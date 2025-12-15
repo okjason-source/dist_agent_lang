@@ -300,7 +300,13 @@ pub fn get_balance(chain_id: i64, address: String) -> i64 {
             .map(|c| c.to_digit(16).unwrap_or(0) as i64)
             .sum();
         
-        (hash_sum % 1000000) * 1000000000000000000 // Convert to wei
+        // Use checked arithmetic to prevent overflow
+        // Limit hash_sum to prevent overflow when multiplying
+        let limited_sum = hash_sum % 1000; // Reduce modulo to prevent overflow
+        let wei_per_unit: i64 = 1000000000000000; // 0.001 ETH in wei (smaller multiplier)
+        
+        // Use checked_mul to safely multiply
+        limited_sum.checked_mul(wei_per_unit).unwrap_or(0)
     } else {
         0
     }

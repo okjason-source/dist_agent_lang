@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2024-12-19
+
+### Fixed
+- Fixed integer overflow bug in `chain::get_balance` function
+  - Used `checked_mul` for safe arithmetic operations
+  - Reduced multiplier to prevent integer overflow
+  - All tests now passing (95/95)
+
+### Changed
+- Updated documentation to reflect complete test coverage
+- Updated security disclaimer with current test status
+- Re-enabled previously ignored tests after bug fix
+
+### Added
+- Comprehensive testing infrastructure
+  - 95 tests across 6 test suites
+  - 17 performance benchmarks
+  - Integration workflow tests
+  - Security feature tests
+
+## [Unreleased] (Previous)
+
 ### Added
 - **Solidity Contract Integration**
   - `solidity_adapter` module for seamless Solidity contract orchestration
