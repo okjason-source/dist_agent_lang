@@ -1,0 +1,589 @@
+// Oracle Quick Start Guide for dist_agent_lang
+// Get up and running with oracles in 5 minutes
+
+// @trust("hybrid")
+service OracleQuickStart {
+    fn get_started() -> Result<Unit, Error> {
+        println!("🚀 Oracle Quick Start for dist_agent_lang");
+        println!("==========================================");
+        println!("");
+        println!("This guide will get you started with oracles in 5 minutes!");
+        println!("");
+
+        // Step 1: Setup mock oracles
+        println!("📡 Step 1: Setting up mock oracles...");
+        let mock_setup = this.setup_quick_mock_oracles();
+
+        // Step 2: Start development server
+        println!("🖥️  Step 2: Starting development server...");
+        let server_setup = this.start_quick_dev_server();
+
+        // Step 3: Test oracle endpoints
+        println!("🧪 Step 3: Testing oracle endpoints...");
+        let test_results = this.test_oracle_endpoints();
+
+        // Step 4: Create sample integration
+        println!("🔗 Step 4: Creating sample integration...");
+        let sample_integration = this.create_sample_integration();
+
+        // Step 5: Show next steps
+        println!("🎯 Step 5: Next steps...");
+        this.show_next_steps();
+
+        return Ok(());
+    }
+
+    fn setup_quick_mock_oracles() -> Result<any, Error> {
+        // Create a simple price oracle
+        let price_oracle = {
+            "name": "QuickPriceOracle",
+            "type": "mock",
+            "endpoint": "http://localhost:3001/quick/price",
+            "data": {
+                "ETH": 2500 + (random() * 100),
+                "BTC": 45000 + (random() * 1000),
+                "timestamp": chain::get_block_timestamp()
+            }
+        };
+
+        // Create a simple weather oracle
+        let weather_oracle = {
+            "name": "QuickWeatherOracle",
+            "type": "mock",
+            "endpoint": "http://localhost:3001/quick/weather",
+            "data": {
+                "temperature": 20 + (random() * 15),
+                "humidity": 50 + (random() * 30),
+                "conditions": "sunny",
+                "timestamp": chain::get_block_timestamp()
+            }
+        };
+
+        println!("   ✅ Created price oracle: {}", price_oracle.endpoint);
+        println!("   ✅ Created weather oracle: {}", weather_oracle.endpoint);
+
+        return Ok({
+            "price_oracle": price_oracle,
+            "weather_oracle": weather_oracle
+        });
+    }
+
+    fn start_quick_dev_server() -> Result<any, Error> {
+        let server_config = {
+            "port": 3001,
+            "routes": [
+                {
+                    "path": "/quick/price",
+                    "method": "GET",
+                    "handler": |request: HttpRequest| {
+                        return {
+                            "status": 200,
+                            "headers": { "Content-Type": "application/json" },
+                            "body": json::stringify({
+                                "ETH": 2500 + (random() * 100),
+                                "BTC": 45000 + (random() * 1000),
+                                "timestamp": chain::get_block_timestamp(),
+                                "source": "quick_price_oracle"
+                            })
+                        };
+                    }
+                },
+                {
+                    "path": "/quick/weather",
+                    "method": "GET",
+                    "handler": |request: HttpRequest| {
+                        return {
+                            "status": 200,
+                            "headers": { "Content-Type": "application/json" },
+                            "body": json::stringify({
+                                "temperature": 20 + (random() * 15),
+                                "humidity": 50 + (random() * 30),
+                                "conditions": "sunny",
+                                "timestamp": chain::get_block_timestamp(),
+                                "source": "quick_weather_oracle"
+                            })
+                        };
+                    }
+                },
+                {
+                    "path": "/health",
+                    "method": "GET",
+                    "handler": |request: HttpRequest| {
+                        return {
+                            "status": 200,
+                            "headers": { "Content-Type": "application/json" },
+                            "body": json::stringify({
+                                "status": "healthy",
+                                "timestamp": chain::get_block_timestamp()
+                            })
+                        };
+                    }
+                }
+            ]
+        };
+
+        let server = web::create_http_server(server_config);
+
+        println!("   ✅ Server started on port {}", server_config.port);
+        println!("   📡 Health check: http://localhost:3001/health");
+
+        return Ok(server);
+    }
+
+    fn test_oracle_endpoints() -> Result<any, Error> {
+        // Test health endpoint
+        let health_response = web::get("http://localhost:3001/health");
+        let health_status = health_response.status == 200 ? "✅ PASS" : "❌ FAIL";
+        println!("   {} Health check", health_status);
+
+        // Test price oracle
+        let price_response = web::get("http://localhost:3001/quick/price");
+        let price_status = price_response.status == 200 ? "✅ PASS" : "❌ FAIL";
+        println!("   {} Price oracle", price_status);
+
+        // Test weather oracle
+        let weather_response = web::get("http://localhost:3001/quick/weather");
+        let weather_status = weather_response.status == 200 ? "✅ PASS" : "❌ FAIL";
+        println!("   {} Weather oracle", weather_status);
+
+        return Ok({
+            "health": health_response.status == 200,
+            "price": price_response.status == 200,
+            "weather": weather_response.status == 200
+        });
+    }
+
+    fn create_sample_integration() -> Result<any, Error> {
+        // Create a simple xNFT that uses the oracles
+        let sample_xnft = r#"
+// @trust("hybrid")
+service SampleWeatherNFT {
+    nft_id: String,
+    weather_oracle: any,
+
+    fn initialize() {
+        this.nft_id = "sample_weather_nft_" + chain::get_block_timestamp();
+        this.weather_oracle = oracle::create_weather_feed({
+            "endpoint": "http://localhost:3001/quick/weather",
+            "location": "New York"
+        });
+
+        log::info("sample_nft", {
+            "event": "initialized",
+            "nft_id": this.nft_id
+        });
+    }
+
+    fn update_based_on_weather() {
+        // Get weather data from oracle
+        let weather_data = oracle::get_weather_data(this.weather_oracle);
+
+        // Update NFT appearance based on weather
+        let appearance = if weather_data.temperature > 25 {
+            "sunny_vibes"
+        } else if weather_data.temperature < 10 {
+            "cool_vibes"
+        } else {
+            "moderate_vibes"
+        };
+
+        // Update NFT metadata
+        update_metadata({
+            "current_weather": weather_data.conditions,
+            "temperature": weather_data.temperature,
+            "humidity": weather_data.humidity,
+            "appearance": appearance,
+            "last_weather_update": weather_data.timestamp
+        });
+
+        log::info("sample_nft", {
+            "event": "weather_update",
+            "nft_id": this.nft_id,
+            "temperature": weather_data.temperature,
+            "appearance": appearance
+        });
+    }
+
+    schedule_execution("every_5_minutes", update_based_on_weather);
+}
+        "#;
+
+        println!("   ✅ Created sample xNFT integration");
+        println!("   📝 Sample code saved to: sample_weather_nft.rs");
+
+        // Save the sample code to a file
+        fs::write_file("sample_weather_nft.rs", sample_xnft);
+
+        return Ok({
+            "sample_nft_code": sample_xnft,
+            "filename": "sample_weather_nft.rs"
+        });
+    }
+
+    fn show_next_steps() -> Result<Unit, Error> {
+        println!("");
+        println!("🎉 You're all set! Here's what you can do next:");
+        println!("");
+        println!("1. 📊 Test your oracles:");
+        println!("   curl http://localhost:3001/quick/price");
+        println!("   curl http://localhost:3001/quick/weather");
+        println!("");
+        println!("2. 🔧 Customize oracle data:");
+        println!("   Edit the mock data generators for realistic values");
+        println!("");
+        println!("3. 🚀 Build your first xNFT:");
+        println!("   Use the sample_weather_nft.rs as a starting point");
+        println!("");
+        println!("4. 📈 Add more oracles:");
+        println!("   - Social sentiment oracle");
+        println!("   - IoT sensor oracle");
+        println!("   - Sports data oracle");
+        println!("   - Custom business data oracle");
+        println!("");
+        println!("5. 🧪 Advanced testing:");
+        println!("   Run the oracle test suite");
+        println!("   Test error scenarios");
+        println!("   Monitor performance");
+        println!("");
+        println!("📚 Resources:");
+        println!("   - oracle_development_setup.rs (complete setup guide)");
+        println!("   - dynamic_nft_examples.rs (advanced NFT examples)");
+        println!("   - xnft_implementation.rs (xNFT system details)");
+        println!("");
+        println!("💡 Pro tips:");
+        println!("   - Use mock oracles for fast development iteration");
+        println!("   - Test with realistic data patterns");
+        println!("   - Monitor oracle health and performance");
+        println!("   - Implement proper error handling");
+
+        return Ok(());
+    }
+}
+
+// =====================================================
+// ONE-CLICK DEVELOPMENT SETUP
+// =====================================================
+
+fn quick_oracle_setup() -> Result<any, Error> {
+    println!("⚡ Quick Oracle Development Setup");
+    println!("==================================");
+
+    let quick_start = OracleQuickStart::new();
+    let result = quick_start.get_started();
+
+    if result.is_ok() {
+        println!("");
+        println!("🎊 Setup complete! Your oracle development environment is ready.");
+        println!("💻 Start building amazing xNFTs and dynamic RWAs!");
+    } else {
+        println!("❌ Setup failed. Please check the error messages above.");
+    }
+
+    return result;
+}
+
+// =====================================================
+// SAMPLE XNFT USING QUICK ORACLES
+// =====================================================
+
+// @trust("hybrid")
+service QuickStartWeatherNFT {
+    nft_id: String,
+    weather_oracle: any,
+    price_oracle: any,
+
+    fn initialize() {
+        this.nft_id = format!("quick_weather_nft_{}", chain::get_block_timestamp());
+
+        // Setup oracles
+        this.weather_oracle = {
+            "endpoint": "http://localhost:3001/quick/weather",
+            "type": "mock",
+            "name": "QuickWeatherOracle"
+        };
+
+        this.price_oracle = {
+            "endpoint": "http://localhost:3001/quick/price",
+            "type": "mock",
+            "name": "QuickPriceOracle"
+        };
+
+        log::info("quick_nft", {
+            "event": "initialized",
+            "nft_id": this.nft_id
+        });
+    }
+
+    fn update_nft_state() {
+        // Get weather data
+        let weather_data = this.get_weather_data();
+
+        // Get price data
+        let price_data = this.get_price_data();
+
+        // Calculate NFT value based on external data
+        let nft_value = this.calculate_nft_value(weather_data, price_data);
+
+        // Determine appearance based on conditions
+        let appearance = this.determine_appearance(weather_data, price_data);
+
+        // Update NFT metadata
+        update_metadata({
+            "nft_id": this.nft_id,
+            "current_value": nft_value,
+            "weather_condition": weather_data.conditions,
+            "eth_price": price_data.ETH,
+            "appearance": appearance,
+            "last_update": chain::get_block_timestamp(),
+            "data_sources": ["weather_oracle", "price_oracle"]
+        });
+
+        // Log the update
+        log::info("quick_nft", {
+            "event": "state_updated",
+            "nft_id": this.nft_id,
+            "value": nft_value,
+            "appearance": appearance,
+            "weather": weather_data.conditions,
+            "eth_price": price_data.ETH
+        });
+
+        // Trigger any external actions based on conditions
+        this.trigger_external_actions(weather_data, price_data);
+    }
+
+    fn get_weather_data() -> any {
+        try {
+            let response = web::get(this.weather_oracle.endpoint);
+            if response.status == 200 {
+                return json::parse(response.body);
+            }
+        } catch (error) {
+            log::warn("quick_nft", {
+                "event": "weather_data_fetch_failed",
+                "error": error.message
+            });
+        }
+
+        // Fallback data
+        return {
+            "temperature": 20,
+            "humidity": 60,
+            "conditions": "moderate",
+            "timestamp": chain::get_block_timestamp()
+        };
+    }
+
+    fn get_price_data() -> any {
+        try {
+            let response = web::get(this.price_oracle.endpoint);
+            if response.status == 200 {
+                return json::parse(response.body);
+            }
+        } catch (error) {
+            log::warn("quick_nft", {
+                "event": "price_data_fetch_failed",
+                "error": error.message
+            });
+        }
+
+        // Fallback data
+        return {
+            "ETH": 2500,
+            "BTC": 45000,
+            "timestamp": chain::get_block_timestamp()
+        };
+    }
+
+    fn calculate_nft_value(weather_data: any, price_data: any) -> Float {
+        // Base value
+        let base_value = 100.0;
+
+        // Weather multiplier
+        let weather_multiplier = match weather_data.conditions {
+            "sunny" => 1.2,
+            "cloudy" => 1.0,
+            "rainy" => 0.8,
+            "stormy" => 0.6,
+            _ => 1.0
+        };
+
+        // Price correlation (simplified)
+        let price_multiplier = if price_data.ETH > 3000 {
+            1.3
+        } else if price_data.ETH > 2000 {
+            1.1
+        } else {
+            0.9
+        };
+
+        return base_value * weather_multiplier * price_multiplier;
+    }
+
+    fn determine_appearance(weather_data: any, price_data: any) -> String {
+        if weather_data.conditions == "sunny" && price_data.ETH > 2500 {
+            return "golden_sunny";
+        } else if weather_data.conditions == "rainy" {
+            return "blue_rainy";
+        } else if price_data.ETH > 3000 {
+            return "eth_bullish";
+        } else {
+            return "neutral";
+        }
+    }
+
+    fn trigger_external_actions(weather_data: any, price_data: any) -> Unit {
+        // Trigger actions based on conditions
+        if weather_data.temperature > 30 && price_data.ETH > 2500 {
+            // Hot weather + high ETH price = special event
+            trigger_action("special_event_trigger", {
+                "event_type": "hot_weather_high_price",
+                "nft_id": this.nft_id,
+                "temperature": weather_data.temperature,
+                "eth_price": price_data.ETH
+            });
+        }
+
+        if weather_data.conditions == "stormy" {
+            // Stormy weather = defensive action
+            trigger_action("defensive_action", {
+                "event_type": "stormy_weather",
+                "nft_id": this.nft_id,
+                "action": "increase_liquidity"
+            });
+        }
+    }
+
+    // Update every 2 minutes for quick feedback during development
+    schedule_execution("every_2_minutes", update_nft_state);
+}
+
+// =====================================================
+// DEVELOPMENT UTILITIES
+// =====================================================
+
+fn check_oracle_setup() -> Result<any, Error> {
+    println!("🔍 Checking Oracle Development Setup");
+    println!("=====================================");
+
+    let checks = {
+        "server_health": false,
+        "price_oracle": false,
+        "weather_oracle": false,
+        "sample_nft": false
+    };
+
+    // Check server health
+    try {
+        let response = web::get("http://localhost:3001/health");
+        checks.server_health = response.status == 200;
+        println!("   {} Server health check", checks.server_health ? "✅" : "❌");
+    } catch (error) {
+        println!("   ❌ Server health check (server not running)");
+    }
+
+    // Check price oracle
+    try {
+        let response = web::get("http://localhost:3001/quick/price");
+        checks.price_oracle = response.status == 200;
+        println!("   {} Price oracle", checks.price_oracle ? "✅" : "❌");
+    } catch (error) {
+        println!("   ❌ Price oracle");
+    }
+
+    // Check weather oracle
+    try {
+        let response = web::get("http://localhost:3001/quick/weather");
+        checks.weather_oracle = response.status == 200;
+        println!("   {} Weather oracle", checks.weather_oracle ? "✅" : "❌");
+    } catch (error) {
+        println!("   ❌ Weather oracle");
+    }
+
+    // Check sample NFT file
+    checks.sample_nft = fs::file_exists("sample_weather_nft.rs");
+    println!("   {} Sample NFT file", checks.sample_nft ? "✅" : "❌");
+
+    let all_passed = checks.server_health && checks.price_oracle &&
+                     checks.weather_oracle && checks.sample_nft;
+
+    println!("");
+    if all_passed {
+        println!("🎉 All checks passed! Your oracle development environment is ready.");
+    } else {
+        println!("⚠️  Some checks failed. Run 'quick_oracle_setup()' to fix issues.");
+    }
+
+    return Ok(checks);
+}
+
+fn reset_oracle_environment() -> Result<Unit, Error> {
+    println!("🔄 Resetting Oracle Development Environment");
+    println!("===========================================");
+
+    // Stop any running servers
+    println!("   🛑 Stopping existing servers...");
+
+    // Clean up data files
+    println!("   🧹 Cleaning up data files...");
+    if fs::file_exists("sample_weather_nft.rs") {
+        fs::delete_file("sample_weather_nft.rs");
+    }
+
+    // Reset configurations
+    println!("   ⚙️  Resetting configurations...");
+
+    println("   ✅ Environment reset complete");
+    println("   💡 Run 'quick_oracle_setup()' to start fresh");
+
+    return Ok(());
+}
+
+// =====================================================
+// COMPLETE DEVELOPMENT WORKFLOW
+// =====================================================
+
+fn oracle_development_workflow() -> Result<Unit, Error> {
+    println!("🔄 Complete Oracle Development Workflow");
+    println!("=======================================");
+    println!("");
+
+    // Step 1: Check current setup
+    println!("1. 📊 Checking current setup...");
+    let current_setup = check_oracle_setup();
+
+    // Step 2: Reset if needed
+    if !current_setup.unwrap().server_health {
+        println!("2. 🔄 Resetting environment...");
+        reset_oracle_environment();
+    } else {
+        println!("2. ✅ Environment looks good, skipping reset");
+    }
+
+    // Step 3: Quick setup
+    println!("3. ⚡ Running quick setup...");
+    quick_oracle_setup();
+
+    // Step 4: Verification
+    println!("4. 🔍 Final verification...");
+    check_oracle_setup();
+
+    // Step 5: Next steps
+    println("");
+    println("🎯 You're ready to start developing!");
+    println("");
+    println("📝 Quick start guide:");
+    println("   1. Create your first xNFT: look at sample_weather_nft.rs");
+    println("   2. Test oracle endpoints: curl http://localhost:3001/quick/price");
+    println("   3. Monitor server logs for data generation");
+    println("   4. Customize mock data for your use case");
+    println("   5. Add more oracles as needed");
+    println("");
+    println("📚 Advanced topics:");
+    println("   - Real oracle integration (Chainlink, etc.)");
+    println("   - Cross-chain oracle networks");
+    println("   - Oracle security and validation");
+    println("   - Performance monitoring and optimization");
+
+    return Ok(());
+}

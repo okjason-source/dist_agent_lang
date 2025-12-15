@@ -1,0 +1,335 @@
+// Chain Selection in dist_agent_lang
+// This demonstrates how to choose and interact with different blockchains
+
+@trust("hybrid")
+@chain("ethereum")
+@chain("polygon")
+@chain("binance")
+@chain("arbitrum")
+@chain("optimism")
+service ChainSelectionExample {
+    // Chain-specific configurations
+    active_chains: map<int, map<string, any>>,
+    default_chain: int = 1, // Ethereum Mainnet
+    
+    // Cross-chain state
+    cross_chain_balances: map<string, map<int, int>>, // user => (chain_id => balance)
+    bridge_requests: map<string, map<string, any>>,
+    
+    fn initialize() {
+        // Initialize with specific chains
+        self.active_chains = {
+            1: { // Ethereum Mainnet
+                "chain_id": 1,
+                "name": "Ethereum Mainnet",
+                "rpc_url": "https://mainnet.infura.io/v3/YOUR_PROJECT_ID",
+                "explorer": "https://etherscan.io",
+                "gas_limit": 21000,
+                "gas_price": 20, // gwei
+                "confirmations": 12
+            },
+            137: { // Polygon
+                "chain_id": 137,
+                "name": "Polygon",
+                "rpc_url": "https://polygon-rpc.com",
+                "explorer": "https://polygonscan.com",
+                "gas_limit": 21000,
+                "gas_price": 30, // gwei
+                "confirmations": 256
+            },
+            56: { // Binance Smart Chain
+                "chain_id": 56,
+                "name": "Binance Smart Chain",
+                "rpc_url": "https://bsc-dataseed.binance.org",
+                "explorer": "https://bscscan.com",
+                "gas_limit": 21000,
+                "gas_price": 5, // gwei
+                "confirmations": 15
+            },
+            42161: { // Arbitrum
+                "chain_id": 42161,
+                "name": "Arbitrum One",
+                "rpc_url": "https://arb1.arbitrum.io/rpc",
+                "explorer": "https://arbiscan.io",
+                "gas_limit": 21000,
+                "gas_price": 0.1, // gwei
+                "confirmations": 1
+            },
+            5: { // Ethereum Goerli
+                "chain_id": 5,
+                "name": "Ethereum Goerli",
+                "rpc_url": "https://goerli.infura.io/v3/YOUR_PROJECT_ID",
+                "explorer": "https://goerli.etherscan.io",
+                "gas_limit": 21000,
+                "gas_price": 2, // gwei
+                "confirmations": 6
+            }
+        };
+        
+        log::info("chain", {
+            "event": "chains_initialized",
+            "chains_count": self.active_chains.size(),
+            "default_chain": self.default_chain
+        });
+    }
+    
+    // Switch to a different chain
+    @txn
+    fn switch_chain(chain_id: int) -> bool {
+        let user = auth::session().user_id;
+        let old_chain = self.default_chain;
+        
+        if !self.active_chains.contains(chain_id) {
+            log::error("chain", {
+                "event": "chain_not_supported",
+                "chain_id": chain_id,
+                "user": user
+            });
+            return false;
+        }
+        
+        self.default_chain = chain_id;
+        
+        log::audit("chain_switched", {
+            "user": user,
+            "old_chain": old_chain,
+            "new_chain": chain_id,
+            "chain_name": self.active_chains[chain_id]["name"]
+        });
+        
+        log::info("chain", {
+            "event": "chain_switched",
+            "user": user,
+            "new_chain": self.active_chains[chain_id]["name"]
+        });
+        
+        return true;
+    }
+    
+    // Deploy contract to specific chain
+    @txn
+    fn deploy_to_chain(chain_id: int) -> string {
+        if !self.active_chains.contains(chain_id) {
+            log::error("chain", {
+                "event": "chain_not_supported",
+                "chain_id": chain_id
+            });
+            return "";
+        }
+        
+        let chain_info = self.active_chains[chain_id];
+        
+        // Use chain:: namespace to deploy
+        let contract_address = chain::deploy_contract(
+            chain_id,
+            "KEYS_Token",
+            {
+                "name": "KEYS Token",
+                "symbol": "KEYS",
+                "total_supply": 120000000 * 10^18
+            }
+        );
+        
+        log::info("chain", {
+            "event": "contract_deployed",
+            "chain_name": chain_info["name"],
+            "contract_address": contract_address,
+            "chain_id": chain_id
+        });
+        
+        return contract_address;
+    }
+    
+    // Cross-chain transfer
+    @txn
+    @limit(15000)
+    fn cross_chain_transfer(
+        to_chain: int,
+        recipient: string,
+        amount: int
+    ) -> bool {
+        let user = auth::session().user_id;
+        
+        // Verify chains are supported
+        if !self.active_chains.contains(to_chain) {
+            log::error("chain", {
+                "event": "target_chain_not_supported",
+                "target_chain": to_chain,
+                "user": user
+            });
+            return false;
+        }
+        
+        // Check balance on current chain
+        let current_balance = self.cross_chain_balances[user][self.default_chain] || 0;
+        if current_balance < amount {
+            log::error("chain", {
+                "event": "insufficient_balance",
+                "user": user,
+                "current_balance": current_balance,
+                "required_amount": amount
+            });
+            return false;
+        }
+        
+        // Create bridge request
+        let bridge_id = crypto::hash("bridge", user + "_" + self.default_chain + "_" + to_chain + "_" + amount);
+        
+        self.bridge_requests[bridge_id] = {
+            "user": user,
+            "from_chain": self.default_chain,
+            "to_chain": to_chain,
+            "amount": amount,
+            "recipient": recipient,
+            "status": "pending",
+            "timestamp": chain::get_block_timestamp(self.default_chain)
+        };
+        
+        // Deduct from current chain
+        if !self.cross_chain_balances.contains(user) {
+            self.cross_chain_balances[user] = {};
+        }
+        self.cross_chain_balances[user][self.default_chain] = current_balance - amount;
+        
+        log::audit("cross_chain_transfer", {
+            "event": "transfer_initiated",
+            "user": user,
+            "from_chain": self.default_chain,
+            "to_chain": to_chain,
+            "amount": amount,
+            "bridge_id": bridge_id
+        });
+        
+        log::info("chain", {
+            "event": "cross_chain_transfer_initiated",
+            "user": user,
+            "amount": amount,
+            "from_chain": self.default_chain,
+            "to_chain": to_chain
+        });
+        
+        return true;
+    }
+    
+    // Get gas estimate for a chain
+    fn estimate_gas(chain_id: int, operation: string) -> int {
+        if !self.active_chains.contains(chain_id) {
+            return 0;
+        }
+        
+        // Use chain:: namespace to estimate gas
+        return chain::estimate_gas_cost(chain_id, operation);
+    }
+    
+    // Get current gas price for a chain
+    fn get_gas_price(chain_id: int) -> float {
+        if !self.active_chains.contains(chain_id) {
+            return 0.0;
+        }
+        
+        // Use chain:: namespace to get current gas price
+        return chain::get_current_gas_price(chain_id);
+    }
+    
+    // Check transaction status across chains
+    fn get_transaction_status(chain_id: int, tx_hash: string) -> string {
+        if !self.active_chains.contains(chain_id) {
+            return "unknown";
+        }
+        
+        // Use chain:: namespace to check transaction
+        return chain::get_transaction_status(chain_id, tx_hash);
+    }
+}
+
+// Chain selection helper functions
+fn select_chain_by_criteria(criteria: map<string, any>) -> int {
+    // Criteria can include: speed, cost, security, ecosystem
+    let speed_priority = criteria.get("speed", "medium");
+    let cost_priority = criteria.get("cost", "medium");
+    let security_priority = criteria.get("security", "high");
+    
+    if speed_priority == "fast" && cost_priority == "low" && security_priority == "medium" {
+        return 137; // Polygon
+    } else if speed_priority == "fast" && cost_priority == "low" && security_priority == "low" {
+        return 56; // BSC
+    } else if speed_priority == "medium" && cost_priority == "medium" && security_priority == "high" {
+        return 1; // Ethereum
+    } else if speed_priority == "fast" && cost_priority == "low" && security_priority == "high" {
+        return 42161; // Arbitrum
+    } else {
+        return 1; // Default to Ethereum
+    }
+}
+
+// Example usage
+fn main() {
+    // Initialize chain selection example
+    let chain_example = ChainSelectionExample::new();
+    chain_example.initialize();
+    
+    // Deploy to different chains
+    let eth_address = chain_example.deploy_to_chain(1);
+    let poly_address = chain_example.deploy_to_chain(137);
+    let bsc_address = chain_example.deploy_to_chain(56);
+    
+    log::info("main", {
+        "event": "contracts_deployed",
+        "ethereum_address": eth_address,
+        "polygon_address": poly_address,
+        "bsc_address": bsc_address
+    });
+    
+    // Switch to Polygon for lower gas fees
+    let switch_result = chain_example.switch_chain(137);
+    
+    if switch_result {
+        log::info("main", {
+            "event": "chain_switched_successfully",
+            "new_chain": "Polygon"
+        });
+    }
+    
+    // Perform cross-chain transfer
+    let transfer_result = chain_example.cross_chain_transfer(1, "0x1234...", 1000 * 10^18);
+    
+    if transfer_result {
+        log::info("main", {
+            "event": "cross_chain_transfer_successful",
+            "amount": 1000 * 10^18,
+            "to_chain": 1
+        });
+    }
+    
+    // Get gas estimates
+    let eth_gas = chain_example.estimate_gas(1, "transfer");
+    let poly_gas = chain_example.estimate_gas(137, "transfer");
+    
+    log::info("main", {
+        "event": "gas_estimates_retrieved",
+        "ethereum_gas": eth_gas,
+        "polygon_gas": poly_gas
+    });
+    
+    // Select chain based on criteria
+    let optimal_chain = select_chain_by_criteria({
+        "speed": "fast",
+        "cost": "low",
+        "security": "medium"
+    });
+    
+    log::info("main", {
+        "event": "optimal_chain_selected",
+        "chain_id": optimal_chain,
+        "criteria": {
+            "speed": "fast",
+            "cost": "low",
+            "security": "medium"
+        }
+    });
+    
+    log::info("main", {
+        "event": "chain_selection_demo_completed",
+        "status": "success"
+    });
+}

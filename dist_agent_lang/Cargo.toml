@@ -1,0 +1,54 @@
+[package]
+name = "dist_agent_lang"
+version = "1.0.0"
+edition = "2021"
+description = "A hybrid programming language for decentralized and centralized network integration"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+repository = "https://github.com/yourusername/dist_agent_lang"
+keywords = ["programming-language", "blockchain", "smart-contracts", "distributed-systems"]
+categories = ["development-tools"]
+
+# Define the library target explicitly
+[[bin]]
+name = "dist_agent_lang"
+path = "src/main.rs"
+
+[lib]
+name = "dist_agent_lang"
+path = "src/lib.rs"
+
+[dependencies]
+thiserror = "1.0"
+lazy_static = "1.4"
+sha2 = "0.10"
+md5 = "0.7"
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+log = "0.4.27"
+tokio = { version = "1.0", features = ["full"] }
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "fs"] }
+serde_json = "1.0"
+base64 = "0.21"
+hex = "0.4"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "performance"
+harness = false
+
+# Exclude .rs files in examples/ directory from compilation
+# These are dist_agent_lang source files, not Rust files
+[package.metadata.docs.rs]
+cargo-args = ["-Zunstable-options", "-Zskip-rustdoc-targets=examples"]
+
+# Note: Cargo automatically discovers example binaries in examples/ directory
+# To prevent dist_agent_lang source files (.rs files with dist_agent_lang syntax)
+# from being compiled as Rust examples, we use a build script or exclude them.
+# The examples/ directory contains dist_agent_lang source code, not Rust code.
+# These files should be run through the dist_agent_lang interpreter, not compiled as Rust.

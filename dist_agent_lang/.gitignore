@@ -1,0 +1,54 @@
+# Build artifacts
+target/
+dist_agent_lang-*/
+*.tar.gz
+*.zip
+
+# Cargo lock (generated file - can be regenerated)
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+*.log.*
+
+# Debug and test files (NOT needed for distribution)
+debug_benchmark.rs
+debug-tokens.dal
+log-test.dal
+minimal-test.dal
+test/
+test2/
+benches/
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+
+# Development scripts (NOT needed for users)
+fix/
+
+# Environment
+.env
+.env.local
+
+# Package files (upload via GitHub Releases instead)
+dist_agent_lang-*.tar.gz
+dist_agent_lang-*.zip
+

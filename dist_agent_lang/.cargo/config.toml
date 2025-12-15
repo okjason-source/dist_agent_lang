@@ -1,0 +1,15 @@
+# Cargo configuration for dist_agent_lang
+# This ensures that .rs files in examples/ directory are not compiled as Rust modules
+
+[target.'cfg(all())']
+rustflags = []
+
+# Configure build to ignore examples/ .rs files 
+[build]
+target-dir = "target"
+
+# Exclude examples from workspace
+[workspace]
+exclude = [
+    "examples/*.rs",
+]

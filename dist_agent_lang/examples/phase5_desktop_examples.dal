@@ -1,0 +1,1552 @@
+// Phase 5: Desktop & Mobile Frameworks Examples
+// Demonstrates comprehensive desktop application development with:
+// - Cross-platform GUI components
+// - Event-driven programming
+// - Native system integrations
+// - Responsive layouts and theming
+
+// Example 1: Advanced Desktop Application with Full GUI
+// @desktop
+// @trust("hybrid")
+// @persistent
+service AdvancedDesktopApp {
+    main_window: any,
+    theme: any,
+    current_user: any,
+    data_source: any,
+
+    fn initialize() -> Result<Unit, Error> {
+        // Create main application window
+        let window_config = {
+            "title": "Advanced Desktop App",
+            "width": 1200,
+            "height": 800,
+            "resizable": true,
+            "decorated": true,
+            "fullscreen": false
+        };
+
+        let main_window = desktop::create_window(window_config);
+
+        // Create and apply theme
+        let theme = desktop::create_theme("modern_dark");
+        desktop::apply_theme_to_window(main_window, theme);
+
+        // Create menu bar
+        let menu_bar = desktop::create_menu_bar();
+
+        // Create toolbar
+        let toolbar = desktop::create_toolbar("horizontal", 0, 30, 1200, 50);
+
+        // Create status bar
+        let status_bar = desktop::create_status_bar(0, 750, 1200, 30);
+
+        // Create main content area with tabs
+        let main_tabs = desktop::create_tab_view(0, 80, 1200, 670);
+
+        // Add components to main window
+        desktop::add_component_to_window(main_window, menu_bar);
+        desktop::add_component_to_window(main_window, toolbar);
+        desktop::add_component_to_window(main_window, status_bar);
+        desktop::add_component_to_window(main_window, main_tabs);
+
+        // Create tab content
+        self.create_dashboard_tab(main_tabs);
+        self.create_data_tab(main_tabs);
+        self.create_settings_tab(main_tabs);
+
+        // Setup event handlers
+        self.setup_event_handlers(main_window);
+
+        // Initialize data source
+        self.data_source = database::connect("postgresql://localhost/app_data");
+
+        // Create system tray icon
+        let tray_icon = desktop::create_system_tray_icon("/assets/app_icon.png", "Advanced Desktop App");
+        desktop::show_notification({
+            "title": "Application Started",
+            "message": "Advanced Desktop App is ready to use",
+            "icon_path": "/assets/app_icon.png"
+        });
+
+        self.main_window = main_window;
+        self.theme = theme;
+
+        log::info("desktop", {
+            "service": "AdvancedDesktopApp",
+            "window": main_window,
+            "theme": "modern_dark",
+            "message": "Advanced desktop application initialized"
+        });
+
+        return Ok(());
+    }
+
+    fn create_dashboard_tab(tab_view: any) -> Result<Unit, Error> {
+        // Create dashboard components
+        let welcome_label = desktop::create_label(
+            "Welcome to Advanced Desktop App",
+            50, 50, 400, 40
+        );
+
+        let user_info_group = self.create_user_info_group(50, 100, 500, 200);
+        let quick_stats_group = self.create_quick_stats_group(600, 100, 500, 200);
+        let recent_activity_list = self.create_recent_activity_list(50, 320, 1050, 300);
+
+        // Add components to tab
+        // Note: In real implementation, these would be added to the tab content
+
+        return Ok(());
+    }
+
+    fn create_user_info_group(x: int, y: int, width: int, height: int) -> any {
+        // Create user info display group
+        let group_title = desktop::create_label("User Information", x + 10, y + 10, 200, 30);
+
+        let name_label = desktop::create_label("Name:", x + 10, y + 50, 60, 25);
+        let name_value = desktop::create_label("John Doe", x + 80, y + 50, 200, 25);
+
+        let email_label = desktop::create_label("Email:", x + 10, y + 80, 60, 25);
+        let email_value = desktop::create_label("john.doe@example.com", x + 80, y + 80, 300, 25);
+
+        let role_label = desktop::create_label("Role:", x + 10, y + 110, 60, 25);
+        let role_value = desktop::create_label("Administrator", x + 80, y + 110, 200, 25);
+
+        let last_login_label = desktop::create_label("Last Login:", x + 10, y + 140, 100, 25);
+        let last_login_value = desktop::create_label("2024-01-01 10:30 AM", x + 120, y + 140, 200, 25);
+
+        return {
+            "title": group_title,
+            "name": { "label": name_label, "value": name_value },
+            "email": { "label": email_label, "value": email_value },
+            "role": { "label": role_label, "value": role_value },
+            "last_login": { "label": last_login_label, "value": last_login_value }
+        };
+    }
+
+    fn create_quick_stats_group(x: int, y: int, width: int, height: int) -> any {
+        // Create quick statistics display
+        let group_title = desktop::create_label("Quick Statistics", x + 10, y + 10, 200, 30);
+
+        let total_users_label = desktop::create_label("Total Users:", x + 10, y + 50, 100, 25);
+        let total_users_value = desktop::create_label("1,234", x + 120, y + 50, 100, 25);
+
+        let active_sessions_label = desktop::create_label("Active Sessions:", x + 10, y + 80, 120, 25);
+        let active_sessions_value = desktop::create_label("89", x + 140, y + 80, 80, 25);
+
+        let system_load_label = desktop::create_label("System Load:", x + 10, y + 110, 100, 25);
+        let system_load_value = desktop::create_label("45%", x + 120, y + 110, 80, 25);
+
+        let uptime_label = desktop::create_label("Uptime:", x + 10, y + 140, 60, 25);
+        let uptime_value = desktop::create_label("7d 14h 32m", x + 80, y + 140, 150, 25);
+
+        return {
+            "title": group_title,
+            "total_users": { "label": total_users_label, "value": total_users_value },
+            "active_sessions": { "label": active_sessions_label, "value": active_sessions_value },
+            "system_load": { "label": system_load_label, "value": system_load_value },
+            "uptime": { "label": uptime_label, "value": uptime_value }
+        };
+    }
+
+    fn create_recent_activity_list(x: int, y: int, width: int, height: int) -> any {
+        // Create recent activity list
+        let list_title = desktop::create_label("Recent Activity", x + 10, y + 10, 200, 30);
+        let activity_list = desktop::create_listbox(
+            [
+                "User 'Alice' logged in",
+                "Database backup completed",
+                "New user 'Bob' registered",
+                "System update applied",
+                "Security scan finished",
+                "Report generated",
+                "Email campaign sent",
+                "Payment processed"
+            ],
+            x + 10, y + 50, width - 20, height - 60
+        );
+
+        return {
+            "title": list_title,
+            "list": activity_list
+        };
+    }
+
+    fn create_data_tab(tab_view: any) -> Result<Unit, Error> {
+        // Create data management tab
+        let search_field = desktop::create_text_field("Search data...", 50, 50, 400, 35);
+        let search_button = desktop::create_button("Search", 470, 50, 100, 35);
+
+        // Create data table
+        let data_table = desktop::create_table(
+            ["ID", "Name", "Type", "Status", "Created", "Modified"],
+            50, 100, 1000, 500
+        );
+
+        // Add sample data (in real app, this would come from database)
+        let sample_data = [
+            ["1", "User Data", "JSON", "Active", "2024-01-01", "2024-01-15"],
+            ["2", "System Config", "YAML", "Active", "2024-01-02", "2024-01-14"],
+            ["3", "Backup Archive", "ZIP", "Inactive", "2024-01-03", "2024-01-10"],
+            ["4", "Log Files", "TXT", "Active", "2024-01-04", "2024-01-15"],
+            ["5", "Media Assets", "Various", "Active", "2024-01-05", "2024-01-13"]
+        ];
+
+        // Create action buttons
+        let add_button = desktop::create_button("Add New", 50, 620, 120, 35);
+        let edit_button = desktop::create_button("Edit", 190, 620, 100, 35);
+        let delete_button = desktop::create_button("Delete", 310, 620, 100, 35);
+        let export_button = desktop::create_button("Export", 430, 620, 100, 35);
+        let import_button = desktop::create_button("Import", 550, 620, 100, 35);
+
+        return Ok(());
+    }
+
+    fn create_settings_tab(tab_view: any) -> Result<Unit, Error> {
+        // Create settings tab with various controls
+        let settings_title = desktop::create_label("Application Settings", 50, 50, 300, 40);
+
+        // General Settings
+        let general_title = desktop::create_label("General", 50, 100, 200, 30);
+
+        let theme_label = desktop::create_label("Theme:", 70, 140, 80, 25);
+        let theme_combo = desktop::create_combobox(
+            ["Light", "Dark", "Auto", "Custom"],
+            160, 140, 150, 30
+        );
+
+        let language_label = desktop::create_label("Language:", 70, 180, 90, 25);
+        let language_combo = desktop::create_combobox(
+            ["English", "Spanish", "French", "German", "Chinese"],
+            160, 180, 150, 30
+        );
+
+        let startup_label = desktop::create_label("Start with system:", 70, 220, 130, 25);
+        let startup_checkbox = desktop::create_checkbox("Launch on startup", 200, 220, 200, 25);
+
+        // Notification Settings
+        let notifications_title = desktop::create_label("Notifications", 400, 100, 200, 30);
+
+        let desktop_notifications_checkbox = desktop::create_checkbox(
+            "Desktop notifications", 420, 140, 200, 25
+        );
+        let sound_notifications_checkbox = desktop::create_checkbox(
+            "Sound notifications", 420, 170, 200, 25
+        );
+        let email_notifications_checkbox = desktop::create_checkbox(
+            "Email notifications", 420, 200, 200, 25
+        );
+
+        // Privacy Settings
+        let privacy_title = desktop::create_label("Privacy", 50, 280, 200, 30);
+
+        let analytics_checkbox = desktop::create_checkbox(
+            "Send anonymous usage statistics", 70, 320, 250, 25
+        );
+        let crash_reports_checkbox = desktop::create_checkbox(
+            "Send crash reports", 70, 350, 200, 25
+        );
+
+        // Action buttons
+        let save_button = desktop::create_button("Save Settings", 50, 420, 150, 40);
+        let reset_button = desktop::create_button("Reset to Defaults", 220, 420, 150, 40);
+        let cancel_button = desktop::create_button("Cancel", 390, 420, 120, 40);
+
+        return Ok(());
+    }
+
+    fn setup_event_handlers(window: any) -> Result<Unit, Error> {
+        // Setup various event handlers for the application
+
+        // Window events
+        desktop::add_event_handler(window, "window", "close", "handle_window_close");
+        desktop::add_event_handler(window, "window", "resize", "handle_window_resize");
+        desktop::add_event_handler(window, "window", "minimize", "handle_window_minimize");
+        desktop::add_event_handler(window, "window", "maximize", "handle_window_maximize");
+
+        // Menu events
+        desktop::add_event_handler(window, "menu_file_new", "click", "handle_file_new");
+        desktop::add_event_handler(window, "menu_file_open", "click", "handle_file_open");
+        desktop::add_event_handler(window, "menu_file_save", "click", "handle_file_save");
+        desktop::add_event_handler(window, "menu_file_exit", "click", "handle_file_exit");
+
+        desktop::add_event_handler(window, "menu_edit_undo", "click", "handle_edit_undo");
+        desktop::add_event_handler(window, "menu_edit_redo", "click", "handle_edit_redo");
+        desktop::add_event_handler(window, "menu_edit_copy", "click", "handle_edit_copy");
+        desktop::add_event_handler(window, "menu_edit_paste", "click", "handle_edit_paste");
+
+        desktop::add_event_handler(window, "menu_help_about", "click", "handle_help_about");
+
+        // Toolbar events
+        desktop::add_event_handler(window, "toolbar_new", "click", "handle_toolbar_new");
+        desktop::add_event_handler(window, "toolbar_open", "click", "handle_toolbar_open");
+        desktop::add_event_handler(window, "toolbar_save", "click", "handle_toolbar_save");
+        desktop::add_event_handler(window, "toolbar_settings", "click", "handle_toolbar_settings");
+
+        // System tray events
+        desktop::add_event_handler(window, "tray_icon", "click", "handle_tray_click");
+        desktop::add_event_handler(window, "tray_show", "click", "handle_tray_show");
+        desktop::add_event_handler(window, "tray_exit", "click", "handle_tray_exit");
+
+        return Ok(());
+    }
+
+    // Event Handlers
+    fn handle_window_close() -> Result<Unit, Error> {
+        // Show confirmation dialog
+        let result = desktop::show_message_dialog({
+            "title": "Confirm Exit",
+            "message": "Are you sure you want to exit the application?",
+            "dialog_type": "question",
+            "buttons": ["Yes", "No", "Cancel"]
+        });
+
+        if result == "Yes" {
+            // Save application state
+            self.save_application_state();
+
+            // Close database connections
+            database::close_connection(self.data_source);
+
+            // Exit application
+            desktop::exit_application();
+        }
+
+        return Ok(());
+    }
+
+    fn handle_window_resize(new_width: int, new_height: int) -> Result<Unit, Error> {
+        log::info("desktop", {
+            "action": "window_resized",
+            "new_width": new_width,
+            "new_height": new_height
+        });
+
+        // Adjust layout components based on new size
+        self.adjust_layout_for_size(new_width, new_height);
+
+        return Ok(());
+    }
+
+    fn handle_file_new() -> Result<Unit, Error> {
+        // Create new document/project
+        let result = desktop::show_save_dialog({
+            "title": "Create New Project",
+            "filters": [
+                { "name": "Project Files", "extensions": ["proj", "json"] },
+                { "name": "All Files", "extensions": ["*"] }
+            ]
+        });
+
+        if !result.is_empty() {
+            // Initialize new project
+            self.create_new_project(result);
+
+            desktop::show_notification({
+                "title": "Project Created",
+                "message": format!("New project created at: {}", result),
+                "icon_path": "/assets/success_icon.png"
+            });
+        }
+
+        return Ok(());
+    }
+
+    fn handle_file_open() -> Result<Unit, Error> {
+        // Open existing file
+        let result = desktop::show_file_dialog({
+            "title": "Open File",
+            "filters": [
+                { "name": "Project Files", "extensions": ["proj", "json"] },
+                { "name": "Data Files", "extensions": ["csv", "xlsx", "json"] },
+                { "name": "Text Files", "extensions": ["txt", "md"] },
+                { "name": "All Files", "extensions": ["*"] }
+            ],
+            "multiple_selection": false
+        });
+
+        if !result.is_empty() {
+            // Load file
+            let file_content = database::read_file(result[0]);
+            self.load_project_from_file(result[0], file_content);
+
+            desktop::show_notification({
+                "title": "File Opened",
+                "message": format!("Opened file: {}", result[0]),
+                "icon_path": "/assets/file_icon.png"
+            });
+        }
+
+        return Ok(());
+    }
+
+    fn handle_file_save() -> Result<Unit, Error> {
+        // Save current project
+        if self.current_user["current_project_path"].is_empty() {
+            // No current path, show save dialog
+            let result = desktop::show_save_dialog({
+                "title": "Save Project",
+                "filters": [
+                    { "name": "Project Files", "extensions": ["proj", "json"] },
+                    { "name": "All Files", "extensions": ["*"] }
+                ]
+            });
+
+            if !result.is_empty() {
+                self.save_project_to_file(result);
+            }
+        } else {
+            // Save to existing path
+            self.save_project_to_file(self.current_user["current_project_path"]);
+        }
+
+        return Ok(());
+    }
+
+    fn handle_help_about() -> Result<Unit, Error> {
+        // Show about dialog
+        let result = desktop::show_message_dialog({
+            "title": "About Advanced Desktop App",
+            "message": "Advanced Desktop App v1.0.0\n\nA comprehensive desktop application built with dist_agent_lang.\n\nFeatures:\n• Cross-platform GUI\n• Database integration\n• AI-powered features\n• Real-time collaboration\n\n© 2024 Advanced Desktop App Team",
+            "dialog_type": "info",
+            "buttons": ["OK"]
+        });
+
+        return Ok(());
+    }
+
+    // Utility Methods
+    fn save_application_state() -> Result<Unit, Error> {
+        // Save current application state
+        let state = {
+            "window_size": { "width": 1200, "height": 800 },
+            "window_position": { "x": 100, "y": 100 },
+            "current_tab": "dashboard",
+            "theme": "modern_dark",
+            "last_saved": chain::get_block_timestamp(1),
+            "user_preferences": {
+                "auto_save": true,
+                "show_notifications": true,
+                "backup_frequency": "daily"
+            }
+        };
+
+        let state_path = "/user_data/app_state.json";
+        let state_json = json::serialize(state);
+        database::write_file(state_path, state_json);
+
+        return Ok(());
+    }
+
+    fn adjust_layout_for_size(width: int, height: int) -> Result<Unit, Error> {
+        // Adjust component sizes based on window size
+        let content_height = height - 110; // Account for menu bar, toolbar, and status bar
+
+        // Adjust main content area
+        // In real implementation, this would update component positions and sizes
+
+        return Ok(());
+    }
+
+    fn create_new_project(project_path: string) -> Result<Unit, Error> {
+        // Initialize new project structure
+        let project_data = {
+            "name": "New Project",
+            "version": "1.0.0",
+            "created_at": chain::get_block_timestamp(1),
+            "author": self.current_user["name"],
+            "description": "A new project created with Advanced Desktop App",
+            "settings": {
+                "theme": "default",
+                "auto_save": true,
+                "backup_enabled": true
+            },
+            "data": {},
+            "metadata": {}
+        };
+
+        let project_json = json::serialize(project_data);
+        database::write_file(project_path, project_json);
+
+        self.current_user["current_project_path"] = project_path;
+
+        return Ok(());
+    }
+
+    fn load_project_from_file(file_path: string, content: string) -> Result<Unit, Error> {
+        // Parse and load project data
+        let project_data = json::parse(content);
+
+        // Update UI with project data
+        self.current_user["current_project_path"] = file_path;
+        self.current_user["current_project"] = project_data;
+
+        // Refresh UI components
+        self.refresh_ui_with_project_data(project_data);
+
+        return Ok(());
+    }
+
+    fn save_project_to_file(file_path: string) -> Result<Unit, Error> {
+        // Get current project data from UI
+        let project_data = self.collect_project_data_from_ui();
+
+        // Add save timestamp
+        project_data["last_saved"] = chain::get_block_timestamp(1);
+
+        // Save to file
+        let project_json = json::serialize(project_data);
+        database::write_file(file_path, project_json);
+
+        // Show success notification
+        desktop::show_notification({
+            "title": "Project Saved",
+            "message": format!("Project saved successfully to: {}", file_path),
+            "icon_path": "/assets/save_icon.png"
+        });
+
+        return Ok(());
+    }
+
+    fn collect_project_data_from_ui() -> any {
+        // Collect current project data from UI components
+        // In real implementation, this would gather data from all UI components
+        return {
+            "name": "Sample Project",
+            "version": "1.0.0",
+            "last_modified": chain::get_block_timestamp(1),
+            "data": {
+                // Project-specific data would be collected here
+            }
+        };
+    }
+
+    fn refresh_ui_with_project_data(project_data: any) -> Result<Unit, Error> {
+        // Update UI components with loaded project data
+        // In real implementation, this would update all relevant UI components
+
+        log::info("desktop", {
+            "action": "project_loaded",
+            "project_name": project_data["name"],
+            "project_version": project_data["version"]
+        });
+
+        return Ok(());
+    }
+
+    // Application Management
+    fn start_application() -> Result<Unit, Error> {
+        // Initialize and show the main window
+        desktop::show_window(self.main_window);
+
+        // Start the desktop event loop
+        desktop::run_event_loop();
+
+        return Ok(());
+    }
+
+    fn shutdown_application() -> Result<Unit, Error> {
+        // Save final state
+        self.save_application_state();
+
+        // Close all windows
+        desktop::close_window(self.main_window);
+
+        // Clean up resources
+        database::close_connection(self.data_source);
+
+        log::info("desktop", {
+            "action": "application_shutdown",
+            "message": "Advanced Desktop App shut down gracefully"
+        });
+
+        return Ok(());
+    }
+
+    // Data Management
+    fn load_user_data() -> Result<Unit, Error> {
+        // Load user preferences and settings
+        let user_data_path = "/user_data/user_profile.json";
+
+        if database::file_exists(user_data_path) {
+            let user_content = database::read_file(user_data_path);
+            self.current_user = json::parse(user_content);
+
+            log::info("desktop", {
+                "action": "user_data_loaded",
+                "user_name": self.current_user["name"]
+            });
+        } else {
+            // Create default user profile
+            self.current_user = {
+                "name": "Default User",
+                "email": "user@example.com",
+                "preferences": {
+                    "theme": "modern_dark",
+                    "language": "en",
+                    "auto_save": true
+                },
+                "current_project_path": "",
+                "recent_projects": []
+            };
+
+            // Save default profile
+            let user_json = json::serialize(self.current_user);
+            database::write_file(user_data_path, user_json);
+        }
+
+        return Ok(());
+    }
+
+    fn save_user_data() -> Result<Unit, Error> {
+        // Save current user data
+        let user_data_path = "/user_data/user_profile.json";
+        let user_json = json::serialize(self.current_user);
+        database::write_file(user_data_path, user_json);
+
+        return Ok(());
+    }
+}
+
+// Example 2: Document Editor Application
+// @desktop
+// @trust("hybrid")
+service DocumentEditorApp {
+    main_window: any,
+    current_document: any,
+    undo_stack: [any],
+    redo_stack: [any],
+    is_modified: bool,
+
+    fn initialize() -> Result<Unit, Error> {
+        // Create main window for document editor
+        let window_config = {
+            "title": "Document Editor - Untitled",
+            "width": 1000,
+            "height": 700,
+            "resizable": true,
+            "decorated": true
+        };
+
+        let main_window = desktop::create_window(window_config);
+
+        // Create menu bar with document-specific menus
+        let menu_bar = self.create_document_menu_bar();
+
+        // Create toolbar with editing tools
+        let toolbar = self.create_editing_toolbar();
+
+        // Create main text area
+        let text_area = desktop::create_text_area(
+            "Start typing your document here...",
+            10, 80, 980, 550
+        );
+
+        // Create status bar with document info
+        let status_bar = desktop::create_status_bar(0, 650, 1000, 30);
+        let status_label = desktop::create_label(
+            "Ready | Characters: 0 | Words: 0 | Lines: 1",
+            10, 655, 500, 20
+        );
+
+        // Add components to window
+        desktop::add_component_to_window(main_window, menu_bar);
+        desktop::add_component_to_window(main_window, toolbar);
+        desktop::add_component_to_window(main_window, text_area);
+        desktop::add_component_to_window(main_window, status_bar);
+
+        // Setup event handlers
+        self.setup_document_event_handlers(main_window);
+
+        // Initialize document state
+        self.current_document = {
+            "title": "Untitled",
+            "content": "",
+            "file_path": "",
+            "is_modified": false,
+            "word_count": 0,
+            "character_count": 0,
+            "line_count": 1,
+            "created_at": chain::get_block_timestamp(1),
+            "last_modified": chain::get_block_timestamp(1)
+        };
+
+        self.undo_stack = [];
+        self.redo_stack = [];
+        self.is_modified = false;
+
+        self.main_window = main_window;
+
+        log::info("desktop", {
+            "service": "DocumentEditorApp",
+            "message": "Document editor initialized"
+        });
+
+        return Ok(());
+    }
+
+    fn create_document_menu_bar() -> any {
+        let menu_bar = desktop::create_menu_bar();
+
+        // File menu
+        let file_menu_items = [
+            { "id": "new", "text": "New", "shortcut": "Ctrl+N", "action": "handle_new_document" },
+            { "id": "open", "text": "Open...", "shortcut": "Ctrl+O", "action": "handle_open_document" },
+            { "id": "save", "text": "Save", "shortcut": "Ctrl+S", "action": "handle_save_document" },
+            { "id": "save_as", "text": "Save As...", "shortcut": "Ctrl+Shift+S", "action": "handle_save_as_document" },
+            { "separator": true },
+            { "id": "print", "text": "Print...", "shortcut": "Ctrl+P", "action": "handle_print_document" },
+            { "separator": true },
+            { "id": "exit", "text": "Exit", "shortcut": "Alt+F4", "action": "handle_exit" }
+        ];
+
+        // Edit menu
+        let edit_menu_items = [
+            { "id": "undo", "text": "Undo", "shortcut": "Ctrl+Z", "action": "handle_undo" },
+            { "id": "redo", "text": "Redo", "shortcut": "Ctrl+Y", "action": "handle_redo" },
+            { "separator": true },
+            { "id": "cut", "text": "Cut", "shortcut": "Ctrl+X", "action": "handle_cut" },
+            { "id": "copy", "text": "Copy", "shortcut": "Ctrl+C", "action": "handle_copy" },
+            { "id": "paste", "text": "Paste", "shortcut": "Ctrl+V", "action": "handle_paste" },
+            { "separator": true },
+            { "id": "find", "text": "Find...", "shortcut": "Ctrl+F", "action": "handle_find" },
+            { "id": "replace", "text": "Replace...", "shortcut": "Ctrl+H", "action": "handle_replace" }
+        ];
+
+        // Format menu
+        let format_menu_items = [
+            { "id": "bold", "text": "Bold", "shortcut": "Ctrl+B", "action": "handle_bold" },
+            { "id": "italic", "text": "Italic", "shortcut": "Ctrl+I", "action": "handle_italic" },
+            { "id": "underline", "text": "Underline", "shortcut": "Ctrl+U", "action": "handle_underline" },
+            { "separator": true },
+            { "id": "align_left", "text": "Align Left", "action": "handle_align_left" },
+            { "id": "align_center", "text": "Align Center", "action": "handle_align_center" },
+            { "id": "align_right", "text": "Align Right", "action": "handle_align_right" }
+        ];
+
+        // View menu
+        let view_menu_items = [
+            { "id": "zoom_in", "text": "Zoom In", "shortcut": "Ctrl+Plus", "action": "handle_zoom_in" },
+            { "id": "zoom_out", "text": "Zoom Out", "shortcut": "Ctrl+Minus", "action": "handle_zoom_out" },
+            { "separator": true },
+            { "id": "word_wrap", "text": "Word Wrap", "checked": true, "action": "handle_word_wrap" },
+            { "id": "status_bar", "text": "Status Bar", "checked": true, "action": "handle_status_bar" }
+        ];
+
+        return menu_bar;
+    }
+
+    fn create_editing_toolbar() -> any {
+        let toolbar = desktop::create_toolbar("horizontal", 0, 30, 1000, 50);
+
+        // Add toolbar buttons
+        let new_button = desktop::create_button("New", 10, 35, 60, 40);
+        let open_button = desktop::create_button("Open", 80, 35, 60, 40);
+        let save_button = desktop::create_button("Save", 150, 35, 60, 40);
+
+        let cut_button = desktop::create_button("Cut", 230, 35, 60, 40);
+        let copy_button = desktop::create_button("Copy", 300, 35, 60, 40);
+        let paste_button = desktop::create_button("Paste", 370, 35, 60, 40);
+
+        let bold_button = desktop::create_button("B", 450, 35, 40, 40);
+        let italic_button = desktop::create_button("I", 500, 35, 40, 40);
+        let underline_button = desktop::create_button("U", 550, 35, 40, 40);
+
+        return toolbar;
+    }
+
+    fn setup_document_event_handlers(window: any) -> Result<Unit, Error> {
+        // Menu event handlers
+        desktop::add_event_handler(window, "menu_file_new", "click", "handle_new_document");
+        desktop::add_event_handler(window, "menu_file_open", "click", "handle_open_document");
+        desktop::add_event_handler(window, "menu_file_save", "click", "handle_save_document");
+        desktop::add_event_handler(window, "menu_file_exit", "click", "handle_exit");
+
+        desktop::add_event_handler(window, "menu_edit_undo", "click", "handle_undo");
+        desktop::add_event_handler(window, "menu_edit_redo", "click", "handle_redo");
+        desktop::add_event_handler(window, "menu_edit_cut", "click", "handle_cut");
+        desktop::add_event_handler(window, "menu_edit_copy", "click", "handle_copy");
+        desktop::add_event_handler(window, "menu_edit_paste", "click", "handle_paste");
+
+        // Text area event handlers
+        desktop::add_event_handler(window, "text_area", "text_changed", "handle_text_changed");
+        desktop::add_event_handler(window, "text_area", "selection_changed", "handle_selection_changed");
+
+        // Window event handlers
+        desktop::add_event_handler(window, "window", "close", "handle_window_close");
+
+        return Ok(());
+    }
+
+    // Document Event Handlers
+    fn handle_new_document() -> Result<Unit, Error> {
+        if self.is_modified {
+            let result = desktop::show_message_dialog({
+                "title": "Save Changes",
+                "message": "Do you want to save changes to the current document?",
+                "dialog_type": "question",
+                "buttons": ["Save", "Don't Save", "Cancel"]
+            });
+
+            if result == "Save" {
+                self.save_current_document();
+            } else if result == "Cancel" {
+                return Ok(());
+            }
+        }
+
+        // Create new document
+        self.current_document = {
+            "title": "Untitled",
+            "content": "",
+            "file_path": "",
+            "is_modified": false,
+            "word_count": 0,
+            "character_count": 0,
+            "line_count": 1,
+            "created_at": chain::get_block_timestamp(1),
+            "last_modified": chain::get_block_timestamp(1)
+        };
+
+        self.undo_stack = [];
+        self.redo_stack = [];
+        self.is_modified = false;
+
+        // Update window title
+        self.update_window_title();
+
+        // Clear text area
+        self.clear_text_area();
+
+        return Ok(());
+    }
+
+    fn handle_open_document() -> Result<Unit, Error> {
+        if self.is_modified {
+            let result = desktop::show_message_dialog({
+                "title": "Save Changes",
+                "message": "Do you want to save changes to the current document?",
+                "dialog_type": "question",
+                "buttons": ["Save", "Don't Save", "Cancel"]
+            });
+
+            if result == "Save" {
+                self.save_current_document();
+            } else if result == "Cancel" {
+                return Ok(());
+            }
+        }
+
+        let result = desktop::show_file_dialog({
+            "title": "Open Document",
+            "filters": [
+                { "name": "Text Files", "extensions": ["txt", "md"] },
+                { "name": "All Files", "extensions": ["*"] }
+            ],
+            "multiple_selection": false
+        });
+
+        if !result.is_empty() {
+            let file_path = result[0];
+            let file_content = database::read_file(file_path);
+
+            self.current_document = {
+                "title": self.extract_filename(file_path),
+                "content": file_content,
+                "file_path": file_path,
+                "is_modified": false,
+                "word_count": self.count_words(file_content),
+                "character_count": file_content.length,
+                "line_count": self.count_lines(file_content),
+                "created_at": chain::get_block_timestamp(1),
+                "last_modified": chain::get_block_timestamp(1)
+            };
+
+            // Load content into text area
+            self.load_text_into_area(file_content);
+
+            // Update window title
+            self.update_window_title();
+
+            // Reset undo/redo stacks
+            self.undo_stack = [];
+            self.redo_stack = [];
+            self.is_modified = false;
+        }
+
+        return Ok(());
+    }
+
+    fn handle_save_document() -> Result<Unit, Error> {
+        if self.current_document["file_path"].is_empty() {
+            // No file path, use Save As
+            return self.handle_save_as_document();
+        }
+
+        // Save to existing file
+        let content = self.get_text_from_area();
+        database::write_file(self.current_document["file_path"], content);
+
+        self.current_document["is_modified"] = false;
+        self.current_document["last_modified"] = chain::get_block_timestamp(1);
+        self.is_modified = false;
+
+        // Update window title
+        self.update_window_title();
+
+        desktop::show_notification({
+            "title": "Document Saved",
+            "message": format!("Document saved to: {}", self.current_document["file_path"]),
+            "icon_path": "/assets/save_icon.png"
+        });
+
+        return Ok(());
+    }
+
+    fn handle_save_as_document() -> Result<Unit, Error> {
+        let result = desktop::show_save_dialog({
+            "title": "Save Document As",
+            "filters": [
+                { "name": "Text Files", "extensions": ["txt", "md"] },
+                { "name": "All Files", "extensions": ["*"] }
+            ]
+        });
+
+        if !result.is_empty() {
+            let content = self.get_text_from_area();
+            database::write_file(result, content);
+
+            self.current_document["title"] = self.extract_filename(result);
+            self.current_document["file_path"] = result;
+            self.current_document["is_modified"] = false;
+            self.current_document["last_modified"] = chain::get_block_timestamp(1);
+            self.is_modified = false;
+
+            // Update window title
+            self.update_window_title();
+
+            desktop::show_notification({
+                "title": "Document Saved",
+                "message": format!("Document saved as: {}", result),
+                "icon_path": "/assets/save_icon.png"
+            });
+        }
+
+        return Ok(());
+    }
+
+    fn handle_text_changed(new_text: string) -> Result<Unit, Error> {
+        // Save current state to undo stack
+        let current_state = {
+            "content": self.current_document["content"],
+            "cursor_position": 0, // Would get actual cursor position
+            "timestamp": chain::get_block_timestamp(1)
+        };
+
+        self.undo_stack.push(current_state);
+
+        // Clear redo stack
+        self.redo_stack = [];
+
+        // Update document state
+        self.current_document["content"] = new_text;
+        self.current_document["character_count"] = new_text.length;
+        self.current_document["word_count"] = self.count_words(new_text);
+        self.current_document["line_count"] = self.count_lines(new_text);
+        self.current_document["last_modified"] = chain::get_block_timestamp(1);
+        self.current_document["is_modified"] = true;
+        self.is_modified = true;
+
+        // Update status bar
+        self.update_status_bar();
+
+        // Update window title
+        self.update_window_title();
+
+        return Ok(());
+    }
+
+    fn handle_undo() -> Result<Unit, Error> {
+        if !self.undo_stack.is_empty() {
+            // Save current state to redo stack
+            let current_state = {
+                "content": self.current_document["content"],
+                "cursor_position": 0,
+                "timestamp": chain::get_block_timestamp(1)
+            };
+
+            self.redo_stack.push(current_state);
+
+            // Restore previous state
+            let previous_state = self.undo_stack.pop();
+            self.current_document["content"] = previous_state["content"];
+
+            // Update UI
+            self.load_text_into_area(previous_state["content"]);
+
+            // Update document stats
+            let content = previous_state["content"];
+            self.current_document["character_count"] = content.length;
+            self.current_document["word_count"] = self.count_words(content);
+            self.current_document["line_count"] = self.count_lines(content);
+
+            self.update_status_bar();
+            self.update_window_title();
+        }
+
+        return Ok(());
+    }
+
+    fn handle_redo() -> Result<Unit, Error> {
+        if !self.redo_stack.is_empty() {
+            // Save current state to undo stack
+            let current_state = {
+                "content": self.current_document["content"],
+                "cursor_position": 0,
+                "timestamp": chain::get_block_timestamp(1)
+            };
+
+            self.undo_stack.push(current_state);
+
+            // Restore next state
+            let next_state = self.redo_stack.pop();
+            self.current_document["content"] = next_state["content"];
+
+            // Update UI
+            self.load_text_into_area(next_state["content"]);
+
+            // Update document stats
+            let content = next_state["content"];
+            self.current_document["character_count"] = content.length;
+            self.current_document["word_count"] = self.count_words(content);
+            self.current_document["line_count"] = self.count_lines(content);
+
+            self.update_status_bar();
+            self.update_window_title();
+        }
+
+        return Ok(());
+    }
+
+    fn handle_window_close() -> Result<Unit, Error> {
+        if self.is_modified {
+            let result = desktop::show_message_dialog({
+                "title": "Save Changes",
+                "message": "Do you want to save changes before closing?",
+                "dialog_type": "question",
+                "buttons": ["Save", "Don't Save", "Cancel"]
+            });
+
+            if result == "Save" {
+                self.save_current_document();
+            } else if result == "Cancel" {
+                return Ok(()); // Don't close
+            }
+        }
+
+        // Close the application
+        desktop::exit_application();
+
+        return Ok(());
+    }
+
+    // Utility Methods
+    fn extract_filename(file_path: string) -> string {
+        let parts = file_path.split("/");
+        if parts.length > 0 {
+            return parts[parts.length - 1];
+        }
+        return "Untitled";
+    }
+
+    fn count_words(text: string) -> int {
+        if text.is_empty() {
+            return 0;
+        }
+
+        let words = text.split(" ").filter(|word| !word.is_empty());
+        return words.length;
+    }
+
+    fn count_lines(text: string) -> int {
+        if text.is_empty() {
+            return 1;
+        }
+
+        let lines = text.split("\n");
+        return lines.length;
+    }
+
+    fn update_window_title() -> Result<Unit, Error> {
+        let title = if self.current_document["is_modified"] {
+            format!("{}* - Document Editor", self.current_document["title"]);
+        } else {
+            format!("{} - Document Editor", self.current_document["title"]);
+        };
+
+        // In real implementation, this would update the window title
+        return Ok(());
+    }
+
+    fn update_status_bar() -> Result<Unit, Error> {
+        let status_text = format!(
+            "Ready | Characters: {} | Words: {} | Lines: {}",
+            self.current_document["character_count"],
+            self.current_document["word_count"],
+            self.current_document["line_count"]
+        );
+
+        // In real implementation, this would update the status bar
+        return Ok(());
+    }
+
+    fn save_current_document() -> Result<Unit, Error> {
+        if self.current_document["file_path"].is_empty() {
+            return self.handle_save_as_document();
+        } else {
+            return self.handle_save_document();
+        }
+    }
+
+    fn clear_text_area() -> Result<Unit, Error> {
+        // In real implementation, this would clear the text area
+        return Ok(());
+    }
+
+    fn load_text_into_area(text: string) -> Result<Unit, Error> {
+        // In real implementation, this would load text into the text area
+        return Ok(());
+    }
+
+    fn get_text_from_area() -> string {
+        // In real implementation, this would get text from the text area
+        return self.current_document["content"];
+    }
+}
+
+// Example 3: Data Visualization Dashboard
+// @desktop
+// @trust("hybrid")
+service DataVisualizationDashboard {
+    main_window: any,
+    data_source: any,
+    charts: [any],
+    filters: any,
+    refresh_timer: any,
+
+    fn initialize() -> Result<Unit, Error> {
+        // Create main dashboard window
+        let window_config = {
+            "title": "Data Visualization Dashboard",
+            "width": 1400,
+            "height": 900,
+            "resizable": true,
+            "decorated": true
+        };
+
+        let main_window = desktop::create_window(window_config);
+
+        // Create dashboard layout
+        let toolbar = self.create_dashboard_toolbar();
+        let filter_panel = self.create_filter_panel();
+        let chart_area = self.create_chart_area();
+        let data_table = self.create_data_table();
+        let status_bar = desktop::create_status_bar(0, 850, 1400, 30);
+
+        // Add components to window
+        desktop::add_component_to_window(main_window, toolbar);
+        desktop::add_component_to_window(main_window, filter_panel);
+        desktop::add_component_to_window(main_window, chart_area);
+        desktop::add_component_to_window(main_window, data_table);
+        desktop::add_component_to_window(main_window, status_bar);
+
+        // Initialize data source
+        self.data_source = database::connect("postgresql://localhost/dashboard_data");
+
+        // Load initial data
+        self.load_dashboard_data();
+
+        // Create sample charts
+        self.create_sample_charts();
+
+        // Setup refresh timer
+        self.setup_auto_refresh();
+
+        self.main_window = main_window;
+        self.charts = [];
+        self.filters = {
+            "date_range": "last_30_days",
+            "category": "all",
+            "region": "all"
+        };
+
+        log::info("desktop", {
+            "service": "DataVisualizationDashboard",
+            "message": "Data visualization dashboard initialized"
+        });
+
+        return Ok(());
+    }
+
+    fn create_dashboard_toolbar() -> any {
+        let toolbar = desktop::create_toolbar("horizontal", 0, 30, 1400, 50);
+
+        // Add toolbar buttons
+        let refresh_button = desktop::create_button("Refresh", 10, 35, 80, 40);
+        let export_button = desktop::create_button("Export", 100, 35, 80, 40);
+        let settings_button = desktop::create_button("Settings", 190, 35, 90, 40);
+
+        // Add filter controls
+        let date_filter_label = desktop::create_label("Date Range:", 300, 40, 90, 25);
+        let date_filter_combo = desktop::create_combobox(
+            ["Last 7 days", "Last 30 days", "Last 90 days", "Custom"],
+            400, 35, 150, 30
+        );
+
+        let category_filter_label = desktop::create_label("Category:", 570, 40, 80, 25);
+        let category_filter_combo = desktop::create_combobox(
+            ["All", "Sales", "Marketing", "Support", "Development"],
+            660, 35, 120, 30
+        );
+
+        return toolbar;
+    }
+
+    fn create_filter_panel() -> any {
+        // Create collapsible filter panel
+        let filter_panel = desktop::create_container(
+            "vertical",
+            10, 90, 300, 200
+        );
+
+        let filter_title = desktop::create_label("Filters", 20, 100, 100, 30);
+
+        // Date range filter
+        let date_label = desktop::create_label("Date Range", 20, 140, 100, 25);
+        let start_date = desktop::create_text_field("Start Date", 20, 170, 120, 30);
+        let end_date = desktop::create_text_field("End Date", 150, 170, 120, 30);
+
+        // Category filter
+        let category_label = desktop::create_label("Category", 20, 210, 100, 25);
+        let category_combo = desktop::create_combobox(
+            ["All", "Revenue", "Users", "Orders", "Support"],
+            20, 240, 250, 30
+        );
+
+        return filter_panel;
+    }
+
+    fn create_chart_area() -> any {
+        // Create main chart display area
+        let chart_container = desktop::create_container(
+            "grid",
+            320, 90, 1070, 400
+        );
+
+        // Create placeholder for charts
+        let chart_placeholder = desktop::create_label(
+            "Charts will be displayed here",
+            330, 100, 300, 30
+        );
+
+        return chart_container;
+    }
+
+    fn create_data_table() -> any {
+        // Create data table for detailed view
+        let data_table = desktop::create_table(
+            ["Date", "Category", "Value", "Change", "Trend"],
+            10, 500, 1380, 340
+        );
+
+        return data_table;
+    }
+
+    fn load_dashboard_data() -> Result<Unit, Error> {
+        // Load data from database
+        let query = "
+            SELECT
+                date,
+                category,
+                SUM(value) as total_value,
+                AVG(value) as avg_value,
+                COUNT(*) as record_count
+            FROM dashboard_metrics
+            WHERE date >= CURRENT_DATE - INTERVAL '30 days'
+            GROUP BY date, category
+            ORDER BY date DESC, category
+        ";
+
+        let result = database::query(self.data_source, query, []);
+
+        // Process and store data for visualization
+        log::info("desktop", {
+            "action": "data_loaded",
+            "records_count": result["row_count"],
+            "message": "Dashboard data loaded successfully"
+        });
+
+        return Ok(());
+    }
+
+    fn create_sample_charts() -> Result<Unit, Error> {
+        // Create sample chart configurations
+        let line_chart = {
+            "type": "line",
+            "title": "Revenue Trend",
+            "data_source": "revenue_data",
+            "x_axis": "date",
+            "y_axis": "revenue",
+            "color": "#007acc"
+        };
+
+        let bar_chart = {
+            "type": "bar",
+            "title": "Category Performance",
+            "data_source": "category_data",
+            "x_axis": "category",
+            "y_axis": "value",
+            "color": "#28a745"
+        };
+
+        let pie_chart = {
+            "type": "pie",
+            "title": "Market Share",
+            "data_source": "market_data",
+            "value_field": "percentage",
+            "label_field": "segment"
+        };
+
+        self.charts = [line_chart, bar_chart, pie_chart];
+
+        return Ok(());
+    }
+
+    fn setup_auto_refresh() -> Result<Unit, Error> {
+        // Setup automatic data refresh every 5 minutes
+        self.refresh_timer = {
+            "interval_seconds": 300,
+            "last_refresh": chain::get_block_timestamp(1),
+            "enabled": true
+        };
+
+        log::info("desktop", {
+            "action": "auto_refresh_setup",
+            "interval_minutes": 5,
+            "message": "Auto-refresh timer configured"
+        });
+
+        return Ok(());
+    }
+
+    fn refresh_dashboard_data() -> Result<Unit, Error> {
+        // Refresh all dashboard data
+        self.load_dashboard_data();
+
+        // Update all charts with new data
+        for chart in self.charts {
+            self.update_chart(chart);
+        }
+
+        // Update data table
+        self.update_data_table();
+
+        // Update last refresh timestamp
+        self.refresh_timer["last_refresh"] = chain::get_block_timestamp(1);
+
+        // Update status bar
+        self.update_status_bar();
+
+        desktop::show_notification({
+            "title": "Dashboard Updated",
+            "message": "Dashboard data has been refreshed",
+            "icon_path": "/assets/refresh_icon.png"
+        });
+
+        return Ok(());
+    }
+
+    fn update_chart(chart_config: any) -> Result<Unit, Error> {
+        // Update chart with new data
+        // In real implementation, this would refresh the chart visualization
+
+        log::info("desktop", {
+            "action": "chart_updated",
+            "chart_type": chart_config["type"],
+            "chart_title": chart_config["title"]
+        });
+
+        return Ok(());
+    }
+
+    fn update_data_table() -> Result<Unit, Error> {
+        // Update data table with latest data
+        let query = "
+            SELECT
+                date::text,
+                category,
+                ROUND(SUM(value)::numeric, 2) as total_value,
+                ROUND(AVG(value)::numeric, 2) as avg_value,
+                COUNT(*) as record_count
+            FROM dashboard_metrics
+            WHERE date >= CURRENT_DATE - INTERVAL '30 days'
+            GROUP BY date, category
+            ORDER BY date DESC, category
+            LIMIT 100
+        ";
+
+        let result = database::query(self.data_source, query, []);
+
+        // Update table with new data
+        log::info("desktop", {
+            "action": "data_table_updated",
+            "records_count": result["row_count"]
+        });
+
+        return Ok(());
+    }
+
+    fn update_status_bar() -> Result<Unit, Error> {
+        let status_text = format!(
+            "Last updated: {} | Records: {} | Auto-refresh: {}min",
+            self.format_timestamp(self.refresh_timer["last_refresh"]),
+            self.get_total_record_count(),
+            self.refresh_timer["interval_seconds"] / 60
+        );
+
+        // In real implementation, this would update the status bar
+        return Ok(());
+    }
+
+    fn apply_filters() -> Result<Unit, Error> {
+        // Apply current filter settings to data
+        let date_filter = self.filters["date_range"];
+        let category_filter = self.filters["category"];
+
+        // Build filtered query
+        let where_clause = if category_filter != "all" {
+            format!("AND category = '{}'", category_filter);
+        } else {
+            "".to_string()
+        };
+
+        // Refresh data with filters
+        self.refresh_dashboard_data();
+
+        log::info("desktop", {
+            "action": "filters_applied",
+            "date_range": date_filter,
+            "category": category_filter
+        });
+
+        return Ok(());
+    }
+
+    fn export_dashboard_data() -> Result<Unit, Error> {
+        // Export current dashboard data
+        let export_data = {
+            "metadata": {
+                "export_date": chain::get_block_timestamp(1),
+                "filters": self.filters,
+                "total_records": self.get_total_record_count()
+            },
+            "charts": self.charts,
+            "data": self.get_current_data()
+        };
+
+        let export_json = json::serialize(export_data);
+
+        let result = desktop::show_save_dialog({
+            "title": "Export Dashboard Data",
+            "filters": [
+                { "name": "JSON Files", "extensions": ["json"] },
+                { "name": "CSV Files", "extensions": ["csv"] },
+                { "name": "All Files", "extensions": ["*"] }
+            ]
+        });
+
+        if !result.is_empty() {
+            database::write_file(result, export_json);
+
+            desktop::show_notification({
+                "title": "Data Exported",
+                "message": format!("Dashboard data exported to: {}", result),
+                "icon_path": "/assets/export_icon.png"
+            });
+        }
+
+        return Ok(());
+    }
+
+    // Utility Methods
+    fn format_timestamp(timestamp: int) -> string {
+        // Format timestamp for display
+        return format!("{} seconds ago", chain::get_block_timestamp(1) - timestamp);
+    }
+
+    fn get_total_record_count() -> int {
+        // Get total record count from database
+        let query = "SELECT COUNT(*) as count FROM dashboard_metrics";
+        let result = database::query(self.data_source, query, []);
+        return result[0]["count"];
+    }
+
+    fn get_current_data() -> any {
+        // Get current dashboard data
+        let query = "
+            SELECT * FROM dashboard_metrics
+            WHERE date >= CURRENT_DATE - INTERVAL '30 days'
+            ORDER BY date DESC
+            LIMIT 1000
+        ";
+
+        let result = database::query(self.data_source, query, []);
+        return result;
+    }
+
+    // Event Handlers
+    fn handle_refresh_click() -> Result<Unit, Error> {
+        return self.refresh_dashboard_data();
+    }
+
+    fn handle_export_click() -> Result<Unit, Error> {
+        return self.export_dashboard_data();
+    }
+
+    fn handle_filter_change() -> Result<Unit, Error> {
+        return self.apply_filters();
+    }
+
+    fn handle_settings_click() -> Result<Unit, Error> {
+        // Open settings dialog
+        let result = desktop::show_message_dialog({
+            "title": "Dashboard Settings",
+            "message": "Settings functionality would be implemented here.",
+            "dialog_type": "info",
+            "buttons": ["OK"]
+        });
+
+        return Ok(());
+    }
+}
+
+// Main demonstration
+fn main() {
+    log::info("main", { "message": "Starting Phase 5: Desktop & Mobile Frameworks Examples" });
+
+    // Initialize all desktop applications
+    let advanced_app = AdvancedDesktopApp::new();
+    advanced_app.initialize();
+    advanced_app.load_user_data();
+
+    let document_editor = DocumentEditorApp::new();
+    document_editor.initialize();
+
+    let dashboard = DataVisualizationDashboard::new();
+    dashboard.initialize();
+
+    // Start the applications
+    advanced_app.start_application();
+
+    log::info("main", { "message": "Phase 5 Desktop Framework examples completed successfully!" });
+}

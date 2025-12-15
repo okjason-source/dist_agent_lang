@@ -1,0 +1,652 @@
+// Secure Configuration Management Example
+// Demonstrates how to handle environment variables and secrets securely in dist_agent_lang
+
+// =====================================================
+// PATTERN 1: Environment Variable Management
+// =====================================================
+
+// @trust("hybrid")
+// @secure
+service SecureConfigurationService {
+    config_manager: any,
+    secrets_vault: Map<String, any>,
+
+    fn initialize() -> Result<Unit, Error> {
+        log::info("config", {
+            "service": "SecureConfigurationService",
+            "status": "initializing",
+            "timestamp": chain::get_block_timestamp()
+        });
+
+        // Initialize configuration manager
+        self.config_manager = config::ConfigManager::new();
+        
+        // Initialize secrets vault
+        self.secrets_vault = Map::new();
+
+        // Load environment-specific configurations
+        self.load_environment_configurations();
+
+        // Setup encrypted secrets
+        self.setup_encrypted_secrets();
+
+        log::info("config", {
+            "service": "SecureConfigurationService",
+            "status": "initialized",
+            "environment": self.config_manager.environment
+        });
+
+        return Ok(());
+    }
+
+    fn load_environment_configurations() -> Result<Unit, Error> {
+        // Database configuration from environment variables
+        let db_config = config::get_database_config()?;
+        log::info("config", {
+            "database_config_loaded": true,
+            "host": db_config["host"],
+            "database": db_config["database"]
+        });
+
+        // API configuration from environment variables
+        let api_config = config::get_api_config()?;
+        log::info("config", {
+            "api_config_loaded": true,
+            "base_url": api_config["base_url"],
+            "timeout": api_config["timeout"]
+        });
+
+        // Blockchain configuration from environment variables
+        let blockchain_config = config::get_blockchain_config()?;
+        log::info("config", {
+            "blockchain_config_loaded": true,
+            "chain_id": blockchain_config["chain_id"],
+            "rpc_url": blockchain_config["rpc_url"]
+        });
+
+        // AI configuration from environment variables
+        let ai_config = config::get_ai_config()?;
+        log::info("config", {
+            "ai_config_loaded": true,
+            "model": ai_config["model"],
+            "temperature": ai_config["temperature"]
+        });
+
+        return Ok(());
+    }
+
+    fn setup_encrypted_secrets() -> Result<Unit, Error> {
+        // Master encryption key (should be stored securely)
+        let master_key = config::get_required_env("MASTER_ENCRYPTION_KEY")?;
+        
+        // Store sensitive API keys encrypted
+        if let Ok(stripe_key) = config::get_env("STRIPE_SECRET_KEY") {
+            self.config_manager.store_secret("stripe_secret", stripe_key.as_string()?, master_key.as_string()?)?;
+        }
+
+        if let Ok(openai_key) = config::get_env("OPENAI_API_KEY") {
+            self.config_manager.store_secret("openai_secret", openai_key.as_string()?, master_key.as_string()?)?;
+        }
+
+        if let Ok(blockchain_key) = config::get_env("BLOCKCHAIN_PRIVATE_KEY") {
+            self.config_manager.store_secret("blockchain_private", blockchain_key.as_string()?, master_key.as_string()?)?;
+        }
+
+        log::info("config", {
+            "secrets_encrypted": true,
+            "secrets_count": self.config_manager.encrypted_secrets.size()
+        });
+
+        return Ok(());
+    }
+
+    fn get_database_connection() -> Result<any, Error> {
+        let master_key = config::get_required_env("MASTER_ENCRYPTION_KEY")?;
+        let db_password = self.config_manager.get_secret("db_password", master_key.as_string()?)?;
+        
+        let db_config = {
+            "host": config::get_required_env("DB_HOST")?.as_string()?,
+            "port": config::get_env_or_default("DB_PORT", Value::Int(5432)).as_int()?,
+            "database": config::get_required_env("DB_NAME")?.as_string()?,
+            "username": config::get_required_env("DB_USER")?.as_string()?,
+            "password": db_password,
+            "ssl_mode": config::get_env_or_default("DB_SSL_MODE", Value::String("require".to_string())).as_string()?
+        };
+
+        let connection = database::connect("postgresql", db_config);
+        return Ok(connection);
+    }
+
+    fn get_api_client(service_name: String) -> Result<any, Error> {
+        let master_key = config::get_required_env("MASTER_ENCRYPTION_KEY")?;
+        let api_key = self.config_manager.get_secret(format!("{}_secret", service_name), master_key.as_string()?)?;
+        
+        let api_config = {
+            "base_url": config::get_required_env(format!("{}_BASE_URL", service_name.to_uppercase()))?.as_string()?,
+            "headers": {
+                "Authorization": format!("Bearer {}", api_key),
+                "Content-Type": "application/json"
+            },
+            "timeout": config::get_env_or_default("API_TIMEOUT", Value::Int(30000)).as_int()?,
+            "retry_count": config::get_env_or_default("API_RETRY_COUNT", Value::Int(3)).as_int()?
+        };
+
+        let client = web::create_http_client(api_config);
+        return Ok(client);
+    }
+}
+
+// =====================================================
+// PATTERN 2: Configuration Validation
+// =====================================================
+
+// @trust("hybrid")
+service ConfigurationValidationService {
+    validation_rules: Map<String, any>,
+
+    fn initialize() -> Result<Unit, Error> {
+        self.setup_validation_rules();
+        return Ok(());
+    }
+
+    fn setup_validation_rules() -> Result<Unit, Error> {
+        // Database validation rules
+        self.validation_rules["DB_HOST"] = {
+            "required": true,
+            "validation_type": "URL",
+            "min_length": 1,
+            "max_length": 255
+        };
+
+        self.validation_rules["DB_PORT"] = {
+            "required": false,
+            "validation_type": "Integer",
+            "default_value": 5432,
+            "min_value": 1,
+            "max_value": 65535
+        };
+
+        self.validation_rules["DB_PASSWORD"] = {
+            "required": true,
+            "validation_type": "String",
+            "min_length": 8,
+            "max_length": 128,
+            "regex_pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]"
+        };
+
+        // API validation rules
+        self.validation_rules["API_BASE_URL"] = {
+            "required": true,
+            "validation_type": "URL",
+            "allowed_protocols": ["https"]
+        };
+
+        self.validation_rules["API_KEY"] = {
+            "required": true,
+            "validation_type": "String",
+            "min_length": 32,
+            "max_length": 256
+        };
+
+        // Blockchain validation rules
+        self.validation_rules["BLOCKCHAIN_PRIVATE_KEY"] = {
+            "required": true,
+            "validation_type": "PrivateKey",
+            "min_length": 66,
+            "max_length": 66
+        };
+
+        self.validation_rules["BLOCKCHAIN_CHAIN_ID"] = {
+            "required": true,
+            "validation_type": "Integer",
+            "allowed_values": [1, 137, 56, 42161, 5] // Ethereum, Polygon, BSC, Arbitrum, Goerli
+        };
+
+        return Ok(());
+    }
+
+    fn validate_configuration() -> Result<Map<String, any>, Error> {
+        let validation_results = Map::new();
+        let errors = [];
+
+        for (key, rule) in self.validation_rules {
+            let validation_result = this.validate_environment_variable(key, rule);
+            
+            if validation_result.valid {
+                validation_results[key] = validation_result;
+            } else {
+                errors.push({
+                    "key": key,
+                    "error": validation_result.error,
+                    "rule": rule
+                });
+            }
+        }
+
+        if errors.length() > 0 {
+            log::error("config", {
+                "validation_errors": errors,
+                "total_errors": errors.length()
+            });
+            return Err(Error::new("ConfigurationValidationFailed", format!("{} configuration errors found", errors.length())));
+        }
+
+        log::info("config", {
+            "validation_passed": true,
+            "validated_keys": validation_results.keys()
+        });
+
+        return Ok(validation_results);
+    }
+
+    fn validate_environment_variable(key: String, rule: any) -> any {
+        let value = config::get_env(key);
+        
+        if value.is_err() {
+            if rule.required {
+                return {
+                    "valid": false,
+                    "error": format!("Required environment variable '{}' not found", key)
+                };
+            } else if rule.default_value {
+                return {
+                    "valid": true,
+                    "value": rule.default_value,
+                    "source": "default"
+                };
+            }
+        }
+
+        let actual_value = value.unwrap();
+        
+        // Apply validation rules
+        let validation_result = this.apply_validation_rules(actual_value, rule);
+        
+        return {
+            "valid": validation_result.valid,
+            "value": actual_value,
+            "source": "environment",
+            "error": validation_result.error
+        };
+    }
+
+    fn apply_validation_rules(value: any, rule: any) -> any {
+        // Type validation
+        if rule.validation_type == "Integer" {
+            if !value.is_int() {
+                return {
+                    "valid": false,
+                    "error": format!("Value '{}' is not a valid integer", value)
+                };
+            }
+            
+            let int_value = value.as_int()?;
+            if rule.min_value && int_value < rule.min_value {
+                return {
+                    "valid": false,
+                    "error": format!("Value {} is below minimum {}", int_value, rule.min_value)
+                };
+            }
+            
+            if rule.max_value && int_value > rule.max_value {
+                return {
+                    "valid": false,
+                    "error": format!("Value {} is above maximum {}", int_value, rule.max_value)
+                };
+            }
+        }
+
+        if rule.validation_type == "URL" {
+            let url = value.as_string()?;
+            if !url.starts_with("http://") && !url.starts_with("https://") {
+                return {
+                    "valid": false,
+                    "error": format!("Value '{}' is not a valid URL", url)
+                };
+            }
+            
+            if rule.allowed_protocols && !rule.allowed_protocols.contains(url.split("://")[0]) {
+                return {
+                    "valid": false,
+                    "error": format!("URL protocol '{}' not allowed", url.split("://")[0])
+                };
+            }
+        }
+
+        if rule.validation_type == "PrivateKey" {
+            let key = value.as_string()?;
+            if !key.starts_with("0x") || key.length() != 66 {
+                return {
+                    "valid": false,
+                    "error": format!("Value '{}' is not a valid private key", key)
+                };
+            }
+        }
+
+        return { "valid": true };
+    }
+}
+
+// =====================================================
+// PATTERN 3: Secrets Management
+// =====================================================
+
+// @trust("hybrid")
+// @secure
+service SecretsManagementService {
+    secrets_vault: Map<String, any>,
+    access_log: List<any>,
+
+    fn initialize() -> Result<Unit, Error> {
+        self.secrets_vault = Map::new();
+        self.access_log = [];
+        return Ok(());
+    }
+
+    fn store_secret(secret_name: String, secret_value: String, encryption_key: String) -> Result<Unit, Error> {
+        // Validate secret name
+        if secret_name.length() < 3 || secret_name.length() > 50 {
+            return Err(Error::new("InvalidSecretName", "Secret name must be between 3 and 50 characters"));
+        }
+
+        // Validate encryption key
+        if encryption_key.length() < 32 {
+            return Err(Error::new("WeakEncryptionKey", "Encryption key must be at least 32 characters"));
+        }
+
+        // Store encrypted secret
+        let encrypted_value = crypto::encrypt_aes256(secret_value, encryption_key)?;
+        
+        let secret_record = {
+            "name": secret_name,
+            "encrypted_value": encrypted_value,
+            "created_at": chain::get_block_timestamp(),
+            "last_accessed": chain::get_block_timestamp(),
+            "access_count": 0,
+            "encryption_algorithm": "AES-256-GCM"
+        };
+
+        self.secrets_vault[secret_name] = secret_record;
+
+        log::info("secrets", {
+            "action": "secret_stored",
+            "secret_name": secret_name,
+            "encrypted": true
+        });
+
+        return Ok(());
+    }
+
+    fn retrieve_secret(secret_name: String, encryption_key: String) -> Result<String, Error> {
+        let secret_record = self.secrets_vault.get(secret_name);
+        
+        if !secret_record {
+            return Err(Error::new("SecretNotFound", format!("Secret '{}' not found", secret_name)));
+        }
+
+        // Decrypt secret
+        let decrypted_value = crypto::decrypt_aes256(secret_record.encrypted_value, encryption_key)?;
+
+        // Update access log
+        secret_record.last_accessed = chain::get_block_timestamp();
+        secret_record.access_count = secret_record.access_count + 1;
+
+        // Log access
+        self.access_log.push({
+            "secret_name": secret_name,
+            "accessed_at": chain::get_block_timestamp(),
+            "access_count": secret_record.access_count
+        });
+
+        log::info("secrets", {
+            "action": "secret_retrieved",
+            "secret_name": secret_name,
+            "access_count": secret_record.access_count
+        });
+
+        return Ok(decrypted_value);
+    }
+
+    fn rotate_secret(secret_name: String, new_value: String, encryption_key: String) -> Result<Unit, Error> {
+        let secret_record = self.secrets_vault.get(secret_name);
+        
+        if !secret_record {
+            return Err(Error::new("SecretNotFound", format!("Secret '{}' not found", secret_name)));
+        }
+
+        // Encrypt new value
+        let new_encrypted_value = crypto::encrypt_aes256(new_value, encryption_key)?;
+
+        // Update secret record
+        secret_record.encrypted_value = new_encrypted_value;
+        secret_record.last_accessed = chain::get_block_timestamp();
+        secret_record.access_count = 0; // Reset access count
+
+        log::info("secrets", {
+            "action": "secret_rotated",
+            "secret_name": secret_name,
+            "rotated_at": chain::get_block_timestamp()
+        });
+
+        return Ok(());
+    }
+
+    fn list_secrets() -> List<String> {
+        return self.secrets_vault.keys();
+    }
+
+    fn get_secret_metadata(secret_name: String) -> Result<any, Error> {
+        let secret_record = self.secrets_vault.get(secret_name);
+        
+        if !secret_record {
+            return Err(Error::new("SecretNotFound", format!("Secret '{}' not found", secret_name)));
+        }
+
+        return Ok({
+            "name": secret_record.name,
+            "created_at": secret_record.created_at,
+            "last_accessed": secret_record.last_accessed,
+            "access_count": secret_record.access_count,
+            "encryption_algorithm": secret_record.encryption_algorithm
+        });
+    }
+
+    fn get_access_log() -> List<any> {
+        return self.access_log;
+    }
+}
+
+// =====================================================
+// PATTERN 4: Environment-Specific Configuration
+// =====================================================
+
+// @trust("hybrid")
+service EnvironmentConfigurationService {
+    environment_configs: Map<String, any>,
+
+    fn initialize() -> Result<Unit, Error> {
+        self.setup_environment_configs();
+        return Ok(());
+    }
+
+    fn setup_environment_configs() -> Result<Unit, Error> {
+        // Development environment
+        self.environment_configs["development"] = {
+            "database": {
+                "host": "localhost",
+                "port": 5432,
+                "ssl_mode": "disable"
+            },
+            "api": {
+                "timeout": 5000,
+                "retry_count": 1
+            },
+            "logging": {
+                "level": "debug",
+                "output": "console"
+            },
+            "security": {
+                "encryption_enabled": false,
+                "rate_limiting": false
+            }
+        };
+
+        // Staging environment
+        self.environment_configs["staging"] = {
+            "database": {
+                "host": "staging-db.example.com",
+                "port": 5432,
+                "ssl_mode": "require"
+            },
+            "api": {
+                "timeout": 15000,
+                "retry_count": 2
+            },
+            "logging": {
+                "level": "info",
+                "output": "file"
+            },
+            "security": {
+                "encryption_enabled": true,
+                "rate_limiting": true
+            }
+        };
+
+        // Production environment
+        self.environment_configs["production"] = {
+            "database": {
+                "host": "prod-db.example.com",
+                "port": 5432,
+                "ssl_mode": "require"
+            },
+            "api": {
+                "timeout": 30000,
+                "retry_count": 3
+            },
+            "logging": {
+                "level": "warn",
+                "output": "syslog"
+            },
+            "security": {
+                "encryption_enabled": true,
+                "rate_limiting": true,
+                "audit_logging": true
+            }
+        };
+
+        return Ok(());
+    }
+
+    fn get_environment_config() -> any {
+        let current_env = config::get_env_or_default("DIST_AGENT_ENV", Value::String("development".to_string()));
+        let env_name = current_env.as_string()?;
+        
+        let base_config = self.environment_configs.get(env_name);
+        
+        if !base_config {
+            log::warn("config", {
+                "message": format!("Environment '{}' not found, using development", env_name),
+                "fallback": "development"
+            });
+            return self.environment_configs["development"];
+        }
+
+        return base_config;
+    }
+
+    fn merge_environment_config(base_config: any, overrides: any) -> any {
+        let merged_config = base_config.clone();
+        
+        // Merge database config
+        if overrides.database {
+            for (key, value) in overrides.database {
+                merged_config.database[key] = value;
+            }
+        }
+
+        // Merge API config
+        if overrides.api {
+            for (key, value) in overrides.api {
+                merged_config.api[key] = value;
+            }
+        }
+
+        // Merge logging config
+        if overrides.logging {
+            for (key, value) in overrides.logging {
+                merged_config.logging[key] = value;
+            }
+        }
+
+        // Merge security config
+        if overrides.security {
+            for (key, value) in overrides.security {
+                merged_config.security[key] = value;
+            }
+        }
+
+        return merged_config;
+    }
+}
+
+// =====================================================
+// USAGE EXAMPLES
+// =====================================================
+
+fn main() {
+    // Example 1: Basic environment variable usage
+    let db_host = config::get_required_env("DB_HOST")?;
+    let db_port = config::get_env_or_default("DB_PORT", Value::Int(5432));
+    
+    log::info("config", {
+        "db_host": db_host,
+        "db_port": db_port
+    });
+
+    // Example 2: Secure configuration service
+    let config_service = SecureConfigurationService::new();
+    config_service.initialize()?;
+    
+    let db_connection = config_service.get_database_connection()?;
+    let api_client = config_service.get_api_client("stripe")?;
+
+    // Example 3: Configuration validation
+    let validation_service = ConfigurationValidationService::new();
+    validation_service.initialize()?;
+    
+    let validation_results = validation_service.validate_configuration()?;
+    
+    if validation_results.size() > 0 {
+        log::info("config", {
+            "validation_passed": true,
+            "validated_configs": validation_results.size()
+        });
+    }
+
+    // Example 4: Secrets management
+    let secrets_service = SecretsManagementService::new();
+    secrets_service.initialize()?;
+    
+    let master_key = config::get_required_env("MASTER_ENCRYPTION_KEY")?.as_string()?;
+    
+    secrets_service.store_secret("api_key", "sk_test_123456789", master_key)?;
+    let retrieved_key = secrets_service.retrieve_secret("api_key", master_key)?;
+    
+    log::info("secrets", {
+        "secret_retrieved": true,
+        "key_length": retrieved_key.length()
+    });
+
+    // Example 5: Environment-specific configuration
+    let env_service = EnvironmentConfigurationService::new();
+    env_service.initialize()?;
+    
+    let env_config = env_service.get_environment_config();
+    
+    log::info("config", {
+        "environment": config::get_env_or_default("DIST_AGENT_ENV", Value::String("development".to_string())),
+        "database_ssl": env_config.database.ssl_mode,
+        "api_timeout": env_config.api.timeout,
+        "security_encryption": env_config.security.encryption_enabled
+    });
+}
