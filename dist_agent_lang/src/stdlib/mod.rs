@@ -21,4 +21,5 @@ pub mod ai;
 pub mod desktop;
 pub mod mobile;
 pub mod iot;
+pub mod solidity_adapter;
 

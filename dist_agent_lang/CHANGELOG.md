@@ -5,6 +5,17 @@ All notable changes to the `dist_agent_lang` project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Solidity Contract Integration**
+  - `solidity_adapter` module for seamless Solidity contract orchestration
+  - ABI parsing and validation for type-safe contract calls
+  - Event listening capabilities for Solidity contract events
+  - Auto-generated wrapper code from Solidity ABIs
+  - Testing utilities for Solidity contract integration
+  - Comprehensive integration guide and examples
+
 ## [1.0.0] - 2024-12-19
 
 ### Added
