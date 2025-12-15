@@ -1,5 +1,14 @@
 # Installation and Usage Guide
 
+## ⚠️ Production Readiness Notice
+
+**dist_agent_lang v1.0.0 is currently in beta/early release.** While it includes comprehensive security features, it has not yet undergone extensive real-world production testing. 
+
+**Recommended for**: Development, prototyping, learning, and non-critical applications.  
+**Use caution for**: Production financial applications, high-value smart contracts, and critical infrastructure.
+
+See [SECURITY_DISCLAIMER.md](SECURITY_DISCLAIMER.md) for detailed information.
+
 ## 📦 Installation
 
 ### Prerequisites

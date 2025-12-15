@@ -9,3 +9,8 @@ pub mod state_isolation;
 pub mod advanced_security;
 
 pub use engine::Runtime;
+
+// Re-export security modules for testing and external use
+pub use reentrancy::ReentrancyGuard;
+pub use safe_math::SafeMath;
+pub use state_isolation::StateIsolationManager;

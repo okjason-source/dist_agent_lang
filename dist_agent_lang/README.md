@@ -6,6 +6,41 @@
 
 **A hybrid compiled programming language for AI agents, blockchain, and distributed systems**
 
+## ⚠️ Production Readiness Disclaimer
+
+**Current Status: Beta Release (v1.0.0)**
+
+dist_agent_lang is currently in **beta/early release** stage. While the language includes comprehensive security features and has passed dependency audits, it has not yet undergone extensive real-world production testing.
+
+### ✅ Safe For:
+- **Development & Prototyping** - Building and testing applications
+- **Learning & Experimentation** - Educational purposes
+- **Non-Critical Applications** - Applications not handling significant value
+- **Testing & Validation** - Validating concepts and workflows
+
+### ⚠️ Use Caution For:
+- **Production Financial Applications** - Applications handling real money
+- **High-Value Smart Contracts** - Contracts managing significant assets
+- **Critical Infrastructure** - Systems requiring high reliability
+- **Applications Handling Sensitive Data** - Without additional security audits
+
+### 🔒 Security Features Included:
+- ✅ Reentrancy protection
+- ✅ Safe math (overflow/underflow protection)
+- ✅ State isolation
+- ✅ Cross-chain security
+- ✅ Advanced security features
+- ✅ 21 library tests passing
+- ✅ Dependency security audit passed
+
+### 📋 Recommendations:
+- **For Production Use**: Wait for version 1.1.0+ with more real-world validation
+- **For Critical Applications**: Conduct third-party security audit
+- **For Financial Applications**: Additional formal verification recommended
+- **Always**: Test thoroughly in development environment first
+
+**We recommend extensive testing and validation before deploying to production.**
+
 ## 🚀 Features
 
 ### 🤖 AI Agent Framework
