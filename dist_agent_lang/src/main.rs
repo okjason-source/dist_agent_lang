@@ -397,7 +397,7 @@ fn print_help() {
     println!("  dist_agent_lang web keys-web-app.dal");
     println!("  dist_agent_lang test");
     println!();
-    println!("For more information, visit: https://github.com/yourusername/dist_agent_lang");
+    println!("For more information, visit: https://github.com/distagentlang/dist_agent_lang");
 }
 
 fn print_version() {

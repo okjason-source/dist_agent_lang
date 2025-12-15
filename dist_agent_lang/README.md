@@ -333,7 +333,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: [docs/](docs/)
 - **Issues**: [GitHub Issues](https://github.com/distagentlang/dist_agent_lang/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/distagentlang/dist_agent_lang/discussions)
-- **Email**: team@distagentlang.com
+- **Email**: jason.dinh.developer@gmail.com
 
 ## 🙏 Acknowledgments
 
@@ -344,4 +344,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by the dist_agent_lang team**
+**Made with ❤️ by OK Jason**

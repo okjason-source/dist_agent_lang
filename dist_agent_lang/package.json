@@ -15,16 +15,16 @@
     "runtime"
   ],
   "author": {
-    "name": "dist_agent_lang Team",
-    "email": "team@distagentlang.com"
+    "name": "OK Jason",
+    "email": "jason.dinh.developer@gmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/distagentlang/dist_agent_lang.git"
+    "url": "https://github.com/okjason-source/dist_agent_lang.git"
   },
   "homepage": "https://distagentlang.com",
   "bugs": {
-    "url": "https://github.com/distagentlang/dist_agent_lang/issues"
+    "url": "https://github.com/okjason-source/dist_agent_lang/issues"
   },
   "engines": {
     "rust": ">=1.70.0",
