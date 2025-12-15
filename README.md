@@ -1,5 +1,24 @@
 # Installation and Usage Guide
 
+## ⚠️ Production Readiness Disclaimer
+
+**Current Status: Beta Release (v1.0.0)**
+
+dist_agent_lang is currently in **beta/early release** stage. While the language includes comprehensive security features and has passed dependency audits, it has not yet undergone extensive real-world production testing.
+
+### ✅ Safe For:
+- **Development & Prototyping** - Building and testing applications
+- **Learning & Experimentation** - Educational purposes
+- **Non-Critical Applications** - Applications not handling significant value
+- **Testing & Validation** - Validating concepts and workflows
+
+### ⚠️ Use Caution For:
+- **Production Financial Applications** - Applications handling real money
+- **High-Value Smart Contracts** - Contracts managing significant assets
+- **Critical Infrastructure** - Systems requiring high reliability
+- **Applications Handling Sensitive Data** - Without additional security audits
+
+
 ## 📦 Installation
 
 ### Prerequisites
