@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KEYS Token: User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #111;
+      --card-bg: #181818;
+      --border: #222;
+      --text: #fff;
+      --muted: #bbb;
+      --input-bg: #181818;
+      --input-border: #333;
+      --input-focus: #fff;
+      --button-bg: #fff;
+      --button-text: #111;
+      --button-hover-bg: #111;
+      --button-hover-text: #fff;
+      --outline: #fff;
+      --outline-muted: #444;
+      --success: #2ecc40;
+      --error: #e74c3c;
+      --warning: #f39c12;
+    }
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    .header {
+      background: #111;
+      color: #fff;
+      padding: 2.5rem 1rem 2rem 1rem;
+      text-align: center;
+      border-bottom: 2px solid var(--outline-muted);
+      margin-bottom: 2.5rem;
+      letter-spacing: 1px;
+    }
+    .logo {
+      width: 70px; height: 70px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.2rem auto; box-shadow: 0 2px 12px #0008; }
+    .logo svg { width: 40px; height: 40px; }
+    .header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 2.5rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .header p {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--muted);
+      font-weight: 400;
+      letter-spacing: 0.5px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto 2.2rem auto;
+      background: var(--card-bg);
+      border-radius: 18px;
+      box-shadow: 0 4px 32px #000a;
+      padding: 2.2rem 2.2rem 2rem 2.2rem;
+      border: 2px solid var(--outline-muted);
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .dashboard-card {
+      background: #111;
+      border: 2px solid var(--outline);
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 16px #0006;
+    }
+    .dashboard-card h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .balance-display {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--success);
+      margin: 1rem 0;
+    }
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 900;
+      margin-bottom: 0.7rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #fff;
+      border-left: 4px solid var(--outline);
+      padding-left: 0.7em;
+      margin-top: 2.2rem;
+    }
+    .section-title:first-child { margin-top: 0; }
+    h1 {
+      color: #fff;
+      font-size: 1.5rem;
+      font-weight: 900;
+      margin-bottom: 1.2rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    label {
+      display: block;
+      margin: 1.1rem 0 0.3rem 0;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-size: 0.98rem;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 0.9rem;
+      margin-bottom: 1.1rem;
+      border-radius: 8px;
+      border: 2px solid var(--input-border);
+      font-size: 1.08rem;
+      background: var(--input-bg);
+      color: var(--text);
+      font-family: inherit;
+      transition: border 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border: 2px solid var(--outline);
+      outline: none;
+      box-shadow: 0 0 0 2px #fff2;
+      background: #181818;
+      color: #fff;
+    }
+    button {
+      width: 100%;
+      padding: 0.9rem;
+      margin-bottom: 1.1rem;
+      border-radius: 8px;
+      background: var(--button-bg);
+      color: var(--button-text);
+      border: 2px solid var(--outline);
+      font-size: 1.08rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 12px #fff1;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s;
+    }
+    button:hover {
+      background: var(--button-hover-bg);
+      color: var(--button-hover-text);
+      border: 2px solid #fff;
+      box-shadow: 0 4px 24px #fff2;
+      transform: translateY(-2px) scale(1.01);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .status {
+      margin: 1rem 0 0.5rem 0;
+      font-weight: 700;
+      font-size: 1.08rem;
+      min-height: 1.2em;
+      letter-spacing: 0.5px;
+      padding: 0.8rem;
+      border-radius: 8px;
+    }
+    .status.success {
+      background: rgba(46, 204, 64, 0.1);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+    .status.error {
+      background: rgba(231, 76, 60, 0.1);
+      color: var(--error);
+      border: 1px solid var(--error);
+    }
+    .status.warning {
+      background: rgba(243, 156, 18, 0.1);
+      color: var(--warning);
+      border: 1px solid var(--warning);
+    }
+    .airdrop-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .airdrop-item {
+      background: #111;
+      border: 1px solid var(--outline-muted);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .airdrop-info h4 {
+      margin: 0 0 0.3rem 0;
+      color: #fff;
+    }
+    .airdrop-info p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .airdrop-amount {
+      font-weight: 900;
+      color: var(--success);
+    }
+    .claim-btn {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .claim-btn:hover {
+      background: #27ae60;
+    }
+    .claim-btn:disabled {
+      background: var(--muted);
+      cursor: not-allowed;
+    }
+    hr {
+      border: none;
+      border-top: 2px solid var(--outline-muted);
+      margin: 2.2rem 0 2rem 0;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .stat-item {
+      background: #111;
+      border: 1px solid var(--outline-muted);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--success);
+    }
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .container {
+        padding: 1.1rem;
+        margin: 0 1rem 2.2rem 1rem;
+      }
+      .header {
+        padding: 1.2rem 0.5rem 1rem 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">
+      <!-- KEYS Token Logo -->
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="18" width="20" height="14" rx="5" fill="#fff" stroke="#111" stroke-width="2"/>
+        <rect x="17" y="10" width="6" height="8" rx="3" fill="#fff" stroke="#111" stroke-width="2"/>
+        <ellipse cx="20" cy="25" rx="2.5" ry="3" fill="#111"/>
+        <rect x="19.25" y="27" width="1.5" height="3" rx="0.75" fill="#111"/>
+      </svg>
+    </div>
+    <h1>KEYS Token</h1>
+    <p>User Dashboard - Manage Your KEYS</p>
+  </div>
+
+  <div class="container">
+    <!-- Connection Section -->
+    <div class="section-title">Wallet Connection</div>
+    <button onclick="connectWallet()" id="connect-btn">Connect Wallet</button>
+    <div id="wallet-address" class="status"></div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Balance Card -->
+      <div class="dashboard-card">
+        <h3>Your Balance</h3>
+        <div class="balance-display" id="user-balance">0 KEYS</div>
+        <p>Total KEYS tokens in your wallet</p>
+      </div>
+
+      <!-- Token Stats Card -->
+      <div class="dashboard-card">
+        <h3>Token Statistics</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="total-supply">0</div>
+            <div class="stat-label">Total Supply</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="circulating-supply">0</div>
+            <div class="stat-label">Circulating</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transfer Section -->
+    <div class="section-title">Transfer KEYS</div>
+    <label>Recipient Address:</label>
+    <input type="text" id="recipient-address" placeholder="0x...">
+    <label>Amount (KEYS):</label>
+    <input type="number" id="transfer-amount" min="0" step="any" placeholder="e.g. 100">
+    <button onclick="transferTokens()">Transfer KEYS</button>
+    <div class="status" id="transfer-status"></div>
+
+    <hr>
+
+    <!-- Airdrop Section -->
+    <div class="section-title">Available Airdrops</div>
+    <div id="airdrop-list">
+      <!-- Airdrops will be populated here -->
+    </div>
+    <div class="status" id="airdrop-status"></div>
+
+    <hr>
+
+    <!-- Approve Section -->
+    <div class="section-title">Approve Spending</div>
+    <label>Spender Address:</label>
+    <input type="text" id="spender-address" placeholder="0x...">
+    <label>Amount (KEYS):</label>
+    <input type="number" id="approve-amount" min="0" step="any" placeholder="e.g. 1000">
+    <button onclick="approveTokens()">Approve KEYS</button>
+    <div class="status" id="approve-status"></div>
+  </div>
+
+  <script>
+    // Global variables
+    let userAddress = null;
+    let contractAddress = null;
+    let isConnected = false;
+
+    // Initialize the interface
+    async function initializeInterface() {
+      // In a real implementation, this would connect to the dist_agent_lang runtime
+      // For now, we'll simulate the connection
+      console.log('Initializing KEYS Token User Interface...');
+      
+      // Simulate contract address (in real implementation, this would come from deployment)
+      contractAddress = '0x1234567890123456789012345678901234567890';
+      
+      // Load initial data
+      await loadUserData();
+    }
+
+    // Connect wallet
+    async function connectWallet() {
+      try {
+        // In a real implementation, this would connect to MetaMask or other wallet
+        // For now, we'll simulate the connection
+        userAddress = '0x' + Math.random().toString(16).substr(2, 40);
+        isConnected = true;
+        
+        document.getElementById('wallet-address').textContent = `Connected: ${userAddress}`;
+        document.getElementById('wallet-address').className = 'status success';
+        
+        // Load user data after connection
+        await loadUserData();
+        
+      } catch (error) {
+        document.getElementById('wallet-address').textContent = `Connection failed: ${error.message}`;
+        document.getElementById('wallet-address').className = 'status error';
+      }
+    }
+
+    // Load user data
+    async function loadUserData() {
+      if (!isConnected) return;
+
+      try {
+        // Simulate API calls to dist_agent_lang runtime
+        const userBalance = await simulateChainQuery('balance_of', [userAddress]);
+        const tokenStats = await simulateChainQuery('get_token_stats', []);
+        
+        // Update UI
+        document.getElementById('user-balance').textContent = `${formatTokens(userBalance)} KEYS`;
+        document.getElementById('total-supply').textContent = formatTokens(tokenStats.total_supply);
+        document.getElementById('circulating-supply').textContent = formatTokens(tokenStats.circulating_supply);
+        
+        // Load airdrops
+        await loadAirdrops();
+        
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+      }
+    }
+
+    // Transfer tokens
+    async function transferTokens() {
+      if (!isConnected) {
+        showStatus('transfer-status', 'Please connect your wallet first.', 'error');
+        return;
+      }
+
+      const recipient = document.getElementById('recipient-address').value.trim();
+      const amount = parseFloat(document.getElementById('transfer-amount').value);
+
+      if (!recipient || !amount || amount <= 0) {
+        showStatus('transfer-status', 'Please enter valid recipient address and amount.', 'error');
+        return;
+      }
+
+      try {
+        showStatus('transfer-status', 'Processing transfer...', 'warning');
+        
+        // Simulate chain call to dist_agent_lang runtime
+        const result = await simulateChainCall('transfer', [recipient, amount * 10**18]);
+        
+        if (result.success) {
+          showStatus('transfer-status', 'Transfer completed successfully!', 'success');
+          await loadUserData(); // Refresh balance
+        } else {
+          showStatus('transfer-status', `Transfer failed: ${result.error}`, 'error');
+        }
+        
+      } catch (error) {
+        showStatus('transfer-status', `Transfer failed: ${error.message}`, 'error');
+      }
+    }
+
+    // Claim airdrop
+    async function claimAirdrop(projectId) {
+      if (!isConnected) {
+        showStatus('airdrop-status', 'Please connect your wallet first.', 'error');
+        return;
+      }
+
+      try {
+        showStatus('airdrop-status', 'Claiming airdrop...', 'warning');
+        
+        // Simulate chain call to dist_agent_lang runtime
+        const result = await simulateChainCall('claim_airdrop', [projectId]);
+        
+        if (result.success) {
+          showStatus('airdrop-status', 'Airdrop claimed successfully!', 'success');
+          await loadUserData(); // Refresh balance and airdrops
+        } else {
+          showStatus('airdrop-status', `Airdrop claim failed: ${result.error}`, 'error');
+        }
+        
+      } catch (error) {
+        showStatus('airdrop-status', `Airdrop claim failed: ${error.message}`, 'error');
+      }
+    }
+
+    // Approve tokens
+    async function approveTokens() {
+      if (!isConnected) {
+        showStatus('approve-status', 'Please connect your wallet first.', 'error');
+        return;
+      }
+
+      const spender = document.getElementById('spender-address').value.trim();
+      const amount = parseFloat(document.getElementById('approve-amount').value);
+
+      if (!spender || !amount || amount <= 0) {
+        showStatus('approve-status', 'Please enter valid spender address and amount.', 'error');
+        return;
+      }
+
+      try {
+        showStatus('approve-status', 'Processing approval...', 'warning');
+        
+        // Simulate chain call to dist_agent_lang runtime
+        const result = await simulateChainCall('approve', [spender, amount * 10**18]);
+        
+        if (result.success) {
+          showStatus('approve-status', 'Approval granted successfully!', 'success');
+        } else {
+          showStatus('approve-status', `Approval failed: ${result.error}`, 'error');
+        }
+        
+      } catch (error) {
+        showStatus('approve-status', `Approval failed: ${error.message}`, 'error');
+      }
+    }
+
+    // Load available airdrops
+    async function loadAirdrops() {
+      try {
+        // Simulate getting available airdrops
+        const airdrops = [
+          { id: 'project_alpha', name: 'Project Alpha', amount: 100, description: 'Early supporter airdrop' },
+          { id: 'project_beta', name: 'Project Beta', amount: 250, description: 'Community airdrop' },
+          { id: 'project_gamma', name: 'Project Gamma', amount: 500, description: 'Loyalty reward' }
+        ];
+
+        const airdropList = document.getElementById('airdrop-list');
+        airdropList.innerHTML = '';
+
+        for (const airdrop of airdrops) {
+          const airdropItem = document.createElement('div');
+          airdropItem.className = 'airdrop-item';
+          airdropItem.innerHTML = `
+            <div class="airdrop-info">
+              <h4>${airdrop.name}</h4>
+              <p>${airdrop.description}</p>
+            </div>
+            <div>
+              <div class="airdrop-amount">${airdrop.amount} KEYS</div>
+              <button class="claim-btn" onclick="claimAirdrop('${airdrop.id}')">Claim</button>
+            </div>
+          `;
+          airdropList.appendChild(airdropItem);
+        }
+        
+      } catch (error) {
+        console.error('Failed to load airdrops:', error);
+      }
+    }
+
+    // Helper functions
+    function showStatus(elementId, message, type) {
+      const element = document.getElementById(elementId);
+      element.textContent = message;
+      element.className = `status ${type}`;
+    }
+
+    function formatTokens(amount) {
+      return (amount / 10**18).toLocaleString();
+    }
+
+    // Simulate dist_agent_lang runtime calls
+    async function simulateChainCall(functionName, args) {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simulate different responses based on function
+      switch (functionName) {
+        case 'transfer':
+          return { success: true, txHash: '0x' + Math.random().toString(16).substr(2, 64) };
+        case 'claim_airdrop':
+          return { success: true, txHash: '0x' + Math.random().toString(16).substr(2, 64) };
+        case 'approve':
+          return { success: true, txHash: '0x' + Math.random().toString(16).substr(2, 64) };
+        default:
+          return { success: false, error: 'Function not implemented' };
+      }
+    }
+
+    async function simulateChainQuery(functionName, args) {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Simulate different responses based on function
+      switch (functionName) {
+        case 'balance_of':
+          return 5000000000000000000000; // 5000 KEYS in wei
+        case 'get_token_stats':
+          return {
+            total_supply: 120000000000000000000000000, // 120M KEYS in wei
+            circulating_supply: 84000000000000000000000000, // 84M KEYS in wei
+            name: 'KEYS Token',
+            symbol: 'KEYS',
+            decimals: 18
+          };
+        default:
+          return 0;
+      }
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', initializeInterface);
+  </script>
+</body>
+</html>

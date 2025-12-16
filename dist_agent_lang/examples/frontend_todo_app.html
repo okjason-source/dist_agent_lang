@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App - Powered by dist_agent_lang</title>
+    <style>
+        :root {
+            --primary: #3a7afe;
+            --primary-dark: #2356b8;
+            --secondary: #f5b942;
+            --success: #2ecc40;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #212529;
+            --text-muted: #6c757d;
+            --border: #dee2e6;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1em;
+        }
+
+        .todo-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .todo-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .todo-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .todo-input button {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .todo-input button:hover {
+            background: var(--primary-dark);
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .todo-list {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.3s ease;
+        }
+
+        .todo-item:last-child {
+            border-bottom: none;
+        }
+
+        .todo-item:hover {
+            background: #f8f9fa;
+        }
+
+        .todo-item.completed {
+            opacity: 0.6;
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .todo-content {
+            flex: 1;
+        }
+
+        .todo-text {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .todo-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .todo-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+        }
+
+        .edit-btn {
+            background: var(--warning);
+            color: white;
+        }
+
+        .delete-btn {
+            background: var(--danger);
+            color: white;
+        }
+
+        .todo-btn:hover {
+            opacity: 0.8;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .todo-input {
+                flex-direction: column;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Todo App</h1>
+            <p>Built with dist_agent_lang - Full-Stack Development Made Simple</p>
+        </div>
+
+        <!-- Todo Input -->
+        <div class="todo-input">
+            <input type="text" id="todo-input" placeholder="What needs to be done?" maxlength="200">
+            <button onclick="addTodo()">Add Todo</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <button class="filter-btn active" onclick="setFilter('all')">All</button>
+            <button class="filter-btn" onclick="setFilter('active')">Active</button>
+            <button class="filter-btn" onclick="setFilter('completed')">Completed</button>
+            <button class="filter-btn" onclick="clearCompleted()">Clear Completed</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total</h3>
+                <div class="number" id="total-count">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active</h3>
+                <div class="number" id="active-count">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Completed</h3>
+                <div class="number" id="completed-count">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Completion Rate</h3>
+                <div class="number" id="completion-rate">0%</div>
+            </div>
+        </div>
+
+        <!-- Todo List -->
+        <div class="todo-list" id="todo-list">
+            <div class="empty-state">
+                <h3>No todos yet</h3>
+                <p>Add your first todo above to get started!</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by <a href="https://github.com/dist_agent_lang" target="_blank">dist_agent_lang</a> | A unified language for modern development</p>
+        </div>
+    </div>
+
+    <!-- dist_agent_lang Integration Script -->
+    <script type="module">
+        // Import dist_agent_lang runtime (this would be the actual import in production)
+        // import { Runtime, Value, web, database, ai } from './dist_agent_lang.js';
+
+        // For demo purposes, we'll simulate the integration
+        class DistAgentFrontend {
+            constructor() {
+                this.todos = [];
+                this.currentFilter = 'all';
+                this.initializeEventListeners();
+                this.loadTodos();
+            }
+
+            initializeEventListeners() {
+                const input = document.getElementById('todo-input');
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.addTodo();
+                    }
+                });
+            }
+
+            async addTodo() {
+                const input = document.getElementById('todo-input');
+                const text = input.value.trim();
+
+                if (!text) return;
+
+                // Simulate dist_agent_lang function call
+                const todo = await this.callDistAgentFunction('createTodo', {
+                    text: text,
+                    createdAt: new Date().toISOString(),
+                    completed: false
+                });
+
+                this.todos.push(todo);
+                input.value = '';
+                this.renderTodos();
+                this.updateStats();
+            }
+
+            async toggleTodo(id) {
+                // Simulate dist_agent_lang function call
+                await this.callDistAgentFunction('toggleTodo', { id });
+                const todo = this.todos.find(t => t.id === id);
+                if (todo) {
+                    todo.completed = !todo.completed;
+                    this.renderTodos();
+                    this.updateStats();
+                }
+            }
+
+            async deleteTodo(id) {
+                // Simulate dist_agent_lang function call
+                await this.callDistAgentFunction('deleteTodo', { id });
+                this.todos = this.todos.filter(t => t.id !== id);
+                this.renderTodos();
+                this.updateStats();
+            }
+
+            async editTodo(id, newText) {
+                // Simulate dist_agent_lang function call
+                await this.callDistAgentFunction('updateTodo', { id, text: newText });
+                const todo = this.todos.find(t => t.id === id);
+                if (todo) {
+                    todo.text = newText;
+                    this.renderTodos();
+                }
+            }
+
+            setFilter(filter) {
+                this.currentFilter = filter;
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                this.renderTodos();
+            }
+
+            clearCompleted() {
+                // Simulate dist_agent_lang function call
+                this.callDistAgentFunction('clearCompletedTodos', {});
+                this.todos = this.todos.filter(t => !t.completed);
+                this.renderTodos();
+                this.updateStats();
+            }
+
+            getFilteredTodos() {
+                switch (this.currentFilter) {
+                    case 'active':
+                        return this.todos.filter(t => !t.completed);
+                    case 'completed':
+                        return this.todos.filter(t => t.completed);
+                    default:
+                        return this.todos;
+                }
+            }
+
+            renderTodos() {
+                const todoList = document.getElementById('todo-list');
+                const filteredTodos = this.getFilteredTodos();
+
+                if (filteredTodos.length === 0) {
+                    todoList.innerHTML = `
+                        <div class="empty-state">
+                            <h3>${this.getEmptyStateMessage()}</h3>
+                            <p>${this.getEmptyStateSubmessage()}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                todoList.innerHTML = filteredTodos.map(todo => `
+                    <div class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+                        <input type="checkbox"
+                               class="todo-checkbox"
+                               ${todo.completed ? 'checked' : ''}
+                               onchange="app.toggleTodo('${todo.id}')">
+                        <div class="todo-content">
+                            <div class="todo-text">${this.escapeHtml(todo.text)}</div>
+                            <div class="todo-meta">
+                                Created: ${new Date(todo.createdAt).toLocaleDateString()}
+                                ${todo.completed ? ` • Completed: ${new Date(todo.updatedAt || todo.createdAt).toLocaleDateString()}` : ''}
+                            </div>
+                        </div>
+                        <div class="todo-actions">
+                            <button class="todo-btn edit-btn" onclick="app.editTodoPrompt('${todo.id}')">Edit</button>
+                            <button class="todo-btn delete-btn" onclick="app.deleteTodo('${todo.id}')">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            getEmptyStateMessage() {
+                switch (this.currentFilter) {
+                    case 'active':
+                        return 'No active todos';
+                    case 'completed':
+                        return 'No completed todos';
+                    default:
+                        return 'No todos yet';
+                }
+            }
+
+            getEmptyStateSubmessage() {
+                switch (this.currentFilter) {
+                    case 'active':
+                        return 'Great job! All your todos are completed.';
+                    case 'completed':
+                        return 'No completed todos yet. Get started!';
+                    default:
+                        return 'Add your first todo above to get started!';
+                }
+            }
+
+            updateStats() {
+                const total = this.todos.length;
+                const active = this.todos.filter(t => !t.completed).length;
+                const completed = this.todos.filter(t => t.completed).length;
+                const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                document.getElementById('total-count').textContent = total;
+                document.getElementById('active-count').textContent = active;
+                document.getElementById('completed-count').textContent = completed;
+                document.getElementById('completion-rate').textContent = `${completionRate}%`;
+            }
+
+            editTodoPrompt(id) {
+                const todo = this.todos.find(t => t.id === id);
+                if (!todo) return;
+
+                const newText = prompt('Edit todo:', todo.text);
+                if (newText && newText.trim() && newText.trim() !== todo.text) {
+                    this.editTodo(id, newText.trim());
+                }
+            }
+
+            async loadTodos() {
+                // Simulate loading from dist_agent_lang backend
+                const savedTodos = await this.callDistAgentFunction('loadTodos', {});
+                this.todos = savedTodos || [];
+                this.renderTodos();
+                this.updateStats();
+            }
+
+            // Simulate dist_agent_lang function calls
+            async callDistAgentFunction(functionName, params) {
+                // In a real implementation, this would call the dist_agent_lang runtime
+                console.log(`Calling dist_agent_lang function: ${functionName}`, params);
+
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                // Mock responses based on function name
+                switch (functionName) {
+                    case 'createTodo':
+                        return {
+                            id: Date.now().toString(),
+                            text: params.text,
+                            completed: false,
+                            createdAt: params.createdAt,
+                            updatedAt: params.createdAt
+                        };
+
+                    case 'loadTodos':
+                        // Return mock data or empty array
+                        return JSON.parse(localStorage.getItem('dist_agent_todos') || '[]');
+
+                    case 'toggleTodo':
+                    case 'deleteTodo':
+                    case 'updateTodo':
+                    case 'clearCompletedTodos':
+                        // Save current state to localStorage (simulating persistence)
+                        localStorage.setItem('dist_agent_todos', JSON.stringify(this.todos));
+                        return { success: true };
+
+                    default:
+                        return null;
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Global app instance
+        window.app = new DistAgentFrontend();
+
+        // Global functions for onclick handlers
+        window.addTodo = () => window.app.addTodo();
+        window.setFilter = (filter) => window.app.setFilter(filter);
+        window.clearCompleted = () => window.app.clearCompleted();
+    </script>
+</body>
+</html>

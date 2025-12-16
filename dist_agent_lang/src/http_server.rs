@@ -4,6 +4,7 @@ use axum::{
     response::{Html, Json},
     routing::{get, post},
     Router,
+    middleware,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,7 +12,12 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
 use crate::runtime::values::Value;
+use crate::runtime::engine::Runtime;
 use crate::stdlib::web::{HttpServer, HttpRequest, HttpResponse, Route, HttpMethod};
+use crate::http_server_security::security_headers_middleware;
+use crate::http_server_security_middleware::{
+    rate_limit_middleware, request_size_middleware, input_validation_middleware,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebRequest {
@@ -32,12 +38,20 @@ pub struct WebResponse {
 pub struct WebServerState {
     pub server: HttpServer,
     pub handlers: HashMap<String, Box<dyn Fn(WebRequest) -> WebResponse + Send + Sync>>,
+    // Note: Runtime is not thread-safe, so we'll create a new one per request
+    // or use a thread-local runtime pool
+    pub runtime_factory: Option<Box<dyn Fn() -> Runtime + Send + Sync>>,
 }
 
 pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::error::Error>> {
+    // Runtime factory for creating new runtime instances per request
+    // (Runtime is not thread-safe, so we create fresh instances)
+    let runtime_factory: Box<dyn Fn() -> Runtime + Send + Sync> = Box::new(|| Runtime::new());
+    
     let state = Arc::new(RwLock::new(WebServerState {
         server: server.clone(),
         handlers: HashMap::new(),
+        runtime_factory: Some(runtime_factory),
     }));
 
     // Create CORS layer
@@ -45,7 +59,14 @@ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::er
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
         .allow_origin(Any);
 
-    // Create router
+    // Create router with security middleware
+    // Security middleware order (from outer to inner):
+    // 1. CORS
+    // 2. Security headers (applied to all responses)
+    // 3. Rate limiting
+    // 4. Request size limiting
+    // 5. Input validation
+    // 6. User middleware (applied in handle_with_middleware)
     let app = Router::new()
         .route("/", get(home_handler))
         .route("/api/balance", get(balance_handler))
@@ -53,8 +74,15 @@ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::er
         .route("/api/transfer", post(transfer_handler))
         .route("/api/airdrop", post(airdrop_handler))
         .route("/health", get(health_handler))
+        .layer(middleware::from_fn(security_headers_middleware))
+        .layer(middleware::from_fn(rate_limit_middleware))
+        .layer(middleware::from_fn(request_size_middleware))
+        .layer(middleware::from_fn(input_validation_middleware))
         .layer(cors)
         .with_state(state);
+    
+    // TODO: When server.routes is populated, use create_router_with_middleware
+    // This requires proper route registration from dist_agent_lang code
 
     // Start server
     let addr = format!("127.0.0.1:{}", server.port);

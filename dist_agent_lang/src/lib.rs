@@ -8,11 +8,23 @@ pub mod stdlib;
 pub mod testing;
 pub mod performance;
 pub mod http_server;
+pub mod http_server_security;
+pub mod http_server_security_middleware;
+pub mod http_server_middleware;
+pub mod http_server_converters;
+pub mod http_server_handlers;
+pub mod http_server_integration;
+pub mod ffi;
+
+// Re-export security modules for easier access
+pub use http_server_security::{RateLimiter, RequestSizeLimiter, InputValidator, SecurityLogger};
+pub use ffi::security::{FFIInputValidator, FFIResourceLimits};
 
 // Re-export main components for easy access
 pub use lexer::{Lexer, tokens::Token};
 pub use parser::{Parser, ast, error::ParserError};
 pub use runtime::{Runtime, values::Value};
+pub use ffi::{FFIInterface, FFIConfig, InterfaceType};
 
 // For external integrations
 pub fn parse_source(source: &str) -> Result<ast::Program, Box<dyn std::error::Error>> {

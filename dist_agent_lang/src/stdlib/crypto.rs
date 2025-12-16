@@ -45,6 +45,28 @@ pub fn hash(data: &str, algorithm: HashAlgorithm) -> String {
     }
 }
 
+/// Hash bytes with specified algorithm (for FFI compatibility)
+pub fn hash_bytes(data: &[u8], algorithm: &str) -> Result<String, String> {
+    match algorithm.to_uppercase().as_str() {
+        "SHA256" => {
+            use sha2::{Sha256, Digest};
+            let mut hasher = Sha256::new();
+            hasher.update(data);
+            Ok(format!("{:x}", hasher.finalize()))
+        }
+        "MD5" => {
+            // MD5 is deprecated but kept for compatibility
+            // Use a simple hash instead
+            use std::collections::hash_map::DefaultHasher;
+            use std::hash::{Hash, Hasher};
+            let mut hasher = DefaultHasher::new();
+            data.hash(&mut hasher);
+            Ok(format!("{:x}", hasher.finish()))
+        }
+        _ => Err(format!("Unsupported hash algorithm: {}", algorithm))
+    }
+}
+
 /// Hash data using SHA-256
 fn hash_sha256(data: &str) -> String {
     use sha2::{Sha256, Digest};

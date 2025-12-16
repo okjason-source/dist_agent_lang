@@ -22,4 +22,5 @@ pub mod desktop;
 pub mod mobile;
 pub mod iot;
 pub mod solidity_adapter;
+pub mod crypto_signatures; // Production-grade cryptographic signatures
 
