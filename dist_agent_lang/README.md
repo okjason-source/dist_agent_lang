@@ -8,7 +8,7 @@
 
 ## ⚠️ Production Readiness Disclaimer
 
-**Current Status: Beta Release (v1.0.0)**
+**Current Status: Beta Release (v1.0.1)**
 
 dist_agent_lang is currently in **beta/early release** stage. While the language includes comprehensive security features and has passed dependency audits, it has not yet undergone extensive real-world production testing.
 
@@ -125,7 +125,7 @@ service HelloWorld {
         // Deploy to blockchain
         let contract = chain::deploy_contract("HelloWorld", {
             "name": "Hello World Contract",
-            "version": "1.0.0"
+            "version": "1.0.1"
         });
         
         log::info("main", "Hello World deployed successfully!");
