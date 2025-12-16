@@ -2,7 +2,7 @@
 
 ## ⚠️ Production Readiness Disclaimer
 
-**Current Status: Beta Release (v1.0.0)**
+**Current Status: Beta Release (v1.0.1)**
 
 dist_agent_lang is currently in **beta/early release** stage. While the language includes comprehensive security features and has passed dependency audits, it has not yet undergone extensive real-world production testing.
 
