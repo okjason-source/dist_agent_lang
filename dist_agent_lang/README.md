@@ -127,6 +127,12 @@ This project receives **consistent updates** with improvements to security, perf
 - **[AI+Blockchain Integration](#)** - Combine AI with DeFi, NFTs, and more
 - **[AI API Reference](../docs/API_REFERENCE.md#6-ai-aiml-integration)** - Complete AI API documentation
 
+### CloudAdmin & Hybrid Trust
+- **[CloudAdmin Guide](../docs/CLOUDADMIN_GUIDE.md)** - Hybrid trust and admin control architecture
+- **[Hybrid Marketplace Tutorial](../docs/tutorials/03_hybrid_marketplace_cloudadmin.md)** - Build moderated marketplace
+- **[CloudAdmin API Reference](../docs/API_REFERENCE.md#21-cloudadmin-cloudadmin-security)** - Complete CloudAdmin API
+- **[Process Management](../docs/API_REFERENCE.md#22-admin-process-management)** - Admin process control
+
 ### Migration Guides
 - **[From Solidity](../docs/migration/FROM_SOLIDITY.md)** - Migrate Solidity contracts to DAL
 - **[From Rust](#)** - Migrate Rust contracts

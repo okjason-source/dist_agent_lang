@@ -36,9 +36,13 @@ Complete reference for all **22 standard library modules** in dist_agent_lang.
 19. [string:: - String Operations](#19-string-string-operations)
 20. [json:: - JSON Processing](#20-json-json-processing)
 
+### Administrative & Security
+21. [cloudadmin:: - CloudAdmin Security](#21-cloudadmin-cloudadmin-security)
+22. [admin:: - Process Management](#22-admin-process-management)
+
 ### Infrastructure
-21. [mobile:: - Mobile Integration](#21-mobile-mobile-integration)
-22. [iot:: - IoT Device Integration](#22-iot-iot-device-integration)
+23. [mobile:: - Mobile Integration](#23-mobile-mobile-integration)
+24. [iot:: - IoT Device Integration](#24-iot-iot-device-integration)
 
 ---
 
@@ -941,7 +945,263 @@ let data = json::parse('{"key":"value"}');
 
 ---
 
-## 21. mobile:: - Mobile Integration
+## 21. cloudadmin:: - CloudAdmin Security
+
+Hybrid trust and administrative control for applications combining centralized admin oversight with decentralized user operations.
+
+### Core Concepts
+
+- **Hybrid Trust**: Bridge centralized admin control with decentralized user trust
+- **Multi-Level Administration**: 4-tier admin hierarchy (SuperAdmin, Admin, Moderator, User)
+- **Policy Enforcement**: Flexible security policies (strict, moderate, permissive)
+- **Trust Bridging**: Connect centralized and decentralized trust models
+
+### Functions
+
+#### `cloudadmin::authorize(admin_id: string, operation: string, resource: string) -> bool`
+Check if admin is authorized for operation on resource.
+
+**Operations:**
+- `"read"` - All admin levels
+- `"write"` - Admin, SuperAdmin only
+- `"delete"` - SuperAdmin only
+
+```dal
+let can_write = cloudadmin::authorize("admin_001", "write", "/data/config");
+let can_delete = cloudadmin::authorize("superadmin_001", "delete", "/data/users");
+```
+
+---
+
+#### `cloudadmin::enforce_policy(policy_name: string, context: AdminContext) -> Result<bool, string>`
+Enforce admin policy based on context.
+
+**Policies:**
+- `"strict"` - SuperAdmin only
+- `"moderate"` - Admin or SuperAdmin
+- `"permissive"` - All users
+
+```dal
+let context = cloudadmin::create_admin_context("admin_001", "admin");
+let allowed = cloudadmin::enforce_policy("moderate", context);
+
+if allowed.is_ok() && allowed.unwrap() {
+    // Execute operation
+}
+```
+
+---
+
+#### `cloudadmin::validate_hybrid_trust(admin_trust: string, user_trust: string) -> bool`
+Validate hybrid trust between admin and user. Both must be "valid" for success.
+
+```dal
+let admin_verified = cloudadmin::authorize(admin_id, "write", resource);
+let admin_trust = if admin_verified { "valid" } else { "invalid" };
+
+let user_verified = auth::verify_signature();
+let user_trust = if user_verified { "valid" } else { "invalid" };
+
+let is_trusted = cloudadmin::validate_hybrid_trust(admin_trust, user_trust);
+```
+
+---
+
+#### `cloudadmin::bridge_trusts(centralized_trust: string, decentralized_trust: string) -> bool`
+Bridge centralized admin trust with decentralized user trust.
+
+**Requirements:** centralized = "admin" AND decentralized = "user"
+
+```dal
+let admin_approved = cloudadmin::authorize(admin_id, "write", "/bridge");
+let centralized = if admin_approved { "admin" } else { "none" };
+
+let user_verified = auth::verify_address(user_address);
+let decentralized = if user_verified { "user" } else { "none" };
+
+let can_bridge = cloudadmin::bridge_trusts(centralized, decentralized);
+```
+
+---
+
+#### `cloudadmin::create_admin_context(admin_id: string, level: string) -> Option<AdminContext>`
+Create admin context with specified level.
+
+**Levels:** "superadmin", "admin", "moderator", "user"
+
+```dal
+let context = cloudadmin::create_admin_context("admin_001", "admin");
+
+// Add permissions
+context = context.with_permissions(["read_users", "write_config"]);
+
+// Add metadata
+context = context.with_metadata({
+    "department": "engineering",
+    "region": "us-west"
+});
+```
+
+### Use Cases
+
+- **Hybrid Marketplaces**: Admin moderation + decentralized trading
+- **Regulated DeFi**: Compliance oversight + user autonomy
+- **Multi-Chain Apps**: Centralized coordination + blockchain operations
+- **AI Agent Systems**: Admin control + autonomous agents
+
+### Example: Hybrid Approval System
+
+```dal
+@trust("hybrid")
+@secure
+service HybridApproval {
+    fn approve_transaction(tx_id: string, admin_id: string, user_sig: string) -> bool {
+        // Check admin authorization
+        let admin_ok = cloudadmin::authorize(admin_id, "write", "/transactions");
+        let admin_trust = if admin_ok { "valid" } else { "invalid" };
+        
+        // Verify user signature
+        let user_ok = auth::verify_signature(user_sig);
+        let user_trust = if user_ok { "valid" } else { "invalid" };
+        
+        // Validate hybrid trust
+        let is_trusted = cloudadmin::validate_hybrid_trust(admin_trust, user_trust);
+        
+        if is_trusted {
+            chain::execute_transaction(tx_id);
+            return true;
+        }
+        
+        return false;
+    }
+}
+```
+
+**See Also:** [CloudAdmin Guide](CLOUDADMIN_GUIDE.md) | [Hybrid Marketplace Tutorial](tutorials/03_hybrid_marketplace_cloudadmin.md)
+
+---
+
+## 22. admin:: - Process Management
+
+Administrative control over system processes, agents, and resources.
+
+### Functions
+
+#### `admin::kill(process_id: string, reason: string) -> Result<bool, string>`
+Terminate process or agent. Reason is required.
+
+**Valid Reasons:**
+- `"resource_violation"` - Excessive resource usage
+- `"security_breach"` - Security threat detected
+- `"policy_violation"` - Policy compliance issue
+- `"maintenance"` - Scheduled maintenance
+
+```dal
+// Kill agent exceeding resources
+let result = admin::kill("agent_123", "resource_violation: CPU > 90%");
+
+if result.is_ok() {
+    log::audit("admin", "Agent terminated successfully");
+} else {
+    log::error("admin", "Failed: " + result.error());
+}
+```
+
+---
+
+#### `admin::get_process_info(process_id: string) -> Result<ProcessInfo, string>`
+Get detailed process information including resource usage.
+
+**Returns:**
+- `process_id` - Process identifier
+- `name` - Process name
+- `status` - Current status (running, stopped, error)
+- `start_time` - Unix timestamp
+- `resource_usage` - Map of resource metrics (cpu, memory, etc.)
+
+```dal
+let info = admin::get_process_info("agent_123");
+
+if info.is_ok() {
+    let process = info.unwrap();
+    log::info("admin", "Process: " + process.name);
+    log::info("admin", "Status: " + process.status);
+    log::info("admin", "CPU: " + process.resource_usage["cpu"]);
+    log::info("admin", "Memory: " + process.resource_usage["memory"]);
+    
+    // Check if exceeding limits
+    if process.resource_usage["cpu"] > 80 {
+        admin::kill(process_id, "excessive_cpu_usage");
+    }
+}
+```
+
+---
+
+#### `admin::list_processes() -> Vec<ProcessInfo>`
+List all running processes in the system.
+
+```dal
+let processes = admin::list_processes();
+
+for process in processes {
+    log::info("admin", "ID: " + process.process_id);
+    log::info("admin", "Name: " + process.name);
+    log::info("admin", "Status: " + process.status);
+    
+    // Monitor AI agents
+    if process.name.starts_with("ai_agent_") {
+        let cpu = process.resource_usage["cpu"].as_int();
+        if cpu > 75 {
+            log::warn("admin", "AI agent high CPU: " + process.process_id);
+        }
+    }
+}
+```
+
+### Use Cases
+
+- **Agent Monitoring**: Track AI agent resource usage
+- **Process Lifecycle**: Manage process termination
+- **Resource Control**: Enforce resource limits
+- **Health Checks**: Monitor system health
+
+### Example: Agent Health Monitor
+
+```dal
+@ai
+service AgentHealthMonitor {
+    fn monitor_agents() {
+        let processes = admin::list_processes();
+        
+        for process in processes {
+            // Check if it's an AI agent
+            if process.name.starts_with("ai_agent_") {
+                let cpu = process.resource_usage["cpu"].as_int();
+                let memory = process.resource_usage["memory"].as_int();
+                
+                // Kill if exceeding limits
+                if cpu > 80 || memory > 4096 {
+                    let result = admin::kill(
+                        process.process_id,
+                        "resource_violation: CPU=" + cpu + "%, Memory=" + memory + "MB"
+                    );
+                    
+                    if result.is_ok() {
+                        log::audit("monitor", "Terminated agent: " + process.process_id);
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+**See Also:** [CloudAdmin Guide](CLOUDADMIN_GUIDE.md) | [Process Management Best Practices](BEST_PRACTICES.md)
+
+---
+
+## 23. mobile:: - Mobile Integration
 
 Mobile app integration.
 
@@ -960,7 +1220,7 @@ mobile::push_notification(
 
 ---
 
-## 22. iot:: - IoT Device Integration
+## 24. iot:: - IoT Device Integration
 
 IoT device integration.
 
