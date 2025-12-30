@@ -1,10 +1,6 @@
 // Cross-Chain Integration Patterns
 // Advanced patterns for seamless multi-chain operations
 
-// =====================================================
-// PATTERN 1: Multi-Chain Asset Management
-// =====================================================
-
 @trust("hybrid")
 @chain("ethereum","polygon","binance","arbitrum","optimism")
 @cloudadmin

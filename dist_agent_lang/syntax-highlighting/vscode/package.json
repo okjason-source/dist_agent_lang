@@ -1,0 +1,51 @@
+{
+  "name": "dist-agent-lang",
+  "displayName": "dist_agent_lang Language Support",
+  "description": "Syntax highlighting and language support for dist_agent_lang (.dal files)",
+  "version": "0.1.0",
+  "publisher": "dist-agent-lang",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "dist_agent_lang",
+    "dal",
+    "blockchain",
+    "ai",
+    "agents",
+    "distributed"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "dist_agent_lang",
+        "aliases": [
+          "dist_agent_lang",
+          "DAL"
+        ],
+        "extensions": [
+          ".dal"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "dist_agent_lang",
+        "scopeName": "source.dist_agent_lang",
+        "path": "./syntaxes/dist_agent_lang.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "echo 'No compilation needed for TextMate grammar'"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.60.0",
+    "@vscode/vsce": "^3.7.1",
+    "typescript": "^4.4.3"
+  }
+}

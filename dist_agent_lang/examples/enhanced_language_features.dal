@@ -1,11 +1,11 @@
 // Enhanced Language Features Example
 // Demonstrates the new type system, attributes, and namespaces from Phase 1
 
-// @trust("hybrid")
-// @secure
-// @web
-// @persistent
-// @chain("ethereum")
+@trust("hybrid")
+@secure
+@web
+@persistent
+@chain("ethereum")
 service EnhancedFeatures {
     // State variables with new types
     users: map<string, any>,

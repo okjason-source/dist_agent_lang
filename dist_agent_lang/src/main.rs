@@ -1,10 +1,10 @@
-mod lexer;
-mod runtime;
-mod parser;
-mod stdlib;
-mod testing;
-mod performance;
-mod http_server;
+// Import from the library instead of redeclaring modules
+use dist_agent_lang::lexer;
+use dist_agent_lang::parser;
+use dist_agent_lang::runtime;
+use dist_agent_lang::stdlib;
+use dist_agent_lang::testing;
+use dist_agent_lang::performance;
 
 use lexer::Lexer;
 use parser::Parser;
@@ -17,6 +17,20 @@ use stdlib::crypto::{HashAlgorithm, SignatureAlgorithm};
 use parser::error::{ParserError, ErrorContext, SimpleErrorReporter, ErrorReporter};
 use lexer::tokens::{Token, Punctuation};
 use std::collections::HashMap;
+
+// Testing framework imports
+use testing::{TestCase, TestSuite, TestResult, TestStatus, TestConfig};
+use testing::{MockFunction, MockRegistry, MockBuilder};
+use testing::TestRunner;
+
+// Performance imports
+use performance::optimizer::{Optimizer, OptimizationLevel};
+use performance::memory::get_global_memory_manager;
+use performance::concurrency::{ThreadPool, AsyncScheduler, TaskPriority, ParallelExecutor};
+use performance::{BenchmarkRunner, BenchmarkResult, BenchmarkSuite};
+use performance::{Profiler, ProfileEvent};
+use performance::{MemoryManager, MemoryStats};
+use performance::AsyncTask;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

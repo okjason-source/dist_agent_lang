@@ -1,11 +1,8 @@
 // Server Security Tests
 // Tests for security vulnerabilities and proper security controls in HTTP server
 
-use axum::http::{Method, StatusCode};
-use axum::body::Body;
-use axum::http::Request;
-use tower::ServiceExt;
-use dist_agent_lang::stdlib::web::HttpServer;
+use dist_agent_lang::stdlib::web::{HttpServer, ServerConfig};
+use std::collections::HashMap;
 
 /// Test: Server should reject requests with invalid methods
 #[test]
@@ -14,7 +11,16 @@ fn test_server_invalid_method_rejection() {
     // For now, test that server config is valid
     let server = HttpServer {
         port: 8080,
-        routes: vec![],
+        routes: HashMap::new(),
+        middleware: Vec::new(),
+        static_files: HashMap::new(),
+        config: ServerConfig {
+            max_connections: 100,
+            timeout_seconds: 30,
+            cors_enabled: true,
+            ssl_enabled: false,
+            static_path: "./public".to_string(),
+        },
     };
     
     assert_eq!(server.port, 8080);

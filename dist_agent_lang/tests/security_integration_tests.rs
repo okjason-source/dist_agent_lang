@@ -75,7 +75,8 @@ fn test_input_validator_xss() {
 /// Test: Input validator should accept valid addresses
 #[test]
 fn test_input_validator_address() {
-    let valid_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb";
+    // Valid Ethereum address: 0x + 40 hex chars = 42 total chars
+    let valid_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0";
     assert!(InputValidator::validate_address(valid_address).is_ok());
     
     let invalid_addresses = vec![

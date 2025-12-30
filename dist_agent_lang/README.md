@@ -6,47 +6,66 @@
 
 **A hybrid compiled programming language for AI agents, blockchain, and distributed systems**
 
-## ⚠️ Production Readiness Disclaimer
+## ⚠️ Beta Release Notice
 
-**Current Status: Beta Release (v1.0.1)**
+**Current Version: v1.0.1 (Beta Release) - Actively Developed**
 
-dist_agent_lang is currently in **beta/early release** stage. While the language includes comprehensive security features and has passed dependency audits, it has not yet undergone extensive real-world production testing.
+dist_agent_lang is an **actively maintained beta release** with consistent updates and improvements. The language includes extensive security features, comprehensive documentation, and has passed all tests (187+ passing).
+
+**🙏 Beta Testing Contributions Appreciated!**  
+We welcome feedback, bug reports, and contributions from the developer community to help us reach production readiness (v1.1.0+).
 
 ### ✅ Safe For:
 - **Development & Prototyping** - Building and testing applications
-- **Learning & Experimentation** - Educational purposes
+- **Learning & Experimentation** - Educational purposes and learning
 - **Non-Critical Applications** - Applications not handling significant value
 - **Testing & Validation** - Validating concepts and workflows
+- **Beta Testing** - Help us improve with your feedback!
 
-### ⚠️ Use Caution For:
-- **Production Financial Applications** - Applications handling real money
-- **High-Value Smart Contracts** - Contracts managing significant assets
-- **Critical Infrastructure** - Systems requiring high reliability
-- **Applications Handling Sensitive Data** - Without additional security audits
+### ⚠️ Use With Caution For:
+- **Production Financial Applications** - Applications handling real money (wait for v1.1.0+)
+- **High-Value Smart Contracts** - Contracts managing significant assets (third-party audit recommended)
+- **Critical Infrastructure** - Systems requiring high reliability (additional validation needed)
+- **Sensitive Data Applications** - Additional security audits strongly recommended
 
-### 🔒 Security Features Included:
+### 🔒 Security Features (v1.0.1):
 - ✅ Reentrancy protection
 - ✅ Safe math (overflow/underflow protection)
 - ✅ State isolation
 - ✅ Cross-chain security
-- ✅ Advanced security features
-- ✅ 95 tests passing (core, stdlib, integration, security)
-- ✅ Dependency security audit passed
-- ✅ Performance benchmarks configured
+- ✅ Oracle security (signed feeds, multi-source validation)
+- ✅ Transaction atomicity (ACID guarantees)
+- ✅ Enhanced security logging
+- ✅ 187+ tests passing (100%)
+- ✅ Zero compilation errors
+- ✅ Dependency security audit passed (0 vulnerabilities)
+
+### 🚀 What's New in v1.0.1:
+- **AI Simplified Wrapper API** - Easy-to-use AI functions (classify, generate, embed, etc.)
+- **Model Registry System** - Register and manage custom AI models
+- **Phase 3 Documentation Complete** - Comprehensive developer guides, tutorials, API reference
+- **Enhanced Testing** - 187+ tests covering all features
+
+### 🔄 Active Development:
+This project receives **consistent updates** with improvements to security, performance, documentation, and features. We're working toward v1.1.0 (production release) with third-party security audits, real-world validation, and community feedback.
+
+**Target for Production (v1.1.0+):** ~14 weeks with community validation
 
 ### 📋 Recommendations:
-- **For Production Use**: Wait for version 1.1.0+ with more real-world validation
-- **For Critical Applications**: Conduct third-party security audit
-- **For Financial Applications**: Additional formal verification recommended
-- **Always**: Test thoroughly in development environment first
+- **For Production Use**: Wait for v1.1.0+ with third-party security audit and real-world validation
+- **For Critical Applications**: Conduct independent security audit before deployment
+- **For Financial Applications**: Additional formal verification strongly recommended
+- **Always**: Test thoroughly in development/testnet environments first
+- **Join Beta Testing**: Help us improve by testing and providing feedback!
 
-### ✅ **Current Test Status:**
-- **95 tests passing** across all test suites
-- **17 performance benchmarks** configured
-- **All known bugs fixed** (including overflow issues)
-- **Comprehensive coverage** of core features, standard library, and integration workflows
+### 🤝 How to Contribute to Beta:
+- Test in your development environment and report bugs
+- Provide feedback on documentation and developer experience
+- Share use cases and requirements
+- Contribute to discussions on GitHub
+- Submit pull requests for improvements
 
-**We recommend extensive testing and validation before deploying to production.**
+**We value your feedback and contributions as we work toward production readiness!**
 
 ## 🚀 Features
 
@@ -77,6 +96,49 @@ dist_agent_lang is currently in **beta/early release** stage. While the language
 - **Native**: High-performance desktop applications
 - **Mobile**: iOS and Android app development
 - **Edge**: IoT and edge computing devices
+
+## 📚 Documentation
+
+### Getting Started (5 minutes)
+- **[Quick Start Guide](../docs/QUICK_START.md)** - Get up and running in 5 minutes
+- **[Installation Guide](#-installation)** - Detailed installation instructions
+- **[Your First Contract](../docs/QUICK_START.md#-your-first-contract-3-minutes)** - Build and deploy your first smart contract
+
+### Production Deployment
+- **[Deployment Guide](../docs/DEPLOYMENT_GUIDE.md)** - Complete production deployment guide
+- **[Docker Deployment](../docs/DEPLOYMENT_GUIDE.md#-docker-deployment)** - Containerized deployment
+- **[CI/CD Integration](../docs/DEPLOYMENT_GUIDE.md#-cicd-integration)** - Automated deployment pipelines
+
+### Developer Guides
+- **[Best Practices](../docs/BEST_PRACTICES.md)** - Security, performance, and code organization
+- **[API Reference](../docs/API_REFERENCE.md)** - Complete standard library documentation (22 modules)
+- **[Testing Guide](../docs/BEST_PRACTICES.md#-testing-strategies)** - Comprehensive testing strategies
+
+### Tutorials
+- **[Tutorial 1: DeFi Token](../docs/tutorials/01_defi_token.md)** - Build a token with oracle integration
+- **[Tutorial 2: AI Trading Agent](../docs/tutorials/02_ai_trading_agent.md)** - Build an AI-powered trading bot
+- **[Tutorial 3: NFT Marketplace](#)** - Complete NFT marketplace
+- **[Tutorial 4: Cross-Chain Bridge](#)** - Multi-chain operations
+- **[More Tutorials...](../examples/)** - Real-world examples
+
+### AI Features
+- **[AI Features Guide](../docs/AI_FEATURES_GUIDE.md)** - Complete AI capabilities overview
+- **[AI Best Practices](../docs/AI_BEST_PRACTICES.md)** - Security and optimization for AI
+- **[AI+Blockchain Integration](#)** - Combine AI with DeFi, NFTs, and more
+- **[AI API Reference](../docs/API_REFERENCE.md#6-ai-aiml-integration)** - Complete AI API documentation
+
+### Migration Guides
+- **[From Solidity](../docs/migration/FROM_SOLIDITY.md)** - Migrate Solidity contracts to DAL
+- **[From Rust](#)** - Migrate Rust contracts
+- **[From Move](#)** - Migrate Move contracts
+
+### Architecture & Reference
+- **[Language Reference](../Documentation.md)** - Complete language specification
+- **[Architecture Overview](../docs/ARCHITECTURE_SEPARATION.md)** - System architecture
+- **[Phase 3 Plan](PHASE3_PLAN.md)** - Current development phase
+- **[Production Roadmap](PRODUCTION_ROADMAP.md)** - Journey to v1.1.0
+
+---
 
 ## 📦 Installation
 

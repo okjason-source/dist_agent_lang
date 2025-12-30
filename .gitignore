@@ -1,0 +1,37 @@
+# Development and Planning Documents (Keep Local)
+Plan.md
+PHASE*.md
+VERSION_PROGRESS_REPORT.md
+AI_IMPLEMENTATION_STATUS.md
+PRODUCTION_ROADMAP.md
+PHASE*_STATUS_UPDATE.md
+PHASE*_COMPLETION_SUMMARY.md
+DAL_SECURITY_IMPLEMENTATION_GUIDE.md
+PHASE2_INTEGRATION_STEPS.md
+AI_DOCUMENTATION_SUMMARY.md
+
+# IDE and OS files
+.DS_Store
+.vscode/
+.idea/
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Build artifacts
+target/
+dist/
+build/
+
+# Keys and sensitive data
+keys-token-project/
+*.key
+*.pem
+*.env
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*~

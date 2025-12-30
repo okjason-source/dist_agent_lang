@@ -126,6 +126,21 @@ impl InterfaceSelector {
     pub fn set_default(&mut self, interface: InterfaceType) {
         self.default_interface = interface;
     }
+
+    /// Get the default interface
+    pub fn default_interface(&self) -> InterfaceType {
+        self.default_interface
+    }
+
+    /// Get the number of registered services
+    pub fn service_count(&self) -> usize {
+        self.service_metadata.len()
+    }
+
+    /// Check if a service is registered
+    pub fn has_service(&self, service_name: &str) -> bool {
+        self.service_metadata.contains_key(service_name)
+    }
 }
 
 impl Default for InterfaceSelector {

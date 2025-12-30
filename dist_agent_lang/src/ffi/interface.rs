@@ -322,7 +322,7 @@ impl ServiceInterface for RustFFIInterface {
 }
 
 // Helper functions for JSON conversion
-fn value_to_json(value: &Value) -> serde_json::Value {
+pub fn value_to_json(value: &Value) -> serde_json::Value {
     match value {
         Value::Int(i) => serde_json::Value::Number((*i).into()),
         Value::Float(f) => serde_json::Value::Number(

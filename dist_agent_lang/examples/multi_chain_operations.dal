@@ -1,9 +1,9 @@
 // Multi-Chain Operations Example
 // This demonstrates the comprehensive chain namespace functions built into dist_agent_lang
 
-// @trust("hybrid")
-// @secure
-// @limit(15000)
+@trust("hybrid")
+@secure
+@limit(15000)
 service MultiChainKEYS {
     // Chain-specific contract addresses
     contract_addresses: map<int, string>,

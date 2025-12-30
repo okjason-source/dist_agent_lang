@@ -7,6 +7,7 @@ pub mod reentrancy;
 pub mod safe_math;
 pub mod state_isolation;
 pub mod advanced_security;
+pub mod transaction;
 
 pub use engine::Runtime;
 
@@ -14,3 +15,4 @@ pub use engine::Runtime;
 pub use reentrancy::ReentrancyGuard;
 pub use safe_math::SafeMath;
 pub use state_isolation::StateIsolationManager;
+pub use transaction::{TransactionManager, IsolationLevel, TransactionError};

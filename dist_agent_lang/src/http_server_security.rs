@@ -97,16 +97,20 @@ impl InputValidator {
         
         // Check for SQL injection patterns
         let sql_patterns = vec![
-            "';",
-            "\";",
-            "--",
-            "/*",
-            "*/",
-            "xp_",
-            "sp_",
-            "exec(",
-            "union",
-            "select",
+            "'",        // Single quote (dangerous in SQL)
+            "\"",       // Double quote (dangerous in SQL)  
+            "--",       // SQL comment
+            "/*",       // SQL comment start
+            "*/",       // SQL comment end
+            "xp_",      // SQL Server extended procedures
+            "sp_",      // SQL Server stored procedures
+            "exec",     // SQL execution command
+            "union",    // SQL UNION injection
+            "select",   // SQL SELECT statement
+            " or ",     // SQL boolean injection
+            " and ",    // SQL boolean injection
+            "drop ",    // SQL DROP command
+            "delete ",  // SQL DELETE command
         ];
         
         let input_lower = input.to_lowercase();

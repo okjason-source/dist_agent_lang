@@ -1,22 +1,29 @@
 # Installation and Usage Guide
 
-## ⚠️ Production Readiness Disclaimer
+## ⚠️ Beta Release Notice
 
-**Current Status: Beta Release (v1.0.1)**
+**Current Version: v1.0.1 (Beta Release)**
 
-dist_agent_lang is currently in **beta/early release** stage. While the language includes comprehensive security features and has passed dependency audits, it has not yet undergone extensive real-world production testing.
+dist_agent_lang is an **actively developed beta release** that is updated consistently with new features and improvements. While the language includes comprehensive security features and has passed all tests (187+ passing), it should be used with appropriate caution based on your use case.
+
+**🙏 Beta Testing Contributions Appreciated!**  
+We welcome feedback, bug reports, and contributions from early adopters to help us reach production readiness.
 
 ### ✅ Safe For:
 - **Development & Prototyping** - Building and testing applications
-- **Learning & Experimentation** - Educational purposes
+- **Learning & Experimentation** - Educational purposes and learning
 - **Non-Critical Applications** - Applications not handling significant value
 - **Testing & Validation** - Validating concepts and workflows
+- **Beta Testing** - Help us improve with your feedback!
 
-### ⚠️ Use Caution For:
+### ⚠️ Use With Caution For:
 - **Production Financial Applications** - Applications handling real money
 - **High-Value Smart Contracts** - Contracts managing significant assets
 - **Critical Infrastructure** - Systems requiring high reliability
-- **Applications Handling Sensitive Data** - Without additional security audits
+- **Applications Handling Sensitive Data** - Additional security audits recommended
+
+### 🔄 Active Development:
+This project is updated consistently with improvements to security, performance, and features. Check the repository regularly for updates and join our community to contribute!
 
 
 ## 📦 Installation
