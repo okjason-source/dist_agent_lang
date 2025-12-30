@@ -1,6 +1,6 @@
-# 🔄 Migration Guide: Solidity → dist_agent_lang (v1.0.1)
+# 🔄 Migration Guide: Solidity → dist_agent_lang (v1.0.2)
 
-> **📢 Beta Release v1.0.1:** Actively developed with consistent updates. Test migrated contracts thoroughly. **Beta testing contributions appreciated!** 🙏
+> **📢 Beta Release v1.0.2:** Actively developed with consistent updates. Test migrated contracts thoroughly. **Beta testing contributions appreciated!** 🙏
 
 Complete guide to migrating your Solidity contracts to **dist_agent_lang**.
 
@@ -441,18 +441,22 @@ contract MyContract {
 
 ## 🛠️ Tools & Automation
 
-### Automated Conversion Tool (Coming Soon)
+### Automated Conversion Tool ✅ **Available Now**
 
 ```bash
 # Convert Solidity to DAL
-dal convert MyContract.sol --output MyContract.dal
+dist_agent_lang convert MyContract.sol --output MyContract.dal
+# or
+dist_agent_lang convert MyContract.sol -o MyContract.dal
 
 # Analyze compatibility
-dal analyze MyContract.sol
+dist_agent_lang analyze MyContract.sol
 
 # Test migrated contract
-dal test MyContract.dal
+dist_agent_lang test MyContract.dal
 ```
+
+**Note**: The conversion tool is in active development. It handles common Solidity patterns but may require manual review for complex contracts. Always test converted contracts thoroughly!
 
 ### Manual Checklist
 
