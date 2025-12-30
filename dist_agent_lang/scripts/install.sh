@@ -278,7 +278,7 @@ verify_installation() {
     print_status "Verifying installation..."
     
     if command_exists dist_agent_lang; then
-        VERSION=$(dist_agent_lang --version 2>/dev/null || echo "1.0.0")
+        VERSION=$(dist_agent_lang --version 2>/dev/null || echo "1.0.2")
         print_success "dist_agent_lang $VERSION is installed and working"
     else
         print_error "dist_agent_lang not found in PATH"

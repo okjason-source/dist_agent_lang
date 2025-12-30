@@ -65,6 +65,32 @@ fn main() {
         "version" | "--version" | "-v" => {
             print_version();
         }
+        "convert" => {
+            if args.len() < 3 {
+                eprintln!("Usage: dist_agent_lang convert <input.sol> [--output <output.dal>]");
+                eprintln!("       dist_agent_lang convert <input.sol> -o <output.dal>");
+                std::process::exit(1);
+            }
+            let input_file = &args[2];
+            let output_file = if args.len() >= 5 && (args[3] == "--output" || args[3] == "-o") {
+                args[4].clone()
+            } else {
+                // Default output: replace .sol with .dal
+                if input_file.ends_with(".sol") {
+                    input_file[..input_file.len() - 4].to_string() + ".dal"
+                } else {
+                    input_file.to_string() + ".dal"
+                }
+            };
+            convert_solidity_file(input_file, &output_file);
+        }
+        "analyze" => {
+            if args.len() < 3 {
+                eprintln!("Usage: dist_agent_lang analyze <input.sol>");
+                std::process::exit(1);
+            }
+            analyze_solidity_file(&args[2]);
+        }
         _ => {
             eprintln!("Unknown command: {}", args[1]);
             eprintln!("Use 'dist_agent_lang help' for usage information");
@@ -335,7 +361,7 @@ let cap_check = cap::check(cap_request);
     println!("   Testing log namespace...");
     log::info("Application started", {
         let mut data = HashMap::new();
-        data.insert("version".to_string(), Value::String("1.0.0".to_string()));
+        data.insert("version".to_string(), Value::String("1.0.2".to_string()));
         data.insert("timestamp".to_string(), Value::Int(1234567890));
         data
     });
@@ -400,23 +426,27 @@ fn print_help() {
     println!("  dist_agent_lang <command> [options]");
     println!();
     println!("Commands:");
-    println!("  run <file.dal>     Run a dist_agent_lang file");
-    println!("  web <file.dal>     Run a dist_agent_lang web application");
-    println!("  test               Run the test suite");
-    println!("  help               Show this help message");
-    println!("  version            Show version information");
+    println!("  run <file.dal>              Run a dist_agent_lang file");
+    println!("  web <file.dal>              Run a dist_agent_lang web application");
+    println!("  test                        Run the test suite");
+    println!("  convert <input.sol> [-o <output.dal>]  Convert Solidity to DAL");
+    println!("  analyze <input.sol>          Analyze Solidity file for conversion compatibility");
+    println!("  help                        Show this help message");
+    println!("  version                     Show version information");
     println!();
     println!("Examples:");
     println!("  dist_agent_lang run my_app.dal");
     println!("  dist_agent_lang web keys-web-app.dal");
     println!("  dist_agent_lang test");
+    println!("  dist_agent_lang convert MyContract.sol -o MyContract.dal");
+    println!("  dist_agent_lang analyze MyContract.sol");
     println!();
     println!("For more information, visit: https://github.com/distagentlang/dist_agent_lang");
 }
 
 fn print_version() {
-    println!("dist_agent_lang v0.1.0");
-    println!("Phase 0: Foundation + Phase 1: Core Language Features");
+    println!("dist_agent_lang v1.0.2");
+    println!("Beta Release - Actively Developed");
     println!("Built with Rust");
 }
 
@@ -863,4 +893,75 @@ fn test_service_parsing() {
     }
     
     println!("\n🎉 Service parsing test completed!");
+}
+
+fn convert_solidity_file(input_file: &str, output_file: &str) {
+    use std::path::Path;
+    use dist_agent_lang::solidity_converter;
+    
+    println!("🔄 Converting Solidity to DAL: {} -> {}", input_file, output_file);
+    
+    let input_path = Path::new(input_file);
+    let output_path = Path::new(output_file);
+    
+    match solidity_converter::convert_file(input_path, output_path) {
+        Ok(_) => {
+            println!("✅ Conversion successful!");
+            println!("   Output written to: {}", output_file);
+        }
+        Err(e) => {
+            eprintln!("❌ Conversion failed: {}", e);
+            std::process::exit(1);
+        }
+    }
+}
+
+fn analyze_solidity_file(input_file: &str) {
+    use std::path::Path;
+    use dist_agent_lang::solidity_converter;
+    
+    println!("📊 Analyzing Solidity file: {}", input_file);
+    
+    let input_path = Path::new(input_file);
+    
+    match solidity_converter::analyze_file(input_path) {
+        Ok(report) => {
+            println!("\n📈 Analysis Report:");
+            println!("   Compatibility Score: {:.1}%", report.compatibility_score);
+            
+            if !report.errors.is_empty() {
+                println!("\n❌ Errors ({}):", report.errors.len());
+                for error in &report.errors {
+                    println!("   - {}", error);
+                }
+            }
+            
+            if !report.unsupported_features.is_empty() {
+                println!("\n⚠️  Unsupported Features ({}):", report.unsupported_features.len());
+                for feature in &report.unsupported_features {
+                    println!("   - {}", feature);
+                }
+            }
+            
+            if !report.warnings.is_empty() {
+                println!("\n⚠️  Warnings ({}):", report.warnings.len());
+                for warning in &report.warnings {
+                    println!("   - {}", warning);
+                }
+            }
+            
+            if !report.suggestions.is_empty() {
+                println!("\n💡 Suggestions ({}):", report.suggestions.len());
+                for suggestion in &report.suggestions {
+                    println!("   - {}", suggestion);
+                }
+            }
+            
+            println!("\n✅ Analysis complete!");
+        }
+        Err(e) => {
+            eprintln!("❌ Analysis failed: {}", e);
+            std::process::exit(1);
+        }
+    }
 }

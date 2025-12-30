@@ -15,6 +15,7 @@ pub mod http_server_converters;
 pub mod http_server_handlers;
 pub mod http_server_integration;
 pub mod ffi;
+pub mod solidity_converter;
 
 // Re-export security modules for easier access
 pub use http_server_security::{RateLimiter, RequestSizeLimiter, InputValidator, SecurityLogger};
