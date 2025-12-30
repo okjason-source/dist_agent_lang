@@ -86,19 +86,13 @@ pub async fn auth_middleware(
     
     // Extract token
     if let Some(token) = AuthValidator::extract_token(headers) {
-        // Validate token
-        match AuthValidator::validate_api_key(&token) {
-            Ok(true) => {
-                // Token is valid, continue
+        // Create validator instance and validate token
+        let validator = AuthValidator::default();
+        match validator.validate_api_key(&token) {
+            Ok(_claims) => {
+                // Token is valid with claims, continue
+                // TODO: Can attach claims to request extensions
                 next.run(request).await
-            }
-            Ok(false) => {
-                let ip = extract_ip(&request);
-                SecurityLogger::log_auth_failure(&ip.to_string(), "Invalid token");
-                Response::builder()
-                    .status(StatusCode::UNAUTHORIZED)
-                    .body(axum::body::Body::from("Unauthorized"))
-                    .unwrap()
             }
             Err(e) => {
                 let ip = extract_ip(&request);

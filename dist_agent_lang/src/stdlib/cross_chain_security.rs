@@ -677,35 +677,37 @@ mod tests {
     fn test_operation_validation() {
         let mut manager = CrossChainSecurityManager::new();
         
-        // Create a bridge between Polygon (137) and Polygon (137) to avoid High security requirements
-        // Use Polygon (137, Medium) to Polygon (137, Medium) for simpler validation
-        // Security deposit must be at least 1000000 to pass validation
+        // Generate a real ECDSA keypair for the validator
+        use crate::stdlib::crypto_signatures::ECDSASignatureVerifier;
+        let (validator_privkey, validator_pubkey) = ECDSASignatureVerifier::generate_keypair().unwrap();
+        
+        // Create a bridge with real validator public key (Polygon to Polygon for testing)
         manager.create_bridge(
-            137, 137, "0xbridge123".to_string(),
-            vec!["validator1".to_string(), "validator2".to_string()],
-            1, 1000000, 1000000, // max_amount, security_deposit (both meet minimum requirements)
+            137, // Polygon
+            137, // Polygon  
+            "0xbridge123".to_string(),
+            vec![validator_pubkey.clone()],
+            1,  // min_signatures
+            1000000, // max_amount
+            1000000, // security_deposit (must match max_amount for security)
         ).unwrap();
 
-        // Generate a valid signature for the test
-        // For nonce-based verification with ECDSA, signature must be hex-encoded and 64-132 chars
-        use sha2::{Sha256, Digest};
-        let mut hasher = Sha256::new();
-        hasher.update(b"test_data");
-        hasher.update(b"validator1");
-        let expected_sig = format!("{:x}", hasher.finalize());
-        // Use full 64-char hex signature for ECDSA format validation
-        let valid_signature = if expected_sig.len() >= 64 {
-            expected_sig[..64].to_string()
-        } else {
-            format!("{:0<64}", expected_sig) // Pad to 64 chars with zeros
-        };
-        
-        // Use a future timestamp for timeout (current time + 1 hour)
+        // Get current timestamp first
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
         let future_timeout = now + 3600; // 1 hour from now
+        
+        // Create message to sign (operation data + nonce/timestamp)
+        use sha2::{Sha256, Digest};
+        let mut hasher = Sha256::new();
+        hasher.update(b"test_data");
+        hasher.update(&now.to_be_bytes());
+        let message_with_nonce = hasher.finalize();
+        
+        // Sign with real ECDSA
+        let valid_signature = ECDSASignatureVerifier::sign(&message_with_nonce, &validator_privkey).unwrap();
         
         let operation = CrossChainOperation {
             operation_id: "test_op".to_string(),
@@ -718,8 +720,8 @@ mod tests {
             },
             data: b"test_data".to_vec(),
             signatures: vec![ValidatorSignature {
-                validator_address: "validator1".to_string(),
-                signature: valid_signature, // Valid signature that matches verification logic
+                validator_address: validator_pubkey,
+                signature: valid_signature, // Real ECDSA signature
                 timestamp: now, // Use timestamp as nonce for replay protection
                 chain_id: 137, // Match source_chain for proper validation
             }],
