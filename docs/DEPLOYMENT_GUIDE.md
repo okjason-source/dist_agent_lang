@@ -68,19 +68,36 @@ Before deploying to production:
 Create a `.env.production` file:
 
 ```bash
-# Network Configuration
-DAL_NETWORK=mainnet
+# Network Configuration (Multi-Chain)
+# Note: DAL_NETWORK controls ALL blockchain connections (Ethereum, Polygon, Solana, etc.)
+DAL_NETWORK=mainnet  # Use production mainnets for all chains
 DAL_RPC_URL=https://mainnet.infura.io/v3/YOUR_PROJECT_ID
-DAL_CHAIN_ID=1
+DAL_CHAIN_ID=1  # Default: Ethereum mainnet
+
+# Multi-Chain RPC Overrides (Optional)
+DAL_ETHEREUM_RPC=https://mainnet.infura.io/v3/YOUR_PROJECT_ID
+DAL_POLYGON_RPC=https://polygon-mainnet.infura.io/v3/YOUR_PROJECT_ID
+DAL_SOLANA_RPC=https://api.mainnet-beta.solana.com
+DAL_ARBITRUM_RPC=https://arb1.arbitrum.io/rpc
 
 # Wallet Configuration
 DAL_WALLET_TYPE=hardware  # or 'encrypted', 'keystore'
 DAL_WALLET_PATH=/path/to/wallet
 
-# Security
+# Security Features (NEW in v1.0.2)
 DAL_ENABLE_REENTRANCY_GUARD=true
 DAL_ENABLE_SAFE_MATH=true
 DAL_ENABLE_RATE_LIMITING=true
+DAL_JWT_SECRET=your-strong-jwt-secret-32-chars-min  # For API authentication
+DAL_JWT_EXPIRATION_HOURS=24
+DAL_ENABLE_REPLAY_PROTECTION=true  # Nonce-based signature validation
+DAL_ENABLE_STRUCTURED_LOGGING=true  # Enhanced security audit logs
+
+# CloudAdmin Configuration (NEW in v1.0.2)
+DAL_CLOUDADMIN_ENABLED=true
+DAL_SUPERADMIN_ADDRESSES=0xYourAddress1,0xYourAddress2  # Comma-separated
+DAL_ADMIN_POLICY_LEVEL=strict  # strict, moderate, or permissive
+DAL_HYBRID_TRUST_ENABLED=true  # Enable hybrid trust model
 
 # Gas Configuration
 DAL_GAS_PRICE=auto  # or specific gwei value
@@ -91,15 +108,20 @@ DAL_MAX_PRIORITY_FEE=2  # gwei
 DAL_ORACLE_PROVIDER=chainlink
 DAL_ORACLE_TIMEOUT=30000  # ms
 DAL_ORACLE_REQUIRE_SIGNATURE=true
+DAL_ORACLE_MIN_CONFIRMATIONS=3  # Multi-source validation
 
 # Deployment
 DAL_VERIFY_ON_ETHERSCAN=true
 DAL_ETHERSCAN_API_KEY=YOUR_API_KEY
+DAL_VERIFY_ON_POLYGONSCAN=true
+DAL_POLYGONSCAN_API_KEY=YOUR_API_KEY
 
-# Monitoring
+# Monitoring & Logging
 DAL_ENABLE_TELEMETRY=true
 DAL_SENTRY_DSN=https://your-sentry-dsn
-DAL_LOG_LEVEL=info
+DAL_LOG_LEVEL=info  # debug, info, warn, error
+DAL_SECURITY_LOG_TARGET=security::auth  # Structured logging target
+DAL_AUDIT_LOG_PATH=/var/log/dal/audit.log
 ```
 
 ### 2. Secure Your Private Keys
