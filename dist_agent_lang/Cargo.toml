@@ -56,16 +56,13 @@ proptest = "1.4"
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
 
-# Benchmarks are optional - only available if benches/ directory exists
-# These are commented out because benches/ is in .gitignore
-# Uncomment and ensure benches/ directory exists to use benchmarks
-# [[bench]]
-# name = "performance"
-# harness = false
+[[bench]]
+name = "performance"
+harness = false
 
-# [[bench]]
-# name = "performance_benchmarks"
-# harness = false
+[[bench]]
+name = "performance_benchmarks"
+harness = false
 
 # Exclude .rs files in examples/ directory from compilation
 # These are dist_agent_lang source files, not Rust files
