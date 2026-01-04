@@ -18,19 +18,19 @@ use parser::error::{ParserError, ErrorContext, SimpleErrorReporter, ErrorReporte
 use lexer::tokens::{Token, Punctuation};
 use std::collections::HashMap;
 
-// Testing framework imports
-use testing::{TestCase, TestSuite, TestResult, TestStatus, TestConfig};
-use testing::{MockFunction, MockRegistry, MockBuilder};
-use testing::TestRunner;
+// Testing framework imports - kept for potential future use
+// use testing::{TestCase, TestSuite, TestResult, TestStatus, TestConfig};
+// use testing::{MockFunction, MockRegistry, MockBuilder};
+// use testing::TestRunner;
 
-// Performance imports
-use performance::optimizer::{Optimizer, OptimizationLevel};
-use performance::memory::get_global_memory_manager;
-use performance::concurrency::{ThreadPool, AsyncScheduler, TaskPriority, ParallelExecutor};
-use performance::{BenchmarkRunner, BenchmarkResult, BenchmarkSuite};
-use performance::{Profiler, ProfileEvent};
-use performance::{MemoryManager, MemoryStats};
-use performance::AsyncTask;
+// Performance imports - kept for potential future use
+// use performance::optimizer::{Optimizer, OptimizationLevel};
+// use performance::memory::get_global_memory_manager;
+// use performance::concurrency::{ThreadPool, AsyncScheduler, TaskPriority, ParallelExecutor};
+// use performance::{BenchmarkRunner, BenchmarkResult, BenchmarkSuite};
+// use performance::{Profiler, ProfileEvent};
+// use performance::{MemoryManager, MemoryStats};
+// use performance::AsyncTask;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

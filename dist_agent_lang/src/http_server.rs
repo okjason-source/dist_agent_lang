@@ -262,7 +262,7 @@ async fn home_handler() -> Html<String> {
         <div class="header">
             <h1>🔑 KEYS Web Application</h1>
             <p>Built with dist_agent_lang - Unified Language for Web & Blockchain</p>
-            <div class="language-badge">dist_agent_lang v0.1.0</div>
+            <div class="language-badge">dist_agent_lang v1.0.2</div>
         </div>
 
         <div class="grid">

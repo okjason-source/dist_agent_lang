@@ -219,14 +219,24 @@ jobs:
       with:
         path: artifacts
     
+    - name: Extract version from tag
+      id: get_version
+      run: |
+        VERSION="${{ github.event.release.tag_name }}"
+        # Remove 'v' prefix if present
+        VERSION=${VERSION#v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Extracted version: $VERSION"
+    
     - name: Create release package
       run: |
-        mkdir -p dist_agent_lang-1.0.0/bin
-        cp artifacts/*/dist_agent_lang* dist_agent_lang-1.0.0/bin/ || true
-        cp -r src examples docs scripts templates dist_agent_lang-1.0.0/
-        cp Cargo.toml README.md LICENSE CHANGELOG.md package.json dist_agent_lang-1.0.0/
-        tar -czf dist_agent_lang-1.0.0.tar.gz dist_agent_lang-1.0.0/
-        zip -r dist_agent_lang-1.0.0.zip dist_agent_lang-1.0.0/
+        VERSION="${{ steps.get_version.outputs.version }}"
+        mkdir -p dist_agent_lang-${VERSION}/bin
+        cp artifacts/*/dist_agent_lang* dist_agent_lang-${VERSION}/bin/ || true
+        cp -r src examples docs scripts templates dist_agent_lang-${VERSION}/
+        cp Cargo.toml README.md LICENSE CHANGELOG.md package.json dist_agent_lang-${VERSION}/
+        tar -czf dist_agent_lang-${VERSION}.tar.gz dist_agent_lang-${VERSION}/
+        zip -r dist_agent_lang-${VERSION}.zip dist_agent_lang-${VERSION}/
     
     - name: Upload release assets
       uses: actions/upload-release-asset@v1
@@ -234,8 +244,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./dist_agent_lang-1.0.0.tar.gz
-        asset_name: dist_agent_lang-1.0.0.tar.gz
+        asset_path: ./dist_agent_lang-${{ steps.get_version.outputs.version }}.tar.gz
+        asset_name: dist_agent_lang-${{ steps.get_version.outputs.version }}.tar.gz
         asset_content_type: application/gzip
     
     - name: Upload release assets (zip)
@@ -244,8 +254,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./dist_agent_lang-1.0.0.zip
-        asset_name: dist_agent_lang-1.0.0.zip
+        asset_path: ./dist_agent_lang-${{ steps.get_version.outputs.version }}.zip
+        asset_name: dist_agent_lang-${{ steps.get_version.outputs.version }}.zip
         asset_content_type: application/zip
 
   # Documentation

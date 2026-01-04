@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const VERSION = process.env.VERSION || '1.0.0';
+const VERSION = process.env.VERSION || '1.0.2';
 const RELEASE_DIR = `dist_agent_lang-${VERSION}`;
 const PLATFORMS = ['x86_64-unknown-linux-gnu', 'x86_64-apple-darwin', 'x86_64-pc-windows-msvc'];
 

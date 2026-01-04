@@ -34,7 +34,7 @@ log-test.dal
 minimal-test.dal
 test/
 test2/
-benches/
+# benches/ - Keep benchmarks in repo for build compatibility
 
 # Backup files
 *.bak
