@@ -303,7 +303,7 @@ impl IsolatedContractState {
 
     /// Hash a value recursively
     fn hash_value(&self, value: &Value, hasher: &mut std::collections::hash_map::DefaultHasher) {
-        use std::hash::{Hash, Hasher};
+        use std::hash::Hash;
 
         match value {
             Value::Null => 0u8.hash(hasher),

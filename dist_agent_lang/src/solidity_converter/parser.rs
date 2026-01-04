@@ -1,7 +1,5 @@
 // Solidity Parser - Parses Solidity source code into AST
 
-use std::collections::HashMap;
-
 /// Solidity AST structures
 #[derive(Debug, Clone)]
 pub struct SolidityAST {

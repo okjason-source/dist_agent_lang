@@ -3,8 +3,6 @@
 
 use crate::runtime::values::Value;
 use std::time::{Duration, Instant};
-use std::sync::Arc;
-use tokio::sync::RwLock;
 
 /// Resource limits for FFI execution
 #[derive(Debug, Clone)]

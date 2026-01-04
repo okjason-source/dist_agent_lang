@@ -3,7 +3,7 @@
 
 use crate::runtime::values::Value;
 use crate::runtime::engine::Runtime;
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::os::raw::{c_char, c_int};
 
 /// Rust FFI runtime handle
@@ -60,7 +60,7 @@ pub extern "C" fn dist_agent_lang_runtime_new() -> *mut RustFFIRuntime {
 pub extern "C" fn dist_agent_lang_runtime_free(ptr: *mut RustFFIRuntime) {
     if !ptr.is_null() {
         unsafe {
-            Box::from_raw(ptr);
+            let _ = Box::from_raw(ptr);
         }
     }
 }

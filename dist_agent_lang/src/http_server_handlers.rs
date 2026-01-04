@@ -10,9 +10,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use crate::http_server::WebServerState;
 use crate::runtime::engine::Runtime;
-use crate::http_server_middleware::{execute_middleware_chain, execute_route_handler, MiddlewareError};
+use crate::http_server_middleware::{execute_middleware_chain, execute_route_handler};
 use crate::http_server_converters::{axum_request_to_http_request, http_response_to_axum_response, error_response};
-use crate::stdlib::web::HttpRequest;
 
 /// Generic handler that executes middleware and route handler
 pub async fn handle_with_middleware(

@@ -6,12 +6,14 @@ use sha2::{Sha256, Digest};
 use hex;
 use crate::runtime::functions::RuntimeError;
 use k256::{
-    ecdsa::{SigningKey, VerifyingKey, Signature as K256Signature, signature::{Signer, Verifier}},
-    SecretKey, PublicKey as K256PublicKey,
+    ecdsa::{SigningKey, VerifyingKey, Signature as K256Signature, signature::Signer},
+    SecretKey,
 };
+use k256::ecdsa::signature::Verifier as EcdsaVerifier;
 use ed25519_dalek::{
-    Verifier as Ed25519Verifier, VerifyingKey as Ed25519VerifyingKey,
+    VerifyingKey as Ed25519VerifyingKey,
     Signature as Ed25519Signature,
+    Verifier as Ed25519Verifier,
 };
 use base64;
 

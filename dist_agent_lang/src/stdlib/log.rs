@@ -26,7 +26,6 @@ pub enum LogLevel {
     Debug,
 }
 
-/// Global log storage (mock implementation)
 lazy_static::lazy_static! {
     static ref LOG_STORAGE: Mutex<Vec<LogEntry>> = Mutex::new(Vec::new());
 }

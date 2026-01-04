@@ -361,7 +361,7 @@ let cap_check = cap::check(cap_request);
     println!("   Testing log namespace...");
     log::info("Application started", {
         let mut data = HashMap::new();
-        data.insert("version".to_string(), Value::String("1.0.2".to_string()));
+        data.insert("version".to_string(), Value::String(env!("CARGO_PKG_VERSION").to_string()));
         data.insert("timestamp".to_string(), Value::Int(1234567890));
         data
     });
@@ -445,7 +445,7 @@ fn print_help() {
 }
 
 fn print_version() {
-    println!("dist_agent_lang v1.0.2");
+    println!("dist_agent_lang v{}", env!("CARGO_PKG_VERSION"));
     println!("Beta Release - Actively Developed");
     println!("Built with Rust");
 }

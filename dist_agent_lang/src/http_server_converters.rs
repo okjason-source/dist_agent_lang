@@ -3,7 +3,7 @@
 
 use axum::{
     extract::Request,
-    http::{HeaderMap, Method, StatusCode, Uri},
+    http::StatusCode,
     response::Response,
     body::Body,
 };
@@ -111,7 +111,7 @@ async fn extract_body(request: &mut Request) -> Result<String, String> {
     // The body is consumed when we read it, so we need to handle this carefully
     
     // Get the body from the request
-    let body = std::mem::replace(request.body_mut(), Body::empty());
+    let _body = std::mem::replace(request.body_mut(), Body::empty());
     
     // Use axum's built-in body collection
     // In Axum 0.7, we can use the body's collect method or convert to bytes

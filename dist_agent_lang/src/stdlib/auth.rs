@@ -3,8 +3,8 @@
 /// 
 /// This module uses the secure_auth backend for production-ready security
 
-use crate::stdlib::secure_auth::{SecureUserStore, SecureSession, PasswordHasher};
-use crate::stdlib::cross_chain_security::{CrossChainSecurityManager, BridgeConfig};
+use crate::stdlib::secure_auth::{SecureUserStore, SecureSession};
+use crate::stdlib::cross_chain_security::CrossChainSecurityManager;
 use std::sync::Mutex;
 
 // Global secure user store

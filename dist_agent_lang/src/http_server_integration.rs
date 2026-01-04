@@ -3,7 +3,6 @@
 
 use axum::{
     extract::{Request, State},
-    http::Method,
     response::Response,
     body::Body,
     routing::{get, post},
@@ -11,7 +10,7 @@ use axum::{
 };
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use crate::http_server::{WebServerState, start_http_server};
+use crate::http_server::WebServerState;
 use crate::http_server_handlers::handle_with_middleware;
 use crate::http_server_converters::error_response;
 use crate::stdlib::web::HttpServer;

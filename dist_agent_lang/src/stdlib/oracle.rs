@@ -135,8 +135,8 @@ impl OracleQuery {
     pub fn require_signature(mut self, required: bool) -> Self {
         self.require_signature = required;
         self
-    }
-    
+}
+
     /// Security: Require multiple source confirmations
     pub fn with_confirmations(mut self, count: u32) -> Self {
         self.min_confirmations = Some(count);
@@ -274,9 +274,9 @@ pub fn fetch(source: &str, query: OracleQuery) -> Result<OracleResponse, String>
     };
     
     let response = OracleResponse {
-        data: mock_data,
+                data: mock_data,
         timestamp,
-        source: source.to_string(),
+                source: source.to_string(),
         signature,
         verified: false, // Will be verified by caller
         confidence_score: 1.0, // Single source = 100% confidence
@@ -290,7 +290,7 @@ pub fn fetch(source: &str, query: OracleQuery) -> Result<OracleResponse, String>
     }
     
     Ok(response)
-}
+        }
 
 /// Security: Fetch data from multiple sources and validate consensus
 pub fn fetch_with_consensus(sources: Vec<&str>, query: OracleQuery, threshold: f64) -> Result<OracleResponse, String> {

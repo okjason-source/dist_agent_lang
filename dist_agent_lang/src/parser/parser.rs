@@ -34,7 +34,7 @@ impl Parser {
     fn parse_statement(&mut self, position: usize) -> Result<(usize, Statement), ParserError> {
         // Check for attributes first
         if let Some(Token::Punctuation(Punctuation::At)) = self.tokens.get(position) {
-            // Attributes can only appear before function declarations
+            // Attributes can appear before function or service declarations
             let mut current_position = position;
             let mut attributes = Vec::new();
             
@@ -45,7 +45,7 @@ impl Parser {
                 current_position = new_pos;
             }
             
-            // After attributes, we must have a function declaration (async or regular)
+            // After attributes, we must have a function declaration (async or regular) or service declaration
             if let Some(Token::Keyword(Keyword::Fn)) = self.tokens.get(current_position) {
                 let (new_pos, mut func_stmt) = self.parse_function_statement(current_position)?;
                 // Set the collected attributes
@@ -61,12 +61,16 @@ impl Parser {
                 }
                 return Ok((new_pos, func_stmt));
             } else if let Some(Token::Keyword(Keyword::Service)) = self.tokens.get(current_position) {
-                let (new_pos, mut service_stmt) = self.parse_service_statement_with_attributes(current_position, attributes)?;
+                let (new_pos, service_stmt) = self.parse_service_statement_with_attributes(current_position, attributes)?;
                 return Ok((new_pos, service_stmt));
             } else {
+                // Get the actual token for better error reporting
+                let actual_token = self.tokens.get(current_position).unwrap_or(&Token::EOF);
+                // Ensure we list both expected options clearly
+                let expected = vec!["function declaration", "service declaration"];
                 return Err(ParserError::unexpected_token(
-                    self.tokens.get(current_position).unwrap_or(&Token::EOF),
-                    &["function declaration", "service declaration"],
+                    actual_token,
+                    &expected,
                     1,
                     1
                 ));
@@ -103,6 +107,12 @@ impl Parser {
             // Skip EOF tokens
             Ok((position + 1, Statement::Expression(Expression::Literal(Literal::Null))))
         } else {
+            // Before falling through to expression parsing, check if this might be a service declaration
+            // that wasn't caught earlier (shouldn't happen, but defensive check)
+            if let Some(Token::Keyword(Keyword::Service)) = self.tokens.get(position) {
+                // This should have been caught at line 92, but if we get here, try parsing as service
+                return self.parse_service_statement(position);
+            }
             let (new_position, expr) = self.parse_expression(position)?;
             Ok((new_position, Statement::Expression(expr)))
         }
@@ -187,10 +197,18 @@ impl Parser {
                 Expression::FieldAccess(object_expr, field_name) => {
                     return Ok((position, Expression::FieldAssignment(object_expr, field_name, Box::new(value))));
                 }
+                Expression::FunctionCall(call) if call.name == "__index__" && call.arguments.len() == 2 => {
+                    // Array assignment: arr[index] = value
+                    // Represent as a function call: __index_assign__(arr, index, value)
+                    return Ok((position, Expression::FunctionCall(FunctionCall {
+                        name: "__index_assign__".to_string(),
+                        arguments: vec![call.arguments[0].clone(), call.arguments[1].clone(), value],
+                    })));
+                }
                 _ => {
                     return Err(ParserError::invalid_function_call(
                         "assignment",
-                        "Invalid assignment target - expected identifier or field access",
+                        "Invalid assignment target - expected identifier, field access, or array access",
                         1
                     ));
                 }
@@ -346,7 +364,51 @@ impl Parser {
             }
         }
         
-        self.parse_primary(position)
+        // Parse primary expression, then handle postfix operations (array access, field access)
+        let mut current_position = position;
+        let (new_position, mut expr) = self.parse_primary(current_position)?;
+        current_position = new_position;
+        
+        // Handle postfix operations: array access [index] and chained field access .field
+        while current_position < self.tokens.len() {
+            // Array access: expr[index]
+            if let Some(Token::Punctuation(Punctuation::LeftBracket)) = self.tokens.get(current_position) {
+                let (new_pos, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::LeftBracket))?;
+                current_position = new_pos;
+                
+                // Parse index expression
+                let (new_pos, index_expr) = self.parse_expression(current_position)?;
+                current_position = new_pos;
+                
+                // Expect closing bracket
+                let (new_pos, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::RightBracket))?;
+                current_position = new_pos;
+                
+                // Represent array access as a function call for now
+                // In the future, we could add IndexAccess to Expression enum
+                expr = Expression::FunctionCall(FunctionCall {
+                    name: "__index__".to_string(),
+                    arguments: vec![expr, index_expr],
+                });
+                continue;
+            }
+            
+            // Chained field access: expr.field (for cases like self.balances[key])
+            if let Some(Token::Punctuation(Punctuation::Dot)) = self.tokens.get(current_position) {
+                let (new_pos, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::Dot))?;
+                current_position = new_pos;
+                
+                let (new_pos, field_name) = self.expect_identifier(current_position)?;
+                current_position = new_pos;
+                
+                expr = Expression::FieldAccess(Box::new(expr), field_name);
+                continue;
+            }
+            
+            break;
+        }
+        
+        Ok((current_position, expr))
     }
 
     fn parse_primary(&self, position: usize) -> Result<(usize, Expression), ParserError> {
@@ -960,6 +1022,7 @@ impl Parser {
                 Keyword::Secure => "secure".to_string(),
                 Keyword::Limit => "limit".to_string(),
                 Keyword::Trust => "trust".to_string(),
+                Keyword::Chain => "chain".to_string(),
                 _ => format!("{:?}", keyword).to_lowercase(),
             }
         } else {
@@ -1269,8 +1332,8 @@ impl Parser {
         let (new_position, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::Colon))?;
         current_position = new_position;
         
-        // Parse field type
-        let (new_position, field_type) = self.expect_identifier(current_position)?;
+        // Parse field type (supports generics like map<string, int>)
+        let (new_position, field_type) = self.parse_type_expression(current_position)?;
         current_position = new_position;
         
         // Parse initial value if present
@@ -1296,6 +1359,56 @@ impl Parser {
         };
         
         Ok((current_position, field))
+    }
+
+    /// Parse a type expression, supporting both simple types and generics
+    /// Examples: "string", "int", "map<string, int>", "list<string>"
+    fn parse_type_expression(&self, position: usize) -> Result<(usize, String), ParserError> {
+        let mut current_position = position;
+        
+        // Parse base type name
+        let (new_position, base_type) = self.expect_identifier(current_position)?;
+        current_position = new_position;
+        
+        // Check if this is a generic type (has <)
+        if let Some(Token::Operator(Operator::Less)) = self.tokens.get(current_position) {
+            // Parse generic parameters
+            let (new_pos, _) = self.expect_token(current_position, &Token::Operator(Operator::Less))?;
+            current_position = new_pos;
+            
+            let mut type_params = Vec::new();
+            
+            // Parse type parameters
+            loop {
+                let (new_pos, param_type) = self.parse_type_expression(current_position)?;
+                current_position = new_pos;
+                type_params.push(param_type);
+                
+                // Check for comma or closing bracket
+                if let Some(Token::Punctuation(Punctuation::Comma)) = self.tokens.get(current_position) {
+                    let (new_pos, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::Comma))?;
+                    current_position = new_pos;
+                } else if let Some(Token::Operator(Operator::Greater)) = self.tokens.get(current_position) {
+                    let (new_pos, _) = self.expect_token(current_position, &Token::Operator(Operator::Greater))?;
+                    current_position = new_pos;
+                    break;
+                } else {
+                    return Err(ParserError::unexpected_token(
+                        self.tokens.get(current_position).unwrap_or(&Token::EOF),
+                        &[",", ">"],
+                        1,
+                        1
+                    ));
+                }
+            }
+            
+            // Build the type string: "map<string, int>"
+            let type_str = format!("{}<{}>", base_type, type_params.join(", "));
+            Ok((current_position, type_str))
+        } else {
+            // Simple type
+            Ok((current_position, base_type))
+        }
     }
 
     fn parse_event_declaration(&self, position: usize) -> Result<(usize, EventDeclaration), ParserError> {
