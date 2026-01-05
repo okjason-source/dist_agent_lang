@@ -23,6 +23,12 @@ impl Lexer {
     }
 
     pub fn tokenize_immutable(&self) -> Result<Vec<Token>, LexerError> {
+        self.tokenize_with_positions_immutable().map(|tokens_with_pos| {
+            tokens_with_pos.into_iter().map(|twp| twp.token).collect()
+        })
+    }
+
+    pub fn tokenize_with_positions_immutable(&self) -> Result<Vec<crate::lexer::tokens::TokenWithPosition>, LexerError> {
         let mut tokens = Vec::new();
         let mut position = self.position;
         let mut line = self.line;
@@ -42,13 +48,14 @@ impl Lexer {
             
             // Get the next token
             let (new_pos, new_line, new_col, token) = self.next_token_immutable(position, line, column)?;
+            // Store the token with its position (before advancing)
+            tokens.push(crate::lexer::tokens::TokenWithPosition::new(token, line, column));
             position = new_pos;
             line = new_line;
             column = new_col;
-            tokens.push(token);
         }
         
-        tokens.push(Token::EOF);
+        tokens.push(crate::lexer::tokens::TokenWithPosition::new(Token::EOF, line, column));
         Ok(tokens)
     }
 

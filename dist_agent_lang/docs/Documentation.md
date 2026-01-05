@@ -419,12 +419,16 @@ aml::generate_compliance_report(user_id)
 @test
 service MyTestSuite {
     fn test_basic_operations() -> bool {
+        // Create service instance - both syntaxes work:
         let service = MyService::new();
+        // or: let service = service::new("MyService");
+        
         let result = service.mint("0x123...", 1000);
         return result == true;
     }
     
     fn test_error_handling() -> bool {
+        let service = MyService::new();
         try {
             service.mint("invalid", -100);
             return false; // Should not reach here

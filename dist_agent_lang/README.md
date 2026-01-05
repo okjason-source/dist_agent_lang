@@ -165,7 +165,7 @@ cargo install --path .
 ### From Release Package
 ```bash
 # Download latest release
-wget https://github.com/distagentlang/dist_agent_lang/releases/latest/download/dist_agent_lang-1.0.0.tar.gz
+wget https://github.com/distagentlang/dist_agent_lang/releases/latest/download/dist_agent_lang-latest.tar.gz
 
 # Extract and install
 tar -xzf dist_agent_lang-1.0.0.tar.gz
@@ -259,13 +259,12 @@ service AIAgentDemo {
 @secure
 @chain("ethereum")
 service TokenContract {
-    name: string = "MyToken",
-    symbol: string = "MTK",
-    total_supply: int = 1000000,
-    balances: map<string, int>,
+    name: string = "MyToken";
+    symbol: string = "MTK";
+    total_supply: int = 1000000;
+    balances: map<string, int> = {};
     
-    fn initialize() {
-        let owner = auth::session().user_id;
+    fn initialize(owner: string) {
         self.balances[owner] = self.total_supply;
         log::info("contract", "Token contract initialized");
     }
@@ -284,6 +283,17 @@ service TokenContract {
         return true;
     }
 }
+
+// Create and use service instances
+let token = TokenContract::new();
+token.initialize("0x1234567890123456789012345678901234567890");
+
+// Alternative instantiation syntax
+let token2 = service::new("TokenContract");
+token2.initialize("0xabcdefabcdefabcdefabcdefabcdefabcdefabcd");
+
+// Call methods on instances
+token.transfer("0x456...", 100);
 ```
 
 ## 📚 Documentation

@@ -460,6 +460,20 @@ pub enum Token {
     EOF,
 }
 
+// Token with position information for accurate error reporting
+#[derive(Debug, Clone)]
+pub struct TokenWithPosition {
+    pub token: Token,
+    pub line: usize,
+    pub column: usize,
+}
+
+impl TokenWithPosition {
+    pub fn new(token: Token, line: usize, column: usize) -> Self {
+        Self { token, line, column }
+    }
+}
+
 // Keep the old struct as TokenStruct for internal use
 #[derive(Debug, Clone, PartialEq)]
 pub struct TokenStruct {

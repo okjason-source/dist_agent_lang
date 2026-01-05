@@ -11,11 +11,43 @@ use std::collections::HashMap;
 
 pub struct Parser {
     tokens: Vec<Token>,
+    token_positions: Vec<(usize, usize)>, // (line, column) for each token
 }
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens }
+        // For backward compatibility, create empty positions
+        // In the future, we should pass tokens with positions
+        Self { 
+            tokens,
+            token_positions: Vec::new(),
+        }
+    }
+
+    pub fn new_with_positions(tokens_with_pos: Vec<crate::lexer::tokens::TokenWithPosition>) -> Self {
+        let mut tokens = Vec::new();
+        let mut positions = Vec::new();
+        for twp in tokens_with_pos {
+            positions.push((twp.line, twp.column));
+            tokens.push(twp.token);
+        }
+        Self { tokens, token_positions: positions }
+    }
+
+    fn get_token_position(&self, position: usize) -> (usize, usize) {
+        if position < self.token_positions.len() {
+            self.token_positions[position]
+        } else {
+            // Fallback: try to calculate from token index
+            // This is a rough estimate
+            (1, 1)
+        }
+    }
+
+    fn error_unexpected_token(&self, position: usize, expected: &[&str]) -> ParserError {
+        let token = self.tokens.get(position).unwrap_or(&Token::EOF);
+        let (line, column) = self.get_token_position(position);
+        ParserError::unexpected_token(token, expected, line, column)
     }
 
     pub fn parse(&mut self) -> Result<Program, ParserError> {
@@ -39,10 +71,15 @@ impl Parser {
             let mut attributes = Vec::new();
             
             // Collect all attributes
-            while let Some(Token::Punctuation(Punctuation::At)) = self.tokens.get(current_position) {
-                let (new_pos, attr) = self.parse_attribute(current_position)?;
-                attributes.push(attr);
-                current_position = new_pos;
+            while current_position < self.tokens.len() {
+                if let Some(Token::Punctuation(Punctuation::At)) = self.tokens.get(current_position) {
+                    let (new_pos, attr) = self.parse_attribute(current_position)?;
+                    attributes.push(attr);
+                    current_position = new_pos;
+                } else {
+                    // No more attributes, break
+                    break;
+                }
             }
             
             // After attributes, we must have a function declaration (async or regular) or service declaration
@@ -65,15 +102,8 @@ impl Parser {
                 return Ok((new_pos, service_stmt));
             } else {
                 // Get the actual token for better error reporting
-                let actual_token = self.tokens.get(current_position).unwrap_or(&Token::EOF);
-                // Ensure we list both expected options clearly
                 let expected = vec!["function declaration", "service declaration"];
-                return Err(ParserError::unexpected_token(
-                    actual_token,
-                    &expected,
-                    1,
-                    1
-                ));
+                return Err(self.error_unexpected_token(current_position, &expected));
             }
         }
         
@@ -398,10 +428,28 @@ impl Parser {
                 let (new_pos, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::Dot))?;
                 current_position = new_pos;
                 
-                let (new_pos, field_name) = self.expect_identifier(current_position)?;
+                let (new_pos, field_name) = self.expect_identifier_or_keyword(current_position)?;
                 current_position = new_pos;
                 
-                expr = Expression::FieldAccess(Box::new(expr), field_name);
+                // Check if this is a method call: expr.field()
+                if let Some(Token::Punctuation(Punctuation::LeftParen)) = self.tokens.get(current_position) {
+                    let (new_pos, arguments) = self.parse_function_arguments(current_position)?;
+                    current_position = new_pos;
+                    // Create a function call with the field access as the name
+                    expr = Expression::FunctionCall(FunctionCall {
+                        name: format!("{}.{}", match &expr {
+                            Expression::Identifier(name) => name.clone(),
+                            Expression::FieldAccess(obj, field) => format!("{}.{}", match obj.as_ref() {
+                                Expression::Identifier(n) => n.clone(),
+                                _ => "self".to_string(),
+                            }, field),
+                            _ => "self".to_string(),
+                        }, field_name),
+                        arguments,
+                    });
+                } else {
+                    expr = Expression::FieldAccess(Box::new(expr), field_name);
+                }
                 continue;
             }
             
@@ -453,14 +501,23 @@ impl Parser {
                             arguments,
                         })));
                     }
-                    // Check if this is a field access (identifier.field)
+                    // Check if this is a field access (identifier.field) or method call (identifier.field())
                     else if let Some(Token::Punctuation(Punctuation::Dot)) = self.tokens.get(position + 1) {
                         let (new_position, _) = self.expect_token(position + 1, &Token::Punctuation(Punctuation::Dot))?;
-                        let (new_position, field_name) = self.expect_identifier(new_position)?;
-                        return Ok((new_position, Expression::FieldAccess(
-                            Box::new(Expression::Identifier(namespace_name)),
-                            field_name
-                        )));
+                        let (new_position, field_name) = self.expect_identifier_or_keyword(new_position)?;
+                        // Check if this is a method call: identifier.field()
+                        if let Some(Token::Punctuation(Punctuation::LeftParen)) = self.tokens.get(new_position) {
+                            let (new_pos, arguments) = self.parse_function_arguments(new_position)?;
+                            return Ok((new_pos, Expression::FunctionCall(FunctionCall {
+                                name: format!("{}.{}", namespace_name, field_name),
+                                arguments,
+                            })));
+                        } else {
+                            return Ok((new_position, Expression::FieldAccess(
+                                Box::new(Expression::Identifier(namespace_name)),
+                                field_name
+                            )));
+                        }
                     } else {
                         return Ok((position + 1, Expression::Identifier(namespace_name.clone())));
                     }
@@ -507,6 +564,11 @@ impl Parser {
                     } else {
                         return Ok((position + 1, Expression::Identifier(namespace_name.clone())));
                     }
+                }
+                Token::Keyword(_) => {
+                    // Allow keywords to be used as identifiers in expressions (e.g., "chain" as a variable name)
+                    let (new_position, name) = self.expect_identifier_or_keyword(position)?;
+                    return Ok((new_position, Expression::Identifier(name)));
                 }
 
                 Token::Punctuation(Punctuation::LeftParen) => {
@@ -580,7 +642,7 @@ impl Parser {
         let return_type = if let Some(Token::Punctuation(Punctuation::Arrow)) = self.tokens.get(current_position) {
             let (new_position, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::Arrow))?;
             current_position = new_position;
-            let (new_position, return_type) = self.expect_identifier(current_position)?;
+            let (new_position, return_type) = self.parse_type_expression(current_position)?;
             current_position = new_position;
             Some(return_type)
         } else {
@@ -623,7 +685,7 @@ impl Parser {
         let return_type = if let Some(Token::Punctuation(Punctuation::Arrow)) = self.tokens.get(current_position) {
             let (new_position, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::Arrow))?;
             current_position = new_position;
-            let (new_position, return_type) = self.expect_identifier(current_position)?;
+            let (new_position, return_type) = self.parse_type_expression(current_position)?;
             current_position = new_position;
             Some(return_type)
         } else {
@@ -653,14 +715,15 @@ impl Parser {
         }
         
         loop {
-            let (new_position, name) = self.expect_identifier(current_position)?;
+            // Allow keywords as parameter names (e.g., "chain" can be a parameter name)
+            let (new_position, name) = self.expect_identifier_or_keyword(current_position)?;
             current_position = new_position;
             
-            // Parse type annotation if present
+            // Parse type annotation if present (supports generics and keywords like list<int>)
             let param_type = if let Some(Token::Punctuation(Punctuation::Colon)) = self.tokens.get(current_position) {
                 let (new_position, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::Colon))?;
                 current_position = new_position;
-                let (new_position, param_type) = self.expect_identifier(current_position)?;
+                let (new_position, param_type) = self.parse_type_expression(current_position)?;
                 current_position = new_position;
                 Some(param_type)
             } else {
@@ -1366,9 +1429,31 @@ impl Parser {
     fn parse_type_expression(&self, position: usize) -> Result<(usize, String), ParserError> {
         let mut current_position = position;
         
-        // Parse base type name
-        let (new_position, base_type) = self.expect_identifier(current_position)?;
-        current_position = new_position;
+        // Parse base type name (can be identifier or keyword like "list")
+        let base_type = if let Some(Token::Identifier(name)) = self.tokens.get(current_position) {
+            let (new_position, _) = self.expect_identifier(current_position)?;
+            current_position = new_position;
+            name.clone()
+        } else if let Some(Token::Keyword(keyword)) = self.tokens.get(current_position) {
+            let (new_position, _) = self.expect_token(current_position, &Token::Keyword(keyword.clone()))?;
+            current_position = new_position;
+            // Convert keyword to string representation
+            match keyword {
+                Keyword::List => "list".to_string(),
+                Keyword::Map => "map".to_string(),
+                Keyword::Set => "set".to_string(),
+                Keyword::Option => "option".to_string(),
+                Keyword::Result => "result".to_string(),
+                _ => format!("{:?}", keyword).to_lowercase(),
+            }
+        } else {
+            return Err(ParserError::unexpected_token(
+                self.tokens.get(current_position).unwrap_or(&Token::EOF),
+                &["identifier", "keyword"],
+                1,
+                1
+            ));
+        };
         
         // Check if this is a generic type (has <)
         if let Some(Token::Operator(Operator::Less)) = self.tokens.get(current_position) {
@@ -1433,11 +1518,11 @@ impl Parser {
             let (new_position, param_name) = self.expect_identifier(current_position)?;
             current_position = new_position;
             
-            // Check for type annotation
+            // Check for type annotation (supports generics and keywords like list<int>)
             let param_type = if let Some(Token::Punctuation(Punctuation::Colon)) = self.tokens.get(current_position) {
                 let (new_position, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::Colon))?;
                 current_position = new_position;
-                let (new_position, type_name) = self.expect_identifier(current_position)?;
+                let (new_position, type_name) = self.parse_type_expression(current_position)?;
                 current_position = new_position;
                 Some(type_name)
             } else {
@@ -1572,12 +1657,7 @@ impl Parser {
             if token == expected {
                 Ok((position + 1, token))
             } else {
-                Err(ParserError::unexpected_token(
-                    token,
-                    &[&format!("{:?}", expected)],
-                    1,
-                    1
-                ))
+                Err(self.error_unexpected_token(position, &[&format!("{:?}", expected)]))
             }
         } else {
             Err(ParserError::unexpected_eof(&format!("{:?}", expected)))
@@ -1588,12 +1668,7 @@ impl Parser {
         if let Some(Token::Identifier(name)) = self.tokens.get(position) {
             Ok((position + 1, name.clone()))
         } else {
-            Err(ParserError::unexpected_token(
-                self.tokens.get(position).unwrap_or(&Token::EOF),
-                &["identifier"],
-                1,
-                1
-            ))
+            Err(self.error_unexpected_token(position, &["identifier"]))
         }
     }
 

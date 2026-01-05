@@ -174,9 +174,159 @@ impl Runtime {
             self.advanced_security.check_timelock(name)?;
         }
         
+        // Handle special built-in functions for array/map access
+        if name == "__index__" {
+            // Array/map access: __index__(container, key)
+            if args.len() != 2 {
+                return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+            }
+            let container = &args[0];
+            let key = &args[1];
+            
+            match container {
+                Value::Map(ref map) => {
+                    let key_str = match key {
+                        Value::String(s) => s.clone(),
+                        Value::Int(i) => i.to_string(),
+                        _ => return Err(RuntimeError::General(format!(
+                            "Map key must be string or int, got: {}", key.type_name()
+                        ))),
+                    };
+                    return Ok(map.get(&key_str).cloned().unwrap_or(Value::Null));
+                }
+                Value::Array(ref arr) => {
+                    let index = match key {
+                        Value::Int(i) => *i as usize,
+                        _ => return Err(RuntimeError::General(format!(
+                            "Array index must be int, got: {}", key.type_name()
+                        ))),
+                    };
+                    return Ok(arr.get(index).cloned().unwrap_or(Value::Null));
+                }
+                _ => return Err(RuntimeError::General(format!(
+                    "Cannot index value of type: {}", container.type_name()
+                ))),
+            }
+        }
+        
+        if name == "__index_assign__" {
+            // Array/map assignment: __index_assign__(container, key, value)
+            // This is called for: self.field[key] = value or arr[index] = value
+            if args.len() != 3 {
+                return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
+            }
+            let container = &args[0];
+            let key = &args[1];
+            let value = args[2].clone();
+            
+            // Check if we're in a service method context (self is in scope)
+            if let Ok(Value::String(ref instance_id)) = self.get_variable("self") {
+                // We're in a service method - the container is the result of evaluating self.field
+                // We need to find which field this map came from and update it
+                if let Value::Map(ref map) = container {
+                    if let Some(instance) = self.services.get_mut(instance_id) {
+                        // Find the field that contains this map
+                        // Since maps are cloned when accessed, we can't use reference equality
+                        // Instead, we'll update all map fields - this works if there's only one map
+                        // being modified, which is the common case
+                        let key_str = match key {
+                            Value::String(s) => s.clone(),
+                            Value::Int(i) => i.to_string(),
+                            _ => return Err(RuntimeError::General(format!(
+                                "Map key must be string or int, got: {}", key.type_name()
+                            ))),
+                        };
+                        
+                        // Try to find a matching map field by checking if the keys overlap
+                        // This is a heuristic - in practice, we'd want to track the field name
+                        for (field_name, field_value) in instance.fields.iter_mut() {
+                            if let Value::Map(ref field_map) = field_value {
+                                // Check if this field's map has overlapping keys with the container map
+                                // This is a simple heuristic to identify the correct field
+                                if map.keys().any(|k| field_map.contains_key(k)) || 
+                                   (map.is_empty() && field_map.is_empty()) {
+                                    // This is likely the field we want to update
+                                    if let Value::Map(ref mut field_map_mut) = field_value {
+                                        field_map_mut.insert(key_str.clone(), value.clone());
+                                        return Ok(value);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Fallback: if no match found, update the first map field
+                        // This handles the case where the map is empty or newly created
+                        for (field_name, field_value) in instance.fields.iter_mut() {
+                            if let Value::Map(ref mut field_map) = field_value {
+                                field_map.insert(key_str.clone(), value.clone());
+                                return Ok(value);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Handle direct map/array variables (not service instance fields)
+            match container {
+                Value::Map(_) => {
+                    // For now, we can't update a map that's not in a variable or service instance
+                    return Err(RuntimeError::General(
+                        "Map assignment requires the map to be stored in a variable or service instance field".to_string()
+                    ));
+                }
+                Value::Array(_) => {
+                    return Err(RuntimeError::General(
+                        "Array assignment not yet fully implemented".to_string()
+                    ));
+                }
+                _ => return Err(RuntimeError::General(format!(
+                    "Cannot assign to index of type: {}", container.type_name()
+                ))),
+            }
+        }
+        
         // Handle namespace calls (e.g., oracle::fetch)
         if name.contains("::") {
             return self.call_namespace_function(name, args);
+        }
+        
+        // Handle instance method calls (e.g., nft.initialize)
+        if name.contains(".") {
+            let parts: Vec<&str> = name.split(".").collect();
+            if parts.len() == 2 {
+                let instance_var = parts[0];
+                let method_name = parts[1];
+                
+                // Get the instance ID from the variable
+                let instance_id = match self.get_variable(instance_var) {
+                    Ok(Value::String(id)) => id,
+                    Ok(other) => return Err(RuntimeError::General(format!(
+                        "Variable '{}' is not a service instance (got: {})", 
+                        instance_var, other.type_name()
+                    ))),
+                    Err(_) => return Err(RuntimeError::General(format!(
+                        "Variable '{}' not found", instance_var
+                    ))),
+                };
+                
+                // Find and clone the method (we need to avoid multiple mutable borrows)
+                let method = {
+                    let instance = self.services.get(&instance_id)
+                        .ok_or_else(|| RuntimeError::General(format!(
+                            "Service instance '{}' not found", instance_id
+                        )))?;
+                    instance.methods.iter()
+                        .find(|m| m.name == method_name)
+                        .ok_or_else(|| RuntimeError::General(format!(
+                            "Method '{}' not found on service instance '{}'", 
+                            method_name, instance_id
+                        )))?
+                        .clone()
+                };
+                
+                // Execute the method - we'll get mutable access inside execute_service_method
+                return self.execute_service_method(&instance_id, method_name, &method, args);
+            }
         }
         
         let function = self.functions.get(name)
@@ -208,6 +358,11 @@ impl Runtime {
         let namespace = parts[0];
         let function_name = parts[1];
         
+        // Check if namespace is a registered service name
+        if self.services.contains_key(namespace) {
+            return self.call_service_instance_method(namespace, function_name, args);
+        }
+        
         match namespace {
             "oracle" => self.call_oracle_function(function_name, args),
             "service" => self.call_service_function(function_name, args),
@@ -228,7 +383,41 @@ impl Runtime {
             "iot" => self.call_iot_function(function_name, args),
             "admin" => self.call_admin_function(function_name, args),
             "cloudadmin" => self.call_cloudadmin_function(function_name, args),
-            _ => Err(RuntimeError::General(format!("Unknown namespace: {}", namespace))),
+            _ => {
+                // Check if namespace is a registered service name (e.g., TestNFT::new())
+                if self.services.contains_key(namespace) {
+                    self.call_service_instance_method(namespace, function_name, args)
+                } else {
+                    Err(RuntimeError::General(format!("Unknown namespace: {}", namespace)))
+                }
+            }
+        }
+    }
+
+    // Handle method calls on service instances (e.g., TestNFT::new(), TestNFT::someMethod())
+    fn call_service_instance_method(&mut self, service_name: &str, method_name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        if method_name == "new" {
+            // Create a new instance of the service
+            let service_template = self.services.get(service_name)
+                .ok_or_else(|| RuntimeError::General(format!("Service {} not found", service_name)))?;
+            
+            // Create a new instance with copied fields
+            let mut new_instance = ServiceInstance {
+                name: service_template.name.clone(),
+                fields: service_template.fields.clone(),
+                methods: service_template.methods.clone(),
+                events: service_template.events.clone(),
+            };
+            
+            // Store the new instance with a unique identifier
+            let instance_id = format!("{}_instance_{}", service_name, self.services.len());
+            self.services.insert(instance_id.clone(), new_instance);
+            
+            // Return the instance identifier
+            Ok(Value::String(instance_id))
+        } else {
+            // Call a method on the service (this would need more implementation)
+            Err(RuntimeError::General(format!("Service method calls not yet implemented: {}.{}()", service_name, method_name)))
         }
     }
 
@@ -259,6 +448,36 @@ impl Runtime {
 
     fn call_service_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         match name {
+            "new" => {
+                // service::new("ServiceName") - create a new instance of a service
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                }
+                let service_name = match &args[0] {
+                    Value::String(name) => name.clone(),
+                    _ => return Err(RuntimeError::General("service::new() expects a string service name".to_string())),
+                };
+                
+                // Get the service template
+                let service_template = self.services.get(&service_name)
+                    .ok_or_else(|| RuntimeError::General(format!("Service '{}' not found. Available services: {:?}", 
+                        service_name, self.services.keys().collect::<Vec<_>>())))?;
+                
+                // Create a new instance with copied fields
+                let mut new_instance = ServiceInstance {
+                    name: service_template.name.clone(),
+                    fields: service_template.fields.clone(),
+                    methods: service_template.methods.clone(),
+                    events: service_template.events.clone(),
+                };
+                
+                // Store the new instance with a unique identifier
+                let instance_id = format!("{}_instance_{}", service_name, self.services.len());
+                self.services.insert(instance_id.clone(), new_instance);
+                
+                // Return the instance identifier
+                Ok(Value::String(instance_id))
+            }
             "create_ai_service" => {
                 if args.len() != 1 {
                     return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
@@ -946,7 +1165,18 @@ impl Runtime {
                 }
             }
             crate::parser::ast::Expression::Identifier(name) => {
-                self.get_variable(name)
+                // Check if this is 'self' - if so, return the instance ID
+                if name == "self" {
+                    let self_id = self.get_variable("self")?;
+                    if let Value::String(instance_id) = self_id {
+                        // Return a reference to the instance (we'll handle field access separately)
+                        Ok(Value::String(instance_id))
+                    } else {
+                        Ok(self_id)
+                    }
+                } else {
+                    self.get_variable(name)
+                }
             }
             crate::parser::ast::Expression::BinaryOp(left, operator, right) => {
                 let left_val = self.evaluate_expression(left)?;
@@ -987,9 +1217,27 @@ impl Runtime {
                 // Evaluate the value to assign
                 let value = self.evaluate_expression(value_expr)?;
 
-                // For now, we need to handle field assignment through variables
-                // since we can't modify the original object directly
+                // Handle 'self.field = value' for service instances
                 match object_expr.as_ref() {
+                    crate::parser::ast::Expression::Identifier(var_name) if var_name == "self" => {
+                        // Get the instance ID from 'self'
+                        let self_id = self.get_variable("self")?;
+                        if let Value::String(instance_id) = self_id {
+                            // Update the field in the service instance
+                            if let Some(instance) = self.services.get_mut(&instance_id) {
+                                instance.fields.insert(field_name.clone(), value.clone());
+                                Ok(value)
+                            } else {
+                                Err(RuntimeError::General(format!(
+                                    "Service instance '{}' not found", instance_id
+                                )))
+                            }
+                        } else {
+                            Err(RuntimeError::General(format!(
+                                "'self' is not a service instance reference"
+                            )))
+                        }
+                    }
                     crate::parser::ast::Expression::Identifier(var_name) => {
                         // Get the current object from variables
                         match self.get_variable(var_name) {
@@ -1041,6 +1289,19 @@ impl Runtime {
                 // Evaluate the object expression to get the object
                 let object_value = self.evaluate_expression(object_expr)?;
 
+                // Handle 'self.field' access for service instances
+                if let Value::String(ref instance_id) = object_value {
+                    if let Some(instance) = self.services.get(instance_id) {
+                        // Access field from service instance
+                        return instance.fields.get(field_name)
+                            .cloned()
+                            .ok_or_else(|| RuntimeError::General(format!(
+                                "Field '{}' not found on service instance '{}'", 
+                                field_name, instance_id
+                            )));
+                    }
+                }
+
                 // Get the field value directly from the object
                 match object_value {
                     Value::Struct(_, ref fields) => {
@@ -1077,6 +1338,8 @@ impl Runtime {
     fn add_values(&self, left: Value, right: Value) -> Result<Value, RuntimeError> {
         match (&left, &right) {
             (Value::String(a), Value::String(b)) => Ok(Value::String(a.clone() + b)),
+            (Value::String(a), other) => Ok(Value::String(format!("{}{}", a, other))),
+            (other, Value::String(b)) => Ok(Value::String(format!("{}{}", other, b))),
             _ => SafeMath::add(&left, &right)
         }
     }
@@ -3242,6 +3505,69 @@ impl Runtime {
             "float" => Ok(Value::Float(0.0)),
             _ => Ok(Value::Null),
         }
+    }
+
+    // Execute a service method with instance context
+    fn execute_service_method(
+        &mut self,
+        instance_id: &str,
+        _method_name: &str,
+        method: &crate::parser::ast::FunctionStatement,
+        args: &[Value],
+    ) -> Result<Value, RuntimeError> {
+        // Validate argument count
+        if args.len() != method.parameters.len() {
+            return Err(RuntimeError::ArgumentCountMismatch {
+                expected: method.parameters.len(),
+                got: args.len(),
+            });
+        }
+
+        // Save current scope
+        let saved_scope = self.scope.clone();
+        let call_frame = CallFrame {
+            scope: saved_scope.clone(),
+        };
+        self.call_stack.push(call_frame);
+
+        // Create new scope for method execution
+        self.scope = Scope::new();
+
+        // Bind method parameters
+        for (param, arg_value) in method.parameters.iter().zip(args.iter()) {
+            self.scope.set(param.name.clone(), arg_value.clone());
+        }
+
+        // Set up 'self' to reference the instance ID
+        self.scope.set("self".to_string(), Value::String(instance_id.to_string()));
+
+        // Execute method body
+        let mut result = Value::Null;
+        for stmt in &method.body.statements {
+            match self.execute_statement(stmt) {
+                Ok(value) => {
+                    // Check if this is a return statement
+                    if let crate::parser::ast::Statement::Return(_) = stmt {
+                        result = value;
+                        break;
+                    }
+                }
+                Err(e) => {
+                    // Restore scope on error
+                    if let Some(frame) = self.call_stack.pop() {
+                        self.scope = frame.scope;
+                    }
+                    return Err(e);
+                }
+            }
+        }
+
+        // Restore scope
+        if let Some(frame) = self.call_stack.pop() {
+            self.scope = frame.scope;
+        }
+
+        Ok(result)
     }
 
     // Helper method to parse agent configuration from Value

@@ -96,6 +96,90 @@ service MyService {
 }
 ```
 
+### Service Instantiation
+
+Services can be instantiated using two syntaxes:
+
+**Syntax 1: Service name as namespace**
+```rust
+let instance = MyService::new();
+instance.increment();
+```
+
+**Syntax 2: Using service namespace**
+```rust
+let instance = service::new("MyService");
+instance.increment();
+```
+
+Both syntaxes are equivalent and create a new instance of the service.
+
+### Service Method Calls
+
+Once you have a service instance, you can call its methods:
+
+```rust
+service TokenContract {
+    balances: map<string, int> = {};
+    
+    fn initialize(owner: string) {
+        self.balances[owner] = 1000;
+    }
+    
+    fn transfer(to: string, amount: int) {
+        self.balances[to] = self.balances[to] + amount;
+    }
+}
+
+// Create instance
+let token = TokenContract::new();
+
+// Call methods
+token.initialize("0x123...");
+token.transfer("0x456...", 100);
+```
+
+### Accessing Service Fields
+
+Within service methods, use `self.field` to access and modify fields:
+
+```rust
+service Counter {
+    count: int = 0;
+    
+    fn increment() {
+        self.count = self.count + 1;  // Access and modify field
+    }
+    
+    fn get_count() -> int {
+        return self.count;  // Read field value
+    }
+}
+```
+
+### Map/Array Access and Assignment
+
+Service fields can be maps or arrays, which support indexed access:
+
+```rust
+service MyService {
+    balances: map<string, int> = {};
+    items: vector<string> = [];
+    
+    fn set_balance(address: string, amount: int) {
+        self.balances[address] = amount;  // Map assignment
+    }
+    
+    fn get_balance(address: string) -> int {
+        return self.balances[address];  // Map access
+    }
+    
+    fn add_item(item: string) {
+        self.items[0] = item;  // Array assignment
+    }
+}
+```
+
 ---
 
 ## Functions

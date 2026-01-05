@@ -183,11 +183,11 @@ service MultiChainDeFi {
 @ai
 
 service AITradingBot {
-    field trading_strategy: any;
-    field market_data: any;
+    trading_strategy: any = null;
+    market_data: any = null;
     
     fn initialize() {
-        this.trading_strategy = ai::create_strategy({
+        self.trading_strategy = ai::create_strategy({
             "type": "momentum",
             "risk_level": "medium"
         });
@@ -198,7 +198,7 @@ service AITradingBot {
         let analysis = ai::analyze_market_conditions(market_data);
         
         if analysis.opportunity_detected {
-            this.execute_trade(analysis.recommendation);
+            self.execute_trade(analysis.recommendation);
         }
     }
     
@@ -206,6 +206,11 @@ service AITradingBot {
         chain::call_contract("trading_contract", "execute", [recommendation]);
     }
 }
+
+// Create and use service instances
+let bot = AITradingBot::new();
+bot.initialize();
+bot.analyze_market();
 ```
 
 ---
