@@ -111,14 +111,14 @@ fn run_dal_file(filename: &str) {
         }
     };
     
-    // Tokenize
-    let tokens = match Lexer::new(&source_code).tokenize() {
+    // Tokenize with positions for accurate error reporting
+    let tokens_with_pos = match Lexer::new(&source_code).tokenize_with_positions_immutable() {
         Ok(tokens) => {
             println!("✅ Tokenization successful! Generated {} tokens", tokens.len());
             // Debug: Show first few tokens
             println!("🔍 First 10 tokens:");
-            for (i, token) in tokens.iter().take(10).enumerate() {
-                println!("  {}: {:?}", i, token);
+            for (i, twp) in tokens.iter().take(10).enumerate() {
+                println!("  {}: {:?} (line {}, col {})", i, twp.token, twp.line, twp.column);
             }
             tokens
         }
@@ -128,8 +128,8 @@ fn run_dal_file(filename: &str) {
         }
     };
     
-    // Parse
-    let ast = match Parser::new(tokens).parse() {
+    // Parse with position information
+    let ast = match Parser::new_with_positions(tokens_with_pos).parse() {
         Ok(ast) => {
             println!("✅ Parsing successful! Generated {} statements", ast.statements.len());
             ast

@@ -796,12 +796,18 @@ impl AdvancedSecurityManager {
     pub fn verify_assignment(&mut self, variable_name: &str, value: &Value) -> Result<(), RuntimeError> {
         // Create a simple assignment verification
         let contract_code = format!("let {} = {:?};", variable_name, value);
-        let result = self.formal_verification.verify_contract("assignment", &contract_code)?;
-        
-        if result.passed {
-            Ok(())
+        // Only verify if a specification exists - otherwise skip (optional verification)
+        if self.formal_verification.contract_specifications.contains_key("assignment") {
+            let result = self.formal_verification.verify_contract("assignment", &contract_code)?;
+            
+            if result.passed {
+                Ok(())
+            } else {
+                Err(RuntimeError::General(format!("Formal verification failed for assignment: {}", variable_name)))
+            }
         } else {
-            Err(RuntimeError::General(format!("Formal verification failed for assignment: {}", variable_name)))
+            // No specification exists, skip verification
+            Ok(())
         }
     }
 }
