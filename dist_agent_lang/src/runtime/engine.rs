@@ -20,6 +20,7 @@ pub struct Runtime {
     pub state_manager: StateIsolationManager, // NEW: State isolation manager
     pub cross_chain_manager: CrossChainSecurityManager, // NEW: Cross-chain security manager
     pub advanced_security: AdvancedSecurityManager, // NEW: Advanced security features
+    execution_start: Option<std::time::Instant>, // NEW: Track execution start time for timeout
 }
 
 // NEW: Service instance structure
@@ -62,6 +63,7 @@ impl Runtime {
             state_manager: StateIsolationManager::new(), // NEW: State isolation manager
             cross_chain_manager: CrossChainSecurityManager::new(), // NEW: Cross-chain security manager
             advanced_security: AdvancedSecurityManager::new(), // NEW: Advanced security features
+            execution_start: None, // NEW: Initialize execution start time
         };
 
         // Register built-in functions
@@ -81,6 +83,7 @@ impl Runtime {
             state_manager: StateIsolationManager::new(), // NEW: State isolation manager
             cross_chain_manager: CrossChainSecurityManager::new(), // NEW: Cross-chain security manager
             advanced_security: AdvancedSecurityManager::new(), // NEW: Advanced security features
+            execution_start: None, // NEW: Initialize execution start time
         };
         
         // Register built-in functions
@@ -135,20 +138,38 @@ impl Runtime {
     }
 
     pub fn execute_program(&mut self, program: Program) -> Result<Option<Value>, RuntimeError> {
+        use std::time::{Instant, Duration};
+        
+        const MAX_EXECUTION_TIME: Duration = Duration::from_secs(10);
+        let start_time = Instant::now();
+        self.execution_start = Some(start_time);
+        
         // Phase 4: Check for MEV attacks before execution
         self.advanced_security.analyze_transaction_for_mev(&format!("{:?}", program))?;
         
         let mut result = None;
         
         for statement in program.statements {
+            // Check timeout before each statement
+            if let Some(start) = self.execution_start {
+                if start.elapsed() > MAX_EXECUTION_TIME {
+                    self.execution_start = None;
+                    return Err(RuntimeError::ExecutionTimeout);
+                }
+            }
+            
             match self.execute_statement(&statement) {
                 Ok(value) => {
                     result = Some(value);
                 }
-                Err(e) => return Err(e),
+                Err(e) => {
+                    self.execution_start = None;
+                    return Err(e);
+                }
             }
         }
         
+        self.execution_start = None;
         Ok(result)
     }
 
@@ -1016,6 +1037,11 @@ impl Runtime {
     }
 
     fn execute_statement(&mut self, statement: &crate::parser::ast::Statement) -> Result<Value, RuntimeError> {
+        // Note: Timeout checking is done in execute_program() before each statement
+        use std::time::{Instant, Duration};
+        
+        // Check timeout (using a thread-local or passed-in start time)
+        // For now, we'll check in execute_program, but this could be enhanced
         match statement {
             crate::parser::ast::Statement::Let(let_stmt) => {
                 let evaluated_value = self.evaluate_expression(&let_stmt.value)?;
@@ -1101,6 +1127,7 @@ impl Runtime {
                                 state_manager: StateIsolationManager::new(),
                                 cross_chain_manager: CrossChainSecurityManager::new(),
                                 advanced_security: AdvancedSecurityManager::new(),
+                                execution_start: None,
                             };
                             
                             match catch_runtime.execute_statement(&crate::parser::ast::Statement::Block(catch_block.body.clone())) {

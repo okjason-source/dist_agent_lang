@@ -497,7 +497,10 @@ impl Lexer {
         while position < self.input.len() {
             let ch = self.input[position];
             if ch == '"' {
-                let string = self.input[start..position].iter().collect();
+                // Optimize: pre-allocate String with known capacity
+                let len = position - start;
+                let mut string = String::with_capacity(len);
+                string.extend(self.input[start..position].iter());
                 position += 1; // Skip closing quote
                 return Ok((position, string));
             } else if ch == '\\' {

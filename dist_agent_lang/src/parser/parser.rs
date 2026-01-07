@@ -6,7 +6,7 @@ use crate::parser::ast::{
     AttributeTarget, ServiceStatement, ServiceField, EventDeclaration, CompilationTargetInfo,
     FieldVisibility
 };
-use crate::parser::error::ParserError;
+use crate::parser::error::{ParserError, ErrorContext};
 use std::collections::HashMap;
 
 pub struct Parser {
@@ -15,6 +15,8 @@ pub struct Parser {
 }
 
 impl Parser {
+    const MAX_RECURSION_DEPTH: usize = 100;
+    
     pub fn new(tokens: Vec<Token>) -> Self {
         // For backward compatibility, create empty positions
         // In the future, we should pass tokens with positions
@@ -55,7 +57,7 @@ impl Parser {
         let mut position = 0;
         
         while position < self.tokens.len() {
-            let (new_position, statement) = self.parse_statement(position)?;
+            let (new_position, statement) = self.parse_statement(position, 0)?;
             program.add_statement(statement);
             position = new_position;
         }
@@ -63,7 +65,15 @@ impl Parser {
         Ok(program)
     }
 
-    fn parse_statement(&mut self, position: usize) -> Result<(usize, Statement), ParserError> {
+    fn parse_statement(&mut self, position: usize, depth: usize) -> Result<(usize, Statement), ParserError> {
+        if depth > Self::MAX_RECURSION_DEPTH {
+            let (line, column) = self.get_token_position(position);
+            return Err(ParserError::SemanticError {
+                message: format!("Maximum recursion depth ({}) exceeded in statement parsing", Self::MAX_RECURSION_DEPTH),
+                line,
+                context: ErrorContext::new(),
+            });
+        }
         // Check for attributes first
         if let Some(Token::Punctuation(Punctuation::At)) = self.tokens.get(position) {
             // Attributes can appear before function or service declarations
@@ -128,7 +138,7 @@ impl Parser {
         } else if let Some(Token::Keyword(Keyword::Return)) = self.tokens.get(position) {
             self.parse_return_statement(position)
         } else if let Some(Token::Punctuation(Punctuation::LeftBrace)) = self.tokens.get(position) {
-            let (new_position, block) = self.parse_block_statement(position)?;
+            let (new_position, block) = self.parse_block_statement(position, depth + 1)?;
             Ok((new_position, Statement::Block(block)))
         } else if let Some(Token::Punctuation(Punctuation::Semicolon)) = self.tokens.get(position) {
             // Skip semicolons (empty statements)
@@ -189,7 +199,16 @@ impl Parser {
         Ok((new_position, Statement::Return(ReturnStatement { value })))
     }
 
-    fn parse_block_statement(&mut self, position: usize) -> Result<(usize, BlockStatement), ParserError> {
+    fn parse_block_statement(&mut self, position: usize, depth: usize) -> Result<(usize, BlockStatement), ParserError> {
+        if depth > Self::MAX_RECURSION_DEPTH {
+            let (line, column) = self.get_token_position(position);
+            return Err(ParserError::SemanticError {
+                message: format!("Maximum recursion depth ({}) exceeded in block statement parsing", Self::MAX_RECURSION_DEPTH),
+                line,
+                context: ErrorContext::new(),
+            });
+        }
+        
         let (position, _) = self.expect_token(position, &Token::Punctuation(Punctuation::LeftBrace))?;
         
         let mut block = BlockStatement::new();
@@ -201,7 +220,7 @@ impl Parser {
                 return Ok((new_position, block));
             }
             
-            let (new_position, statement) = self.parse_statement(current_position)?;
+            let (new_position, statement) = self.parse_statement(current_position, depth + 1)?;
             block.add_statement(statement);
             current_position = new_position;
         }
@@ -210,15 +229,32 @@ impl Parser {
     }
 
     fn parse_expression(&self, position: usize) -> Result<(usize, Expression), ParserError> {
-        self.parse_assignment(position)
+        self.parse_assignment(position, 0) // Start with depth 0 for top-level expressions
+    }
+    
+    fn parse_expression_with_depth(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+        self.parse_assignment(position, depth)
     }
 
-    fn parse_assignment(&self, position: usize) -> Result<(usize, Expression), ParserError> {
-        let (position, expr) = self.parse_or(position)?;
+    fn parse_assignment(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+        // Prevent stack overflow from infinite recursion
+        if depth > Self::MAX_RECURSION_DEPTH {
+            let (line, column) = self.get_token_position(position);
+            return Err(ParserError::SemanticError {
+                message: format!(
+                    "Maximum recursion depth ({}) exceeded at line {}, column {}. This may indicate malformed input or a parser bug.",
+                    Self::MAX_RECURSION_DEPTH, line, column
+                ),
+                line,
+                context: ErrorContext::new(),
+            });
+        }
+        
+        let (position, expr) = self.parse_or(position, depth)?;
         
         if let Some(Token::Operator(Operator::Assign)) = self.tokens.get(position) {
             let (position, _) = self.expect_token(position, &Token::Operator(Operator::Assign))?;
-            let (position, value) = self.parse_assignment(position)?;
+            let (position, value) = self.parse_assignment(position, depth + 1)?;
             
             match expr {
                 Expression::Identifier(name) => {
@@ -248,15 +284,15 @@ impl Parser {
         Ok((position, expr))
     }
 
-    fn parse_or(&self, position: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_or(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
-        let (new_position, mut expr) = self.parse_and(current_position)?;
+        let (new_position, mut expr) = self.parse_and(current_position, depth)?;
         current_position = new_position;
         
         while current_position < self.tokens.len() {
             if let Some(Token::Operator(Operator::Or)) = self.tokens.get(current_position) {
                 let (new_pos, _) = self.expect_token(current_position, &Token::Operator(Operator::Or))?;
-                let (new_pos, right) = self.parse_and(new_pos)?;
+                let (new_pos, right) = self.parse_and(new_pos, depth)?;
                 expr = Expression::BinaryOp(Box::new(expr), Operator::Or, Box::new(right));
                 current_position = new_pos;
             } else {
@@ -267,15 +303,15 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_and(&self, position: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_and(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
-        let (new_position, mut expr) = self.parse_equality(current_position)?;
+        let (new_position, mut expr) = self.parse_equality(current_position, depth)?;
         current_position = new_position;
         
         while current_position < self.tokens.len() {
             if let Some(Token::Operator(Operator::And)) = self.tokens.get(current_position) {
                 let (new_pos, _) = self.expect_token(current_position, &Token::Operator(Operator::And))?;
-                let (new_pos, right) = self.parse_equality(new_pos)?;
+                let (new_pos, right) = self.parse_equality(new_pos, depth)?;
                 expr = Expression::BinaryOp(Box::new(expr), Operator::And, Box::new(right));
                 current_position = new_pos;
             } else {
@@ -286,20 +322,20 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_equality(&self, position: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_equality(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
-        let (new_position, mut expr) = self.parse_comparison(current_position)?;
+        let (new_position, mut expr) = self.parse_comparison(current_position, depth)?;
         current_position = new_position;
         
         while current_position < self.tokens.len() {
             if let Some(Token::Operator(Operator::Equal)) = self.tokens.get(current_position) {
                 let (new_pos, _) = self.expect_token(current_position, &Token::Operator(Operator::Equal))?;
-                let (new_pos, right) = self.parse_comparison(new_pos)?;
+                let (new_pos, right) = self.parse_comparison(new_pos, depth)?;
                 expr = Expression::BinaryOp(Box::new(expr), Operator::Equal, Box::new(right));
                 current_position = new_pos;
             } else if let Some(Token::Operator(Operator::NotEqual)) = self.tokens.get(current_position) {
                 let (new_pos, _) = self.expect_token(current_position, &Token::Operator(Operator::NotEqual))?;
-                let (new_pos, right) = self.parse_comparison(new_pos)?;
+                let (new_pos, right) = self.parse_comparison(new_pos, depth)?;
                 expr = Expression::BinaryOp(Box::new(expr), Operator::NotEqual, Box::new(right));
                 current_position = new_pos;
             } else {
@@ -310,9 +346,9 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_comparison(&self, position: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_comparison(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
-        let (new_position, mut expr) = self.parse_term(current_position)?;
+        let (new_position, mut expr) = self.parse_term(current_position, depth)?;
         current_position = new_position;
         
         while current_position < self.tokens.len() {
@@ -320,7 +356,7 @@ impl Parser {
                 match op {
                     Operator::Less | Operator::LessEqual | Operator::Greater | Operator::GreaterEqual => {
                         let (new_pos, _) = self.expect_token(current_position, &Token::Operator(op.clone()))?;
-                        let (new_pos, right) = self.parse_term(new_pos)?;
+                        let (new_pos, right) = self.parse_term(new_pos, depth)?;
                         expr = Expression::BinaryOp(Box::new(expr), op.clone(), Box::new(right));
                         current_position = new_pos;
                     }
@@ -334,9 +370,9 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_term(&self, position: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_term(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
-        let (new_position, mut expr) = self.parse_factor(current_position)?;
+        let (new_position, mut expr) = self.parse_factor(current_position, depth)?;
         current_position = new_position;
         
         while current_position < self.tokens.len() {
@@ -344,7 +380,7 @@ impl Parser {
                 match op {
                     Operator::Plus | Operator::Minus => {
                         let (new_pos, _) = self.expect_token(current_position, &Token::Operator(op.clone()))?;
-                        let (new_pos, right) = self.parse_factor(new_pos)?;
+                        let (new_pos, right) = self.parse_factor(new_pos, depth)?;
                         expr = Expression::BinaryOp(Box::new(expr), op.clone(), Box::new(right));
                         current_position = new_pos;
                     }
@@ -358,9 +394,9 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_factor(&self, position: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_factor(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
-        let (new_position, mut expr) = self.parse_unary(current_position)?;
+        let (new_position, mut expr) = self.parse_unary(current_position, depth)?;
         current_position = new_position;
         
         while current_position < self.tokens.len() {
@@ -368,7 +404,7 @@ impl Parser {
                 match op {
                     Operator::Star | Operator::Slash => {
                         let (new_pos, _) = self.expect_token(current_position, &Token::Operator(op.clone()))?;
-                        let (new_pos, right) = self.parse_unary(new_pos)?;
+                        let (new_pos, right) = self.parse_unary(new_pos, depth)?;
                         expr = Expression::BinaryOp(Box::new(expr), op.clone(), Box::new(right));
                         current_position = new_pos;
                     }
@@ -382,12 +418,12 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_unary(&self, position: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_unary(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         if let Some(Token::Operator(op)) = self.tokens.get(position) {
             match op {
                 Operator::Minus | Operator::Not => {
                     let (position, _) = self.expect_token(position, &Token::Operator(op.clone()))?;
-                    let (position, right) = self.parse_unary(position)?;
+                    let (position, right) = self.parse_unary(position, depth)?;
                     return Ok((position, Expression::UnaryOp(op.clone(), Box::new(right))));
                 }
                 _ => {}
@@ -396,7 +432,7 @@ impl Parser {
         
         // Parse primary expression, then handle postfix operations (array access, field access)
         let mut current_position = position;
-        let (new_position, mut expr) = self.parse_primary(current_position)?;
+        let (new_position, mut expr) = self.parse_primary(current_position, depth)?;
         current_position = new_position;
         
         // Handle postfix operations: array access [index] and chained field access .field
@@ -407,7 +443,7 @@ impl Parser {
                 current_position = new_pos;
                 
                 // Parse index expression
-                let (new_pos, index_expr) = self.parse_expression(current_position)?;
+                let (new_pos, index_expr) = self.parse_expression_with_depth(current_position, depth + 1)?;
                 current_position = new_pos;
                 
                 // Expect closing bracket
@@ -433,7 +469,7 @@ impl Parser {
                 
                 // Check if this is a method call: expr.field()
                 if let Some(Token::Punctuation(Punctuation::LeftParen)) = self.tokens.get(current_position) {
-                    let (new_pos, arguments) = self.parse_function_arguments(current_position)?;
+                    let (new_pos, arguments) = self.parse_function_arguments(current_position, depth)?;
                     current_position = new_pos;
                     // Create a function call with the field access as the name
                     expr = Expression::FunctionCall(FunctionCall {
@@ -459,7 +495,7 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_primary(&self, position: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_primary(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         if let Some(token) = self.tokens.get(position) {
             match token {
                 Token::Literal(Literal::Int(value)) => {
@@ -484,7 +520,7 @@ impl Parser {
                         
                         // Check if this is a function call
                         if let Some(Token::Punctuation(Punctuation::LeftParen)) = self.tokens.get(new_position) {
-                            let (new_position, arguments) = self.parse_function_arguments(new_position)?;
+                            let (new_position, arguments) = self.parse_function_arguments(new_position, depth)?;
                             return Ok((new_position, Expression::FunctionCall(FunctionCall {
                                 name: format!("{}::{}", namespace_name, method_name),
                                 arguments,
@@ -495,7 +531,7 @@ impl Parser {
                     }
                     // Check if this is a function call
                     else if let Some(Token::Punctuation(Punctuation::LeftParen)) = self.tokens.get(position + 1) {
-                        let (new_position, arguments) = self.parse_function_arguments(position + 1)?;
+                        let (new_position, arguments) = self.parse_function_arguments(position + 1, depth)?;
                         return Ok((new_position, Expression::FunctionCall(FunctionCall {
                             name: namespace_name.clone(),
                             arguments,
@@ -507,7 +543,7 @@ impl Parser {
                         let (new_position, field_name) = self.expect_identifier_or_keyword(new_position)?;
                         // Check if this is a method call: identifier.field()
                         if let Some(Token::Punctuation(Punctuation::LeftParen)) = self.tokens.get(new_position) {
-                            let (new_pos, arguments) = self.parse_function_arguments(new_position)?;
+                            let (new_pos, arguments) = self.parse_function_arguments(new_position, depth)?;
                             return Ok((new_pos, Expression::FunctionCall(FunctionCall {
                                 name: format!("{}.{}", namespace_name, field_name),
                                 arguments,
@@ -531,7 +567,7 @@ impl Parser {
                         let (new_position, method_name) = self.expect_identifier_or_keyword(new_position)?;
                                   // Check if this is a function call
                         if let Some(Token::Punctuation(Punctuation::LeftParen)) = self.tokens.get(new_position) {
-                            let (new_position, arguments) = self.parse_function_arguments(new_position)?;
+                            let (new_position, arguments) = self.parse_function_arguments(new_position, depth)?;
                             return Ok((new_position, Expression::FunctionCall(FunctionCall {
                                 name: format!("{}::{}", namespace_name, method_name),
                                 arguments,
@@ -553,7 +589,7 @@ impl Parser {
 
                         // Check if this is a function call
                         if let Some(Token::Punctuation(Punctuation::LeftParen)) = self.tokens.get(new_position) {
-                            let (new_position, arguments) = self.parse_function_arguments(new_position)?;
+                            let (new_position, arguments) = self.parse_function_arguments(new_position, depth)?;
                             return Ok((new_position, Expression::FunctionCall(FunctionCall {
                                 name: format!("{}::{}", namespace_name, method_name),
                                 arguments,
@@ -573,7 +609,7 @@ impl Parser {
 
                 Token::Punctuation(Punctuation::LeftParen) => {
                     let (position, _) = self.expect_token(position, &Token::Punctuation(Punctuation::LeftParen))?;
-                    let (position, expr) = self.parse_expression(position)?;
+                    let (position, expr) = self.parse_expression_with_depth(position, depth + 1)?;
                     let (position, _) = self.expect_token(position, &Token::Punctuation(Punctuation::RightParen))?;
                     return Ok((position, expr));
                 }
@@ -589,7 +625,7 @@ impl Parser {
                     let (position, _) = self.expect_token(position, &Token::Punctuation(Punctuation::LeftParen))?;
                     
                     // Parse the arguments
-                    let (position, arguments) = self.parse_function_arguments(position)?;
+                    let (position, arguments) = self.parse_function_arguments(position, depth)?;
                     
                     // Expect a right parenthesis
                     let (position, _) = self.expect_token(position, &Token::Punctuation(Punctuation::RightParen))?;
@@ -603,12 +639,12 @@ impl Parser {
                 }
                 Token::Keyword(Keyword::Await) => {
                     let (position, _) = self.expect_token(position, &Token::Keyword(Keyword::Await))?;
-                    let (position, expr) = self.parse_primary(position)?;
+                    let (position, expr) = self.parse_primary(position, depth)?;
                     return Ok((position, Expression::Await(Box::new(expr))));
                 }
                 Token::Keyword(Keyword::Throw) => {
                     let (position, _) = self.expect_token(position, &Token::Keyword(Keyword::Throw))?;
-                    let (position, expr) = self.parse_expression(position)?;
+                    let (position, expr) = self.parse_expression_with_depth(position, depth + 1)?;
                     return Ok((position, Expression::Throw(Box::new(expr))));
                 }
                 _ => {}
@@ -649,7 +685,7 @@ impl Parser {
             None
         };
         
-        let (new_position, body) = self.parse_block_statement(current_position)?;
+        let (new_position, body) = self.parse_block_statement(current_position, 0)?;
         current_position = new_position;
         
         Ok((current_position, Statement::Function(FunctionStatement {
@@ -692,7 +728,7 @@ impl Parser {
             None
         };
         
-        let (new_position, body) = self.parse_block_statement(current_position)?;
+        let (new_position, body) = self.parse_block_statement(current_position, 0)?;
         current_position = new_position;
         
         Ok((current_position, Statement::Function(FunctionStatement {
@@ -769,7 +805,7 @@ impl Parser {
             }
         }
 
-        let (new_position, body) = self.parse_block_statement(current_position)?;
+        let (new_position, body) = self.parse_block_statement(current_position, 0)?;
         current_position = new_position;
 
         Ok((current_position, Statement::Spawn(SpawnStatement {
@@ -815,7 +851,7 @@ impl Parser {
             capabilities = caps;
         }
 
-        let (new_position, body) = self.parse_block_statement(current_position)?;
+        let (new_position, body) = self.parse_block_statement(current_position, 0)?;
         current_position = new_position;
 
         Ok((current_position, Statement::Agent(AgentStatement {
@@ -1016,13 +1052,13 @@ impl Parser {
         let (new_position, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::RightParen))?;
         current_position = new_position;
         
-        let (new_position, consequence) = self.parse_block_statement(current_position)?;
+        let (new_position, consequence) = self.parse_block_statement(current_position, 0)?;
         current_position = new_position;
         
         // Parse else block if present
         let alternative = if let Some(Token::Keyword(Keyword::Else)) = self.tokens.get(current_position) {
             let (new_pos, _) = self.expect_token(current_position, &Token::Keyword(Keyword::Else))?;
-            let (new_pos, else_block) = self.parse_block_statement(new_pos)?;
+            let (new_pos, else_block) = self.parse_block_statement(new_pos, 0)?;
             current_position = new_pos;
             Some(else_block)
         } else {
@@ -1036,7 +1072,7 @@ impl Parser {
         })))
     }
 
-    fn parse_function_arguments(&self, position: usize) -> Result<(usize, Vec<Expression>), ParserError> {
+    fn parse_function_arguments(&self, position: usize, depth: usize) -> Result<(usize, Vec<Expression>), ParserError> {
         let mut current_position = position;
         let mut arguments = Vec::new();
         
@@ -1051,7 +1087,7 @@ impl Parser {
         }
         
         loop {
-            let (new_position, argument) = self.parse_expression(current_position)?;
+            let (new_position, argument) = self.parse_expression_with_depth(current_position, depth + 1)?;
             current_position = new_position;
             arguments.push(argument);
             
@@ -1115,7 +1151,7 @@ impl Parser {
             }
             
             loop {
-                let (new_pos, param) = self.parse_expression(current_position)?;
+                let (new_pos, param) = self.parse_expression(current_position)?; // Top-level, depth 0
                 current_position = new_pos;
                 parameters.push(param);
                 
@@ -1146,7 +1182,7 @@ impl Parser {
         let mut current_position = position + 1; // consume 'try'
         
         // Parse try block
-        let (new_position, try_block) = self.parse_block_statement(current_position)?;
+        let (new_position, try_block) = self.parse_block_statement(current_position, 0)?;
         current_position = new_position;
         
         let mut catch_blocks = Vec::new();
@@ -1203,7 +1239,7 @@ impl Parser {
         }
         
         // Parse catch body
-        let (new_position, body) = self.parse_block_statement(current_position)?;
+        let (new_position, body) = self.parse_block_statement(current_position, 0)?;
         current_position = new_position;
         
         Ok((current_position, CatchBlock {
@@ -1217,7 +1253,7 @@ impl Parser {
         let mut current_position = position + 1; // consume 'finally'
         
         // Parse finally body
-        let (new_position, body) = self.parse_block_statement(current_position)?;
+        let (new_position, body) = self.parse_block_statement(current_position, 0)?;
         current_position = new_position;
         
         Ok((current_position, body))

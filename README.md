@@ -37,11 +37,11 @@ This project is updated consistently with improvements to security, performance,
 #### Linux/macOS
 ```bash
 # Download the release package
-wget https://github.com/distagentlang/dist_agent_lang/releases/download/v1.0.0/dist_agent_lang-1.0.0.tar.gz
+wget https://github.com/distagentlang/dist_agent_lang/releases/latest/download/dist_agent_lang-latest.tar.gz
 
 # Extract the package
-tar -xzf dist_agent_lang-1.0.0.tar.gz
-cd dist_agent_lang-1.0.0
+tar -xzf dist_agent_lang-latest.tar.gz
+cd dist_agent_lang-*
 
 # Run the installation script
 ./install.sh

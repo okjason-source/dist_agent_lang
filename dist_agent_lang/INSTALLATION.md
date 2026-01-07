@@ -20,11 +20,11 @@ See [SECURITY_DISCLAIMER.md](SECURITY_DISCLAIMER.md) for detailed information.
 #### Linux/macOS
 ```bash
 # Download the release package
-wget https://github.com/distagentlang/dist_agent_lang/releases/download/v1.0.0/dist_agent_lang-1.0.0.tar.gz
+wget https://github.com/distagentlang/dist_agent_lang/releases/latest/download/dist_agent_lang-latest.tar.gz
 
 # Extract the package
-tar -xzf dist_agent_lang-1.0.0.tar.gz
-cd dist_agent_lang-1.0.0
+tar -xzf dist_agent_lang-latest.tar.gz
+cd dist_agent_lang-*
 
 # Run the installation script
 ./install.sh
@@ -43,8 +43,8 @@ cd dist_agent_lang-1.0.0
 #### Linux/macOS
 ```bash
 # Extract the package
-tar -xzf dist_agent_lang-1.0.0.tar.gz
-cd dist_agent_lang-1.0.0
+tar -xzf dist_agent_lang-latest.tar.gz
+cd dist_agent_lang-*
 
 # Copy binary to a directory in your PATH
 sudo cp bin/dist_agent_lang /usr/local/bin/
@@ -65,7 +65,7 @@ export PATH="$HOME/.local/bin:$PATH"  # Add to ~/.bashrc or ~/.zshrc
 ### Verify Installation
 ```bash
 dist_agent_lang --version
-# Should output: dist_agent_lang 1.0.0
+# Should output: dist_agent_lang v1.0.2 (or latest version)
 ```
 
 ## 🚀 Quick Start

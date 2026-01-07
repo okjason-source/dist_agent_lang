@@ -106,6 +106,9 @@ pub enum RuntimeError {
     
     #[error("Access denied")]
     AccessDenied,
+    
+    #[error("Execution timeout: program exceeded maximum execution time")]
+    ExecutionTimeout,
 }
 
 impl RuntimeError {
