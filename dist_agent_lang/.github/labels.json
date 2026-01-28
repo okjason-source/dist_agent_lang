@@ -1,0 +1,124 @@
+{
+  "labels": [
+    {
+      "name": "good-first-issue",
+      "color": "0e8a16",
+      "description": "Good for newcomers"
+    },
+    {
+      "name": "help-wanted",
+      "color": "008672",
+      "description": "Extra attention is needed"
+    },
+    {
+      "name": "bug",
+      "color": "d73a4a",
+      "description": "Something isn't working"
+    },
+    {
+      "name": "enhancement",
+      "color": "a2eeef",
+      "description": "New feature or request"
+    },
+    {
+      "name": "documentation",
+      "color": "0075ca",
+      "description": "Improvements or additions to documentation"
+    },
+    {
+      "name": "testing",
+      "color": "f9d71c",
+      "description": "Testing related"
+    },
+    {
+      "name": "security",
+      "color": "ee0701",
+      "description": "Security issue"
+    },
+    {
+      "name": "question",
+      "color": "d876e3",
+      "description": "Further information is requested"
+    },
+    {
+      "name": "wontfix",
+      "color": "ffffff",
+      "description": "This will not be worked on"
+    },
+    {
+      "name": "duplicate",
+      "color": "cfd3d7",
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "name": "invalid",
+      "color": "e4e669",
+      "description": "This doesn't seem right"
+    },
+    {
+      "name": "blocked",
+      "color": "b60205",
+      "description": "Blocked by another issue"
+    },
+    {
+      "name": "priority: high",
+      "color": "b60205",
+      "description": "High priority issue"
+    },
+    {
+      "name": "priority: medium",
+      "color": "fbca04",
+      "description": "Medium priority issue"
+    },
+    {
+      "name": "priority: low",
+      "color": "0e8a16",
+      "description": "Low priority issue"
+    },
+    {
+      "name": "area: lexer",
+      "color": "1d76db",
+      "description": "Related to lexer/tokenization"
+    },
+    {
+      "name": "area: parser",
+      "color": "1d76db",
+      "description": "Related to parser/AST"
+    },
+    {
+      "name": "area: runtime",
+      "color": "1d76db",
+      "description": "Related to runtime execution"
+    },
+    {
+      "name": "area: stdlib",
+      "color": "1d76db",
+      "description": "Related to standard library"
+    },
+    {
+      "name": "area: blockchain",
+      "color": "1d76db",
+      "description": "Related to blockchain features"
+    },
+    {
+      "name": "area: ai",
+      "color": "1d76db",
+      "description": "Related to AI agent features"
+    },
+    {
+      "name": "area: security",
+      "color": "1d76db",
+      "description": "Related to security features"
+    },
+    {
+      "name": "area: http",
+      "color": "1d76db",
+      "description": "Related to HTTP server"
+    },
+    {
+      "name": "area: ffi",
+      "color": "1d76db",
+      "description": "Related to FFI (Foreign Function Interface)"
+    }
+  ]
+}
