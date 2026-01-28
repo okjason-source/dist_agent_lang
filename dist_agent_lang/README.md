@@ -8,9 +8,9 @@
 
 ## ⚠️ Beta Release Notice
 
-**Current Version: v1.0.1 (Beta Release) - Actively Developed**
+**Current Version: v1.0.3 (Beta Release) - Actively Developed**
 
-dist_agent_lang is an **actively maintained beta release** with consistent updates and improvements. The language includes extensive security features, comprehensive documentation, and has passed all tests (187+ passing).
+dist_agent_lang is an **actively maintained beta release** with consistent updates and improvements. The language includes extensive security features, comprehensive documentation, and has passed all tests (140+ passing).
 
 **🙏 Beta Testing Contributions Appreciated!**  
 We welcome feedback, bug reports, and contributions from the developer community to help us reach production readiness (v1.1.0+).
@@ -28,23 +28,24 @@ We welcome feedback, bug reports, and contributions from the developer community
 - **Critical Infrastructure** - Systems requiring high reliability (additional validation needed)
 - **Sensitive Data Applications** - Additional security audits strongly recommended
 
-### 🔒 Security Features (v1.0.1):
+### 🔒 Security Features (v1.0.3):
 - ✅ Reentrancy protection
 - ✅ Safe math (overflow/underflow protection)
 - ✅ State isolation
 - ✅ Cross-chain security
 - ✅ Oracle security (signed feeds, multi-source validation)
 - ✅ Transaction atomicity (ACID guarantees)
-- ✅ Enhanced security logging
-- ✅ 187+ tests passing (100%)
+- ✅ Enhanced security logging with source tracking
+- ✅ 140+ tests passing (100%)
 - ✅ Zero compilation errors
 - ✅ Dependency security audit passed (0 vulnerabilities)
 
-### 🚀 What's New in v1.0.1:
-- **AI Simplified Wrapper API** - Easy-to-use AI functions (classify, generate, embed, etc.)
-- **Model Registry System** - Register and manage custom AI models
-- **Phase 3 Documentation Complete** - Comprehensive developer guides, tutorials, API reference
-- **Enhanced Testing** - 187+ tests covering all features
+### 🚀 What's New in v1.0.3:
+- **Enhanced Log Functions** - Optional source parameter for all log functions (info, warning, error, debug, audit)
+- **HTTP Timeout Standardization** - Standardized to 30000ms (30 seconds) for consistency with HTTP libraries
+- **Comprehensive Security Integration Tests** - End-to-end security workflow tests using actual DAL language code
+- **Improved Logging** - Custom source identifiers for better log filtering and debugging
+- **Enhanced Testing** - 140+ tests covering all standard library modules
 
 ### 🔄 Active Development:
 This project receives **consistent updates** with improvements to security, performance, documentation, and features. We're working toward v1.1.0 (production release) with third-party security audits, real-world validation, and community feedback.
@@ -59,11 +60,14 @@ This project receives **consistent updates** with improvements to security, perf
 - **Join Beta Testing**: Help us improve by testing and providing feedback!
 
 ### 🤝 How to Contribute to Beta:
-- Test in your development environment and report bugs
-- Provide feedback on documentation and developer experience
-- Share use cases and requirements
-- Contribute to discussions on GitHub
-- Submit pull requests for improvements
+- **🧪 Testing** - Use the language, run examples, report bugs (no coding required!)
+- **📝 Documentation** - Improve docs, write tutorials, fix typos
+- **💻 Code** - Fix bugs, implement features, add tests
+- **💡 Ideas** - Share use cases, suggest improvements, join discussions
+
+**👉 New to contributing?** Check out [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md) for beginner-friendly tasks!
+
+**📖 Full Guide:** See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 
 **We value your feedback and contributions as we work toward production readiness!**
 
@@ -193,7 +197,7 @@ service HelloWorld {
         // Deploy to blockchain
         let contract = chain::deploy_contract("HelloWorld", {
             "name": "Hello World Contract",
-            "version": "1.0.1"
+            "version": "1.0.3"
         });
         
         log::info("main", "Hello World deployed successfully!");
@@ -423,7 +427,19 @@ pool_size = 10
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+**Contributors Welcome!** 🎉 We're actively seeking help to improve and test dist_agent_lang. Every contribution, no matter how small, helps!
+
+### 🚀 Quick Start Contributing
+
+**No coding required?** You can still help!
+- 🧪 **Test the language** - Run examples, report bugs
+- 📝 **Improve documentation** - Fix typos, clarify instructions
+- 💡 **Share feedback** - Tell us what works and what doesn't
+
+**Ready to code?** Great!
+- 🟢 **Beginners**: Check out [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md)
+- 📖 **Full Guide**: See [CONTRIBUTING.md](CONTRIBUTING.md)
+- 🔧 **Specific Tasks**: See [CODEBASE_TODOS.md](../CODEBASE_TODOS.md)
 
 ### Development Setup
 ```bash

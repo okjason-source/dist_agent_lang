@@ -15,7 +15,7 @@ use ed25519_dalek::{
     Signature as Ed25519Signature,
     Verifier as Ed25519Verifier,
 };
-use base64;
+use base64::{Engine as _, engine::general_purpose};
 
 /// Nonce manager to prevent replay attacks
 #[derive(Debug, Clone)]
@@ -191,7 +191,7 @@ impl EdDSASignatureVerifier {
         // Try to decode signature (try hex first, then base64)
         let signature_bytes = if let Ok(bytes) = hex::decode(signature) {
             bytes
-        } else if let Ok(bytes) = base64::decode(signature) {
+        } else if let Ok(bytes) = general_purpose::STANDARD.decode(signature) {
             bytes
         } else {
             return Err(RuntimeError::General(
@@ -213,7 +213,7 @@ impl EdDSASignatureVerifier {
         // Try to decode public key (try hex first, then base64)
         let pubkey_bytes = if let Ok(bytes) = hex::decode(public_key) {
             bytes
-        } else if let Ok(bytes) = base64::decode(public_key) {
+        } else if let Ok(bytes) = general_purpose::STANDARD.decode(public_key) {
             bytes
         } else {
             return Err(RuntimeError::General(
@@ -442,8 +442,8 @@ mod tests {
         let signature_bytes = vec![0u8; 64];
         let pubkey_bytes = vec![0u8; 32];
         
-        let signature_b64 = base64::encode(&signature_bytes);
-        let pubkey_b64 = base64::encode(&pubkey_bytes);
+        let signature_b64 = general_purpose::STANDARD.encode(&signature_bytes);
+        let pubkey_b64 = general_purpose::STANDARD.encode(&pubkey_bytes);
         
         // Should accept base64 encoding
         let result = EdDSASignatureVerifier::verify(message, &signature_b64, &pubkey_b64);

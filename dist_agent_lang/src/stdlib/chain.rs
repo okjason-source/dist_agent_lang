@@ -129,7 +129,7 @@ pub fn deploy(chain_id: i64, contract_name: String, constructor_args: HashMap<St
         data.insert("contract_name".to_string(), Value::String(contract_name.clone()));
         data.insert("constructor_args".to_string(), Value::String(format!("{:?}", constructor_args)));
         data
-    });
+    }, Some("chain"));
     
     // Get chain config
     let chain_config = get_chain_config(chain_id);
@@ -139,7 +139,7 @@ pub fn deploy(chain_id: i64, contract_name: String, constructor_args: HashMap<St
             data.insert("chain_id".to_string(), Value::Int(chain_id));
             data.insert("error".to_string(), Value::String(format!("Chain {} not supported", chain_id)));
             data
-        });
+        }, Some("chain"));
         return String::new();
     }
     
@@ -158,7 +158,7 @@ pub fn deploy(chain_id: i64, contract_name: String, constructor_args: HashMap<St
         data.insert("contract_name".to_string(), Value::String(contract_name));
         data.insert("address".to_string(), Value::String(address.clone()));
         data
-    });
+    }, None);
     
     address
 }
@@ -341,7 +341,7 @@ pub fn call(chain_id: i64, contract_address: String, function_name: String, args
         data.insert("function_name".to_string(), Value::String(function_name.clone()));
         data.insert("args".to_string(), Value::String(format!("{:?}", args)));
         data
-    });
+    }, Some("chain"));
     
     // Mock function call result
     format!("success: {} called on {} at {}", function_name, contract_address, chain_config.unwrap().name)
@@ -367,7 +367,7 @@ pub fn mint(name: String, metadata: HashMap<String, String>) -> i64 {
         data.insert("name".to_string(), Value::String(name.clone()));
         data.insert("metadata".to_string(), Value::String(format!("{:?}", metadata)));
         data
-    });
+    }, Some("chain"));
     
     // Generate a unique ID (mock implementation)
     let timestamp = std::time::SystemTime::now()
@@ -383,7 +383,7 @@ pub fn mint(name: String, metadata: HashMap<String, String>) -> i64 {
         let mut data = std::collections::HashMap::new();
         data.insert("asset_id".to_string(), Value::Int(asset_id));
         data
-    });
+    }, None);
     
     asset_id
 }
@@ -408,7 +408,7 @@ pub fn update(asset_id: i64, updates: HashMap<String, String>) -> bool {
         data.insert("asset_id".to_string(), Value::Int(asset_id));
         data.insert("updates".to_string(), Value::String(format!("{:?}", updates)));
         data
-    });
+    }, Some("chain"));
     
     // Simulate update success (mock implementation)
     let success = asset_id > 0; // Simple validation
@@ -419,7 +419,7 @@ pub fn update(asset_id: i64, updates: HashMap<String, String>) -> bool {
             let mut data = std::collections::HashMap::new();
             data.insert("asset_id".to_string(), Value::Int(asset_id));
             data
-        });
+        }, None);
     } else {
         // Log failure
         crate::stdlib::log::info("update_failed", {
@@ -427,7 +427,7 @@ pub fn update(asset_id: i64, updates: HashMap<String, String>) -> bool {
             data.insert("asset_id".to_string(), Value::Int(asset_id));
             data.insert("reason".to_string(), Value::String("Invalid asset ID".to_string()));
             data
-        });
+        }, None);
     }
     
     success

@@ -455,7 +455,7 @@ pub fn register_device(device_config: HashMap<String, Value>) -> Result<IoTDevic
         data.insert("device_config".to_string(), Value::Map(device_config.clone()));
         data.insert("message".to_string(), Value::String("Registering new IoT device".to_string()));
         data
-    });
+    }, Some("iot"));
 
     let device_id = device_config.get("device_id")
         .and_then(|v| match v {
@@ -509,7 +509,7 @@ pub fn connect_device(device_id: &str) -> Result<IoTDevice, String> {
         data.insert("device_id".to_string(), Value::String(device_id.to_string()));
         data.insert("message".to_string(), Value::String("Connecting to IoT device".to_string()));
         data
-    });
+    }, Some("iot"));
 
     // Simulate device connection
     let mut device = register_device({
@@ -531,7 +531,7 @@ pub fn disconnect_device(device_id: &str) -> Result<bool, String> {
         data.insert("device_id".to_string(), Value::String(device_id.to_string()));
         data.insert("message".to_string(), Value::String("Disconnecting IoT device".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -548,7 +548,7 @@ pub fn update_device_firmware(device_id: &str, firmware_version: &str) -> Result
         data.insert("firmware_version".to_string(), Value::String(firmware_version.to_string()));
         data.insert("message".to_string(), Value::String("Updating device firmware".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -561,7 +561,7 @@ pub fn add_sensor_to_device(device_id: &str, sensor_config: HashMap<String, Valu
         data.insert("sensor_config".to_string(), Value::Map(sensor_config.clone()));
         data.insert("message".to_string(), Value::String("Adding sensor to device".to_string()));
         data
-    });
+    }, Some("iot"));
 
     let sensor_id = sensor_config.get("sensor_id")
         .and_then(|v| match v {
@@ -600,7 +600,7 @@ pub fn read_sensor_data(sensor_id: &str) -> Result<SensorReading, String> {
         data.insert("sensor_id".to_string(), Value::String(sensor_id.to_string()));
         data.insert("message".to_string(), Value::String("Reading sensor data".to_string()));
         data
-    });
+    }, Some("iot"));
 
     let reading = SensorReading {
         timestamp: "2024-01-01T00:00:00Z".to_string(),
@@ -624,7 +624,7 @@ pub fn calibrate_sensor(sensor_id: &str, calibration_points: Vec<CalibrationPoin
         data.insert("calibration_points".to_string(), Value::Int(calibration_points.len() as i64));
         data.insert("message".to_string(), Value::String("Calibrating sensor".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -637,7 +637,7 @@ pub fn add_actuator_to_device(device_id: &str, actuator_config: HashMap<String, 
         data.insert("actuator_config".to_string(), Value::Map(actuator_config.clone()));
         data.insert("message".to_string(), Value::String("Adding actuator to device".to_string()));
         data
-    });
+    }, Some("iot"));
 
     let actuator_id = actuator_config.get("actuator_id")
         .and_then(|v| match v {
@@ -672,7 +672,7 @@ pub fn send_actuator_command(actuator_id: &str, command: &str, parameters: HashM
         data.insert("parameters".to_string(), Value::Map(parameters.clone()));
         data.insert("message".to_string(), Value::String("Sending actuator command".to_string()));
         data
-    });
+    }, Some("iot"));
 
     let actuator_command = ActuatorCommand {
         command_id: format!("cmd_{}", generate_id()),
@@ -693,7 +693,7 @@ pub fn create_edge_node(node_config: HashMap<String, Value>) -> Result<EdgeNode,
         data.insert("node_config".to_string(), Value::Map(node_config.clone()));
         data.insert("message".to_string(), Value::String("Creating edge computing node".to_string()));
         data
-    });
+    }, Some("iot"));
 
     let node_id = node_config.get("node_id")
         .and_then(|v| match v {
@@ -744,7 +744,7 @@ pub fn process_data_at_edge(edge_node_id: &str, data: Value, task_type: EdgeTask
         data_map.insert("task_type".to_string(), Value::String(format!("{:?}", task_type)));
         data_map.insert("message".to_string(), Value::String("Processing data at edge node".to_string()));
         data_map
-    });
+    }, Some("iot"));
 
     let task = EdgeTask {
         task_id: format!("edge_task_{}", generate_id()),
@@ -768,7 +768,7 @@ pub fn cache_data_at_edge(edge_node_id: &str, key: &str, data: Value, ttl_second
         data_map.insert("ttl_seconds".to_string(), Value::Int(ttl_seconds.unwrap_or(3600)));
         data_map.insert("message".to_string(), Value::String("Caching data at edge node".to_string()));
         data_map
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -786,7 +786,7 @@ pub fn create_data_stream(stream_config: HashMap<String, Value>) -> Result<DataS
         data.insert("stream_config".to_string(), Value::Map(stream_config.clone()));
         data.insert("message".to_string(), Value::String("Creating data stream".to_string()));
         data
-    });
+    }, Some("iot"));
 
     let stream_id = stream_config.get("stream_id")
         .and_then(|v| match v {
@@ -826,7 +826,7 @@ pub fn add_filter_to_stream(stream_id: &str, filter: DataFilter) -> Result<bool,
         data.insert("filter_type".to_string(), Value::String(format!("{:?}", filter.filter_type)));
         data.insert("message".to_string(), Value::String("Adding filter to data stream".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -838,7 +838,7 @@ pub fn add_processor_to_stream(stream_id: &str, processor: DataProcessor) -> Res
         data.insert("processor_type".to_string(), Value::String(format!("{:?}", processor.processor_type)));
         data.insert("message".to_string(), Value::String("Adding processor to data stream".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -851,7 +851,7 @@ pub fn add_sink_to_stream(stream_id: &str, sink: DataSink) -> Result<bool, Strin
         data.insert("destination".to_string(), Value::String(sink.destination.clone()));
         data.insert("message".to_string(), Value::String("Adding sink to data stream".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -864,7 +864,7 @@ pub fn configure_protocol(protocol_config: ProtocolConfig) -> Result<bool, Strin
         data.insert("client_id".to_string(), Value::String(protocol_config.client_id.clone()));
         data.insert("message".to_string(), Value::String("Configuring IoT communication protocol".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -876,7 +876,7 @@ pub fn publish_message(protocol_config: &ProtocolConfig, topic: &str, payload: V
         data.insert("protocol".to_string(), Value::String(format!("{:?}", protocol_config.protocol_type)));
         data.insert("message".to_string(), Value::String("Publishing message via IoT protocol".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -888,7 +888,7 @@ pub fn subscribe_to_topic(protocol_config: &ProtocolConfig, topic: &str) -> Resu
         data.insert("protocol".to_string(), Value::String(format!("{:?}", protocol_config.protocol_type)));
         data.insert("message".to_string(), Value::String("Subscribing to IoT topic".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -901,7 +901,7 @@ pub fn authenticate_device(device_id: &str, credentials: &Credentials) -> Result
         data.insert("has_credentials".to_string(), Value::Bool(credentials.username.is_some()));
         data.insert("message".to_string(), Value::String("Authenticating IoT device".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -913,7 +913,7 @@ pub fn encrypt_device_data(data: Value, security_profile: &SecurityProfile) -> R
         data_map.insert("security_level".to_string(), Value::String(format!("{:?}", security_profile.security_level)));
         data_map.insert("message".to_string(), Value::String("Encrypting device data".to_string()));
         data_map
-    });
+    }, Some("iot"));
 
     Ok(Value::String("encrypted_data".to_string()))
 }
@@ -925,7 +925,7 @@ pub fn verify_device_certificate(device_id: &str, certificate_path: &str) -> Res
         data.insert("certificate_path".to_string(), Value::String(certificate_path.to_string()));
         data.insert("message".to_string(), Value::String("Verifying device certificate".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(true)
 }
@@ -937,7 +937,7 @@ pub fn sync_device_data_to_cloud(device_id: &str, data: Value) -> Result<bool, S
         data_map.insert("device_id".to_string(), Value::String(device_id.to_string()));
         data_map.insert("message".to_string(), Value::String("Syncing device data to cloud".to_string()));
         data_map
-    });
+    }, Some("iot"));
 
     // In real implementation, this would use cloud APIs
     Ok(true)
@@ -950,7 +950,7 @@ pub fn get_device_data_from_cloud(device_id: &str, time_range: Option<(String, S
         data.insert("has_time_range".to_string(), Value::Bool(time_range.is_some()));
         data.insert("message".to_string(), Value::String("Retrieving device data from cloud".to_string()));
         data
-    });
+    }, Some("iot"));
 
     Ok(Value::String("cloud_data".to_string()))
 }
@@ -962,7 +962,7 @@ pub fn detect_sensor_anomalies(sensor_data: Vec<SensorReading>) -> Result<Vec<St
         data.insert("data_points".to_string(), Value::Int(sensor_data.len() as i64));
         data.insert("message".to_string(), Value::String("Detecting sensor anomalies".to_string()));
         data
-    });
+    }, Some("iot"));
 
     // In real implementation, this would use AI for anomaly detection
     Ok(vec!["potential_anomaly_detected".to_string()])
@@ -975,7 +975,7 @@ pub fn predict_device_failure(device_id: &str, sensor_history: Vec<SensorReading
         data.insert("history_points".to_string(), Value::Int(sensor_history.len() as i64));
         data.insert("message".to_string(), Value::String("Predicting device failure probability".to_string()));
         data
-    });
+    }, Some("iot"));
 
     // In real implementation, this would use ML for predictive maintenance
     Ok(0.15) // 15% failure probability
@@ -994,7 +994,7 @@ pub fn monitor_power_consumption(device_id: &str) -> Result<PowerStatus, String>
         data.insert("device_id".to_string(), Value::String(device_id.to_string()));
         data.insert("message".to_string(), Value::String("Monitoring device power consumption".to_string()));
         data
-    });
+    }, Some("iot"));
 
     let power_status = PowerStatus {
         source: PowerSource::Battery,
@@ -1015,7 +1015,7 @@ pub fn optimize_power_usage(device_id: &str, target_runtime: i64) -> Result<Hash
         data.insert("target_runtime_hours".to_string(), Value::Int(target_runtime / 60));
         data.insert("message".to_string(), Value::String("Optimizing device power usage".to_string()));
         data
-    });
+    }, Some("iot"));
 
     let optimizations = {
         let mut opts = HashMap::new();

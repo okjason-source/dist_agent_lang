@@ -313,7 +313,7 @@ pub fn listen_to_event(
             data.insert("to_block".to_string(), Value::Int(to));
         }
         data
-    });
+    }, Some("solidity_adapter"));
     
     format!("Event listener registered for {} on contract {}", event_name, contract.address)
 }

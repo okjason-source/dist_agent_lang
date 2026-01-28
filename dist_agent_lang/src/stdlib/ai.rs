@@ -236,13 +236,13 @@ pub struct CommunicationProtocol {
 
 // Agent Lifecycle Management
 pub fn spawn_agent(config: AgentConfig) -> Result<Agent, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Spawning new AI agent", {
         let mut data = std::collections::HashMap::new();
         data.insert("agent_name".to_string(), Value::String(config.name.clone()));
         data.insert("agent_role".to_string(), Value::String(config.role.clone()));
         data.insert("message".to_string(), Value::String("Spawning new AI agent".to_string()));
         data
-    });
+    }, Some("ai"));
 
     let mut agent = Agent {
         id: format!("agent_{}", generate_id()),
@@ -264,12 +264,12 @@ pub fn spawn_agent(config: AgentConfig) -> Result<Agent, String> {
 }
 
 pub fn terminate_agent(agent: &mut Agent) -> Result<bool, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Terminating AI agent", {
         let mut data = std::collections::HashMap::new();
         data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
         data.insert("message".to_string(), Value::String("Terminating AI agent".to_string()));
         data
-    });
+    }, Some("ai"));
 
     agent.status = AgentStatus::Terminated;
 
@@ -304,26 +304,26 @@ pub fn send_message(from_agent: &str, to_agent: &str, message_type: String, cont
         correlation_id: None,
     };
 
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Message sent between agents", {
         let mut data = std::collections::HashMap::new();
         data.insert("from_agent".to_string(), Value::String(from_agent.to_string()));
         data.insert("to_agent".to_string(), Value::String(to_agent.to_string()));
         data.insert("message_type".to_string(), Value::String(message.message_type.clone()));
         data.insert("message".to_string(), Value::String("Message sent between agents".to_string()));
         data
-    });
+    }, Some("ai"));
 
     Ok(message)
 }
 
 pub fn receive_message(agent: &mut Agent, message: Message) -> Result<(), String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Message received by agent", {
         let mut data = std::collections::HashMap::new();
         data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
         data.insert("message_id".to_string(), Value::String(message.id.clone()));
         data.insert("message".to_string(), Value::String("Message received by agent".to_string()));
         data
-    });
+    }, Some("ai"));
 
     agent.message_queue.push(message);
     agent.last_active = "2024-01-01T00:00:00Z".to_string();
@@ -392,14 +392,14 @@ pub fn create_task(agent: &mut Agent, task_type: String, description: String, pa
 
     agent.tasks.push(task.clone());
 
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Task created", {
         let mut data = std::collections::HashMap::new();
         data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
         data.insert("task_id".to_string(), Value::String(task.id.clone()));
         data.insert("task_type".to_string(), Value::String(task.task_type.clone()));
         data.insert("message".to_string(), Value::String("Task created".to_string()));
         data
-    });
+    }, Some("ai"));
 
     Ok(task)
 }
@@ -472,25 +472,25 @@ pub fn execute_task(agent: &mut Agent, task_id: &str) -> Result<Value, String> {
         task.result = Some(result.clone());
     }
 
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Task executed successfully", {
         let mut data = std::collections::HashMap::new();
         data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
         data.insert("task_id".to_string(), Value::String(task_id.to_string()));
         data.insert("message".to_string(), Value::String("Task executed successfully".to_string()));
         data
-    });
+    }, Some("ai"));
 
     Ok(result)
 }
 
 // AI Processing Functions
 pub fn analyze_text(text: String) -> Result<TextAnalysis, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Analyzing text", {
         let mut data = std::collections::HashMap::new();
         data.insert("text_length".to_string(), Value::Int(text.len() as i64));
         data.insert("message".to_string(), Value::String("Analyzing text".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Simulated text analysis
     let analysis = TextAnalysis {
@@ -514,12 +514,12 @@ pub fn analyze_text(text: String) -> Result<TextAnalysis, String> {
 }
 
 pub fn analyze_image(image_data: Vec<u8>) -> Result<ImageAnalysis, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Analyzing image", {
         let mut data = std::collections::HashMap::new();
         data.insert("image_size".to_string(), Value::Int(image_data.len() as i64));
         data.insert("message".to_string(), Value::String("Analyzing image".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Simulated image analysis
     let analysis = ImageAnalysis {
@@ -545,25 +545,25 @@ pub fn analyze_image(image_data: Vec<u8>) -> Result<ImageAnalysis, String> {
 }
 
 pub fn generate_text(prompt: String) -> Result<String, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Generating text response", {
         let mut data = std::collections::HashMap::new();
         data.insert("prompt_length".to_string(), Value::Int(prompt.len() as i64));
         data.insert("message".to_string(), Value::String("Generating text response".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Simulated text generation
     Ok(format!("Generated response to: {}", prompt))
 }
 
 pub fn train_model(training_data: TrainingData) -> Result<Model, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Training AI model", {
         let mut data = std::collections::HashMap::new();
         data.insert("data_type".to_string(), Value::String(training_data.data_type.clone()));
         data.insert("samples".to_string(), Value::Int(training_data.samples.len() as i64));
         data.insert("message".to_string(), Value::String("Training AI model".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Simulated model training
     let model = Model {
@@ -580,12 +580,12 @@ pub fn train_model(training_data: TrainingData) -> Result<Model, String> {
 }
 
 pub fn predict(model: &Model, input: Value) -> Result<Prediction, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Making prediction", {
         let mut data = std::collections::HashMap::new();
         data.insert("model_id".to_string(), Value::String(model.model_id.clone()));
         data.insert("message".to_string(), Value::String("Making prediction".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Simulated prediction
     let prediction = Prediction {
@@ -605,12 +605,12 @@ pub fn predict(model: &Model, input: Value) -> Result<Prediction, String> {
 
 // Agent Coordination
 pub fn create_coordinator(coordinator_id: String) -> AgentCoordinator {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Creating agent coordinator", {
         let mut data = std::collections::HashMap::new();
         data.insert("coordinator_id".to_string(), Value::String(coordinator_id.clone()));
         data.insert("message".to_string(), Value::String("Creating agent coordinator".to_string()));
         data
-    });
+    }, Some("ai"));
 
     AgentCoordinator {
         coordinator_id,
@@ -625,13 +625,13 @@ pub fn add_agent_to_coordinator(coordinator: &mut AgentCoordinator, agent: Agent
     let agent_id = agent.id.clone();
     coordinator.agents.push(agent);
 
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Agent added to coordinator", {
         let mut data = std::collections::HashMap::new();
         data.insert("coordinator_id".to_string(), Value::String(coordinator.coordinator_id.clone()));
         data.insert("agent_id".to_string(), Value::String(agent_id));
         data.insert("message".to_string(), Value::String("Agent added to coordinator".to_string()));
         data
-    });
+    }, Some("ai"));
 }
 
 pub fn create_workflow(coordinator: &mut AgentCoordinator, name: String, steps: Vec<WorkflowStep>) -> Workflow {
@@ -645,14 +645,14 @@ pub fn create_workflow(coordinator: &mut AgentCoordinator, name: String, steps: 
 
     coordinator.workflows.push(workflow.clone());
 
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Workflow created", {
         let mut data = std::collections::HashMap::new();
         data.insert("workflow_id".to_string(), Value::String(workflow.workflow_id.clone()));
         data.insert("workflow_name".to_string(), Value::String(workflow.name.clone()));
         data.insert("steps".to_string(), Value::Int(workflow.steps.len() as i64));
         data.insert("message".to_string(), Value::String("Workflow created".to_string()));
         data
-    });
+    }, Some("ai"));
 
     workflow
 }
@@ -693,12 +693,12 @@ pub fn execute_workflow(coordinator: &mut AgentCoordinator, workflow_id: &str) -
 
     workflow.status = WorkflowStatus::Completed;
 
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Workflow executed successfully", {
         let mut data = std::collections::HashMap::new();
         data.insert("workflow_id".to_string(), Value::String(workflow_id.to_string()));
         data.insert("message".to_string(), Value::String("Workflow executed successfully".to_string()));
         data
-    });
+    }, Some("ai"));
 
     Ok(true)
 }
@@ -721,24 +721,24 @@ pub fn generate_id() -> String {
 
 // Agent State Management
 pub fn save_agent_state(agent: &Agent) -> Result<bool, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Saving agent state", {
         let mut data = std::collections::HashMap::new();
         data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
         data.insert("message".to_string(), Value::String("Saving agent state".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Simulated state saving
     Ok(true)
 }
 
 pub fn load_agent_state(agent_id: &str) -> Result<Agent, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Loading agent state", {
         let mut data = std::collections::HashMap::new();
         data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
         data.insert("message".to_string(), Value::String("Loading agent state".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Simulated state loading
     Err("Agent state not found".to_string())
@@ -812,12 +812,12 @@ fn get_model_registry() -> &'static mut HashMap<String, Model> {
 pub fn register_model(name: String, model: Model) {
     let registry = get_model_registry();
     
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Model registered", {
         let mut data = std::collections::HashMap::new();
         data.insert("model_name".to_string(), Value::String(name.clone()));
         data.insert("message".to_string(), Value::String("Model registered".to_string()));
         data
-    });
+    }, Some("ai"));
     
     registry.insert(name, model);
 }
@@ -840,13 +840,13 @@ pub fn get_model(name: &str) -> Option<Model> {
 /// 3. Returns a simplified classification result
 /// 4. Cleans up automatically
 pub fn classify(model: &str, input: &str) -> Result<String, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Classifying text (simplified API)", {
         let mut data = std::collections::HashMap::new();
         data.insert("model".to_string(), Value::String(model.to_string()));
         data.insert("input_length".to_string(), Value::Int(input.len() as i64));
         data.insert("message".to_string(), Value::String("Classifying text (simplified API)".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Use built-in text analysis
     let analysis = analyze_text(input.to_string())?;
@@ -928,13 +928,13 @@ pub fn classify_with_confidence(model: &str, input: &str) -> Result<(String, f64
 
 /// Generate text using a named model (simplified API)
 pub fn generate(model: &str, prompt: &str) -> Result<String, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Generating text (simplified API)", {
         let mut data = std::collections::HashMap::new();
         data.insert("model".to_string(), Value::String(model.to_string()));
         data.insert("prompt_length".to_string(), Value::Int(prompt.len() as i64));
         data.insert("message".to_string(), Value::String("Generating text (simplified API)".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Use built-in text generation
     let mut response = generate_text(prompt.to_string())?;
@@ -963,12 +963,12 @@ pub fn generate(model: &str, prompt: &str) -> Result<String, String> {
 
 /// Generate embeddings for text (simplified API)
 pub fn embed(text: &str) -> Result<Vec<f64>, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Generating embeddings", {
         let mut data = std::collections::HashMap::new();
         data.insert("text_length".to_string(), Value::Int(text.len() as i64));
         data.insert("message".to_string(), Value::String("Generating embeddings".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Simple embedding generation using hash-based approach
     // In production, this would use actual embedding models
@@ -1021,13 +1021,13 @@ pub fn detect_anomaly(data: &[f64], new_value: f64) -> Result<bool, String> {
         return Ok(false);
     }
     
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Detecting anomaly", {
         let mut log_data = std::collections::HashMap::new();
         log_data.insert("data_points".to_string(), Value::Int(data.len() as i64));
         log_data.insert("new_value".to_string(), Value::Int(new_value as i64));
-        log_data.insert("message".to_string(), Value::String("Detecting anomaly".to_string()));
+        log_data.insert("message".to_string(), Value::String("Detecting anomaly in data".to_string()));
         log_data
-    });
+    }, Some("ai"));
 
     // Calculate mean and standard deviation
     let mean = data.iter().sum::<f64>() / data.len() as f64;
@@ -1043,12 +1043,12 @@ pub fn detect_anomaly(data: &[f64], new_value: f64) -> Result<bool, String> {
 
 /// Predict using a named model (simplified API)
 pub fn predict_with_model(model_name: &str, input: Value) -> Result<Value, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Making prediction (simplified API)", {
         let mut data = std::collections::HashMap::new();
         data.insert("model_name".to_string(), Value::String(model_name.to_string()));
         data.insert("message".to_string(), Value::String("Making prediction (simplified API)".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Try to get registered model
     if let Some(model) = get_model(model_name) {
@@ -1090,12 +1090,12 @@ pub fn predict_with_model(model_name: &str, input: Value) -> Result<Value, Strin
 
 /// Analyze image from URL (simplified API)
 pub fn analyze_image_url(url: &str) -> Result<ImageAnalysis, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Analyzing image from URL", {
         let mut data = std::collections::HashMap::new();
         data.insert("url".to_string(), Value::String(url.to_string()));
         data.insert("message".to_string(), Value::String("Analyzing image from URL".to_string()));
         data
-    });
+    }, Some("ai"));
 
     // In production, this would fetch and analyze the actual image
     // For now, return simulated analysis
@@ -1104,13 +1104,14 @@ pub fn analyze_image_url(url: &str) -> Result<ImageAnalysis, String> {
 
 /// Generate image from prompt (simplified API)
 pub fn generate_image(model: &str, prompt: &str) -> Result<String, String> {
-    crate::stdlib::log::info("ai", {
+    let msg = "Generating image from prompt";
+    crate::stdlib::log::info(msg, {
         let mut data = std::collections::HashMap::new();
         data.insert("model".to_string(), Value::String(model.to_string()));
         data.insert("prompt".to_string(), Value::String(prompt.to_string()));
-        data.insert("message".to_string(), Value::String("Generating image".to_string()));
+        data.insert("message".to_string(), Value::String(msg.to_string()));
         data
-    });
+    }, Some("ai"));
 
     // Return simulated image URL
     // In production, this would call DALL-E, Midjourney, Stable Diffusion, etc.
@@ -1121,13 +1122,13 @@ pub fn generate_image(model: &str, prompt: &str) -> Result<String, String> {
 
 /// Recommend items based on preferences (simplified API)
 pub fn recommend(user_preferences: Vec<String>, available_items: Vec<String>, count: usize) -> Result<Vec<String>, String> {
-    crate::stdlib::log::info("ai", {
+    crate::stdlib::log::info("Generating recommendations", {
         let mut data = std::collections::HashMap::new();
         data.insert("preferences_count".to_string(), Value::Int(user_preferences.len() as i64));
         data.insert("items_count".to_string(), Value::Int(available_items.len() as i64));
         data.insert("message".to_string(), Value::String("Generating recommendations".to_string()));
         data
-    });
+    }, Some("ai"));
 
     let mut recommendations = Vec::new();
     

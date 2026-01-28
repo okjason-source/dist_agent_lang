@@ -364,7 +364,7 @@ let cap_check = cap::check(cap_request);
         data.insert("version".to_string(), Value::String(env!("CARGO_PKG_VERSION").to_string()));
         data.insert("timestamp".to_string(), Value::Int(1234567890));
         data
-    });
+    }, None);
     
     let log_stats = log::get_stats();
     println!("   ✅ Log statistics: {:?}", log_stats);

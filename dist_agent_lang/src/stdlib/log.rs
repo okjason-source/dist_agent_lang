@@ -35,13 +35,16 @@ lazy_static::lazy_static! {
 /// # Arguments
 /// * `message` - The message to log
 /// * `data` - Additional data to include with the log
+/// * `source` - Optional source identifier (defaults to "system" if None)
 /// 
 /// # Example
 /// ```rust
-/// log::info("User logged in", { "user_id": "123", "ip": "192.168.1.1" });
+/// log::info("User logged in", { "user_id": "123", "ip": "192.168.1.1" }, Some("auth_service"));
+/// log::info("System message", {}, None); // Uses default "system" source
 /// ```
-pub fn info(message: &str, data: HashMap<String, Value>) {
-    log_message(LogLevel::Info, message, data, "system".to_string());
+pub fn info(message: &str, data: HashMap<String, Value>, source: Option<&str>) {
+    let source_str = source.unwrap_or("system").to_string();
+    log_message(LogLevel::Info, message, data, source_str);
 }
 
 /// Log a warning message
@@ -49,13 +52,15 @@ pub fn info(message: &str, data: HashMap<String, Value>) {
 /// # Arguments
 /// * `message` - The warning message
 /// * `data` - Additional data to include with the warning
+/// * `source` - Optional source identifier (defaults to "system" if None)
 /// 
 /// # Example
 /// ```rust
-/// log::warning("High memory usage detected", { "usage": "85%", "threshold": "80%" });
+/// log::warning("High memory usage detected", { "usage": "85%", "threshold": "80%" }, Some("monitor"));
 /// ```
-pub fn warning(message: &str, data: HashMap<String, Value>) {
-    log_message(LogLevel::Warning, message, data, "system".to_string());
+pub fn warning(message: &str, data: HashMap<String, Value>, source: Option<&str>) {
+    let source_str = source.unwrap_or("system").to_string();
+    log_message(LogLevel::Warning, message, data, source_str);
 }
 
 /// Log an error message
@@ -68,8 +73,9 @@ pub fn warning(message: &str, data: HashMap<String, Value>) {
 /// ```rust
 /// log::error("Database connection failed", { "error_code": "CONN_001", "retry_count": 3 });
 /// ```
-pub fn error(message: &str, data: HashMap<String, Value>) {
-    log_message(LogLevel::Error, message, data, "system".to_string());
+pub fn error(message: &str, data: HashMap<String, Value>, source: Option<&str>) {
+    let source_str = source.unwrap_or("system").to_string();
+    log_message(LogLevel::Error, message, data, source_str);
 }
 
 /// Log an audit event
@@ -77,13 +83,15 @@ pub fn error(message: &str, data: HashMap<String, Value>) {
 /// # Arguments
 /// * `event` - The audit event name
 /// * `data` - Additional data to include with the audit
+/// * `source` - Optional source identifier (defaults to "audit" if None)
 /// 
 /// # Example
 /// ```rust
-/// log::audit("user_login", { "user_id": "123", "ip": "192.168.1.1", "success": true });
+/// log::audit("user_login", { "user_id": "123", "ip": "192.168.1.1", "success": true }, Some("auth"));
 /// ```
-pub fn audit(event: &str, data: HashMap<String, Value>) {
-    log_message(LogLevel::Audit, event, data, "audit".to_string());
+pub fn audit(event: &str, data: HashMap<String, Value>, source: Option<&str>) {
+    let source_str = source.unwrap_or("audit").to_string();
+    log_message(LogLevel::Audit, event, data, source_str);
 }
 
 /// Log a debug message
@@ -91,13 +99,15 @@ pub fn audit(event: &str, data: HashMap<String, Value>) {
 /// # Arguments
 /// * `message` - The debug message
 /// * `data` - Additional data to include with the debug info
+/// * `source` - Optional source identifier (defaults to "debug" if None)
 /// 
 /// # Example
 /// ```rust
-/// log::debug("Function execution time", { "function": "process_data", "duration_ms": 150 });
+/// log::debug("Function execution time", { "function": "process_data", "duration_ms": 150 }, Some("performance"));
 /// ```
-pub fn debug(message: &str, data: HashMap<String, Value>) {
-    log_message(LogLevel::Debug, message, data, "debug".to_string());
+pub fn debug(message: &str, data: HashMap<String, Value>, source: Option<&str>) {
+    let source_str = source.unwrap_or("debug").to_string();
+    log_message(LogLevel::Debug, message, data, source_str);
 }
 
 /// Internal function to log messages

@@ -510,7 +510,7 @@ pub fn create_window(config: WindowConfig) -> Result<Window, String> {
         data.insert("height".to_string(), Value::Int(config.height));
         data.insert("message".to_string(), Value::String("Creating desktop window".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     let window = Window {
         id: format!("window_{}", generate_id()),
@@ -541,7 +541,7 @@ pub fn show_window(window: &mut Window) -> Result<bool, String> {
         data.insert("window_id".to_string(), Value::String(window.id.clone()));
         data.insert("message".to_string(), Value::String("Showing desktop window".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(true)
 }
@@ -554,7 +554,7 @@ pub fn hide_window(window: &mut Window) -> Result<bool, String> {
         data.insert("window_id".to_string(), Value::String(window.id.clone()));
         data.insert("message".to_string(), Value::String("Hiding desktop window".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(true)
 }
@@ -568,7 +568,7 @@ pub fn close_window(window: &mut Window) -> Result<bool, String> {
         data.insert("window_id".to_string(), Value::String(window.id.clone()));
         data.insert("message".to_string(), Value::String("Closing desktop window".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(true)
 }
@@ -582,7 +582,7 @@ pub fn maximize_window(window: &mut Window) -> Result<bool, String> {
         data.insert("window_id".to_string(), Value::String(window.id.clone()));
         data.insert("message".to_string(), Value::String("Maximizing desktop window".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(true)
 }
@@ -596,7 +596,7 @@ pub fn minimize_window(window: &mut Window) -> Result<bool, String> {
         data.insert("window_id".to_string(), Value::String(window.id.clone()));
         data.insert("message".to_string(), Value::String("Minimizing desktop window".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(true)
 }
@@ -610,7 +610,7 @@ pub fn restore_window(window: &mut Window) -> Result<bool, String> {
         data.insert("window_id".to_string(), Value::String(window.id.clone()));
         data.insert("message".to_string(), Value::String("Restoring desktop window".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(true)
 }
@@ -982,7 +982,7 @@ pub fn add_component_to_window(window: &mut Window, component: UIComponent) -> R
         data.insert("component_count".to_string(), Value::Int(window.components.len() as i64));
         data.insert("message".to_string(), Value::String("Added component to window".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(true)
 }
@@ -1000,7 +1000,7 @@ pub fn remove_component_from_window(window: &mut Window, component_id: &str) -> 
             data.insert("component_id".to_string(), Value::String(component_id.to_string()));
             data.insert("message".to_string(), Value::String("Removed component from window".to_string()));
             data
-        });
+        }, Some("desktop"));
     }
 
     Ok(removed)
@@ -1042,7 +1042,7 @@ pub fn add_event_handler(window: &mut Window, component_id: String, event_type: 
         data.insert("event_type".to_string(), Value::String(event_type));
         data.insert("message".to_string(), Value::String("Added event handler to window".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(true)
 }
@@ -1059,7 +1059,7 @@ pub fn remove_event_handler(window: &mut Window, component_id: String, event_typ
             data.insert("event_type".to_string(), Value::String(event_type));
             data.insert("message".to_string(), Value::String("Removed event handler from window".to_string()));
             data
-        });
+        }, Some("desktop"));
     }
 
     Ok(removed)
@@ -1094,7 +1094,7 @@ pub fn trigger_event(window: &Window, component_id: String, event_type: String, 
         data.insert("handlers_triggered".to_string(), Value::Int(triggered_handlers.len() as i64));
         data.insert("message".to_string(), Value::String("Event triggered".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(triggered_handlers)
 }
@@ -1107,7 +1107,7 @@ pub fn show_file_dialog(options: FileDialogOptions) -> Result<Vec<String>, Strin
         data.insert("multiple_selection".to_string(), Value::Bool(options.multiple_selection));
         data.insert("message".to_string(), Value::String("Showing file dialog".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     // Simulated file selection
     if options.multiple_selection {
@@ -1126,7 +1126,7 @@ pub fn show_save_dialog(options: FileDialogOptions) -> Result<String, String> {
         data.insert("title".to_string(), Value::String(options.title.clone()));
         data.insert("message".to_string(), Value::String("Showing save dialog".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     // Simulated file path
     Ok("/home/user/new_document.txt".to_string())
@@ -1139,7 +1139,7 @@ pub fn show_message_dialog(options: MessageDialogOptions) -> Result<String, Stri
         data.insert("message".to_string(), Value::String(options.message.clone()));
         data.insert("message".to_string(), Value::String("Showing message dialog".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     // Simulated button selection
     Ok(options.buttons.get(0).unwrap_or(&"OK".to_string()).clone())
@@ -1152,7 +1152,7 @@ pub fn create_system_tray_icon(icon_path: String, tooltip: String) -> SystemTray
         data.insert("tooltip".to_string(), Value::String(tooltip.clone()));
         data.insert("message".to_string(), Value::String("Creating system tray icon".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     SystemTrayIcon {
         icon_path,
@@ -1170,7 +1170,7 @@ pub fn show_notification(options: NotificationOptions) -> Result<bool, String> {
         data.insert("sound".to_string(), Value::Bool(options.sound));
         data.insert("message".to_string(), Value::String("Showing desktop notification".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(true)
 }
@@ -1222,7 +1222,7 @@ pub fn apply_theme_to_window(window: &mut Window, theme: Theme) -> Result<bool, 
         data.insert("theme_name".to_string(), Value::String(theme.name.clone()));
         data.insert("message".to_string(), Value::String("Applied theme to window".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(true)
 }
@@ -1254,7 +1254,7 @@ pub fn run_event_loop() -> Result<(), String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Starting desktop event loop".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     // In a real implementation, this would start the GUI event loop
     Ok(())
@@ -1265,7 +1265,7 @@ pub fn exit_application() -> Result<(), String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Exiting desktop application".to_string()));
         data
-    });
+    }, Some("desktop"));
 
     Ok(())
 }

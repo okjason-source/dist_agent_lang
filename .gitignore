@@ -1,13 +1,16 @@
 # Development and Planning Documents (Keep Local)
+# Note: Files in dist_agent_lang/docs/development/ and docs/project/ are tracked
+# Only ignore root-level development docs (prefix with / to match root only)
+
 Plan.md
-PHASE*.md
+/PHASE*.md
 VERSION_PROGRESS_REPORT.md
 AI_IMPLEMENTATION_STATUS.md
 PRODUCTION_ROADMAP.md
-PHASE*_STATUS_UPDATE.md
-PHASE*_COMPLETION_SUMMARY.md
+/PHASE*_STATUS_UPDATE.md
+/PHASE*_COMPLETION_SUMMARY.md
 DAL_SECURITY_IMPLEMENTATION_GUIDE.md
-PHASE2_INTEGRATION_STEPS.md
+/PHASE2_INTEGRATION_STEPS.md
 AI_DOCUMENTATION_SUMMARY.md
 CLOUDADMIN_DOCUMENTATION_SUMMARY.md
 GITHUB_COMMIT_SUMMARY.md
@@ -15,7 +18,8 @@ COMMIT_COMMANDS.sh
 PUSH_TO_GITHUB.sh
 PACKAGE_VERIFICATION.md
 
-# Development/Internal documentation in docs/ (not for public GitHub)
+# Development/Internal documentation in root docs/ (not for public GitHub)
+# Note: dist_agent_lang/docs/ is organized and tracked
 docs/ARCHITECTURE_SEPARATION.md
 docs/AUDIT_REPORT.md
 docs/BETA_RELEASE_SUMMARY.md

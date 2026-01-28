@@ -194,7 +194,7 @@ pub fn perform_check(
         data.insert("check_type".to_string(), Value::String(check_type.clone()));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("aml"));
     
     if !AML_PROVIDERS.contains_key(&provider_id) {
         return {
@@ -269,7 +269,7 @@ pub fn get_check_status(check_id: String) -> HashMap<String, Value> {
         data.insert("check_id".to_string(), Value::String(check_id.clone()));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("aml"));
     
     // Simulate status check
     let mut result = HashMap::new();
@@ -349,7 +349,7 @@ pub fn screen_transaction(
         data.insert("amount".to_string(), Value::Int(amount));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("aml"));
     
     // Simulate transaction screening
     let risk_score = calculate_transaction_risk(&from_address, &to_address, amount);
@@ -374,7 +374,7 @@ pub fn monitor_address(
         data.insert("monitoring_level".to_string(), Value::String(monitoring_level.clone()));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("aml"));
     
     // Simulate address monitoring
     let monitoring_id = format!("monitor_{}_{}", address, chain::get_block_timestamp(1));
@@ -400,7 +400,7 @@ pub fn get_risk_assessment(
         data.insert("user_address".to_string(), Value::String(user_address.clone()));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("aml"));
     
     // Simulate comprehensive risk assessment
     let overall_risk = calculate_overall_risk(&user_address, &transaction_history);
@@ -425,7 +425,7 @@ pub fn check_sanctions_list(
         data.insert("user_address".to_string(), Value::String(user_address.clone()));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("aml"));
     
     // Simulate sanctions list check
     let mut result = HashMap::new();

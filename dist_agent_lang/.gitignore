@@ -26,6 +26,11 @@ Thumbs.db
 # Logs
 *.log
 *.log.*
+logs/
+
+# Mutation testing output (cargo-mutants)
+mutants.out/
+mutants.out.*/
 
 # Debug and test files (NOT needed for distribution)
 debug_benchmark.rs
@@ -52,41 +57,120 @@ fix/
 dist_agent_lang-*.tar.gz
 dist_agent_lang-*.zip
 
-# Development documentation (keep local, not user-facing)
-PHASE*.md
-*_PROGRESS.md
-*_STATUS*.md
-*_PLAN.md
-*_COMPLETE.md
-*_REVIEW.md
-*_IMPLEMENTATION*.md
-*_HARDENING*.md
-*_FOCUS*.md
-*_UPDATE.md
-*_RESULTS.md
-*_REPORT.md
-PERFORMANCE_REPORT.md
-PRODUCTION_ROADMAP.md
-GIT_WORKFLOW.md
-GITHUB_PUSH_INSTRUCTIONS.md
-PUSH_TO_GITHUB.md
-CREATE_RELEASE.md
-NETWORK_SETUP_GUIDE.md
-HOMEBREW_NETWORK_FIX.sh
-NEXT_STEPS*.md
-TESTING_PLAN.md
-TEST_FIXES_TRACKING.md
-MIDDLEWARE_IMPLEMENTATION_STATUS.md
-MIDDLEWARE_CLOUDADMIN_INTEGRATION.md
-FFI_SERVER_SECURITY_STATUS.md
-FFI_SERVER_SECURITY_PLAN.md
-SECURITY_HARDENING_PLAN.md
-SECURITY_REVIEW_REPORT.md
-SECURITY_INTEGRATION_COMPLETE.md
-SERVER_ASSEMBLY_REVIEW.md
-IMPLEMENTATION_COMPLETE.md
-FFI_IMPLEMENTATION_SUMMARY.md
-PHASE1_SETUP_INSTRUCTIONS.md
-PHASE2_HARDENING_REPORT.md
-PHASE2_TEST_RESULTS.md
-TESTING_COMPLETE_SUMMARY.md
+# ============================================================================
+# DOCUMENTATION: Only user-facing docs are tracked
+# ============================================================================
+
+# Ignore development/internal documentation directories (ignore entire directories)
+docs/development/
+docs/project/
+docs/beta/
+docs/testing/
+
+# Allow user-facing documentation directories (explicitly allow)
+!docs/getting_started/
+!docs/guides/
+!docs/tutorials/
+!docs/migration/
+
+# Allow specific root-level docs files
+!docs/README.md
+!docs/api_reference.md
+!docs/syntax.md
+!docs/attributes.md
+!docs/KYC_AML_FEATURES.md
+!docs/XNFT_DYNAMIC_RWA_GUIDE.md
+
+# ============================================================================
+# ROOT-LEVEL FILES: Ignore development docs, keep core project files
+# ============================================================================
+
+# Core project files (KEEP - these are user-facing)
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!CONTRIBUTORS.md
+!GOOD_FIRST_ISSUES.md
+!LICENSE
+!SECURITY_DISCLAIMER.md
+
+# Ignore all root-level .md files EXCEPT core files listed above
+/*.md
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!CONTRIBUTORS.md
+!GOOD_FIRST_ISSUES.md
+!SECURITY_DISCLAIMER.md
+
+# Ignore development documentation patterns (explicit list for clarity)
+/*_PROGRESS.md
+/*_STATUS*.md
+/*_PLAN.md
+/*_COMPLETE.md
+/*_REVIEW.md
+/*_IMPLEMENTATION*.md
+/*_HARDENING*.md
+/*_FOCUS*.md
+/*_UPDATE.md
+/*_RESULTS.md
+/*_REPORT.md
+/*_SUMMARY.md
+/PERFORMANCE_REPORT.md
+/PRODUCTION_ROADMAP.md
+/GIT_WORKFLOW.md
+/GITHUB_PUSH_INSTRUCTIONS.md
+/PUSH_TO_GITHUB.md
+/CREATE_RELEASE.md
+/NETWORK_SETUP_GUIDE.md
+/HOMEBREW_NETWORK_FIX.sh
+/NEXT_STEPS*.md
+/TESTING_PLAN.md
+/TEST_FIXES_TRACKING.md
+/MIDDLEWARE_IMPLEMENTATION_STATUS.md
+/MIDDLEWARE_CLOUDADMIN_INTEGRATION.md
+/FFI_SERVER_SECURITY_STATUS.md
+/FFI_SERVER_SECURITY_PLAN.md
+/SECURITY_HARDENING_PLAN.md
+/SECURITY_REVIEW_REPORT.md
+/SECURITY_INTEGRATION_COMPLETE.md
+/SERVER_ASSEMBLY_REVIEW.md
+/IMPLEMENTATION_COMPLETE.md
+/FFI_IMPLEMENTATION_SUMMARY.md
+/PHASE*.md
+/PHASE1_SETUP_INSTRUCTIONS.md
+/PHASE2_HARDENING_REPORT.md
+/PHASE2_TEST_RESULTS.md
+/TESTING_COMPLETE_SUMMARY.md
+/DUPES*.md
+/TEST_CONSOLIDATION_SUMMARY.md
+/DOCS_*.md
+/DIAGNOSIS.md
+/VERSION_UPDATE_CHECK.md
+/VERSION_PROGRESS_REPORT.md
+/DOCTEST_ANALYSIS_PLAN.md
+/EXTENDED_FUZZING_PLAN.md
+/FIX_BENCHES.md
+/GITHUB_SETUP_COMPLETE.md
+/GIT_WORKFLOW.md
+/HTTP_SECURITY_TESTS_SUMMARY.md
+/HTTP_SERVER_ARCHITECTURE_ANALYSIS.md
+/INSTALLATION_TEST.md
+/LEXER_TESTS_SUMMARY.md
+/PARSER_USAGE_GUIDE.md
+/RECOMMENDATION.md
+/SOLIDITY_CONVERTER_IMPLEMENTATION.md
+/SOLIDITY_CONVERTER_PLAN.md
+/TEST_IMPROVEMENT_PLAN.md
+/TEST_FIXES_TRACKING.md
+/TIMEOUT_*.md
+/USAGE.md
+/GITIGNORE_UPDATE_SUMMARY.md
+/GITIGNORE_USER_FACING_UPDATE.md
+
+# Ignore test documentation (internal)
+tests/**/*.md
+!tests/README.md
+
+# Ignore examples/test_examples (development examples)
+examples/test_examples/

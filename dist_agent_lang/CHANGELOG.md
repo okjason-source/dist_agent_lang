@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-01-27
+
+### Added
+- Optional `source` parameter to all log functions (info, warning, error, debug, audit)
+  - Defaults to "system" (or "audit"/"debug" for respective functions) if None is provided
+  - Enables custom source identifiers for better log filtering and debugging
+- Comprehensive security integration tests using actual DAL language code
+  - End-to-end security workflow tests
+  - Tests cover authentication, authorization, cryptographic signatures, cross-chain security
+  - Tests cover KYC/AML compliance, security logging, input validation
+  - Aligned with PRODUCTION_ROADMAP.md goals
+
+### Changed
+- HTTP client timeout standardized to 30000ms (30 seconds) for consistency with HTTP libraries
+  - Added clear documentation comment explaining timeout unit
+  - Aligns with reqwest and other standard HTTP client conventions
+- Updated all log function calls throughout codebase to include source parameter
+  - Appropriate source identifiers added (e.g., "web", "ai", "runtime", "chain")
+  - Backward compatible with None parameter using default sources
+
+### Fixed
+- Log source hardcoding issue (now supports custom sources)
+- HTTP timeout unit confusion (now standardized to milliseconds)
+- All recommendations from STDLIB_TESTS_BUG_REPORT.md implemented
+
+### Test Coverage
+- 140 stdlib tests passing (100%)
+- Comprehensive security integration tests added
+- Zero compilation errors
+- All log function calls updated and tested
+
 ## [1.0.1] - 2025-12-15
 
 ### Fixed

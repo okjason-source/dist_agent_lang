@@ -204,6 +204,7 @@ pub enum Expression {
     Await(Box<Expression>),
     Throw(Box<Expression>),
     ObjectLiteral(HashMap<String, Expression>),  // NEW: object literal syntax
+    ArrayLiteral(Vec<Expression>),  // NEW: array literal syntax [expr1, expr2, ...]
 }
 
 impl Program {

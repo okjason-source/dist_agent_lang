@@ -372,7 +372,7 @@ impl CrossChainSecurityManager {
                 data.insert("validator".to_string(), Value::String(validator_address.to_string()));
                 data.insert("chain_id".to_string(), Value::Int(chain_id));
                 data
-            });
+            }, Some("cross_chain_security"));
             
             // Fallback to basic verification
             let mut hasher = Sha256::new();

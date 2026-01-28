@@ -169,7 +169,8 @@ impl Parser {
             false
         };
         
-        let (new_position, name) = self.expect_identifier(current_position)?;
+        // Use expect_identifier_or_keyword to allow keywords as variable names (e.g., "agent", "ai", "chain")
+        let (new_position, name) = self.expect_identifier_or_keyword(current_position)?;
         current_position = new_position;
         
         let (new_position, _) = self.expect_token(current_position, &Token::Operator(Operator::Assign))?;
@@ -617,6 +618,12 @@ impl Parser {
                     let (position, object_literal) = self.parse_object_literal(position)?;
                     return Ok((position, Expression::ObjectLiteral(object_literal)));
                 }
+                Token::Punctuation(Punctuation::LeftBracket) => {
+                    // Array literal: [expr1, expr2, ...]
+                    // Note: Array access expr[index] is handled in parse_unary postfix operations
+                    let (position, array_literal) = self.parse_array_literal(position)?;
+                    return Ok((position, Expression::ArrayLiteral(array_literal)));
+                }
                 Token::Operator(Operator::Not) => {
                     // Handle macro calls like vec!["read"]
                     let (position, _) = self.expect_token(position, &Token::Operator(Operator::Not))?;
@@ -931,6 +938,60 @@ impl Parser {
         }
 
         Ok((current_position, properties))
+    }
+
+    fn parse_array_literal(&self, position: usize) -> Result<(usize, Vec<Expression>), ParserError> {
+        let mut current_position = position;
+
+        // Expect opening bracket
+        if let Some(Token::Punctuation(Punctuation::LeftBracket)) = self.tokens.get(current_position) {
+            current_position += 1;
+        } else {
+            let (line, column) = self.get_token_position(position);
+            return Err(ParserError::unexpected_token(
+                &self.tokens[position],
+                &["["],
+                line,
+                column,
+            ));
+        }
+
+        let mut elements = Vec::new();
+
+        // Parse elements until closing bracket
+        while let Some(token) = self.tokens.get(current_position) {
+            match token {
+                Token::Punctuation(Punctuation::RightBracket) => {
+                    current_position += 1;
+                    break;
+                }
+                _ => {
+                    // Parse expression (can be any expression: literal, identifier, function call, etc.)
+                    let (new_position, expr) = self.parse_expression(current_position)?;
+                    current_position = new_position;
+                    elements.push(expr);
+
+                    // Check for comma (optional for last element)
+                    if let Some(Token::Punctuation(Punctuation::Comma)) = self.tokens.get(current_position) {
+                        current_position += 1; // consume ','
+                    } else if let Some(Token::Punctuation(Punctuation::RightBracket)) = self.tokens.get(current_position) {
+                        // Allow trailing comma or no comma before closing bracket
+                        continue;
+                    } else {
+                        // If we don't have a comma or closing bracket, it's an error
+                        let (line, column) = self.get_token_position(current_position);
+                        return Err(ParserError::unexpected_token(
+                            &self.tokens[current_position],
+                            &[",", "]"],
+                            line,
+                            column,
+                        ));
+                    }
+                }
+            }
+        }
+
+        Ok((current_position, elements))
     }
 
     fn parse_capabilities_list(&self, position: usize) -> Result<(usize, Vec<String>), ParserError> {

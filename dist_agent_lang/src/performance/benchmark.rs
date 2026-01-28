@@ -307,8 +307,8 @@ impl LanguageBenchmarks {
                 use crate::runtime::values::Value;
                 let mut data = HashMap::new();
                 data.insert("test".to_string(), Value::String("benchmark".to_string()));
-                log::info("benchmark_test", data.clone());
-                log::audit("benchmark_audit", data);
+                log::info("benchmark_test", data.clone(), None);
+                log::audit("benchmark_audit", data, None);
                 Ok(())
             })),
         ]

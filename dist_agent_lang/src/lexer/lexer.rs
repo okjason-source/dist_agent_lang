@@ -34,7 +34,17 @@ impl Lexer {
         let mut line = self.line;
         let mut column = self.column;
         
+        // Safety: Prevent infinite loops from mutations that cause position to not advance
+        let max_iterations = self.input.len() * 2; // Allow up to 2x input length iterations
+        let mut iterations = 0;
+        
         while position < self.input.len() {
+            // Safety check: prevent infinite loops
+            iterations += 1;
+            if iterations > max_iterations {
+                return Err(LexerError::UnexpectedCharacter('\0', line, column));
+            }
+            
             // Skip whitespace first
             let (new_pos, new_line, new_col) = self.skip_whitespace_immutable(position, line, column);
             position = new_pos;
@@ -48,11 +58,17 @@ impl Lexer {
             
             // Get the next token
             let (new_pos, new_line, new_col, token) = self.next_token_immutable(position, line, column)?;
+            
+            // Safety check: ensure position advances (prevents infinite loops from mutations)
+            if new_pos <= position {
+                return Err(LexerError::UnexpectedCharacter('\0', line, column));
+            }
+            
             // Store the token with its position (before advancing)
             tokens.push(crate::lexer::tokens::TokenWithPosition::new(token, line, column));
             position = new_pos;
             line = new_line;
-            column = new_col;
+            column = new_col.max(1); // Ensure column is always >= 1
         }
         
         tokens.push(crate::lexer::tokens::TokenWithPosition::new(Token::EOF, line, column));
@@ -75,7 +91,7 @@ impl Lexer {
         let ch = self.input[position];
         let mut new_position = position;
         let new_line = line;
-        let mut new_column = column;
+        let mut new_column = column.max(1); // Ensure column is always >= 1
         
         match ch {
             // Identifiers and keywords
@@ -291,6 +307,16 @@ impl Lexer {
             
             _ => Err(LexerError::UnexpectedCharacter(ch, line, column)),
         }
+        .map(|(pos, ln, col, token)| {
+            // Safety: Ensure position always advances and column is always >= 1
+            // This prevents infinite loops from mutations that cause position to not advance
+            if pos <= position {
+                Err(LexerError::UnexpectedCharacter('\0', line, column))
+            } else {
+                Ok((pos, ln, col.max(1), token))
+            }
+        })
+        .and_then(|x| x)
     }
 
     fn read_identifier(&mut self) -> String {
@@ -378,6 +404,63 @@ impl Lexer {
                     line += 1;
                     column = 1;
                     position += 1;
+                }
+                '/' => {
+                    // Check for comment: // or /*
+                    if position + 1 < self.input.len() {
+                        let next_ch = self.input[position + 1];
+                        if next_ch == '/' {
+                            // Single-line comment: skip until end of line
+                            position += 2; // Skip //
+                            while position < self.input.len() {
+                                let comment_ch = self.input[position];
+                                if comment_ch == '\n' {
+                                    line += 1;
+                                    column = 1;
+                                    position += 1;
+                                    break;
+                                } else if comment_ch == '\r' {
+                                    if position + 1 < self.input.len() && self.input[position + 1] == '\n' {
+                                        position += 1;
+                                    }
+                                    line += 1;
+                                    column = 1;
+                                    position += 1;
+                                    break;
+                                } else {
+                                    position += 1;
+                                }
+                            }
+                        } else if next_ch == '*' {
+                            // Multi-line comment: skip until */
+                            position += 2; // Skip /*
+                            while position + 1 < self.input.len() {
+                                if self.input[position] == '*' && self.input[position + 1] == '/' {
+                                    position += 2; // Skip */
+                                    break;
+                                } else if self.input[position] == '\n' {
+                                    line += 1;
+                                    column = 1;
+                                    position += 1;
+                                } else if self.input[position] == '\r' {
+                                    if position + 1 < self.input.len() && self.input[position + 1] == '\n' {
+                                        position += 1;
+                                    }
+                                    line += 1;
+                                    column = 1;
+                                    position += 1;
+                                } else {
+                                    position += 1;
+                                }
+                            }
+                        } else {
+                            // Not a comment, just a division operator
+                            break;
+                        }
+                    } else {
+                        // Single / at end of input, treat as operator
+                        break;
+                    }
                 }
                 _ => break,
             }

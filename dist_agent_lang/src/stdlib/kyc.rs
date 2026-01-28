@@ -170,7 +170,7 @@ pub fn verify_identity(
         data.insert("level".to_string(), Value::String(level.clone()));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("kyc"));
     
     if !KYC_PROVIDERS.contains_key(&provider_id) {
         return {
@@ -221,7 +221,7 @@ pub fn get_verification_status(verification_id: String) -> HashMap<String, Value
         data.insert("verification_id".to_string(), Value::String(verification_id.clone()));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("kyc"));
     
     // Simulate status check
     let mut result = HashMap::new();
@@ -240,7 +240,7 @@ pub fn revoke_verification(verification_id: String, reason: String) -> bool {
         data.insert("reason".to_string(), Value::String(reason.clone()));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("kyc"));
     
     // Simulate revocation
     true
@@ -307,7 +307,7 @@ pub fn validate_document(document_type: String, document_data: HashMap<String, S
         data.insert("document_type".to_string(), Value::String(document_type.clone()));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("kyc"));
     
     // Simulate document validation
     let mut result = HashMap::new();
@@ -327,7 +327,7 @@ pub fn check_identity_match(
         let mut data = HashMap::new();
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("kyc"));
     
     // Simulate identity matching
     let mut result = HashMap::new();
@@ -344,7 +344,7 @@ pub fn get_compliance_report(user_address: String) -> HashMap<String, Value> {
         data.insert("user_address".to_string(), Value::String(user_address.clone()));
         data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
         data
-    });
+    }, Some("kyc"));
     
     // Simulate compliance report
     let mut result = HashMap::new();

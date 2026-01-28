@@ -792,7 +792,7 @@ pub fn create_app(name: String, bundle_id: String, platform: MobilePlatform) -> 
         data.insert("bundle_id".to_string(), Value::String(bundle_id.clone()));
         data.insert("message".to_string(), Value::String("Creating mobile app".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     MobileApp {
         id: format!("app_{}", generate_id()),
@@ -825,7 +825,7 @@ pub fn add_screen_to_app(app: &mut MobileApp, screen: MobileScreen) -> Result<bo
         data.insert("screen_count".to_string(), Value::Int(app.screens.len() as i64));
         data.insert("message".to_string(), Value::String("Added screen to mobile app".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Ok(true)
 }
@@ -841,7 +841,7 @@ pub fn set_root_screen(app: &mut MobileApp, screen_id: String) -> Result<bool, S
             data.insert("root_screen".to_string(), Value::String(screen_id));
             data.insert("message".to_string(), Value::String("Set root screen for mobile app".to_string()));
             data
-        });
+        }, Some("mobile"));
 
         Ok(true)
     } else {
@@ -861,7 +861,7 @@ pub fn push_screen(app: &mut MobileApp, screen_id: String) -> Result<bool, Strin
             data.insert("navigation_stack_size".to_string(), Value::Int(app.navigation.screens.len() as i64));
             data.insert("message".to_string(), Value::String("Pushed screen to navigation stack".to_string()));
             data
-        });
+        }, Some("mobile"));
 
         Ok(true)
     } else {
@@ -885,7 +885,7 @@ pub fn pop_screen(app: &mut MobileApp) -> Result<String, String> {
         data.insert("navigation_stack_size".to_string(), Value::Int(app.navigation.screens.len() as i64));
         data.insert("message".to_string(), Value::String("Popped screen from navigation stack".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Ok(popped_screen)
 }
@@ -912,7 +912,7 @@ pub fn add_component_to_screen(screen: &mut MobileScreen, component: MobileCompo
         data.insert("component_count".to_string(), Value::Int(screen.components.len() as i64));
         data.insert("message".to_string(), Value::String("Added component to mobile screen".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Ok(true)
 }
@@ -1140,7 +1140,7 @@ pub fn get_camera() -> Camera {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Accessing mobile camera".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Camera {
         device_id: "default_camera".to_string(),
@@ -1159,7 +1159,7 @@ pub fn capture_photo(camera: &mut Camera) -> Result<Vec<u8>, String> {
         data.insert("resolution".to_string(), Value::String(format!("{}x{}", camera.resolution.width, camera.resolution.height)));
         data.insert("message".to_string(), Value::String("Capturing photo with mobile camera".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     // Simulated photo capture
     Ok(vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255])
@@ -1170,7 +1170,7 @@ pub fn get_gps_location() -> Result<Location, String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Getting GPS location".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     // Simulated GPS location
     Ok(Location {
@@ -1192,7 +1192,7 @@ pub fn get_accelerometer_data() -> Result<AccelerometerData, String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Getting accelerometer data".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     // Simulated accelerometer data
     Ok(AccelerometerData {
@@ -1208,7 +1208,7 @@ pub fn get_gyroscope_data() -> Result<GyroscopeData, String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Getting gyroscope data".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     // Simulated gyroscope data
     Ok(GyroscopeData {
@@ -1227,7 +1227,7 @@ pub fn send_push_notification(notification: PushNotification) -> Result<bool, St
         data.insert("title".to_string(), Value::String(notification.title.clone()));
         data.insert("message".to_string(), Value::String("Sending push notification".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Ok(true)
 }
@@ -1239,7 +1239,7 @@ pub fn schedule_local_notification(notification: LocalNotification) -> Result<bo
         data.insert("fire_date".to_string(), Value::String(notification.fire_date.clone()));
         data.insert("message".to_string(), Value::String("Scheduling local notification".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Ok(true)
 }
@@ -1251,7 +1251,7 @@ pub fn request_permission(permission: String) -> Result<bool, String> {
         data.insert("permission".to_string(), Value::String(permission.clone()));
         data.insert("message".to_string(), Value::String("Requesting mobile app permission".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Ok(true)
 }
@@ -1267,7 +1267,7 @@ pub fn create_mobile_wallet() -> Result<String, String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Creating mobile wallet".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Ok(format!("wallet_{}", generate_id()))
 }
@@ -1277,7 +1277,7 @@ pub fn scan_qr_code() -> Result<String, String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Scanning QR code".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     // Simulated QR code scan
     Ok("https://example.com/wallet/123".to_string())
@@ -1288,7 +1288,7 @@ pub fn perform_nfc_scan() -> Result<String, String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Performing NFC scan".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     // Simulated NFC scan
     Ok("04:12:34:56:78:9A:BC:DE".to_string())
@@ -1300,7 +1300,7 @@ pub fn check_for_updates() -> Result<bool, String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Checking for app updates".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     // Simulated update check
     Ok(false)
@@ -1317,7 +1317,7 @@ pub fn rate_app(rating: i64, review: Option<String>) -> Result<bool, String> {
         data.insert("has_review".to_string(), Value::Bool(review.is_some()));
         data.insert("message".to_string(), Value::String("Submitting app rating".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Ok(true)
 }
@@ -1336,7 +1336,7 @@ pub fn run_mobile_app(app: &MobileApp) -> Result<(), String> {
         data.insert("app_name".to_string(), Value::String(app.name.clone()));
         data.insert("message".to_string(), Value::String("Starting mobile app".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Ok(())
 }
@@ -1348,7 +1348,7 @@ pub fn terminate_mobile_app(app: &MobileApp) -> Result<(), String> {
         data.insert("app_name".to_string(), Value::String(app.name.clone()));
         data.insert("message".to_string(), Value::String("Terminating mobile app".to_string()));
         data
-    });
+    }, Some("mobile"));
 
     Ok(())
 }

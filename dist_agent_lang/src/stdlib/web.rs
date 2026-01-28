@@ -204,12 +204,13 @@ pub struct WebSocketMessage {
 // === ENHANCED HTTP SERVER FUNCTIONS ===
 
 pub fn create_server(port: i64) -> HttpServer {
-    crate::stdlib::log::info("web", {
+    let message = format!("Creating enhanced HTTP server on port {}", port);
+    crate::stdlib::log::info(&message, {
         let mut data = std::collections::HashMap::new();
         data.insert("port".to_string(), Value::Int(port));
-        data.insert("message".to_string(), Value::String(format!("Creating enhanced HTTP server on port {}", port)));
+        data.insert("message".to_string(), Value::String(message.clone()));
         data
-    });
+    }, Some("web"));
     
     HttpServer {
         port,
@@ -245,16 +246,18 @@ pub fn add_route(server: &mut HttpServer, method: String, path: String, handler:
         middleware: Vec::new(),
     };
     
+    // Use "METHOD:/path" format as key to match create_router_with_middleware expectations
+    let route_key = format!("{}:{}", method.to_uppercase(), path);
     let route_path = route.path.clone(); // Store path before move
-    server.routes.insert(path, route);
+    server.routes.insert(route_key, route);
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Route added", {
         let mut data = std::collections::HashMap::new();
         data.insert("method".to_string(), Value::String(method));
         data.insert("path".to_string(), Value::String(route_path));
         data.insert("message".to_string(), Value::String("Route added".to_string()));
         data
-    });
+    }, Some("web"));
 }
 
 pub fn add_middleware(server: &mut HttpServer, name: String, handler: String, priority: i64) {
@@ -267,47 +270,47 @@ pub fn add_middleware(server: &mut HttpServer, name: String, handler: String, pr
     server.middleware.push(middleware);
     server.middleware.sort_by(|a, b| a.priority.cmp(&b.priority));
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Middleware added", {
         let mut data = std::collections::HashMap::new();
         data.insert("middleware".to_string(), Value::String(name));
         data.insert("priority".to_string(), Value::Int(priority));
         data.insert("message".to_string(), Value::String("Middleware added".to_string()));
         data
-    });
+    }, Some("web"));
 }
 
 pub fn configure_cors(server: &mut HttpServer, enabled: bool, origins: Vec<String>) {
     server.config.cors_enabled = enabled;
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("CORS configured", {
         let mut data = std::collections::HashMap::new();
         data.insert("cors_enabled".to_string(), Value::Bool(enabled));
         data.insert("origins_count".to_string(), Value::Int(origins.len() as i64));
         data.insert("message".to_string(), Value::String("CORS configured".to_string()));
         data
-    });
+    }, Some("web"));
 }
 
 pub fn serve_static_files(server: &mut HttpServer, path: String, content: String) {
     server.static_files.insert(path.clone(), content);
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Static file added", {
         let mut data = std::collections::HashMap::new();
         data.insert("path".to_string(), Value::String(path));
         data.insert("message".to_string(), Value::String("Static file added".to_string()));
         data
-    });
+    }, Some("web"));
 }
 
 pub fn start_server(server: &HttpServer) -> Result<String, String> {
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Starting HTTP server", {
         let mut data = std::collections::HashMap::new();
         data.insert("port".to_string(), Value::Int(server.port));
         data.insert("routes_count".to_string(), Value::Int(server.routes.len() as i64));
         data.insert("middleware_count".to_string(), Value::Int(server.middleware.len() as i64));
         data.insert("message".to_string(), Value::String("Starting HTTP server".to_string()));
         data
-    });
+    }, Some("web"));
     
     // Start actual HTTP server
     let server_clone = server.clone();
@@ -327,12 +330,14 @@ pub fn create_client(base_url: String) -> HttpClient {
         data.insert("base_url".to_string(), Value::String(base_url.clone()));
         data.insert("message".to_string(), Value::String(format!("Creating enhanced HTTP client for {}", base_url)));
         data
-    });
+    }, Some("web"));
     
     HttpClient {
         base_url,
         headers: HashMap::new(),
-        timeout: 30,
+        // Timeout in milliseconds (30000ms = 30 seconds)
+        // Standardized to milliseconds for consistency with HTTP libraries (reqwest, etc.)
+        timeout: 30000,
         retry_count: 3,
     }
 }
@@ -343,7 +348,7 @@ pub fn render_template(template: String, data: HashMap<String, Value>) -> String
         log_data.insert("template".to_string(), Value::String(template.clone()));
         log_data.insert("message".to_string(), Value::String(format!("Rendering template: {}", template)));
         log_data
-    });
+    }, Some("web"));
     
     // Simple template rendering
     let mut result = template.clone();
@@ -363,7 +368,7 @@ pub fn get_request(url: String) -> Result<HttpResponse, String> {
         data.insert("url".to_string(), Value::String(url.clone()));
         data.insert("message".to_string(), Value::String(format!("Making GET request to {}", url)));
         data
-    });
+    }, Some("web"));
     
     // Simulated HTTP GET request
     Ok(HttpResponse {
@@ -385,7 +390,7 @@ pub fn post_request(url: String, data: HashMap<String, Value>) -> Result<HttpRes
         log_data.insert("url".to_string(), Value::String(url.clone()));
         log_data.insert("message".to_string(), Value::String(format!("Making POST request to {}", url)));
         log_data
-    });
+    }, Some("web"));
     
     // Simulated HTTP POST request
     Ok(HttpResponse {
@@ -551,12 +556,12 @@ pub fn error_response(status: i64, message: String) -> HttpResponse {
 // === FRONTEND FRAMEWORK FUNCTIONS ===
 
 pub fn create_html_page(title: String) -> HtmlPage {
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Creating HTML page", {
         let mut data = std::collections::HashMap::new();
         data.insert("title".to_string(), Value::String(title.clone()));
         data.insert("message".to_string(), Value::String("Creating HTML page".to_string()));
         data
-    });
+    }, Some("web"));
     
     HtmlPage {
         title,
@@ -577,23 +582,23 @@ pub fn create_html_page(title: String) -> HtmlPage {
 pub fn add_css_file(page: &mut HtmlPage, css_path: String) {
     page.styles.push(css_path.clone());
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("CSS file added", {
         let mut data = std::collections::HashMap::new();
         data.insert("css_path".to_string(), Value::String(css_path));
         data.insert("message".to_string(), Value::String("CSS file added".to_string()));
         data
-    });
+    }, Some("web"));
 }
 
 pub fn add_js_file(page: &mut HtmlPage, js_path: String) {
     page.scripts.push(js_path.clone());
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("JavaScript file added", {
         let mut data = std::collections::HashMap::new();
         data.insert("js_path".to_string(), Value::String(js_path));
         data.insert("message".to_string(), Value::String("JavaScript file added".to_string()));
         data
-    });
+    }, Some("web"));
 }
 
 pub fn create_element(tag: String, text: Option<String>) -> HtmlElement {
@@ -724,13 +729,13 @@ pub fn create_api_endpoint(path: String, method: String, handler: String) -> Api
         _ => HttpMethod::GET,
     };
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("API endpoint created", {
         let mut data = std::collections::HashMap::new();
         data.insert("path".to_string(), Value::String(path.clone()));
         data.insert("method".to_string(), Value::String(method));
         data.insert("message".to_string(), Value::String("API endpoint created".to_string()));
         data
-    });
+    }, Some("web"));
     
     ApiEndpoint {
         path,
@@ -754,13 +759,13 @@ pub fn create_api_endpoint(path: String, method: String, handler: String) -> Api
 pub fn add_auth_requirement(endpoint: &mut ApiEndpoint, required: bool) {
     endpoint.auth_required = required;
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Auth requirement updated", {
         let mut data = std::collections::HashMap::new();
         data.insert("path".to_string(), Value::String(endpoint.path.clone()));
         data.insert("auth_required".to_string(), Value::Bool(required));
         data.insert("message".to_string(), Value::String("Auth requirement updated".to_string()));
         data
-    });
+    }, Some("web"));
 }
 
 pub fn add_rate_limit(endpoint: &mut ApiEndpoint, requests_per_minute: i64, burst_limit: i64) {
@@ -769,25 +774,25 @@ pub fn add_rate_limit(endpoint: &mut ApiEndpoint, requests_per_minute: i64, burs
         burst_limit,
     });
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Rate limit added", {
         let mut data = std::collections::HashMap::new();
         data.insert("path".to_string(), Value::String(endpoint.path.clone()));
         data.insert("rpm".to_string(), Value::Int(requests_per_minute));
         data.insert("burst".to_string(), Value::Int(burst_limit));
         data.insert("message".to_string(), Value::String("Rate limit added".to_string()));
         data
-    });
+    }, Some("web"));
 }
 
 pub fn validate_json_request(request: &HttpRequest, schema: &JsonSchema) -> Result<bool, String> {
     // Simplified JSON validation
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Validating JSON request", {
         let mut data = std::collections::HashMap::new();
         data.insert("path".to_string(), Value::String(request.path.clone()));
         data.insert("schema_type".to_string(), Value::String(schema.schema_type.clone()));
         data.insert("message".to_string(), Value::String("Validating JSON request".to_string()));
         data
-    });
+    }, Some("web"));
     
     // In a real implementation, this would parse and validate the JSON
     Ok(true)
@@ -796,12 +801,12 @@ pub fn validate_json_request(request: &HttpRequest, schema: &JsonSchema) -> Resu
 // === WEBSOCKET FUNCTIONS ===
 
 pub fn create_websocket_server(port: i64) -> WebSocketServer {
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Creating WebSocket server", {
         let mut data = std::collections::HashMap::new();
         data.insert("port".to_string(), Value::Int(port));
         data.insert("message".to_string(), Value::String("Creating WebSocket server".to_string()));
         data
-    });
+    }, Some("web"));
     
     WebSocketServer {
         port,
@@ -821,12 +826,12 @@ pub fn add_websocket_connection(server: &mut WebSocketServer, connection_id: Str
     
     server.connections.insert(connection_id.clone(), connection);
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("WebSocket connection added", {
         let mut data = std::collections::HashMap::new();
         data.insert("connection_id".to_string(), Value::String(connection_id));
         data.insert("message".to_string(), Value::String("WebSocket connection added".to_string()));
         data
-    });
+    }, Some("web"));
 }
 
 pub fn join_room(server: &mut WebSocketServer, connection_id: String, room_name: String) -> Result<bool, String> {
@@ -838,13 +843,13 @@ pub fn join_room(server: &mut WebSocketServer, connection_id: String, room_name:
             .or_insert_with(Vec::new)
             .push(connection_id.clone());
         
-        crate::stdlib::log::info("web", {
+        crate::stdlib::log::info("Joined room", {
             let mut data = std::collections::HashMap::new();
             data.insert("connection_id".to_string(), Value::String(connection_id));
             data.insert("room".to_string(), Value::String(room_name));
             data.insert("message".to_string(), Value::String("Joined room".to_string()));
             data
-        });
+        }, Some("web"));
         
         Ok(true)
     } else {
@@ -856,13 +861,13 @@ pub fn broadcast_to_room(server: &WebSocketServer, room_name: String, message: S
     if let Some(connection_ids) = server.rooms.get(&room_name) {
         let message_count = connection_ids.len() as i64;
         
-        crate::stdlib::log::info("web", {
+        crate::stdlib::log::info("Broadcasting to room", {
             let mut data = std::collections::HashMap::new();
             data.insert("room".to_string(), Value::String(room_name));
             data.insert("connections".to_string(), Value::Int(message_count));
             data.insert("message".to_string(), Value::String("Broadcasting to room".to_string()));
             data
-        });
+        }, Some("web"));
         
         // In a real implementation, this would send the message to all connections
         Ok(message_count)
@@ -874,12 +879,12 @@ pub fn broadcast_to_room(server: &WebSocketServer, room_name: String, message: S
 // === TEMPLATE ENGINE FUNCTIONS ===
 
 pub fn create_template(name: String, content: String) -> Template {
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Template created", {
         let mut data = std::collections::HashMap::new();
         data.insert("template_name".to_string(), Value::String(name.clone()));
         data.insert("message".to_string(), Value::String("Template created".to_string()));
         data
-    });
+    }, Some("web"));
     
     Template {
         name,
@@ -892,13 +897,13 @@ pub fn create_template(name: String, content: String) -> Template {
 pub fn add_template_variable(template: &mut Template, key: String, value: Value) {
     template.variables.insert(key.clone(), value);
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Template variable added", {
         let mut data = std::collections::HashMap::new();
         data.insert("template".to_string(), Value::String(template.name.clone()));
         data.insert("variable".to_string(), Value::String(key));
         data.insert("message".to_string(), Value::String("Template variable added".to_string()));
         data
-    });
+    }, Some("web"));
 }
 
 pub fn render_advanced_template(template: &Template) -> String {
@@ -917,13 +922,13 @@ pub fn render_advanced_template(template: &Template) -> String {
         result = result.replace(&placeholder, &replacement);
     }
     
-    crate::stdlib::log::info("web", {
+    crate::stdlib::log::info("Template rendered", {
         let mut data = std::collections::HashMap::new();
         data.insert("template".to_string(), Value::String(template.name.clone()));
         data.insert("variables_count".to_string(), Value::Int(template.variables.len() as i64));
         data.insert("message".to_string(), Value::String("Template rendered".to_string()));
         data
-    });
+    }, Some("web"));
     
     result
 }

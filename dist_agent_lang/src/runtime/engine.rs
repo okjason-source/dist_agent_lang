@@ -1359,6 +1359,14 @@ impl Runtime {
                 }
                 Ok(Value::Map(object_value))
             }
+            crate::parser::ast::Expression::ArrayLiteral(elements) => {
+                let mut array_value = Vec::new();
+                for expr in elements {
+                    let value = self.evaluate_expression(expr)?;
+                    array_value.push(value);
+                }
+                Ok(Value::Array(array_value))
+            }
         }
     }
 
@@ -3020,13 +3028,13 @@ impl Runtime {
         }
 
         // For non-AI spawns, create a new execution context
-        crate::stdlib::log::info("runtime", {
+        crate::stdlib::log::info("Executing spawn statement", {
             let mut data = std::collections::HashMap::new();
             data.insert("agent_name".to_string(), Value::String(spawn_stmt.agent_name.clone()));
             data.insert("agent_type".to_string(), Value::String(spawn_stmt.agent_type.as_ref().unwrap_or(&"generic".to_string()).clone()));
             data.insert("message".to_string(), Value::String("Executing spawn statement".to_string()));
             data
-        });
+        }, Some("runtime"));
 
         // Create new scope for the spawned agent
         let parent_scope = self.scope.clone();
@@ -3129,13 +3137,13 @@ impl Runtime {
                 // Store agent in current scope
                 self.scope.set(spawn_stmt.agent_name.clone(), Value::String(format!("agent_{}", agent.id)));
 
-                crate::stdlib::log::info("ai", {
+                crate::stdlib::log::info("AI agent spawned successfully", {
                     let mut data = std::collections::HashMap::new();
                     data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
                     data.insert("agent_name".to_string(), Value::String(spawn_stmt.agent_name.clone()));
                     data.insert("message".to_string(), Value::String("AI agent spawned successfully".to_string()));
                     data
-                });
+                }, Some("ai"));
 
                 // Execute agent body in new scope
                 let parent_scope = self.scope.clone();
@@ -3223,14 +3231,14 @@ impl Runtime {
                 // Store agent in current scope
                 self.scope.set(agent_stmt.name.clone(), Value::String(format!("agent_{}", agent.id)));
 
-                crate::stdlib::log::info("ai", {
+                crate::stdlib::log::info("AI agent declared and spawned", {
                     let mut data = std::collections::HashMap::new();
                     data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
                     data.insert("agent_name".to_string(), Value::String(agent_stmt.name.clone()));
                     data.insert("capabilities".to_string(), Value::String(agent_stmt.capabilities.join(", ")));
                     data.insert("message".to_string(), Value::String("AI agent declared and spawned".to_string()));
                     data
-                });
+                }, Some("ai"));
 
                 // Execute agent body in new scope
                 let parent_scope = self.scope.clone();
@@ -3252,13 +3260,13 @@ impl Runtime {
     }
 
     fn execute_system_agent_declaration(&mut self, agent_stmt: &crate::parser::ast::AgentStatement) -> Result<Value, RuntimeError> {
-        crate::stdlib::log::info("runtime", {
+        crate::stdlib::log::info("Executing system agent declaration", {
             let mut data = std::collections::HashMap::new();
             data.insert("agent_name".to_string(), Value::String(agent_stmt.name.clone()));
             data.insert("agent_type".to_string(), Value::String("system".to_string()));
             data.insert("message".to_string(), Value::String("Executing system agent declaration".to_string()));
             data
-        });
+        }, Some("runtime"));
 
         // System agents run in isolated scopes
         let parent_scope = self.scope.clone();
@@ -3274,13 +3282,13 @@ impl Runtime {
     }
 
     fn execute_worker_agent_declaration(&mut self, agent_stmt: &crate::parser::ast::AgentStatement) -> Result<Value, RuntimeError> {
-        crate::stdlib::log::info("runtime", {
+        crate::stdlib::log::info("Executing worker agent declaration", {
             let mut data = std::collections::HashMap::new();
             data.insert("agent_name".to_string(), Value::String(agent_stmt.name.clone()));
             data.insert("agent_type".to_string(), Value::String("worker".to_string()));
             data.insert("message".to_string(), Value::String("Executing worker agent declaration".to_string()));
             data
-        });
+        }, Some("runtime"));
 
         // Worker agents have access to parent scope but run in separate context
         self.scope.set("agent_type".to_string(), Value::String("worker".to_string()));
@@ -3295,7 +3303,7 @@ impl Runtime {
             data.insert("agent_type".to_string(), Value::String(format!("custom:{}", custom_type)));
             data.insert("message".to_string(), Value::String("Executing custom agent declaration".to_string()));
             data
-        });
+        }, Some("runtime"));
 
         // Custom agents can define their own execution model
         self.scope.set("agent_type".to_string(), Value::String(format!("custom:{}", custom_type)));

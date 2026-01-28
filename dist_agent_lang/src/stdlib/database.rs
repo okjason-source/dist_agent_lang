@@ -225,7 +225,7 @@ pub fn connect(connection_string: String) -> Result<Database, String> {
         data.insert("connection_string".to_string(), Value::String(connection_string.clone()));
         data.insert("message".to_string(), Value::String(format!("Connecting to database: {}", connection_string)));
         data
-    });
+    }, Some("database"));
     
     // Determine connection type from connection string
     let connection_type = if connection_string.starts_with("postgresql://") {
@@ -251,7 +251,7 @@ pub fn query(db: &Database, sql: String, params: Vec<Value>) -> Result<QueryResu
         data.insert("sql".to_string(), Value::String(sql.clone()));
         data.insert("message".to_string(), Value::String(format!("Executing query: {}", sql)));
         data
-    });
+    }, Some("database"));
     
     if !db.is_connected {
         return Err("Database not connected".to_string());
@@ -299,7 +299,7 @@ pub fn transaction(db: &Database, operations: Vec<String>) -> Result<Transaction
         data.insert("operations_count".to_string(), Value::Int(operations.len() as i64));
         data.insert("message".to_string(), Value::String(format!("Starting transaction with {} operations", operations.len())));
         data
-    });
+    }, Some("database"));
     
     if !db.is_connected {
         return Err("Database not connected".to_string());
@@ -318,7 +318,7 @@ pub fn commit_transaction(transaction: &mut Transaction) -> Result<bool, String>
         data.insert("transaction_id".to_string(), Value::String(transaction.id.clone()));
         data.insert("message".to_string(), Value::String(format!("Committing transaction: {}", transaction.id)));
         data
-    });
+    }, Some("database"));
     
     if !transaction.is_active {
         return Err("Transaction is not active".to_string());
@@ -334,7 +334,7 @@ pub fn rollback_transaction(transaction: &mut Transaction) -> Result<bool, Strin
         data.insert("transaction_id".to_string(), Value::String(transaction.id.clone()));
         data.insert("message".to_string(), Value::String(format!("Rolling back transaction: {}", transaction.id)));
         data
-    });
+    }, Some("database"));
     
     if !transaction.is_active {
         return Err("Transaction is not active".to_string());
@@ -350,7 +350,7 @@ pub fn create_table(db: &Database, table_name: String, schema: TableSchema) -> R
         data.insert("table_name".to_string(), Value::String(table_name.clone()));
         data.insert("message".to_string(), Value::String(format!("Creating table: {}", table_name)));
         data
-    });
+    }, Some("database"));
     
     if !db.is_connected {
         return Err("Database not connected".to_string());
@@ -366,7 +366,7 @@ pub fn drop_table(db: &Database, table_name: String) -> Result<bool, String> {
         data.insert("table_name".to_string(), Value::String(table_name.clone()));
         data.insert("message".to_string(), Value::String(format!("Dropping table: {}", table_name)));
         data
-    });
+    }, Some("database"));
     
     if !db.is_connected {
         return Err("Database not connected".to_string());
@@ -382,7 +382,7 @@ pub fn get_table_schema(db: &Database, table_name: String) -> Result<TableSchema
         data.insert("table_name".to_string(), Value::String(table_name.clone()));
         data.insert("message".to_string(), Value::String(format!("Getting schema for table: {}", table_name)));
         data
-    });
+    }, Some("database"));
     
     if !db.is_connected {
         return Err("Database not connected".to_string());
@@ -422,7 +422,7 @@ pub fn list_tables(db: &Database) -> Result<Vec<String>, String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Listing tables".to_string()));
         data
-    });
+    }, Some("database"));
     
     if !db.is_connected {
         return Err("Database not connected".to_string());
@@ -443,7 +443,7 @@ pub fn backup_database(db: &Database, backup_path: String) -> Result<bool, Strin
         data.insert("backup_path".to_string(), Value::String(backup_path.clone()));
         data.insert("message".to_string(), Value::String(format!("Creating backup at: {}", backup_path)));
         data
-    });
+    }, Some("database"));
     
     if !db.is_connected {
         return Err("Database not connected".to_string());
@@ -459,7 +459,7 @@ pub fn restore_database(db: &Database, backup_path: String) -> Result<bool, Stri
         data.insert("backup_path".to_string(), Value::String(backup_path.clone()));
         data.insert("message".to_string(), Value::String(format!("Restoring from backup: {}", backup_path)));
         data
-    });
+    }, Some("database"));
     
     if !db.is_connected {
         return Err("Database not connected".to_string());
@@ -482,7 +482,7 @@ pub fn close_connection(db: &mut Database) -> Result<bool, String> {
         let mut data = std::collections::HashMap::new();
         data.insert("message".to_string(), Value::String("Closing database connection".to_string()));
         data
-    });
+    }, Some("database"));
     
     db.is_connected = false;
     Ok(true)
@@ -503,7 +503,7 @@ pub fn get_query_plan(db: &Database, sql: String) -> Result<HashMap<String, Valu
         data.insert("sql".to_string(), Value::String(sql.clone()));
         data.insert("message".to_string(), Value::String(format!("Getting query plan for: {}", sql)));
         data
-    });
+    }, Some("database"));
     
     if !db.is_connected {
         return Err("Database not connected".to_string());
@@ -528,7 +528,7 @@ pub fn create_connection_pool(pool_name: String, connection_string: String, max_
         data.insert("max_connections".to_string(), Value::Int(max_connections));
         data.insert("message".to_string(), Value::String("Creating connection pool".to_string()));
         data
-    });
+    }, Some("database"));
 
     ConnectionPool {
         pool_name,
@@ -553,7 +553,7 @@ pub fn get_connection_from_pool(pool: &mut ConnectionPool) -> Result<Database, S
             data.insert("pool".to_string(), Value::String(pool.pool_name.clone()));
             data.insert("message".to_string(), Value::String("Connection acquired from pool".to_string()));
             data
-        });
+        }, Some("database"));
 
         return Ok(db);
     }
@@ -569,7 +569,7 @@ pub fn get_connection_from_pool(pool: &mut ConnectionPool) -> Result<Database, S
             data.insert("pool".to_string(), Value::String(pool.pool_name.clone()));
             data.insert("message".to_string(), Value::String("New connection created in pool".to_string()));
             data
-        });
+        }, Some("database"));
 
         return Ok(db);
     }
@@ -590,7 +590,7 @@ pub fn return_connection_to_pool(pool: &mut ConnectionPool, db: Database) {
         data.insert("pool".to_string(), Value::String(pool.pool_name.clone()));
         data.insert("message".to_string(), Value::String("Connection returned to pool".to_string()));
         data
-    });
+    }, Some("database"));
 }
 
 // Query Builder Functions
@@ -751,7 +751,7 @@ pub fn create_migration_manager(migrations_table: String) -> MigrationManager {
         data.insert("migrations_table".to_string(), Value::String(migrations_table.clone()));
         data.insert("message".to_string(), Value::String("Creating migration manager".to_string()));
         data
-    });
+    }, Some("database"));
 
     MigrationManager {
         migrations_table,
@@ -787,7 +787,7 @@ pub fn apply_migration(manager: &mut MigrationManager, db: &Database, migration:
             data.insert("version".to_string(), Value::String(migration.version.clone()));
             data.insert("message".to_string(), Value::String("Migration applied".to_string()));
             data
-        });
+        }, Some("database"));
 
         Ok(true)
     } else {
@@ -811,7 +811,7 @@ pub fn rollback_migration(manager: &mut MigrationManager, db: &Database, migrati
             data.insert("version".to_string(), Value::String(migration.version.clone()));
             data.insert("message".to_string(), Value::String("Migration rolled back".to_string()));
             data
-        });
+        }, Some("database"));
 
         Ok(true)
     } else {
@@ -827,7 +827,7 @@ pub fn create_cache(config: CacheConfig) -> Result<String, String> {
         data.insert("max_size".to_string(), Value::Int(config.max_size));
         data.insert("message".to_string(), Value::String("Creating cache".to_string()));
         data
-    });
+    }, Some("database"));
 
     // Return cache identifier
     Ok(format!("cache_{}", config.cache_type))
@@ -840,7 +840,7 @@ pub fn cache_set(cache_id: String, key: String, value: Value, ttl_seconds: Optio
         data.insert("key".to_string(), Value::String(key.clone()));
         data.insert("message".to_string(), Value::String("Setting cache entry".to_string()));
         data
-    });
+    }, Some("database"));
 
     // Simulated cache set
     Ok(true)
@@ -853,7 +853,7 @@ pub fn cache_get(cache_id: String, key: String) -> Result<Option<Value>, String>
         data.insert("key".to_string(), Value::String(key));
         data.insert("message".to_string(), Value::String("Getting cache entry".to_string()));
         data
-    });
+    }, Some("database"));
 
     // Simulated cache miss
     Ok(None)
@@ -866,7 +866,7 @@ pub fn cache_delete(cache_id: String, key: String) -> Result<bool, String> {
         data.insert("key".to_string(), Value::String(key));
         data.insert("message".to_string(), Value::String("Deleting cache entry".to_string()));
         data
-    });
+    }, Some("database"));
 
     Ok(true)
 }
@@ -877,7 +877,7 @@ pub fn cache_clear(cache_id: String) -> Result<i64, String> {
         data.insert("cache_id".to_string(), Value::String(cache_id));
         data.insert("message".to_string(), Value::String("Clearing cache".to_string()));
         data
-    });
+    }, Some("database"));
 
     // Return number of entries cleared
     Ok(42)
@@ -890,7 +890,7 @@ pub fn read_file(path: String) -> Result<String, String> {
         data.insert("path".to_string(), Value::String(path.clone()));
         data.insert("message".to_string(), Value::String("Reading file".to_string()));
         data
-    });
+    }, Some("database"));
 
     // Simulated file read
     Ok("file contents here".to_string())
@@ -903,7 +903,7 @@ pub fn write_file(path: String, content: String) -> Result<bool, String> {
         data.insert("content_length".to_string(), Value::Int(content.len() as i64));
         data.insert("message".to_string(), Value::String("Writing file".to_string()));
         data
-    });
+    }, Some("database"));
 
     Ok(true)
 }
@@ -914,7 +914,7 @@ pub fn delete_file(path: String) -> Result<bool, String> {
         data.insert("path".to_string(), Value::String(path));
         data.insert("message".to_string(), Value::String("Deleting file".to_string()));
         data
-    });
+    }, Some("database"));
 
     Ok(true)
 }
@@ -925,7 +925,7 @@ pub fn list_directory(path: String) -> Result<Vec<String>, String> {
         data.insert("path".to_string(), Value::String(path));
         data.insert("message".to_string(), Value::String("Listing directory".to_string()));
         data
-    });
+    }, Some("database"));
 
     // Simulated directory listing
     Ok(vec![
@@ -941,7 +941,7 @@ pub fn create_directory(path: String) -> Result<bool, String> {
         data.insert("path".to_string(), Value::String(path));
         data.insert("message".to_string(), Value::String("Creating directory".to_string()));
         data
-    });
+    }, Some("database"));
 
     Ok(true)
 }
@@ -957,7 +957,7 @@ pub fn get_file_info(path: String) -> Result<FileInfo, String> {
         data.insert("path".to_string(), Value::String(path.clone()));
         data.insert("message".to_string(), Value::String("Getting file info".to_string()));
         data
-    });
+    }, Some("database"));
 
     Ok(FileInfo {
         name: "example.txt".to_string(),
@@ -1037,7 +1037,7 @@ pub fn create_backup(db: &Database, options: BackupOptions) -> Result<BackupInfo
         data.insert("compression".to_string(), Value::Bool(options.compression));
         data.insert("message".to_string(), Value::String("Creating backup".to_string()));
         data
-    });
+    }, Some("database"));
 
     Ok(BackupInfo {
         backup_path: format!("backup_{}.sql", "2024-01-01T00:00:00Z"),
@@ -1055,7 +1055,7 @@ pub fn restore_from_backup(db: &Database, backup_path: String) -> Result<bool, S
         data.insert("backup_path".to_string(), Value::String(backup_path));
         data.insert("message".to_string(), Value::String("Restoring from backup".to_string()));
         data
-    });
+    }, Some("database"));
 
     Ok(true)
 }
@@ -1090,5 +1090,5 @@ pub fn log_query_stats(query: String, execution_time: i64, rows_affected: i64) {
         data.insert("slow_query".to_string(), Value::Bool(stats.slow_query));
         data.insert("message".to_string(), Value::String("Query executed".to_string()));
         data
-    });
+    }, Some("database"));
 }

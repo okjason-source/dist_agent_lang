@@ -1,8 +1,6 @@
 use axum::{
     http::Method,
     response::{Html, Json},
-    routing::{get, post},
-    Router,
     middleware,
 };
 use serde::{Deserialize, Serialize};
@@ -16,6 +14,7 @@ use crate::http_server_security::security_headers_middleware;
 use crate::http_server_security_middleware::{
     rate_limit_middleware, request_size_middleware, input_validation_middleware,
 };
+use axum::routing::Router;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebRequest {
@@ -57,7 +56,7 @@ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::er
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
         .allow_origin(Any);
 
-    // Create router with security middleware
+    // Create router from server configuration (uses routes from server.routes)
     // Security middleware order (from outer to inner):
     // 1. CORS
     // 2. Security headers (applied to all responses)
@@ -65,22 +64,56 @@ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::er
     // 4. Request size limiting
     // 5. Input validation
     // 6. User middleware (applied in handle_with_middleware)
-    let app = Router::new()
-        .route("/", get(home_handler))
-        .route("/api/balance", get(balance_handler))
-        .route("/api/connect", post(connect_handler))
-        .route("/api/transfer", post(transfer_handler))
-        .route("/api/airdrop", post(airdrop_handler))
-        .route("/health", get(health_handler))
+    
+    // Create router with routes from server configuration
+    // Note: We need to add layers before with_state() to maintain correct types
+    // So we'll build the router manually here to have control over layer ordering
+    let mut router = Router::new();
+    
+    // Add routes from server configuration (same logic as create_router_with_middleware)
+    for (route_key, route) in &server.routes {
+        if let Some((method_str, path)) = route_key.split_once(':') {
+            let method = method_str.to_uppercase();
+            let handler_name = route.handler.clone();
+            let state_clone = state.clone();
+            
+            let handler = move |request: axum::extract::Request| {
+                let state = state_clone.clone();
+                let handler_name = handler_name.clone();
+                async move {
+                    crate::http_server_handlers::handle_with_middleware(
+                        axum::extract::State(state),
+                        request,
+                        &handler_name,
+                    ).await
+                }
+            };
+            
+            match method.as_str() {
+                "GET" => router = router.route(path, axum::routing::get(handler)),
+                "POST" => router = router.route(path, axum::routing::post(handler)),
+                "PUT" => router = router.route(path, axum::routing::put(handler)),
+                "DELETE" => router = router.route(path, axum::routing::delete(handler)),
+                _ => router = router.route(path, axum::routing::get(handler)),
+            }
+        }
+    }
+    
+    // Add default routes if no routes configured
+    if server.routes.is_empty() {
+        router = router
+            .route("/", axum::routing::get(home_handler))
+            .route("/health", axum::routing::get(health_handler));
+    }
+    
+    // Add security middleware layers, then state
+    let app = router
         .layer(middleware::from_fn(security_headers_middleware))
         .layer(middleware::from_fn(rate_limit_middleware))
         .layer(middleware::from_fn(request_size_middleware))
         .layer(middleware::from_fn(input_validation_middleware))
         .layer(cors)
         .with_state(state);
-    
-    // TODO: When server.routes is populated, use create_router_with_middleware
-    // This requires proper route registration from dist_agent_lang code
 
     // Start server
     let addr = format!("127.0.0.1:{}", server.port);
