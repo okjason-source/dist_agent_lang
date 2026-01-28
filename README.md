@@ -7,7 +7,7 @@
 dist_agent_lang is an **actively developed beta release** that is updated consistently with new features and improvements. While the language includes comprehensive security features and has passed all tests (187+ passing), it should be used with appropriate caution based on your use case.
 
 **🙏 Beta Testing Contributions Appreciated!**  
-We welcome feedback, bug reports, and contributions from early adopters to help us reach production readiness.
+We welcome feedback, bug reports, and contributions from the developer community to help us reach production readiness (v1.1.0+).
 
 ### ✅ Safe For:
 - **Development & Prototyping** - Building and testing applications
@@ -17,13 +17,44 @@ We welcome feedback, bug reports, and contributions from early adopters to help 
 - **Beta Testing** - Help us improve with your feedback!
 
 ### ⚠️ Use With Caution For:
-- **Production Financial Applications** - Applications handling real money
-- **High-Value Smart Contracts** - Contracts managing significant assets
-- **Critical Infrastructure** - Systems requiring high reliability
-- **Applications Handling Sensitive Data** - Additional security audits recommended
+- **Production Financial Applications** - Applications handling real money (wait for v1.1.0+)
+- **High-Value Smart Contracts** - Contracts managing significant assets (third-party audit recommended)
+- **Critical Infrastructure** - Systems requiring high reliability (additional validation needed)
+- **Sensitive Data Applications** - Additional security audits strongly recommended
+
+### 🔒 Security Features (v1.0.3):
+- ✅ Reentrancy protection
+- ✅ Safe math (overflow/underflow protection)
+- ✅ State isolation
+- ✅ Cross-chain security
+- ✅ Oracle security (signed feeds, multi-source validation)
+- ✅ Transaction atomicity (ACID guarantees)
+- ✅ Enhanced security logging with source tracking
+- ✅ 140+ tests passing (100%)
+- ✅ Zero compilation errors
+- ✅ Dependency security audit passed (0 vulnerabilities)
+
+### 🚀 What's New in v1.0.3:
+- **Enhanced Log Functions** - Optional source parameter for all log functions (info, warning, error, debug, audit)
+- **HTTP Timeout Standardization** - Standardized to 30000ms (30 seconds) for consistency with HTTP libraries
+- **Comprehensive Security Integration Tests** - End-to-end security workflow tests using actual DAL language code
+- **Improved Logging** - Custom source identifiers for better log filtering and debugging
+- **Enhanced Testing** - 140+ tests covering all standard library modules
 
 ### 🔄 Active Development:
-This project is updated consistently with improvements to security, performance, and features. Check the repository regularly for updates and join our community to contribute!
+This project receives **consistent updates** with improvements to security, performance, documentation, and features. We're working toward v1.1.0 (production release) with third-party security audits, real-world validation, and community feedback.
+
+**Target for Production (v1.1.0+):** ~14 weeks with community validation
+
+### 🤝 How to Contribute:
+- **🧪 Testing** - Use the language, run examples, report bugs (no coding required!)
+- **📝 Documentation** - Improve docs, write tutorials, fix typos
+- **💻 Code** - Fix bugs, implement features, add tests
+- **💡 Ideas** - Share use cases, suggest improvements, join discussions
+
+**👉 New to contributing?** Check out [dist_agent_lang/GOOD_FIRST_ISSUES.md](dist_agent_lang/GOOD_FIRST_ISSUES.md) for beginner-friendly tasks!
+
+**📖 Full Guide:** See [dist_agent_lang/CONTRIBUTING.md](dist_agent_lang/CONTRIBUTING.md) for detailed contribution guidelines.
 
 
 ## 📦 Installation
@@ -82,7 +113,7 @@ export PATH="$HOME/.local/bin:$PATH"  # Add to ~/.bashrc or ~/.zshrc
 ### Verify Installation
 ```bash
 dist_agent_lang --version
-# Should output: dist_agent_lang 1.0.0
+# Should output: dist_agent_lang 1.0.3
 ```
 
 ## 🚀 Quick Start
@@ -113,7 +144,7 @@ service HelloWorld {
             "capabilities": ["greeting", "conversation"]
         });
         
-        log::info("main", "Hello World program executed successfully!");
+        log::info("Hello World program executed successfully!", {}, None);
     }
 }
 ```
@@ -141,7 +172,7 @@ dist_agent_lang --version
 
 ## 📚 Examples
 
-The package includes 27 example files in the `examples/` directory:
+The package includes user-facing example files in the `dist_agent_lang/examples/` directory:
 
 ### Basic Examples
 - `hello_world_demo.dal` - Simple hello world program
@@ -152,7 +183,7 @@ The package includes 27 example files in the `examples/` directory:
 - `agent_system_demo.dal` - Multi-agent coordination
 - `integrated_spawn_ai_examples.dal` - Spawn and AI integration
 - `llm_integration_examples.dal` - LLM integration patterns
-- `phase4_ai_agent_examples.dal` - Advanced AI agent features
+- `llm_motivations_demo.dal` - LLM use cases and motivations
 
 ### Blockchain Examples
 - `smart_contract.dal` - Smart contract development
@@ -160,40 +191,35 @@ The package includes 27 example files in the `examples/` directory:
 - `multi_chain_operations.dal` - Multi-chain management
 - `chain_selection_example.dal` - Chain selection patterns
 - `keys_token_implementation.dal` - Token implementation
+- `defi_nft_rwa_contract.dal` - DeFi, NFT, and RWA contracts
 
 ### Web & Backend Examples
 - `simple_web_api_example.dal` - Web API creation
 - `backend_connectivity_patterns.dal` - Database and API patterns
 - `real_time_backend_example.dal` - Real-time backend
-- `phase2_web_framework_examples.dal` - Web framework features
-
-### Database Examples
-- `phase3_database_examples.dal` - Database operations
-
-### Desktop & Mobile Examples
-- `phase5_desktop_examples.dal` - Desktop application development
-- `phase5_mobile_examples.dal` - Mobile application development
-
-### Edge & IoT Examples
-- `phase6_edge_examples.dal` - Edge computing examples
+- `practical_backend_example.dal` - Practical backend patterns
 
 ### Advanced Examples
-- `dynamic_nft_examples.dal` - Dynamic NFT creation
 - `dynamic_rwa_examples.dal` - Real World Asset tokenization
 - `enhanced_language_features.dal` - Advanced language features
 - `secure_configuration_example.dal` - Security configuration
 - `oracle_quick_start.dal` - Oracle integration
 - `oracle_development_setup.dal` - Oracle development
+- `xnft_implementation.dal` - XNFT implementation
+- `solidity_abi_integration.dal` - Solidity ABI integration
+- `solidity_orchestration.dal` - Solidity orchestration
+
+**Note:** Development/internal examples (phase* and test* files) are excluded from the repository.
 
 ### Running Examples
 ```bash
-# Navigate to the examples directory
-cd examples
+# Navigate to the dist_agent_lang directory
+cd dist_agent_lang
 
 # Run any example
-dist_agent_lang run hello_world_demo.dal
-dist_agent_lang run agent_system_demo.dal
-dist_agent_lang run smart_contract.dal
+dist_agent_lang run examples/hello_world_demo.dal
+dist_agent_lang run examples/agent_system_demo.dal
+dist_agent_lang run examples/smart_contract.dal
 ```
 
 ## 🔧 Configuration
@@ -293,16 +319,26 @@ ls -la examples/hello_world_demo.dal
 
 ## 📖 Next Steps
 
-1. **Read the README.md** - Overview of features and capabilities
-2. **Explore Examples** - Run through the example files
-3. **Check CHANGELOG.md** - See what's new in version 1.0.0
-4. **Visit Documentation** - See docs/ directory for detailed guides
+1. **Read the Documentation** - See [dist_agent_lang/README.md](dist_agent_lang/README.md) for complete overview
+2. **Explore Examples** - Run through the example files in `dist_agent_lang/examples/`
+3. **Check CHANGELOG.md** - See what's new in [dist_agent_lang/CHANGELOG.md](dist_agent_lang/CHANGELOG.md)
+4. **Visit Documentation** - See `dist_agent_lang/docs/` directory for detailed guides
+5. **Contribute** - Check [dist_agent_lang/CONTRIBUTING.md](dist_agent_lang/CONTRIBUTING.md) and [dist_agent_lang/GOOD_FIRST_ISSUES.md](dist_agent_lang/GOOD_FIRST_ISSUES.md)
 
 ## 🆘 Getting Help
 
-- **Documentation**: See README.md and CHANGELOG.md in the package
-- **Examples**: Check the examples/ directory
+- **Documentation**: See [dist_agent_lang/README.md](dist_agent_lang/README.md) and [dist_agent_lang/CHANGELOG.md](dist_agent_lang/CHANGELOG.md)
+- **Examples**: Check the `dist_agent_lang/examples/` directory
+- **GitHub**: [Repository](https://github.com/okjason-source/dist_agent_lang) | [Issues](https://github.com/okjason-source/dist_agent_lang/issues) | [Discussions](https://github.com/okjason-source/dist_agent_lang/discussions)
+- **Wiki**: [GitHub Wiki](https://github.com/okjason-source/dist_agent_lang/wiki)
 - **Email**: jason.dinh.developer@gmail.com
+
+## 🤝 Contributing
+
+We welcome contributions! See:
+- [CONTRIBUTING.md](dist_agent_lang/CONTRIBUTING.md) - Contribution guidelines
+- [GOOD_FIRST_ISSUES.md](dist_agent_lang/GOOD_FIRST_ISSUES.md) - Beginner-friendly tasks
+- [CONTRIBUTORS.md](dist_agent_lang/CONTRIBUTORS.md) - Contributor recognition
 
 ---
 
