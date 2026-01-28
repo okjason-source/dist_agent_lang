@@ -174,3 +174,9 @@ tests/**/*.md
 
 # Ignore examples/test_examples (development examples)
 examples/test_examples/
+
+# Ignore phase and test examples (development/internal examples)
+examples/*phase*.dal
+examples/*test*.dal
+examples/*Phase*.dal
+examples/*Test*.dal
