@@ -2,7 +2,7 @@
 // Tests all DAL example files to ensure they compile and execute correctly
 // This is critical for ensuring examples stay up-to-date with language changes
 //
-// Now includes SEMANTIC VALIDATION to catch:
+// SEMANTIC VALIDATION to catch:
 // - Invalid trust models
 // - Invalid blockchain identifiers  
 // - Attribute compatibility issues

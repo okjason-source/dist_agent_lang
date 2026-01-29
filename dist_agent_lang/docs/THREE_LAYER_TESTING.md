@@ -67,13 +67,26 @@ fn test_token_contract_parses() {
 - GitHub Actions CI/CD
 - Pre-commit hooks (optional)
 
-### Limitations (ADDRESSED!)
-- ✅ ~~Does NOT validate semantic meaning~~ **NOW VALIDATES via `test_all_examples_with_semantic_validation()`**
-- ✅ ~~Does NOT check if "hybrid" is a valid trust model~~ **NOW VALIDATES trust models**
-- ✅ ~~Does NOT enforce attribute compatibility rules~~ **NOW ENFORCES compatibility rules**
-- ❌ Does NOT test runtime behavior → **Use Layer 3 for this**
+### Validation Capabilities
 
-**Note**: The new `test_all_examples_with_semantic_validation()` test integrates Layer 2 validators directly into Layer 1 Rust tests!
+**Syntax Validation** (Parse-time)
+- ✅ Token recognition and lexical analysis
+- ✅ Grammar and structure validation
+- ✅ AST construction and integrity
+- ✅ Attribute syntax and positioning
+
+**Semantic Validation** (Parse-time)
+- ✅ Trust model validation (hybrid, centralized, decentralized, trustless)
+- ✅ Blockchain identifier validation (ethereum, polygon, bsc, solana, etc.)
+- ✅ Attribute compatibility rules (@trust requires @chain)
+- ✅ Attribute mutual exclusivity (@secure ⊕ @public)
+- ✅ Domain constraint enforcement
+
+**Runtime Behavior** (Layer 3)
+- For runtime behavior testing, use Layer 3 DAL test files (`.test.dal`)
+- This separation ensures fast feedback for syntax/semantic issues
+
+**Key Feature**: The `test_all_examples_with_semantic_validation()` test combines syntax and semantic validation in a single fast test run!
 
 ---
 

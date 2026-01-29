@@ -259,26 +259,58 @@ fn test_attribute_order_preserved() {
 
 ## Summary
 
-**Rust unit tests NOW validate attributes at TWO levels:**
+**Rust unit tests validate attributes at multiple levels:**
 
-### Level 1: Parse-Time (Automatic)
-1. **Syntax checking**: Structure, positioning, token recognition
-2. **AST construction**: Attributes properly attached to targets
-3. **Error detection**: Invalid syntax causes `parse_source()` to fail
+### Syntax Validation (Parse-Time)
+The parser validates:
+1. **Token recognition**: `@` symbol, attribute names, parameters
+2. **Structure validation**: Parentheses, commas, positioning
+3. **AST construction**: Attributes properly attached to targets (functions, services)
+4. **Grammar compliance**: Well-formed attribute expressions
 
-### Level 2: Semantic Validation (NEW!)
-1. **Attribute values**: Trust models, chain identifiers validated
-2. **Compatibility rules**: @trust requires @chain, @secure ⊕ @public
-3. **Domain constraints**: Only allowed values accepted
+### Semantic Validation (Parse-Time)
+The semantic validator validates:
+1. **Attribute values**: Trust models, chain identifiers, parameter types
+2. **Compatibility rules**: Dependencies between attributes (@trust requires @chain)
+3. **Mutual exclusivity**: Conflicting attributes (@secure ⊕ @public)
+4. **Domain constraints**: Only allowed values from predefined sets
 
-**The `test_all_examples_with_semantic_validation()` test in `example_tests.rs` now validates:**
-- ✅ Trust models: hybrid, centralized, decentralized, trustless
-- ✅ Chain identifiers: ethereum, polygon, bsc, solana, etc.
-- ✅ Attribute compatibility: @trust requires @chain
-- ✅ Mutual exclusivity: @secure and @public cannot coexist
+### Validation Capabilities
 
-**What's still NOT tested automatically:**
-- ❌ Runtime behavior of attributes → Use Layer 3 DAL tests for this
-- ❌ Complex business logic → Use Layer 3 DAL tests for this
+**Trust Model Validation**
+- Valid: `hybrid`, `centralized`, `decentralized`, `trustless`
+- Detects: Invalid or misspelled trust models
+- Test: `validate_trust_model()`
 
-**Key Achievement**: Semantic validation is now integrated directly into cargo test! No need for separate validation steps.
+**Blockchain Validation**
+- Valid: `ethereum`, `polygon`, `bsc`, `solana`, `bitcoin`, `avalanche`, `arbitrum`, `optimism`, `base`, `near`
+- Detects: Unsupported or misspelled chain identifiers
+- Test: `validate_chain()`
+
+**Attribute Compatibility**
+- Rule: `@trust` attribute requires `@chain` attribute
+- Rule: `@secure` and `@public` are mutually exclusive
+- Test: `validate_attribute_compatibility()`
+
+### Comprehensive Testing
+The `test_all_examples_with_semantic_validation()` test provides:
+- ✅ Syntax validation for all attributes
+- ✅ Semantic validation for attribute values
+- ✅ Compatibility rule enforcement
+- ✅ Fast feedback (milliseconds per file)
+- ✅ Clear error messages with file locations
+
+### Testing Boundaries
+**Parse-Time Validation** (Layers 1 & 2):
+- Syntax correctness
+- Semantic meaning
+- Attribute rules
+- Type constraints
+
+**Runtime Validation** (Layer 3):
+- Actual execution behavior
+- State changes
+- Business logic
+- Integration scenarios
+
+Use Layer 3 DAL test files (`.test.dal`) for runtime behavior testing.

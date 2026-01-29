@@ -293,8 +293,10 @@ All documentation is located in `/docs/`:
 1. **THREE_LAYER_TESTING.md** - Strategy overview
 2. **guides/TESTING_GUIDE.md** - Comprehensive usage guide
 3. **TESTING_ATTRIBUTES.md** - Attribute testing deep dive
-4. **WHY_RUST_UNIT_TESTS.md** - Rationale for Rust tests
-5. **IMPLEMENTATION_SUMMARY.md** - This file
+4. **SEMANTIC_VALIDATION_FEATURE.md** - Semantic validation capabilities
+5. **WHY_RUST_UNIT_TESTS.md** - Rationale for Rust tests
+6. **TESTING_QUICK_REFERENCE.md** - Quick reference card
+7. **IMPLEMENTATION_SUMMARY.md** - This file
 
 ## Testing Checklist
 

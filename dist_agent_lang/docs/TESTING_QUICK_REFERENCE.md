@@ -284,8 +284,9 @@ cargo run --release -- run file.test.dal --verbose
 - **Full Strategy**: [`THREE_LAYER_TESTING.md`](THREE_LAYER_TESTING.md)
 - **Comprehensive Guide**: [`guides/TESTING_GUIDE.md`](guides/TESTING_GUIDE.md)
 - **Attribute Testing**: [`TESTING_ATTRIBUTES.md`](TESTING_ATTRIBUTES.md)
+- **Semantic Validation**: [`SEMANTIC_VALIDATION_FEATURE.md`](SEMANTIC_VALIDATION_FEATURE.md)
 - **Rust Tests Rationale**: [`WHY_RUST_UNIT_TESTS.md`](WHY_RUST_UNIT_TESTS.md)
-- **Implementation**: [`IMPLEMENTATION_SUMMARY.md`](IMPLEMENTATION_SUMMARY.md)
+- **Implementation Summary**: [`IMPLEMENTATION_SUMMARY.md`](IMPLEMENTATION_SUMMARY.md)
 
 ## Summary Table
 
