@@ -2,7 +2,7 @@
 
 ## ⚠️ Beta Release Notice
 
-**Current Version: v1.0.1 (Beta Release)**
+**Current Version: v1.0.3 (Beta Release)**
 
 dist_agent_lang is an **actively developed beta release** that is updated consistently with new features and improvements. While the language includes comprehensive security features and has passed all tests (187+ passing), it should be used with appropriate caution based on your use case.
 
