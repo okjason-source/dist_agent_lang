@@ -262,3 +262,202 @@ pub fn clear_results() {
     let mut results = TEST_RESULTS.lock().unwrap();
     results.clear();
 }
+
+// ============================================================================
+// SEMANTIC VALIDATION LAYER
+// ============================================================================
+
+/// Validate that a trust model is valid
+pub fn expect_valid_trust_model(model: &str) -> Result<(), String> {
+    let valid_models = ["hybrid", "centralized", "decentralized", "trustless"];
+    if valid_models.contains(&model) {
+        Ok(())
+    } else {
+        Err(format!(
+            "Invalid trust model: '{}'. Valid options: {:?}", 
+            model, 
+            valid_models
+        ))
+    }
+}
+
+/// Validate that a blockchain chain identifier is valid
+pub fn expect_valid_chain(chain: &str) -> Result<(), String> {
+    let valid_chains = [
+        "ethereum", "polygon", "bsc", "solana", "bitcoin", 
+        "avalanche", "arbitrum", "optimism", "base", "near"
+    ];
+    if valid_chains.contains(&chain) {
+        Ok(())
+    } else {
+        Err(format!(
+            "Invalid chain: '{}'. Valid options: {:?}", 
+            chain, 
+            valid_chains
+        ))
+    }
+}
+
+/// Validate that a value matches an expected type
+pub fn expect_type(value: &Value, expected_type: &str) -> Result<(), String> {
+    let actual_type = match value {
+        Value::Number(_) => "number",
+        Value::String(_) => "string",
+        Value::Bool(_) => "bool",
+        Value::Map(_) => "map",
+        Value::Vector(_) => "vector",
+        Value::Null => "null",
+        Value::Function { .. } => "function",
+        _ => "unknown",
+    };
+    
+    if actual_type == expected_type {
+        Ok(())
+    } else {
+        Err(format!(
+            "Type mismatch: expected '{}', but got '{}'", 
+            expected_type, 
+            actual_type
+        ))
+    }
+}
+
+/// Validate that a number is within a range
+pub fn expect_in_range(value: Value, min: f64, max: f64) -> Result<(), String> {
+    match value {
+        Value::Number(n) => {
+            if n >= min && n <= max {
+                Ok(())
+            } else {
+                Err(format!(
+                    "Value {} is out of range [{}, {}]", 
+                    n, min, max
+                ))
+            }
+        }
+        _ => Err(format!("Expected number, got {:?}", value)),
+    }
+}
+
+/// Validate that a string matches a pattern (basic contains check)
+pub fn expect_contains(haystack: &str, needle: &str) -> Result<(), String> {
+    if haystack.contains(needle) {
+        Ok(())
+    } else {
+        Err(format!(
+            "String '{}' does not contain '{}'", 
+            haystack, 
+            needle
+        ))
+    }
+}
+
+/// Validate that a string starts with a prefix
+pub fn expect_starts_with(string: &str, prefix: &str) -> Result<(), String> {
+    if string.starts_with(prefix) {
+        Ok(())
+    } else {
+        Err(format!(
+            "String '{}' does not start with '{}'", 
+            string, 
+            prefix
+        ))
+    }
+}
+
+/// Validate that a collection has an expected length
+pub fn expect_length(value: Value, expected_len: usize) -> Result<(), String> {
+    let actual_len = match &value {
+        Value::String(s) => s.len(),
+        Value::Vector(v) => v.len(),
+        Value::Map(m) => m.len(),
+        _ => return Err(format!("Value {:?} does not have a length", value)),
+    };
+    
+    if actual_len == expected_len {
+        Ok(())
+    } else {
+        Err(format!(
+            "Length mismatch: expected {}, got {}", 
+            expected_len, 
+            actual_len
+        ))
+    }
+}
+
+/// Validate that a collection is not empty
+pub fn expect_not_empty(value: Value) -> Result<(), String> {
+    let is_empty = match &value {
+        Value::String(s) => s.is_empty(),
+        Value::Vector(v) => v.is_empty(),
+        Value::Map(m) => m.is_empty(),
+        _ => return Err(format!("Value {:?} is not a collection", value)),
+    };
+    
+    if !is_empty {
+        Ok(())
+    } else {
+        Err("Collection is empty".to_string())
+    }
+}
+
+/// Validate that a map contains a specific key
+pub fn expect_has_key(map: Value, key: &str) -> Result<(), String> {
+    match map {
+        Value::Map(m) => {
+            if m.contains_key(key) {
+                Ok(())
+            } else {
+                Err(format!("Map does not contain key '{}'", key))
+            }
+        }
+        _ => Err(format!("Expected map, got {:?}", map)),
+    }
+}
+
+/// Validate that an attribute exists (for semantic AST validation)
+/// Note: This would require AST access, placeholder for now
+pub fn expect_has_attribute(service_name: &str, attr_name: &str) -> Result<(), String> {
+    // This would need AST access from the runtime
+    // For now, store this as a semantic validation requirement
+    Err(format!(
+        "Attribute validation not yet implemented. Would check if '{}' has @{}", 
+        service_name, 
+        attr_name
+    ))
+}
+
+/// Validate attribute compatibility rules
+pub fn expect_compatible_attributes(attributes: Vec<&str>) -> Result<(), String> {
+    // Rule: @trust requires @chain
+    let has_trust = attributes.contains(&"trust");
+    let has_chain = attributes.contains(&"chain");
+    
+    if has_trust && !has_chain {
+        return Err("Services with @trust attribute must also have @chain attribute".to_string());
+    }
+    
+    // Rule: @secure and @public are mutually exclusive
+    let has_secure = attributes.contains(&"secure");
+    let has_public = attributes.contains(&"public");
+    
+    if has_secure && has_public {
+        return Err("@secure and @public attributes are mutually exclusive".to_string());
+    }
+    
+    Ok(())
+}
+
+/// Validate that a function signature matches expectations
+pub fn expect_function_signature(
+    function_name: &str, 
+    param_count: usize, 
+    has_return: bool
+) -> Result<(), String> {
+    // This would need runtime/AST integration
+    // Placeholder for semantic validation
+    Err(format!(
+        "Function signature validation not yet implemented for '{}'", 
+        function_name
+    ))
+}

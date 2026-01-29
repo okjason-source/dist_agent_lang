@@ -1,0 +1,293 @@
+// Example DAL Test File - Layer 3 Testing
+// This demonstrates the Hardhat-style testing framework for DAL
+// Run with: dist_agent_lang test token_contract.test.dal
+
+// Note: This is a conceptual example showing the intended syntax.
+// The test runner is not yet fully implemented.
+
+describe("TokenContract - Basic Functionality", fn() {
+    let contract;
+    let owner = "alice";
+    let recipient = "bob";
+    let initial_supply = 1000.0;
+    
+    beforeEach(fn() {
+        // Deploy a fresh contract instance for each test
+        contract = deploy_service("TokenContract", {
+            "owner": owner,
+            "initial_supply": initial_supply
+        });
+        
+        print("✓ TokenContract deployed");
+    });
+    
+    afterEach(fn() {
+        // Cleanup after each test
+        reset_context();
+    });
+    
+    it("should initialize with correct supply", fn() {
+        let supply = contract.total_supply();
+        
+        // Layer 3: Runtime behavior validation
+        expect(supply).to_equal(initial_supply);
+        
+        // Layer 2: Semantic validation
+        test::expect_type(&supply, "number");
+        test::expect_in_range(supply, 0.0, 1000000.0);
+        
+        print("✓ Initial supply is correct");
+    });
+    
+    it("should have zero balance for new addresses", fn() {
+        let balance = contract.balance_of("charlie");
+        
+        expect(balance).to_equal(0.0);
+        test::expect_type(&balance, "number");
+    });
+    
+    it("should transfer tokens correctly", fn() {
+        let transfer_amount = 100.0;
+        
+        // Get initial balances
+        let sender_initial = contract.balance_of(owner);
+        let recipient_initial = contract.balance_of(recipient);
+        
+        // Perform transfer
+        contract.transfer(recipient, transfer_amount);
+        
+        // Verify balances
+        let sender_final = contract.balance_of(owner);
+        let recipient_final = contract.balance_of(recipient);
+        
+        expect(sender_final).to_equal(sender_initial - transfer_amount);
+        expect(recipient_final).to_equal(recipient_initial + transfer_amount);
+        
+        // Semantic validation
+        test::expect_in_range(sender_final, 0.0, initial_supply);
+        test::expect_in_range(recipient_final, 0.0, initial_supply);
+        
+        print("✓ Transfer completed successfully");
+    });
+    
+    it("should reject negative transfer amounts", fn() {
+        expect_throws(fn() {
+            contract.transfer(recipient, -100.0);
+        }, "negative amounts not allowed");
+        
+        print("✓ Negative amounts rejected");
+    });
+    
+    it("should reject transfers exceeding balance", fn() {
+        expect_throws(fn() {
+            contract.transfer(recipient, initial_supply + 100.0);
+        }, "insufficient balance");
+        
+        print("✓ Insufficient balance rejected");
+    });
+    
+    it("should handle zero amount transfers", fn() {
+        let initial_balance = contract.balance_of(recipient);
+        
+        contract.transfer(recipient, 0.0);
+        
+        let final_balance = contract.balance_of(recipient);
+        expect(final_balance).to_equal(initial_balance);
+        
+        print("✓ Zero transfers handled");
+    });
+    
+    it("should maintain total supply invariant", fn() {
+        // Total supply should never change during transfers
+        let initial_total = contract.total_supply();
+        
+        contract.transfer("bob", 100.0);
+        contract.transfer("charlie", 50.0);
+        contract.transfer("dave", 25.0);
+        
+        let final_total = contract.total_supply();
+        expect(final_total).to_equal(initial_total);
+        
+        print("✓ Total supply invariant maintained");
+    });
+});
+
+describe("TokenContract - Attribute Validation", fn() {
+    it("should have valid trust model", fn() {
+        // Layer 2: Semantic validation of attributes
+        let trust_model = "hybrid";
+        test::expect_valid_trust_model(trust_model);
+        
+        print("✓ Trust model is valid");
+    });
+    
+    it("should have valid blockchain", fn() {
+        let chain = "ethereum";
+        test::expect_valid_chain(chain);
+        
+        print("✓ Blockchain is valid");
+    });
+    
+    it("should have compatible attributes", fn() {
+        // Trust requires chain
+        let attributes = ["trust", "chain"];
+        test::expect_compatible_attributes(attributes);
+        
+        print("✓ Attributes are compatible");
+    });
+    
+    it("should reject incompatible attributes", fn() {
+        expect_throws(fn() {
+            // Secure and public are mutually exclusive
+            test::expect_compatible_attributes(["secure", "public"]);
+        }, "mutually exclusive");
+        
+        print("✓ Incompatible attributes rejected");
+    });
+});
+
+describe("TokenContract - Edge Cases", fn() {
+    let contract;
+    
+    beforeEach(fn() {
+        contract = deploy_service("TokenContract", {
+            "owner": "alice",
+            "initial_supply": 1000.0
+        });
+    });
+    
+    it("should handle maximum value transfers", fn() {
+        let max_amount = contract.balance_of("alice");
+        
+        contract.transfer("bob", max_amount);
+        
+        expect(contract.balance_of("alice")).to_equal(0.0);
+        expect(contract.balance_of("bob")).to_equal(max_amount);
+        
+        print("✓ Maximum value transfers work");
+    });
+    
+    it("should handle transfer to self", fn() {
+        let initial = contract.balance_of("alice");
+        
+        contract.transfer("alice", 100.0);
+        
+        // Balance should be unchanged
+        expect(contract.balance_of("alice")).to_equal(initial);
+        
+        print("✓ Self-transfers handled");
+    });
+    
+    it("should handle multiple consecutive transfers", fn() {
+        let amounts = [10.0, 20.0, 30.0, 40.0, 50.0];
+        let total = 0.0;
+        
+        for amount in amounts {
+            contract.transfer("bob", amount);
+            total = total + amount;
+        }
+        
+        expect(contract.balance_of("bob")).to_equal(total);
+        
+        print("✓ Multiple transfers work correctly");
+    });
+    
+    it("should validate string lengths", fn() {
+        let address = "0x1234567890123456789012345678901234567890";
+        
+        // Ethereum addresses should be 42 characters (0x + 40 hex)
+        test::expect_length(address, 42);
+        test::expect_starts_with(address, "0x");
+        test::expect_contains(address, "1234");
+        
+        print("✓ Address format validated");
+    });
+    
+    it("should handle empty string addresses gracefully", fn() {
+        expect_throws(fn() {
+            contract.transfer("", 100.0);
+        }, "invalid address");
+        
+        print("✓ Empty addresses rejected");
+    });
+});
+
+describe("TokenContract - Performance", fn() {
+    let contract;
+    
+    beforeEach(fn() {
+        contract = deploy_service("TokenContract", {
+            "owner": "alice", 
+            "initial_supply": 100000.0
+        });
+    });
+    
+    it("should handle many transfers efficiently", fn() {
+        let start_time = time::now();
+        
+        // Perform 100 transfers
+        for i in 0..100 {
+            let recipient = "user_" + string(i);
+            contract.transfer(recipient, 10.0);
+        }
+        
+        let duration = time::now() - start_time;
+        
+        // Should complete in reasonable time (< 1 second)
+        test::expect_in_range(duration, 0.0, 1000.0);
+        
+        print("✓ Performance test passed");
+    });
+    
+    it("should handle large balance maps", fn() {
+        // Create many addresses
+        for i in 0..1000 {
+            let addr = "user_" + string(i);
+            contract.transfer(addr, 1.0);
+        }
+        
+        // Map should contain all addresses
+        let balance_count = contract.address_count();
+        test::expect_in_range(balance_count, 1000.0, 1001.0);
+        
+        print("✓ Large map test passed");
+    });
+});
+
+// Test suite for integration scenarios
+describe("TokenContract - Integration", fn() {
+    let token_contract;
+    let escrow_contract;
+    
+    beforeEach(fn() {
+        token_contract = deploy_service("TokenContract", {
+            "owner": "alice",
+            "initial_supply": 10000.0
+        });
+        
+        // Deploy complementary service
+        escrow_contract = deploy_service("EscrowContract", {
+            "token": token_contract
+        });
+    });
+    
+    it("should integrate with escrow contract", fn() {
+        // Alice deposits tokens into escrow
+        token_contract.approve(escrow_contract, 500.0);
+        escrow_contract.deposit("alice", 500.0);
+        
+        // Verify escrow has tokens
+        expect(token_contract.balance_of(escrow_contract)).to_equal(500.0);
+        
+        // Release from escrow to Bob
+        escrow_contract.release("alice", "bob", 500.0);
+        
+        // Verify Bob received tokens
+        expect(token_contract.balance_of("bob")).to_equal(500.0);
+        
+        print("✓ Token/Escrow integration works");
+    });
+});
+
+// Run all tests
+print("\n🧪 Running TokenContract test suite...\n");

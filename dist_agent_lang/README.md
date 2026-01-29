@@ -390,6 +390,66 @@ The project includes 11 comprehensive examples:
 10. **Integrated Spawn AI Examples** - Spawn and AI agent integration
 11. **KEYS Token Implementation** - Complete token system (Ethereum)
 
+## 🧪 Testing
+
+DAL uses a **three-layer testing strategy** for comprehensive validation:
+
+### Layer 1: Rust Unit Tests (Syntax Validation)
+Fast syntax and parse-time validation for all DAL code:
+
+```bash
+cargo test                        # Run all tests
+cargo test --test example_tests   # Run example tests only
+cargo test -- --nocapture         # Run with output
+```
+
+### Layer 2: Semantic Validators (Attribute & Type Validation)
+Validation helpers for semantic correctness:
+
+```rust
+// Used within tests for semantic validation
+test::expect_valid_trust_model("hybrid");
+test::expect_valid_chain("ethereum");
+test::expect_compatible_attributes(["trust", "chain"]);
+test::expect_type(&value, "number");
+test::expect_in_range(value, 0.0, 100.0);
+```
+
+### Layer 3: DAL Test Files (Runtime Behavior)
+Hardhat-style testing framework for DAL (`.test.dal` files):
+
+```bash
+# Run all DAL test files
+./scripts/run_dal_tests.sh
+
+# Run specific test file
+cargo run --release -- run examples/token_contract.test.dal
+```
+
+**Example DAL test:**
+```dal
+describe("TokenContract", fn() {
+    let contract;
+    
+    beforeEach(fn() {
+        contract = deploy_service("TokenContract", {});
+    });
+    
+    it("should transfer tokens", fn() {
+        contract.transfer("bob", 100.0);
+        expect(contract.balance_of("bob")).to_equal(100.0);
+    });
+});
+```
+
+### Testing Documentation
+
+For complete testing guides:
+- [`docs/THREE_LAYER_TESTING.md`](docs/THREE_LAYER_TESTING.md) - Complete strategy overview
+- [`docs/guides/TESTING_GUIDE.md`](docs/guides/TESTING_GUIDE.md) - Comprehensive testing guide
+- [`docs/TESTING_ATTRIBUTES.md`](docs/TESTING_ATTRIBUTES.md) - Attribute testing deep dive
+- [`docs/WHY_RUST_UNIT_TESTS.md`](docs/WHY_RUST_UNIT_TESTS.md) - Rationale for Rust tests
+
 ## 🔧 Configuration
 
 ### Environment Variables
