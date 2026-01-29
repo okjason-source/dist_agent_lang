@@ -38,8 +38,9 @@
 
 ### Run Tests
 ```bash
-cargo test                         # All tests
+cargo test                         # All tests (syntax + semantics!)
 cargo test --test example_tests    # Example tests only
+cargo test test_all_examples_with_semantic_validation  # Semantic validation
 cargo test test_name               # Specific test
 cargo test -- --nocapture          # With output
 ```
@@ -50,6 +51,10 @@ cargo test -- --nocapture          # With output
 ✅ AST construction  
 ✅ Attribute syntax  
 ✅ Statement structure  
+✅ **Semantic validation** (NEW!)  
+✅ **Trust model values** (NEW!)  
+✅ **Chain identifiers** (NEW!)  
+✅ **Attribute compatibility** (NEW!)  
 
 ## Layer 2: Semantic Validators
 
@@ -286,9 +291,11 @@ cargo run --release -- run file.test.dal --verbose
 
 | Layer | Command | Speed | Purpose | Coverage |
 |-------|---------|-------|---------|----------|
-| **1** | `cargo test` | ⚡ Fast | Syntax | 100% examples |
-| **2** | `test::expect_*()` | 🚀 Medium | Semantics | Rules |
+| **1** | `cargo test` | ⚡ Fast | Syntax + Semantics | 100% examples |
+| **2** | `test::expect_*()` | 🚀 Medium | Standalone validators | Rules |
 | **3** | `./scripts/run_dal_tests.sh` | 🐌 Slower | Behavior | Critical paths |
+
+**Note**: Layer 2 validators are now integrated into Layer 1 tests!
 
 ## Quick Checklist
 

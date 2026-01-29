@@ -259,21 +259,26 @@ fn test_attribute_order_preserved() {
 
 ## Summary
 
-**Rust unit tests validate attributes by:**
+**Rust unit tests NOW validate attributes at TWO levels:**
 
-1. **Parse-time checking**: Syntax, structure, positioning
-2. **AST construction**: Attributes are properly attached to targets
+### Level 1: Parse-Time (Automatic)
+1. **Syntax checking**: Structure, positioning, token recognition
+2. **AST construction**: Attributes properly attached to targets
 3. **Error detection**: Invalid syntax causes `parse_source()` to fail
 
-**What's NOT tested automatically:**
-- Semantic meaning of attribute values
-- Runtime behavior of attributes
-- Attribute interaction/conflicts
+### Level 2: Semantic Validation (NEW!)
+1. **Attribute values**: Trust models, chain identifiers validated
+2. **Compatibility rules**: @trust requires @chain, @secure ⊕ @public
+3. **Domain constraints**: Only allowed values accepted
 
-**To test semantics**, you need additional tests that:
-- Extract attributes from the AST
-- Validate parameter values
-- Check attribute combinations
-- Verify runtime behavior
+**The `test_all_examples_with_semantic_validation()` test in `example_tests.rs` now validates:**
+- ✅ Trust models: hybrid, centralized, decentralized, trustless
+- ✅ Chain identifiers: ethereum, polygon, bsc, solana, etc.
+- ✅ Attribute compatibility: @trust requires @chain
+- ✅ Mutual exclusivity: @secure and @public cannot coexist
 
-The current `example_tests.rs` validates that examples **parse correctly**, which includes all attribute syntax validation. Semantic validation would require additional runtime tests.
+**What's still NOT tested automatically:**
+- ❌ Runtime behavior of attributes → Use Layer 3 DAL tests for this
+- ❌ Complex business logic → Use Layer 3 DAL tests for this
+
+**Key Achievement**: Semantic validation is now integrated directly into cargo test! No need for separate validation steps.

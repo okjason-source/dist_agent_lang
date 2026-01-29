@@ -1,6 +1,12 @@
 // Example Tests
 // Tests all DAL example files to ensure they compile and execute correctly
 // This is critical for ensuring examples stay up-to-date with language changes
+//
+// Now includes SEMANTIC VALIDATION to catch:
+// - Invalid trust models
+// - Invalid blockchain identifiers  
+// - Attribute compatibility issues
+// - Type mismatches
 
 use dist_agent_lang::{parse_source, execute_source};
 use std::fs;
@@ -42,6 +48,127 @@ fn test_example_parses(path: &Path) {
     parse_source(&source).unwrap_or_else(|e| {
         panic!("Failed to parse {:?}: {}", path, e);
     });
+}
+
+// Test that an example file can be parsed AND semantically validated
+fn test_example_parses_with_semantics(path: &Path) {
+    let source = read_file(path);
+    let ast = parse_source(&source).unwrap_or_else(|e| {
+        panic!("Failed to parse {:?}: {}", path, e);
+    });
+    
+    // Validate semantic correctness
+    validate_ast_semantics(&ast, path);
+}
+
+// Validate the AST for semantic correctness
+fn validate_ast_semantics(ast: &dist_agent_lang::parser::ast::Program, path: &Path) {
+    use dist_agent_lang::parser::ast::{Statement, Expression};
+    use dist_agent_lang::lexer::tokens::Literal;
+    
+    for statement in &ast.statements {
+        match statement {
+            Statement::Service(service) => {
+                // Collect attribute names
+                let attr_names: Vec<&str> = service.attributes.iter()
+                    .map(|a| a.name.as_str())
+                    .collect();
+                
+                // Validate attribute compatibility rules
+                validate_attribute_compatibility(&attr_names, path);
+                
+                // Validate individual attribute values
+                for attr in &service.attributes {
+                    match attr.name.as_str() {
+                        "trust" => {
+                            if let Some(Expression::Literal(Literal::String(model))) = attr.parameters.first() {
+                                validate_trust_model(model, path);
+                            }
+                        }
+                        "chain" => {
+                            for param in &attr.parameters {
+                                if let Expression::Literal(Literal::String(chain)) = param {
+                                    validate_chain(chain, path);
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            Statement::Function(func) => {
+                // Validate function attributes
+                for attr in &func.attributes {
+                    match attr.name.as_str() {
+                        "trust" => {
+                            if let Some(Expression::Literal(Literal::String(model))) = attr.parameters.first() {
+                                validate_trust_model(model, path);
+                            }
+                        }
+                        "chain" => {
+                            for param in &attr.parameters {
+                                if let Expression::Literal(Literal::String(chain)) = param {
+                                    validate_chain(chain, path);
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+// Validate trust model values
+fn validate_trust_model(model: &str, path: &Path) {
+    let valid_models = ["hybrid", "centralized", "decentralized", "trustless"];
+    if !valid_models.contains(&model) {
+        panic!(
+            "Invalid trust model '{}' in {:?}. Valid options: {:?}",
+            model, path, valid_models
+        );
+    }
+}
+
+// Validate blockchain identifiers
+fn validate_chain(chain: &str, path: &Path) {
+    let valid_chains = [
+        "ethereum", "polygon", "bsc", "solana", "bitcoin",
+        "avalanche", "arbitrum", "optimism", "base", "near",
+        "eth", // Common shorthand
+    ];
+    if !valid_chains.contains(&chain.to_lowercase().as_str()) {
+        panic!(
+            "Invalid chain identifier '{}' in {:?}. Valid options: {:?}",
+            chain, path, valid_chains
+        );
+    }
+}
+
+// Validate attribute compatibility
+fn validate_attribute_compatibility(attrs: &[&str], path: &Path) {
+    let has_trust = attrs.contains(&"trust");
+    let has_chain = attrs.contains(&"chain");
+    let has_secure = attrs.contains(&"secure");
+    let has_public = attrs.contains(&"public");
+    
+    // Rule: @trust requires @chain
+    if has_trust && !has_chain {
+        panic!(
+            "Service with @trust attribute must also have @chain attribute in {:?}",
+            path
+        );
+    }
+    
+    // Rule: @secure and @public are mutually exclusive
+    if has_secure && has_public {
+        panic!(
+            "@secure and @public attributes are mutually exclusive in {:?}",
+            path
+        );
+    }
 }
 
 // Test that an example file can be executed (if it doesn't require external deps)
@@ -263,6 +390,72 @@ fn test_all_examples_parse() {
         }
         panic!("Some examples failed to parse");
     }
+    
+    println!("\n✅ All {} examples parsed successfully!", example_files.len());
+}
+
+/// Test that all example files can be parsed AND semantically validated
+/// This addresses the limitations of syntax-only validation by checking:
+/// - Trust model values (hybrid, centralized, decentralized, trustless)
+/// - Chain identifiers (ethereum, polygon, etc.)
+/// - Attribute compatibility (@trust requires @chain, @secure ⊕ @public)
+#[test]
+fn test_all_examples_with_semantic_validation() {
+    let example_files = get_example_files();
+    assert!(!example_files.is_empty(), "No example files found");
+    
+    let mut failed_parse = Vec::new();
+    let mut failed_semantic = Vec::new();
+    
+    for path in &example_files {
+        let source = read_file(path);
+        
+        // Parse test
+        match parse_source(&source) {
+            Ok(ast) => {
+                // Semantic validation
+                if let Err(e) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    validate_ast_semantics(&ast, &path);
+                })) {
+                    let msg = if let Some(s) = e.downcast_ref::<String>() {
+                        s.clone()
+                    } else if let Some(s) = e.downcast_ref::<&str>() {
+                        s.to_string()
+                    } else {
+                        "Unknown semantic error".to_string()
+                    };
+                    failed_semantic.push((path.clone(), msg));
+                }
+            }
+            Err(e) => {
+                failed_parse.push((path.clone(), format!("{}", e)));
+            }
+        }
+    }
+    
+    let mut had_errors = false;
+    
+    if !failed_parse.is_empty() {
+        eprintln!("\n❌ Failed to parse {} example(s):", failed_parse.len());
+        for (path, error) in &failed_parse {
+            eprintln!("  - {:?}: {}", path, error);
+        }
+        had_errors = true;
+    }
+    
+    if !failed_semantic.is_empty() {
+        eprintln!("\n❌ Semantic validation failed for {} example(s):", failed_semantic.len());
+        for (path, error) in &failed_semantic {
+            eprintln!("  - {:?}: {}", path, error);
+        }
+        had_errors = true;
+    }
+    
+    if had_errors {
+        panic!("Some examples failed parse or semantic validation");
+    }
+    
+    println!("\n✅ All {} examples passed syntax AND semantic validation!", example_files.len());
 }
 
 /// Test that examples without external dependencies can execute

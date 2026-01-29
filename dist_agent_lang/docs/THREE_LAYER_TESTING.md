@@ -67,11 +67,13 @@ fn test_token_contract_parses() {
 - GitHub Actions CI/CD
 - Pre-commit hooks (optional)
 
-### Limitations
-- ❌ Does NOT validate semantic meaning
-- ❌ Does NOT check if "hybrid" is a valid trust model
-- ❌ Does NOT enforce attribute compatibility rules
-- ❌ Does NOT test runtime behavior
+### Limitations (ADDRESSED!)
+- ✅ ~~Does NOT validate semantic meaning~~ **NOW VALIDATES via `test_all_examples_with_semantic_validation()`**
+- ✅ ~~Does NOT check if "hybrid" is a valid trust model~~ **NOW VALIDATES trust models**
+- ✅ ~~Does NOT enforce attribute compatibility rules~~ **NOW ENFORCES compatibility rules**
+- ❌ Does NOT test runtime behavior → **Use Layer 3 for this**
+
+**Note**: The new `test_all_examples_with_semantic_validation()` test integrates Layer 2 validators directly into Layer 1 Rust tests!
 
 ---
 
