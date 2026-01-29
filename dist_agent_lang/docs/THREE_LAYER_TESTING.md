@@ -207,7 +207,7 @@ fn test_token_contract_semantics() {
 **Location**: `/dist_agent_lang/examples/*.test.dal`
 
 ### Purpose
-Runtime behavior testing and integration testing, written in DAL itself (like Hardhat tests for Solidity).
+Runtime behavior testing and integration testing, written in DAL itself.
 
 ### What It Tests
 - ✅ **Runtime behavior**: Actual execution results
