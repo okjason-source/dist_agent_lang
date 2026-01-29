@@ -119,7 +119,12 @@ pub fn get_supported_chains() -> Vec<ChainConfig> {
 /// 
 /// # Example
 /// ```rust
-/// let address = chain::deploy(1, "KEYS_Token", { "name": "KEYS", "symbol": "KEYS" });
+/// use dist_agent_lang::stdlib::chain;
+/// use std::collections::HashMap;
+/// let mut args = HashMap::new();
+/// args.insert("name".to_string(), "KEYS".to_string());
+/// args.insert("symbol".to_string(), "KEYS".to_string());
+/// let address = chain::deploy(1, "KEYS_Token".to_string(), args);
 /// ```
 pub fn deploy(chain_id: i64, contract_name: String, constructor_args: HashMap<String, String>) -> String {
     // Log the deployment operation
@@ -174,7 +179,8 @@ pub fn deploy(chain_id: i64, contract_name: String, constructor_args: HashMap<St
 /// 
 /// # Example
 /// ```rust
-/// let gas = chain::estimate_gas(1, "transfer");
+/// use dist_agent_lang::stdlib::chain;
+/// let gas = chain::estimate_gas(1, "transfer".to_string());
 /// ```
 pub fn estimate_gas(chain_id: i64, operation: String) -> i64 {
     let chain_config = get_chain_config(chain_id);
@@ -213,6 +219,7 @@ pub fn estimate_gas(chain_id: i64, operation: String) -> i64 {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::chain;
 /// let gas_price = chain::get_gas_price(1);
 /// ```
 pub fn get_gas_price(chain_id: i64) -> f64 {
@@ -241,6 +248,7 @@ pub fn get_gas_price(chain_id: i64) -> f64 {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::chain;
 /// let timestamp = chain::get_block_timestamp(1);
 /// ```
 pub fn get_block_timestamp(chain_id: i64) -> i64 {
@@ -264,7 +272,8 @@ pub fn get_block_timestamp(chain_id: i64) -> i64 {
 /// 
 /// # Example
 /// ```rust
-/// let status = chain::get_transaction_status(1, "0x1234...");
+/// use dist_agent_lang::stdlib::chain;
+/// let status = chain::get_transaction_status(1, "0x1234...".to_string());
 /// ```
 pub fn get_transaction_status(chain_id: i64, tx_hash: String) -> String {
     let _chain_config = get_chain_config(chain_id);
@@ -288,7 +297,8 @@ pub fn get_transaction_status(chain_id: i64, tx_hash: String) -> String {
 /// 
 /// # Example
 /// ```rust
-/// let balance = chain::get_balance(1, "0x1234...");
+/// use dist_agent_lang::stdlib::chain;
+/// let balance = chain::get_balance(1, "0x1234...".to_string());
 /// ```
 pub fn get_balance(chain_id: i64, address: String) -> i64 {
     let _chain_config = get_chain_config(chain_id);
@@ -325,7 +335,12 @@ pub fn get_balance(chain_id: i64, address: String) -> i64 {
 /// 
 /// # Example
 /// ```rust
-/// let result = chain::call(1, "0x1234...", "transfer", { "to": "0x5678...", "amount": "1000000000000000000" });
+/// use dist_agent_lang::stdlib::chain;
+/// use std::collections::HashMap;
+/// let mut args = HashMap::new();
+/// args.insert("to".to_string(), "0x5678...".to_string());
+/// args.insert("amount".to_string(), "1000000000000000000".to_string());
+/// let result = chain::call(1, "0x1234...".to_string(), "transfer".to_string(), args);
 /// ```
 pub fn call(chain_id: i64, contract_address: String, function_name: String, args: HashMap<String, String>) -> String {
     let chain_config = get_chain_config(chain_id);
@@ -358,7 +373,12 @@ pub fn call(chain_id: i64, contract_address: String, function_name: String, args
 /// 
 /// # Example
 /// ```rust
-/// let asset_id = chain::mint("MyNFT", { "description": "A unique NFT", "image": "ipfs://..." });
+/// use dist_agent_lang::stdlib::chain;
+/// use std::collections::HashMap;
+/// let mut metadata = HashMap::new();
+/// metadata.insert("description".to_string(), "A unique NFT".to_string());
+/// metadata.insert("image".to_string(), "ipfs://...".to_string());
+/// let asset_id = chain::mint("MyNFT".to_string(), metadata);
 /// ```
 pub fn mint(name: String, metadata: HashMap<String, String>) -> i64 {
     // Log the mint operation for audit purposes
@@ -399,7 +419,11 @@ pub fn mint(name: String, metadata: HashMap<String, String>) -> i64 {
 /// 
 /// # Example
 /// ```rust
-/// let success = chain::update(12345, { "description": "Updated description" });
+/// use dist_agent_lang::stdlib::chain;
+/// use std::collections::HashMap;
+/// let mut updates = HashMap::new();
+/// updates.insert("description".to_string(), "Updated description".to_string());
+/// let success = chain::update(12345, updates);
 /// ```
 pub fn update(asset_id: i64, updates: HashMap<String, String>) -> bool {
     // Log the update operation for audit purposes
@@ -443,6 +467,7 @@ pub fn update(asset_id: i64, updates: HashMap<String, String>) -> bool {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::chain;
 /// let asset_info = chain::get(12345);
 /// ```
 pub fn get(asset_id: i64) -> HashMap<String, String> {
@@ -474,6 +499,7 @@ pub fn get(asset_id: i64) -> HashMap<String, String> {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::chain;
 /// let exists = chain::exists(12345);
 /// ```
 pub fn exists(asset_id: i64) -> bool {

@@ -34,6 +34,8 @@ pub enum SignatureAlgorithm {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::crypto;
+/// use dist_agent_lang::stdlib::crypto::HashAlgorithm;
 /// let hash = crypto::hash("Hello, World!", HashAlgorithm::SHA256);
 /// ```
 pub fn hash(data: &str, algorithm: HashAlgorithm) -> String {
@@ -116,6 +118,8 @@ fn hash_custom(data: &str, algorithm_name: &str) -> String {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::crypto;
+/// use dist_agent_lang::stdlib::crypto::HashAlgorithm;
 /// let random_hash = crypto::random_hash(HashAlgorithm::SHA256);
 /// ```
 pub fn random_hash(algorithm: HashAlgorithm) -> String {
@@ -141,6 +145,8 @@ pub fn random_hash(algorithm: HashAlgorithm) -> String {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::crypto;
+/// use dist_agent_lang::stdlib::crypto::SignatureAlgorithm;
 /// let signature = crypto::sign("Hello, World!", "private_key_123", SignatureAlgorithm::RSA);
 /// ```
 pub fn sign(data: &str, private_key: &str, algorithm: SignatureAlgorithm) -> String {
@@ -205,7 +211,10 @@ fn sign_custom(data: &str, private_key: &str, algorithm_name: &str) -> String {
 /// 
 /// # Example
 /// ```rust
-/// let is_valid = crypto::verify("Hello, World!", signature, "public_key_123", SignatureAlgorithm::RSA);
+/// use dist_agent_lang::stdlib::crypto;
+/// use dist_agent_lang::stdlib::crypto::SignatureAlgorithm;
+/// let signature = crypto::sign("Hello, World!", "private_key_123", SignatureAlgorithm::RSA);
+/// let is_valid = crypto::verify("Hello, World!", &signature, "public_key_123", SignatureAlgorithm::RSA);
 /// ```
 pub fn verify(_data: &str, signature: &str, _public_key: &str, algorithm: SignatureAlgorithm) -> bool {
     // Mock verification - in real implementation this would properly verify signatures
@@ -248,6 +257,8 @@ fn verify_custom(signature: &str) -> bool {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::crypto;
+/// use dist_agent_lang::stdlib::crypto::SignatureAlgorithm;
 /// let keypair = crypto::generate_keypair(SignatureAlgorithm::RSA);
 /// ```
 pub fn generate_keypair(algorithm: SignatureAlgorithm) -> HashMap<String, String> {
@@ -290,6 +301,7 @@ pub fn generate_keypair(algorithm: SignatureAlgorithm) -> HashMap<String, String
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::crypto;
 /// let encrypted = crypto::encrypt("secret message", "public_key_123");
 /// ```
 pub fn encrypt(data: &str, public_key: &str) -> String {
@@ -312,7 +324,9 @@ pub fn encrypt(data: &str, public_key: &str) -> String {
 /// 
 /// # Example
 /// ```rust
-/// let decrypted = crypto::decrypt(encrypted_data, "private_key_123");
+/// use dist_agent_lang::stdlib::crypto;
+/// let encrypted = crypto::encrypt("secret message", "public_key_123");
+/// let decrypted = crypto::decrypt(&encrypted, "private_key_123");
 /// ```
 pub fn decrypt(encrypted_data: &str, _private_key: &str) -> Option<String> {
     // Mock decryption - just check if data starts with "encrypted_"
@@ -334,7 +348,8 @@ pub fn decrypt(encrypted_data: &str, _private_key: &str) -> Option<String> {
 /// 
 /// # Example
 /// ```rust
-/// let encrypted = crypto::encrypt_aes256("secret data", "encryption_key")?;
+/// use dist_agent_lang::stdlib::crypto;
+/// let encrypted = crypto::encrypt_aes256("secret data", "encryption_key").unwrap();
 /// ```
 pub fn encrypt_aes256(data: &str, key: &str) -> Result<String, String> {
     // Mock AES-256-GCM encryption
@@ -356,7 +371,9 @@ pub fn encrypt_aes256(data: &str, key: &str) -> Result<String, String> {
 /// 
 /// # Example
 /// ```rust
-/// let decrypted = crypto::decrypt_aes256(encrypted_data, "decryption_key")?;
+/// use dist_agent_lang::stdlib::crypto;
+/// let encrypted = crypto::encrypt_aes256("secret data", "encryption_key").unwrap();
+/// let decrypted = crypto::decrypt_aes256(&encrypted, "decryption_key").unwrap();
 /// ```
 pub fn decrypt_aes256(encrypted_data: &str, key: &str) -> Result<String, String> {
     // Mock AES-256-GCM decryption

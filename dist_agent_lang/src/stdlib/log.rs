@@ -39,8 +39,15 @@ lazy_static::lazy_static! {
 /// 
 /// # Example
 /// ```rust
-/// log::info("User logged in", { "user_id": "123", "ip": "192.168.1.1" }, Some("auth_service"));
-/// log::info("System message", {}, None); // Uses default "system" source
+/// use dist_agent_lang::stdlib::log;
+/// use dist_agent_lang::runtime::values::Value;
+/// use std::collections::HashMap;
+/// let mut data1 = HashMap::new();
+/// data1.insert("user_id".to_string(), Value::String("123".to_string()));
+/// data1.insert("ip".to_string(), Value::String("192.168.1.1".to_string()));
+/// log::info("User logged in", data1, Some("auth_service"));
+/// let data2 = HashMap::new();
+/// log::info("System message", data2, None); // Uses default "system" source
 /// ```
 pub fn info(message: &str, data: HashMap<String, Value>, source: Option<&str>) {
     let source_str = source.unwrap_or("system").to_string();
@@ -56,7 +63,13 @@ pub fn info(message: &str, data: HashMap<String, Value>, source: Option<&str>) {
 /// 
 /// # Example
 /// ```rust
-/// log::warning("High memory usage detected", { "usage": "85%", "threshold": "80%" }, Some("monitor"));
+/// use dist_agent_lang::stdlib::log;
+/// use dist_agent_lang::runtime::values::Value;
+/// use std::collections::HashMap;
+/// let mut data = HashMap::new();
+/// data.insert("usage".to_string(), Value::String("85%".to_string()));
+/// data.insert("threshold".to_string(), Value::String("80%".to_string()));
+/// log::warning("High memory usage detected", data, Some("monitor"));
 /// ```
 pub fn warning(message: &str, data: HashMap<String, Value>, source: Option<&str>) {
     let source_str = source.unwrap_or("system").to_string();
@@ -71,7 +84,13 @@ pub fn warning(message: &str, data: HashMap<String, Value>, source: Option<&str>
 /// 
 /// # Example
 /// ```rust
-/// log::error("Database connection failed", { "error_code": "CONN_001", "retry_count": 3 });
+/// use dist_agent_lang::stdlib::log;
+/// use dist_agent_lang::runtime::values::Value;
+/// use std::collections::HashMap;
+/// let mut data = HashMap::new();
+/// data.insert("error_code".to_string(), Value::String("CONN_001".to_string()));
+/// data.insert("retry_count".to_string(), Value::Int(3));
+/// log::error("Database connection failed", data, None);
 /// ```
 pub fn error(message: &str, data: HashMap<String, Value>, source: Option<&str>) {
     let source_str = source.unwrap_or("system").to_string();
@@ -87,7 +106,14 @@ pub fn error(message: &str, data: HashMap<String, Value>, source: Option<&str>) 
 /// 
 /// # Example
 /// ```rust
-/// log::audit("user_login", { "user_id": "123", "ip": "192.168.1.1", "success": true }, Some("auth"));
+/// use dist_agent_lang::stdlib::log;
+/// use dist_agent_lang::runtime::values::Value;
+/// use std::collections::HashMap;
+/// let mut data = HashMap::new();
+/// data.insert("user_id".to_string(), Value::String("123".to_string()));
+/// data.insert("ip".to_string(), Value::String("192.168.1.1".to_string()));
+/// data.insert("success".to_string(), Value::Bool(true));
+/// log::audit("user_login", data, Some("auth"));
 /// ```
 pub fn audit(event: &str, data: HashMap<String, Value>, source: Option<&str>) {
     let source_str = source.unwrap_or("audit").to_string();
@@ -103,7 +129,13 @@ pub fn audit(event: &str, data: HashMap<String, Value>, source: Option<&str>) {
 /// 
 /// # Example
 /// ```rust
-/// log::debug("Function execution time", { "function": "process_data", "duration_ms": 150 }, Some("performance"));
+/// use dist_agent_lang::stdlib::log;
+/// use dist_agent_lang::runtime::values::Value;
+/// use std::collections::HashMap;
+/// let mut data = HashMap::new();
+/// data.insert("function".to_string(), Value::String("process_data".to_string()));
+/// data.insert("duration_ms".to_string(), Value::Int(150));
+/// log::debug("Function execution time", data, Some("performance"));
 /// ```
 pub fn debug(message: &str, data: HashMap<String, Value>, source: Option<&str>) {
     let source_str = source.unwrap_or("debug").to_string();
@@ -154,6 +186,7 @@ fn log_message(level: LogLevel, message: &str, data: HashMap<String, Value>, sou
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::log;
 /// let entries = log::get_entries();
 /// ```
 pub fn get_entries() -> Vec<LogEntry> {
@@ -174,6 +207,8 @@ pub fn get_entries() -> Vec<LogEntry> {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::log;
+/// use dist_agent_lang::stdlib::log::LogLevel;
 /// let audit_entries = log::get_entries_by_level(LogLevel::Audit);
 /// ```
 pub fn get_entries_by_level(level: LogLevel) -> Vec<LogEntry> {
@@ -192,6 +227,7 @@ pub fn get_entries_by_level(level: LogLevel) -> Vec<LogEntry> {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::log;
 /// let audit_logs = log::get_entries_by_source("audit");
 /// ```
 pub fn get_entries_by_source(source: &str) -> Vec<LogEntry> {
@@ -204,6 +240,7 @@ pub fn get_entries_by_source(source: &str) -> Vec<LogEntry> {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::log;
 /// log::clear();
 /// ```
 pub fn clear() {
@@ -219,6 +256,7 @@ pub fn clear() {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::log;
 /// let stats = log::get_stats();
 /// ```
 pub fn get_stats() -> HashMap<String, Value> {

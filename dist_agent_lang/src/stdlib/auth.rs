@@ -89,7 +89,8 @@ pub fn authenticate(username: String, password: String) -> Result<Session, Strin
 /// 
 /// # Example
 /// ```rust
-/// let session = auth::session("user123", ["admin", "moderator"]);
+/// use dist_agent_lang::stdlib::auth;
+/// let session = auth::session("user123".to_string(), vec!["admin".to_string(), "moderator".to_string()]);
 /// ```
 pub fn session(user_id: String, roles: Vec<String>) -> Session {
     // Mock implementation for testing
@@ -162,6 +163,8 @@ pub fn session(user_id: String, roles: Vec<String>) -> Session {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::auth;
+/// let session = auth::session("user123".to_string(), vec![]);
 /// let is_valid = auth::is_valid_session(&session);
 /// ```
 pub fn is_valid_session(session: &Session) -> bool {
@@ -184,6 +187,8 @@ pub fn is_valid_session(session: &Session) -> bool {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::auth;
+/// let session = auth::session("user123".to_string(), vec![]);
 /// let can_write = auth::has_permission(&session, "write");
 /// ```
 pub fn has_permission(session: &Session, permission: &str) -> bool {
@@ -205,6 +210,8 @@ pub fn has_permission(session: &Session, permission: &str) -> bool {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::auth;
+/// let session = auth::session("user123".to_string(), vec!["admin".to_string()]);
 /// let is_admin = auth::has_role(&session, "admin");
 /// ```
 pub fn has_role(session: &Session, role: &str) -> bool {
@@ -227,7 +234,8 @@ pub fn has_role(session: &Session, role: &str) -> bool {
 /// 
 /// # Example
 /// ```rust
-/// let role = auth::create_role("editor", ["read", "write"], "Can edit content");
+/// use dist_agent_lang::stdlib::auth;
+/// let role = auth::create_role("editor".to_string(), vec!["read".to_string(), "write".to_string()], "Can edit content".to_string());
 /// ```
 pub fn create_role(name: String, permissions: Vec<String>, description: String) -> Role {
     Role {
@@ -247,6 +255,7 @@ pub fn create_role(name: String, permissions: Vec<String>, description: String) 
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::auth;
 /// let role = auth::get_role("admin");
 /// ```
 pub fn get_role(role_name: &str) -> Option<Role> {
@@ -294,6 +303,7 @@ pub fn get_role(role_name: &str) -> Option<Role> {
 /// 
 /// # Example
 /// ```rust
+/// use dist_agent_lang::stdlib::auth;
 /// let user_id = auth::validate_credentials("john", "password123");
 /// ```
 pub fn validate_credentials(username: &str, password: &str) -> Option<String> {
