@@ -91,9 +91,42 @@ fn main() {
             }
             analyze_solidity_file(&args[2]);
         }
+        "parse" => {
+            if args.len() < 3 {
+                eprintln!("Usage: dist_agent_lang parse <file.dal>");
+                std::process::exit(1);
+            }
+            parse_dal_file(&args[2]);
+        }
         _ => {
             eprintln!("Unknown command: {}", args[1]);
             eprintln!("Use 'dist_agent_lang help' for usage information");
+            std::process::exit(1);
+        }
+    }
+}
+
+fn parse_dal_file(filename: &str) {
+    println!("🔍 Parsing dist_agent_lang file: {}", filename);
+    
+    // Read the file
+    let source_code = match std::fs::read_to_string(filename) {
+        Ok(content) => content,
+        Err(e) => {
+            eprintln!("❌ Error reading file {}: {}", filename, e);
+            std::process::exit(1);
+        }
+    };
+    
+    // Use the library function for parsing
+    match dist_agent_lang::parse_source(&source_code) {
+        Ok(ast) => {
+            println!("✅ Parsing successful!");
+            println!("   Generated {} statements", ast.statements.len());
+            std::process::exit(0);
+        }
+        Err(e) => {
+            eprintln!("❌ Parsing failed: {}", e);
             std::process::exit(1);
         }
     }
@@ -427,6 +460,7 @@ fn print_help() {
     println!();
     println!("Commands:");
     println!("  run <file.dal>              Run a dist_agent_lang file");
+    println!("  parse <file.dal>            Parse and validate syntax (without executing)");
     println!("  web <file.dal>              Run a dist_agent_lang web application");
     println!("  test                        Run the test suite");
     println!("  convert <input.sol> [-o <output.dal>]  Convert Solidity to DAL");
@@ -436,6 +470,7 @@ fn print_help() {
     println!();
     println!("Examples:");
     println!("  dist_agent_lang run my_app.dal");
+    println!("  dist_agent_lang parse my_app.dal");
     println!("  dist_agent_lang web keys-web-app.dal");
     println!("  dist_agent_lang test");
     println!("  dist_agent_lang convert MyContract.sol -o MyContract.dal");
