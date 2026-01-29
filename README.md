@@ -7,7 +7,7 @@
 dist_agent_lang is an **actively developed beta release** that is updated consistently with new features and improvements. While the language includes comprehensive security features and has passed all tests (187+ passing), it should be used with appropriate caution based on your use case.
 
 **🙏 Beta Testing Contributions Appreciated!**  
-We welcome feedback, bug reports, and contributions from the developer community to help us reach production readiness (v1.1.0+).
+We welcome feedback, bug reports, and contributions from early adopters to help us reach production readiness.
 
 ### ✅ Safe For:
 - **Development & Prototyping** - Building and testing applications
@@ -42,19 +42,7 @@ We welcome feedback, bug reports, and contributions from the developer community
 - **Enhanced Testing** - 140+ tests covering all standard library modules
 
 ### 🔄 Active Development:
-This project receives **consistent updates** with improvements to security, performance, documentation, and features. We're working toward v1.1.0 (production release) with third-party security audits, real-world validation, and community feedback.
-
-**Target for Production (v1.1.0+):** ~14 weeks with community validation
-
-### 🤝 How to Contribute:
-- **🧪 Testing** - Use the language, run examples, report bugs (no coding required!)
-- **📝 Documentation** - Improve docs, write tutorials, fix typos
-- **💻 Code** - Fix bugs, implement features, add tests
-- **💡 Ideas** - Share use cases, suggest improvements, join discussions
-
-**👉 New to contributing?** Check out [dist_agent_lang/GOOD_FIRST_ISSUES.md](dist_agent_lang/GOOD_FIRST_ISSUES.md) for beginner-friendly tasks!
-
-**📖 Full Guide:** See [dist_agent_lang/CONTRIBUTING.md](dist_agent_lang/CONTRIBUTING.md) for detailed contribution guidelines.
+This project is updated consistently with improvements to security, performance, and features. Check the repository regularly for updates and join our community to contribute!
 
 
 ## 📦 Installation
@@ -172,7 +160,7 @@ dist_agent_lang --version
 
 ## 📚 Examples
 
-The package includes user-facing example files in the `dist_agent_lang/examples/` directory:
+The package includes example files in the `dist_agent_lang/examples/` directory:
 
 ### Basic Examples
 - `hello_world_demo.dal` - Simple hello world program
@@ -209,7 +197,6 @@ The package includes user-facing example files in the `dist_agent_lang/examples/
 - `solidity_abi_integration.dal` - Solidity ABI integration
 - `solidity_orchestration.dal` - Solidity orchestration
 
-**Note:** Development/internal examples (phase* and test* files) are excluded from the repository.
 
 ### Running Examples
 ```bash
