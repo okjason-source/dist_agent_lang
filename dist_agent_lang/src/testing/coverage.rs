@@ -167,6 +167,10 @@ impl CoverageAnalyzer {
                         self.count_branches_in_block(alternative);
                     }
                 }
+                Statement::While(while_stmt) => {
+                    self.tracker.total_branches += 1; // loop vs exit
+                    self.count_branches_in_block(&while_stmt.body);
+                }
                 Statement::Block(nested_block) => {
                     self.count_branches_in_block(nested_block);
                 }
@@ -191,6 +195,10 @@ impl CoverageAnalyzer {
                 if let Some(alternative) = &if_stmt.alternative {
                     self.analyze_block(alternative);
                 }
+            }
+            Statement::While(while_stmt) => {
+                self.analyze_expression(&while_stmt.condition);
+                self.analyze_block(&while_stmt.body);
             }
             Statement::Block(block) => {
                 self.analyze_block(block);
@@ -224,6 +232,14 @@ impl CoverageAnalyzer {
             }
             Expression::Await(await_expr) => {
                 self.analyze_expression(await_expr);
+            }
+            Expression::Spawn(expr) => {
+                self.analyze_expression(expr);
+            }
+            Expression::ArrowFunction { body, .. } => {
+                for stmt in &body.statements {
+                    self.analyze_statement(stmt);
+                }
             }
             _ => {}
         }

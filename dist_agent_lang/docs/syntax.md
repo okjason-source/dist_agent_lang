@@ -1,6 +1,6 @@
 # dist_agent_lang Syntax Reference
 
-Complete syntax reference for the dist_agent_lang programming language.
+DAL (dist_agent_lang) is a **networking-oriented language** that is built with **Rust**: services, agents, messages, and spawn are first-class; syntax uses **`fn`**, **`let`**, blocks, **`::`** namespacing, and type annotations in a Rust-friendly way. This document reflects the **parser and AST** as implemented and how DAL connects to **libraries and `src/`**: standard library calls use **`namespace::function(args)`**, implemented in **`src/stdlib/`** and dispatched in **`src/runtime/engine.rs`**. See [DAL Syntax Patterns](testing/DAL_SYNTAX_PATTERNS.md) for common patterns and pitfalls.
 
 ## Table of Contents
 
@@ -13,7 +13,9 @@ Complete syntax reference for the dist_agent_lang programming language.
 - [Control Flow](#control-flow)
 - [Operators](#operators)
 - [Expressions](#expressions)
+- [Libraries and Standard Namespaces](#libraries-and-standard-namespaces)
 - [Comments](#comments)
+- [Keywords](#keywords)
 
 ---
 
@@ -21,20 +23,24 @@ Complete syntax reference for the dist_agent_lang programming language.
 
 ### Program Structure
 
-A dist_agent_lang program consists of service declarations:
+A DAL program is a sequence of **top-level statements**; there is no single “main” entry point. The language is built around **networking** and **Rust-like** structure:
 
-```rust
-@trust("hybrid")
-service MyService {
-    // Service fields and methods
-}
-```
+- Service declarations (`service Name { ... }`)
+- Function declarations (`fn name(...) { ... }`)
+- Variable declarations (`let x = ...;`)
+- Agent declarations (`agent name:type { ... } { ... }`)
+- Spawn statements (`spawn name [: type] [{ config }] { body }`)
+- Message and event statements (`msg` / `event`)
+- Control flow (`if`, `try`, `for`)
+- Expression statements (e.g. calls, assignments)
 
-### Statements
+### Statements and Semicolons
 
-Statements end with semicolons (optional in some contexts):
+- **`let`** and **`return`** statements **must** end with a semicolon.
+- Expression statements (including assignments and calls) are terminated by semicolons when used as statements.
+- Block bodies `{ ... }` do not use a semicolon after the closing `}`.
 
-```rust
+```dal
 let x = 10;
 print("Hello");
 return result;
@@ -46,22 +52,26 @@ return result;
 
 ### Primitive Types
 
-- `int` - Integer numbers: `42`, `-10`, `1000`
-- `float` - Floating point numbers: `3.14`, `-0.5`, `2.0`
-- `string` - Text strings: `"Hello"`, `"World"`
-- `bool` - Boolean values: `true`, `false`
-- `null` - Null value: `null`
+- **`int`** – integers: `42`, `-10`, `1000`
+- **`float`** – floating point: `3.14`, `-0.5`, `2.0`
+- **`string`** – text: `"Hello"`, `"World"`
+- **`bool`** – booleans: `true`, `false`
+- **`null`** – null value: `null`
 
-### Complex Types
+### Collection and Generic Types
 
-- `vector<T>` - Arrays/Lists: `[1, 2, 3]`, `["a", "b"]`
-- `map<K, V>` - Maps/Dictionaries: `{"key": "value"}`
-- `any` - Any type (dynamic)
+Type annotations use identifiers or type keywords with optional generic parameters:
+
+- **`vector<T>`** or **`list<T>`** – lists (e.g. `list<int>`, `vector<string>`). The parser recognizes the **`list`** keyword; **`vector`** is accepted as an identifier type name.
+- **`map<K, V>`** – maps (e.g. `map<string, int>`). **`map`** is a keyword.
+- **`any`** – dynamic type (identifier).
 
 **Examples:**
-```rust
-let numbers: vector<int> = [1, 2, 3];
-let user: map<string, any> = {"name": "Alice", "age": 30};
+
+```dal
+let numbers: list<int> = [1, 2, 3];
+let items: vector<string> = ["a", "b"];
+let user: map<string, any> = { name: "Alice", age: 30 };
 ```
 
 ---
@@ -70,26 +80,32 @@ let user: map<string, any> = {"name": "Alice", "age": 30};
 
 ### Variable Declaration
 
-```rust
+```dal
 let name = "Alice";
 let age: int = 30;
 let is_active: bool = true;
 ```
 
+The parser allows an optional **`mut`** after `let` (it is consumed but not reflected in the AST).
+
 ### Variable Assignment
 
-```rust
+Only **simple assignment** is supported: **`=`**. Compound assignment operators (`+=`, `-=`, `*=`, `/=`, etc.) are **not** parsed as assignments.
+
+```dal
 let x = 10;
-x = 20;  // Reassignment
+x = 20;
 ```
 
 ### Service Fields
 
-```rust
+Fields are declared with **name**, **type**, optional **initial value**, and a **semicolon**. Visibility modifiers (e.g. `public` / `private`) are **not** parsed; all fields are treated as public.
+
+```dal
 service MyService {
     count: int = 0;
     name: string = "default";
-    
+
     fn increment() {
         self.count = self.count + 1;
     }
@@ -98,86 +114,52 @@ service MyService {
 
 ### Service Instantiation
 
-Services can be instantiated using two syntaxes:
+**Syntax 1 – type name as namespace:**
 
-**Syntax 1: Service name as namespace**
-```rust
+```dal
 let instance = MyService::new();
 instance.increment();
 ```
 
-**Syntax 2: Using service namespace**
-```rust
+**Syntax 2 – `service` namespace:**
+
+```dal
 let instance = service::new("MyService");
 instance.increment();
 ```
 
-Both syntaxes are equivalent and create a new instance of the service.
+Both create a new instance of the service.
 
-### Service Method Calls
+### Service Method Calls and Field Access
 
-Once you have a service instance, you can call its methods:
+Within service methods, use **`self.field`** to read and assign fields. Method calls use **`instance.method(args)`** or **`namespace::function(args)`**.
 
-```rust
+```dal
 service TokenContract {
     balances: map<string, int> = {};
-    
+
     fn initialize(owner: string) {
         self.balances[owner] = 1000;
     }
-    
+
     fn transfer(to: string, amount: int) {
         self.balances[to] = self.balances[to] + amount;
     }
 }
 
-// Create instance
 let token = TokenContract::new();
-
-// Call methods
 token.initialize("0x123...");
 token.transfer("0x456...", 100);
 ```
 
-### Accessing Service Fields
+### Indexed Access and Assignment
 
-Within service methods, use `self.field` to access and modify fields:
+Map and array indexing use **`expr[index]`**. Assignment to an index is **`expr[index] = value`** (parsed as a special assignment form).
 
-```rust
-service Counter {
-    count: int = 0;
-    
-    fn increment() {
-        self.count = self.count + 1;  // Access and modify field
-    }
-    
-    fn get_count() -> int {
-        return self.count;  // Read field value
-    }
-}
-```
-
-### Map/Array Access and Assignment
-
-Service fields can be maps or arrays, which support indexed access:
-
-```rust
-service MyService {
-    balances: map<string, int> = {};
-    items: vector<string> = [];
-    
-    fn set_balance(address: string, amount: int) {
-        self.balances[address] = amount;  // Map assignment
-    }
-    
-    fn get_balance(address: string) -> int {
-        return self.balances[address];  // Map access
-    }
-    
-    fn add_item(item: string) {
-        self.items[0] = item;  // Array assignment
-    }
-}
+```dal
+self.balances[address] = amount;
+return self.balances[address];
+self.items[0] = item;
 ```
 
 ---
@@ -186,27 +168,27 @@ service MyService {
 
 ### Function Declaration
 
-```rust
+```dal
 fn function_name(param1: type, param2: type) -> return_type {
-    // Function body
     return value;
 }
 ```
 
+- Parameters: **`name`** or **`name: type`**.
+- Return type is optional: **`-> return_type`** after the closing `)`.
+- Body is a block **`{ ... }**.
+
 ### Function Examples
 
-```rust
-// Simple function
+```dal
 fn greet(name: string) -> string {
     return "Hello, " + name;
 }
 
-// Function with no return
 fn print_message(msg: string) {
     print(msg);
 }
 
-// Function with no parameters
 fn get_current_time() -> int {
     return 1234567890;
 }
@@ -214,9 +196,10 @@ fn get_current_time() -> int {
 
 ### Async Functions
 
-```rust
+**`async fn`** is supported at the top level or inside a service. The parser accepts **`async fn name(...) [ -> type ] { body }`**. Attributes (e.g. **`@async`**) may appear before **`fn`** or **`async fn`** when allowed by the parser.
+
+```dal
 async fn fetch_data(url: string) -> string {
-    // Async operations
     return await http::get(url);
 }
 ```
@@ -227,58 +210,91 @@ async fn fetch_data(url: string) -> string {
 
 ### Service Declaration
 
-```rust
+Services can be preceded by **attributes** (e.g. **`@trust`**, **`@chain`**, **`@secure`**, **`@compile_target`**). See [Attributes Reference](attributes.md).
+
+```dal
 @trust("hybrid")
 @chain("ethereum")
 service MyService {
-    // Fields
     balance: int = 0;
-    
-    // Methods
+
     fn deposit(amount: int) {
         self.balance = self.balance + amount;
     }
-    
+
     fn get_balance() -> int {
         return self.balance;
     }
 }
 ```
 
-### Service Fields
+### Service Members
 
-```rust
-service Example {
-    // Public field
-    public_name: string = "public";
-    
-    // Private field
-    private_secret: string = "secret";
-    
-    // Field with initial value
-    counter: int = 0;
-}
-```
+- **Fields:** **`name: type [ = value ];`**
+- **Methods:** **`fn name(params) [ -> type ] { body }`**
+- **Events:** Optional **`event`** declarations (see parser for exact form).
+
+Field visibility is not parsed; all fields are effectively public.
 
 ---
 
 ## Agents
 
+Agents can be created in two ways: **language syntax** (`spawn` / `agent`) and **stdlib API** (`ai::create_agent`).
+
+### Create agent (stdlib API)
+
+The **`ai::create_agent(config)`** function creates an agent instance at runtime. **`config`** is a literal (e.g. role, capabilities). This is the usual pattern in examples and scripts.
+
+```dal
+let agent_config = {
+    role: "assistant",
+    capabilities: ["analysis", "reasoning"]
+};
+let agent_instance = ai::create_agent(agent_config);
+```
+
+For coordinators: **`ai::create_agent_coordinator()`**.
+
 ### Spawn Statement
 
-```rust
+**`spawn`** as a **statement** has one of these forms:
+
+1. **`spawn agent_name { body }`** – body block is **required**.
+2. **`spawn agent_name : type { body }`** – optional type (e.g. `ai`, `worker`).
+3. **`spawn agent_name : type { config } { body }`** – config is a struct literal; body required.
+
+Config follows literal rules: keys are identifiers or string literals, colon, then expression.
+
+```dal
 spawn agent_name:ai {
     role: "assistant",
     capabilities: ["analysis", "reasoning"]
 } {
-    // Agent body
     log::info("agent", "Agent started");
 }
 ```
 
+### Spawn Expression
+
+**`spawn`** can also be used as an **expression**: **`spawn expr`**. For example, spawning the result of a call:
+
+```dal
+let handle = spawn worker_process(i);
+```
+
+The parser treats **`spawn`** in expression context as a unary operator: **`spawn`** followed by an expression (e.g. a function call).
+
 ### Agent Declaration
 
-```rust
+**`agent name : type { config } [ with capabilities ] { body }`** defines an agent **type** (name, type, config, and body). It does not create a running instance.
+
+- **`type`** is required (e.g. **`ai`**, **`system`**, **`worker`**, or a custom identifier).
+- **`config`** is a literal **`{ key: value, ... }`**.
+- Optional **`with`** clause for capabilities (parser-dependent).
+- **`body`** is a block **`{ ... }`**.
+
+```dal
 agent MyAgent:ai {
     role: "worker",
     capabilities: ["processing"]
@@ -289,16 +305,31 @@ agent MyAgent:ai {
 }
 ```
 
-### Message Passing
+### Message Statement
 
-```rust
+**`msg recipient { data } ;`**
+
+- **`recipient`** is an identifier.
+- **`data`** is a single **`{ ... }`** block. Keys in the data block are **identifiers**; each key is followed by **`:`** and an expression. Comma-separated.
+
+```dal
 msg agent_name {
     type: "task",
-    data: {"task": "process"}
+    data: { key: "value" }
 };
+```
 
-event "task_completed" {
-    result: "success"
+### Event Statement
+
+**`event event_name { data } ;`**
+
+- **`event_name`** is an **identifier** (not a string literal in the current parser).
+- **`data`** is the same as for **`msg`**: **`{ key: value, ... }`** with identifier keys and colons.
+
+```dal
+event task_completed {
+    result: "success",
+    count: 42
 };
 ```
 
@@ -308,73 +339,61 @@ event "task_completed" {
 
 ### If Statements
 
-```rust
-if condition {
-    // Then block
-} else {
-    // Else block
-}
+**Parentheses around the condition are required.** Use **`if (condition) { ... }`**, not **`if condition`**.
 
-// Example
-if x > 10 {
+```dal
+if (x > 10) {
     print("Large");
+} else if (x > 0) {
+    print("Positive");
 } else {
     print("Small");
 }
 ```
 
-### While Loops
-
-```rust
-while condition {
-    // Loop body
-}
-
-// Example
-let i = 0;
-while i < 10 {
-    print(i);
-    i = i + 1;
-}
-```
+- **`else if (condition) { block }`** is supported (parsed as **`else`** followed by an **`if`** statement in a block).
+- **`else { block }`** is optional.
 
 ### For Loops
 
-```rust
-for item in collection {
-    // Loop body
-}
+Only **for-in** is supported: **`for variable in iterable { body }`**. **`variable`** can be an identifier or keyword used as identifier; **`iterable`** is an expression.
 
-// Example
-for num in [1, 2, 3] {
-    print(num);
+```dal
+for item in [1, 2, 3] {
+    print(item);
 }
 ```
 
+### While Loops
+
+**While loops are not implemented** in the parser or AST. Use **`for`** or other control flow instead.
+
 ### Try-Catch-Finally
 
-```rust
+```dal
 try {
-    // Risky code
     risky_operation();
-} catch (error) {
-    // Error handling
-    log::error("main", error);
+} catch (error_type error_var) {
+    log::info("main", error_var);
 } finally {
-    // Cleanup
     cleanup();
 }
 ```
 
+- **`try`** is followed by a single block **`{ ... }`**.
+- Zero or more **`catch`** blocks. **`catch`** can be **`catch { body }`** or **`catch (ErrorType var) { body }`** (error type and variable are optional in the grammar).
+- Optional single **`finally { body }`** after all **`catch`** blocks.
+
 ### Return Statement
 
-```rust
+**`return [ expression ] ;`**
+
+```dal
 fn calculate() -> int {
     return 42;
 }
 
-// Early return
-if condition {
+if (condition) {
     return;
 }
 ```
@@ -383,66 +402,48 @@ if condition {
 
 ## Operators
 
-### Arithmetic Operators
+### Arithmetic
 
-- `+` - Addition
-- `-` - Subtraction
-- `*` - Multiplication
-- `/` - Division
-- `%` - Modulo
+- **`+`** **`-`** **`*`** **`/`** **`%`**
 
-```rust
-let sum = 10 + 5;      // 15
-let diff = 10 - 5;     // 5
-let prod = 10 * 5;     // 50
-let quot = 10 / 5;     // 2
-let mod = 10 % 3;      // 1
+```dal
+let sum = 10 + 5;
+let diff = 10 - 5;
+let prod = 10 * 5;
+let quot = 10 / 5;
+let rem = 10 % 3;
 ```
 
-### Comparison Operators
+### Comparison
 
-- `==` - Equal
-- `!=` - Not equal
-- `<` - Less than
-- `<=` - Less than or equal
-- `>` - Greater than
-- `>=` - Greater than or equal
+- **`==`** **`!=`** **`<`** **`<=`** **`>`** **`>=`**
 
-```rust
-if x == 10 { }
-if x != 10 { }
-if x < 10 { }
-if x <= 10 { }
-if x > 10 { }
-if x >= 10 { }
+```dal
+if (x == 10) { }
+if (x != 10) { }
+if (x < 10) { }
+if (x <= 10) { }
+if (x > 10) { }
+if (x >= 10) { }
 ```
 
-### Logical Operators
+### Logical
 
-- `&&` - Logical AND
-- `||` - Logical OR
-- `!` - Logical NOT
+- **`&&`** **`||`** **`!`**
 
-```rust
-if x > 0 && x < 10 { }
-if x < 0 || x > 10 { }
-if !is_empty { }
+```dal
+if (x > 0 && x < 10) { }
+if (x < 0 || x > 10) { }
+if (!is_empty) { }
 ```
 
-### Assignment Operators
+### Assignment
 
-- `=` - Assignment
-- `+=` - Add and assign
-- `-=` - Subtract and assign
-- `*=` - Multiply and assign
-- `/=` - Divide and assign
+- **`=`** – simple assignment. **Compound assignment** (**`+=`**, **`-=`**, **`*=`**, **`/=`**, etc.) is **not** parsed as assignment; use **`x = x + 1`** etc.
 
-```rust
+```dal
 let x = 10;
-x += 5;   // x = 15
-x -= 3;   // x = 12
-x *= 2;   // x = 24
-x /= 4;   // x = 6
+x = 20;
 ```
 
 ---
@@ -451,156 +452,188 @@ x /= 4;   // x = 6
 
 ### Literals
 
-```rust
-42              // Integer
-3.14            // Float
-"Hello"         // String
-true            // Boolean
-false           // Boolean
-null            // Null
+- Integers, floats, strings (double-quoted), **`true`** / **`false`**, **`null`**.
+
+```dal
+42
+3.14
+"Hello"
+true
+false
+null
 ```
 
-### Arrays/Vectors
+### Array Literals
 
-```rust
-[1, 2, 3]                           // Integer array
-["a", "b", "c"]                      // String array
-[]                                   // Empty array
+**`[ expr1, expr2, ... ]`**
+
+```dal
+[1, 2, 3]
+["a", "b", "c"]
+[]
 ```
 
-### Maps/Objects
+### Literals
 
-```rust
-{"key": "value"}                     // Simple map
-{"name": "Alice", "age": 30}         // Map with multiple keys
-{}                                    // Empty map
+**`{ key: value, ... }`**
+
+DAL uses **key-value** pairs inside **`{ }`** for literals: agent/spawn config, message/event data, and any expression. The form is always **key : value** (colon between key and value).
+
+**Is the colon required?** **Yes.** The parser requires a **colon** after each key; without it you get an error (except in one narrow compatibility case when the value starts with `this`).
+
+| Context | Key allowed | Colon | Example |
+|--------|--------------|-------|--------|
+| **Literal** (expression) | Identifier or string literal | Required | `{ name: "Alice", age: 30 }` or `{ "name": "Alice" }` |
+| **`msg` / `event` data** | Identifier only | Required | `msg x { type: "task", id: 1 };` |
+
+- **Keys**: In **literals** (e.g. config, payloads), keys can be an **identifier** (`name`) or a **string literal** (`"name"`). In **`msg`** and **`event`** data blocks, keys must be **identifiers**.
+- **Values**: Any expression after the colon.
+- **Commas**: Between pairs, optional in literals; in `msg`/`event` data, a comma is required between entries.
+
+```dal
+{ key: "value" }
+{ name: "Alice", age: 30 }
+{}
 ```
 
 ### Function Calls
 
-```rust
-function_name(arg1, arg2)
-print("Hello")
-chain::deploy(1, "Contract", {})
+- **`name(args)`** – direct call.
+- **`namespace::function(args)`** – namespace call into the standard library (e.g. **`chain::deploy(1, "Contract", {})`**, **`log::info("tag", "message")`**). Namespaces are implemented in **`src/stdlib/`** and dispatched in **`src/runtime/engine.rs`**; see [Libraries and Standard Namespaces](#libraries-and-standard-namespaces).
+- **`expr.method(args)`** – method call (parsed as a call with a compound name).
+
+```dal
+print("Hello");
+chain::deploy(1, "Contract", {});
+instance.method(arg1, arg2);
 ```
 
-### Field Access
+### Inline Closures (Call-Argument Only)
 
-```rust
-self.field                          // Access service field
-object.property                      // Access object property
-map["key"]                          // Access map value
+Inside a **function argument list**, the parser accepts a **single-parameter closure** with block body:
+
+**`( param => { body } )`**
+
+- **Single parameter** (identifier).
+- **Block body** only; **expression bodies** (e.g. **`r => r.success`**) are **not** supported. Use **`param => { return expr; }`**.
+
+```dal
+handler.process(items, r => { return r.success; });
 ```
 
-### Binary Operations
+Closures are only recognized as the last (or only) argument in a **`(...)`** list, immediately after a single identifier and **`=>`**.
 
-```rust
-a + b
-a - b
-a * b
-a / b
-a == b
-a && b
+### Field and Index Access
+
+- **`expr.field`** – field access (literal or service).
+- **`expr[index]`** – index access (maps/arrays).
+- **`self.field`** – service field (identifier **`self`** plus field).
+
+```dal
+self.field
+value.field
+map["key"]
+arr[i]
 ```
 
-### Unary Operations
+### Unary and Binary Operations
 
-```rust
+- Unary: **`!expr`**, **`-expr`**, **`await expr`**, **`spawn expr`**, **`throw expr`**.
+- Binary: arithmetic, comparison, and logical operators as above.
+
+```dal
 !condition
 -amount
-await async_function()
+await async_call()
+spawn worker(i)
+throw error_expr
 ```
+
+---
+
+## Libraries and Standard Namespaces
+
+DAL code calls into the **standard library** using the **`namespace::function(args)`** syntax. The runtime resolves these calls in **`src/runtime/engine.rs`** (see `call_namespace_function`) and delegates to the corresponding module under **`src/stdlib/`**. Any **DAL-specific syntax** you use for libraries is this call form plus the argument shapes each namespace expects.
+
+### Namespace → implementation mapping
+
+| Namespace   | Implementation        | Typical DAL usage |
+|------------|------------------------|-------------------|
+| **`service`** | `src/stdlib/service.rs`  | `service::new("ServiceName")` – create instance by name |
+| **`ai`**      | `src/stdlib/ai.rs`       | `ai::create_agent(config)`, `ai::create_agent_coordinator()` |
+| **`agent`**   | `src/stdlib/agent.rs`    | `agent::create_agent_message(...)`, `agent::create_agent_task(...)` |
+| **`log`**     | `src/stdlib/log.rs`      | `log::info("tag", message)`, `log::audit("tag", message)` |
+| **`auth`**    | `src/stdlib/auth.rs`     | `auth::session(user_id, roles)` – returns a session value; use its fields (e.g. `user_id`) as in [API Reference](api_reference.md) |
+| **`chain`**   | `src/stdlib/chain.rs`    | `chain::deploy(chain_id, contract_name, {})`, `chain::estimate_gas(...)` |
+| **`oracle`**  | `src/stdlib/oracle.rs`   | `oracle::fetch(...)`, `oracle::create_query(...)` |
+| **`crypto`**  | `src/stdlib/crypto.rs`   | `crypto::hash(...)`, `crypto::sign(...)`, `crypto::verify(...)` |
+| **`database`** | `src/stdlib/database.rs` | DB helpers (see [API Reference](api_reference.md)) |
+| **`web`**     | `src/stdlib/web.rs`      | Web/server helpers |
+| **`sync`**, **`cap`**, **`kyc`**, **`aml`**, **`admin`**, **`cloudadmin`**, **`config`**, **`trust`**, **`mobile`**, **`desktop`**, **`iot`** | `src/stdlib/<name>.rs` | Same pattern: `namespace::function(args)` |
+
+### DAL-specific library syntax
+
+- **Service instances**
+  - **`ServiceName::new()`** – parser allows **`identifier::identifier`**; runtime treats a known service name as namespace and **`new`** as constructor. Implemented in `engine.rs` (`call_service_instance_method` / `call_service_function`).
+  - **`service::new("ServiceName")`** – string-based constructor; same runtime path for creating an instance.
+- **Logging**
+  - **`log::info("tag", message)`** – two arguments (tag string, message). **`log::audit("tag", message)`** – same shape. Other `log::*` functions are only available if implemented in the engine.
+- **Auth**
+  - **`auth::session(user_id, roles)`** – `roles` is an array of strings. Returns a session value; use its fields (e.g. `user_id`) as documented in [API Reference](api_reference.md).
+- **Chain**
+  - **`chain::deploy(chain_id, contract_name, constructor_args)`** – `chain_id` int, `contract_name` string, third argument a literal. Chain access is subject to trust validation in the runtime.
+- **AI / agents**
+  - **`ai::create_agent(config)`** – `config` is a literal (e.g. `role`, `capabilities`). **`ai::create_agent_coordinator()`** – no arguments. Full list of `ai::*` and `agent::*` functions is in [API Reference](api_reference.md).
+
+For full signatures and behavior, see **[API Reference](api_reference.md)**. For where each namespace is wired and executed, see **`src/runtime/engine.rs`** (e.g. `call_ai_function`, `call_log_function`, `call_auth_function`, `call_chain_function`) and the corresponding **`src/stdlib/*.rs`** modules.
 
 ---
 
 ## Comments
 
-### Single-line Comments
+- **Single-line:** **`// ...`** to end of line.
+- **Multi-line:** **`/* ... */`**.
 
-```rust
+```dal
 // This is a comment
 let x = 10; // Inline comment
-```
 
-### Multi-line Comments
-
-```rust
-/* This is a
-   multi-line comment */
+/* Multi-line
+   comment */
 ```
 
 ---
 
 ## Keywords
 
-### Declaration Keywords
+### Declaration and Structure
 
-- `service` - Service declaration
-- `fn` - Function declaration
-- `let` - Variable declaration
-- `agent` - Agent declaration
-- `spawn` - Spawn agent
-- `msg` - Send message
-- `event` - Emit event
+- **`service`** **`fn`** **`let`** **`agent`** **`spawn`** **`msg`** **`event`**
 
-### Control Flow Keywords
+### Control Flow
 
-- `if` - Conditional statement
-- `else` - Else clause
-- `while` - While loop
-- `for` - For loop
-- `return` - Return statement
-- `try` - Try block
-- `catch` - Catch block
-- `finally` - Finally block
-- `throw` - Throw exception
-- `break` - Break loop
-- `continue` - Continue loop
+- **`if`** **`else`** **`for`** **`in`** **`return`** **`try`** **`catch`** **`finally`** **`throw`**
+- **`break`** **`continue`** – reserved; **`loop`** is **not** implemented in the parser.
 
-### Async Keywords
+### Async
 
-- `async` - Async function
-- `await` - Await async operation
+- **`async`** **`await`**
 
-### Type Keywords
+### Types and Modifiers
 
-- `int`, `float`, `string`, `bool`, `null`
-- `vector`, `map`, `any`
+- **`list`** **`map`** – type keywords for generics.
+- **`int`** **`float`** **`string`** **`bool`** **`null`** – used in type annotations (as identifiers or literals where applicable).
+- **`mut`** – consumed after **`let`** but not stored in the AST.
+
+### Attributes and Targets
+
+- **`@trust`** **`@chain`** **`@secure`** **`@compile_target`** **`@interface`** etc. – see [Attributes Reference](attributes.md).
 
 ---
 
-## Examples
+## Cross-Reference
 
-### Complete Example
-
-```rust
-@trust("hybrid")
-@chain("ethereum")
-service TokenService {
-    total_supply: int = 1000000;
-    balances: map<string, int>;
-    
-    fn initialize() {
-        let owner = auth::session().user_id;
-        self.balances[owner] = self.total_supply;
-    }
-    
-    fn transfer(to: string, amount: int) -> bool {
-        let from = auth::session().user_id;
-        
-        if self.balances[from] < amount {
-            return false;
-        }
-        
-        self.balances[from] = self.balances[from] - amount;
-        self.balances[to] = self.balances[to] + amount;
-        
-        return true;
-    }
-}
-```
-
----
-
-**See also:** [Attributes Reference](attributes.md) | [API Reference](api_reference.md)
-
+- **[Libraries and Standard Namespaces](#libraries-and-standard-namespaces)** – DAL **`namespace::function(args)`** syntax, mapping to **`src/stdlib/`** and **`src/runtime/engine.rs`**.
+- **[DAL Syntax Patterns](testing/DAL_SYNTAX_PATTERNS.md)** – patterns, required syntax (e.g. parentheses in **`if`**), and common mistakes.
+- **[Attributes Reference](attributes.md)** – service and function attributes.
+- **[API Reference](api_reference.md)** – full standard library APIs.

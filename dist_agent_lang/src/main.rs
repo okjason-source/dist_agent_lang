@@ -922,7 +922,9 @@ fn test_service_parsing() {
                 Statement::Message(_) => println!("     - Message"),
                 Statement::Event(_) => println!("     - Event"),
                 Statement::If(_) => println!("     - If"),
+                Statement::While(_) => println!("     - While"),
                 Statement::Try(_) => println!("     - Try"),
+                Statement::ForIn(_) => println!("     - ForIn"),
             }
         }
     }

@@ -2,9 +2,9 @@ use crate::lexer::tokens::{Token, Keyword, Operator, Punctuation, Literal};
 use crate::parser::ast::{
     Expression, Statement, Program, LetStatement, ReturnStatement, FunctionStatement, 
     Parameter, FunctionCall, SpawnStatement, AgentStatement, MessageStatement, 
-    EventStatement, IfStatement, TryStatement, CatchBlock, Attribute, BlockStatement,
+    EventStatement, IfStatement, WhileStatement, TryStatement, CatchBlock, Attribute, BlockStatement,
     AttributeTarget, ServiceStatement, ServiceField, EventDeclaration, CompilationTargetInfo,
-    FieldVisibility
+    FieldVisibility, ForInStatement
 };
 use crate::parser::error::{ParserError, ErrorContext};
 use std::collections::HashMap;
@@ -131,8 +131,12 @@ impl Parser {
             self.parse_event_statement(position)
         } else if let Some(Token::Keyword(Keyword::If)) = self.tokens.get(position) {
             self.parse_if_statement(position)
+        } else if let Some(Token::Keyword(Keyword::While)) = self.tokens.get(position) {
+            self.parse_while_statement(position)
         } else if let Some(Token::Keyword(Keyword::Try)) = self.tokens.get(position) {
             self.parse_try_statement(position)
+        } else if let Some(Token::Keyword(Keyword::For)) = self.tokens.get(position) {
+            self.parse_for_in_statement(position)
         } else if let Some(Token::Keyword(Keyword::Service)) = self.tokens.get(position) {
             self.parse_service_statement(position)
         } else if let Some(Token::Keyword(Keyword::Return)) = self.tokens.get(position) {
@@ -158,7 +162,7 @@ impl Parser {
         }
     }
 
-    fn parse_let_statement(&self, position: usize) -> Result<(usize, Statement), ParserError> {
+    fn parse_let_statement(&mut self, position: usize) -> Result<(usize, Statement), ParserError> {
         let mut current_position = position + 1; // consume 'let'
         
         // Check for 'mut' keyword
@@ -185,7 +189,7 @@ impl Parser {
         Ok((current_position, Statement::Let(LetStatement { name, value })))
     }
 
-    fn parse_return_statement(&self, position: usize) -> Result<(usize, Statement), ParserError> {
+    fn parse_return_statement(&mut self, position: usize) -> Result<(usize, Statement), ParserError> {
         let mut current_position = position + 1; // consume 'return'
         
         let value = if let Some(Token::Punctuation(Punctuation::Semicolon)) = self.tokens.get(current_position) {
@@ -229,15 +233,15 @@ impl Parser {
         Err(ParserError::unexpected_eof("}"))
     }
 
-    fn parse_expression(&self, position: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_expression(&mut self, position: usize) -> Result<(usize, Expression), ParserError> {
         self.parse_assignment(position, 0) // Start with depth 0 for top-level expressions
     }
     
-    fn parse_expression_with_depth(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_expression_with_depth(&mut self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         self.parse_assignment(position, depth)
     }
 
-    fn parse_assignment(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_assignment(&mut self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         // Prevent stack overflow from infinite recursion
         if depth > Self::MAX_RECURSION_DEPTH {
             let (line, column) = self.get_token_position(position);
@@ -285,7 +289,7 @@ impl Parser {
         Ok((position, expr))
     }
 
-    fn parse_or(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_or(&mut self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
         let (new_position, mut expr) = self.parse_and(current_position, depth)?;
         current_position = new_position;
@@ -304,7 +308,7 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_and(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_and(&mut self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
         let (new_position, mut expr) = self.parse_equality(current_position, depth)?;
         current_position = new_position;
@@ -323,7 +327,7 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_equality(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_equality(&mut self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
         let (new_position, mut expr) = self.parse_comparison(current_position, depth)?;
         current_position = new_position;
@@ -347,18 +351,21 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_comparison(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_comparison(&mut self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
         let (new_position, mut expr) = self.parse_term(current_position, depth)?;
         current_position = new_position;
         
         while current_position < self.tokens.len() {
-            if let Some(Token::Operator(op)) = self.tokens.get(current_position) {
-                match op {
+            let op = self.tokens.get(current_position).and_then(|t| {
+                if let Token::Operator(o) = t { Some(o.clone()) } else { None }
+            });
+            if let Some(op) = op {
+                match &op {
                     Operator::Less | Operator::LessEqual | Operator::Greater | Operator::GreaterEqual => {
                         let (new_pos, _) = self.expect_token(current_position, &Token::Operator(op.clone()))?;
                         let (new_pos, right) = self.parse_term(new_pos, depth)?;
-                        expr = Expression::BinaryOp(Box::new(expr), op.clone(), Box::new(right));
+                        expr = Expression::BinaryOp(Box::new(expr), op, Box::new(right));
                         current_position = new_pos;
                     }
                     _ => break,
@@ -371,18 +378,21 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_term(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_term(&mut self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
         let (new_position, mut expr) = self.parse_factor(current_position, depth)?;
         current_position = new_position;
         
         while current_position < self.tokens.len() {
-            if let Some(Token::Operator(op)) = self.tokens.get(current_position) {
-                match op {
+            let op = self.tokens.get(current_position).and_then(|t| {
+                if let Token::Operator(o) = t { Some(o.clone()) } else { None }
+            });
+            if let Some(op) = op {
+                match &op {
                     Operator::Plus | Operator::Minus => {
                         let (new_pos, _) = self.expect_token(current_position, &Token::Operator(op.clone()))?;
                         let (new_pos, right) = self.parse_factor(new_pos, depth)?;
-                        expr = Expression::BinaryOp(Box::new(expr), op.clone(), Box::new(right));
+                        expr = Expression::BinaryOp(Box::new(expr), op, Box::new(right));
                         current_position = new_pos;
                     }
                     _ => break,
@@ -395,18 +405,21 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_factor(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_factor(&mut self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         let mut current_position = position;
         let (new_position, mut expr) = self.parse_unary(current_position, depth)?;
         current_position = new_position;
         
         while current_position < self.tokens.len() {
-            if let Some(Token::Operator(op)) = self.tokens.get(current_position) {
-                match op {
-                    Operator::Star | Operator::Slash => {
+            let op = self.tokens.get(current_position).and_then(|t| {
+                if let Token::Operator(o) = t { Some(o.clone()) } else { None }
+            });
+            if let Some(op) = op {
+                match &op {
+                    Operator::Star | Operator::Slash | Operator::Percent => {
                         let (new_pos, _) = self.expect_token(current_position, &Token::Operator(op.clone()))?;
                         let (new_pos, right) = self.parse_unary(new_pos, depth)?;
-                        expr = Expression::BinaryOp(Box::new(expr), op.clone(), Box::new(right));
+                        expr = Expression::BinaryOp(Box::new(expr), op, Box::new(right));
                         current_position = new_pos;
                     }
                     _ => break,
@@ -419,13 +432,22 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_unary(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
-        if let Some(Token::Operator(op)) = self.tokens.get(position) {
-            match op {
+    fn parse_unary(&mut self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+        // spawn <expression> e.g. spawn worker_process(i)
+        if let Some(Token::Keyword(Keyword::Spawn)) = self.tokens.get(position) {
+            let (position, _) = self.expect_token(position, &Token::Keyword(Keyword::Spawn))?;
+            let (position, expr) = self.parse_unary(position, depth)?;
+            return Ok((position, Expression::Spawn(Box::new(expr))));
+        }
+        let op = self.tokens.get(position).and_then(|t| {
+            if let Token::Operator(o) = t { Some(o.clone()) } else { None }
+        });
+        if let Some(op) = op {
+            match &op {
                 Operator::Minus | Operator::Not => {
                     let (position, _) = self.expect_token(position, &Token::Operator(op.clone()))?;
                     let (position, right) = self.parse_unary(position, depth)?;
-                    return Ok((position, Expression::UnaryOp(op.clone(), Box::new(right))));
+                    return Ok((position, Expression::UnaryOp(op, Box::new(right))));
                 }
                 _ => {}
             }
@@ -496,11 +518,14 @@ impl Parser {
         Ok((current_position, expr))
     }
 
-    fn parse_primary(&self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
+    fn parse_primary(&mut self, position: usize, depth: usize) -> Result<(usize, Expression), ParserError> {
         if let Some(token) = self.tokens.get(position) {
             match token {
                 Token::Literal(Literal::Int(value)) => {
                     return Ok((position + 1, Expression::Literal(Literal::Int(*value))));
+                }
+                Token::Literal(Literal::Float(value)) => {
+                    return Ok((position + 1, Expression::Literal(Literal::Float(*value))));
                 }
                 Token::Literal(Literal::String(value)) => {
                     return Ok((position + 1, Expression::Literal(Literal::String(value.clone()))));
@@ -658,11 +683,12 @@ impl Parser {
             }
         }
         
+        let (line, column) = self.get_token_position(position);
         Err(ParserError::unexpected_token(
             self.tokens.get(position).unwrap_or(&Token::EOF),
             &["expression"],
-            1,
-            1
+            line,
+            column
         ))
     }
 
@@ -842,7 +868,8 @@ impl Parser {
                 _ => crate::parser::ast::AgentType::Custom(type_str),
             }
         } else {
-            return Err(ParserError::unexpected_token(&self.tokens[current_position], &[":"], current_position, 0));
+            let (line, column) = self.get_token_position(current_position);
+            return Err(ParserError::unexpected_token(&self.tokens[current_position], &[":"], line, column));
         };
 
         // Parse configuration block
@@ -870,7 +897,7 @@ impl Parser {
         })))
     }
 
-    fn parse_object_literal(&self, position: usize) -> Result<(usize, HashMap<String, Expression>), ParserError> {
+    fn parse_object_literal(&mut self, position: usize) -> Result<(usize, HashMap<String, Expression>), ParserError> {
         let mut current_position = position;
 
         // Expect opening brace
@@ -882,65 +909,84 @@ impl Parser {
 
         let mut properties = HashMap::new();
 
-        // Parse properties until closing brace
-        while let Some(token) = self.tokens.get(current_position) {
+        // Parse properties until closing brace (clone token so we don't hold &self across parse_expression)
+        loop {
+            let token = self.tokens.get(current_position).cloned();
             match token {
-                Token::Punctuation(Punctuation::RightBrace) => {
+                Some(Token::Punctuation(Punctuation::RightBrace)) => {
                     current_position += 1;
                     break;
                 }
-                Token::Identifier(key) => {
+                Some(Token::Identifier(key)) => {
                     current_position += 1; // consume key
 
-                    // Expect colon
+                    // Expect colon (allow missing colon when value starts with "this" for compatibility)
                     if let Some(Token::Punctuation(Punctuation::Colon)) = self.tokens.get(current_position) {
                         current_position += 1; // consume ':'
+                    } else if let Some(Token::Identifier(id)) = self.tokens.get(current_position) {
+                        if id == "this" {
+                            // Missing colon before "this.xxx" - parse value anyway
+                        } else {
+                            let (line, column) = self.get_token_position(current_position);
+                            return Err(ParserError::unexpected_token(&self.tokens[current_position], &[":"], line, column));
+                        }
                     } else {
-                        return Err(ParserError::unexpected_token(&self.tokens[current_position], &[":"], current_position, 0));
+                        let (line, column) = self.get_token_position(current_position);
+                        return Err(ParserError::unexpected_token(&self.tokens[current_position], &[":"], line, column));
                     }
 
-                    // Parse value expression
+                    // Parse value expression (no borrow of self.tokens held here)
                     let (new_position, value) = self.parse_expression(current_position)?;
                     current_position = new_position;
 
-                    properties.insert(key.clone(), value);
+                    properties.insert(key, value);
 
                     // Check for comma (optional for last property)
                     if let Some(Token::Punctuation(Punctuation::Comma)) = self.tokens.get(current_position) {
                         current_position += 1; // consume ','
                     }
                 }
-                Token::Literal(Literal::String(key)) => {
+                Some(Token::Literal(Literal::String(key))) => {
                     current_position += 1; // consume key
 
-                    // Expect colon
+                    // Expect colon (allow missing colon when value starts with "this" for compatibility)
                     if let Some(Token::Punctuation(Punctuation::Colon)) = self.tokens.get(current_position) {
                         current_position += 1; // consume ':'
+                    } else if let Some(Token::Identifier(id)) = self.tokens.get(current_position) {
+                        if id == "this" {
+                            // Missing colon before "this.xxx" - parse value anyway
+                        } else {
+                            let (line, column) = self.get_token_position(current_position);
+                            return Err(ParserError::unexpected_token(&self.tokens[current_position], &[":"], line, column));
+                        }
                     } else {
-                        return Err(ParserError::unexpected_token(&self.tokens[current_position], &[":"], current_position, 0));
+                        let (line, column) = self.get_token_position(current_position);
+                        return Err(ParserError::unexpected_token(&self.tokens[current_position], &[":"], line, column));
                     }
 
-                    // Parse value expression
+                    // Parse value expression (no borrow of self.tokens held here)
                     let (new_position, value) = self.parse_expression(current_position)?;
                     current_position = new_position;
 
-                    properties.insert(key.clone(), value);
+                    properties.insert(key, value);
 
                     // Check for comma (optional for last property)
                     if let Some(Token::Punctuation(Punctuation::Comma)) = self.tokens.get(current_position) {
                         current_position += 1; // consume ','
                     }
                 }
-                _ => {
-                    return Err(ParserError::unexpected_token(&self.tokens[current_position], &["property key", "}"], current_position, 0));
+                Some(_) => {
+                    let (line, column) = self.get_token_position(current_position);
+                    return Err(ParserError::unexpected_token(&self.tokens[current_position], &["property key", "}"], line, column));
                 }
+                None => break,
             }
         }
 
         Ok((current_position, properties))
     }
 
-    fn parse_array_literal(&self, position: usize) -> Result<(usize, Vec<Expression>), ParserError> {
+    fn parse_array_literal(&mut self, position: usize) -> Result<(usize, Vec<Expression>), ParserError> {
         let mut current_position = position;
 
         // Expect opening bracket
@@ -1030,7 +1076,7 @@ impl Parser {
         Ok((current_position, capabilities))
     }
 
-    fn parse_message_statement(&self, position: usize) -> Result<(usize, Statement), ParserError> {
+    fn parse_message_statement(&mut self, position: usize) -> Result<(usize, Statement), ParserError> {
         let mut current_position = position + 1; // consume 'msg'
         
         let (new_position, recipient) = self.expect_identifier(current_position)?;
@@ -1048,7 +1094,7 @@ impl Parser {
         })))
     }
 
-    fn parse_event_statement(&self, position: usize) -> Result<(usize, Statement), ParserError> {
+    fn parse_event_statement(&mut self, position: usize) -> Result<(usize, Statement), ParserError> {
         let mut current_position = position + 1; // consume 'event'
         
         let (new_position, event_name) = self.expect_identifier(current_position)?;
@@ -1063,7 +1109,7 @@ impl Parser {
         })))
     }
 
-    fn parse_message_data(&self, position: usize) -> Result<(usize, HashMap<String, Expression>), ParserError> {
+    fn parse_message_data(&mut self, position: usize) -> Result<(usize, HashMap<String, Expression>), ParserError> {
         let mut current_position = position;
         let mut data = HashMap::new();
         
@@ -1116,11 +1162,24 @@ impl Parser {
         let (new_position, consequence) = self.parse_block_statement(current_position, 0)?;
         current_position = new_position;
         
-        // Parse else block if present
+        // Parse else block if present (supports "else if (cond) { block }" as well as "else { block }")
         let alternative = if let Some(Token::Keyword(Keyword::Else)) = self.tokens.get(current_position) {
             let (new_pos, _) = self.expect_token(current_position, &Token::Keyword(Keyword::Else))?;
-            let (new_pos, else_block) = self.parse_block_statement(new_pos, 0)?;
             current_position = new_pos;
+            // If we see "if (" then parse as "else if (cond) { block }" and wrap in a single-statement block
+            let else_block = if let (Some(Token::Keyword(Keyword::If)), Some(Token::Punctuation(Punctuation::LeftParen))) =
+                (self.tokens.get(current_position), self.tokens.get(current_position + 1))
+            {
+                let (new_pos, if_stmt) = self.parse_if_statement(current_position)?;
+                current_position = new_pos;
+                BlockStatement {
+                    statements: vec![if_stmt],
+                }
+            } else {
+                let (new_pos, block) = self.parse_block_statement(current_position, 0)?;
+                current_position = new_pos;
+                block
+            };
             Some(else_block)
         } else {
             None
@@ -1133,7 +1192,28 @@ impl Parser {
         })))
     }
 
-    fn parse_function_arguments(&self, position: usize, depth: usize) -> Result<(usize, Vec<Expression>), ParserError> {
+    fn parse_while_statement(&mut self, position: usize) -> Result<(usize, Statement), ParserError> {
+        let mut current_position = position + 1; // consume 'while'
+
+        let (new_position, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::LeftParen))?;
+        current_position = new_position;
+
+        let (new_position, condition) = self.parse_expression(current_position)?;
+        current_position = new_position;
+
+        let (new_position, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::RightParen))?;
+        current_position = new_position;
+
+        let (new_position, body) = self.parse_block_statement(current_position, 0)?;
+        current_position = new_position;
+
+        Ok((current_position, Statement::While(WhileStatement {
+            condition,
+            body,
+        })))
+    }
+
+    fn parse_function_arguments(&mut self, position: usize, depth: usize) -> Result<(usize, Vec<Expression>), ParserError> {
         let mut current_position = position;
         let mut arguments = Vec::new();
         
@@ -1152,6 +1232,25 @@ impl Parser {
             current_position = new_position;
             arguments.push(argument);
             
+            // Arrow function: (param => { body }) — if last arg is single identifier and next is =>
+            let param_name = arguments.last().and_then(|a| {
+                if let Expression::Identifier(p) = a { Some(p.clone()) } else { None }
+            });
+            if let Some(param) = param_name {
+                if let Some(Token::Punctuation(Punctuation::FatArrow)) = self.tokens.get(current_position) {
+                    let (pos2, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::FatArrow))?;
+                    let (pos3, body) = self.parse_block_statement(pos2, depth)?;
+                    arguments.pop();
+                    arguments.push(Expression::ArrowFunction {
+                        param,
+                        body,
+                    });
+                    current_position = pos3;
+                    let (new_pos, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::RightParen))?;
+                    return Ok((new_pos, arguments));
+                }
+            }
+            
             // Check for comma or end of arguments
             if let Some(Token::Punctuation(Punctuation::Comma)) = self.tokens.get(current_position) {
                 let (new_position, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::Comma))?;
@@ -1165,7 +1264,7 @@ impl Parser {
         Ok((new_position, arguments))
     }
 
-    fn parse_attribute(&self, position: usize) -> Result<(usize, Attribute), ParserError> {
+    fn parse_attribute(&mut self, position: usize) -> Result<(usize, Attribute), ParserError> {
         let mut current_position = position + 1; // consume '@'
         
         // Parse attribute name (can be identifier or keyword)
@@ -1186,11 +1285,12 @@ impl Parser {
                 _ => format!("{:?}", keyword).to_lowercase(),
             }
         } else {
+            let (line, column) = self.get_token_position(current_position);
             return Err(ParserError::unexpected_token(
                 self.tokens.get(current_position).unwrap_or(&Token::EOF),
                 &["identifier", "keyword"],
-                1,
-                1
+                line,
+                column
             ));
         };
         
@@ -1318,6 +1418,24 @@ impl Parser {
         current_position = new_position;
         
         Ok((current_position, body))
+    }
+
+    /// Parse `for <variable> in <iterable> { body }`
+    fn parse_for_in_statement(&mut self, position: usize) -> Result<(usize, Statement), ParserError> {
+        let mut current_position = position + 1; // consume 'for'
+        let (new_position, variable) = self.expect_identifier_or_keyword(current_position)?;
+        current_position = new_position;
+        let (new_position, _) = self.expect_token(current_position, &Token::Keyword(Keyword::In))?;
+        current_position = new_position;
+        let (new_position, iterable) = self.parse_expression(current_position)?;
+        current_position = new_position;
+        let (new_position, body) = self.parse_block_statement(current_position, 0)?;
+        current_position = new_position;
+        Ok((current_position, Statement::ForIn(ForInStatement {
+            variable,
+            iterable,
+            body,
+        })))
     }
 
     // NEW: Service statement parsing with pre-parsed attributes
@@ -1481,7 +1599,7 @@ impl Parser {
         Ok((current_position, Statement::Service(service_stmt)))
     }
 
-    fn parse_service_field(&self, position: usize) -> Result<(usize, ServiceField), ParserError> {
+    fn parse_service_field(&mut self, position: usize) -> Result<(usize, ServiceField), ParserError> {
         let mut current_position = position;
         
         // Parse field name
@@ -1544,11 +1662,12 @@ impl Parser {
                 _ => format!("{:?}", keyword).to_lowercase(),
             }
         } else {
+            let (line, column) = self.get_token_position(current_position);
             return Err(ParserError::unexpected_token(
                 self.tokens.get(current_position).unwrap_or(&Token::EOF),
                 &["identifier", "keyword"],
-                1,
-                1
+                line,
+                column
             ));
         };
         
@@ -1824,11 +1943,12 @@ impl Parser {
             };
             Ok((position + 1, name))
         } else {
+            let (line, column) = self.get_token_position(position);
             Err(ParserError::unexpected_token(
                 self.tokens.get(position).unwrap_or(&Token::EOF),
                 &["identifier", "keyword"],
-                1,
-                1
+                line,
+                column
             ))
         }
     }

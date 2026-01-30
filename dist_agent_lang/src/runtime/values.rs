@@ -2,7 +2,7 @@ use std::fmt;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, OnceLock};
 
 // Global object ID counter for unique object identification
 static OBJECT_ID_COUNTER: AtomicU64 = AtomicU64::new(1);
@@ -221,39 +221,38 @@ impl ObjectRegistry {
 }
 
 /// Global object registry instance
-static mut OBJECT_REGISTRY: Option<ObjectRegistry> = None;
+static OBJECT_REGISTRY: OnceLock<Mutex<ObjectRegistry>> = OnceLock::new();
 
 /// Initialize the global object registry
 pub fn init_object_registry() {
-    unsafe {
-        OBJECT_REGISTRY = Some(ObjectRegistry::new());
-    }
+    OBJECT_REGISTRY.get_or_init(|| Mutex::new(ObjectRegistry::new()));
 }
 
-/// Get a reference to the global object registry
-pub fn get_object_registry() -> &'static mut ObjectRegistry {
-    unsafe {
-        OBJECT_REGISTRY.as_mut().expect("Object registry not initialized")
-    }
+/// Get a lock on the global object registry
+pub fn get_object_registry() -> std::sync::MutexGuard<'static, ObjectRegistry> {
+    OBJECT_REGISTRY
+        .get_or_init(|| Mutex::new(ObjectRegistry::new()))
+        .lock()
+        .expect("Object registry lock poisoned")
 }
 
 /// Create a new object in the registry
 pub fn create_struct_object(struct_name: String, fields: HashMap<String, Value>) -> ObjectRef {
-    let registry = get_object_registry();
+    let mut registry = get_object_registry();
     let data = ObjectData::Struct(struct_name, fields);
     registry.create_object(data, false) // Structs are mutable by default
 }
 
 /// Create a new map object in the registry
 pub fn create_map_object(map: HashMap<String, Value>) -> ObjectRef {
-    let registry = get_object_registry();
+    let mut registry = get_object_registry();
     let data = ObjectData::Map(map);
     registry.create_object(data, false) // Maps are mutable by default
 }
 
 /// Create a new array object in the registry
 pub fn create_array_object(array: Vec<Value>) -> ObjectRef {
-    let registry = get_object_registry();
+    let mut registry = get_object_registry();
     let data = ObjectData::Array(array);
     registry.create_object(data, false) // Arrays are mutable by default
 }

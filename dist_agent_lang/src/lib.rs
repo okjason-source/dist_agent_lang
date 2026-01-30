@@ -29,9 +29,11 @@ pub use ffi::{FFIInterface, FFIConfig, InterfaceType};
 
 // For external integrations
 pub fn parse_source(source: &str) -> Result<ast::Program, Box<dyn std::error::Error>> {
-    let mut lexer = Lexer::new(source);
-    let tokens = lexer.tokenize().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
-    let mut parser = Parser::new(tokens);
+    let lexer = Lexer::new(source);
+    let tokens_with_pos = lexer
+        .tokenize_with_positions_immutable()
+        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+    let mut parser = Parser::new_with_positions(tokens_with_pos);
     parser.parse().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
 }
 

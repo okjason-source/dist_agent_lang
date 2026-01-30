@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
 use crate::runtime::values::Value;
 
 // AI Agent Framework - Phase 4
@@ -796,21 +797,19 @@ pub fn get_coordinator_metrics(coordinator: &AgentCoordinator) -> HashMap<String
 // automatically, making AI features easier to use.
 // ============================================================================
 
-/// Model Registry for named models
-static mut MODEL_REGISTRY: Option<HashMap<String, Model>> = None;
+/// Model Registry for named models (thread-safe, avoids mutable static)
+static MODEL_REGISTRY: OnceLock<Mutex<HashMap<String, Model>>> = OnceLock::new();
 
-fn get_model_registry() -> &'static mut HashMap<String, Model> {
-    unsafe {
-        if MODEL_REGISTRY.is_none() {
-            MODEL_REGISTRY = Some(HashMap::new());
-        }
-        MODEL_REGISTRY.as_mut().unwrap()
-    }
+fn get_model_registry() -> std::sync::MutexGuard<'static, HashMap<String, Model>> {
+    MODEL_REGISTRY
+        .get_or_init(|| Mutex::new(HashMap::new()))
+        .lock()
+        .unwrap()
 }
 
 /// Register a trained model with a name for easy access
 pub fn register_model(name: String, model: Model) {
-    let registry = get_model_registry();
+    let mut registry = get_model_registry();
     
     crate::stdlib::log::info("Model registered", {
         let mut data = std::collections::HashMap::new();

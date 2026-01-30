@@ -528,14 +528,17 @@ pub struct CrossChainProof {
 pub mod secure_chain {
     use super::*;
     use crate::stdlib::chain;
+    use std::sync::{Mutex, OnceLock};
 
-    static mut SECURITY_MANAGER: Option<CrossChainSecurityManager> = None;
+    static SECURITY_MANAGER: OnceLock<Mutex<Option<CrossChainSecurityManager>>> = OnceLock::new();
+
+    fn get_manager() -> &'static Mutex<Option<CrossChainSecurityManager>> {
+        SECURITY_MANAGER.get_or_init(|| Mutex::new(None))
+    }
 
     /// Initialize the security manager
     pub fn init_security_manager() {
-        unsafe {
-            SECURITY_MANAGER = Some(CrossChainSecurityManager::new());
-        }
+        *get_manager().lock().expect("SECURITY_MANAGER lock poisoned") = Some(CrossChainSecurityManager::new());
     }
 
     /// Secure cross-chain deployment with validation
@@ -546,8 +549,8 @@ pub mod secure_chain {
         constructor_args: HashMap<String, String>,
         validator_signatures: Vec<ValidatorSignature>,
     ) -> Result<String, String> {
-        unsafe {
-            if let Some(ref mut manager) = SECURITY_MANAGER {
+        let mut guard = get_manager().lock().expect("SECURITY_MANAGER lock poisoned");
+        if let Some(ref mut manager) = *guard {
                 let operation_data = format!("deploy:{}:{:?}", contract_name, constructor_args).into_bytes();
                 
                 let operation = CrossChainOperation {
@@ -583,9 +586,8 @@ pub mod secure_chain {
                     .map_err(|e| format!("Failed to update operation status: {}", e))?;
 
                 Ok(address)
-            } else {
-                Err("Security manager not initialized".to_string())
-            }
+        } else {
+            Err("Security manager not initialized".to_string())
         }
     }
 
@@ -598,47 +600,46 @@ pub mod secure_chain {
         amount: u64,
         validator_signatures: Vec<ValidatorSignature>,
     ) -> Result<String, String> {
-        unsafe {
-            if let Some(ref mut manager) = SECURITY_MANAGER {
-                let operation_data = format!("transfer:{}:{}:{}", from, to, amount).into_bytes();
-                
-                let operation = CrossChainOperation {
-                    operation_id: format!("transfer_{}_{}_{}", source_chain, target_chain, amount),
-                    source_chain,
-                    target_chain,
-                    operation_type: CrossChainOperationType::Transfer {
-                        from: from.clone(),
-                        to: to.clone(),
-                        amount,
-                    },
-                    data: operation_data.clone(),
-                    signatures: validator_signatures,
-                    status: OperationStatus::Pending,
-                    created_at: std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_secs(),
-                    timeout: std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_secs() + 1800, // 30 minute timeout
-                };
+        let mut guard = get_manager().lock().expect("SECURITY_MANAGER lock poisoned");
+        if let Some(ref mut manager) = *guard {
+            let operation_data = format!("transfer:{}:{}:{}", from, to, amount).into_bytes();
 
-                let operation_id = manager.validate_cross_chain_operation(operation)
-                    .map_err(|e| format!("Cross-chain validation failed: {}", e))?;
+            let operation = CrossChainOperation {
+                operation_id: format!("transfer_{}_{}_{}", source_chain, target_chain, amount),
+                source_chain,
+                target_chain,
+                operation_type: CrossChainOperationType::Transfer {
+                    from: from.clone(),
+                    to: to.clone(),
+                    amount,
+                },
+                data: operation_data.clone(),
+                signatures: validator_signatures,
+                status: OperationStatus::Pending,
+                created_at: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs(),
+                timeout: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs() + 1800, // 30 minute timeout
+            };
 
-                // Generate cross-chain proof
-                let proof = manager.generate_cross_chain_proof(&operation_data, source_chain, target_chain)
-                    .map_err(|e| format!("Failed to generate proof: {}", e))?;
+            let operation_id = manager.validate_cross_chain_operation(operation)
+                .map_err(|e| format!("Cross-chain validation failed: {}", e))?;
 
-                // Update operation status
-                manager.update_operation_status(&operation_id, OperationStatus::Confirmed)
-                    .map_err(|e| format!("Failed to update operation status: {}", e))?;
+            // Generate cross-chain proof
+            let proof = manager.generate_cross_chain_proof(&operation_data, source_chain, target_chain)
+                .map_err(|e| format!("Failed to generate proof: {}", e))?;
 
-                Ok(format!("Transfer completed with proof: {:?}", proof))
-            } else {
-                Err("Security manager not initialized".to_string())
-            }
+            // Update operation status
+            manager.update_operation_status(&operation_id, OperationStatus::Confirmed)
+                .map_err(|e| format!("Failed to update operation status: {}", e))?;
+
+            Ok(format!("Transfer completed with proof: {:?}", proof))
+        } else {
+            Err("Security manager not initialized".to_string())
         }
     }
 }

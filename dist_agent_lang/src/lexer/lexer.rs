@@ -123,9 +123,9 @@ impl Lexer {
             
             // Numbers
             '0'..='9' => {
-                let (pos, number) = self.read_number_immutable(position)?;
+                let (pos, literal) = self.read_number_immutable(position)?;
                 new_position = pos;
-                Ok((new_position, new_line, new_column, Token::Literal(Literal::Int(number))))
+                Ok((new_position, new_line, new_column, Token::Literal(literal)))
             }
             
             // Strings
@@ -175,7 +175,11 @@ impl Lexer {
             }
             
             '=' => {
-                if position + 1 < self.input.len() && self.input[position + 1] == '=' {
+                if position + 1 < self.input.len() && self.input[position + 1] == '>' {
+                    new_position += 2;
+                    new_column += 2;
+                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::FatArrow)))
+                } else if position + 1 < self.input.len() && self.input[position + 1] == '=' {
                     new_position += 2;
                     new_column += 2;
                     Ok((new_position, new_line, new_column, Token::Operator(Operator::Equal)))
@@ -477,6 +481,7 @@ impl Lexer {
             ("else", Keyword::Else),
             ("match", Keyword::Match),
             ("for", Keyword::For),
+            ("in", Keyword::In),
             ("while", Keyword::While),
             ("break", Keyword::Break),
             ("continue", Keyword::Continue),
@@ -557,8 +562,11 @@ impl Lexer {
         (position, identifier)
     }
 
-    fn read_number_immutable(&self, mut position: usize) -> Result<(usize, i64), LexerError> {
+    fn read_number_immutable(&self, mut position: usize) -> Result<(usize, Literal), LexerError> {
         let start = position;
+        let mut has_decimal = false;
+        
+        // Read integer part
         while position < self.input.len() {
             let ch = self.input[position];
             if ch.is_ascii_digit() {
@@ -567,10 +575,38 @@ impl Lexer {
                 break;
             }
         }
+        
+        // Check for decimal point
+        if position < self.input.len() && self.input[position] == '.' {
+            // Look ahead to ensure there's a digit after the dot (not a method call like `0.toString()`)
+            if position + 1 < self.input.len() && self.input[position + 1].is_ascii_digit() {
+                has_decimal = true;
+                position += 1; // consume '.'
+                
+                // Read fractional part
+                while position < self.input.len() {
+                    let ch = self.input[position];
+                    if ch.is_ascii_digit() {
+                        position += 1;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        
         let number_str: String = self.input[start..position].iter().collect();
-        match number_str.parse::<i64>() {
-            Ok(num) => Ok((position, num)),
-            Err(_) => Err(LexerError::InvalidNumber(number_str, 0, 0))
+        
+        if has_decimal {
+            match number_str.parse::<f64>() {
+                Ok(num) => Ok((position, Literal::Float(num))),
+                Err(_) => Err(LexerError::InvalidNumber(number_str, 0, 0))
+            }
+        } else {
+            match number_str.parse::<i64>() {
+                Ok(num) => Ok((position, Literal::Int(num))),
+                Err(_) => Err(LexerError::InvalidNumber(number_str, 0, 0))
+            }
         }
     }
 

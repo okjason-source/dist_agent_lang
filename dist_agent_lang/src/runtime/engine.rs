@@ -1094,6 +1094,22 @@ impl Runtime {
                     Ok(Value::Null)
                 }
             }
+            crate::parser::ast::Statement::While(while_stmt) => {
+                let mut last_result = Value::Null;
+                loop {
+                    let condition = self.evaluate_expression(&while_stmt.condition)?;
+                    if !self.is_truthy(&condition) {
+                        break;
+                    }
+                    for stmt in &while_stmt.body.statements {
+                        match self.execute_statement(stmt) {
+                            Ok(value) => last_result = value,
+                            Err(e) => return Err(e),
+                        }
+                    }
+                }
+                Ok(last_result)
+            }
             crate::parser::ast::Statement::Try(try_stmt) => {
                 // Execute try block
                 match self.execute_statement(&crate::parser::ast::Statement::Block(try_stmt.try_block.clone())) {
@@ -1176,6 +1192,33 @@ impl Runtime {
                 
                 // For now, just return the event data as a string
                 Ok(Value::String(format!("Event {}: {:?}", event_stmt.event_name, data)))
+            }
+            crate::parser::ast::Statement::ForIn(for_in_stmt) => {
+                let iterable = self.evaluate_expression(&for_in_stmt.iterable)?;
+                let items: Vec<crate::runtime::values::Value> = match &iterable {
+                    crate::runtime::values::Value::List(list) => list.clone(),
+                    crate::runtime::values::Value::Array(arr) => arr.clone(),
+                    crate::runtime::values::Value::Map(map) => {
+                        map.keys().cloned().map(crate::runtime::values::Value::String).collect()
+                    }
+                    other => {
+                        return Err(RuntimeError::General(format!(
+                            "for-in requires list, array, or map; got {}",
+                            other.type_name()
+                        )));
+                    }
+                };
+                let mut last_result = crate::runtime::values::Value::Null;
+                for item in items {
+                    self.set_variable(for_in_stmt.variable.clone(), item);
+                    for stmt in &for_in_stmt.body.statements {
+                        match self.execute_statement(stmt) {
+                            Ok(value) => last_result = value,
+                            Err(e) => return Err(e),
+                        }
+                    }
+                }
+                Ok(last_result)
             }
         }
     }
@@ -1308,6 +1351,11 @@ impl Runtime {
                 // In a real implementation, this would handle async/await
                 self.evaluate_expression(expr)
             }
+            crate::parser::ast::Expression::Spawn(expr) => {
+                // For now, evaluate the expression (e.g. spawn worker_process(i) runs the call)
+                // In a real implementation, this would run in background and return a handle
+                self.evaluate_expression(expr)
+            }
             crate::parser::ast::Expression::Throw(expr) => {
                 let error_value = self.evaluate_expression(expr)?;
                 Err(RuntimeError::General(format!("Thrown error: {}", error_value)))
@@ -1366,6 +1414,11 @@ impl Runtime {
                     array_value.push(value);
                 }
                 Ok(Value::Array(array_value))
+            }
+            crate::parser::ast::Expression::ArrowFunction { .. } => {
+                // Arrow functions are passed as callbacks; for now return a placeholder.
+                // Full implementation would capture env and be invokable by .then() etc.
+                Ok(Value::Null)
             }
         }
     }

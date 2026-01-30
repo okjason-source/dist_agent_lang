@@ -1,3 +1,4 @@
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -200,13 +201,8 @@ impl AsyncScheduler {
     where
         F: FnOnce() -> Result<(), String> + Send + 'static,
     {
-        let task_id = {
-            static mut NEXT_ID: usize = 0;
-            unsafe {
-                NEXT_ID += 1;
-                NEXT_ID
-            }
-        };
+        static NEXT_ID: AtomicUsize = AtomicUsize::new(0);
+        let task_id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
 
         let async_task = AsyncTask {
             id: task_id,
