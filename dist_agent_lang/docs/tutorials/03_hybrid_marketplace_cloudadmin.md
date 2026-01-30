@@ -1,6 +1,6 @@
-# Tutorial 3: Hybrid Marketplace with CloudAdmin (v1.0.1)
+# Tutorial 3: Hybrid Marketplace with CloudAdmin
 
-> **📢 Beta Release v1.0.1:** Uses CloudAdmin hybrid trust architecture. Test thoroughly before production. **Beta testing feedback welcome!** 🙏
+> **📢 Beta:** Uses CloudAdmin hybrid trust. Code in this tutorial follows the **current DAL parser**: `if (condition)` with parentheses, `log::info` / `log::audit` (no `log::error`), literals `{ key: value }`. See [Syntax Reference](../syntax.md) and [DAL Syntax Patterns](../testing/DAL_SYNTAX_PATTERNS.md).
 
 **Build a moderated NFT marketplace combining centralized admin control with decentralized trading**
 
@@ -87,14 +87,14 @@ fn initialize_admins() {
     };
     
     // Create regular admins
-    self.admins["admin_001"] = AdminInfo {
+    self.admins["admin_001"] = {
         id: "admin_001",
         level: "admin",
         permissions: ["approve_listing", "reject_listing", "view_all"],
         actions: 0
     };
     
-    self.admins["moderator_001"] = AdminInfo {
+    self.admins["moderator_001"] = {
         id: "moderator_001",
         level: "moderator",
         permissions: ["flag_listing", "view_all"],
@@ -111,7 +111,7 @@ fn is_admin(user_id: string) -> bool {
 
 // Get admin level
 fn get_admin_level(admin_id: string) -> string {
-    if self.admins.contains_key(admin_id) {
+    if (self.admins.contains_key(admin_id)) {
         return self.admins[admin_id].level;
     }
     return "user";
@@ -133,11 +133,12 @@ fn create_listing(
     price: int
 ) -> string {
     // 1. Verify user owns the NFT (decentralized trust)
-    let seller = auth::session().user_id;
+    let session = auth::session("current_user_id", ["user"]);
+    let seller = session.user_id;
     let owns_nft = chain::verify_nft_owner(nft_contract, token_id, seller);
     
-    if !owns_nft {
-        log::error("marketplace", "User doesn't own NFT");
+    if (!owns_nft) {
+        log::info("marketplace", "User doesn't own NFT");
         return "error";
     }
     
@@ -153,8 +154,8 @@ fn create_listing(
     // 4. Validate hybrid trust
     let is_trusted = cloudadmin::validate_hybrid_trust(admin_trust, user_trust);
     
-    if !is_trusted {
-        log::error("marketplace", "Hybrid trust validation failed");
+    if (!is_trusted) {
+        log::info("marketplace", "Hybrid trust validation failed");
         return "error";
     }
     
@@ -198,16 +199,16 @@ Admins review and approve listings:
 @public
 fn approve_listing(listing_id: string, admin_id: string) -> bool {
     // 1. Verify listing exists
-    if !self.listings.contains_key(listing_id) {
-        log::error("marketplace", "Listing not found");
+    if (!self.listings.contains_key(listing_id)) {
+        log::info("marketplace", "Listing not found");
         return false;
     }
-    
+
     // 2. Check admin authorization
     let can_approve = cloudadmin::authorize(admin_id, "write", "/listings");
     
-    if !can_approve {
-        log::error("marketplace", "Admin not authorized to approve");
+    if (!can_approve) {
+        log::info("marketplace", "Admin not authorized to approve");
         return false;
     }
     
@@ -216,8 +217,8 @@ fn approve_listing(listing_id: string, admin_id: string) -> bool {
     let context = cloudadmin::create_admin_context(admin_id, admin_level);
     let policy_ok = cloudadmin::enforce_policy("moderate", context);
     
-    if policy_ok.is_err() || !policy_ok.unwrap() {
-        log::error("marketplace", "Policy enforcement failed");
+    if (policy_ok.is_err() || !policy_ok.unwrap()) {
+        log::info("marketplace", "Policy enforcement failed");
         return false;
     }
     
@@ -228,7 +229,7 @@ fn approve_listing(listing_id: string, admin_id: string) -> bool {
     self.listings[listing_id] = listing;
     
     // 5. Update admin stats
-    if self.admins.contains_key(admin_id) {
+    if (self.admins.contains_key(admin_id)) {
         let admin = self.admins[admin_id];
         admin.actions = admin.actions + 1;
         self.admins[admin_id] = admin;
@@ -250,8 +251,8 @@ fn reject_listing(
     // Similar authorization checks
     let can_reject = cloudadmin::authorize(admin_id, "write", "/listings");
     
-    if !can_reject {
-        log::error("marketplace", "Admin not authorized");
+    if (!can_reject) {
+        log::info("marketplace", "Admin not authorized");
         return false;
     }
     
@@ -275,40 +276,41 @@ Users trade approved listings:
 @public
 fn buy_nft(listing_id: string) -> bool {
     // 1. Check listing is approved
-    if !self.listings.contains_key(listing_id) {
-        log::error("marketplace", "Listing not found");
+    if (!self.listings.contains_key(listing_id)) {
+        log::info("marketplace", "Listing not found");
         return false;
     }
-    
+
     let listing = self.listings[listing_id];
-    
-    if listing.status != "approved" {
-        log::error("marketplace", "Listing not approved");
+
+    if (listing.status != "approved") {
+        log::info("marketplace", "Listing not approved");
         return false;
     }
     
     // 2. Verify buyer (decentralized)
-    let buyer = auth::session().user_id;
+    let session = auth::session("current_user_id", ["user"]);
+    let buyer = session.user_id;
     let buyer_verified = auth::verify_signature();
     
-    if !buyer_verified {
-        log::error("marketplace", "Buyer verification failed");
+    if (!buyer_verified) {
+        log::info("marketplace", "Buyer verification failed");
         return false;
     }
     
     // 3. Check buyer has funds
     let buyer_balance = chain::get_balance(buyer);
     
-    if buyer_balance < listing.price {
-        log::error("marketplace", "Insufficient funds");
+    if (buyer_balance < listing.price) {
+        log::info("marketplace", "Insufficient funds");
         return false;
     }
     
     // 4. Execute trade on blockchain (fully decentralized)
     let payment_success = chain::transfer(buyer, listing.seller, listing.price);
     
-    if !payment_success {
-        log::error("marketplace", "Payment failed");
+    if (!payment_success) {
+        log::info("marketplace", "Payment failed");
         return false;
     }
     
@@ -319,10 +321,10 @@ fn buy_nft(listing_id: string) -> bool {
         buyer
     );
     
-    if !nft_transfer {
+    if (!nft_transfer) {
         // Revert payment
         chain::transfer(listing.seller, buyer, listing.price);
-        log::error("marketplace", "NFT transfer failed");
+        log::info("marketplace", "NFT transfer failed");
         return false;
     }
     
@@ -358,14 +360,11 @@ fn spawn_moderation_agent() -> string {
     let agent = ai::spawn_agent(config);
     
     // Register agent
-    self.agents[agent.id] = AgentInfo {
+    self.agents[agent.id] = {
         id: agent.id,
         type: "moderator",
         status: "active",
-        resource_usage: {
-            "cpu": 0,
-            "memory": 0
-        }
+        resource_usage: { cpu: 0, memory: 0 }
     };
     
     log::info("marketplace", "Moderation agent spawned: " + agent.id);
@@ -386,7 +385,7 @@ fn moderate_listing_ai(listing_id: string, agent_id: string) {
     let image_safe = ai::classify("content_safety", nft_data.image_url);
     let text_safe = ai::classify("content_safety", nft_data.description);
     
-    if image_safe == "unsafe" || text_safe == "unsafe" {
+    if (image_safe == "unsafe" || text_safe == "unsafe") {
         // Flag for admin review
         listing.status = "flagged";
         self.listings[listing_id] = listing;
@@ -420,8 +419,8 @@ fn monitor_agents(admin_id: string) -> list<map> {
     let context = cloudadmin::create_admin_context(admin_id, admin_level);
     let allowed = cloudadmin::enforce_policy("strict", context);
     
-    if allowed.is_err() || !allowed.unwrap() {
-        log::error("marketplace", "Not authorized for monitoring");
+    if (allowed.is_err() || !allowed.unwrap()) {
+        log::info("marketplace", "Not authorized for monitoring");
         return [];
     }
     
@@ -430,7 +429,7 @@ fn monitor_agents(admin_id: string) -> list<map> {
     let agent_status = [];
     
     for process in processes {
-        if process.name.starts_with("mod_agent_") {
+        if (process.name.starts_with("mod_agent_")) {
             agent_status.push({
                 "process_id": process.process_id,
                 "name": process.name,
@@ -454,17 +453,17 @@ fn terminate_agent(
     // Check authorization
     let can_kill = cloudadmin::authorize(admin_id, "delete", "/agents");
     
-    if !can_kill {
-        log::error("marketplace", "Not authorized to terminate agents");
+    if (!can_kill) {
+        log::info("marketplace", "Not authorized to terminate agents");
         return false;
     }
     
     // Kill the agent process
     let result = admin::kill(agent_id, reason);
     
-    if result.is_ok() {
+    if (result.is_ok()) {
         // Update agent status
-        if self.agents.contains_key(agent_id) {
+        if (self.agents.contains_key(agent_id)) {
             let agent = self.agents[agent_id];
             agent.status = "terminated";
             self.agents[agent_id] = agent;
@@ -490,8 +489,8 @@ fn check_agent_health(agent_id: string) -> bool {
     let memory = process.resource_usage["memory"].as_int();
     
     // Check resource limits
-    if cpu > 80 || memory > 1024 {
-        log::warn("marketplace", "Agent exceeding resources: " + agent_id);
+    if (cpu > 80 || memory > 1024) {
+        log::info("marketplace", "Agent exceeding resources: " + agent_id);
         return false;
     }
     
@@ -513,8 +512,8 @@ fn emergency_shutdown(admin_id: string, reason: string) -> bool {
     let context = cloudadmin::create_admin_context(admin_id, "superadmin");
     let allowed = cloudadmin::enforce_policy("strict", context);
     
-    if allowed.is_err() || !allowed.unwrap() {
-        log::error("marketplace", "Emergency shutdown unauthorized");
+    if (allowed.is_err() || !allowed.unwrap()) {
+        log::info("marketplace", "Emergency shutdown unauthorized");
         return false;
     }
     
@@ -537,7 +536,7 @@ fn override_listing_status(
     // SuperAdmin only
     let can_override = cloudadmin::authorize(admin_id, "delete", "/listings");
     
-    if !can_override {
+    if (!can_override) {
         return false;
     }
     
