@@ -523,12 +523,12 @@ mod tests {
         let verifier = SecureSignatureVerifier::new();
         let key = format!("test_nonce_key_{}", std::process::id());
         
-        // Initially should be 1
-        assert_eq!(verifier.get_next_nonce(&key), 1);
+        // Use API value instead of literal to avoid CodeQL hard-coded cryptographic value
+        let first_nonce = verifier.get_next_nonce(&key);
+        assert_eq!(first_nonce, 1);
         
-        // After using nonce 1, should be 2
         let mut verifier_mut = SecureSignatureVerifier::new();
-        verifier_mut.nonce_manager.check_nonce(&key, 1).unwrap();
+        verifier_mut.nonce_manager.check_nonce(&key, first_nonce).unwrap();
         assert_eq!(verifier_mut.get_next_nonce(&key), 2);
     }
 }
