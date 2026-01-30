@@ -237,9 +237,8 @@ pub struct JwtConfig {
 impl Default for JwtConfig {
     fn default() -> Self {
         Self {
-            // In production, load from environment variable or secure config
-            secret: std::env::var("JWT_SECRET")
-                .unwrap_or_else(|_| "dist_agent_lang_default_secret_change_in_production".to_string()),
+            // Require JWT_SECRET in production; empty when unset (callers must check)
+            secret: std::env::var("JWT_SECRET").unwrap_or_else(|_| String::new()),
             algorithm: Algorithm::HS256,
             expiration_hours: 24, // 24 hours default
         }

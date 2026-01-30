@@ -31,7 +31,7 @@ A DAL program is a sequence of **top-level statements**; there is no single “m
 - Agent declarations (`agent name:type { ... } { ... }`)
 - Spawn statements (`spawn name [: type] [{ config }] { body }`)
 - Message and event statements (`msg` / `event`)
-- Control flow (`if`, `try`, `for`)
+- Control flow (`if`, `while`, `for`, `try`)
 - Expression statements (e.g. calls, assignments)
 
 ### Statements and Semicolons
@@ -366,7 +366,14 @@ for item in [1, 2, 3] {
 
 ### While Loops
 
-**While loops are not implemented** in the parser or AST. Use **`for`** or other control flow instead.
+**`while (condition) { body }`**. Parentheses around the condition are required.
+
+```dal
+while (count > 0) {
+    count = count - 1;
+    process(count);
+}
+```
 
 ### Try-Catch-Finally
 
@@ -612,7 +619,7 @@ let x = 10; // Inline comment
 
 ### Control Flow
 
-- **`if`** **`else`** **`for`** **`in`** **`return`** **`try`** **`catch`** **`finally`** **`throw`**
+- **`if`** **`else`** **`while`** **`for`** **`in`** **`return`** **`try`** **`catch`** **`finally`** **`throw`**
 - **`break`** **`continue`** – reserved; **`loop`** is **not** implemented in the parser.
 
 ### Async
