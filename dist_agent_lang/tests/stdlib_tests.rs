@@ -600,16 +600,25 @@ fn test_log_get_stats() {
 
 #[test]
 fn test_log_clear() {
-    // Isolate from other tests: clear first, then test that clear() empties our entry
+    // Use a unique source so we can find our entry even if other tests log in parallel
+    let unique_source = format!("test_log_clear_{}", std::process::id());
     log::clear();
     let mut data = HashMap::new();
     data.insert("test".to_string(), Value::String("value".to_string()));
-    log::info("test_source", data, None);
-    assert_eq!(log::get_entries().len(), 1, "one entry after info");
+    log::info(&unique_source, data, Some(&unique_source));
+
+    let entries_with_our_source: Vec<_> = log::get_entries()
+        .into_iter()
+        .filter(|e| e.source == unique_source)
+        .collect();
+    assert_eq!(entries_with_our_source.len(), 1, "our entry should be present after info");
 
     log::clear();
-    let entries = log::get_entries();
-    assert!(entries.is_empty(), "entries should be empty after clear");
+    let entries_with_our_source_after: Vec<_> = log::get_entries()
+        .into_iter()
+        .filter(|e| e.source == unique_source)
+        .collect();
+    assert!(entries_with_our_source_after.is_empty(), "our entry should be gone after clear");
 }
 
 // ============================================
