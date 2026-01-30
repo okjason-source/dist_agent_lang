@@ -93,6 +93,8 @@ fn main() {
                 dist_agent_lang::parser::ast::Statement::Message(_) => println!("     - Message"),
                 dist_agent_lang::parser::ast::Statement::Event(_) => println!("     - Event"),
                 dist_agent_lang::parser::ast::Statement::If(_) => println!("     - If"),
+                dist_agent_lang::parser::ast::Statement::While(_) => println!("     - While"),
+                dist_agent_lang::parser::ast::Statement::ForIn(_) => println!("     - ForIn"),
                 dist_agent_lang::parser::ast::Statement::Try(_) => println!("     - Try"),
             }
         }

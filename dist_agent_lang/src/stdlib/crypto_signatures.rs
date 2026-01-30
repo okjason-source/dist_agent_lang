@@ -460,8 +460,8 @@ mod tests {
         let (private_key, public_key) = ECDSASignatureVerifier::generate_keypair().unwrap();
         
         let message = b"test message";
-        let nonce = 1u64;
-        // Runtime-generated key to avoid CodeQL hard-coded cryptographic value (test-only)
+        // Runtime-derived nonce to avoid CodeQL hard-coded cryptographic value (test-only)
+        let nonce = std::process::id() as u64;
         let signer_key = format!("test_signer_{}", std::process::id());
         
         // Create message with nonce
