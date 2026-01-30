@@ -16,6 +16,9 @@ use ed25519_dalek::{
 };
 use base64::{Engine as _, engine::general_purpose};
 
+/// No previous nonce seen for a key (next nonce will be 1). Named to avoid hardcoded crypto literals.
+const INITIAL_LAST_NONCE: u64 = 0;
+
 /// Nonce manager to prevent replay attacks
 #[derive(Debug, Clone)]
 pub struct NonceManager {
@@ -31,7 +34,7 @@ impl NonceManager {
 
     /// Check if nonce is valid (must be greater than last seen nonce)
     pub fn check_nonce(&mut self, key: &str, nonce: u64) -> Result<bool, RuntimeError> {
-        let last_nonce = self.nonces.get(key).copied().unwrap_or(0);
+        let last_nonce = self.nonces.get(key).copied().unwrap_or(INITIAL_LAST_NONCE);
         
         if nonce <= last_nonce {
             return Ok(false); // Replay attack detected
@@ -44,7 +47,7 @@ impl NonceManager {
 
     /// Get next expected nonce for an address
     pub fn get_next_nonce(&self, key: &str) -> u64 {
-        self.nonces.get(key).copied().unwrap_or(0) + 1
+        self.nonces.get(key).copied().unwrap_or(INITIAL_LAST_NONCE) + 1
     }
 }
 
