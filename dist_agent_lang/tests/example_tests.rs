@@ -95,6 +95,7 @@ fn test_example_parses(path: &Path) {
 }
 
 // Test that an example file can be parsed AND semantically validated
+#[allow(dead_code)]
 fn test_example_parses_with_semantics(path: &Path) {
     if should_skip(path) {
         return;
@@ -219,6 +220,7 @@ fn validate_attribute_compatibility(attrs: &[&str], path: &Path) {
 }
 
 // Test that an example file can be executed (if it doesn't require external deps)
+#[allow(dead_code)]
 fn test_example_executes(path: &Path) -> Result<(), String> {
     let source = read_file(path);
     

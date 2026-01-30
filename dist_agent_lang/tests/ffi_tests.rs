@@ -174,7 +174,7 @@ fn test_interface_selector_with_metadata() {
 #[test]
 fn test_ffi_interface_creation() {
     let config = FFIConfig::both();
-    let interface = FFIInterface::new(config);
+    let _interface = FFIInterface::new(config);
     // Should create successfully
     assert!(true); // Just verify it doesn't panic
 }
@@ -299,8 +299,8 @@ fn test_ffi_integration_with_runtime() {
     
     // Test FFI interface with runtime
     let config = FFIConfig::ffi_only();
-    let interface = FFIInterface::new(config);
-    
+    let _interface = FFIInterface::new(config);
+
     let _args = vec![Value::Int(5), Value::Int(3)];
     // Note: This requires the runtime to be accessible from FFI
     // For now, just verify the interface can be created

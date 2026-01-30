@@ -857,7 +857,7 @@ pub fn join_room(server: &mut WebSocketServer, connection_id: String, room_name:
     }
 }
 
-pub fn broadcast_to_room(server: &WebSocketServer, room_name: String, message: String) -> Result<i64, String> {
+pub fn broadcast_to_room(server: &WebSocketServer, room_name: String, _message: String) -> Result<i64, String> {
     if let Some(connection_ids) = server.rooms.get(&room_name) {
         let message_count = connection_ids.len() as i64;
         

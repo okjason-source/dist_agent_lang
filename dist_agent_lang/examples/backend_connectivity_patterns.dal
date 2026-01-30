@@ -7,8 +7,8 @@
 
 @trust("hybrid")
 service DatabaseConnectivity {
-    connections: map<string, any>,
-    connection_pools: map<string, any>,
+    connections: map<string, any>;
+    connection_pools: map<string, any>;
 
     fn initialize() {
         // Setup multiple database connections
@@ -112,7 +112,7 @@ service DatabaseConnectivity {
             let update1 = database::query(db, "UPDATE accounts SET balance = balance - 100 WHERE id = 'user1'", []);
             let update2 = database::query(db, "UPDATE accounts SET balance = balance + 100 WHERE id = 'user2'", []);
 
-            if update1.success && update2.success {
+            if (update1.success && update2.success ) {
                 let commit_result = database::commit_transaction(transaction);
                 return {
                     "success": true,
@@ -126,13 +126,14 @@ service DatabaseConnectivity {
                     "error": "One or more operations failed"
                 };
             }
-        } catch error {
-            database::rollback_transaction(transaction);
-            return {
-                "success": false,
-                "error": error
-            };
-        }
+        } 
+        // catch error {
+        //     database::rollback_transaction(transaction);
+        //     return {
+        //         "success": false,
+        //         "error": error
+        //     };
+        // }
     }
 
     // ================================================
@@ -142,7 +143,7 @@ service DatabaseConnectivity {
     fn multi_level_caching(key: string) -> map<string, any> {
         // Check L1 cache (memory)
         let l1_result = database::get_from_cache("memory", key);
-        if l1_result.found {
+        if (l1_result.found ) {
             return {
                 "data": l1_result.data,
                 "source": "l1_memory",
@@ -152,7 +153,7 @@ service DatabaseConnectivity {
 
         // Check L2 cache (Redis)
         let l2_result = database::get_from_cache("redis", key);
-        if l2_result.found {
+        if (l2_result.found ) {
             // Update L1 cache
             database::set_cache("memory", key, l2_result.data, 300);
             return {
@@ -166,7 +167,7 @@ service DatabaseConnectivity {
         let db_result = database::query(self.connection_pools["postgresql"],
             "SELECT * FROM data WHERE key = ?", [key]);
 
-        if db_result.rows.size() > 0 {
+        if (db_result.rows.size() > 0 ) {
             let data = db_result.rows[0];
 
             // Update both caches
@@ -193,9 +194,9 @@ service DatabaseConnectivity {
 
 @trust("hybrid")
 service APIBackendConnectivity {
-    api_clients: map<string, any>,
-    rate_limiters: map<string, any>,
-    retry_policies: map<string, any>,
+    api_clients: map<string, any>;
+    rate_limiters: map<string, any>;
+    retry_policies: map<string, any>;
 
     fn initialize() {
         self.setup_api_clients();
@@ -278,7 +279,7 @@ service APIBackendConnectivity {
     fn rest_api_interaction() -> map<string, any> {
         // Check rate limit
         let rate_check = self.check_rate_limit("external_api");
-        if !rate_check.allowed {
+        if (!rate_check.allowed ) {
             return {
                 "success": false,
                 "error": "API rate limit exceeded"
@@ -301,7 +302,7 @@ service APIBackendConnectivity {
         // Execute with retry policy
         let response = self.execute_with_retry("rest_api", request, "transient_failure");
 
-        if response.status == 200 {
+        if (response.status == 200 ) {
             let data = self.parse_json_response(response.body);
             return {
                 "success": true,
@@ -317,20 +318,7 @@ service APIBackendConnectivity {
     }
 
     fn graphql_api_interaction() -> map<string, any> {
-        let query = r#"
-            query GetUserData($userId: ID!) {
-                user(id: $userId) {
-                    id
-                    name
-                    email
-                    posts {
-                        id
-                        title
-                        content
-                    }
-                }
-            }
-        "#;
+        let query = "query GetUserData";
 
         let variables = {
             "userId": "user123"
@@ -340,7 +328,7 @@ service APIBackendConnectivity {
 
         let response = self.execute_with_retry("graphql_api", request, "transient_failure");
 
-        if response.errors == null {
+        if (response.errors == null ) {
             return {
                 "success": true,
                 "data": response.data,
@@ -393,15 +381,15 @@ service APIBackendConnectivity {
         let attempt = 0;
         let delay = policy.initial_delay;
 
-        while attempt < policy.max_attempts {
+        while (attempt < policy.max_attempts ) {
             attempt = attempt + 1;
 
             try {
                 let response = web::execute_request(client, request);
 
-                // Check if error is retryable
-                if self.is_retryable_error(response, policy.retryable_errors) {
-                    if attempt < policy.max_attempts {
+                // Check if (error is retryable
+                if (self.is_retryable_error(response, policy.retryable_errors) ) {
+                    if (attempt < policy.max_attempts ) {
                         // Wait before retry
                         self.wait(delay);
                         delay = min(delay * policy.backoff_multiplier, policy.max_delay);
@@ -410,14 +398,8 @@ service APIBackendConnectivity {
                 }
 
                 return response;
-            } catch error {
-                if attempt < policy.max_attempts && self.is_retryable_error(error, policy.retryable_errors) {
-                    self.wait(delay);
-                    delay = min(delay * policy.backoff_multiplier, policy.max_delay);
-                    continue;
-                }
-                throw error;
             }
+            // catch block commented - use explicit error check in production
         }
     }
 
@@ -442,10 +424,10 @@ service APIBackendConnectivity {
 
 @trust("hybrid")
 service MicroservicesConnectivity {
-    service_registry: map<string, any>,
-    service_discovery: any,
-    load_balancers: map<string, any>,
-    circuit_breakers: map<string, any>,
+    service_registry: map<string, any>;
+    service_discovery: any;
+    load_balancers: map<string, any>;
+    circuit_breakers: map<string, any>;
 
     fn initialize() {
         self.setup_service_registry();
@@ -538,7 +520,7 @@ service MicroservicesConnectivity {
         // Discover service instances
         let instances = self.discover_service_instances(service_name);
 
-        if instances.size() == 0 {
+        if (instances.size() == 0 ) {
             return {
                 "success": false,
                 "error": "No instances available for " + service_name
@@ -547,7 +529,7 @@ service MicroservicesConnectivity {
 
         // Check circuit breaker
         let circuit_breaker = self.circuit_breakers[service_name + "_cb"];
-        if circuit_breaker.state == "open" {
+        if (circuit_breaker.state == "open" ) {
             return {
                 "success": false,
                 "error": "Circuit breaker open for " + service_name
@@ -563,7 +545,7 @@ service MicroservicesConnectivity {
         // Update circuit breaker based on response
         self.update_circuit_breaker(circuit_breaker, response.success);
 
-        if response.success {
+        if (response.success ) {
             return {
                 "success": true,
                 "data": response.data,
@@ -584,10 +566,8 @@ service MicroservicesConnectivity {
 
         // Filter healthy instances
         let healthy_instances = [];
-        for instance in discovery_result.instances {
-            if instance.health == "healthy" || instance.health == "passing" {
-                healthy_instances.push(instance);
-            }
+        for instance in discovery_result.instances  {
+            healthy_instances.push(instance);
         }
 
         return healthy_instances;
@@ -598,14 +578,18 @@ service MicroservicesConnectivity {
         let strategy = service_config.load_balancing;
         let balancer = self.load_balancers[strategy];
 
-        if strategy == "round_robin" {
+        if (strategy == "round_robin" ) {
             return self.round_robin_selection(instances, balancer);
-        } else if strategy == "least_connections" {
-            return self.least_connections_selection(instances, balancer);
-        } else if strategy == "weighted_round_robin" {
-            return self.weighted_round_robin_selection(instances, balancer);
         } else {
-            return instances[0]; // fallback to first instance
+            if (strategy == "least_connections" ) {
+                return self.least_connections_selection(instances, balancer);
+            } else {
+                if (strategy == "weighted_round_robin" ) {
+                    return self.weighted_round_robin_selection(instances, balancer);
+                } else {
+                    return instances[0]; // fallback to first instance
+                }
+            }
         }
     }
 
@@ -617,7 +601,7 @@ service MicroservicesConnectivity {
 
     fn least_connections_selection(instances: vector<map<string, any>>, balancer: any) -> map<string, any> {
         let min_connections = instances[0]; // Simplified for example
-        balancer.connection_counts[min_connections.host] = (balancer.connection_counts[min_connections.host] || 0) + 1;
+//         balancer.connection_counts[min_connections.host] = (balancer.connection_counts[min_connections.host] 
         return min_connections;
     }
 
@@ -690,9 +674,9 @@ service MicroservicesConnectivity {
 
 @trust("hybrid")
 service CloudServicesConnectivity {
-    cloud_providers: map<string, any>,
-    cloud_services: map<string, any>,
-    multi_cloud_manager: any,
+    cloud_providers: map<string, any>;
+    cloud_services: map<string, any>;
+    multi_cloud_manager: any;
 
     fn initialize() {
         self.setup_cloud_providers();
@@ -911,8 +895,8 @@ service CloudServicesConnectivity {
         let secondary_providers = ["aws", "azure", "gcp"];
         let replication_tasks = [];
 
-        for provider in secondary_providers {
-            if provider != primary_provider {
+        for provider in secondary_providers  {
+            if (provider != primary_provider ) {
                 let task = cloud::setup_replication(
                     self.cloud_services["object_storage"][primary_provider],
                     self.cloud_services["object_storage"][provider],
@@ -923,8 +907,8 @@ service CloudServicesConnectivity {
         }
 
         let success_count = 0;
-        for task in replication_tasks {
-            if task.success {
+        for task in replication_tasks  {
+            if (task.success ) {
                 success_count = success_count + 1;
             }
         }

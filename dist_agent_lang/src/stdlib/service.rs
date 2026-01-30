@@ -137,7 +137,7 @@ pub fn call(service: ServiceCall) -> Result<Value, String> {
 }
 
 /// Webhook service integration
-pub fn webhook(config: WebhookConfig, data: HashMap<String, Value>) -> Result<String, String> {
+pub fn webhook(config: WebhookConfig, _data: HashMap<String, Value>) -> Result<String, String> {
     // Mock implementation - in real system this would make HTTP POST calls
     match config.url.as_str() {
         "https://api.example.com/webhook" => {

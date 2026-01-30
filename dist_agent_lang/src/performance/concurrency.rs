@@ -27,6 +27,7 @@ enum Message {
 }
 
 struct Worker {
+    #[allow(dead_code)]
     id: usize,
     thread: Option<thread::JoinHandle<()>>,
 }
@@ -184,7 +185,9 @@ pub enum TaskPriority {
 #[derive(Debug)]
 struct RunningTask {
     id: usize,
+    #[allow(dead_code)]
     start_time: Instant,
+    #[allow(dead_code)]
     thread_id: usize,
 }
 

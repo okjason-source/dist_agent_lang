@@ -4,6 +4,7 @@ use super::converter::{DALAST, Service, Field, DALFunction, DALParameter, DALEve
 
 /// DAL Code Generator
 pub struct DALGenerator {
+    #[allow(dead_code)]
     indent_level: usize,
 }
 

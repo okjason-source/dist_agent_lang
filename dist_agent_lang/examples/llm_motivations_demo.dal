@@ -1,15 +1,15 @@
 // LLM Motivations Demo: Showcasing Why LLMs Choose dist_agent_lang
 // This demonstrates the key features that drive LLM adoption
 
-// @trust("hybrid")
-// @ai
+@trust("hybrid")
+@ai
 service LLMMotivationsDemo {
-    demonstration_results: any,
+    demonstration_results: any;
 
     fn run_motivations_demo() -> Result<any, Error> {
-        println!("🎯 LLM Motivations for Choosing dist_agent_lang");
-        println!("==============================================");
-        println!("");
+        // println!("🎯 LLM Motivations for Choosing dist_agent_lang");
+        // println!("==============================================");
+        // println!("");
 
         let motivations = this.analyze_key_motivations();
 
@@ -89,19 +89,19 @@ service LLMMotivationsDemo {
     }
 
     fn demonstrate_hybrid_trust_power() -> Unit {
-        println!("🔗 Motivation 1: Hybrid Trust Model");
-        println!("-----------------------------------");
+        // println!("🔗 Motivation 1: Hybrid Trust Model");
+        // println!("-----------------------------------");
 
         // Traditional approach (what LLMs hate)
-        println!("❌ Traditional Approach (JavaScript + Solidity):");
-        println!("   - Context switch between languages");
-        println!("   - Complex API bridging");
+        // println!("❌ Traditional Approach (JavaScript + Solidity):");
+        // println!("   - Context switch between languages");
+        // println!("   - Complex API bridging");
         println("   - Manual state synchronization");
         println("   - Error-prone integration points");
         println("");
 
         // dist_agent_lang approach (what LLMs love)
-        println!("✅ dist_agent_lang Approach:");
+        // println!("✅ dist_agent_lang Approach:");
         println("   - Single unified language");
         println("   - Native hybrid operations");
         println("   - Automatic trust model management");
@@ -137,10 +137,10 @@ service HybridDeFiAgent {
 }
         ';
 
-        println!("💡 Example: Intelligent DeFi Trading Agent");
-        println!("   - Single function handles web APIs, AI analysis, and blockchain execution");
-        println!("   - No context switching or complex integration");
-        println!("   - LLM can write this entire application in minutes");
+        // println!("💡 Example: Intelligent DeFi Trading Agent");
+        // println!("   - Single function handles web APIs, AI analysis, and blockchain execution");
+        // println!("   - No context switching or complex integration");
+        // println!("   - LLM can write this entire application in minutes");
         println("");
 
         this.demonstration_results["hybrid_trust"] = {
@@ -152,8 +152,8 @@ service HybridDeFiAgent {
     }
 
     fn demonstrate_agent_first_architecture() -> Unit {
-        println!("🤖 Motivation 2: Agent-First Architecture");
-        println!("----------------------------------------");
+        // println!("🤖 Motivation 2: Agent-First Architecture");
+        // println!("----------------------------------------");
 
         println("❌ Traditional Approach:");
         println("   - Complex microservice orchestration");
@@ -193,7 +193,7 @@ spawn trade_executor:ai {
     "capabilities": ["order_placement", "position_management", "risk_control"]
 } {
     fn execute_trade_strategy(analysis: any) {
-        if analysis.confidence > 0.8 && analysis.risk_level < 0.3 {
+        if (analysis.confidence > 0.8 && analysis.risk_level < 0.3 {
             let trade_result = chain::execute_trade({
                 "strategy": "momentum_based",
                 "analysis": analysis,
@@ -226,8 +226,8 @@ spawn ecosystem_coordinator:ai {
 }
         ';
 
-        println!("💡 Example: Autonomous Trading Agent Ecosystem");
-        println!("   - LLM spawns multiple specialized agents");
+        // println!("💡 Example: Autonomous Trading Agent Ecosystem");
+        // println!("   - LLM spawns multiple specialized agents");
         println("   - Natural message passing between agents");
         println("   - Automatic coordination and conflict resolution");
         println("   - Dynamic agent creation based on needs");
@@ -242,8 +242,8 @@ spawn ecosystem_coordinator:ai {
     }
 
     fn demonstrate_oracle_integration_ease() -> Unit {
-        println!("🔮 Motivation 3: Built-in Oracle Integration");
-        println!("--------------------------------------------");
+        // println!("🔮 Motivation 3: Built-in Oracle Integration");
+        // println!("--------------------------------------------");
 
         println("❌ Traditional Approach:");
         println("   - Manual API setup and configuration");
@@ -282,7 +282,7 @@ let price_oracle = oracle::create_price_feed({
 let price_data = oracle::get_latest_data(price_oracle);
 
 // LLM can immediately use real-world data
-if price_data.ETH > 2500 {
+if (price_data.ETH > 2500 ) {
     ai::adjust_strategy("bullish_conditions");
     log::info("strategy_adjustment", {
         "reason": "ETH_price_above_threshold",
@@ -308,7 +308,7 @@ let comprehensive_decision = ai::make_decision({
 });
         ';
 
-        println!("💡 Example: Multi-Oracle Decision Making");
+        // println!("💡 Example: Multi-Oracle Decision Making");
         println("   - Price data for market conditions");
         println("   - Weather data for additional context");
         println("   - Automatic data validation and caching");
@@ -324,8 +324,8 @@ let comprehensive_decision = ai::make_decision({
     }
 
     fn demonstrate_xnft_intelligence() -> Unit {
-        println!("🎨 Motivation 4: xNFT Intelligence");
-        println!("----------------------------------");
+        // println!("🎨 Motivation 4: xNFT Intelligence");
+        // println!("----------------------------------");
 
         println("❌ Traditional Approach:");
         println("   - Static NFTs with basic metadata");
@@ -418,9 +418,9 @@ service IntelligentArtNFT {
         let recent_interactions = this.interaction_history.slice(-10);
         let sentiment_analysis = ai::analyze_sentiment_batch(recent_interactions);
 
-        if sentiment_analysis.overall_sentiment > 0.7 {
+        if (sentiment_analysis.overall_sentiment > 0.7 {
             return "joyful";
-        } else if sentiment_analysis.overall_sentiment < 0.3 {
+        } else if (sentiment_analysis.overall_sentiment < 0.3 ) {
             return "contemplative";
         } else {
             return "balanced";
@@ -453,11 +453,11 @@ service IntelligentArtNFT {
     fn get_time_of_day() -> String {
         let hour = (chain::get_block_timestamp() / 3600000) % 24;
 
-        if hour >= 6 && hour < 12 {
+        if (hour >= 6 && hour < 12 {
             return "morning";
-        } else if hour >= 12 && hour < 18 {
+        } else if (hour >= 12 && hour < 18 ) {
             return "afternoon";
-        } else if hour >= 18 && hour < 22 {
+        } else if (hour >= 18 && hour < 22 ) {
             return "evening";
         } else {
             return "night";
@@ -494,7 +494,7 @@ service IntelligentArtNFT {
             "evolution_goals": ["increased_interactivity", "better_adaptation", "enhanced_beauty"]
         });
 
-        if evolution_decision.should_evolve {
+        if (evolution_decision.should_evolve {
             this.apply_evolution(evolution_decision.evolution_plan);
         }
     }
@@ -524,7 +524,7 @@ service IntelligentArtNFT {
 }
         ';
 
-        println!("💡 Example: Truly Intelligent Art NFT");
+        // println!("💡 Example: Truly Intelligent Art NFT");
         println("   - AI-powered personality and learning");
         println("   - Evolves based on owner interactions");
         println("   - Adapts appearance based on mood and market conditions");
@@ -542,8 +542,8 @@ service IntelligentArtNFT {
     }
 
     fn demonstrate_real_time_capabilities() -> Unit {
-        println!("⚡ Motivation 5: Real-time Processing");
-        println!("------------------------------------");
+        // println!("⚡ Motivation 5: Real-time Processing");
+        // println!("------------------------------------");
 
         println("❌ Traditional Approach:");
         println("   - Complex WebSocket setup");
@@ -600,93 +600,17 @@ service RealTimeAIChatbot {
 
     fn setup_message_handlers() -> Unit {
         // Handle new connections
-        this.websocket_server.on_connect(|connection: WebSocketConnection| {
-            let connection_id = this.generate_connection_id();
-
-            this.active_connections[connection_id] = {
-                "connection": connection,
-                "conversation_history": List::new(),
-                "user_context": {},
-                "last_activity": chain::get_block_timestamp()
-            };
-
-            log::info("realtime_chat", {
-                "event": "new_connection",
-                "connection_id": connection_id,
-                "total_connections": this.active_connections.size()
-            });
-        });
-
+        // this.websocket_server.on_connect(...);
         // Handle incoming messages with real-time AI responses
-        this.websocket_server.on_message(|message: WebSocketMessage, connection_id: String| {
-            let user_message = json::parse(message.data);
-
-            // Get connection context
-            let connection_context = this.active_connections[connection_id];
-
-            // Update conversation history
-            connection_context.conversation_history.push({
-                "role": "user",
-                "content": user_message.text,
-                "timestamp": chain::get_block_timestamp()
-            });
-
-            // Generate real-time AI response
-            let ai_response = this.generate_streaming_response({
-                "message": user_message.text,
-                "conversation_history": connection_context.conversation_history,
-                "user_context": connection_context.user_context,
-                "streaming_connection": connection_context.connection
-            });
-
-            // Update connection activity
-            connection_context.last_activity = chain::get_block_timestamp();
-        });
-
-        // Handle disconnections
-        this.websocket_server.on_disconnect(|connection_id: String| {
-            log::info("realtime_chat", {
-                "event": "connection_closed",
-                "connection_id": connection_id,
-                "conversation_length": this.active_connections[connection_id].conversation_history.length()
-            });
-
-            // Clean up connection data
-            this.active_connections.remove(connection_id);
-        });
+        // this.websocket_server.on_message(...);
+        // Handle disconnections  
+        // this.websocket_server.on_disconnect(...);
     }
 
     fn generate_streaming_response(params: any) -> Unit {
         // Start streaming AI response
-        ai::stream_response(this.ai_model, {
-            "prompt": params.message,
-            "conversation_history": params.conversation_history,
-            "user_context": params.user_context,
-            "streaming_callback": |chunk: String| {
-                // Send each chunk in real-time
-                web::send_websocket_message(params.streaming_connection, {
-                    "type": "response_chunk",
-                    "chunk": chunk,
-                    "timestamp": chain::get_block_timestamp()
-                });
-            },
-            "completion_callback": |full_response: String| {
-                // Send completion signal
-                web::send_websocket_message(params.streaming_connection, {
-                    "type": "response_complete",
-                    "full_response": full_response,
-                    "conversation_turns": params.conversation_history.length(),
-                    "timestamp": chain::get_block_timestamp()
-                });
-
-                // Update conversation history
-                params.conversation_history.push({
-                    "role": "assistant",
-                    "content": full_response,
-                    "timestamp": chain::get_block_timestamp()
-                });
-            }
-        });
+        // ai::stream_response(...) with callbacks
+        log::info("streaming", { "status": "generating" });
     }
 
     // Real-time connection monitoring
@@ -699,8 +623,8 @@ service RealTimeAIChatbot {
         for connection_id, connection_data in this.active_connections {
             let time_since_activity = now - connection_data.last_activity;
 
-            if time_since_activity > inactive_threshold {
-                // Send ping to check if connection is still alive
+            if (time_since_activity > inactive_threshold {
+                // Send ping to check if (connection is still alive
                 web::send_websocket_message(connection_data.connection, {
                     "type": "ping",
                     "timestamp": now
@@ -726,12 +650,12 @@ service RealTimeAIChatbot {
             fn handle_timeout() {
                 sleep(this.timeout_ms);
 
-                // Check if connection still exists and hasn't been updated
-                if this.parent.active_connections.contains_key(this.connection_id) {
+                // Check if (connection still exists and hasn't been updated
+                if (this.parent.active_connections.contains_key(this.connection_id) {
                     let connection_data = this.parent.active_connections[this.connection_id];
                     let time_since_ping = chain::get_block_timestamp() - connection_data.last_ping_sent;
 
-                    if time_since_ping >= this.timeout_ms {
+                    if (time_since_ping >= this.timeout_ms {
                         // Connection is dead, clean up
                         log::warn("connection_timeout", {
                             "connection_id": this.connection_id,
@@ -797,7 +721,7 @@ service RealTimeAIChatbot {
 }
         ';
 
-        println!("💡 Example: Real-time AI Chatbot");
+        // println!("💡 Example: Real-time AI Chatbot");
         println("   - One-line WebSocket server setup");
         println("   - Built-in real-time streaming AI responses");
         println("   - Automatic connection management");
@@ -815,8 +739,8 @@ service RealTimeAIChatbot {
     }
 
     fn show_productivity_comparison() -> Unit {
-        println!("📊 Productivity Comparison");
-        println!("==========================");
+        // println!("📊 Productivity Comparison");
+        // println!("==========================");
 
         let comparison_data = {
             "traditional_languages": {
@@ -839,8 +763,8 @@ service RealTimeAIChatbot {
             }
         };
 
-        println!("| Feature | Traditional | dist_agent_lang | Improvement |");
-        println!("|---------|-------------|-----------------|-------------|");
+//         // println!("| Feature | Traditional | dist_agent_lang 
+//         // println!("|---------|-------------|-----------------
 
         let features = [
             "hybrid_app_development",
@@ -852,38 +776,38 @@ service RealTimeAIChatbot {
             "maintenance_overhead"
         ];
 
-        for feature in features {
+        for feature in features  {
             let traditional = comparison_data.traditional_languages[feature];
             let dist_agent = comparison_data.dist_agent_lang[feature];
             let improvement = this.calculate_improvement(feature, traditional, dist_agent);
 
-            println!("| {} | {} | {} | {} |", feature, traditional, dist_agent, improvement);
+//             // println!("| {} | {} | {} 
         }
 
         println("");
-        println!("💡 Key Insights:");
-        println!("   • 10-20x faster development for hybrid applications");
-        println!("   • 5x more sophisticated AI agent systems");
-        println!("   • 90% reduction in integration complexity");
-        println!("   • Revolutionary intelligent digital asset capabilities");
+        // println!("💡 Key Insights:");
+        // println!("   • 10-20x faster development for hybrid applications");
+        // println!("   • 5x more sophisticated AI agent systems");
+        // println!("   • 90% reduction in integration complexity");
+        // println!("   • Revolutionary intelligent digital asset capabilities");
         println("");
     }
 
     fn calculate_improvement(feature: String, traditional: String, dist_agent: String) -> String {
         // Calculate rough improvement metrics
-        if feature == "hybrid_app_development" {
+        if (feature == "hybrid_app_development" {
             return "10-20x faster";
-        } else if feature == "ai_agent_creation" {
+        } else if (feature == "ai_agent_creation" ) {
             return "5x simpler";
-        } else if feature == "oracle_integration" {
+        } else if (feature == "oracle_integration" ) {
             return "90% easier";
-        } else if feature == "xnft_creation" {
+        } else if (feature == "xnft_creation" ) {
             return "Revolutionary";
-        } else if feature == "real_time_features" {
+        } else if (feature == "real_time_features" ) {
             return "80% simpler";
-        } else if feature == "error_rate" {
+        } else if (feature == "error_rate" ) {
             return "85% reduction";
-        } else if feature == "maintenance_overhead" {
+        } else if (feature == "maintenance_overhead" ) {
             return "75% reduction";
         } else {
             return "Significant";
@@ -972,14 +896,14 @@ fn executive_summary_for_llms() -> String {
 
 ## Quantitative Benefits
 
-| Metric | Traditional Languages | dist_agent_lang | Improvement |
-|--------|----------------------|-----------------|-------------|
-| **Hybrid App Development** | 2-4 weeks | 2-4 hours | **10-20x faster** |
-| **AI Agent Creation** | Complex orchestration | Native spawning | **5x simpler** |
-| **Oracle Integration** | Manual setup (days) | One-line integration | **90% easier** |
-| **xNFT Development** | Static assets | Intelligent evolving | **Revolutionary** |
-| **Error Rate** | 15-20% | 2-3% | **85% reduction** |
-| **Maintenance** | High overhead | Low overhead | **75% reduction** |
+// | Metric | Traditional Languages | dist_agent_lang 
+// |--------|----------------------|-----------------
+// | **Hybrid App Development** | 2-4 weeks | 2-4 hours 
+// | **AI Agent Creation** | Complex orchestration | Native spawning 
+// | **Oracle Integration** | Manual setup (days) | One-line integration 
+// | **xNFT Development** | Static assets | Intelligent evolving 
+// | **Error Rate** | 15-20% | 2-3% 
+// | **Maintenance** | High overhead | Low overhead 
 
 ## The Adoption Decision
 

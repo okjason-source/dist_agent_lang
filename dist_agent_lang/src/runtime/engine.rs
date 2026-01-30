@@ -260,7 +260,7 @@ impl Runtime {
                         
                         // Try to find a matching map field by checking if the keys overlap
                         // This is a heuristic - in practice, we'd want to track the field name
-                        for (field_name, field_value) in instance.fields.iter_mut() {
+                        for (_field_name, field_value) in instance.fields.iter_mut() {
                             if let Value::Map(ref field_map) = field_value {
                                 // Check if this field's map has overlapping keys with the container map
                                 // This is a simple heuristic to identify the correct field
@@ -277,7 +277,7 @@ impl Runtime {
                         
                         // Fallback: if no match found, update the first map field
                         // This handles the case where the map is empty or newly created
-                        for (field_name, field_value) in instance.fields.iter_mut() {
+                        for (_field_name, field_value) in instance.fields.iter_mut() {
                             if let Value::Map(ref mut field_map) = field_value {
                                 field_map.insert(key_str.clone(), value.clone());
                                 return Ok(value);
@@ -416,14 +416,14 @@ impl Runtime {
     }
 
     // Handle method calls on service instances (e.g., TestNFT::new(), TestNFT::someMethod())
-    fn call_service_instance_method(&mut self, service_name: &str, method_name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+    fn call_service_instance_method(&mut self, service_name: &str, method_name: &str, _args: &[Value]) -> Result<Value, RuntimeError> {
         if method_name == "new" {
             // Create a new instance of the service
             let service_template = self.services.get(service_name)
                 .ok_or_else(|| RuntimeError::General(format!("Service {} not found", service_name)))?;
             
             // Create a new instance with copied fields
-            let mut new_instance = ServiceInstance {
+            let new_instance = ServiceInstance {
                 name: service_template.name.clone(),
                 fields: service_template.fields.clone(),
                 methods: service_template.methods.clone(),
@@ -485,7 +485,7 @@ impl Runtime {
                         service_name, self.services.keys().collect::<Vec<_>>())))?;
                 
                 // Create a new instance with copied fields
-                let mut new_instance = ServiceInstance {
+                let new_instance = ServiceInstance {
                     name: service_template.name.clone(),
                     fields: service_template.fields.clone(),
                     methods: service_template.methods.clone(),
@@ -1038,7 +1038,6 @@ impl Runtime {
 
     fn execute_statement(&mut self, statement: &crate::parser::ast::Statement) -> Result<Value, RuntimeError> {
         // Note: Timeout checking is done in execute_program() before each statement
-        use std::time::{Instant, Duration};
         
         // Check timeout (using a thread-local or passed-in start time)
         // For now, we'll check in execute_program, but this could be enhanced
@@ -1074,7 +1073,7 @@ impl Runtime {
                 }
                 Ok(last_result)
             }
-            crate::parser::ast::Statement::Function(func_stmt) => {
+            crate::parser::ast::Statement::Function(_func_stmt) => {
                 // For now, we'll skip function registration during execution
                 // In a real implementation, we'd need to handle this differently
                 // to avoid lifetime issues with closures
@@ -2061,13 +2060,13 @@ impl Runtime {
             }
             "create_table" => {
                 if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
-                let table_name = self.value_to_string(&args[0])?;
+                let _table_name = self.value_to_string(&args[0])?;
                 let _schema = self.value_to_string(&args[1])?;
                 Ok(Value::Bool(true))
             }
             "drop_table" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let table_name = self.value_to_string(&args[0])?;
+                let _table_name = self.value_to_string(&args[0])?;
                 Ok(Value::Bool(true))
             }
             "get_table_schema" => {
@@ -2321,13 +2320,13 @@ impl Runtime {
             }
             "terminate_agent" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let agent_id = self.value_to_string(&args[0])?;
+                let _agent_id = self.value_to_string(&args[0])?;
                 // Mock termination - in real implementation this would terminate the actual agent
                 Ok(Value::Bool(true))
             }
             "get_agent_status" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let agent_id = self.value_to_string(&args[0])?;
+                let _agent_id = self.value_to_string(&args[0])?;
                 // Mock status - in real implementation this would check actual agent status
                 Ok(Value::String("idle".to_string()))
             }
@@ -2356,20 +2355,20 @@ impl Runtime {
             }
             "receive_message" => {
                 if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
-                let agent_id = self.value_to_string(&args[0])?;
+                let _agent_id = self.value_to_string(&args[0])?;
                 // Mock message reception - in real implementation this would check message queue
                 Ok(Value::String("message_received".to_string()))
             }
             "process_message_queue" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let agent_id = self.value_to_string(&args[0])?;
+                let _agent_id = self.value_to_string(&args[0])?;
                 // Mock queue processing - in real implementation this would process actual queue
                 Ok(Value::String("messages_processed".to_string()))
             }
             "process_message" => {
                 if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
-                let agent_id = self.value_to_string(&args[0])?;
-                let message_id = self.value_to_string(&args[1])?;
+                let _agent_id = self.value_to_string(&args[0])?;
+                let _message_id = self.value_to_string(&args[1])?;
                 // Mock message processing - in real implementation this would process actual message
                 Ok(Value::String("message_processed".to_string()))
             }
@@ -2394,7 +2393,7 @@ impl Runtime {
                     );
 
                     match task {
-                        Some(task_obj) => {
+                        Some(_task_obj) => {
                             // Mock task assignment - in real implementation this would assign to actual agent
                             Ok(Value::String(format!("task_created_{}_{}", agent_id, task_type)))
                         }
@@ -2406,8 +2405,8 @@ impl Runtime {
             }
             "create_task_from_message" => {
                 if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
-                let agent_id = self.value_to_string(&args[0])?;
-                let message_id = self.value_to_string(&args[1])?;
+                let _agent_id = self.value_to_string(&args[0])?;
+                let _message_id = self.value_to_string(&args[1])?;
                 // Mock task creation from message - in real implementation this would create task from actual message
                 Ok(Value::String("task_from_message".to_string()))
             }
@@ -2536,13 +2535,13 @@ impl Runtime {
             }
             "terminate" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let agent_id = self.value_to_string(&args[0])?;
+                let _agent_id = self.value_to_string(&args[0])?;
                 // Mock termination - in real implementation this would terminate actual agent
                 Ok(Value::Bool(true))
             }
             "get_status" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let agent_id = self.value_to_string(&args[0])?;
+                let _agent_id = self.value_to_string(&args[0])?;
                 // Mock status - in real implementation this would check actual agent status
                 Ok(Value::String("idle".to_string()))
             }
@@ -2673,7 +2672,7 @@ impl Runtime {
                     let message_type = self.value_to_string(&args[2])?;
                     let content = args[3].clone();
 
-                    let message = crate::stdlib::agent::create_agent_message(
+                    let _message = crate::stdlib::agent::create_agent_message(
                         message_id.clone(),
                         sender_id,
                         receiver_id,

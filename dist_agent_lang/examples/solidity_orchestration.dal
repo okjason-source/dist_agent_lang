@@ -6,27 +6,27 @@
 @interface("typescript")
 service SolidityOrchestrator {
     // Registry of Solidity contract addresses
-    solidity_contracts: map<string, map<int, string>>,  // contract_name -> (chain_id -> address)
+    solidity_contracts: map<string, map<int, string>>;  // contract_name -> (chain_id -> address)
     
     // Initialize with Solidity contract addresses
     fn initialize() {
         // Example: Uniswap V2 Router (Solidity contract)
         self.solidity_contracts["UniswapRouter"] = {
-            1: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",  // Ethereum
-            137: "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",  // Polygon
-            42161: "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24"  // Arbitrum
+            "1": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",  // Ethereum
+            "137": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",  // Polygon
+            "42161": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24"  // Arbitrum
         };
         
         // Example: Aave Lending Pool (Solidity contract)
         self.solidity_contracts["AaveLendingPool"] = {
-            1: "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",  // Ethereum
-            137: "0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf"   // Polygon
+            "1": "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",  // Ethereum
+            "137": "0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf"   // Polygon
         };
         
         // Example: ERC20 Token (Solidity contract)
         self.solidity_contracts["USDC"] = {
-            1: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",  // Ethereum
-            137: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"   // Polygon
+            "1": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",  // Ethereum
+            "137": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"   // Polygon
         };
         
         log::info("orchestrator", "Solidity contracts registered");
@@ -42,7 +42,7 @@ service SolidityOrchestrator {
         // Get contract address
         let contract_address = self.solidity_contracts[contract_name][chain_id];
         
-        if contract_address == null {
+        if (contract_address == null) {
             log::error("orchestrator", "Contract " + contract_name + " not found on chain " + chain_id);
             return "error: contract not found";
         }
@@ -122,10 +122,10 @@ service SolidityOrchestrator {
         let chains = [1, 137, 42161];  // Ethereum, Polygon, Arbitrum
         
         // Check price on each chain
-        for chain_id in chains {
+        for chain_id in chains  {
             let router_address = self.solidity_contracts["UniswapRouter"][chain_id];
             
-            if router_address != null {
+            if (router_address != null ) {
                 // Get quote from Uniswap (Solidity contract)
                 let quote = self.call_solidity_contract(
                     "UniswapRouter",
@@ -146,8 +146,8 @@ service SolidityOrchestrator {
         let best_chain = null;
         let best_price = 0;
         
-        for chain_id in chains {
-            if prices[chain_id] > best_price {
+        for chain_id in chains  {
+            if (prices[chain_id] > best_price ) {
                 best_price = prices[chain_id];
                 best_chain = chain_id;
             }
@@ -214,7 +214,7 @@ service SolidityOrchestrator {
         chain_id: int,
         contract_address: string
     ) -> bool {
-        if self.solidity_contracts[contract_name] == null {
+        if (self.solidity_contracts[contract_name] == null ) {
             self.solidity_contracts[contract_name] = {};
         }
         
@@ -232,9 +232,10 @@ service SolidityOrchestrator {
 
 // Example: AI-powered DeFi orchestration
 @trust("hybrid")
+@chain("ethereum","polygon","arbitrum")
 @ai
 service AIDefiOrchestrator {
-    orchestrator: SolidityOrchestrator,
+    orchestrator: SolidityOrchestrator;
     
     fn initialize() {
         self.orchestrator = SolidityOrchestrator::new();

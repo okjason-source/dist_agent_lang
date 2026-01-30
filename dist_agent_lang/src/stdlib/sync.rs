@@ -82,7 +82,7 @@ impl Default for SyncFilters {
 }
 
 /// Push data to target location
-pub fn push(data: HashMap<String, Value>, target: SyncTarget) -> Result<bool, String> {
+pub fn push(_data: HashMap<String, Value>, target: SyncTarget) -> Result<bool, String> {
     // Mock implementation - in real system this would transfer data
     match target.protocol.as_str() {
         "http" => {

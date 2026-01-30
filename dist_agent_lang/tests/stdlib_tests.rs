@@ -600,14 +600,16 @@ fn test_log_get_stats() {
 
 #[test]
 fn test_log_clear() {
+    // Isolate from other tests: clear first, then test that clear() empties our entry
+    log::clear();
     let mut data = HashMap::new();
     data.insert("test".to_string(), Value::String("value".to_string()));
     log::info("test_source", data, None);
-    
+    assert_eq!(log::get_entries().len(), 1, "one entry after info");
+
     log::clear();
-    
     let entries = log::get_entries();
-    assert!(entries.is_empty());
+    assert!(entries.is_empty(), "entries should be empty after clear");
 }
 
 // ============================================
@@ -1416,8 +1418,8 @@ fn test_cap_create_capability_request() {
 
 #[test]
 fn test_cross_chain_security_new() {
-    let manager = cross_chain_security::CrossChainSecurityManager::new();
-    
+    let _manager = cross_chain_security::CrossChainSecurityManager::new();
+
     // Manager should be created successfully
     assert!(true);
 }
@@ -1467,8 +1469,8 @@ fn test_cross_chain_security_bridge_config() {
 
 #[test]
 fn test_secure_auth_new() {
-    let store = secure_auth::SecureUserStore::new();
-    
+    let _store = secure_auth::SecureUserStore::new();
+
     // Store should be created successfully
     assert!(true);
 }
@@ -1686,14 +1688,14 @@ fn test_mobile_create_app() {
     let app = mobile::create_app(
         "TestApp".to_string(),
         "com.test.app".to_string(),
-        mobile::MobilePlatform::iOS
+        mobile::MobilePlatform::IOs
     );
     
     assert_eq!(app.name, "TestApp");
     assert_eq!(app.config.bundle_id, "com.test.app");
     match app.platform {
-        mobile::MobilePlatform::iOS => assert!(true),
-        _ => panic!("Expected iOS platform"),
+        mobile::MobilePlatform::IOs => assert!(true),
+        _ => panic!("Expected IOs platform"),
     }
 }
 

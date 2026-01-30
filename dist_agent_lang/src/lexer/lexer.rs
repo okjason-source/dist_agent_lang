@@ -8,6 +8,7 @@ pub struct Lexer {
     column: usize,
 }
 
+#[allow(dead_code)]
 impl Lexer {
     pub fn new(input: &str) -> Self {
         Self {

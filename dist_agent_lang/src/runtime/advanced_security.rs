@@ -11,6 +11,7 @@ use crate::runtime::functions::RuntimeError;
 pub struct MEVProtectionManager {
     transaction_pool: VecDeque<PendingTransaction>,
     commitment_scheme: CommitRevealScheme,
+    #[allow(dead_code)]
     time_windows: HashMap<String, TimeWindow>,
     fair_ordering: FairOrderingProtocol,
 }
@@ -31,7 +32,9 @@ pub struct PendingTransaction {
 #[derive(Debug, Clone)]
 pub struct CommitRevealScheme {
     commits: HashMap<String, CommitData>,
+    #[allow(dead_code)]
     reveal_deadline: u64,
+    #[allow(dead_code)]
     commit_deadline: u64,
 }
 

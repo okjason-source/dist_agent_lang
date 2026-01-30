@@ -87,7 +87,7 @@ impl ConversionAnalyzer {
     }
     
     fn analyze_function(&self, func: &Function, warnings: &mut Vec<String>, 
-                       errors: &mut Vec<String>, suggestions: &mut Vec<String>) {
+                       _errors: &mut Vec<String>, suggestions: &mut Vec<String>) {
         // Check visibility
         if matches!(func.visibility, Visibility::External) {
             warnings.push(format!("Function '{}' is external - will be converted to @public", func.name));

@@ -3,6 +3,7 @@
 // Simplified to work with current language features
 
 @trust("hybrid")
+@chain("ethereum")
 service AgentSystemDemo {
     demo_agents: map<string, string> = {};
     coordination_examples: map<string, any> = {};
@@ -308,6 +309,7 @@ service AgentSystemDemo {
 // =====================================================
 
 @trust("hybrid")
+@chain("ethereum")
 service PracticalAgentUsage {
     // Example: AI-Powered Code Review System
     fn create_code_review_system() -> map<string, any> {

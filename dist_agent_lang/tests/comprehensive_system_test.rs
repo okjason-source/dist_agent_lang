@@ -303,7 +303,7 @@ fn test_core_language_features() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
     
     // Test 1: Basic syntax parsing
-    let test_code = r#"
+    let _test_code = r#"
         let x = 10;
         let y = "hello";
         let z = true;
@@ -313,7 +313,7 @@ fn test_core_language_features() -> Result<HashMap<String, String>, String> {
     details.insert("basic_syntax".to_string(), "PASSED".to_string());
     
     // Test 2: Function definition
-    let function_code = r#"
+    let _function_code = r#"
         fn add(a: int, b: int) -> int {
             return a + b;
         }
@@ -322,7 +322,7 @@ fn test_core_language_features() -> Result<HashMap<String, String>, String> {
     details.insert("function_definition".to_string(), "PASSED".to_string());
     
     // Test 3: Control structures
-    let control_code = r#"
+    let _control_code = r#"
         if x > 5 {
             return "greater";
         } else {
@@ -333,14 +333,14 @@ fn test_core_language_features() -> Result<HashMap<String, String>, String> {
     details.insert("control_structures".to_string(), "PASSED".to_string());
     
     // Test 4: Error handling
-    let error_code = r#"
+    let _error_code = r#"
         try {
             let result = divide(10, 0);
         } catch {
             return "division_by_zero";
         }
     "#;
-    
+
     details.insert("error_handling".to_string(), "PASSED".to_string());
     
     Ok(details)
@@ -400,7 +400,7 @@ fn test_phase2_compilation_targets() -> Result<HashMap<String, String>, String> 
     
     details.insert("blockchain_target".to_string(), "PASSED".to_string());
     
-    let wasm_service = r#"
+    let _wasm_service = r#"
         @compile_target("wasm")
         service WasmService {
             fn process() {
@@ -410,8 +410,8 @@ fn test_phase2_compilation_targets() -> Result<HashMap<String, String>, String> 
     "#;
     
     details.insert("wasm_target".to_string(), "PASSED".to_string());
-    
-    let native_service = r#"
+
+    let _native_service = r#"
         @compile_target("native")
         service NativeService {
             fn execute() {
@@ -449,7 +449,7 @@ fn test_phase3_trust_models() -> Result<HashMap<String, String>, String> {
     details.insert("decentralized_trust".to_string(), "PASSED".to_string());
     
     // Test hybrid trust model
-    let hybrid_service = r#"
+    let _hybrid_service = r#"
         @trust("hybrid")
         service HybridService {
             fn execute() {
@@ -461,7 +461,7 @@ fn test_phase3_trust_models() -> Result<HashMap<String, String>, String> {
     details.insert("hybrid_trust".to_string(), "PASSED".to_string());
     
     // Test centralized trust model
-    let centralized_service = r#"
+    let _centralized_service = r#"
         @trust("centralized")
         service CentralizedService {
             fn execute() {
@@ -471,7 +471,7 @@ fn test_phase3_trust_models() -> Result<HashMap<String, String>, String> {
     "#;
     
     details.insert("centralized_trust".to_string(), "PASSED".to_string());
-    
+
     // Test trust validation
     let trust_validation = validate_trust_model(&decentralized_service);
     if trust_validation.is_ok() {
@@ -487,7 +487,7 @@ fn test_phase4_cross_chain_support() -> Result<HashMap<String, String>, String> 
     let mut details = HashMap::new();
     
     // Test multi-chain service
-    let multi_chain_service = r#"
+    let _multi_chain_service = r#"
         @chain("ethereum")
         @chain("polygon")
         service MultiChainService {

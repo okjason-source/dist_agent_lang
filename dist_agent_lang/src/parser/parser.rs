@@ -67,7 +67,7 @@ impl Parser {
 
     fn parse_statement(&mut self, position: usize, depth: usize) -> Result<(usize, Statement), ParserError> {
         if depth > Self::MAX_RECURSION_DEPTH {
-            let (line, column) = self.get_token_position(position);
+            let (line, _column) = self.get_token_position(position);
             return Err(ParserError::SemanticError {
                 message: format!("Maximum recursion depth ({}) exceeded in statement parsing", Self::MAX_RECURSION_DEPTH),
                 line,
@@ -206,7 +206,7 @@ impl Parser {
 
     fn parse_block_statement(&mut self, position: usize, depth: usize) -> Result<(usize, BlockStatement), ParserError> {
         if depth > Self::MAX_RECURSION_DEPTH {
-            let (line, column) = self.get_token_position(position);
+            let (line, _column) = self.get_token_position(position);
             return Err(ParserError::SemanticError {
                 message: format!("Maximum recursion depth ({}) exceeded in block statement parsing", Self::MAX_RECURSION_DEPTH),
                 line,
@@ -627,6 +627,16 @@ impl Parser {
                         return Ok((position + 1, Expression::Identifier(namespace_name.clone())));
                     }
                 }
+                Token::Keyword(Keyword::Await) => {
+                    let (position, _) = self.expect_token(position, &Token::Keyword(Keyword::Await))?;
+                    let (position, expr) = self.parse_primary(position, depth)?;
+                    return Ok((position, Expression::Await(Box::new(expr))));
+                }
+                Token::Keyword(Keyword::Throw) => {
+                    let (position, _) = self.expect_token(position, &Token::Keyword(Keyword::Throw))?;
+                    let (position, expr) = self.parse_expression_with_depth(position, depth + 1)?;
+                    return Ok((position, Expression::Throw(Box::new(expr))));
+                }
                 Token::Keyword(_) => {
                     // Allow keywords to be used as identifiers in expressions (e.g., "chain" as a variable name)
                     let (new_position, name) = self.expect_identifier_or_keyword(position)?;
@@ -668,16 +678,6 @@ impl Parser {
                         name: "macro".to_string(),
                         arguments,
                     })));
-                }
-                Token::Keyword(Keyword::Await) => {
-                    let (position, _) = self.expect_token(position, &Token::Keyword(Keyword::Await))?;
-                    let (position, expr) = self.parse_primary(position, depth)?;
-                    return Ok((position, Expression::Await(Box::new(expr))));
-                }
-                Token::Keyword(Keyword::Throw) => {
-                    let (position, _) = self.expect_token(position, &Token::Keyword(Keyword::Throw))?;
-                    let (position, expr) = self.parse_expression_with_depth(position, depth + 1)?;
-                    return Ok((position, Expression::Throw(Box::new(expr))));
                 }
                 _ => {}
             }

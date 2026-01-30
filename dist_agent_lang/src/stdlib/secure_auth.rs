@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use sha2::{Sha256, Digest};
 use rand::Rng;
+use base64::{engine::general_purpose::STANDARD as BASE64_ENGINE, Engine};
 
 /// Secure password hashing using PBKDF2 with SHA256
 pub struct PasswordHasher;
@@ -27,13 +28,13 @@ impl PasswordHasher {
         result.extend_from_slice(&hash);
         
         // Encode as base64 for storage
-        Ok(base64::encode(result))
+        Ok(BASE64_ENGINE.encode(result))
     }
     
     /// Verify a password against a stored hash
     pub fn verify_password(password: &str, stored_hash: &str) -> Result<bool, String> {
         // Decode base64 hash
-        let decoded = base64::decode(stored_hash)
+        let decoded = BASE64_ENGINE.decode(stored_hash)
             .map_err(|e| format!("Invalid hash format: {}", e))?;
         
         if decoded.len() < Self::SALT_LENGTH + 32 {
@@ -59,12 +60,10 @@ impl PasswordHasher {
     
     /// PBKDF2 implementation with SHA256
     fn pbkdf2_hash(password: &[u8], salt: &[u8], iterations: u32) -> Vec<u8> {
-        let mut hasher = Sha256::new();
         let mut result = vec![0u8; 32]; // SHA256 output size
         
         // Simplified PBKDF2 implementation
         let mut u = Vec::new();
-        let mut t = Vec::new();
         
         // For each block (we only need one for 32-byte output)
         for block in 1..=1 {
@@ -78,7 +77,7 @@ impl PasswordHasher {
             
             // First iteration
             let mut current = Self::hmac_sha256(password, &u);
-            t = current.clone();
+            let mut t = current.clone();
             
             // Remaining iterations
             for _ in 1..iterations {
@@ -228,7 +227,7 @@ impl SecureSession {
     fn generate_secure_token() -> String {
         let mut rng = rand::thread_rng();
         let bytes: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
-        base64::encode(bytes)
+        BASE64_ENGINE.encode(bytes)
     }
     
     /// Get permissions for roles
@@ -279,6 +278,7 @@ impl SecureSession {
 pub struct SecureUserStore {
     users: HashMap<String, SecureUser>,
     sessions: HashMap<String, SecureSession>,
+    #[allow(dead_code)]
     failed_login_attempts: HashMap<String, (u32, u64)>, // user_id -> (attempts, last_attempt_time)
 }
 

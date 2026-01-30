@@ -3,7 +3,9 @@
 
 #[cfg(feature = "python-ffi")]
 use pyo3::prelude::*;
+#[cfg(feature = "python-ffi")]
 use crate::runtime::values::Value;
+#[cfg(feature = "python-ffi")]
 use crate::runtime::engine::Runtime;
 
 /// Python FFI module for dist_agent_lang

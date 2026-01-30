@@ -79,7 +79,7 @@ fn test_concurrent_reentrancy_guard() {
     let mut handles = vec![];
     
     // Spawn 100 threads trying to access the same function
-    for i in 0..100 {
+    for _ in 0..100 {
         let guard_clone = Arc::clone(&guard);
         let handle = thread::spawn(move || {
             let result = guard_clone.enter("critical_function", Some("contract"));

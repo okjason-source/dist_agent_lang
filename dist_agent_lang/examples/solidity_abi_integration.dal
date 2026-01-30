@@ -5,7 +5,7 @@
 @chain("ethereum")
 service SolidityABIIntegration {
     // Example: Uniswap V2 Router ABI (simplified)
-    uniswap_abi: string = `[
+//     uniswap_abi: string = `[
         {
             "type": "function",
             "name": "swapExactTokensForTokens",
@@ -42,7 +42,7 @@ service SolidityABIIntegration {
             ],
             "anonymous": false
         }
-    ]`,
+//     ]`,
     
     uniswap_router: string = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
     

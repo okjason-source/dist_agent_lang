@@ -169,7 +169,7 @@ fn real_time_communication_example() {
         log::info("agent", { "message": "Chat Agent initialized and ready for communication" });
 
         // Set up message handling
-        while true {
+        while (true ) {
             // In a real implementation, this would be event-driven
             // For demo purposes, we'll simulate message handling
 
@@ -253,8 +253,8 @@ fn system_agent_example() {
             "connections": system_status.active_connections
         });
 
-        // Example: Send alert if resources are critical
-        if system_status.cpu_usage > 90.0 {
+        // Example: Send alert if (resources are critical
+        if (system_status.cpu_usage > 90.0 {
             ai::send_message(
                 "infrastructure_manager",
                 "alert_system",
@@ -293,12 +293,12 @@ fn worker_agent_example() {
             "/data/input/file3.xml"
         ];
 
-        for file_path in files_to_process {
+        for file_path in files_to_process  {
             // Process each file
             let file_content = database::read_file(file_path);
 
             // Perform processing (simplified)
-            let processed_content = format!("Processed: {}", file_content);
+            let processed_content = // format!("Processed: {}", file_content);
 
             // Save processed result
             let output_path = file_path.replace("/input/", "/output/");
@@ -363,7 +363,7 @@ fn custom_agent_example() {
 
         let verification_result = self.verify_external_data(external_data);
 
-        if verification_result {
+        if (verification_result {
             ai::send_message(
                 "blockchain_oracle",
                 "data_consumers",
@@ -475,7 +475,7 @@ fn complex_workflow_example() {
     let workflow = ai::create_workflow(coordinator, "content_creation_pipeline", content_workflow_steps);
     let success = ai::execute_workflow(coordinator, workflow.workflow_id);
 
-    if success {
+    if (success {
         log::info("example", {
             "message": "Complex content creation workflow completed successfully",
             "workflow_id": workflow.workflow_id,

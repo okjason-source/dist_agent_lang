@@ -79,7 +79,7 @@ service ChainSelectionExample {
         let user = auth::session().user_id;
         let old_chain = self.default_chain;
         
-        if !self.active_chains.contains(chain_id) {
+        if (!self.active_chains.contains(chain_id) {
             log::error("chain", {
                 "event": "chain_not_supported",
                 "chain_id": chain_id,
@@ -109,7 +109,7 @@ service ChainSelectionExample {
     // Deploy contract to specific chain
     @txn
     fn deploy_to_chain(chain_id: int) -> string {
-        if !self.active_chains.contains(chain_id) {
+        if (!self.active_chains.contains(chain_id) {
             log::error("chain", {
                 "event": "chain_not_supported",
                 "chain_id": chain_id
@@ -151,7 +151,7 @@ service ChainSelectionExample {
         let user = auth::session().user_id;
         
         // Verify chains are supported
-        if !self.active_chains.contains(to_chain) {
+        if (!self.active_chains.contains(to_chain) {
             log::error("chain", {
                 "event": "target_chain_not_supported",
                 "target_chain": to_chain,
@@ -161,8 +161,8 @@ service ChainSelectionExample {
         }
         
         // Check balance on current chain
-        let current_balance = self.cross_chain_balances[user][self.default_chain] || 0;
-        if current_balance < amount {
+//         let current_balance = self.cross_chain_balances[user][self.default_chain] 
+        if (current_balance < amount {
             log::error("chain", {
                 "event": "insufficient_balance",
                 "user": user,
@@ -186,7 +186,7 @@ service ChainSelectionExample {
         };
         
         // Deduct from current chain
-        if !self.cross_chain_balances.contains(user) {
+        if (!self.cross_chain_balances.contains(user) {
             self.cross_chain_balances[user] = {};
         }
         self.cross_chain_balances[user][self.default_chain] = current_balance - amount;
@@ -213,7 +213,7 @@ service ChainSelectionExample {
     
     // Get gas estimate for a chain
     fn estimate_gas(chain_id: int, operation: string) -> int {
-        if !self.active_chains.contains(chain_id) {
+        if (!self.active_chains.contains(chain_id) {
             return 0;
         }
         
@@ -223,7 +223,7 @@ service ChainSelectionExample {
     
     // Get current gas price for a chain
     fn get_gas_price(chain_id: int) -> float {
-        if !self.active_chains.contains(chain_id) {
+        if (!self.active_chains.contains(chain_id) {
             return 0.0;
         }
         
@@ -233,7 +233,7 @@ service ChainSelectionExample {
     
     // Check transaction status across chains
     fn get_transaction_status(chain_id: int, tx_hash: string) -> string {
-        if !self.active_chains.contains(chain_id) {
+        if (!self.active_chains.contains(chain_id) {
             return "unknown";
         }
         
@@ -249,13 +249,13 @@ fn select_chain_by_criteria(criteria: map<string, any>) -> int {
     let cost_priority = criteria.get("cost", "medium");
     let security_priority = criteria.get("security", "high");
     
-    if speed_priority == "fast" && cost_priority == "low" && security_priority == "medium" {
+    if (speed_priority == "fast" && cost_priority == "low" && security_priority == "medium" {
         return 137; // Polygon
-    } else if speed_priority == "fast" && cost_priority == "low" && security_priority == "low" {
+    } else if (speed_priority == "fast" && cost_priority == "low" && security_priority == "low" ) {
         return 56; // BSC
-    } else if speed_priority == "medium" && cost_priority == "medium" && security_priority == "high" {
+    } else if (speed_priority == "medium" && cost_priority == "medium" && security_priority == "high" ) {
         return 1; // Ethereum
-    } else if speed_priority == "fast" && cost_priority == "low" && security_priority == "high" {
+    } else if (speed_priority == "fast" && cost_priority == "low" && security_priority == "high" ) {
         return 42161; // Arbitrum
     } else {
         return 1; // Default to Ethereum
@@ -283,7 +283,7 @@ fn main() {
     // Switch to Polygon for lower gas fees
     let switch_result = chain_example.switch_chain(137);
     
-    if switch_result {
+    if (switch_result {
         log::info("main", {
             "event": "chain_switched_successfully",
             "new_chain": "Polygon"
@@ -293,7 +293,7 @@ fn main() {
     // Perform cross-chain transfer
     let transfer_result = chain_example.cross_chain_transfer(1, "0x1234...", 1000 * 10^18);
     
-    if transfer_result {
+    if (transfer_result {
         log::info("main", {
             "event": "cross_chain_transfer_successful",
             "amount": 1000 * 10^18,

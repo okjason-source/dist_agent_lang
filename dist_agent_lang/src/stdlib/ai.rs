@@ -580,7 +580,7 @@ pub fn train_model(training_data: TrainingData) -> Result<Model, String> {
     Ok(model)
 }
 
-pub fn predict(model: &Model, input: Value) -> Result<Prediction, String> {
+pub fn predict(model: &Model, _input: Value) -> Result<Prediction, String> {
     crate::stdlib::log::info("Making prediction", {
         let mut data = std::collections::HashMap::new();
         data.insert("model_id".to_string(), Value::String(model.model_id.clone()));
@@ -705,12 +705,12 @@ pub fn execute_workflow(coordinator: &mut AgentCoordinator, workflow_id: &str) -
 }
 
 // Helper Functions
-pub fn process_data_task(task: &Task) -> Result<Value, String> {
+pub fn process_data_task(_task: &Task) -> Result<Value, String> {
     // Simulated data processing
     Ok(Value::String("Data processed successfully".to_string()))
 }
 
-pub fn handle_communication_task(agent: &mut Agent, task: &Task) -> Result<Value, String> {
+pub fn handle_communication_task(_agent: &mut Agent, _task: &Task) -> Result<Value, String> {
     // Simulated communication task
     Ok(Value::String("Communication handled".to_string()))
 }

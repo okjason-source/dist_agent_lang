@@ -536,7 +536,7 @@ pub fn disconnect_device(device_id: &str) -> Result<bool, String> {
     Ok(true)
 }
 
-pub fn get_device_status(device_id: &str) -> Result<DeviceStatus, String> {
+pub fn get_device_status(_device_id: &str) -> Result<DeviceStatus, String> {
     // Simulate status check
     Ok(DeviceStatus::Online)
 }
@@ -760,7 +760,7 @@ pub fn process_data_at_edge(edge_node_id: &str, data: Value, task_type: EdgeTask
     Ok(task)
 }
 
-pub fn cache_data_at_edge(edge_node_id: &str, key: &str, data: Value, ttl_seconds: Option<i64>) -> Result<bool, String> {
+pub fn cache_data_at_edge(edge_node_id: &str, key: &str, _data: Value, ttl_seconds: Option<i64>) -> Result<bool, String> {
     crate::stdlib::log::info("iot", {
         let mut data_map = std::collections::HashMap::new();
         data_map.insert("edge_node_id".to_string(), Value::String(edge_node_id.to_string()));
@@ -773,7 +773,7 @@ pub fn cache_data_at_edge(edge_node_id: &str, key: &str, data: Value, ttl_second
     Ok(true)
 }
 
-pub fn get_cached_data_from_edge(edge_node_id: &str, key: &str) -> Result<Option<Value>, String> {
+pub fn get_cached_data_from_edge(_edge_node_id: &str, _key: &str) -> Result<Option<Value>, String> {
     // Simulate cache retrieval
     Ok(Some(Value::String("cached_data".to_string())))
 }
@@ -869,7 +869,7 @@ pub fn configure_protocol(protocol_config: ProtocolConfig) -> Result<bool, Strin
     Ok(true)
 }
 
-pub fn publish_message(protocol_config: &ProtocolConfig, topic: &str, payload: Value) -> Result<bool, String> {
+pub fn publish_message(protocol_config: &ProtocolConfig, topic: &str, _payload: Value) -> Result<bool, String> {
     crate::stdlib::log::info("iot", {
         let mut data = std::collections::HashMap::new();
         data.insert("topic".to_string(), Value::String(topic.to_string()));
@@ -906,7 +906,7 @@ pub fn authenticate_device(device_id: &str, credentials: &Credentials) -> Result
     Ok(true)
 }
 
-pub fn encrypt_device_data(data: Value, security_profile: &SecurityProfile) -> Result<Value, String> {
+pub fn encrypt_device_data(_data: Value, security_profile: &SecurityProfile) -> Result<Value, String> {
     crate::stdlib::log::info("iot", {
         let mut data_map = std::collections::HashMap::new();
         data_map.insert("encryption_enabled".to_string(), Value::Bool(security_profile.encryption_enabled));
@@ -931,7 +931,7 @@ pub fn verify_device_certificate(device_id: &str, certificate_path: &str) -> Res
 }
 
 // Cloud Integration
-pub fn sync_device_data_to_cloud(device_id: &str, data: Value) -> Result<bool, String> {
+pub fn sync_device_data_to_cloud(device_id: &str, _data: Value) -> Result<bool, String> {
     crate::stdlib::log::info("iot", {
         let mut data_map = std::collections::HashMap::new();
         data_map.insert("device_id".to_string(), Value::String(device_id.to_string()));

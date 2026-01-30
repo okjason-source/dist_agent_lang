@@ -66,7 +66,7 @@ pub struct AdminPolicy {
 }
 
 /// Authorize admin operation
-pub fn authorize(admin_id: &str, operation: &str, resource: &str) -> bool {
+pub fn authorize(admin_id: &str, operation: &str, _resource: &str) -> bool {
     // Mock implementation - in real system this would check admin permissions
     match operation {
         "read" => true,

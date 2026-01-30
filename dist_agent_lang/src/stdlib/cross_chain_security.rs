@@ -158,7 +158,7 @@ impl CrossChainSecurityManager {
     ) -> Result<String, RuntimeError> {
         // Validate source and target chains
         let source_chain_id = operation.source_chain;
-        let target_chain_id = operation.target_chain;
+        let _target_chain_id = operation.target_chain;
         let source_config = self.chain_configs.get(&source_chain_id)
             .ok_or_else(|| RuntimeError::General(format!("Unsupported source chain: {}", operation.source_chain)))?;
 
@@ -435,10 +435,10 @@ impl CrossChainSecurityManager {
         source_chain: i64,
         target_chain: i64,
     ) -> Result<CrossChainProof, RuntimeError> {
-        let source_config = self.chain_configs.get(&source_chain)
+        let _source_config = self.chain_configs.get(&source_chain)
             .ok_or_else(|| RuntimeError::General(format!("Source chain not found: {}", source_chain)))?;
 
-        let target_config = self.chain_configs.get(&target_chain)
+        let _target_config = self.chain_configs.get(&target_chain)
             .ok_or_else(|| RuntimeError::General(format!("Target chain not found: {}", target_chain)))?;
 
         // Generate merkle proof

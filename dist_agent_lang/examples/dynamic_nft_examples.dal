@@ -17,7 +17,7 @@ service DynamicNFTExamples {
             "update_interval": 1800000 // 30 minutes
         });
 
-        let executable_code = r#"
+//         let executable_code = r#"
             // Dynamic art generation based on weather
             fn update_art_based_on_weather() {
                 let weather_data = oracle::get_weather_data("New York");
@@ -25,20 +25,20 @@ service DynamicNFTExamples {
                 let humidity = weather_data.humidity;
 
                 // Generate art colors based on temperature
-                let colors = if temperature < 0 {
+                let colors = if (temperature < 0 {
                     ["#E3F2FD", "#BBDEFB", "#90CAF9"] // Cold blue tones
-                } else if temperature < 10 {
+                } else if (temperature < 10 ) {
                     ["#FFF3E0", "#FFE0B2", "#FFCC02"] // Cool yellow tones
-                } else if temperature < 20 {
+                } else if (temperature < 20 ) {
                     ["#F3E5F5", "#CE93D8", "#BA68C8"] // Warm purple tones
                 } else {
                     ["#FFEBE3", "#FFAB91", "#FF7043"] // Hot orange tones
                 };
 
                 // Generate patterns based on humidity
-                let pattern_complexity = if humidity < 30 {
+                let pattern_complexity = if (humidity < 30 {
                     "minimalist"
-                } else if humidity < 60 {
+                } else if (humidity < 60 ) {
                     "moderate"
                 } else {
                     "complex"
@@ -109,7 +109,7 @@ service DynamicNFTExamples {
             "update_interval": 3600000 // 1 hour
         });
 
-        let executable_code = r#"
+//         let executable_code = r#"
             fn update_team_performance() {
                 let performance_data = oracle::get_sports_data(team_name);
 
@@ -118,21 +118,21 @@ service DynamicNFTExamples {
                 let win_rate = recent_games.filter(g => g.result == "win").length() / recent_games.length();
 
                 // Update NFT appearance based on performance
-                let appearance = if win_rate >= 0.8 {
+                let appearance = if (win_rate >= 0.8 {
                     {
                         "rarity": "legendary",
                         "colors": ["#FFD700", "#FFA500", "#FF6347"], // Gold, orange, red
                         "effects": ["glowing", "animated"],
                         "accessories": ["championship_ring", "trophy"]
                     }
-                } else if win_rate >= 0.6 {
+                } else if (win_rate >= 0.6 ) {
                     {
                         "rarity": "epic",
                         "colors": ["#9370DB", "#8A2BE2", "#4B0082"], // Purple tones
                         "effects": ["sparkling"],
                         "accessories": ["medal"]
                     }
-                } else if win_rate >= 0.4 {
+                } else if (win_rate >= 0.4 ) {
                     {
                         "rarity": "rare",
                         "colors": ["#4169E1", "#0000FF", "#00008B"], // Blue tones
@@ -160,7 +160,7 @@ service DynamicNFTExamples {
                 });
 
                 // Special actions for significant events
-                if performance_data.recent_games[0].is_playoffs && performance_data.recent_games[0].result == "win" {
+                if (performance_data.recent_games[0].is_playoffs && performance_data.recent_games[0].result == "win" {
                     trigger_action("playoff_celebration", {
                         "team": team_name,
                         "game_result": performance_data.recent_games[0]
@@ -175,9 +175,9 @@ service DynamicNFTExamples {
                 let older_performance = games.slice(5, 10); // Previous 5 games
                 let older_win_rate = older_performance.filter(g => g.result == "win").length() / older_performance.length();
 
-                if recent_win_rate > older_win_rate + 0.2 {
+                if (recent_win_rate > older_win_rate + 0.2 {
                     return "improving";
-                } else if recent_win_rate < older_win_rate - 0.2 {
+                } else if (recent_win_rate < older_win_rate - 0.2 ) {
                     return "declining";
                 } else {
                     return "stable";
@@ -231,7 +231,7 @@ service DynamicNFTExamples {
             "update_interval": 3600000 // 1 hour
         });
 
-        let executable_code = r#"
+//         let executable_code = r#"
             fn update_fitness_achievement() {
                 let health_data = oracle::get_health_data(user_address);
 
@@ -256,7 +256,7 @@ service DynamicNFTExamples {
                 });
 
                 // Trigger achievement celebrations
-                for achievement in achievements.new_achievements {
+                for achievement in achievements.new_achievements  {
                     trigger_action("achievement_unlocked", {
                         "achievement": achievement,
                         "fitness_level": fitness_level,
@@ -265,7 +265,7 @@ service DynamicNFTExamples {
                 }
 
                 // AI-powered personalized recommendations
-                if ai_enabled {
+                if (ai_enabled {
                     let recommendations = ai::generate_fitness_recommendations(weekly_stats, fitness_level);
                     trigger_action("personalized_recommendations", {
                         "recommendations": recommendations,
@@ -296,13 +296,13 @@ service DynamicNFTExamples {
 
                 let overall_score = (steps_score + calories_score + active_score) / 3;
 
-                if overall_score >= 1.5 {
+                if (overall_score >= 1.5 {
                     return "elite";
-                } else if overall_score >= 1.2 {
+                } else if (overall_score >= 1.2 ) {
                     return "advanced";
-                } else if overall_score >= 0.9 {
+                } else if (overall_score >= 0.9 ) {
                     return "intermediate";
-                } else if overall_score >= 0.6 {
+                } else if (overall_score >= 0.6 ) {
                     return "beginner";
                 } else {
                     return "inactive";
@@ -348,20 +348,20 @@ service DynamicNFTExamples {
                 let new_achievements = [];
 
                 // Step achievements
-                if weekly_stats.total_steps >= 70000 {
+                if (weekly_stats.total_steps >= 70000 {
                     new_achievements.push("week_warrior");
                 }
-                if weekly_stats.average_daily_steps >= 10000 {
+                if (weekly_stats.average_daily_steps >= 10000 {
                     new_achievements.push("daily_champion");
                 }
 
                 // Active minutes achievements
-                if weekly_stats.total_active_minutes >= 150 {
+                if (weekly_stats.total_active_minutes >= 150 {
                     new_achievements.push("activity_master");
                 }
 
                 // Streak achievements
-                if weekly_stats.days_active >= 7 {
+                if (weekly_stats.days_active >= 7 {
                     new_achievements.push("perfect_week");
                 }
 
@@ -431,7 +431,7 @@ service DynamicNFTExamples {
             "update_interval": 86400000 // Daily updates
         });
 
-        let executable_code = r#"
+//         let executable_code = r#"
             fn update_property_valuation() {
                 let property_data = oracle::get_real_estate_data(property_id);
 
@@ -461,7 +461,7 @@ service DynamicNFTExamples {
                 });
 
                 // Trigger alerts for important events
-                for event in significant_events {
+                for event in significant_events  {
                     trigger_action("market_event_alert", {
                         "event_type": event.type,
                         "severity": event.severity,
@@ -471,7 +471,7 @@ service DynamicNFTExamples {
                 }
 
                 // AI-powered investment insights
-                if ai_enabled {
+                if (ai_enabled {
                     let insights = ai::generate_investment_insights(property_data, performance_metrics);
                     trigger_action("investment_insights", {
                         "insights": insights,
@@ -505,13 +505,13 @@ service DynamicNFTExamples {
             fn calculate_performance_rating(appreciation, yield_rate) -> string {
                 let score = (appreciation * 0.6) + (yield_rate * 0.4);
 
-                if score >= 0.15 {
+                if (score >= 0.15 {
                     return "excellent";
-                } else if score >= 0.10 {
+                } else if (score >= 0.10 ) {
                     return "very_good";
-                } else if score >= 0.05 {
+                } else if (score >= 0.05 ) {
                     return "good";
-                } else if score >= 0.02 {
+                } else if (score >= 0.02 ) {
                     return "fair";
                 } else {
                     return "poor";
@@ -558,14 +558,14 @@ service DynamicNFTExamples {
 
                 // Price change events
                 let price_change_pct = property_data.price_change_30_days;
-                if price_change_pct >= 0.10 {
+                if (price_change_pct >= 0.10 {
                     events.push({
                         "type": "price_appreciation",
                         "severity": "high",
                         "description": "Property value increased by " + (price_change_pct * 100).to_i64() + "%",
                         "impact": "positive"
                     });
-                } else if price_change_pct <= -0.10 {
+                } else if (price_change_pct <= -0.10 ) {
                     events.push({
                         "type": "price_depreciation",
                         "severity": "high",
@@ -576,7 +576,7 @@ service DynamicNFTExamples {
 
                 // Occupancy change events
                 let occupancy_change = property_data.occupancy_change_30_days;
-                if occupancy_change <= -0.20 {
+                if (occupancy_change <= -0.20 {
                     events.push({
                         "type": "occupancy_drop",
                         "severity": "medium",
@@ -586,7 +586,7 @@ service DynamicNFTExamples {
                 }
 
                 // Market trend changes
-                if property_data.market_trend == "hot" {
+                if (property_data.market_trend == "hot" {
                     events.push({
                         "type": "hot_market",
                         "severity": "medium",
@@ -647,7 +647,7 @@ service DynamicNFTExamples {
             "update_interval": 3600000 // 1 hour
         });
 
-        let executable_code = r#"
+//         let executable_code = r#"
             fn update_music_royalty_status() {
                 let music_data = oracle::get_music_data(song_id);
 
@@ -679,7 +679,7 @@ service DynamicNFTExamples {
                 });
 
                 // Trigger fan engagement events
-                if music_data.chart_position <= 10 {
+                if (music_data.chart_position <= 10 {
                     trigger_action("chart_success_celebration", {
                         "position": music_data.chart_position,
                         "streams": total_streams,
@@ -688,7 +688,7 @@ service DynamicNFTExamples {
                 }
 
                 // AI-powered music insights
-                if ai_enabled {
+                if (ai_enabled {
                     let insights = ai::analyze_music_performance(music_data);
                     trigger_action("music_insights", {
                         "insights": insights,
@@ -699,15 +699,15 @@ service DynamicNFTExamples {
             }
 
             fn determine_popularity_tier(total_streams) -> string {
-                if total_streams >= 100000000 {
+                if (total_streams >= 100000000 {
                     return "diamond";
-                } else if total_streams >= 50000000 {
+                } else if (total_streams >= 50000000 ) {
                     return "platinum";
-                } else if total_streams >= 10000000 {
+                } else if (total_streams >= 10000000 ) {
                     return "gold";
-                } else if total_streams >= 1000000 {
+                } else if (total_streams >= 1000000 ) {
                     return "silver";
-                } else if total_streams >= 100000 {
+                } else if (total_streams >= 100000 ) {
                     return "bronze";
                 } else {
                     return "emerging";
@@ -758,17 +758,17 @@ service DynamicNFTExamples {
             fn generate_music_visualization(music_data) -> any {
                 // Generate waveform visualization from streaming data
                 let waveform = [];
-                for i in 0..100 {
-                    let amplitude = sin(i * 0.1) * (music_data.average_volume || 0.5);
+                for i in 0..100  {
+//                     let amplitude = sin(i * 0.1) * (music_data.average_volume 
                     waveform.push(amplitude);
                 }
 
                 // Generate frequency spectrum
                 let spectrum = [];
-                for i in 0..50 {
+                for i in 0..50  {
                     let frequency = i * 100; // Hz
                     let intensity = music_data.frequency_data ?
-                        music_data.frequency_data[i] || 0 : random();
+//                         music_data.frequency_data[i] 
                     spectrum.push({
                         "frequency": frequency,
                         "intensity": intensity
@@ -778,8 +778,8 @@ service DynamicNFTExamples {
                 return {
                     "waveform": waveform,
                     "spectrum": spectrum,
-                    "beat_intensity": music_data.beat_intensity || 0.5,
-                    "tempo": music_data.tempo || 120
+//                     "beat_intensity": music_data.beat_intensity 
+//                     "tempo": music_data.tempo 
                 };
             }
 
@@ -800,13 +800,13 @@ service DynamicNFTExamples {
             }
 
             fn get_chart_celebration_effects(position) -> any {
-                if position == 1 {
+                if (position == 1 {
                     return {
                         "effects": ["fireworks", "confetti", "golden_sparkles"],
                         "duration": 10000,
                         "sound_effect": "champion_fanfare"
                     };
-                } else if position <= 5 {
+                } else if (position <= 5 ) {
                     return {
                         "effects": ["sparkles", "rising_stars"],
                         "duration": 5000,

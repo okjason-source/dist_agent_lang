@@ -1492,7 +1492,7 @@ fn test_operation_data_mutation() {
 #[test]
 fn test_bridge_token_list_operations() {
     // Test bridge token list operations
-    let mut bridge = BridgeConfig {
+    let bridge = BridgeConfig {
         bridge_address: "0xBridge".to_string(),
         bridge_fee: 1000,
         bridge_timeout: 3600,

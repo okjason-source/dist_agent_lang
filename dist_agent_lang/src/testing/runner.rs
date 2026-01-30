@@ -4,7 +4,6 @@ use crate::testing::mock::*;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::runtime::Runtime;
-use crate::runtime::values::Value;
 
 /// Test runner that executes test suites
 pub struct TestRunner {

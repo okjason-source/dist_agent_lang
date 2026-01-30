@@ -20,7 +20,7 @@ service AutoDetectedService {
     // This will auto-select FFI (batch operation pattern)
     fn batch_process(data_list: vector<string>) -> vector<string> {
         let results = [];
-        for data in data_list {
+        for data in data_list  {
             results.push(self.hash_data(data));
         }
         return results;
@@ -64,7 +64,7 @@ service ExplicitHTTPService {
 @trust("hybrid")
 service ExplicitFFIService {
     // Even though this uses chain (network), FFI is forced
-    // Note: This might fail if chain operations require network
+    // Note: This might fail if (chain operations require network
     fn get_chain_info(chain_id: int) -> map<string, any> {
         return chain::get_info(chain_id);
     }
@@ -90,7 +90,7 @@ service MixedService {
     // Explicitly override to FFI for this function
     @api("ffi")
     fn high_performance(data: string) -> string {
-        // Force FFI even if auto-detection would choose HTTP
+        // Force FFI even if (auto-detection would choose HTTP
         return self.compute_hash(data);
     }
 }
@@ -113,7 +113,7 @@ service SmartService {
     // Pattern: "batch_" -> Auto-selects FFI
     fn batch_hash(data_list: vector<string>) -> vector<string> {
         let results = [];
-        for data in data_list {
+        for data in data_list  {
             results.push(self.hash(data));
         }
         return results;

@@ -12,7 +12,6 @@ use dist_agent_lang::http_server_handlers::{
 use dist_agent_lang::http_server_integration::{
     create_router_with_middleware
 };
-use dist_agent_lang::runtime::values::Value;
 use axum::http::StatusCode;
 use std::collections::HashMap;
 
@@ -28,7 +27,7 @@ use std::collections::HashMap;
 fn test_http_response_to_axum_response_valid() {
     // Test http_response_to_axum_response - catches return value mutations
     // Catches: replace with Response::new(Default::default()) or Response::from(Default::default()) (line 129)
-    use dist_agent_lang::stdlib::web::{HttpResponse, Cookie};
+    use dist_agent_lang::stdlib::web::HttpResponse;
     
     let http_response = HttpResponse {
         status: 200,
@@ -120,8 +119,8 @@ async fn test_axum_request_to_http_request_extract_body() {
         .body(axum::body::Body::from("test body content"))
         .unwrap();
     
-    let http_request = axum_request_to_http_request(request).await;
-    
+    let _http_request = axum_request_to_http_request(request).await;
+
     // Verify body extraction (extract_body may return empty for now, but function should execute)
     // The key is that extract_body is called, not that it returns specific content
     assert!(true, "extract_body should be called during request conversion");
@@ -276,7 +275,7 @@ fn test_create_router_with_middleware_get_method() {
         },
     };
     
-    let router = create_router_with_middleware(server);
+    let _router = create_router_with_middleware(server);
     
     // Router should handle GET method (if match arm is deleted, this may fail)
     assert!(true, "Router should handle GET method");
@@ -304,8 +303,8 @@ fn test_create_router_with_middleware_post_method() {
         },
     };
     
-    let router = create_router_with_middleware(server);
-    
+    let _router = create_router_with_middleware(server);
+
     // Router should handle POST method
     assert!(true, "Router should handle POST method");
 }
@@ -332,8 +331,8 @@ fn test_create_router_with_middleware_put_method() {
         },
     };
     
-    let router = create_router_with_middleware(server);
-    
+    let _router = create_router_with_middleware(server);
+
     // Router should handle PUT method
     assert!(true, "Router should handle PUT method");
 }
@@ -360,7 +359,7 @@ fn test_create_router_with_middleware_delete_method() {
         },
     };
     
-    let router = create_router_with_middleware(server);
+    let _router = create_router_with_middleware(server);
     
     // Router should handle DELETE method
     assert!(true, "Router should handle DELETE method");
@@ -421,8 +420,9 @@ fn test_rate_limit_middleware_function_exists() {
     // Test that rate_limit_middleware function exists and can be referenced
     // Catches: replace rate_limit_middleware -> Response with Default::default() (line 17)
     // The function is used in start_http_server, so router creation verifies it exists
+    #[allow(unused_imports)]
     use dist_agent_lang::http_server_security_middleware::rate_limit_middleware;
-    
+
     // Function exists if we can reference it
     // Actual behavior is tested through integration tests
     assert!(true, "rate_limit_middleware function exists");
@@ -432,8 +432,9 @@ fn test_rate_limit_middleware_function_exists() {
 fn test_request_size_middleware_function_exists() {
     // Test that request_size_middleware function exists
     // Catches: replace request_size_middleware -> Response with Default::default() (line 45)
+    #[allow(unused_imports)]
     use dist_agent_lang::http_server_security_middleware::request_size_middleware;
-    
+
     assert!(true, "request_size_middleware function exists");
 }
 
@@ -441,8 +442,9 @@ fn test_request_size_middleware_function_exists() {
 fn test_auth_middleware_function_exists() {
     // Test that auth_middleware function exists
     // Catches: replace auth_middleware -> Response with Default::default() (line 81)
+    #[allow(unused_imports)]
     use dist_agent_lang::http_server_security_middleware::auth_middleware;
-    
+
     assert!(true, "auth_middleware function exists");
 }
 
@@ -450,8 +452,9 @@ fn test_auth_middleware_function_exists() {
 fn test_input_validation_middleware_function_exists() {
     // Test that input_validation_middleware function exists
     // Catches: replace input_validation_middleware -> Response with Default::default() (line 118)
+    #[allow(unused_imports)]
     use dist_agent_lang::http_server_security_middleware::input_validation_middleware;
-    
+
     assert!(true, "input_validation_middleware function exists");
 }
 
@@ -489,7 +492,7 @@ fn test_create_router_with_middleware_delete_method_with_route() {
         },
     };
     
-    let router = create_router_with_middleware(server);
+    let _router = create_router_with_middleware(server);
     
     // Router should handle DELETE method (if match arm is deleted, this may fail)
     assert!(true, "Router should handle DELETE method with route");
@@ -541,7 +544,7 @@ fn test_create_router_with_middleware_all_methods_coverage() {
         },
     };
     
-    let router = create_router_with_middleware(server);
+    let _router = create_router_with_middleware(server);
     
     // Router should handle all methods
     assert!(true, "Router should handle all HTTP methods (GET, POST, PUT, DELETE)");
@@ -583,7 +586,7 @@ fn test_middleware_value_conversion_map_request() {
     // The middleware chain will use value_to_http_request with Map values
     // If the match arm is deleted, middleware execution will fail
     // This test verifies the router can be created with middleware
-    let router = create_router_with_middleware(server);
+    let _router = create_router_with_middleware(server);
     assert!(true, "Router with middleware should handle Map value conversion");
 }
 
@@ -610,7 +613,7 @@ fn test_middleware_value_conversion_map_response() {
     };
     
     // Router creation exercises value conversion paths
-    let router = create_router_with_middleware(server);
+    let _router = create_router_with_middleware(server);
     assert!(true, "Router should handle Map value conversion in responses");
 }
 
@@ -637,7 +640,7 @@ fn test_middleware_value_conversion_string_response() {
     };
     
     // Router creation exercises value conversion paths
-    let router = create_router_with_middleware(server);
+    let _router = create_router_with_middleware(server);
     assert!(true, "Router should handle String value conversion in responses");
 }
 
@@ -670,7 +673,7 @@ async fn test_home_handler_response_content() {
         },
     };
     
-    let router = create_router_with_middleware(server);
+    let _router = create_router_with_middleware(server);
     
     // Router should be created successfully
     // If home_handler is mutated to return Default::default(), the router still works
@@ -700,7 +703,7 @@ async fn test_health_handler_response_content() {
         },
     };
     
-    let router = create_router_with_middleware(server);
+    let _router = create_router_with_middleware(server);
     
     // Router should be created successfully
     // If health_handler is mutated to return Default::default(), the router still works
@@ -737,7 +740,7 @@ fn test_handle_with_middleware_response_verification() {
         },
     };
     
-    let router = create_router_with_middleware(server);
+    let _router = create_router_with_middleware(server);
     
     // Router should be created successfully
     // If handle_with_middleware is mutated to return Default::default(), the router still works

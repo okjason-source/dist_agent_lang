@@ -340,7 +340,7 @@ pub fn screen_transaction(
     from_address: String,
     to_address: String,
     amount: i64,
-    transaction_data: HashMap<String, String>
+    _transaction_data: HashMap<String, String>
 ) -> HashMap<String, Value> {
     crate::stdlib::log::audit("aml_transaction_screening", {
         let mut data = HashMap::new();
@@ -418,7 +418,7 @@ pub fn get_risk_assessment(
 
 pub fn check_sanctions_list(
     user_address: String,
-    user_data: HashMap<String, String>
+    _user_data: HashMap<String, String>
 ) -> HashMap<String, Value> {
     crate::stdlib::log::audit("aml_sanctions_check", {
         let mut data = HashMap::new();
@@ -441,7 +441,7 @@ pub fn check_sanctions_list(
 
 // Helper functions
 
-fn generate_risk_score(check_type: &str, user_data: &HashMap<String, String>) -> f64 {
+fn generate_risk_score(check_type: &str, _user_data: &HashMap<String, String>) -> f64 {
     // Simulate risk score generation based on check type and user data
     match check_type {
         "sanctions" => 0.1, // Low risk for sanctions

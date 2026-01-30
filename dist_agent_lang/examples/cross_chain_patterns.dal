@@ -2,15 +2,15 @@
 // Advanced patterns for seamless multi-chain operations
 
 @trust("hybrid")
-@chain("ethereum","polygon","binance","arbitrum","optimism")
+@chain("ethereum","polygon","bsc","arbitrum","optimism")
 @cloudadmin
 @advanced_security
 @SafeMath
 @nonreentrant
 service MultiChainAssetManager {
-    supported_chains: vector<string>,
-    asset_balances: map<string, map<string, float>>,
-    cross_chain_bridges: map<string, any>,
+    supported_chains: vector<string>;
+    asset_balances: map<string, map<string, float>>;
+    cross_chain_bridges: map<string, any>;
 
     fn initialize() {
         self.supported_chains = ["ethereum", "polygon", "bsc", "arbitrum", "optimism"];
@@ -30,7 +30,7 @@ service MultiChainAssetManager {
         };
 
         // Initialize asset tracking across chains
-        for chain in self.supported_chains {
+        for chain in self.supported_chains  {
             self.asset_balances[chain] = {};
         }
     }
@@ -40,7 +40,7 @@ service MultiChainAssetManager {
         let chain_balances = {};
 
         // Query balance on each supported chain
-        for chain in self.supported_chains {
+        for chain in self.supported_chains  {
             let balance = chain::get_token_balance(chain, token_symbol, user_address);
             chain_balances[chain] = balance;
             total_balance = total_balance + balance;
@@ -80,7 +80,7 @@ service MultiChainAssetManager {
     fn execute_cross_chain_transfer(from_chain: string, to_chain: string, token_symbol: string, amount: float, user_address: string) -> map<string, any> {
         // Step 1: Check bridge availability
         let bridge = self.select_optimal_bridge(from_chain, to_chain);
-        if bridge == null {
+        if (bridge == null) {
             return {
                 "success": false,
                 "error": "No bridge available for this chain pair"
@@ -90,8 +90,8 @@ service MultiChainAssetManager {
         // Step 2: Estimate fees and time
         let estimate = chain::estimate_cross_chain_transfer(bridge, token_symbol, amount);
 
-        // Step 3: Check if transfer is economical
-        if !self.is_transfer_economical(estimate, amount) {
+        // Step 3: Check if (transfer is economical
+        if (!self.is_transfer_economical(estimate, amount)) {
             return {
                 "success": false,
                 "error": "Transfer cost exceeds benefit"
@@ -132,9 +132,9 @@ service MultiChainAssetManager {
 @chain("arbitrum")
 @chain("optimism")
 service CrossChainLiquidityAggregator {
-    dexes: map<string, map<string, any>>,
-    price_oracles: map<string, any>,
-    ai_optimizer: any,
+    dexes: map<string, map<string, any>>;
+    price_oracles: map<string, any>;
+    ai_optimizer: any;
 
     fn initialize() {
         // Initialize DEX integrations across chains
@@ -165,11 +165,11 @@ service CrossChainLiquidityAggregator {
         let routes = [];
 
         // Analyze routes on each chain
-        for chain in self.dexes {
-            for dex_name in self.dexes[chain] {
+        for chain in self.dexes  {
+            for dex_name in self.dexes[chain]  {
                 let dex = self.dexes[chain][dex_name];
                 let route = self.analyze_dex_route(chain, dex_name, dex, from_token, to_token, amount);
-                if route != null {
+                if (route != null) {
                     routes.push(route);
                 }
             }
@@ -177,7 +177,7 @@ service CrossChainLiquidityAggregator {
 
         // Analyze cross-chain routes
         let cross_chain_routes = self.analyze_cross_chain_routes(from_token, to_token, amount);
-        for route in cross_chain_routes {
+        for route in cross_chain_routes  {
             routes.push(route);
         }
 
@@ -191,7 +191,7 @@ service CrossChainLiquidityAggregator {
     }
 
     fn execute_optimized_swap(route: map<string, any>, user_address: string) -> map<string, any> {
-        if route.is_cross_chain {
+        if (route.is_cross_chain) {
             // Execute cross-chain swap
             return self.execute_cross_chain_swap(route, user_address);
         } else {
@@ -209,8 +209,8 @@ service CrossChainLiquidityAggregator {
         };
 
         // Monitor liquidity across all DEXes
-        for chain in self.dexes {
-            for dex_name in self.dexes[chain] {
+        for chain in self.dexes  {
+            for dex_name in self.dexes[chain]  {
                 let dex = self.dexes[chain][dex_name];
                 let liquidity = chain::get_dex_liquidity_pool(dex, "ETH/USDC"); // Example pair
                 health_report.chain_liquidity[chain][dex_name] = liquidity;
@@ -241,9 +241,9 @@ service CrossChainLiquidityAggregator {
 @chain("arbitrum")
 @chain("optimism")
 service MultiChainNFTManager {
-    nft_contracts: map<string, map<string, any>>,
-    metadata_cache: map<string, any>,
-    cross_chain_transfers: map<string, any>,
+    nft_contracts: map<string, map<string, any>>;
+    metadata_cache: map<string, any>;
+    cross_chain_transfers: map<string, any>;
 
     fn initialize() {
         // Initialize NFT contracts across chains
@@ -270,14 +270,14 @@ service MultiChainNFTManager {
         };
 
         // Query NFTs across all chains
-        for chain in self.nft_contracts {
+        for chain in self.nft_contracts  {
             let chain_nfts = [];
 
-            for contract_name in self.nft_contracts[chain] {
+            for contract_name in self.nft_contracts[chain]  {
                 let contract = self.nft_contracts[chain][contract_name];
                 let user_nfts = chain::get_user_nft_tokens(chain, contract.address, user_address);
 
-                for nft in user_nfts {
+                for nft in user_nfts  {
                     // Get NFT metadata
                     let metadata = self.get_nft_metadata(chain, contract.address, nft.token_id);
 
@@ -287,7 +287,7 @@ service MultiChainNFTManager {
                     // Get floor price
                     let floor_price = self.get_collection_floor_price(chain, contract_name);
 
-                    if !portfolio.collections.contains(contract_name) {
+                    if (!portfolio.collections.contains(contract_name)) {
                         portfolio.collections[contract_name] = [];
                     }
                     
@@ -325,9 +325,11 @@ service MultiChainNFTManager {
         // Step 3: Verify transfer completion
         let verification = self.verify_nft_transfer_completion(from_chain, to_chain, lock_result, mint_result);
 
-        // Step 4: Burn original NFT if transfer successful
-        if verification.successful {
+        // Step 4: Burn original NFT if (transfer successful
+        let mut status = "pending";
+        if (verification.successful) {
             chain::burn_nft_token(from_chain, contract_address, token_id);
+            status = "completed";
         }
 
         return {
@@ -335,7 +337,7 @@ service MultiChainNFTManager {
             "from_chain": from_chain,
             "to_chain": to_chain,
             "token_id": token_id,
-            "status": verification.successful ? "completed" : "pending",
+            "status": status,
             "completion_time": verification.completion_time
         };
     }
@@ -356,23 +358,25 @@ service MultiChainNFTManager {
         };
 
         // Analyze each NFT
-        for collection_name in portfolio.collections {
+        for collection_name in portfolio.collections  {
             let nfts = portfolio.collections[collection_name];
-            for nft in nfts {
+            for nft in nfts  {
                 let analysis = self.analyze_nft_position(nft, market_analysis);
 
-                if analysis.recommendation == "hold" {
+                if (analysis.recommendation == "hold") {
                     strategy.hold_positions.push({
                         "nft": nft,
                         "reason": analysis.reason,
                         "expected_return": analysis.expected_return
                     });
-                } else if analysis.recommendation == "sell" {
-                    strategy.sell_candidates.push({
-                        "nft": nft,
-                        "reason": analysis.reason,
-                        "target_price": analysis.target_price
-                    });
+                } else {
+                    if (analysis.recommendation == "sell") {
+                        strategy.sell_candidates.push({
+                            "nft": nft,
+                            "reason": analysis.reason,
+                            "target_price": analysis.target_price
+                        });
+                    }
                 }
             }
         }

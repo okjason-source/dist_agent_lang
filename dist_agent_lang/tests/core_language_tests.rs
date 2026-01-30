@@ -9,7 +9,7 @@
 // - ✅ Module namespaces tested (ai::, chain::, etc.)
 // - ✅ Comprehensive coverage of core language features
 
-use dist_agent_lang::{Lexer, Parser, parse_source, execute_source};
+use dist_agent_lang::{Lexer, parse_source, execute_source};
 use dist_agent_lang::lexer::tokens::{Token, Keyword, Literal};
 use dist_agent_lang::parser::ast::{Statement, Expression};
 

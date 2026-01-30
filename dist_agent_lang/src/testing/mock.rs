@@ -271,7 +271,7 @@ impl MockRuntime {
         self
     }
     
-    pub fn execute_with_mocks(&mut self, source_code: &str) -> Result<Value, String> {
+    pub fn execute_with_mocks(&mut self, _source_code: &str) -> Result<Value, String> {
         // In a real implementation, this would:
         // 1. Parse the source code
         // 2. Intercept function calls to check for mocks

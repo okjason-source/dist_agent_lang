@@ -470,7 +470,7 @@ mod tests {
         
         // tx2 trying to read a key with active write lock from tx1 will conflict
         // This is correct behavior for isolation - we can't read while another tx has write lock
-        let read_result = manager.read(&tx2, "counter");
+        let _read_result = manager.read(&tx2, "counter");
         // For now, this will error due to conflict - which is safe behavior
         
         // Commit tx1

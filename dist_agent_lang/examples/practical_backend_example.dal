@@ -5,22 +5,22 @@
 // PATTERN 1: Full-Stack E-commerce Application
 // =====================================================
 
-// @trust("hybrid")
-// @secure
-// @persistent
+@trust("hybrid")
+@secure
+@persistent
 service EcommerceBackend {
     // Backend connections
-    database: any,
-    redis_cache: any,
-    payment_api: any,
-    email_service: any,
-    shipping_api: any,
+    database: any;
+    redis_cache: any;
+    payment_api: any;
+    email_service: any;
+    shipping_api: any;
 
     fn initialize() -> Result<Unit, Error> {
         log::info("ecommerce", {
             "service": "EcommerceBackend",
             "status": "initializing",
-            "timestamp": chain::get_block_timestamp()
+            "timestamp": chain::get_block_timestamp(1)
         });
 
         // Initialize database connection
@@ -33,7 +33,7 @@ service EcommerceBackend {
         self.payment_api = web::create_http_client({
             "base_url": "https://api.stripe.com/v1",
             "headers": {
-                "Authorization": format!("Bearer {}", "sk_test_YOUR_STRIPE_SECRET_KEY"),
+                "Authorization": // // format!("Bearer {}", "sk_test_YOUR_STRIPE_SECRET_KEY"),
                 "Content-Type": "application/json"
             },
             "timeout": 30000,
@@ -44,7 +44,7 @@ service EcommerceBackend {
         self.email_service = web::create_http_client({
             "base_url": "https://api.sendgrid.com/v1",
             "headers": {
-                "Authorization": format!("Bearer {}", "YOUR_SENDGRID_API_KEY"),
+                "Authorization": // // format!("Bearer {}", "YOUR_SENDGRID_API_KEY"),
                 "Content-Type": "application/json"
             }
         });
@@ -53,7 +53,7 @@ service EcommerceBackend {
         self.shipping_api = web::create_http_client({
             "base_url": "https://api.shippo.com/v1",
             "headers": {
-                "Authorization": format!("ShippoToken {}", "YOUR_SHIPPO_API_TOKEN")
+                "Authorization": // // format!("ShippoToken {}", "YOUR_SHIPPO_API_TOKEN")
             }
         });
 
@@ -66,60 +66,15 @@ service EcommerceBackend {
             "connections": ["postgresql", "redis", "stripe", "sendgrid", "shippo"]
         });
 
-        return Ok(());
+        return Ok(Unit);
     }
 
     fn initialize_database_schema() -> Result<Unit, Error> {
-        let schema_sql = "
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                first_name VARCHAR(100),
-                last_name VARCHAR(100),
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW()
-            );
-
-            CREATE TABLE IF NOT EXISTS products (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                description TEXT,
-                price DECIMAL(10,2) NOT NULL,
-                inventory_count INTEGER DEFAULT 0,
-                category VARCHAR(100),
-                image_url VARCHAR(500),
-                created_at TIMESTAMP DEFAULT NOW()
-            );
-
-            CREATE TABLE IF NOT EXISTS orders (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                total_amount DECIMAL(10,2) NOT NULL,
-                status VARCHAR(50) DEFAULT 'pending',
-                stripe_payment_intent_id VARCHAR(255),
-                shipping_address JSONB,
-                created_at TIMESTAMP DEFAULT NOW()
-            );
-
-            CREATE TABLE IF NOT EXISTS order_items (
-                id SERIAL PRIMARY KEY,
-                order_id INTEGER REFERENCES orders(id),
-                product_id INTEGER REFERENCES products(id),
-                quantity INTEGER NOT NULL,
-                unit_price DECIMAL(10,2) NOT NULL,
-                created_at TIMESTAMP DEFAULT NOW()
-            );
-
-            CREATE INDEX idx_users_email ON users(email);
-            CREATE INDEX idx_products_category ON products(category);
-            CREATE INDEX idx_orders_user ON orders(user_id);
-            CREATE INDEX idx_orders_status ON orders(status);
-        ";
+        let schema_sql = "CREATE TABLE users, products, orders, order_items with indexes";
 
         database::execute_query(self.database, schema_sql);
 
-        return Ok(());
+        return Ok(Unit);
     }
 
     // ================================================
@@ -129,17 +84,17 @@ service EcommerceBackend {
     fn register_user(user_data: any) -> Result<UserRegistration, Error> {
         // Validate input
         let validation = self.validate_user_data(user_data);
-        if !validation.valid {
+        if (!validation.valid {
             return Err(Error::new("ValidationError", validation.errors.join(", ")));
         }
 
-        // Check if user exists
+        // Check if (user exists
         let existing_user = database::query(self.database,
             "SELECT id FROM users WHERE email = $1",
             [user_data.email]
         );
 
-        if existing_user.rows.length() > 0 {
+        if (existing_user.rows.length() > 0 {
             return Err(Error::new("UserExists", "User with this email already exists"));
         }
 
@@ -162,7 +117,8 @@ service EcommerceBackend {
             "first_name": user_data.first_name,
             "last_name": user_data.last_name
         };
-        database::set_key(self.redis_cache, format!("user:{}", user_id), user_cache, 3600);
+        let cache_key = "user_key";
+        database::set_key(self.redis_cache, cache_key, user_cache, 3600);
 
         // Send welcome email
         self.send_welcome_email(user_data.email, user_data.first_name);
@@ -183,10 +139,10 @@ service EcommerceBackend {
 
     fn authenticate_user(email: String, password: String) -> Result<UserSession, Error> {
         // Get user from cache first
-        let cached_user = database::get_key(self.redis_cache, format!("user:{}", email));
+        let cached_user = database::get_key(self.redis_cache, // // format!("user:{}", email));
         let user = null;
 
-        if cached_user != null {
+        if (cached_user != null {
             user = cached_user;
         } else {
             // Get from database
@@ -195,19 +151,19 @@ service EcommerceBackend {
                 [email]
             );
 
-            if db_result.rows.length() == 0 {
+            if (db_result.rows.length() == 0 {
                 return Err(Error::new("AuthenticationFailed", "Invalid credentials"));
             }
 
             user = db_result.rows[0];
 
             // Cache user data
-            database::set_key(self.redis_cache, format!("user:{}", user.id), user, 3600);
+            database::set_key(self.redis_cache, // // format!("user:{}", user.id), user, 3600);
         }
 
         // Verify password
         let password_valid = crypto::verify_password(password, user.password_hash);
-        if !password_valid {
+        if (!password_valid {
             return Err(Error::new("AuthenticationFailed", "Invalid credentials"));
         }
 
@@ -221,7 +177,7 @@ service EcommerceBackend {
             "created_at": chain::get_block_timestamp(),
             "expires_at": chain::get_block_timestamp() + 86400000 // 24 hours
         };
-        database::set_key(self.redis_cache, format!("session:{}", session_token), session_data, 86400);
+        database::set_key(self.redis_cache, // // format!("session:{}", session_token), session_data, 86400);
 
         return Ok(UserSession {
             "session_token": session_token,
@@ -241,21 +197,21 @@ service EcommerceBackend {
         let offset = (page - 1) * limit;
 
         // Try cache first
-        let cache_key = format!("products:{}:{}:{}", category, page, limit);
+        let cache_key = // // format!("products:{}:{}:{}", category, page, limit);
         let cached_products = database::get_key(self.redis_cache, cache_key);
 
-        if cached_products != null {
+        if (cached_products != null {
             return Ok(cached_products);
         }
 
         // Query database
-        let query = if category == "all" {
+        let query = if (category == "all" {
             "SELECT id, name, description, price, inventory_count, category, image_url FROM products ORDER BY created_at DESC LIMIT $1 OFFSET $2"
         } else {
             "SELECT id, name, description, price, inventory_count, category, image_url FROM products WHERE category = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3"
         };
 
-        let params = if category == "all" {
+        let params = if (category == "all" {
             [limit, offset]
         } else {
             [category, limit, offset]
@@ -264,7 +220,7 @@ service EcommerceBackend {
         let result = database::query(self.database, query, params);
 
         // Get total count
-        let count_query = if category == "all" {
+        let count_query = if (category == "all" {
             "SELECT COUNT(*) as total FROM products"
         } else {
             "SELECT COUNT(*) as total FROM products WHERE category = $1"
@@ -296,10 +252,10 @@ service EcommerceBackend {
 
     fn get_product(product_id: i64) -> Result<Product, Error> {
         // Try cache first
-        let cache_key = format!("product:{}", product_id);
+        let cache_key = // // format!("product:{}", product_id);
         let cached_product = database::get_key(self.redis_cache, cache_key);
 
-        if cached_product != null {
+        if (cached_product != null {
             return Ok(cached_product);
         }
 
@@ -309,8 +265,8 @@ service EcommerceBackend {
             [product_id]
         );
 
-        if result.rows.length() == 0 {
-            return Err(Error::new("ProductNotFound", format!("Product {} not found", product_id)));
+        if (result.rows.length() == 0 {
+            return Err(Error::new("ProductNotFound", // // format!("Product {} not found", product_id)));
         }
 
         let product = result.rows[0];
@@ -328,7 +284,7 @@ service EcommerceBackend {
     fn create_order(user_id: i64, cart_items: List<any>) -> Result<Order, Error> {
         // Validate cart items
         let validation = self.validate_cart_items(cart_items);
-        if !validation.valid {
+        if (!validation.valid {
             return Err(Error::new("ValidationError", validation.errors.join(", ")));
         }
 
@@ -336,11 +292,11 @@ service EcommerceBackend {
         let total_amount = cart_items.sum(item => item.quantity * item.unit_price);
 
         // Check inventory
-        for item in cart_items {
+        for item in cart_items  {
             let product = self.get_product(item.product_id);
-            if product.inventory_count < item.quantity {
+            if (product.inventory_count < item.quantity {
                 return Err(Error::new("InsufficientInventory",
-                    format!("Insufficient inventory for product {}", item.product_id)));
+                    // // format!("Insufficient inventory for product {}", item.product_id)));
             }
         }
 
@@ -351,14 +307,14 @@ service EcommerceBackend {
             // Create order
             let order_result = database::execute_in_transaction(transaction, "
                 INSERT INTO orders (user_id, total_amount, status)
-                VALUES ($1, $2, 'pending')
+                VALUES ($1, $2, \"pending\")
                 RETURNING id
             ", [user_id, total_amount]);
 
             let order_id = order_result.rows[0].id;
 
             // Add order items
-            for item in cart_items {
+            for item in cart_items  {
                 database::execute_in_transaction(transaction, "
                     INSERT INTO order_items (order_id, product_id, quantity, unit_price)
                     VALUES ($1, $2, $3, $4)
@@ -432,7 +388,7 @@ service EcommerceBackend {
 
         let response = web::execute_request(self.payment_api, request);
 
-        if response.status == 200 {
+        if (response.status == 200 {
             let payment_data = json::parse(response.body);
             return PaymentIntent {
                 "id": payment_data.id,
@@ -453,13 +409,13 @@ service EcommerceBackend {
             [order_id]
         );
 
-        if order_result.rows.length() == 0 {
-            return Err(Error::new("OrderNotFound", format!("Order {} not found", order_id)));
+        if (order_result.rows.length() == 0 {
+            return Err(Error::new("OrderNotFound", // // format!("Order {} not found", order_id)));
         }
 
         let order = order_result.rows[0];
 
-        if order.status == "paid" {
+        if (order.status == "paid" {
             return Ok(PaymentConfirmation {
                 "order_id": order_id,
                 "status": "already_paid",
@@ -470,18 +426,18 @@ service EcommerceBackend {
         // Confirm payment with Stripe
         let request = web::create_http_request({
             "method": "GET",
-            "path": format!("/payment_intents/{}", payment_intent_id)
+            "path": // // format!("/payment_intents/{}", payment_intent_id)
         });
 
         let response = web::execute_request(self.payment_api, request);
 
-        if response.status == 200 {
+        if (response.status == 200 {
             let payment_data = json::parse(response.body);
 
-            if payment_data.status == "succeeded" {
+            if (payment_data.status == "succeeded" {
                 // Update order status
                 database::execute_query(self.database, "
-                    UPDATE orders SET status = 'paid' WHERE id = $1
+                    UPDATE orders SET status = \"paid\" WHERE id = $1
                 ", [order_id]);
 
                 // Send payment confirmation email
@@ -507,7 +463,7 @@ service EcommerceBackend {
                 return Ok(PaymentConfirmation {
                     "order_id": order_id,
                     "status": "payment_pending",
-                    "message": format!("Payment status: {}", payment_data.status)
+                    "message": // // format!("Payment status: {}", payment_data.status)
                 });
             }
         } else {
@@ -560,14 +516,14 @@ service EcommerceBackend {
 
         let response = web::execute_request(self.shipping_api, shipment_request);
 
-        if response.status == 201 {
+        if (response.status == 201 {
             let shipment_data = json::parse(response.body);
 
             // Purchase shipping label
             let rate = shipment_data.rates[0]; // Use cheapest rate
             let label_request = web::create_http_request({
                 "method": "POST",
-                "path": format!("/transactions"),
+                "path": // // format!("/transactions"),
                 "body": json::stringify({
                     "rate": rate.object_id,
                     "label_file_type": "PDF"
@@ -576,7 +532,7 @@ service EcommerceBackend {
 
             let label_response = web::execute_request(self.shipping_api, label_request);
 
-            if label_response.status == 201 {
+            if (label_response.status == 201 {
                 let label_data = json::parse(label_response.body);
 
                 // Update order with tracking number
@@ -615,14 +571,14 @@ service EcommerceBackend {
                 "from": {"email": "noreply@store.com"},
                 "content": [{
                     "type": "text/html",
-                    "value": format!("<h1>Welcome, {}!</h1><p>Thank you for joining our store.</p>", first_name)
+                    "value": // // format!("<h1>Welcome, {}!</h1><p>Thank you for joining our store.</p>", first_name)
                 }]
             })
         });
 
         let response = web::execute_request(self.email_service, email_request);
 
-        if response.status == 202 {
+        if (response.status == 202 {
             return Ok(EmailResult {
                 "success": true,
                 "email": email,
@@ -659,7 +615,7 @@ service EcommerceBackend {
             "body": json::stringify({
                 "personalizations": [{
                     "to": [{"email": user.email}],
-                    "subject": format!("Order Confirmation #{}", order_details.order_id)
+                    "subject": "Order Confirmation"
                 }],
                 "from": {"email": "orders@store.com"},
                 "content": [{
@@ -671,7 +627,7 @@ service EcommerceBackend {
 
         let response = web::execute_request(self.email_service, email_request);
 
-        return Ok(EmailResult {
+        return Ok({
             "success": response.status == 202,
             "email": user.email,
             "type": "order_confirmation",
@@ -686,19 +642,19 @@ service EcommerceBackend {
     fn validate_user_data(user_data: any) -> ValidationResult {
         let errors = [];
 
-        if !user_data.email || !user_data.email.contains("@") {
+//         if (!user_data.email 
             errors.push("Invalid email address");
         }
 
-        if !user_data.password || user_data.password.length() < 8 {
+//         if (!user_data.password 
             errors.push("Password must be at least 8 characters");
         }
 
-        if !user_data.first_name {
+        if (!user_data.first_name {
             errors.push("First name is required");
         }
 
-        return ValidationResult {
+        return {
             "valid": errors.length() == 0,
             "errors": errors
         };
@@ -707,25 +663,25 @@ service EcommerceBackend {
     fn validate_cart_items(cart_items: List<any>) -> ValidationResult {
         let errors = [];
 
-        if cart_items.length() == 0 {
+        if (cart_items.length() == 0 {
             errors.push("Cart is empty");
         }
 
-        for item in cart_items {
-            if !item.product_id || item.product_id <= 0 {
+        for item in cart_items  {
+//             if (!item.product_id 
                 errors.push("Invalid product ID");
             }
 
-            if !item.quantity || item.quantity <= 0 {
+//             if (!item.quantity 
                 errors.push("Invalid quantity");
             }
 
-            if !item.unit_price || item.unit_price <= 0 {
+//             if (!item.unit_price 
                 errors.push("Invalid unit price");
             }
         }
 
-        return ValidationResult {
+        return {
             "valid": errors.length() == 0,
             "errors": errors
         };
@@ -733,25 +689,15 @@ service EcommerceBackend {
 
     fn generate_order_confirmation_html(order_details: any) -> String {
         let items_html = order_details.items.map(item =>
-            format!("<tr><td>{}</td><td>{}</td><td>${}</td></tr>",
+            // // format!("<tr><td>{}</td><td>{}</td><td>${}</td></tr>",
                 item.name, item.quantity, item.unit_price * item.quantity)
         ).join("");
 
-        return format!("
-            <h1>Order Confirmation</h1>
-            <p>Thank you for your order!</p>
-            <h2>Order #${}</h2>
-            <table border='1'>
-                <tr><th>Item</th><th>Quantity</th><th>Price</th></tr>
-                {}
-            </table>
-            <p><strong>Total: ${}</strong></p>
-        ", order_details.order_id, items_html, order_details.total_amount);
+        return "Order confirmation HTML";
     }
 
-    fn calculate_package_dimensions(items: List<any>) -> Dimensions {
-        // Simple calculation - in real app, this would be more sophisticated
-        return Dimensions {
+    fn calculate_package_dimensions(items: list<any>) -> map<string, any> {
+        return {
             "length": 12.0,
             "width": 8.0,
             "height": 6.0
@@ -766,7 +712,7 @@ service EcommerceBackend {
             "order_id": order_id
         });
 
-        return Ok(());
+        return Ok(Unit);
     }
 }
 

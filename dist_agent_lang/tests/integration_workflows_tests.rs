@@ -16,9 +16,8 @@
 // - Complex multi-agent coordination (coordination, workflows with dependencies)
 // - Solidity integration workflows (contract orchestration, event listening)
 
-use dist_agent_lang::{parse_source, execute_source};
+use dist_agent_lang::parse_source;
 use dist_agent_lang::parser::ast::Statement;
-use std::collections::HashMap;
 
 // ============================================
 // DEFI WORKFLOW TESTS

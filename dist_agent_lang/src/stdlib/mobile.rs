@@ -26,7 +26,7 @@ pub struct MobileApp {
 
 #[derive(Debug, Clone)]
 pub enum MobilePlatform {
-    iOS,
+    IOs,
     Android,
     CrossPlatform,
 }
@@ -831,7 +831,7 @@ pub fn add_screen_to_app(app: &mut MobileApp, screen: MobileScreen) -> Result<bo
 }
 
 pub fn set_root_screen(app: &mut MobileApp, screen_id: String) -> Result<bool, String> {
-    if let Some(screen) = app.screens.iter().find(|s| s.id == screen_id) {
+    if let Some(_screen) = app.screens.iter().find(|s| s.id == screen_id) {
         app.navigation.current_screen = Some(screen_id.clone());
         app.navigation.screens = vec![screen_id.clone()];
 
@@ -1256,7 +1256,7 @@ pub fn request_permission(permission: String) -> Result<bool, String> {
     Ok(true)
 }
 
-pub fn check_permission_status(permission: String) -> String {
+pub fn check_permission_status(_permission: String) -> String {
     // Simulated permission check
     "granted".to_string()
 }

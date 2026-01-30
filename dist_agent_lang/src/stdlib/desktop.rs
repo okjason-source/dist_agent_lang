@@ -1065,7 +1065,7 @@ pub fn remove_event_handler(window: &mut Window, component_id: String, event_typ
     Ok(removed)
 }
 
-pub fn trigger_event(window: &Window, component_id: String, event_type: String, event_data: HashMap<String, Value>) -> Result<Vec<String>, String> {
+pub fn trigger_event(window: &Window, component_id: String, event_type: String, _event_data: HashMap<String, Value>) -> Result<Vec<String>, String> {
     let mut triggered_handlers = Vec::new();
 
     // Check for specific component event handler

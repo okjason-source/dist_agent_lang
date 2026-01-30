@@ -60,17 +60,17 @@ impl EnhancedFeatures {
                 log::info("init", "Database connected successfully");
             },
             Err(error) => {
-                log::error("init", format!("Database connection failed: {}", error));
+                log::error("init", // format!("Database connection failed: {}", error));
                 return Err(Error::new("Database connection failed", error));
             }
         }
         
         // Create web server
         let server = web::create_server(8080);
-        self.web_server = format!("server_{}", 8080);
+        self.web_server = // format!("server_{}", 8080);
         log::info("init", "Web server created successfully");
         
-        return Ok(());
+        return Ok(Unit);
     }
     
     // Create a new user with KYC verification
@@ -81,7 +81,7 @@ impl EnhancedFeatures {
             "email": email
         });
         
-        if kyc_result.get("status") != "verified" {
+        if (kyc_result.get("status") != "verified" {
             return Err(Error::new("KYC verification failed", "User verification incomplete"));
         }
         
@@ -109,7 +109,7 @@ impl EnhancedFeatures {
                 return Ok(user_id);
             },
             Err(error) => {
-                log::error("create_user", format!("Database error: {}", error));
+                log::error("create_user", // format!("Database error: {}", error));
                 return Err(Error::new("Database error", error));
             }
         }
@@ -137,11 +137,11 @@ impl EnhancedFeatures {
             Ok(_) => {
                 self.products.push(product);
                 self.emit(ProductAdded { product_id: product_id, name: name });
-                log::info("add_product", format!("Product added: {}", product_id));
+                log::info("add_product", // format!("Product added: {}", product_id));
                 return Ok(product_id);
             },
             Err(error) => {
-                log::error("add_product", format!("Database error: {}", error));
+                log::error("add_product", // format!("Database error: {}", error));
                 return Err(Error::new("Database error", error));
             }
         }
@@ -155,12 +155,12 @@ impl EnhancedFeatures {
             "to_address": to_address
         });
         
-        if aml_result.get("status") != "passed" {
+        if (aml_result.get("status") != "passed" {
             return Err(Error::new("AML check failed", "Transaction blocked by AML"));
         }
         
         // Create transaction
-        let tx_id = format!("tx_{}", crypto::hash(format!("{}{}{}", from_address, to_address, amount)));
+        let tx_id = // format!("tx_{}", crypto::hash(// format!("{}{}{}", from_address, to_address, amount)));
         let transaction = Transaction {
             id: tx_id.clone(),
             from_address: from_address,
@@ -180,11 +180,11 @@ impl EnhancedFeatures {
             Ok(_) => {
                 self.transactions.insert(tx_id.clone());
                 self.emit(TransactionProcessed { tx_id: tx_id.clone(), amount: amount });
-                log::info("process_transaction", format!("Transaction processed: {}", tx_id));
+                log::info("process_transaction", // format!("Transaction processed: {}", tx_id));
                 return Ok(tx_id);
             },
             Err(error) => {
-                log::error("process_transaction", format!("Database error: {}", error));
+                log::error("process_transaction", // format!("Database error: {}", error));
                 return Err(Error::new("Database error", error));
             }
         }
@@ -200,8 +200,8 @@ impl EnhancedFeatures {
                 return web::json_response(users_data);
             },
             Err(error) => {
-                log::error("get_users_api", format!("Database error: {}", error));
-                return web::error_response(500, format!("Database error: {}", error));
+                log::error("get_users_api", // format!("Database error: {}", error));
+                return web::error_response(500, // format!("Database error: {}", error));
             }
         }
     }
@@ -215,7 +215,7 @@ impl EnhancedFeatures {
         let email = user_data.get("email");
         let wallet_address = user_data.get("wallet_address");
         
-        if name == null || email == null || wallet_address == null {
+//         if (name == null || email == null 
             return web::error_response(400, "Missing required fields");
         }
         
@@ -232,8 +232,8 @@ impl EnhancedFeatures {
                 return web::json_response(response_data);
             },
             Err(error) => {
-                log::error("create_user_api", format!("Error: {}", error));
-                return web::error_response(500, format!("Error: {}", error));
+                log::error("create_user_api", // format!("Error: {}", error));
+                return web::error_response(500, // format!("Error: {}", error));
             }
         }
     }
@@ -241,11 +241,11 @@ impl EnhancedFeatures {
     // Cache management
     fn cache_set(key: string, value: any, ttl: int) {
         self.cache.insert(key, value);
-        log::info("cache", format!("Cached value for key: {}", key));
+        log::info("cache", // format!("Cached value for key: {}", key));
     }
     
     fn cache_get(key: string) -> Option<any> {
-        if self.cache.contains_key(key) {
+        if (self.cache.contains_key(key) {
             return Some(self.cache.get(key));
         }
         return None;
@@ -254,8 +254,8 @@ impl EnhancedFeatures {
     // Get user by ID with caching
     fn get_user_by_id(user_id: string) -> Option<User> {
         // Check cache first
-        let cached_user = self.cache_get(format!("user_{}", user_id));
-        if cached_user != None {
+        let cached_user = self.cache_get(// format!("user_{}", user_id));
+        if (cached_user != None {
             return cached_user;
         }
         
@@ -267,19 +267,19 @@ impl EnhancedFeatures {
         
         match query_result {
             Ok(result) => {
-                if result.rows.length > 0 {
+                if (result.rows.length > 0 {
                     let user_data = result.rows[0];
                     let user = User::from_row(user_data);
                     
                     // Cache the result
-                    self.cache_set(format!("user_{}", user_id), user.clone(), 300);
+                    self.cache_set(// format!("user_{}", user_id), user.clone(), 300);
                     
                     return Some(user);
                 }
                 return None;
             },
             Err(error) => {
-                log::error("get_user_by_id", format!("Database error: {}", error));
+                log::error("get_user_by_id", // format!("Database error: {}", error));
                 return None;
             }
         }
@@ -297,7 +297,7 @@ impl EnhancedFeatures {
                     attrs
                 });
                 
-                for product_data in result.rows {
+                for product_data in result.rows  {
                     let product = Product::from_row(product_data);
                     
                     let product_element = web::create_html_element("div", {
@@ -306,14 +306,14 @@ impl EnhancedFeatures {
                         attrs
                     });
                     
-                    web::set_text(&mut product_element, format!("{} - ${}", product.name, product.price));
+                    web::set_text(&mut product_element, // format!("{} - ${}", product.name, product.price));
                     web::add_child(&mut html, product_element);
                 }
                 
                 return html;
             },
             Err(error) => {
-                log::error("get_products_web", format!("Database error: {}", error));
+                log::error("get_products_web", // format!("Database error: {}", error));
                 return web::create_html_element("div", {
                     let mut attrs = HashMap::new();
                     attrs.insert("class".to_string(), "error".to_string());
@@ -347,7 +347,7 @@ fn main() {
     match init_result {
         Ok(_) => log::info("main", "Service initialized successfully"),
         Err(error) => {
-            log::error("main", format!("Initialization failed: {}", error));
+            log::error("main", // format!("Initialization failed: {}", error));
             return;
         }
     }
@@ -355,25 +355,25 @@ fn main() {
     // Create some test data
     let user_result = service.create_user("John Doe", "john@example.com", "0x1234567890abcdef");
     match user_result {
-        Ok(user_id) => log::info("main", format!("User created: {}", user_id)),
-        Err(error) => log::error("main", format!("User creation failed: {}", error)),
+        Ok(user_id) => log::info("main", // format!("User created: {}", user_id)),
+        Err(error) => log::error("main", // format!("User creation failed: {}", error)),
     }
     
     let product_result = service.add_product("Enhanced Product", 29.99, "A great product", "electronics");
     match product_result {
-        Ok(product_id) => log::info("main", format!("Product added: {}", product_id)),
-        Err(error) => log::error("main", format!("Product addition failed: {}", error)),
+        Ok(product_id) => log::info("main", // format!("Product added: {}", product_id)),
+        Err(error) => log::error("main", // format!("Product addition failed: {}", error)),
     }
     
     let tx_result = service.process_transaction("0x1234567890abcdef", "0xfedcba0987654321", 100);
     match tx_result {
-        Ok(tx_id) => log::info("main", format!("Transaction processed: {}", tx_id)),
-        Err(error) => log::error("main", format!("Transaction failed: {}", error)),
+        Ok(tx_id) => log::info("main", // format!("Transaction processed: {}", tx_id)),
+        Err(error) => log::error("main", // format!("Transaction failed: {}", error)),
     }
     
     // Get statistics
     let stats = service.get_statistics();
-    log::info("main", format!("Service statistics: {:?}", stats));
+    log::info("main", // format!("Service statistics: {:?}", stats));
     
     log::info("main", "Enhanced language features demonstration completed!");
 }

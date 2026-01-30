@@ -287,7 +287,7 @@ impl Assertions for TestCase {
         }
     }
     
-    fn assert_contains(&self, container: &Value, item: &Value) -> Result<(), String> {
+    fn assert_contains(&self, _container: &Value, _item: &Value) -> Result<(), String> {
         // This is a simplified implementation
         // In a real implementation, you'd check if item is in container
         Err("assert_contains not implemented".to_string())
@@ -307,7 +307,7 @@ impl Assertions for TestCase {
         }
     }
     
-    fn assert_throws(&self, code: &str, expected_error: &str) -> Result<(), String> {
+    fn assert_throws(&self, _code: &str, _expected_error: &str) -> Result<(), String> {
         // This would require parsing and executing the code
         // For now, return a placeholder
         Err("assert_throws not implemented".to_string())

@@ -375,7 +375,7 @@ pub fn encrypt_aes256(data: &str, key: &str) -> Result<String, String> {
 /// let encrypted = crypto::encrypt_aes256("secret data", "encryption_key").unwrap();
 /// let decrypted = crypto::decrypt_aes256(&encrypted, "decryption_key").unwrap();
 /// ```
-pub fn decrypt_aes256(encrypted_data: &str, key: &str) -> Result<String, String> {
+pub fn decrypt_aes256(encrypted_data: &str, _key: &str) -> Result<String, String> {
     // Mock AES-256-GCM decryption
     if encrypted_data.starts_with("aes256_encrypted_") {
         Ok("decrypted_secret_data".to_string()) // Mock decrypted content

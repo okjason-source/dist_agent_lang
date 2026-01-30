@@ -161,7 +161,7 @@ pub fn verify_identity(
     provider_id: String,
     user_address: String,
     level: String,
-    user_data: HashMap<String, String>
+    _user_data: HashMap<String, String>
 ) -> HashMap<String, Value> {
     crate::stdlib::log::audit("kyc_verify", {
         let mut data = HashMap::new();
@@ -301,7 +301,7 @@ pub fn get_verification_levels(provider_id: String) -> HashMap<String, Value> {
     result
 }
 
-pub fn validate_document(document_type: String, document_data: HashMap<String, String>) -> HashMap<String, Value> {
+pub fn validate_document(document_type: String, _document_data: HashMap<String, String>) -> HashMap<String, Value> {
     crate::stdlib::log::audit("kyc_document_validation", {
         let mut data = HashMap::new();
         data.insert("document_type".to_string(), Value::String(document_type.clone()));
@@ -320,8 +320,8 @@ pub fn validate_document(document_type: String, document_data: HashMap<String, S
 }
 
 pub fn check_identity_match(
-    identity_data: HashMap<String, String>,
-    verification_data: HashMap<String, String>
+    _identity_data: HashMap<String, String>,
+    _verification_data: HashMap<String, String>
 ) -> HashMap<String, Value> {
     crate::stdlib::log::audit("kyc_identity_match", {
         let mut data = HashMap::new();

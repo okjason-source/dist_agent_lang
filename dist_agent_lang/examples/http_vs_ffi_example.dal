@@ -70,7 +70,7 @@ service FlexibleService {
     @api("ffi")  // Function-level override - prefer FFI
     fn high_frequency_operation(data: any) -> any {
         // This function will prefer FFI when available
-        // Falls back to HTTP if FFI not available
+        // Falls back to HTTP if (FFI not available
         return fast_compute(data);
     }
     
@@ -99,7 +99,7 @@ service CryptoService {
         // FFI allows processing millions of operations per second
         // vs thousands via HTTP
         let results = [];
-        for data in data_list {
+        for data in data_list  {
             results.push(crypto::hash(data, "SHA256"));
         }
         return results;
@@ -113,7 +113,7 @@ service CryptoService {
         // Batch verification with FFI
         // ~1000x faster than HTTP for high-frequency operations
         let results = [];
-        for i in 0..data_list.len() {
+        for (i in 0..data_list.len() ) {
             let valid = crypto::verify(
                 data_list[i],
                 signature_list[i],

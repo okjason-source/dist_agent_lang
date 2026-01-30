@@ -245,7 +245,7 @@ pub fn connect(connection_string: String) -> Result<Database, String> {
     })
 }
 
-pub fn query(db: &Database, sql: String, params: Vec<Value>) -> Result<QueryResult, String> {
+pub fn query(db: &Database, sql: String, _params: Vec<Value>) -> Result<QueryResult, String> {
     crate::stdlib::log::info("database", {
         let mut data = std::collections::HashMap::new();
         data.insert("sql".to_string(), Value::String(sql.clone()));
@@ -344,7 +344,7 @@ pub fn rollback_transaction(transaction: &mut Transaction) -> Result<bool, Strin
     Ok(true)
 }
 
-pub fn create_table(db: &Database, table_name: String, schema: TableSchema) -> Result<bool, String> {
+pub fn create_table(db: &Database, table_name: String, _schema: TableSchema) -> Result<bool, String> {
     crate::stdlib::log::info("database", {
         let mut data = std::collections::HashMap::new();
         data.insert("table_name".to_string(), Value::String(table_name.clone()));
@@ -833,7 +833,7 @@ pub fn create_cache(config: CacheConfig) -> Result<String, String> {
     Ok(format!("cache_{}", config.cache_type))
 }
 
-pub fn cache_set(cache_id: String, key: String, value: Value, ttl_seconds: Option<i64>) -> Result<bool, String> {
+pub fn cache_set(cache_id: String, key: String, _value: Value, _ttl_seconds: Option<i64>) -> Result<bool, String> {
     crate::stdlib::log::info("database", {
         let mut data = std::collections::HashMap::new();
         data.insert("cache_id".to_string(), Value::String(cache_id));
@@ -1029,7 +1029,7 @@ pub fn validate_data(data: HashMap<String, Value>, rules: Vec<ValidationRule>) -
 }
 
 // Enhanced Backup and Restore Functions
-pub fn create_backup(db: &Database, options: BackupOptions) -> Result<BackupInfo, String> {
+pub fn create_backup(_db: &Database, options: BackupOptions) -> Result<BackupInfo, String> {
     crate::stdlib::log::info("database", {
         let mut data = std::collections::HashMap::new();
         data.insert("include_data".to_string(), Value::Bool(options.include_data));
@@ -1049,7 +1049,7 @@ pub fn create_backup(db: &Database, options: BackupOptions) -> Result<BackupInfo
     })
 }
 
-pub fn restore_from_backup(db: &Database, backup_path: String) -> Result<bool, String> {
+pub fn restore_from_backup(_db: &Database, backup_path: String) -> Result<bool, String> {
     crate::stdlib::log::info("database", {
         let mut data = std::collections::HashMap::new();
         data.insert("backup_path".to_string(), Value::String(backup_path));
@@ -1061,7 +1061,7 @@ pub fn restore_from_backup(db: &Database, backup_path: String) -> Result<bool, S
 }
 
 // Performance Monitoring
-pub fn get_database_metrics(db: &Database) -> DatabaseMetrics {
+pub fn get_database_metrics(_db: &Database) -> DatabaseMetrics {
     DatabaseMetrics {
         total_queries: 1000,
         slow_queries: 5,

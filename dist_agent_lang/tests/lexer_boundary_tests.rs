@@ -281,7 +281,7 @@ fn test_lexer_position_tracking_newline_boundary() {
     // First identifier should be on line 1
     // Second identifier should be on line 2
     // Third identifier should be on line 3
-    let mut line_numbers: Vec<usize> = tokens_with_pos.iter()
+    let line_numbers: Vec<usize> = tokens_with_pos.iter()
         .filter(|twp| matches!(twp.token, Token::Identifier(_)))
         .map(|twp| twp.line)
         .collect();

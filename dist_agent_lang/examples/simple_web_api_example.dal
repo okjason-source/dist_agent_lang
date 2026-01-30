@@ -1,10 +1,10 @@
 // Simple Web API Example using Phase 2 Web Framework
 // Demonstrates basic web server, API endpoints, and frontend integration
 
-// @web
-// @trust("hybrid")
+@web
+@trust("hybrid")
 service SimpleAPI {
-    server: string,
+    server: string;
     
     fn main() {
         // Create server with Phase 2 framework
@@ -82,7 +82,7 @@ service SimpleAPI {
         web::add_rate_limit(endpoint, 60, 5);
         
         // Validate request
-        if !web::validate_json_request(request, endpoint.input_schema) {
+        if (!web::validate_json_request(request, endpoint.input_schema)) {
             return web::error_response(400, "Invalid request format");
         }
         
@@ -111,9 +111,9 @@ service SimpleAPI {
 }
 
 // WebSocket Chat Example
-// @web
+@web
 service ChatServer {
-    ws_server: string,
+    ws_server: string;
     
     fn main() {
         // Create WebSocket server
@@ -148,7 +148,7 @@ service ChatServer {
 }
 
 // Template System Example
-// @web
+@web
 service TemplateDemo {
     fn main() {
         // Create advanced template

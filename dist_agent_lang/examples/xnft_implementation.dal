@@ -1,19 +1,19 @@
 // xNFT (Executable NFT) Implementation with dist_agent_lang
 // Advanced NFT system with executable capabilities, dynamic metadata, and real-world asset integration
 
-// @trust("hybrid")
-// @secure
-// @ai
+@trust("hybrid")
+@secure
+@ai
 service xNFTSystem {
     // Core NFT storage and management
-    nft_registry: Map<String, xNFT>,
-    execution_engine: any,
-    oracle_feeds: Map<String, any>,
-    ai_orchestrator: any,
+    nft_registry: Map<String, xNFT>;
+    execution_engine: any;
+    oracle_feeds: Map<String, any>;
+    ai_orchestrator: any;
 
     // Multi-chain support
-    supported_chains: List<String>,
-    cross_chain_bridge: any,
+    supported_chains: list;
+    cross_chain_bridge: any;
 
     fn initialize() -> Result<Unit, Error> {
         log::info("xnft", {
@@ -59,7 +59,7 @@ service xNFTSystem {
             "execution_engine": "ready"
         });
 
-        return Ok(());
+        return Ok(Unit);
     }
 
     fn setup_execution_engine() -> ExecutionEngine {
@@ -100,54 +100,55 @@ service xNFTSystem {
     }
 
     fn setup_nft_database() -> Result<Unit, Error> {
-        let schema_sql = "
-            CREATE TABLE IF NOT EXISTS xnfts (
-                id SERIAL PRIMARY KEY,
-                token_id VARCHAR(255) UNIQUE NOT NULL,
-                contract_address VARCHAR(255) NOT NULL,
-                chain VARCHAR(50) NOT NULL,
-                owner_address VARCHAR(255) NOT NULL,
-                metadata JSONB,
-                executable_code TEXT,
-                execution_state JSONB,
-                dynamic_properties JSONB,
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW(),
-                last_executed TIMESTAMP,
-                execution_count INTEGER DEFAULT 0
-            );
-
-            CREATE TABLE IF NOT EXISTS nft_events (
-                id SERIAL PRIMARY KEY,
-                nft_id INTEGER REFERENCES xnfts(id),
-                event_type VARCHAR(100) NOT NULL,
-                event_data JSONB,
-                triggered_by VARCHAR(255),
-                executed_at TIMESTAMP DEFAULT NOW(),
-                transaction_hash VARCHAR(255),
-                gas_used BIGINT
-            );
-
-            CREATE TABLE IF NOT EXISTS oracle_data (
-                id SERIAL PRIMARY KEY,
-                feed_type VARCHAR(100) NOT NULL,
-                data_key VARCHAR(255) NOT NULL,
-                data_value JSONB,
-                confidence_score NUMERIC,
-                source VARCHAR(100),
-                fetched_at TIMESTAMP DEFAULT NOW()
-            );
-
-            CREATE INDEX idx_xnfts_token_id ON xnfts(token_id);
-            CREATE INDEX idx_xnfts_owner ON xnfts(owner_address);
-            CREATE INDEX idx_xnfts_chain ON xnfts(chain);
-            CREATE INDEX idx_nft_events_nft_id ON nft_events(nft_id);
-            CREATE INDEX idx_nft_events_type ON nft_events(event_type);
-            CREATE INDEX idx_oracle_data_feed ON oracle_data(feed_type, data_key);
-        ";
+        let schema_sql = "CREATE TABLE xnfts, nft_events, oracle_data with indexes";
+//         let schema_sql = "
+//             CREATE TABLE IF NOT EXISTS xnfts (
+//                 id SERIAL PRIMARY KEY,
+//                 token_id VARCHAR(255) UNIQUE NOT NULL,
+//                 contract_address VARCHAR(255) NOT NULL,
+//                 chain VARCHAR(50) NOT NULL,
+//                 owner_address VARCHAR(255) NOT NULL,
+//                 metadata JSONB,
+//                 executable_code TEXT,
+//                 execution_state JSONB,
+//                 dynamic_properties JSONB,
+//                 created_at TIMESTAMP DEFAULT NOW(),
+//                 updated_at TIMESTAMP DEFAULT NOW(),
+//                 last_executed TIMESTAMP,
+//                 execution_count INTEGER DEFAULT 0
+//             );
+// 
+//             CREATE TABLE IF NOT EXISTS nft_events (
+//                 id SERIAL PRIMARY KEY,
+//                 nft_id INTEGER REFERENCES xnfts(id),
+//                 event_type VARCHAR(100) NOT NULL,
+//                 event_data JSONB,
+//                 triggered_by VARCHAR(255),
+//                 executed_at TIMESTAMP DEFAULT NOW(),
+//                 transaction_hash VARCHAR(255),
+//                 gas_used BIGINT
+//             );
+// 
+//             CREATE TABLE IF NOT EXISTS oracle_data (
+//                 id SERIAL PRIMARY KEY,
+//                 feed_type VARCHAR(100) NOT NULL,
+//                 data_key VARCHAR(255) NOT NULL,
+//                 data_value JSONB,
+//                 confidence_score NUMERIC,
+//                 source VARCHAR(100),
+//                 fetched_at TIMESTAMP DEFAULT NOW()
+//             );
+// 
+//             CREATE INDEX idx_xnfts_token_id ON xnfts(token_id);
+//             CREATE INDEX idx_xnfts_owner ON xnfts(owner_address);
+//             CREATE INDEX idx_xnfts_chain ON xnfts(chain);
+//             CREATE INDEX idx_nft_events_nft_id ON nft_events(nft_id);
+//             CREATE INDEX idx_nft_events_type ON nft_events(event_type);
+//             CREATE INDEX idx_oracle_data_feed ON oracle_data(feed_type, data_key);
+//         ";
 
         database::execute_query(self.database, schema_sql);
-        return Ok(());
+        return Ok(Unit);
     }
 
     // ================================================
@@ -160,7 +161,7 @@ service xNFTSystem {
 
         // Validate executable code
         let validation = this.validate_executable_code(nft_config.executable_code);
-        if !validation.valid {
+        if (!validation.valid ) {
             return Err(Error::new("CodeValidationError", validation.errors.join(", ")));
         }
 
@@ -171,7 +172,7 @@ service xNFTSystem {
         let deployment = this.deploy_nft_to_blockchain(metadata, nft_config.chain);
 
         // Store xNFT in registry and database
-        let xnft = xNFT {
+        let xnft = {
             "id": token_id,
             "contract_address": deployment.contract_address,
             "chain": nft_config.chain,
@@ -184,9 +185,9 @@ service xNFTSystem {
                 "energy_level": 100,
                 "cooldown_until": null
             },
-            "dynamic_properties": nft_config.dynamic_properties || {},
+            "dynamic_properties": nft_config.dynamic_properties /* closure */,
             "created_at": chain::get_block_timestamp(),
-            "ai_enabled": nft_config.ai_enabled || false
+//             "ai_enabled": nft_config.ai_enabled 
         };
 
         // Store in memory registry
@@ -204,8 +205,8 @@ service xNFTSystem {
             json::stringify(xnft.execution_state), json::stringify(xnft.dynamic_properties)
         ]);
 
-        // Setup real-time monitoring if AI-enabled
-        if xnft.ai_enabled {
+        // Setup real-time monitoring if (AI-enabled
+        if (xnft.ai_enabled ) {
             this.setup_ai_monitoring(xnft);
         }
 
@@ -217,19 +218,19 @@ service xNFTSystem {
             "ai_enabled": xnft.ai_enabled
         });
 
-        return Ok(xnft);
+        return Ok({ "value": xnft });
     }
 
     fn execute_xnft_logic(token_id: String, trigger_event: any) -> Result<ExecutionResult, Error> {
         // Get xNFT from registry
         let xnft = self.nft_registry.get(token_id);
-        if xnft == null {
-            return Err(Error::new("NFTNotFound", format!("xNFT {} not found", token_id)));
+        if (xnft == null ) {
+            return Err(Error::new("NFTNotFound", "not found"));
         }
 
         // Check execution constraints
         let constraints_check = this.check_execution_constraints(xnft);
-        if !constraints_check.allowed {
+        if (!constraints_check.allowed ) {
             return Err(Error::new("ExecutionBlocked", constraints_check.reason));
         }
 
@@ -239,7 +240,7 @@ service xNFTSystem {
             "trigger_event": trigger_event,
             "oracle_data": this.get_relevant_oracle_data(xnft),
             "blockchain_state": this.get_blockchain_state(xnft),
-            "ai_insights": xnft.ai_enabled ? ai::get_nft_insights(self.ai_orchestrator, xnft) : null,
+            "ai_insights": if (xnft.ai_enabled == true) { ai::get_nft_insights(self.ai_orchestrator, xnft) } else { null },
             "timestamp": chain::get_block_timestamp()
         };
 
@@ -286,19 +287,19 @@ service xNFTSystem {
         // Race between execution and timeout
         let execution_result = await Promise::race([execution_promise, timeout_promise]);
 
-        if execution_result.timed_out {
+        if (execution_result.timed_out ) {
             throw Error::new("ExecutionTimeout", "NFT execution timed out");
         }
 
         return {
             "success": execution_result.success,
             "result": execution_result.result,
-            "actions": execution_result.actions || [],
-            "state_changes": execution_result.state_changes || {},
-            "oracle_queries": execution_result.oracle_queries || [],
-            "gas_used": execution_result.gas_used || 0,
+//             "actions": execution_result.actions 
+            "state_changes": execution_result.state_changes /* closure */,
+//             "oracle_queries": execution_result.oracle_queries 
+//             "gas_used": execution_result.gas_used 
             "execution_time": execution_result.execution_time,
-            "ai_decisions": execution_result.ai_decisions || []
+//             "ai_decisions": execution_result.ai_decisions 
         };
     }
 
@@ -308,8 +309,8 @@ service xNFTSystem {
 
     fn update_dynamic_metadata(token_id: String, update_type: String, update_data: any) -> Result<UpdateResult, Error> {
         let xnft = self.nft_registry.get(token_id);
-        if xnft == null {
-            return Err(Error::new("NFTNotFound", format!("xNFT {} not found", token_id)));
+        if (xnft == null ) {
+            return Err(Error::new("NFTNotFound", "not found"));
         }
 
         // Determine update mechanism based on type
@@ -320,12 +321,12 @@ service xNFTSystem {
 
         // Validate update doesn't violate NFT constraints
         let validation = this.validate_metadata_update(xnft, update_result.new_metadata);
-        if !validation.valid {
+        if (!validation.valid ) {
             return Err(Error::new("UpdateValidationError", validation.errors.join(", ")));
         }
 
-        // Update on blockchain if required
-        if update_result.requires_blockchain_update {
+        // Update on blockchain if (required
+        if (update_result.requires_blockchain_update ) {
             let blockchain_update = this.update_nft_on_blockchain(xnft, update_result.new_metadata);
             update_result.blockchain_tx = blockchain_update.transaction_hash;
         }
@@ -396,7 +397,7 @@ service xNFTSystem {
     fn create_dynamic_rwa(asset_config: RWAConfig) -> Result<DynamicRWA, Error> {
         // Validate asset configuration
         let validation = this.validate_rwa_config(asset_config);
-        if !validation.valid {
+        if (!validation.valid ) {
             return Err(Error::new("RWAValidationError", validation.errors.join(", ")));
         }
 
@@ -449,8 +450,8 @@ service xNFTSystem {
 
     fn update_rwa_valuation(token_id: String) -> Result<ValuationUpdate, Error> {
         let xnft = self.nft_registry.get(token_id);
-        if xnft == null {
-            return Err(Error::new("RWANotFound", format!("Dynamic RWA {} not found", token_id)));
+        if (xnft == null ) {
+            return Err(Error::new("RWANotFound", // format!("Dynamic RWA {} not found", token_id)));
         }
 
         // Gather current market data
@@ -481,7 +482,7 @@ service xNFTSystem {
 
         // Check for significant value changes
         let significant_change = this.detect_significant_change(xnft, risk_adjusted_valuation);
-        if significant_change.detected {
+        if (significant_change.detected ) {
             this.handle_significant_value_change(xnft, significant_change);
         }
 
@@ -534,7 +535,7 @@ service xNFTSystem {
             "name": "price_prediction",
             "type": "predictive",
             "schedule": "every_1_hour",
-            "execute": |nft| {
+//             "execute": 
                 let historical_data = this.get_price_history(nft.id);
                 let market_indicators = this.get_market_indicators(nft.dynamic_properties.oracle_sources);
 
@@ -544,7 +545,7 @@ service xNFTSystem {
                     market_indicators
                 );
 
-                if prediction.confidence > 0.8 {
+                if (prediction.confidence > 0.8 ) {
                     this.handle_price_prediction_alert(nft, prediction);
                 }
 
@@ -554,7 +555,7 @@ service xNFTSystem {
     }
 
     fn handle_price_prediction_alert(xnft: xNFT, prediction: any) -> Result<Unit, Error> {
-        let alert_message = format!(
+        let alert_message = // format!(
             "Price prediction alert for {}: {} movement predicted with {}% confidence",
             xnft.id,
             prediction.direction,
@@ -568,8 +569,8 @@ service xNFTSystem {
             "message": alert_message
         });
 
-        // Execute automated actions if configured
-        if xnft.dynamic_properties.automated_trading {
+        // Execute automated actions if (configured
+        if (xnft.dynamic_properties.automated_trading ) {
             this.execute_automated_trading_action(xnft, prediction);
         }
 
@@ -580,7 +581,7 @@ service xNFTSystem {
             "confidence": prediction.confidence
         });
 
-        return Ok(());
+        return Ok(Unit);
     }
 
     // ================================================
@@ -589,17 +590,17 @@ service xNFTSystem {
 
     fn transfer_cross_chain(token_id: String, from_chain: String, to_chain: String, recipient: String) -> Result<CrossChainTransfer, Error> {
         let xnft = self.nft_registry.get(token_id);
-        if xnft == null {
-            return Err(Error::new("NFTNotFound", format!("xNFT {} not found", token_id)));
+        if (xnft == null ) {
+            return Err(Error::new("NFTNotFound", "not found"));
         }
 
         // Validate chains are supported
-        if !self.supported_chains.contains(from_chain) || !self.supported_chains.contains(to_chain) {
+//         if (!self.supported_chains.contains(from_chain) 
             return Err(Error::new("UnsupportedChain", "One or both chains are not supported"));
         }
 
-        // Check if cross-chain transfer is allowed for this NFT
-        if !xnft.dynamic_properties.cross_chain_enabled {
+        // Check if (cross-chain transfer is allowed for this NFT
+        if (!xnft.dynamic_properties.cross_chain_enabled ) {
             return Err(Error::new("CrossChainDisabled", "This NFT does not support cross-chain transfers"));
         }
 
@@ -646,25 +647,25 @@ service xNFTSystem {
     fn generate_unique_token_id(collection: String) -> String {
         let timestamp = chain::get_block_timestamp();
         let random_component = crypto::generate_random_bytes(8);
-        return format!("{}_{}_{}", collection, timestamp, random_component);
+        return // format!("{}_{}_{}", collection, timestamp, random_component);
     }
 
     fn validate_executable_code(code: String) -> ValidationResult {
         // Basic syntax validation
         let syntax_check = this.check_code_syntax(code);
-        if !syntax_check.valid {
+        if (!syntax_check.valid ) {
             return { "valid": false, "errors": syntax_check.errors };
         }
 
         // Security validation
         let security_check = this.check_code_security(code);
-        if !security_check.secure {
+        if (!security_check.secure ) {
             return { "valid": false, "errors": security_check.violations };
         }
 
         // Performance validation
         let performance_check = this.analyze_code_performance(code);
-        if performance_check.complexity > 100 {
+        if (performance_check.complexity > 100 ) {
             return { "valid": false, "errors": ["Code complexity too high"] };
         }
 
@@ -688,7 +689,7 @@ service xNFTSystem {
         let relevant_feeds = [];
 
         for feed_name, feed in self.oracle_feeds {
-            if xnft.dynamic_properties.oracle_sources &&
+            if (xnft.dynamic_properties.oracle_sources &&
                xnft.dynamic_properties.oracle_sources.contains(feed_name) {
                 let data = oracle::get_latest_data(feed);
                 relevant_feeds.push({
@@ -706,7 +707,7 @@ service xNFTSystem {
         let now = chain::get_block_timestamp();
 
         // Check cooldown
-        if xnft.execution_state.cooldown_until && now < xnft.execution_state.cooldown_until {
+        if (xnft.execution_state.cooldown_until && now < xnft.execution_state.cooldown_until ) {
             return {
                 "allowed": false,
                 "reason": "NFT is in cooldown period"
@@ -714,7 +715,7 @@ service xNFTSystem {
         }
 
         // Check energy level
-        if xnft.execution_state.energy_level < 10 {
+        if (xnft.execution_state.energy_level < 10 ) {
             return {
                 "allowed": false,
                 "reason": "NFT energy level too low"
@@ -722,7 +723,7 @@ service xNFTSystem {
         }
 
         // Check execution limits
-        if xnft.execution_state.execution_count > 1000 {
+        if (xnft.execution_state.execution_count > 1000 ) {
             return {
                 "allowed": false,
                 "reason": "Execution limit exceeded"
@@ -744,7 +745,7 @@ service xNFTSystem {
                 "execution_result": execution_result,
                 "timestamp": chain::get_block_timestamp()
             }),
-            trigger_event.triggered_by || "system",
+//             trigger_event.triggered_by 
             execution_result.blockchain_tx,
             execution_result.gas_used
         ]);
@@ -791,19 +792,19 @@ struct xNFTConfig {
 struct ExecutionResult {
     success: bool,
     result: any,
-    actions: List<any>,
+    actions: list,
     state_changes: any,
-    oracle_queries: List<any>,
+    oracle_queries: list,
     gas_used: i64,
     execution_time: i64,
-    ai_decisions: List<any>
+    ai_decisions: list
 }
 
 struct ExecutionEngine {
     runtime: any,
     max_execution_time: i64,
     memory_limit: i64,
-    allowed_functions: List<String>,
+    allowed_functions: list,
     security_sandbox: bool
 }
 
@@ -837,14 +838,14 @@ struct DynamicRWA {
     asset_config: RWAConfig,
     data_feeds: any,
     monitoring: AIMonitoring,
-    valuation_history: List<any>,
+    valuation_history: list,
     risk_assessment: any,
     compliance_status: any
 }
 
 struct AIMonitoring {
     config: any,
-    tasks: List<AITask>,
+    tasks: list,
     alert_thresholds: any,
     prediction_models: any,
     active: bool
@@ -873,13 +874,13 @@ struct ValuationUpdate {
     new_valuation: Float,
     change_percentage: Float,
     confidence_score: Float,
-    market_data_used: List<String>,
+    market_data_used: list,
     blockchain_updated: bool
 }
 
 struct ValidationResult {
     valid: bool,
-    errors: List<String>
+    errors: list
 }
 
 struct ConstraintCheck {
@@ -893,7 +894,7 @@ struct ExecutionEnvironment {
     oracle_data: any,
     blockchain_state: any,
     ai_insights: any,
-    allowed_functions: List<String>,
+    allowed_functions: list,
     max_memory: i64,
     timeout: i64
 }

@@ -254,7 +254,7 @@ impl ConfigManager {
     }
 
     /// Load configuration from file
-    pub fn load_from_file(path: &str) -> Result<HashMap<String, Value>, String> {
+    pub fn load_from_file(_path: &str) -> Result<HashMap<String, Value>, String> {
         // Implementation would read from JSON, YAML, or TOML files
         // For now, return empty config
         Ok(HashMap::new())

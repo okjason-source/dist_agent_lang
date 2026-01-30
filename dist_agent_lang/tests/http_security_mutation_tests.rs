@@ -19,8 +19,6 @@ async fn test_rate_limiter_exact_limit_boundary() {
     // Catches: replace < with <= in RateLimiter::check_rate_limit (line 45)
     // The mutation at line 45 changes the retain condition from < window to <= window
     // This would cause timestamps exactly at the window boundary to be retained incorrectly
-    use tokio::time::Duration;
-    
     let limiter = RateLimiter::new(3, 60); // 3 requests per 60 seconds
     let ip: IpAddr = "127.0.0.1".parse().unwrap();
     
@@ -496,9 +494,10 @@ fn test_security_headers_middleware_function_exists() {
     // This is a compile-time check - if the function is replaced with Default::default(),
     // the function signature would change and this test would fail to compile
     
-    // Verify the function is accessible
+    // Verify the function is accessible (import used for compile-time check)
+    #[allow(unused_imports)]
     use dist_agent_lang::http_server_security::security_headers_middleware;
-    
+
     // The function exists if we can reference it
     // Actual behavior testing requires integration tests with a real server
     assert!(true, "Function exists and is accessible");

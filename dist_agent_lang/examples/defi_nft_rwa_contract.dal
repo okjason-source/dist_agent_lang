@@ -7,12 +7,12 @@
 @chain("arbitrum")
 service DeFiNFT_RWA {
     // Core state variables
-    total_assets: int = 0,
-    total_value_locked: int = 0,
-    assets: map<int, map<string, any>>,
-    users: map<string, map<string, any>>,
-    kyc_providers: map<string, map<string, any>>,
-    aml_checks: map<string, map<string, any>>,
+    total_assets: int = 0;
+    total_value_locked: int = 0;
+    assets: map<int, map<string, any>>;
+    users: map<string, map<string, any>>;
+    kyc_providers: map<string, map<string, any>>;
+    aml_checks: map<string, map<string, any>>;
     
     fn initialize() {
         log::info("defi", {
@@ -33,7 +33,7 @@ service DeFiNFT_RWA {
         insurance_info: map<string, string>
     ) -> int {
         // KYC/AML verification required for asset tokenization
-        if !self.verify_user_compliance(owner, "asset_tokenization") {
+        if (!self.verify_user_compliance(owner, "asset_tokenization")) {
             throw "User compliance verification failed";
         }
         
@@ -87,7 +87,7 @@ service DeFiNFT_RWA {
         methodology: string,
         confidence_level: float
     ) -> int {
-        if !self.assets.contains(asset_id) {
+        if (!self.assets.contains(asset_id) ) {
             throw "Asset not found";
         }
         
@@ -170,19 +170,19 @@ service DeFiNFT_RWA {
         level: string,
         user_data: map<string, string>
     ) -> bool {
-        if !self.kyc_providers.contains(provider_id) {
+        if (!self.kyc_providers.contains(provider_id) ) {
             throw "KYC provider not found";
         }
         
         let provider = self.kyc_providers[provider_id];
-        if !provider["verification_levels"].contains(level) {
+        if (!provider["verification_levels"].contains(level) ) {
             throw "KYC level not supported";
         }
         
         // Simulate KYC verification via external API
         let verification_result = kyc_verify_identity(provider["api_endpoint"], provider["api_key"], user_data);
         
-        if verification_result["status"] == "verified" {
+        if (verification_result["status"] == "verified" ) {
             let user_profile = {
                 "address": user_address,
                 "kyc_status": "verified",
@@ -217,7 +217,7 @@ service DeFiNFT_RWA {
         user_address: string,
         check_type: string
     ) -> string {
-        if !self.users.contains(user_address) {
+        if (!self.users.contains(user_address) ) {
             throw "User not found";
         }
         
@@ -242,7 +242,7 @@ service DeFiNFT_RWA {
         self.aml_checks[check_id] = aml_check;
         self.users[user_address]["aml_checks"][check_id] = aml_check;
         
-        if aml_result["status"] == "passed" {
+        if (aml_result["status"] == "passed" ) {
             self.users[user_address]["aml_status"] = "passed";
             self.users[user_address]["risk_score"] = aml_result["risk_score"];
             self.users[user_address]["compliance_flags"]["aml_verified"] = true;
@@ -265,30 +265,30 @@ service DeFiNFT_RWA {
     }
     
     fn verify_user_compliance(user_address: string, operation: string) -> bool {
-        if !self.users.contains(user_address) {
+        if (!self.users.contains(user_address) ) {
             return false;
         }
         
         let user = self.users[user_address];
         
         // Check KYC status
-        if user["kyc_status"] != "verified" {
+        if (user["kyc_status"] != "verified" ) {
             return false;
         }
         
         // Check AML status
-        if user["aml_status"] != "passed" {
+        if (user["aml_status"] != "passed" ) {
             return false;
         }
         
         // Check risk score
-        if user["risk_score"] > 0.7 {
+        if (user["risk_score"] > 0.7 ) {
             return false;
         }
         
         // Check trading limits based on operation
         let current_limits = self.get_trading_limits(user_address, operation);
-        if current_limits["exceeded"] == true {
+        if (current_limits["exceeded"] == true ) {
             return false;
         }
         
@@ -296,7 +296,7 @@ service DeFiNFT_RWA {
     }
     
     fn get_trading_limits(user_address: string, operation: string) -> map<string, any> {
-        if !self.users.contains(user_address) {
+        if (!self.users.contains(user_address) ) {
             return { "exceeded": true, "reason": "user_not_found" };
         }
         
@@ -313,7 +313,7 @@ service DeFiNFT_RWA {
             "monthly_limit": monthly_limit,
             "daily_usage": daily_usage,
             "monthly_usage": monthly_usage,
-            "exceeded": daily_usage > daily_limit || monthly_usage > monthly_limit
+//             "exceeded": daily_usage > daily_limit 
         };
     }
     
@@ -328,20 +328,20 @@ service DeFiNFT_RWA {
         trade_type: string
     ) -> int {
         // Verify both parties compliance
-        if !self.verify_user_compliance(seller, "asset_trading") {
+        if (!self.verify_user_compliance(seller, "asset_trading") ) {
             throw "Seller compliance verification failed";
         }
         
-        if !self.verify_user_compliance(buyer, "asset_trading") {
+        if (!self.verify_user_compliance(buyer, "asset_trading") ) {
             throw "Buyer compliance verification failed";
         }
         
-        if !self.assets.contains(asset_id) {
+        if (!self.assets.contains(asset_id) ) {
             throw "Asset not found";
         }
         
         let asset = self.assets[asset_id];
-        if asset["owner"] != seller {
+        if (asset["owner"] != seller ) {
             throw "Seller does not own this asset";
         }
         
@@ -387,18 +387,18 @@ service DeFiNFT_RWA {
         provider: string,
         amount: int
     ) -> string {
-        if !self.verify_user_compliance(provider, "liquidity_provision") {
+        if (!self.verify_user_compliance(provider, "liquidity_provision") ) {
             throw "Provider compliance verification failed";
         }
         
-        if !self.assets.contains(asset_id) {
+        if (!self.assets.contains(asset_id) ) {
             throw "Asset not found";
         }
         
         let pool_id = "pool_" + asset_id + "_" + provider;
         let current_time = chain::get_block_timestamp(1);
         
-        if self.assets[asset_id]["liquidity_pools"].contains(pool_id) {
+        if (self.assets[asset_id]["liquidity_pools"].contains(pool_id) ) {
             // Update existing pool
             self.assets[asset_id]["liquidity_pools"][pool_id]["total_liquidity"] = 
                 self.assets[asset_id]["liquidity_pools"][pool_id]["total_liquidity"] + amount;
@@ -442,20 +442,20 @@ service DeFiNFT_RWA {
         amount: int,
         term: int
     ) -> int {
-        if !self.verify_user_compliance(borrower, "loan_borrowing") {
+        if (!self.verify_user_compliance(borrower, "loan_borrowing") ) {
             throw "Borrower compliance verification failed";
         }
         
-        if !self.assets.contains(asset_id) {
+        if (!self.assets.contains(asset_id) ) {
             throw "Asset not found";
         }
         
         let asset = self.assets[asset_id];
-        if asset["owner"] != borrower {
+        if (asset["owner"] != borrower ) {
             throw "Borrower does not own this asset";
         }
         
-        if amount > asset["collateral_value"] {
+        if (amount > asset["collateral_value"] ) {
             throw "Loan amount exceeds collateral value";
         }
         
@@ -499,11 +499,11 @@ service DeFiNFT_RWA {
         let found_loan = false;
         let asset_id = 0;
         
-        for asset_id_key in self.assets {
+        for asset_id_key in self.assets  {
             let asset = self.assets[asset_id_key];
-            if asset["loan_history"].contains(loan_id) {
+            if (asset["loan_history"].contains(loan_id) ) {
                 let loan = asset["loan_history"][loan_id];
-                if loan["borrower"] == borrower && loan["status"] == "active" {
+                if (loan["borrower"] == borrower && loan["status"] == "active" ) {
                     self.assets[asset_id_key]["loan_history"][loan_id]["status"] = "repaid";
                     self.assets[asset_id_key]["updated_at"] = chain::get_block_timestamp(1);
                     found_loan = true;
@@ -513,7 +513,7 @@ service DeFiNFT_RWA {
             }
         }
         
-        if !found_loan {
+        if (!found_loan ) {
             throw "Loan not found or not active";
         }
         
@@ -535,7 +535,7 @@ service DeFiNFT_RWA {
         description: string,
         parameters: map<string, any>
     ) -> int {
-        if !self.verify_user_compliance(proposer, "governance") {
+        if (!self.verify_user_compliance(proposer, "governance") ) {
             throw "Proposer compliance verification failed";
         }
         
@@ -557,7 +557,7 @@ service DeFiNFT_RWA {
         vote: bool,
         weight: int
     ) -> bool {
-        if !self.verify_user_compliance(voter, "governance") {
+        if (!self.verify_user_compliance(voter, "governance") ) {
             throw "Voter compliance verification failed";
         }
         
@@ -588,7 +588,7 @@ service DeFiNFT_RWA {
     // Utility Functions
     
     fn get_asset_info(asset_id: int) -> map<string, any> {
-        if !self.assets.contains(asset_id) {
+        if (!self.assets.contains(asset_id) ) {
             throw "Asset not found";
         }
         
@@ -607,7 +607,7 @@ service DeFiNFT_RWA {
     }
     
     fn get_user_profile(user_address: string) -> map<string, any> {
-        if !self.users.contains(user_address) {
+        if (!self.users.contains(user_address) ) {
             throw "User not found";
         }
         

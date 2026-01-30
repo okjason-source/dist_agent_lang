@@ -13,7 +13,6 @@ use k256::ecdsa::signature::Verifier as EcdsaVerifier;
 use ed25519_dalek::{
     VerifyingKey as Ed25519VerifyingKey,
     Signature as Ed25519Signature,
-    Verifier as Ed25519Verifier,
 };
 use base64::{Engine as _, engine::general_purpose};
 

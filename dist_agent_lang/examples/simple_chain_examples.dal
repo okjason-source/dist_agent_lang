@@ -2,10 +2,11 @@
 // Working with 1-2 chains or custom chains in dist_agent_lang
 
 // Example 1: Single Chain (Ethereum Only)
-// @trust("hybrid")
-// @secure
+@trust("hybrid")
+@chain("ethereum")
+@secure
 service EthereumOnlyKEYS {
-    contract_address: string,
+    contract_address: string;
     
     fn deploy_to_ethereum() -> string {
         // Deploy to Ethereum mainnet (chain_id: 1)
@@ -20,7 +21,7 @@ service EthereumOnlyKEYS {
         );
         
         self.contract_address = address;
-        log::info("deploy", format!("Deployed to Ethereum at {}", address));
+        log::info("deploy", "Deployed to Ethereum");
         return address;
     }
     
@@ -32,7 +33,7 @@ service EthereumOnlyKEYS {
             { "to": to, "amount": amount.to_string() }
         );
         
-        log::info("transfer", format!("Transfer result: {}", result));
+        log::info("transfer", "Transfer completed");
         return result.contains("success");
     }
     
@@ -42,11 +43,12 @@ service EthereumOnlyKEYS {
 }
 
 // Example 2: Two Chains (Ethereum + Polygon)
-// @trust("hybrid")
-// @secure
+@trust("hybrid")
+@chain("ethereum","polygon")
+@secure
 service DualChainKEYS {
-    eth_address: string,
-    poly_address: string,
+    eth_address: string;
+    poly_address: string;
     
     fn deploy_to_two_chains() -> bool {
         // Deploy to Ethereum
@@ -63,7 +65,7 @@ service DualChainKEYS {
             { "name": "KEYS", "symbol": "KEYS" }
         );
         
-        log::info("deploy", format!("Ethereum: {}, Polygon: {}", self.eth_address, self.poly_address));
+        log::info("deploy", "Ethereum and Polygon deployed");
         return true;
     }
     
@@ -88,7 +90,7 @@ service DualChainKEYS {
         let eth_cost = chain::estimate_gas(1, "transfer") * chain::get_gas_price(1);
         let poly_cost = chain::estimate_gas(137, "transfer") * chain::get_gas_price(137);
         
-        if poly_cost < eth_cost {
+        if (poly_cost < eth_cost) {
             log::info("choice", "Polygon is cheaper");
             return 137;
         } else {
@@ -99,11 +101,12 @@ service DualChainKEYS {
 }
 
 // Example 3: Custom Chain Configuration
-// @trust("hybrid")
-// @secure
+@trust("hybrid")
+@chain("ethereum")
+@secure
 service CustomChainKEYS {
-    custom_chain_id: int = 999, // Custom chain ID
-    contract_address: string,
+    custom_chain_id: int = 999; // Custom chain ID
+    contract_address: string;
     
     fn deploy_to_custom_chain() -> string {
         // Deploy to a custom chain (e.g., private blockchain)
@@ -118,7 +121,7 @@ service CustomChainKEYS {
         );
         
         self.contract_address = address;
-        log::info("deploy", format!("Deployed to custom chain {} at {}", self.custom_chain_id, address));
+        log::info("deploy", "Deployed to custom chain");
         return address;
     }
     
@@ -126,41 +129,36 @@ service CustomChainKEYS {
         let gas_price = chain::get_gas_price(self.custom_chain_id);
         let timestamp = chain::get_block_timestamp(self.custom_chain_id);
         
-        return format!("Custom Chain {} - Gas: {} gwei, Timestamp: {}", 
-            self.custom_chain_id, gas_price, timestamp);
+        return "Custom chain info";
     }
 }
 
 // Example 4: Chain Selection Based on Use Case
-// @trust("hybrid")
-// @secure
+@trust("hybrid")
+@chain("ethereum","polygon","bsc","arbitrum")
+@secure
 service SmartChainKEYS {
     fn select_chain_by_use_case(use_case: string) -> int {
-        match use_case {
-            "high_value" => {
-                // High-value transactions: Use Ethereum for security
-                log::info("selection", "High value transaction - using Ethereum");
-                return 1;
-            },
-            "gaming" => {
-                // Gaming/NFTs: Use Polygon for speed and low cost
+        if (use_case == "high_value") {
+            log::info("selection", "High value transaction - using Ethereum");
+            return 1;
+        } else {
+            if (use_case == "gaming") {
                 log::info("selection", "Gaming transaction - using Polygon");
                 return 137;
-            },
-            "micro_transaction" => {
-                // Micro-transactions: Use BSC for lowest cost
-                log::info("selection", "Micro transaction - using BSC");
-                return 56;
-            },
-            "defi" => {
-                // DeFi: Use Arbitrum for L2 benefits
-                log::info("selection", "DeFi transaction - using Arbitrum");
-                return 42161;
-            },
-            _ => {
-                // Default: Use Ethereum
-                log::info("selection", "Default - using Ethereum");
-                return 1;
+            } else {
+                if (use_case == "micro_transaction") {
+                    log::info("selection", "Micro transaction - using BSC");
+                    return 56;
+                } else {
+                    if (use_case == "defi") {
+                        log::info("selection", "DeFi transaction - using Arbitrum");
+                        return 42161;
+                    } else {
+                        log::info("selection", "Default - using Ethereum");
+                        return 1;
+                    }
+                }
             }
         }
     }
@@ -169,15 +167,16 @@ service SmartChainKEYS {
         let chain_id = self.select_chain_by_use_case(use_case);
         
         let result = chain::call(chain_id, "0x1234...", operation, args);
-        log::info("execution", format!("Executed {} on chain {}: {}", operation, chain_id, result));
+        log::info("execution", "Executed");
         
         return result;
     }
 }
 
 // Example 5: Simple Single-Chain Token
-// @trust("hybrid")
-// @secure
+@trust("hybrid")
+@chain("ethereum")
+@secure
 service SimpleKEYS {
     // Only work with Ethereum mainnet
     fn deploy() -> string {
@@ -186,7 +185,7 @@ service SimpleKEYS {
             "symbol": "SKEYS"
         });
         
-        log::info("deploy", format!("Simple KEYS deployed at {}", address));
+        log::info("deploy", "Simple KEYS deployed");
         return address;
     }
     
@@ -196,13 +195,13 @@ service SimpleKEYS {
             "type": "erc20"
         });
         
-        log::info("mint", format!("Minted {} tokens with ID {}", amount, asset_id));
+        log::info("mint", "Minted");
         return asset_id;
     }
     
     fn check_balance(address: string) -> int {
         let balance = chain::get_balance(1, address); // Ethereum only
-        log::info("balance", format!("Balance for {}: {} wei", address, balance));
+        log::info("balance", "Balance");
         return balance;
     }
 }
@@ -215,14 +214,14 @@ service TestnetKEYS {
         let testnets = [5, 80001]; // Goerli, Mumbai
         let mut addresses = {};
         
-        for chain_id in testnets {
+        for chain_id in testnets  {
             let address = chain::deploy(chain_id, "TestKEYS", {
                 "name": "Test KEYS",
                 "symbol": "TKEYS"
             });
             
             addresses[chain_id] = address;
-            log::info("testnet", format!("Deployed to testnet {} at {}", chain_id, address));
+            log::info("testnet", "Deployed to testnet");
         }
         
         return addresses;
@@ -232,10 +231,10 @@ service TestnetKEYS {
         let testnets = [5, 80001];
         let mut gas_costs = {};
         
-        for chain_id in testnets {
+        for chain_id in testnets  {
             let gas = chain::estimate_gas(chain_id, "transfer");
             gas_costs[chain_id] = gas;
-            log::info("gas", format!("Testnet {} transfer gas: {}", chain_id, gas));
+            log::info("gas", "Testnet transfer gas");
         }
         
         return gas_costs;
@@ -248,25 +247,25 @@ fn main() {
     let eth_only = EthereumOnlyKEYS::new();
     let address = eth_only.deploy_to_ethereum();
     let gas_price = eth_only.get_ethereum_gas_price();
-    log::info("main", format!("Ethereum gas price: {} gwei", gas_price));
+    log::info("main", "Ethereum gas price");
     
     // Dual chain example
     let dual = DualChainKEYS::new();
     dual.deploy_to_two_chains();
     let costs = dual.compare_gas_costs();
     let cheaper = dual.choose_cheaper_chain();
-    log::info("main", format!("Cheaper chain: {}", cheaper));
+    log::info("main", "Cheaper chain");
     
     // Custom chain example
     let custom = CustomChainKEYS::new();
     custom.deploy_to_custom_chain();
     let info = custom.get_custom_chain_info();
-    log::info("main", format!("Custom chain info: {}", info));
+    log::info("main", "Custom chain info");
     
     // Smart selection example
     let smart = SmartChainKEYS::new();
     let result = smart.execute_on_best_chain("gaming", "mint", { "amount": "100" });
-    log::info("main", format!("Smart execution result: {}", result));
+    log::info("main", "Smart execution result");
     
     // Simple single chain
     let simple = SimpleKEYS::new();

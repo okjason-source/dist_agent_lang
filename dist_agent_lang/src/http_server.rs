@@ -472,6 +472,7 @@ async fn home_handler() -> Html<String> {
     Html(html.to_string())
 }
 
+#[allow(dead_code)]
 async fn balance_handler() -> Json<serde_json::Value> {
     let response = serde_json::json!({
         "success": true,
@@ -483,6 +484,7 @@ async fn balance_handler() -> Json<serde_json::Value> {
     Json(response)
 }
 
+#[allow(dead_code)]
 async fn connect_handler() -> Json<serde_json::Value> {
     let response = serde_json::json!({
         "success": true,
@@ -493,6 +495,7 @@ async fn connect_handler() -> Json<serde_json::Value> {
     Json(response)
 }
 
+#[allow(dead_code)]
 async fn transfer_handler() -> Json<serde_json::Value> {
     let response = serde_json::json!({
         "success": true,
@@ -503,6 +506,7 @@ async fn transfer_handler() -> Json<serde_json::Value> {
     Json(response)
 }
 
+#[allow(dead_code)]
 async fn airdrop_handler() -> Json<serde_json::Value> {
     let response = serde_json::json!({
         "success": true,

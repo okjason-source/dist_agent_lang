@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 // Simple token definitions for testing
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
@@ -14,6 +12,7 @@ pub enum Token {
 #[derive(Debug, Clone)]
 pub struct Lexer {
     input: String,
+    #[allow(dead_code)]
     position: usize,
 }
 

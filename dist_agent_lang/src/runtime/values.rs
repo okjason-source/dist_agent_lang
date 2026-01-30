@@ -70,6 +70,7 @@ impl ObjectRef {
 pub struct ObjectRegistry {
     objects: HashMap<ObjectId, ObjectData>,
     total_memory_usage: usize,
+    #[allow(dead_code)]
     max_memory_threshold: usize,
 }
 

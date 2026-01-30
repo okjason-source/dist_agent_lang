@@ -33,7 +33,7 @@ describe("TokenContract - Basic Functionality", fn() {
         expect(supply).to_equal(initial_supply);
         
         // Layer 2: Semantic validation
-        test::expect_type(&supply, "number");
+        test::expect_type(supply, "number");
         test::expect_in_range(supply, 0.0, 1000000.0);
         
         print("✓ Initial supply is correct");
@@ -182,7 +182,7 @@ describe("TokenContract - Edge Cases", fn() {
         let amounts = [10.0, 20.0, 30.0, 40.0, 50.0];
         let total = 0.0;
         
-        for amount in amounts {
+        for amount in amounts  {
             contract.transfer("bob", amount);
             total = total + amount;
         }
@@ -226,7 +226,7 @@ describe("TokenContract - Performance", fn() {
         let start_time = time::now();
         
         // Perform 100 transfers
-        for i in 0..100 {
+        for i in 0..100  {
             let recipient = "user_" + string(i);
             contract.transfer(recipient, 10.0);
         }
@@ -241,7 +241,7 @@ describe("TokenContract - Performance", fn() {
     
     it("should handle large balance maps", fn() {
         // Create many addresses
-        for i in 0..1000 {
+        for i in 0..1000  {
             let addr = "user_" + string(i);
             contract.transfer(addr, 1.0);
         }

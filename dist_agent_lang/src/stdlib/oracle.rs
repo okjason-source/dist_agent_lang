@@ -324,7 +324,7 @@ pub fn verify(data: &Value, signature: &str) -> bool {
 }
 
 /// Stream real-time data from oracle source with security
-pub fn stream(source: &str, callback: &str) -> Result<String, String> {
+pub fn stream(source: &str, _callback: &str) -> Result<String, String> {
     // Security: Validate source before streaming
     let trusted_sources = vec!["price_feed", "weather", "events"];
     
