@@ -277,6 +277,7 @@ impl IsolatedContractState {
             Value::Struct(name, fields) => name.len() + fields.iter()
                 .map(|(k, v)| k.len() + self.estimate_value_size(v))
                 .sum::<usize>() + (fields.len() * 8),
+            Value::Closure(id) => id.len() + 8,
         }
     }
 
@@ -365,6 +366,7 @@ impl IsolatedContractState {
                     }
                 }
             }
+            Value::Closure(id) => id.hash(hasher),
         }
     }
 

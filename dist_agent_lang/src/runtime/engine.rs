@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::collections::VecDeque;
+use std::sync::mpsc;
 use crate::runtime::values::Value;
 use crate::runtime::scope::Scope;
 use crate::runtime::functions::{Function, RuntimeError};
@@ -7,12 +9,48 @@ use crate::runtime::safe_math::SafeMath;
 use crate::runtime::state_isolation::StateIsolationManager;
 use crate::stdlib::cross_chain_security::CrossChainSecurityManager;
 use crate::runtime::advanced_security::AdvancedSecurityManager;
-use crate::parser::ast::{Program, ServiceStatement};
+use crate::parser::ast::{BlockStatement, Program, ServiceStatement, Statement};
+
+/// In-memory agent state: status, message queue, task queue (for ai:: and agent::).
+#[derive(Debug, Clone)]
+pub struct AgentState {
+    pub status: String,
+    pub message_queue: VecDeque<Value>,
+    pub task_queue: VecDeque<String>,
+}
+
+impl Default for AgentState {
+    fn default() -> Self {
+        Self {
+            status: "idle".to_string(),
+            message_queue: VecDeque::new(),
+            task_queue: VecDeque::new(),
+        }
+    }
+}
+
+/// Captured arrow/closure: single param, body, and scope snapshot for callbacks.
+#[derive(Clone)]
+pub struct ClosureEntry {
+    pub param: String,
+    pub body: BlockStatement,
+    pub captured_scope: Scope,
+}
+
+/// User-defined (DAL) function: name, parameter names, and body AST.
+#[derive(Debug, Clone)]
+pub struct UserFunction {
+    pub name: String,
+    pub parameters: Vec<String>,
+    pub body: BlockStatement,
+}
 
 pub struct Runtime {
     pub stack: Vec<Value>,
     pub scope: Scope,
     pub functions: HashMap<String, Function>,
+    /// Top-level DAL functions registered during execution (Statement::Function).
+    pub user_functions: HashMap<String, UserFunction>,
     pub call_stack: Vec<CallFrame>,
     pub services: HashMap<String, ServiceInstance>, // NEW: Service instances
     pub current_service: Option<ServiceContext>, // NEW: Current service context for trust validation
@@ -21,6 +59,14 @@ pub struct Runtime {
     pub cross_chain_manager: CrossChainSecurityManager, // NEW: Cross-chain security manager
     pub advanced_security: AdvancedSecurityManager, // NEW: Advanced security features
     execution_start: Option<std::time::Instant>, // NEW: Track execution start time for timeout
+    /// Pending spawn handles: task_id -> receiver for join.
+    pending_spawns: HashMap<String, mpsc::Receiver<Result<Value, RuntimeError>>>,
+    spawn_counter: u64,
+    /// Arrow/closure values: closure_id -> (param, body, captured_scope).
+    closure_registry: HashMap<String, ClosureEntry>,
+    closure_counter: u64,
+    /// In-memory agent state for ai:: and agent:: (message/task queues, status).
+    agent_states: HashMap<String, AgentState>,
 }
 
 // NEW: Service instance structure
@@ -56,6 +102,7 @@ impl Runtime {
             stack: Vec::with_capacity(64), // Pre-allocate stack space
             scope: Scope::new(),
             functions: HashMap::with_capacity(16), // Pre-allocate for built-ins
+            user_functions: HashMap::with_capacity(8), // DAL top-level functions
             call_stack: Vec::with_capacity(8), // Pre-allocate call stack
             services: HashMap::with_capacity(8), // NEW: Pre-allocate for services
             current_service: None, // NEW: Initialize current service context
@@ -64,6 +111,11 @@ impl Runtime {
             cross_chain_manager: CrossChainSecurityManager::new(), // NEW: Cross-chain security manager
             advanced_security: AdvancedSecurityManager::new(), // NEW: Advanced security features
             execution_start: None, // NEW: Initialize execution start time
+            pending_spawns: HashMap::new(),
+            spawn_counter: 0,
+            closure_registry: HashMap::new(),
+            closure_counter: 0,
+            agent_states: HashMap::new(),
         };
 
         // Register built-in functions
@@ -76,6 +128,7 @@ impl Runtime {
             stack: Vec::with_capacity(stack_cap),
             scope: Scope::new(),
             functions: HashMap::with_capacity(func_cap),
+            user_functions: HashMap::with_capacity(8), // DAL top-level functions
             call_stack: Vec::with_capacity(call_cap),
             services: HashMap::with_capacity(8), // NEW: Pre-allocate for services
             current_service: None, // NEW: Initialize current service context
@@ -84,6 +137,11 @@ impl Runtime {
             cross_chain_manager: CrossChainSecurityManager::new(), // NEW: Cross-chain security manager
             advanced_security: AdvancedSecurityManager::new(), // NEW: Advanced security features
             execution_start: None, // NEW: Initialize execution start time
+            pending_spawns: HashMap::new(),
+            spawn_counter: 0,
+            closure_registry: HashMap::new(),
+            closure_counter: 0,
+            agent_states: HashMap::new(),
         };
         
         // Register built-in functions
@@ -135,6 +193,20 @@ impl Runtime {
             Value::Bool(b) => Ok(if *b { 1 } else { 0 }),
             _ => Err(RuntimeError::General("Cannot convert value to int".to_string())),
         }
+    }
+
+    /// Convert Value::Map to HashMap<String, String> for chain:: deploy/call/mint/update.
+    fn value_map_to_string_map(&self, value: &Value) -> Result<HashMap<String, String>, RuntimeError> {
+        let map = match value {
+            Value::Map(m) => m,
+            _ => return Err(RuntimeError::General("Expected a map value".to_string())),
+        };
+        let mut out = HashMap::new();
+        for (k, v) in map {
+            let s = self.value_to_string(v).unwrap_or_else(|_| format!("{:?}", v));
+            out.insert(k.clone(), s);
+        }
+        Ok(out)
     }
 
     pub fn execute_program(&mut self, program: Program) -> Result<Option<Value>, RuntimeError> {
@@ -231,25 +303,37 @@ impl Runtime {
         }
         
         if name == "__index_assign__" {
-            // Array/map assignment: __index_assign__(container, key, value)
-            // This is called for: self.field[key] = value or arr[index] = value
-            if args.len() != 3 {
+            // __index_assign__(container, key, value) or
+            // + var_name when LHS is a variable (4 args), or
+            // + empty, field_name when LHS is self.field (5 args)
+            if args.len() != 3 && args.len() != 4 && args.len() != 5 {
                 return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
             }
             let container = &args[0];
             let key = &args[1];
             let value = args[2].clone();
-            
-            // Check if we're in a service method context (self is in scope)
-            if let Ok(Value::String(ref instance_id)) = self.get_variable("self") {
-                // We're in a service method - the container is the result of evaluating self.field
-                // We need to find which field this map came from and update it
-                if let Value::Map(ref map) = container {
-                    if let Some(instance) = self.services.get_mut(instance_id) {
-                        // Find the field that contains this map
-                        // Since maps are cloned when accessed, we can't use reference equality
-                        // Instead, we'll update all map fields - this works if there's only one map
-                        // being modified, which is the common case
+            let var_name = if args.len() == 4 {
+                match &args[3] {
+                    Value::String(s) => Some(s.clone()),
+                    _ => None,
+                }
+            } else {
+                None
+            };
+            let field_name = if args.len() == 5 {
+                match &args[4] {
+                    Value::String(s) if !s.is_empty() => Some(s.clone()),
+                    _ => None,
+                }
+            } else {
+                None
+            };
+
+            // Variable assignment: map_var[key] = value or arr_var[index] = value
+            if let Some(var_name) = var_name {
+                let current = self.get_variable(&var_name)?;
+                match &current {
+                    Value::Map(map) => {
                         let key_str = match key {
                             Value::String(s) => s.clone(),
                             Value::Int(i) => i.to_string(),
@@ -257,29 +341,78 @@ impl Runtime {
                                 "Map key must be string or int, got: {}", key.type_name()
                             ))),
                         };
-                        
-                        // Try to find a matching map field by checking if the keys overlap
-                        // This is a heuristic - in practice, we'd want to track the field name
-                        for (_field_name, field_value) in instance.fields.iter_mut() {
+                        let mut new_map = map.clone();
+                        new_map.insert(key_str, value.clone());
+                        self.set_variable(var_name, Value::Map(new_map));
+                        return Ok(value);
+                    }
+                    Value::Array(arr) => {
+                        let index = match key {
+                            Value::Int(i) if *i >= 0 => *i as usize,
+                            _ => return Err(RuntimeError::General(format!(
+                                "Array index must be non-negative int, got: {}", key.type_name()
+                            ))),
+                        };
+                        let mut new_arr = arr.clone();
+                        if index < new_arr.len() {
+                            new_arr[index] = value.clone();
+                        } else {
+                            while new_arr.len() < index {
+                                new_arr.push(Value::Null);
+                            }
+                            new_arr.push(value.clone());
+                        }
+                        self.set_variable(var_name, Value::Array(new_arr));
+                        return Ok(value);
+                    }
+                    _ => return Err(RuntimeError::General(format!(
+                        "Cannot assign to index of variable '{}' (type: {})",
+                        var_name, current.type_name()
+                    ))),
+                }
+            }
+            
+            // Check if we're in a service method context (self is in scope)
+            if let Ok(Value::String(ref instance_id)) = self.get_variable("self") {
+                if let Value::Map(ref _map) = container {
+                    if let Some(instance) = self.services.get_mut(instance_id) {
+                        let key_str = match key {
+                            Value::String(s) => s.clone(),
+                            Value::Int(i) => i.to_string(),
+                            _ => return Err(RuntimeError::General(format!(
+                                "Map key must be string or int, got: {}", key.type_name()
+                            ))),
+                        };
+
+                        // When field name is known (self.field[key] = value), update that field directly
+                        if let Some(field_name) = &field_name {
+                            if let Some(field_value) = instance.fields.get_mut(field_name) {
+                                if let Value::Map(ref mut field_map) = field_value {
+                                    field_map.insert(key_str, value.clone());
+                                    return Ok(value);
+                                }
+                            }
+                            return Err(RuntimeError::General(format!(
+                                "Field '{}' not found or not a map on service instance",
+                                field_name
+                            )));
+                        }
+
+                        // Heuristic fallback when field name not tracked (multiple map fields)
+                        let map = _map;
+                        for (_fname, field_value) in instance.fields.iter_mut() {
                             if let Value::Map(ref field_map) = field_value {
-                                // Check if this field's map has overlapping keys with the container map
-                                // This is a simple heuristic to identify the correct field
-                                if map.keys().any(|k| field_map.contains_key(k)) || 
-                                   (map.is_empty() && field_map.is_empty()) {
-                                    // This is likely the field we want to update
-                                    if let Value::Map(ref mut field_map_mut) = field_value {
-                                        field_map_mut.insert(key_str.clone(), value.clone());
+                                if map.keys().any(|k| field_map.contains_key(k)) || (map.is_empty() && field_map.is_empty()) {
+                                    if let Value::Map(ref mut fm) = field_value {
+                                        fm.insert(key_str.clone(), value.clone());
                                         return Ok(value);
                                     }
                                 }
                             }
                         }
-                        
-                        // Fallback: if no match found, update the first map field
-                        // This handles the case where the map is empty or newly created
-                        for (_field_name, field_value) in instance.fields.iter_mut() {
-                            if let Value::Map(ref mut field_map) = field_value {
-                                field_map.insert(key_str.clone(), value.clone());
+                        for (_fname, field_value) in instance.fields.iter_mut() {
+                            if let Value::Map(ref mut fm) = field_value {
+                                fm.insert(key_str.clone(), value.clone());
                                 return Ok(value);
                             }
                         }
@@ -304,6 +437,11 @@ impl Runtime {
                     "Cannot assign to index of type: {}", container.type_name()
                 ))),
             }
+        }
+
+        // Call variable holding Value::Closure (arrow function)
+        if let Ok(Value::Closure(ref id)) = self.get_variable(name) {
+            return self.call_closure(id, args);
         }
         
         // Handle namespace calls (e.g., oracle::fetch)
@@ -350,6 +488,45 @@ impl Runtime {
             }
         }
         
+        // Dispatch to user-defined (DAL) function if registered during execution
+        let user_func = self.user_functions.get(name).cloned();
+        if let Some(user_func) = user_func {
+            if args.len() != user_func.parameters.len() {
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: user_func.parameters.len(),
+                    got: args.len(),
+                });
+            }
+            let call_frame = CallFrame {
+                scope: self.scope.clone(),
+            };
+            self.call_stack.push(call_frame);
+            for (param, arg) in user_func.parameters.iter().zip(args.iter()) {
+                self.scope.set(param.clone(), arg.clone());
+            }
+            let mut result = Value::Null;
+            for stmt in &user_func.body.statements {
+                match self.execute_statement(stmt) {
+                    Ok(value) => {
+                        result = value;
+                        if let Statement::Return(_) = stmt {
+                            break;
+                        }
+                    }
+                    Err(e) => {
+                        if let Some(frame) = self.call_stack.pop() {
+                            self.scope = frame.scope;
+                        }
+                        return Err(e);
+                    }
+                }
+            }
+            if let Some(frame) = self.call_stack.pop() {
+                self.scope = frame.scope;
+            }
+            return Ok(result);
+        }
+        
         let function = self.functions.get(name)
             .ok_or_else(|| RuntimeError::function_not_found(name.to_string()))?;
         
@@ -359,8 +536,8 @@ impl Runtime {
         };
         self.call_stack.push(call_frame);
         
-        // Call the function
-        let result = function.call(args, &mut self.scope);
+        // Call the function (pass body so cloned functions can be invoked when engine resolves by name)
+        let result = function.call(args, &mut self.scope, function.body_ref());
         
         // Restore scope from call frame
         if let Some(frame) = self.call_stack.pop() {
@@ -416,7 +593,7 @@ impl Runtime {
     }
 
     // Handle method calls on service instances (e.g., TestNFT::new(), TestNFT::someMethod())
-    fn call_service_instance_method(&mut self, service_name: &str, method_name: &str, _args: &[Value]) -> Result<Value, RuntimeError> {
+    fn call_service_instance_method(&mut self, service_name: &str, method_name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         if method_name == "new" {
             // Create a new instance of the service
             let service_template = self.services.get(service_name)
@@ -437,8 +614,19 @@ impl Runtime {
             // Return the instance identifier
             Ok(Value::String(instance_id))
         } else {
-            // Call a method on the service (this would need more implementation)
-            Err(RuntimeError::General(format!("Service method calls not yet implemented: {}.{}()", service_name, method_name)))
+            // Call a method on the service: use the registered service (template) as the instance
+            let method = {
+                let instance = self.services.get(service_name)
+                    .ok_or_else(|| RuntimeError::General(format!("Service '{}' not found", service_name)))?;
+                instance.methods.iter()
+                    .find(|m| m.name == method_name)
+                    .ok_or_else(|| RuntimeError::General(format!(
+                        "Method '{}' not found on service '{}'",
+                        method_name, service_name
+                    )))?
+                    .clone()
+            };
+            self.execute_service_method(service_name, method_name, &method, args)
         }
     }
 
@@ -541,6 +729,20 @@ impl Runtime {
 
     fn call_sync_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         match name {
+            "join" => {
+                // sync::join(handle) — block until spawned task completes and return its result
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                }
+                let task_id = match &args[0] {
+                    Value::String(s) => s.clone(),
+                    _ => return Err(RuntimeError::General("sync::join expects a string handle".to_string())),
+                };
+                let rx = self.pending_spawns.remove(&task_id)
+                    .ok_or_else(|| RuntimeError::General(format!("Spawn handle '{}' not found or already joined", task_id)))?;
+                rx.recv()
+                    .map_err(|_| RuntimeError::General(format!("Spawn '{}' channel closed", task_id)))?
+            }
             "create_sync_target" => {
                 if args.len() != 2 {
                     return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
@@ -598,7 +800,7 @@ impl Runtime {
 
         match name {
             "deploy" => {
-                if args.len() != 3 {
+                if args.len() != 3 && args.len() != 4 {
                     return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
                 }
                 let chain_id = match &args[0] {
@@ -609,7 +811,11 @@ impl Runtime {
                     Value::String(s) => s.clone(),
                     _ => return Err(RuntimeError::TypeError { expected: "string".to_string(), got: args[1].type_name().to_string() }),
                 };
-                let constructor_args = HashMap::new(); // Simplified for now
+                let constructor_args = if args.len() >= 4 {
+                    self.value_map_to_string_map(&args[3])?
+                } else {
+                    HashMap::new()
+                };
                 let address = crate::stdlib::chain::deploy(chain_id, contract_name, constructor_args);
                 Ok(Value::String(address))
             }
@@ -681,7 +887,7 @@ impl Runtime {
                 Ok(Value::Int(balance))
             }
             "call" => {
-                if args.len() != 4 {
+                if args.len() != 4 && args.len() != 5 {
                     return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() });
                 }
                 let chain_id = match &args[0] {
@@ -696,31 +902,43 @@ impl Runtime {
                     Value::String(s) => s.clone(),
                     _ => return Err(RuntimeError::TypeError { expected: "string".to_string(), got: args[2].type_name().to_string() }),
                 };
-                let args_map = HashMap::new(); // Simplified for now
+                let args_map = if args.len() >= 5 {
+                    self.value_map_to_string_map(&args[4])?
+                } else {
+                    HashMap::new()
+                };
                 let result = crate::stdlib::chain::call(chain_id, contract_address, function_name, args_map);
                 Ok(Value::String(result))
             }
             "mint" => {
-                if args.len() != 2 {
+                if args.len() != 2 && args.len() != 3 {
                     return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
                 }
                 let name = match &args[0] {
                     Value::String(s) => s.clone(),
                     _ => return Err(RuntimeError::TypeError { expected: "string".to_string(), got: args[0].type_name().to_string() }),
                 };
-                let metadata = HashMap::new(); // Simplified for now
+                let metadata = if args.len() >= 3 {
+                    self.value_map_to_string_map(&args[2])?
+                } else {
+                    HashMap::new()
+                };
                 let asset_id = crate::stdlib::chain::mint(name, metadata);
                 Ok(Value::Int(asset_id))
             }
             "update" => {
-                if args.len() != 2 {
+                if args.len() != 2 && args.len() != 3 {
                     return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
                 }
                 let asset_id = match &args[0] {
                     Value::Int(n) => *n,
                     _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
                 };
-                let updates = HashMap::new(); // Simplified for now
+                let updates = if args.len() >= 3 {
+                    self.value_map_to_string_map(&args[2])?
+                } else {
+                    HashMap::new()
+                };
                 let success = crate::stdlib::chain::update(asset_id, updates);
                 Ok(Value::Bool(success))
             }
@@ -1073,10 +1291,15 @@ impl Runtime {
                 }
                 Ok(last_result)
             }
-            crate::parser::ast::Statement::Function(_func_stmt) => {
-                // For now, we'll skip function registration during execution
-                // In a real implementation, we'd need to handle this differently
-                // to avoid lifetime issues with closures
+            Statement::Function(func_stmt) => {
+                // Register top-level DAL function so call_function(name, args) can dispatch to it
+                let parameters: Vec<String> = func_stmt.parameters.iter().map(|p| p.name.clone()).collect();
+                let user_func = UserFunction {
+                    name: func_stmt.name.clone(),
+                    parameters: parameters.clone(),
+                    body: func_stmt.body.clone(),
+                };
+                self.user_functions.insert(func_stmt.name.clone(), user_func);
                 Ok(Value::Null)
             }
             crate::parser::ast::Statement::Service(service_stmt) => {
@@ -1136,6 +1359,7 @@ impl Runtime {
                                 stack: Vec::new(),
                                 scope: catch_scope,
                                 functions: HashMap::new(),
+                                user_functions: HashMap::new(),
                                 call_stack: Vec::new(),
                                 current_service: None,
                                 reentrancy_guard: ReentrancyGuard::new(),
@@ -1143,6 +1367,11 @@ impl Runtime {
                                 cross_chain_manager: CrossChainSecurityManager::new(),
                                 advanced_security: AdvancedSecurityManager::new(),
                                 execution_start: None,
+                                pending_spawns: HashMap::new(),
+                                spawn_counter: 0,
+                                closure_registry: HashMap::new(),
+                                closure_counter: 0,
+                                agent_states: HashMap::new(),
                             };
                             
                             match catch_runtime.execute_statement(&crate::parser::ast::Statement::Block(catch_block.body.clone())) {
@@ -1351,13 +1580,33 @@ impl Runtime {
                 self.evaluate_expression(expr)
             }
             crate::parser::ast::Expression::Spawn(expr) => {
-                // For now, evaluate the expression (e.g. spawn worker_process(i) runs the call)
-                // In a real implementation, this would run in background and return a handle
-                self.evaluate_expression(expr)
+                // Run expression in a background thread and return a handle; use sync::join(handle) to get the result
+                self.spawn_counter = self.spawn_counter.wrapping_add(1);
+                let task_id = format!("spawn_{}", self.spawn_counter);
+                let (tx, rx) = mpsc::channel();
+                let expr = expr.clone();
+                let user_functions = self.user_functions.clone();
+                let services = self.services.clone();
+                let scope = self.scope.clone();
+                std::thread::spawn(move || {
+                    let mut rt = Runtime::new();
+                    rt.user_functions = user_functions;
+                    rt.services = services;
+                    rt.scope = scope;
+                    let result = rt.evaluate_expression(&expr);
+                    let _ = tx.send(result);
+                });
+                self.pending_spawns.insert(task_id.clone(), rx);
+                Ok(Value::String(task_id))
             }
             crate::parser::ast::Expression::Throw(expr) => {
                 let error_value = self.evaluate_expression(expr)?;
                 Err(RuntimeError::General(format!("Thrown error: {}", error_value)))
+            }
+            crate::parser::ast::Expression::IndexAccess(container, index_expr) => {
+                let container_val = self.evaluate_expression(container)?;
+                let index_val = self.evaluate_expression(index_expr)?;
+                self.call_function("__index__", &[container_val, index_val])
             }
             crate::parser::ast::Expression::FieldAccess(object_expr, field_name) => {
                 // Evaluate the object expression to get the object
@@ -1414,10 +1663,17 @@ impl Runtime {
                 }
                 Ok(Value::Array(array_value))
             }
-            crate::parser::ast::Expression::ArrowFunction { .. } => {
-                // Arrow functions are passed as callbacks; for now return a placeholder.
-                // Full implementation would capture env and be invokable by .then() etc.
-                Ok(Value::Null)
+            crate::parser::ast::Expression::ArrowFunction { param, body } => {
+                // Capture current scope and register closure; call via variable holding Value::Closure(id)
+                self.closure_counter = self.closure_counter.wrapping_add(1);
+                let closure_id = format!("closure_{}", self.closure_counter);
+                let entry = ClosureEntry {
+                    param: param.clone(),
+                    body: body.clone(),
+                    captured_scope: self.scope.clone(),
+                };
+                self.closure_registry.insert(closure_id.clone(), entry);
+                Ok(Value::Closure(closure_id))
             }
         }
     }
@@ -1510,6 +1766,7 @@ impl Runtime {
             Value::Set(set) => !set.is_empty(),
             Value::Struct(_, _) => true,
             Value::Array(arr) => !arr.is_empty(),
+            Value::Closure(_) => true,
         }
     }
 
@@ -1670,6 +1927,7 @@ impl Runtime {
                     Value::Set(set) => !set.is_empty(),
                     Value::Struct(_, _) => true,
                     Value::Array(arr) => !arr.is_empty(),
+                    Value::Closure(_) => true,
                 };
                 
                 Ok(Value::Bool(is_truthy))
@@ -2301,8 +2559,11 @@ impl Runtime {
 
                 match crate::stdlib::agent::spawn(agent_config) {
                     Ok(agent_context) => {
-                        // Store agent context in runtime scope
                         let agent_id = agent_context.agent_id.clone();
+                        self.agent_states.insert(agent_id.clone(), AgentState {
+                            status: agent_context.status.to_string(),
+                            ..Default::default()
+                        });
                         self.scope.set(
                             agent_id.clone(),
                             Value::Struct("agent_context".to_string(), {
@@ -2320,15 +2581,15 @@ impl Runtime {
             }
             "terminate_agent" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let _agent_id = self.value_to_string(&args[0])?;
-                // Mock termination - in real implementation this would terminate the actual agent
+                let agent_id = self.value_to_string(&args[0])?;
+                self.agent_states.entry(agent_id).or_default().status = "terminated".to_string();
                 Ok(Value::Bool(true))
             }
             "get_agent_status" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let _agent_id = self.value_to_string(&args[0])?;
-                // Mock status - in real implementation this would check actual agent status
-                Ok(Value::String("idle".to_string()))
+                let agent_id = self.value_to_string(&args[0])?;
+                let status = self.agent_states.get(&agent_id).map(|s| s.status.clone()).unwrap_or_else(|| "idle".to_string());
+                Ok(Value::String(status))
             }
 
             // Message Passing System
@@ -2345,9 +2606,11 @@ impl Runtime {
                     sender_id.clone(),
                     receiver_id.clone(),
                     message_type,
-                    content
+                    content.clone()
                 );
 
+                // Push message content to receiver's in-memory queue
+                self.agent_states.entry(receiver_id.clone()).or_default().message_queue.push_back(content);
                 match crate::stdlib::agent::communicate(&sender_id, &receiver_id, message) {
                     Ok(_) => Ok(Value::String(format!("message_sent_{}_{}", sender_id, receiver_id))),
                     Err(e) => Err(RuntimeError::General(e))
@@ -2355,21 +2618,20 @@ impl Runtime {
             }
             "receive_message" => {
                 if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
-                let _agent_id = self.value_to_string(&args[0])?;
-                // Mock message reception - in real implementation this would check message queue
-                Ok(Value::String("message_received".to_string()))
+                let agent_id = self.value_to_string(&args[0])?;
+                let msg = self.agent_states.entry(agent_id).or_default().message_queue.pop_front();
+                Ok(msg.map(|v| v).unwrap_or(Value::String("none".to_string())))
             }
             "process_message_queue" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let _agent_id = self.value_to_string(&args[0])?;
-                // Mock queue processing - in real implementation this would process actual queue
-                Ok(Value::String("messages_processed".to_string()))
+                let agent_id = self.value_to_string(&args[0])?;
+                let msg = self.agent_states.entry(agent_id).or_default().message_queue.pop_front();
+                Ok(msg.map(|v| v).unwrap_or(Value::String("none".to_string())))
             }
             "process_message" => {
                 if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
                 let _agent_id = self.value_to_string(&args[0])?;
                 let _message_id = self.value_to_string(&args[1])?;
-                // Mock message processing - in real implementation this would process actual message
                 Ok(Value::String("message_processed".to_string()))
             }
 
@@ -2377,7 +2639,7 @@ impl Runtime {
             "create_task" => {
                 if args.len() >= 3 {
                     let agent_id = self.value_to_string(&args[0])?;
-                    let task_type = self.value_to_string(&args[1])?;
+                    let _task_type = self.value_to_string(&args[1])?;
                     let description = self.value_to_string(&args[2])?;
                     let priority = if args.len() > 3 {
                         self.value_to_string(&args[3])?
@@ -2386,36 +2648,38 @@ impl Runtime {
                     };
 
                     let task_id = format!("task_{}", generate_id());
-                    let task = crate::stdlib::agent::create_agent_task(
+                    let _ = crate::stdlib::agent::create_agent_task(
                         task_id.clone(),
                         description.clone(),
                         &priority
                     );
-
-                    match task {
-                        Some(_task_obj) => {
-                            // Mock task assignment - in real implementation this would assign to actual agent
-                            Ok(Value::String(format!("task_created_{}_{}", agent_id, task_type)))
-                        }
-                        None => Err(RuntimeError::General("Failed to create task".to_string()))
-                    }
+                    self.agent_states.entry(agent_id.clone()).or_default().task_queue.push_back(task_id.clone());
+                    Ok(Value::String(task_id))
                 } else {
                     Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() })
                 }
             }
             "create_task_from_message" => {
                 if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
-                let _agent_id = self.value_to_string(&args[0])?;
+                let agent_id = self.value_to_string(&args[0])?;
                 let _message_id = self.value_to_string(&args[1])?;
-                // Mock task creation from message - in real implementation this would create task from actual message
-                Ok(Value::String("task_from_message".to_string()))
+                let task_id = format!("task_from_msg_{}", generate_id());
+                self.agent_states.entry(agent_id).or_default().task_queue.push_back(task_id.clone());
+                Ok(Value::String(task_id))
             }
             "execute_task" => {
                 if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
                 let agent_id = self.value_to_string(&args[0])?;
                 let task_id = self.value_to_string(&args[1])?;
-                // Mock task execution - in real implementation this would execute actual task
-                Ok(Value::String(format!("task_executed_{}_{}", agent_id, task_id)))
+                let state = self.agent_states.entry(agent_id).or_default();
+                let pos = state.task_queue.iter().position(|id| id == &task_id);
+                let result = if let Some(i) = pos {
+                    state.task_queue.remove(i);
+                    Value::String(format!("executed_{}", task_id))
+                } else {
+                    Value::String(format!("task_not_found_{}", task_id))
+                };
+                Ok(result)
             }
 
             // AI Processing Functions
@@ -2518,6 +2782,10 @@ impl Runtime {
                 match crate::stdlib::agent::spawn(agent_config) {
                     Ok(agent_context) => {
                         let agent_id = agent_context.agent_id.clone();
+                        self.agent_states.insert(agent_id.clone(), AgentState {
+                            status: agent_context.status.to_string(),
+                            ..Default::default()
+                        });
                         self.scope.set(
                             agent_id.clone(),
                             Value::Struct("agent_context".to_string(), {
@@ -2535,15 +2803,15 @@ impl Runtime {
             }
             "terminate" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let _agent_id = self.value_to_string(&args[0])?;
-                // Mock termination - in real implementation this would terminate actual agent
+                let agent_id = self.value_to_string(&args[0])?;
+                self.agent_states.entry(agent_id).or_default().status = "terminated".to_string();
                 Ok(Value::Bool(true))
             }
             "get_status" => {
                 if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                let _agent_id = self.value_to_string(&args[0])?;
-                // Mock status - in real implementation this would check actual agent status
-                Ok(Value::String("idle".to_string()))
+                let agent_id = self.value_to_string(&args[0])?;
+                let status = self.agent_states.get(&agent_id).map(|s| s.status.clone()).unwrap_or_else(|| "idle".to_string());
+                Ok(Value::String(status))
             }
 
             // === AGENT COORDINATION ===
@@ -2554,21 +2822,21 @@ impl Runtime {
                 let task_description = self.value_to_string(&args[1])?;
                 let coordination_type = self.value_to_string(&args[2])?;
 
-                // Create a mock task for coordination
+                let task_id = format!("task_{}", generate_id());
                 let task = crate::stdlib::agent::create_agent_task(
-                    format!("task_{}", generate_id()),
+                    task_id.clone(),
                     task_description.clone(),
                     "medium"
                 );
 
-                match task {
-                    Some(task_obj) => {
-                        match crate::stdlib::agent::coordinate(&agent_id, task_obj, &coordination_type) {
-                            Ok(_) => Ok(Value::String(format!("coordinated_{}_{}", agent_id, coordination_type))),
-                            Err(e) => Err(RuntimeError::General(e))
-                        }
+                if let Some(task_obj) = task {
+                    self.agent_states.entry(agent_id.clone()).or_default().task_queue.push_back(task_id.clone());
+                    match crate::stdlib::agent::coordinate(&agent_id, task_obj, &coordination_type) {
+                        Ok(_) => Ok(Value::String(format!("coordinated_{}_{}", agent_id, coordination_type))),
+                        Err(e) => Err(RuntimeError::General(e))
                     }
-                    None => Err(RuntimeError::General("Failed to create coordination task".to_string()))
+                } else {
+                    Err(RuntimeError::General("Failed to create coordination task".to_string()))
                 }
             }
 
@@ -3592,6 +3860,42 @@ impl Runtime {
             "float" => Ok(Value::Float(0.0)),
             _ => Ok(Value::Null),
         }
+    }
+
+    /// Call an arrow/closure value by id (single param, body, captured scope).
+    fn call_closure(&mut self, id: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        let entry = self.closure_registry.get(id)
+            .ok_or_else(|| RuntimeError::General(format!("Closure '{}' not found", id)))?
+            .clone();
+        if args.len() != 1 {
+            return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+        }
+        let saved_scope = self.scope.clone();
+        let call_frame = CallFrame { scope: saved_scope.clone() };
+        self.call_stack.push(call_frame);
+        self.scope = entry.captured_scope.clone();
+        self.scope.set(entry.param.clone(), args[0].clone());
+        let mut result = Value::Null;
+        for stmt in &entry.body.statements {
+            match self.execute_statement(stmt) {
+                Ok(value) => {
+                    if let crate::parser::ast::Statement::Return(_) = stmt {
+                        result = value;
+                        break;
+                    }
+                }
+                Err(e) => {
+                    if let Some(frame) = self.call_stack.pop() {
+                        self.scope = frame.scope;
+                    }
+                    return Err(e);
+                }
+            }
+        }
+        if let Some(frame) = self.call_stack.pop() {
+            self.scope = frame.scope;
+        }
+        Ok(result)
     }
 
     // Execute a service method with instance context

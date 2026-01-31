@@ -198,6 +198,7 @@ impl FFIInterface {
             Value::Struct(_, fields) => {
                 fields.iter().map(|(k, v)| k.len() + self.estimate_value_size(v)).sum()
             }
+            Value::Closure(id) => id.len() + 8,
         }
     }
 }
@@ -368,6 +369,7 @@ pub fn value_to_json(value: &Value) -> serde_json::Value {
         Value::Array(arr) => {
             serde_json::Value::Array(arr.iter().map(value_to_json).collect())
         }
+        Value::Closure(id) => serde_json::Value::String(format!("<closure {}>", id)),
     }
 }
 

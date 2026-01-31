@@ -6,23 +6,34 @@ pub type FunctionBody = Box<dyn Fn(&[Value], &mut Scope) -> Result<Value, Runtim
 pub struct Function {
     pub name: String,
     pub parameters: Vec<String>,
-    pub body: FunctionBody,
+    /// None for cloned built-ins; caller must pass body_override when invoking (e.g. engine resolves by name).
+    pub body: Option<FunctionBody>,
 }
 
 impl Function {
-    pub fn new<F>(name: String, parameters: Vec<String>, body: F) -> Self 
+    pub fn new<F>(name: String, parameters: Vec<String>, body: F) -> Self
     where
         F: Fn(&[Value], &mut Scope) -> Result<Value, RuntimeError> + 'static,
     {
         Self {
             name,
             parameters,
-            body: Box::new(body),
+            body: Some(Box::new(body)),
         }
     }
 
-    pub fn call(&self, args: &[Value], scope: &mut Scope) -> Result<Value, RuntimeError> {
-        // Check argument count
+    /// Reference to the body, if present (not a clone).
+    pub fn body_ref(&self) -> Option<&FunctionBody> {
+        self.body.as_ref()
+    }
+
+    /// Call with optional body override so cloned functions can be invoked when the engine resolves by name.
+    pub fn call(
+        &self,
+        args: &[Value],
+        scope: &mut Scope,
+        body_override: Option<&FunctionBody>,
+    ) -> Result<Value, RuntimeError> {
         if args.len() != self.parameters.len() {
             return Err(RuntimeError::ArgumentCountMismatch {
                 expected: self.parameters.len(),
@@ -30,27 +41,25 @@ impl Function {
             });
         }
 
-        // Create new scope for function execution
+        let body = body_override
+            .or(self.body.as_ref())
+            .ok_or(RuntimeError::FunctionNotClonable)?;
+
         let mut function_scope = Scope::new_child(scope.clone());
-        
-        // Bind parameters to arguments
         for (param, arg) in self.parameters.iter().zip(args.iter()) {
             function_scope.set(param.clone(), arg.clone());
         }
 
-        // Execute function body
-        (self.body)(args, &mut function_scope)
+        (body)(args, &mut function_scope)
     }
 }
 
 impl Clone for Function {
     fn clone(&self) -> Self {
-        // For now, we'll create a simple clone that can't be called
-        // In a real implementation, you'd need to handle the function body cloning
         Self {
             name: self.name.clone(),
             parameters: self.parameters.clone(),
-            body: Box::new(|_, _| Err(RuntimeError::FunctionNotClonable)),
+            body: None,
         }
     }
 }

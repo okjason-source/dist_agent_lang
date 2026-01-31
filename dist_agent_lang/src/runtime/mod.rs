@@ -15,4 +15,4 @@ pub use engine::Runtime;
 pub use reentrancy::ReentrancyGuard;
 pub use safe_math::SafeMath;
 pub use state_isolation::StateIsolationManager;
-pub use transaction::{TransactionManager, IsolationLevel, TransactionError};
+pub use transaction::{TransactionManager, IsolationLevel, TransactionError, StateStorage, InMemoryStorage};

@@ -7,10 +7,42 @@
 // - Two-phase commit for distributed transactions
 // - Isolation levels
 // - Deadlock detection
+// - Pluggable storage backend (StateStorage); in-memory default
 
 use std::collections::HashMap;
 use thiserror::Error;
 use crate::runtime::values::Value;
+
+/// Pluggable backend for transaction state. In production, implement with a DB, chain state, or durable key-value store.
+pub trait StateStorage {
+    fn get(&self, key: &str) -> Option<Value>;
+    fn set(&mut self, key: &str, value: Value);
+}
+
+/// In-memory storage (default). For production, replace with a persistent implementation.
+#[derive(Default)]
+pub struct InMemoryStorage {
+    state: HashMap<String, Value>,
+}
+
+impl InMemoryStorage {
+    pub fn new() -> Self {
+        Self::default()
+    }
+    /// Build storage with initial state (e.g. for tests or bootstrap).
+    pub fn from_map(map: HashMap<String, Value>) -> Self {
+        Self { state: map }
+    }
+}
+
+impl StateStorage for InMemoryStorage {
+    fn get(&self, key: &str) -> Option<Value> {
+        self.state.get(key).cloned()
+    }
+    fn set(&mut self, key: &str, value: Value) {
+        self.state.insert(key.to_string(), value);
+    }
+}
 
 /// Transaction errors
 #[derive(Error, Debug, Clone)]
@@ -83,15 +115,11 @@ pub struct Transaction {
     pub is_distributed: bool,
 }
 
-/// Transaction manager
+/// Transaction manager. Uses pluggable [`StateStorage`]; default is in-memory.
 pub struct TransactionManager {
     active_transactions: HashMap<String, Transaction>,
     transaction_counter: u64,
-    
-    // Global state (simplified - in production would use proper storage)
-    global_state: HashMap<String, Value>,
-    
-    // Locking for isolation
+    storage: Box<dyn StateStorage>,
     read_locks: HashMap<String, Vec<String>>, // key -> [transaction_ids]
     write_locks: HashMap<String, String>,     // key -> transaction_id
 }
@@ -153,13 +181,36 @@ impl Transaction {
 
 impl TransactionManager {
     pub fn new() -> Self {
+        Self::with_storage(Box::new(InMemoryStorage::new()))
+    }
+
+    /// Use a custom storage backend (DB, chain state, etc.).
+    pub fn with_storage(storage: Box<dyn StateStorage>) -> Self {
         Self {
             active_transactions: HashMap::new(),
             transaction_counter: 0,
-            global_state: HashMap::new(),
+            storage,
             read_locks: HashMap::new(),
             write_locks: HashMap::new(),
         }
+    }
+
+    /// Read committed value for a key (for tests or inspection).
+    pub fn get_committed(&self, key: &str) -> Option<Value> {
+        self.storage.get(key)
+    }
+
+    /// Access active transaction by id (for tests).
+    pub fn get_transaction(&self, tx_id: &str) -> Option<&Transaction> {
+        self.active_transactions.get(tx_id)
+    }
+
+    /// Set timeout for an active transaction (for tests or tuning).
+    pub fn set_transaction_timeout(&mut self, tx_id: &str, timeout_ms: Option<u64>) -> Result<(), TransactionError> {
+        let tx = self.active_transactions.get_mut(tx_id)
+            .ok_or_else(|| TransactionError::NotFound(tx_id.to_string()))?;
+        tx.timeout_ms = timeout_ms;
+        Ok(())
     }
     
     /// Begin a new transaction
@@ -201,12 +252,12 @@ impl TransactionManager {
             self.acquire_read_lock(tx_id, key)?;
         }
         
-        // Check modified state first, then global state
+        // Check modified state first, then storage
         if let Some(value) = modified_value {
             return Ok(Some(value));
         }
         
-        Ok(self.global_state.get(key).cloned())
+        Ok(self.storage.get(key))
     }
     
     /// Write a value within a transaction
@@ -223,8 +274,8 @@ impl TransactionManager {
         
         // Save original value if not already saved
         if !tx.original_state.contains_key(&key) {
-            if let Some(original) = self.global_state.get(&key) {
-                tx.original_state.insert(key.clone(), original.clone());
+            if let Some(original) = self.storage.get(&key) {
+                tx.original_state.insert(key.clone(), original);
             }
         }
         
@@ -254,9 +305,9 @@ impl TransactionManager {
             return self.two_phase_commit(tx_id);
         }
         
-        // Apply all modifications to global state
+        // Apply all modifications to storage
         for (key, value) in &tx.modified_state {
-            self.global_state.insert(key.clone(), value.clone());
+            self.storage.set(key, value.clone());
         }
         
         // Update state
@@ -303,9 +354,8 @@ impl TransactionManager {
         // For now, simulate immediate success
         
         // Phase 2: Commit
-        // Apply changes
         for (key, value) in &tx.modified_state {
-            self.global_state.insert(key.clone(), value.clone());
+            self.storage.set(key, value.clone());
         }
         
         tx.state = TransactionState::Committed;
@@ -420,23 +470,21 @@ mod tests {
         manager.write(&tx_id, "key1".to_string(), Value::Int(42)).unwrap();
         manager.commit(&tx_id).unwrap();
         
-        assert!(!manager.active_transactions.contains_key(&tx_id));
-        assert_eq!(manager.global_state.get("key1"), Some(&Value::Int(42)));
+        assert!(!manager.get_transaction(&tx_id).is_some());
+        assert_eq!(manager.get_committed("key1"), Some(Value::Int(42)));
     }
     
     #[test]
     fn test_transaction_rollback() {
-        let mut manager = TransactionManager::new();
-        
-        // Set initial value
-        manager.global_state.insert("key1".to_string(), Value::Int(10));
+        let mut manager = TransactionManager::with_storage(Box::new(
+            InMemoryStorage::from_map(HashMap::from([("key1".to_string(), Value::Int(10))])),
+        ));
         
         let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
         manager.write(&tx_id, "key1".to_string(), Value::Int(42)).unwrap();
         manager.rollback(&tx_id).unwrap();
         
-        // Original value should remain
-        assert_eq!(manager.global_state.get("key1"), Some(&Value::Int(10)));
+        assert_eq!(manager.get_committed("key1"), Some(Value::Int(10)));
     }
     
     #[test]
@@ -451,14 +499,15 @@ mod tests {
         manager.write(&tx_id, "key1".to_string(), Value::Int(2)).unwrap();
         manager.rollback_to_savepoint(&tx_id, "sp1").unwrap();
         
-        let tx = manager.active_transactions.get(&tx_id).unwrap();
+        let tx = manager.get_transaction(&tx_id).unwrap();
         assert_eq!(tx.modified_state.get("key1"), Some(&Value::Int(1)));
     }
     
     #[test]
     fn test_isolation_read_committed() {
-        let mut manager = TransactionManager::new();
-        manager.global_state.insert("counter".to_string(), Value::Int(0));
+        let mut manager = TransactionManager::with_storage(Box::new(
+            InMemoryStorage::from_map(HashMap::from([("counter".to_string(), Value::Int(0))])),
+        ));
         
         let tx1 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
         
@@ -502,18 +551,11 @@ mod tests {
     #[test]
     fn test_transaction_timeout() {
         let mut manager = TransactionManager::new();
-        
         let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        
-        // Set a very short timeout
-        if let Some(tx) = manager.active_transactions.get_mut(&tx_id) {
-            tx.timeout_ms = Some(1); // 1ms timeout
-        }
-        
-        // Wait a bit
+        manager.set_transaction_timeout(&tx_id, Some(1)).unwrap();
+
         std::thread::sleep(std::time::Duration::from_millis(10));
-        
-        // Transaction should timeout on commit
+
         let result = manager.commit(&tx_id);
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), TransactionError::Timeout));

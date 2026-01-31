@@ -289,6 +289,7 @@ fn value_to_string(value: &Value) -> String {
                 None => "null".to_string(),
             }
         },
+        Value::Closure(id) => format!("<closure {}>", id),
     }
 }
 

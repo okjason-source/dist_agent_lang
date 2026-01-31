@@ -6,23 +6,29 @@ use crate::parser::ast::{
     AttributeTarget, ServiceStatement, ServiceField, EventDeclaration, CompilationTargetInfo,
     FieldVisibility, ForInStatement
 };
-use crate::parser::error::{ParserError, ErrorContext};
-use std::collections::HashMap;
+use crate::parser::error::{ParserError, ErrorContext, ErrorRecovery};
+use std::collections::{HashMap, HashSet};
 
 pub struct Parser {
     tokens: Vec<Token>,
     token_positions: Vec<(usize, usize)>, // (line, column) for each token
+    /// Set by caller before recover_from_error; used by skip_to_synchronization_point to know where to skip from.
+    pub(crate) recovery_skip_from: Option<usize>,
+    /// Set by skip_to_synchronization_point; caller reads this to continue parsing after recovery.
+    pub(crate) recovery_continue_at: Option<usize>,
 }
 
 impl Parser {
     const MAX_RECURSION_DEPTH: usize = 100;
     
+    /// Creates a parser from tokens. Token positions are empty, so parse errors will use fallback line/column (e.g. 1, 1).
+    /// For user-facing parse paths (CLI, IDE) prefer [`Self::new_with_positions`] so errors have accurate line/column.
     pub fn new(tokens: Vec<Token>) -> Self {
-        // For backward compatibility, create empty positions
-        // In the future, we should pass tokens with positions
-        Self { 
+        Self {
             tokens,
             token_positions: Vec::new(),
+            recovery_skip_from: None,
+            recovery_continue_at: None,
         }
     }
 
@@ -33,7 +39,50 @@ impl Parser {
             positions.push((twp.line, twp.column));
             tokens.push(twp.token);
         }
-        Self { tokens, token_positions: positions }
+        Self {
+            tokens,
+            token_positions: positions,
+            recovery_skip_from: None,
+            recovery_continue_at: None,
+        }
+    }
+
+    /// Set the position to skip from when recover_from_error is called (used for multi-error recovery).
+    pub fn set_recovery_skip_from(&mut self, position: usize) {
+        self.recovery_skip_from = Some(position);
+    }
+
+    /// Take the position to continue parsing at after recovery; call after recover_from_error succeeds.
+    pub fn get_recovery_continue_at(&mut self) -> Option<usize> {
+        self.recovery_continue_at.take()
+    }
+
+    /// Advances from `start` to the next synchronization point (`;`, `}`, statement-start keyword, etc.)
+    /// and sets `recovery_continue_at`. Used by ErrorRecovery; keeps token stream private.
+    pub(crate) fn skip_to_sync_point_from(&mut self, start: usize) -> bool {
+        let mut pos = start;
+        while pos < self.tokens.len() {
+            let token = &self.tokens[pos];
+            let is_sync = match token {
+                Token::Punctuation(Punctuation::Semicolon) | Token::Punctuation(Punctuation::RightBrace) => true,
+                Token::EOF => true,
+                Token::Keyword(k) => matches!(k,
+                    Keyword::Let | Keyword::Fn | Keyword::If | Keyword::While | Keyword::Try
+                    | Keyword::For | Keyword::Return | Keyword::Service | Keyword::Agent
+                    | Keyword::Spawn | Keyword::Event | Keyword::Msg | Keyword::Async
+                ),
+                Token::Punctuation(Punctuation::LeftBrace) => true,
+                Token::Punctuation(Punctuation::At) => true,
+                _ => false,
+            };
+            if is_sync {
+                self.recovery_continue_at = Some(pos);
+                return true;
+            }
+            pos += 1;
+        }
+        self.recovery_continue_at = Some(pos);
+        true
     }
 
     fn get_token_position(&self, position: usize) -> (usize, usize) {
@@ -55,14 +104,46 @@ impl Parser {
     pub fn parse(&mut self) -> Result<Program, ParserError> {
         let mut program = Program::new();
         let mut position = 0;
-        
+
         while position < self.tokens.len() {
             let (new_position, statement) = self.parse_statement(position, 0)?;
             program.add_statement(statement);
             position = new_position;
         }
-        
+
         Ok(program)
+    }
+
+    /// Parse and collect multiple errors by recovering at statement boundaries.
+    /// Returns (program with successfully parsed statements, list of parse errors).
+    pub fn parse_with_recovery(&mut self) -> (Program, Vec<ParserError>) {
+        let mut program = Program::new();
+        let mut errors = Vec::new();
+        let mut position = 0;
+
+        while position < self.tokens.len() {
+            match self.parse_statement(position, 0) {
+                Ok((new_position, statement)) => {
+                    program.add_statement(statement);
+                    position = new_position;
+                }
+                Err(e) => {
+                    errors.push(e.clone());
+                    self.set_recovery_skip_from(position);
+                    if self.recover_from_error(&e).is_ok() {
+                        if let Some(next_pos) = self.get_recovery_continue_at() {
+                            position = next_pos;
+                        } else {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        (program, errors)
     }
 
     fn parse_statement(&mut self, position: usize, depth: usize) -> Result<(usize, Statement), ParserError> {
@@ -151,10 +232,8 @@ impl Parser {
             // Skip EOF tokens
             Ok((position + 1, Statement::Expression(Expression::Literal(Literal::Null))))
         } else {
-            // Before falling through to expression parsing, check if this might be a service declaration
-            // that wasn't caught earlier (shouldn't happen, but defensive check)
+            // Defensive: service is already handled above; if we ever reach here with Service token, parse as service.
             if let Some(Token::Keyword(Keyword::Service)) = self.tokens.get(position) {
-                // This should have been caught at line 92, but if we get here, try parsing as service
                 return self.parse_service_statement(position);
             }
             let (new_position, expr) = self.parse_expression(position)?;
@@ -268,12 +347,40 @@ impl Parser {
                 Expression::FieldAccess(object_expr, field_name) => {
                     return Ok((position, Expression::FieldAssignment(object_expr, field_name, Box::new(value))));
                 }
-                Expression::FunctionCall(call) if call.name == "__index__" && call.arguments.len() == 2 => {
-                    // Array assignment: arr[index] = value
-                    // Represent as a function call: __index_assign__(arr, index, value)
+                Expression::IndexAccess(container, index_expr) => {
+                    // Index assignment: arr[index] = value, map_var[key] = value, or self.field[key] = value
+                    let mut args = vec![*container.clone(), *index_expr.clone(), value];
+                    match container.as_ref() {
+                        Expression::Identifier(var_name) => {
+                            args.push(Expression::Literal(Literal::String(var_name.clone())));
+                        }
+                        Expression::FieldAccess(_, field_name) => {
+                            args.push(Expression::Literal(Literal::String(String::new()))); // 4th: not a var
+                            args.push(Expression::Literal(Literal::String(field_name.clone()))); // 5th: field name
+                        }
+                        _ => {}
+                    }
                     return Ok((position, Expression::FunctionCall(FunctionCall {
                         name: "__index_assign__".to_string(),
-                        arguments: vec![call.arguments[0].clone(), call.arguments[1].clone(), value],
+                        arguments: args,
+                    })));
+                }
+                Expression::FunctionCall(call) if call.name == "__index__" && call.arguments.len() == 2 => {
+                    // Legacy: __index__ as assignment target (e.g. from older AST)
+                    let mut args = vec![call.arguments[0].clone(), call.arguments[1].clone(), value];
+                    match &call.arguments[0] {
+                        Expression::Identifier(var_name) => {
+                            args.push(Expression::Literal(Literal::String(var_name.clone())));
+                        }
+                        Expression::FieldAccess(_, field_name) => {
+                            args.push(Expression::Literal(Literal::String(String::new())));
+                            args.push(Expression::Literal(Literal::String(field_name.clone())));
+                        }
+                        _ => {}
+                    }
+                    return Ok((position, Expression::FunctionCall(FunctionCall {
+                        name: "__index_assign__".to_string(),
+                        arguments: args,
                     })));
                 }
                 _ => {
@@ -473,12 +580,7 @@ impl Parser {
                 let (new_pos, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::RightBracket))?;
                 current_position = new_pos;
                 
-                // Represent array access as a function call for now
-                // In the future, we could add IndexAccess to Expression enum
-                expr = Expression::FunctionCall(FunctionCall {
-                    name: "__index__".to_string(),
-                    arguments: vec![expr, index_expr],
-                });
+                expr = Expression::IndexAccess(Box::new(expr), Box::new(index_expr));
                 continue;
             }
             
@@ -538,6 +640,51 @@ impl Parser {
                 }
                 Token::Identifier(name) => {
                     let namespace_name = name.clone();
+                    
+                    // Check if this is a macro call (identifier!(...)) e.g. vec!(a,b), map!("k",v)
+                    if let Some(Token::Operator(Operator::Not)) = self.tokens.get(position + 1) {
+                        if let Some(Token::Punctuation(Punctuation::LeftParen)) = self.tokens.get(position + 2) {
+                            let (new_position, _) = self.expect_token(position + 1, &Token::Operator(Operator::Not))?;
+                            let (new_position, _) = self.expect_token(new_position, &Token::Punctuation(Punctuation::LeftParen))?;
+                            let (new_position, arguments) = self.parse_function_arguments(new_position, depth)?;
+                            let (new_position, _) = self.expect_token(new_position, &Token::Punctuation(Punctuation::RightParen))?;
+                            let macro_name = namespace_name.to_lowercase();
+                            return Ok((new_position, match macro_name.as_str() {
+                                "vec" => Expression::ArrayLiteral(arguments),
+                                "map" => {
+                                    if arguments.len() % 2 != 0 {
+                                        let (line, col) = self.get_token_position(position);
+                                        return Err(ParserError::unexpected_token(
+                                            self.tokens.get(position).unwrap_or(&Token::EOF),
+                                            &["map! requires even number of arguments (key, value pairs)"],
+                                            line, col
+                                        ));
+                                    }
+                                    let mut obj = HashMap::new();
+                                    for i in (0..arguments.len()).step_by(2) {
+                                        let key_expr = &arguments[i];
+                                        let key_str = match key_expr {
+                                            Expression::Literal(Literal::String(s)) => s.clone(),
+                                            _ => {
+                                                let (line, col) = self.get_token_position(position);
+                                                return Err(ParserError::unexpected_token(
+                                                    self.tokens.get(position).unwrap_or(&Token::EOF),
+                                                    &["map! keys must be string literals"],
+                                                    line, col
+                                                ));
+                                            }
+                                        };
+                                        obj.insert(key_str, arguments[i + 1].clone());
+                                    }
+                                    Expression::ObjectLiteral(obj)
+                                }
+                                _ => Expression::FunctionCall(FunctionCall {
+                                    name: format!("{}!", namespace_name),
+                                    arguments,
+                                }),
+                            }));
+                        }
+                    }
                     
                     // Check if this is a namespace call (identifier::identifier)
                     if let Some(Token::Punctuation(Punctuation::DoubleColon)) = self.tokens.get(position + 1) {
@@ -660,20 +807,11 @@ impl Parser {
                     return Ok((position, Expression::ArrayLiteral(array_literal)));
                 }
                 Token::Operator(Operator::Not) => {
-                    // Handle macro calls like vec!["read"]
+                    // !(...) without identifier (e.g. from tokenization edge case); vec!(...) and map!(...) are handled in Identifier branch
                     let (position, _) = self.expect_token(position, &Token::Operator(Operator::Not))?;
-                    
-                    // Expect a left parenthesis after the !
                     let (position, _) = self.expect_token(position, &Token::Punctuation(Punctuation::LeftParen))?;
-                    
-                    // Parse the arguments
                     let (position, arguments) = self.parse_function_arguments(position, depth)?;
-                    
-                    // Expect a right parenthesis
                     let (position, _) = self.expect_token(position, &Token::Punctuation(Punctuation::RightParen))?;
-                    
-                    // For now, treat it as a function call with "macro" prefix
-                    // In a real implementation, this would be more sophisticated
                     return Ok((position, Expression::FunctionCall(FunctionCall {
                         name: "macro".to_string(),
                         arguments,
@@ -1329,7 +1467,7 @@ impl Parser {
             current_position = new_pos;
         }
         
-        // Determine target based on context (default to Function for now)
+        // Target is set by caller when attaching to function (Function) or service (Module)
         let target = AttributeTarget::Function;
         
         Ok((current_position, Attribute { 
@@ -1448,7 +1586,7 @@ impl Parser {
         let (new_position, name) = self.expect_identifier(current_position)?;
         current_position = new_position;
         
-        // Use the pre-parsed attributes
+        // Use the pre-parsed attributes (target already set to Module by caller); set Module for any added later
         let mut attributes = pre_parsed_attributes;
         let mut compilation_target = None;
         
@@ -1502,6 +1640,10 @@ impl Parser {
             }
         }
         
+        // All attributes on this service apply to the module
+        for attr in &mut attributes {
+            attr.target = AttributeTarget::Module;
+        }
         let service_stmt = ServiceStatement {
             name,
             attributes,
@@ -1582,6 +1724,9 @@ impl Parser {
             }
         }
         
+        for attr in &mut attributes {
+            attr.target = AttributeTarget::Module;
+        }
         let service_stmt = ServiceStatement {
             name,
             attributes,
@@ -1601,6 +1746,33 @@ impl Parser {
 
     fn parse_service_field(&mut self, position: usize) -> Result<(usize, ServiceField), ParserError> {
         let mut current_position = position;
+        let mut visibility = FieldVisibility::Public;
+
+        // Optional visibility: @public / @private / @internal or keyword private before field name
+        if let Some(Token::Punctuation(Punctuation::At)) = self.tokens.get(current_position) {
+            let (new_position, _) = self.expect_token(current_position, &Token::Punctuation(Punctuation::At))?;
+            current_position = new_position;
+            let (new_position, vis_name) = self.expect_identifier_or_keyword(current_position)?;
+            current_position = new_position;
+            let vis_name = vis_name.to_lowercase();
+            visibility = match vis_name.as_str() {
+                "public" => FieldVisibility::Public,
+                "private" => FieldVisibility::Private,
+                "internal" => FieldVisibility::Internal,
+                _ => {
+                    let (line, col) = self.get_token_position(current_position.saturating_sub(1));
+                    return Err(ParserError::unexpected_token(
+                        self.tokens.get(current_position.saturating_sub(1)).unwrap_or(&Token::EOF),
+                        &["@public", "@private", "@internal"],
+                        line, col
+                    ));
+                }
+            };
+        } else if let Some(Token::Keyword(Keyword::Private)) = self.tokens.get(current_position) {
+            let (new_position, _) = self.expect_token(current_position, &Token::Keyword(Keyword::Private))?;
+            current_position = new_position;
+            visibility = FieldVisibility::Private;
+        }
         
         // Parse field name
         let (new_position, name) = self.expect_identifier(current_position)?;
@@ -1633,7 +1805,7 @@ impl Parser {
             name,
             field_type,
             initial_value,
-            visibility: FieldVisibility::Public, // Default for now
+            visibility,
         };
         
         Ok((current_position, field))
@@ -1813,6 +1985,139 @@ impl Parser {
         Ok((current_position, target_info))
     }
     
+    /// Collect namespaces used in method body (e.g. "chain" from chain::deploy, "web" from web::fetch).
+    fn collect_namespaces_from_expression(&self, expr: &Expression) -> HashSet<String> {
+        let mut out = HashSet::new();
+        match expr {
+            Expression::FunctionCall(call) => {
+                if let Some(ns) = call.name.split("::").next() {
+                    if call.name.contains("::") && !ns.is_empty() {
+                        out.insert(ns.to_string());
+                    }
+                }
+                for arg in &call.arguments {
+                    out.extend(self.collect_namespaces_from_expression(arg));
+                }
+            }
+            Expression::BinaryOp(l, _, r) => {
+                out.extend(self.collect_namespaces_from_expression(l));
+                out.extend(self.collect_namespaces_from_expression(r));
+            }
+            Expression::UnaryOp(_, e) => {
+                out.extend(self.collect_namespaces_from_expression(e));
+            }
+            Expression::Assignment(_, v) => {
+                out.extend(self.collect_namespaces_from_expression(v));
+            }
+            Expression::FieldAccess(obj, _) => {
+                out.extend(self.collect_namespaces_from_expression(obj));
+            }
+            Expression::FieldAssignment(obj, _, v) => {
+                out.extend(self.collect_namespaces_from_expression(obj));
+                out.extend(self.collect_namespaces_from_expression(v));
+            }
+            Expression::Await(e) | Expression::Spawn(e) | Expression::Throw(e) => {
+                out.extend(self.collect_namespaces_from_expression(e));
+            }
+            Expression::IndexAccess(c, i) => {
+                out.extend(self.collect_namespaces_from_expression(c));
+                out.extend(self.collect_namespaces_from_expression(i));
+            }
+            Expression::ObjectLiteral(props) => {
+                for (_, e) in props {
+                    out.extend(self.collect_namespaces_from_expression(e));
+                }
+            }
+            Expression::ArrayLiteral(elems) => {
+                for e in elems {
+                    out.extend(self.collect_namespaces_from_expression(e));
+                }
+            }
+            Expression::ArrowFunction { body, .. } => {
+                out.extend(self.collect_namespaces_from_block(&body));
+            }
+            _ => {}
+        }
+        out
+    }
+
+    fn collect_namespaces_from_statement(&self, stmt: &Statement) -> HashSet<String> {
+        let mut out = HashSet::new();
+        match stmt {
+            Statement::Expression(expr) => {
+                out.extend(self.collect_namespaces_from_expression(expr));
+            }
+            Statement::Let(let_stmt) => {
+                out.extend(self.collect_namespaces_from_expression(&let_stmt.value));
+            }
+            Statement::Return(ret) => {
+                if let Some(ref e) = ret.value {
+                    out.extend(self.collect_namespaces_from_expression(e));
+                }
+            }
+            Statement::Block(block) => {
+                out.extend(self.collect_namespaces_from_block(block));
+            }
+            Statement::If(if_stmt) => {
+                out.extend(self.collect_namespaces_from_expression(&if_stmt.condition));
+                out.extend(self.collect_namespaces_from_block(&if_stmt.consequence));
+                if let Some(ref alt) = if_stmt.alternative {
+                    out.extend(self.collect_namespaces_from_block(alt));
+                }
+            }
+            Statement::While(while_stmt) => {
+                out.extend(self.collect_namespaces_from_expression(&while_stmt.condition));
+                out.extend(self.collect_namespaces_from_block(&while_stmt.body));
+            }
+            Statement::Try(try_stmt) => {
+                out.extend(self.collect_namespaces_from_block(&try_stmt.try_block));
+                for cb in &try_stmt.catch_blocks {
+                    out.extend(self.collect_namespaces_from_block(&cb.body));
+                }
+                if let Some(ref fb) = try_stmt.finally_block {
+                    out.extend(self.collect_namespaces_from_block(fb));
+                }
+            }
+            Statement::ForIn(for_stmt) => {
+                out.extend(self.collect_namespaces_from_expression(&for_stmt.iterable));
+                out.extend(self.collect_namespaces_from_block(&for_stmt.body));
+            }
+            Statement::Function(func) => {
+                out.extend(self.collect_namespaces_from_block(&func.body));
+            }
+            Statement::Spawn(spawn) => {
+                out.extend(self.collect_namespaces_from_block(&spawn.body));
+            }
+            Statement::Agent(agent) => {
+                out.extend(self.collect_namespaces_from_block(&agent.body));
+            }
+            Statement::Message(msg) => {
+                for (_, e) in &msg.data {
+                    out.extend(self.collect_namespaces_from_expression(e));
+                }
+            }
+            Statement::Event(ev) => {
+                for (_, e) in &ev.data {
+                    out.extend(self.collect_namespaces_from_expression(e));
+                }
+            }
+            Statement::Service(service) => {
+                for method in &service.methods {
+                    out.extend(self.collect_namespaces_from_block(&method.body));
+                }
+            }
+        }
+        out
+    }
+
+    fn collect_namespaces_from_block(&self, block: &BlockStatement) -> HashSet<String> {
+        let mut out = HashSet::new();
+        for stmt in &block.statements {
+            out.extend(self.collect_namespaces_from_statement(stmt));
+        }
+        out
+    }
+
     fn validate_target_constraints(&self, service: &ServiceStatement) -> Result<(), ParserError> {
         if let Some(ref target_info) = service.compilation_target {
             let constraint = &target_info.constraints;
@@ -1840,23 +2145,28 @@ impl Parser {
                 ));
             }
             
-            // Check method operations (simplified validation)
+            // Forbidden namespaces for this target (from constraint.forbidden_operations, e.g. "web::http_request" -> "web")
+            let forbidden_namespaces: HashSet<String> = constraint
+                .forbidden_operations
+                .iter()
+                .filter_map(|op| op.split("::").next().map(|s| s.to_string()))
+                .collect();
+            
             for method in &service.methods {
-                // For now, we'll do basic validation
-                // In a full implementation, we'd analyze the method body
-                if method.name.contains("web::") && target_info.target == crate::lexer::tokens::CompilationTarget::Blockchain {
+                let used_namespaces = self.collect_namespaces_from_block(&method.body);
+                let violating: Vec<String> = used_namespaces
+                    .intersection(&forbidden_namespaces)
+                    .cloned()
+                    .collect();
+                if !violating.is_empty() {
                     return Err(ParserError::unexpected_token(
                         self.tokens.get(0).unwrap_or(&Token::EOF),
-                        &["Web operations not allowed in blockchain target"],
-                        1,
-                        1
-                    ));
-                }
-                
-                if method.name.contains("chain::") && target_info.target == crate::lexer::tokens::CompilationTarget::WebAssembly {
-                    return Err(ParserError::unexpected_token(
-                        self.tokens.get(0).unwrap_or(&Token::EOF),
-                        &["Blockchain operations not allowed in wasm target"],
+                        &[&format!(
+                            "Method '{}' uses forbidden namespace(s) for target {:?}: {:?}",
+                            method.name,
+                            target_info.target,
+                            violating
+                        )],
                         1,
                         1
                     ));

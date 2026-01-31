@@ -275,6 +275,22 @@ fn test_parser_service_declaration() {
     assert!(matches!(program.statements[0], Statement::Service(_)));
 }
 
+/// Ensures "service Foo { }" is never parsed as Statement::Expression (parser plan 1.2: defensive dispatch).
+#[test]
+fn test_service_empty_not_parsed_as_expression() {
+    let code = "service Foo { }";
+    let program = parse_source(code).unwrap();
+    assert!(!program.statements.is_empty(), "should parse at least one statement");
+    match &program.statements[0] {
+        Statement::Service(s) => {
+            assert_eq!(s.name, "Foo");
+            assert!(s.fields.is_empty());
+            assert!(s.methods.is_empty());
+        }
+        other => panic!("service Foo {{ }} must be parsed as Statement::Service, got {:?}", other),
+    }
+}
+
 #[test]
 fn test_parser_service_with_fields() {
     let code = r#"

@@ -236,6 +236,10 @@ impl CoverageAnalyzer {
             Expression::Spawn(expr) => {
                 self.analyze_expression(expr);
             }
+            Expression::IndexAccess(container, index_expr) => {
+                self.analyze_expression(container);
+                self.analyze_expression(index_expr);
+            }
             Expression::ArrowFunction { body, .. } => {
                 for stmt in &body.statements {
                     self.analyze_statement(stmt);

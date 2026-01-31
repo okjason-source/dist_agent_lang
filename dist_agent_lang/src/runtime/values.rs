@@ -65,10 +65,14 @@ impl ObjectRef {
     }
 }
 
+/// Stored object with reference count for GC (only collect when ref_count == 0).
+#[derive(Debug)]
+struct StoredObject(ObjectData, usize);
+
 /// Central object registry for memory management and object identity
 #[derive(Debug)]
 pub struct ObjectRegistry {
-    objects: HashMap<ObjectId, ObjectData>,
+    objects: HashMap<ObjectId, StoredObject>,
     total_memory_usage: usize,
     #[allow(dead_code)]
     max_memory_threshold: usize,
@@ -96,22 +100,46 @@ impl ObjectRegistry {
         let size_bytes = self.calculate_size(&data);
         let object_ref = ObjectRef::new(size_bytes, is_immutable);
 
-        self.objects.insert(object_ref.id, data);
+        self.objects.insert(object_ref.id, StoredObject(data, 1));
         self.total_memory_usage += size_bytes;
 
         object_ref
     }
 
     pub fn get_object(&self, id: &ObjectId) -> Option<&ObjectData> {
-        self.objects.get(id)
+        self.objects.get(id).map(|s| &s.0)
     }
 
     pub fn get_object_mut(&mut self, id: &ObjectId) -> Option<&mut ObjectData> {
-        self.objects.get_mut(id)
+        self.objects.get_mut(id).map(|s| &mut s.0)
+    }
+
+    /// Increment reference count for an object; call when retaining a reference.
+    pub fn register_ref(&mut self, id: &ObjectId) -> bool {
+        if let Some(stored) = self.objects.get_mut(id) {
+            stored.1 = stored.1.saturating_add(1);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Decrement reference count; returns true if count reached 0.
+    pub fn unregister_ref(&mut self, id: &ObjectId) -> bool {
+        if let Some(stored) = self.objects.get_mut(id) {
+            stored.1 = stored.1.saturating_sub(1);
+            stored.1 == 0
+        } else {
+            false
+        }
+    }
+
+    pub fn get_ref_count(&self, id: &ObjectId) -> Option<usize> {
+        self.objects.get(id).map(|s| s.1)
     }
 
     pub fn update_struct_field(&mut self, object_id: &ObjectId, field_name: &str, value: Value) -> Result<(), String> {
-        if let Some(ObjectData::Struct(_, fields)) = self.objects.get_mut(object_id) {
+        if let Some(StoredObject(ObjectData::Struct(_, fields), _)) = self.objects.get_mut(object_id) {
             fields.insert(field_name.to_string(), value);
             Ok(())
         } else {
@@ -120,7 +148,7 @@ impl ObjectRegistry {
     }
 
     pub fn update_map_field(&mut self, object_id: &ObjectId, key: &str, value: Value) -> Result<(), String> {
-        if let Some(ObjectData::Map(map)) = self.objects.get_mut(object_id) {
+        if let Some(StoredObject(ObjectData::Map(map), _)) = self.objects.get_mut(object_id) {
             map.insert(key.to_string(), value);
             Ok(())
         } else {
@@ -130,11 +158,11 @@ impl ObjectRegistry {
 
     pub fn update_array_element(&mut self, object_id: &ObjectId, index: usize, value: Value) -> Result<(), String> {
         match self.objects.get_mut(object_id) {
-            Some(ObjectData::Array(arr)) if index < arr.len() => {
+            Some(StoredObject(ObjectData::Array(arr), _)) if index < arr.len() => {
                 arr[index] = value;
                 Ok(())
             }
-            Some(ObjectData::List(list)) if index < list.len() => {
+            Some(StoredObject(ObjectData::List(list), _)) if index < list.len() => {
                 list[index] = value;
                 Ok(())
             }
@@ -143,7 +171,7 @@ impl ObjectRegistry {
     }
 
     pub fn remove_object(&mut self, id: &ObjectId) -> bool {
-        if let Some(removed) = self.objects.remove(id) {
+        if let Some(StoredObject(removed, _)) = self.objects.remove(id) {
             let size = self.calculate_size(&removed);
             self.total_memory_usage = self.total_memory_usage.saturating_sub(size);
             true
@@ -152,25 +180,17 @@ impl ObjectRegistry {
         }
     }
 
+    /// Remove only objects with reference count 0 (reachability: no live references).
     pub fn garbage_collect(&mut self) -> usize {
-        // Simple reference-counted garbage collection
-        // In a real implementation, this would be more sophisticated
-        let mut to_remove = Vec::new();
-
-        for (id, _) in &self.objects {
-            // For now, we'll implement a simple time-based cleanup
-            // In practice, this would check reference counts
-            // For this demo, we'll just clean up every 1000 objects
-            if id.as_u64() % 1000 == 0 {
-                to_remove.push(*id);
-            }
-        }
-
+        let to_remove: Vec<ObjectId> = self.objects
+            .iter()
+            .filter(|(_, StoredObject(_, ref_count))| *ref_count == 0)
+            .map(|(id, _)| *id)
+            .collect();
         let removed_count = to_remove.len();
         for id in to_remove {
             self.remove_object(&id);
         }
-
         removed_count
     }
 
@@ -217,6 +237,7 @@ impl ObjectRegistry {
             Value::Map(entries) => entries.len() * (std::mem::size_of::<String>() + std::mem::size_of::<Value>()),
             Value::Set(items) => items.len() * std::mem::size_of::<String>(),
             Value::Result(_, _) | Value::Option(_) => 2 * std::mem::size_of::<Value>(),
+            Value::Closure(id) => 24 + id.len(),
         }
     }
 }
@@ -278,6 +299,9 @@ pub enum Value {
     // Structured types
     Struct(String, HashMap<String, Value>), // struct_name, fields
     Array(Vec<Value>),                       // Array type
+
+    /// Arrow/closure value; id refers to engine's closure_registry (param, body, captured_scope).
+    Closure(String),
 }
 
 impl Value {
@@ -295,6 +319,7 @@ impl Value {
             Value::Set(_) => "set",
             Value::Struct(_, _) => "struct",
             Value::Array(_) => "array",
+            Value::Closure(_) => "closure",
         }
     }
 
@@ -341,7 +366,11 @@ impl Value {
     pub fn is_array(&self) -> bool {
         matches!(self, Value::Array(_))
     }
-    
+
+    pub fn is_closure(&self) -> bool {
+        matches!(self, Value::Closure(_))
+    }
+
     // Result methods
     pub fn is_ok(&self) -> bool {
         match self {
@@ -541,6 +570,7 @@ impl fmt::Display for Value {
                 }
                 write!(f, "]")
             },
+            Value::Closure(id) => write!(f, "<closure {}>", id),
         }
     }
 }

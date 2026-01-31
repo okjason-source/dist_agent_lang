@@ -1,5 +1,6 @@
 use crate::runtime::values::Value;
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Admin ABI - Interface for administrative operations
 /// 
@@ -23,7 +24,7 @@ impl ProcessInfo {
             process_id,
             name,
             status: "running".to_string(),
-            start_time: 1756744707, // Mock timestamp
+            start_time: SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() as i64, // Placeholder until wired to real process info
             resource_usage: HashMap::new(),
         }
     }
@@ -41,7 +42,7 @@ impl ProcessInfo {
 
 /// Terminate process or agent
 pub fn kill(process_id: &str, reason: &str) -> Result<bool, String> {
-    // Mock implementation - in real system this would terminate actual processes
+    // MOCK: in a real system this would terminate actual processes
     match process_id {
         "agent_123" => {
             if reason.is_empty() {
@@ -66,7 +67,7 @@ pub fn kill(process_id: &str, reason: &str) -> Result<bool, String> {
 
 /// Get process information
 pub fn get_process_info(process_id: &str) -> Result<ProcessInfo, String> {
-    // Mock implementation - in real system this would query process status
+    // MOCK: in a real system this would query process status
     match process_id {
         "agent_123" => {
             let mut process = ProcessInfo::new("agent_123".to_string(), "data_processor".to_string());
@@ -86,7 +87,7 @@ pub fn get_process_info(process_id: &str) -> Result<ProcessInfo, String> {
 
 /// List all running processes
 pub fn list_processes() -> Vec<ProcessInfo> {
-    // Mock implementation - in real system this would query system processes
+    // MOCK: in a real system this would query system processes
     vec![
         ProcessInfo::new("agent_123".to_string(), "data_processor".to_string()),
         ProcessInfo::new("process_456".to_string(), "web_server".to_string()),

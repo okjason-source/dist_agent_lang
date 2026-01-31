@@ -326,11 +326,8 @@ impl ErrorReporter for SimpleErrorReporter {
     }
 }
 
-// Note: Error recovery implementation would need to be integrated with the Parser struct
-// For now, we'll provide a basic implementation that can be extended later
 impl ErrorRecovery for crate::parser::Parser {
     fn recover_from_error(&mut self, error: &ParserError) -> Result<(), ParserError> {
-        // Basic error recovery - skip to next statement boundary
         if self.skip_to_synchronization_point() {
             Ok(())
         } else {
@@ -340,17 +337,17 @@ impl ErrorRecovery for crate::parser::Parser {
             })
         }
     }
-    
+
     fn skip_to_synchronization_point(&mut self) -> bool {
-        // Skip tokens until we find a statement boundary
-        // Note: This is a simplified implementation since Parser doesn't track current position
-        // In a full implementation, you'd need to modify the Parser struct to track position
-        true
+        let start = match self.recovery_skip_from.take() {
+            Some(p) => p,
+            None => return false,
+        };
+        self.skip_to_sync_point_from(start)
     }
     
+    /// No-op: recovery uses skip-to-sync only (no token insertion). Returns true for API compatibility.
     fn insert_missing_token(&mut self, _token: Token) -> bool {
-        // In a real implementation, you'd insert the token into the token stream
-        // For now, we'll just return true to indicate we can recover
         true
     }
     
