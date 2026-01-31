@@ -2,7 +2,7 @@
 
 ## ⚠️ Production Readiness Notice
 
-**dist_agent_lang v1.0.0 is currently in beta/early release.** While it includes comprehensive security features, it has not yet undergone extensive real-world production testing. 
+**dist_agent_lang v1.0.3 is currently in beta/early release.** While it includes comprehensive security features, it has not yet undergone extensive real-world production testing. 
 
 **Recommended for**: Development, prototyping, learning, and non-critical applications.  
 **Use caution for**: Production financial applications, high-value smart contracts, and critical infrastructure.
@@ -12,60 +12,83 @@ See [SECURITY_DISCLAIMER.md](SECURITY_DISCLAIMER.md) for detailed information.
 ## 📦 Installation
 
 ### Prerequisites
-- Linux, macOS, or Windows
-- No additional dependencies required (binary is self-contained)
+- **Binary install:** Linux, macOS, or Windows; no other dependencies (binary is self-contained).
+- **Build from source:** Rust (e.g. [rustup](https://rustup.rs)), and optionally Node.js 18+ and system build tools; the install script can install these.
 
-### Quick Install
+---
 
-#### Linux/macOS
+### Option A: Install from release binary
+
+**Latest version:** Go to [GitHub Releases → Latest](https://github.com/distagentlang/dist_agent_lang/releases/latest) and download the archive for your OS. Or use a specific version from the [Releases](https://github.com/distagentlang/dist_agent_lang/releases) list.
+
+#### Linux (x64)
 ```bash
-# Download the release package
-wget https://github.com/distagentlang/dist_agent_lang/releases/latest/download/dist_agent_lang-latest.tar.gz
-
-# Extract the package
-tar -xzf dist_agent_lang-latest.tar.gz
-cd dist_agent_lang-*
-
-# Run the installation script
-./install.sh
+# Option 1: Install latest (uses GitHub API to get current release)
+V=$(curl -sL https://api.github.com/repos/distagentlang/dist_agent_lang/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+wget "https://github.com/distagentlang/dist_agent_lang/releases/download/v${V}/dist_agent_lang-v${V}-linux-x64.tar.gz"
+tar -xzf "dist_agent_lang-v${V}-linux-x64.tar.gz"
+sudo cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang /usr/local/bin/
 ```
 
-#### Windows
 ```bash
-# Download the release package
-# Extract dist_agent_lang-1.0.0.zip
-# Open Command Prompt in the extracted folder
-# Run install.bat (if available) or manually copy bin/dist_agent_lang.exe to your PATH
-```
-
-### Manual Installation
-
-#### Linux/macOS
-```bash
-# Extract the package
-tar -xzf dist_agent_lang-latest.tar.gz
-cd dist_agent_lang-*
-
-# Copy binary to a directory in your PATH
-sudo cp bin/dist_agent_lang /usr/local/bin/
-# OR for user installation:
+# Option 2: Install a specific version (replace v1.0.3 with the release you want)
+wget https://github.com/distagentlang/dist_agent_lang/releases/download/v1.0.3/dist_agent_lang-v1.0.3-linux-x64.tar.gz
+tar -xzf dist_agent_lang-v1.0.3-linux-x64.tar.gz
+sudo cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang /usr/local/bin/
+# OR user install (no sudo):
 mkdir -p ~/.local/bin
-cp bin/dist_agent_lang ~/.local/bin/
-export PATH="$HOME/.local/bin:$PATH"  # Add to ~/.bashrc or ~/.zshrc
+cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang ~/.local/bin/
+chmod +x ~/.local/bin/dist_agent_lang
+export PATH="$HOME/.local/bin:$PATH"   # add to ~/.bashrc or ~/.zshrc
+```
+
+#### macOS (x64 or ARM64)
+```bash
+# Download the right one: ...-macos-x64.tar.gz or ...-macos-arm64.tar.gz
+# Extract, then copy the binary from the path inside the tarball to /usr/local/bin or ~/.local/bin
+# Example (ARM64):
+tar -xzf dist_agent_lang-v1.0.3-macos-arm64.tar.gz
+sudo cp target/aarch64-apple-darwin/release/dist_agent_lang /usr/local/bin/
 ```
 
 #### Windows
 ```bash
-# Extract dist_agent_lang-1.0.0.zip
-# Copy bin/dist_agent_lang.exe to a directory in your PATH
-# For example: C:\Program Files\dist_agent_lang\
-# Add that directory to your system PATH environment variable
+# Download dist_agent_lang-v1.0.3-windows-x64.zip from Releases
+# Extract, then copy dist_agent_lang.exe to a folder in your PATH (e.g. C:\Program Files\dist_agent_lang\)
+# Add that folder to the system PATH environment variable.
 ```
 
-### Verify Installation
+---
+
+### Option B: Build from source (developers)
+
+Use this if you clone the repo or need to build from source.
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/distagentlang/dist_agent_lang.git
+   cd dist_agent_lang
+   ```
+
+2. **Run the install script from the repository root** (the directory that contains `Cargo.toml`):
+   ```bash
+   ./scripts/install.sh
+   ```
+   The script will install Rust (if needed), system dependencies, build the project with `cargo build --release`, run tests, copy the binary to `/usr/local/bin` or `~/.local/bin`, create a default config under `~/.config/dist_agent_lang`, and copy examples to `~/dist_agent_lang_examples`.
+
+3. **If you prefer to build manually:**
+   ```bash
+   cargo build --release
+   sudo cp target/release/dist_agent_lang /usr/local/bin/
+   # OR: cp target/release/dist_agent_lang ~/.local/bin/  and add ~/.local/bin to PATH
+   ```
+
+---
+
+### Verify installation
 ```bash
 dist_agent_lang --version
-# Should output: dist_agent_lang v1.0.2 (or latest version)
+# Should output: dist_agent_lang v1.0.3 (or the version you installed)
 ```
 
 ## 🚀 Quick Start
@@ -170,8 +193,8 @@ The package includes 27 example files in the `examples/` directory:
 
 ### Running Examples
 ```bash
-# Navigate to the examples directory
-cd examples
+# If you built from source, examples are in the repo and in ~/dist_agent_lang_examples
+cd examples   # or: cd ~/dist_agent_lang_examples
 
 # Run any example
 dist_agent_lang run hello_world_demo.dal
@@ -232,7 +255,7 @@ dist_agent_lang run examples/smart_contract.dal
 
 ### 2. Deploy a Token
 ```bash
-dist_agent_lang run examples/keys_token_implementation.dal
+dist_agent_lang run examples/defi_nft_rwa_contract.dal
 ```
 
 ### 3. Create an AI Agent System
@@ -258,11 +281,18 @@ export PATH="$HOME/.local/bin:$PATH"  # For Linux/macOS
 
 ### Permission denied
 ```bash
-# Make binary executable
-chmod +x bin/dist_agent_lang
+# Make binary executable (if you have the binary locally)
+chmod +x dist_agent_lang
 
-# Or install with sudo
-sudo ./install.sh
+# For build-from-source, install with sudo if needed
+sudo ./scripts/install.sh
+```
+
+### install.sh not found or "Cargo.toml not found"
+```bash
+# The install script must be run from the repository root (the directory that contains Cargo.toml)
+cd /path/to/dist_agent_lang
+./scripts/install.sh
 ```
 
 ### File not found
@@ -278,15 +308,15 @@ ls -la examples/hello_world_demo.dal
 
 1. **Read the README.md** - Overview of features and capabilities
 2. **Explore Examples** - Run through the example files
-3. **Check CHANGELOG.md** - See what's new in version 1.0.0
+3. **Check CHANGELOG.md** - See what's new in the current version
 4. **Visit Documentation** - See docs/ directory for detailed guides
 
 ## 🆘 Getting Help
 
 - **Documentation**: See README.md and CHANGELOG.md in the package
 - **Examples**: Check the examples/ directory
-- **Issues**: Report at https://github.com/distagentlang/dist_agent_lang/issues
-- **Email**: team@distagentlang.com
+
+
 
 ---
 
