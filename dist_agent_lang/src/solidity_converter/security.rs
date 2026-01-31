@@ -33,23 +33,67 @@ impl SecurityConverter {
         patterns
     }
     
-    fn has_reentrancy_risk(&self, contract: &Contract) -> bool {
-        // Simple heuristic: external payable functions
+    /// Reentrancy risk: (public|external) + (payable|nonPayable) and body contains external call (.call, .transfer, .call{).
+    /// Centralized here for converter and analyzer; DAL runtime has reentrancy protection so this guides attribute suggestions.
+    pub fn has_reentrancy_risk(&self, contract: &Contract) -> bool {
+        use super::parser::{Visibility, Mutability};
         contract.functions.iter().any(|f| {
-            matches!(f.visibility, super::parser::Visibility::Public | super::parser::Visibility::External) &&
-            matches!(f.mutability, super::parser::Mutability::Payable)
+            let visible = matches!(f.visibility, Visibility::Public | Visibility::External);
+            let state_changing = matches!(f.mutability, Mutability::Payable | Mutability::NonPayable);
+            let has_external_call = Self::body_has_external_call(f.body.as_deref().unwrap_or(""));
+            visible && state_changing && has_external_call
         })
     }
-    
-    fn uses_arithmetic(&self, contract: &Contract) -> bool {
-        // Check if contract uses arithmetic operations
-        // This is a simplified check
-        contract.functions.iter().any(|f| {
-            f.name.contains("add") || 
-            f.name.contains("sub") || 
-            f.name.contains("mul") ||
-            f.name.contains("div")
-        })
+
+    /// True if body contains .call(, .transfer(, or .call{ (external call patterns).
+    fn body_has_external_call(body: &str) -> bool {
+        body.contains(".call(") || body.contains(".call{") || body.contains(".transfer(")
+    }
+
+    /// Arithmetic usage: scan function bodies for +, -, *, /, ** (and legacy add/sub/mul/div in names).
+    pub fn uses_arithmetic(&self, contract: &Contract) -> bool {
+        if contract.functions.iter().any(|f| {
+            f.name.contains("add") || f.name.contains("sub")
+                || f.name.contains("mul") || f.name.contains("div")
+        }) {
+            return true;
+        }
+        for f in &contract.functions {
+            if let Some(ref body) = f.body {
+                if Self::body_has_arithmetic(body) {
+                    return true;
+                }
+            }
+        }
+        for v in &contract.state_variables {
+            if let Some(ref init) = v.initial_value {
+                if Self::body_has_arithmetic(init) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    /// True if s contains arithmetic operators: +, -, *, /, ** (excluding ->, --, ++).
+    fn body_has_arithmetic(s: &str) -> bool {
+        let bytes = s.as_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            if i + 1 < bytes.len() {
+                match (bytes[i], bytes[i + 1]) {
+                    (b'+', b'+') | (b'-', b'-') | (b'-', b'>') => { i += 2; continue; }
+                    (b'*', b'*') => return true,
+                    _ => {}
+                }
+            }
+            match bytes[i] {
+                b'+' | b'-' | b'*' | b'/' => return true,
+                _ => {}
+            }
+            i += 1;
+        }
+        false
     }
     
     fn has_access_control(&self, contract: &Contract) -> bool {

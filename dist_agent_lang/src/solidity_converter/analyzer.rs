@@ -11,6 +11,8 @@ pub struct AnalysisReport {
     pub errors: Vec<String>,
     pub suggestions: Vec<String>,
     pub unsupported_features: Vec<String>,
+    /// Import paths / library identifiers found in the source (e.g. "openzeppelin/...", "@openzeppelin/...").
+    pub used_libraries: Vec<String>,
 }
 
 /// Conversion Analyzer
@@ -31,13 +33,24 @@ impl ConversionAnalyzer {
         let mut errors = Vec::new();
         let mut suggestions = Vec::new();
         let mut unsupported_features = Vec::new();
-        
+
+        // Check imports for OpenZeppelin / known libraries
+        let has_openzeppelin_import = ast.imports.iter().any(|s| {
+            let lower = s.to_lowercase();
+            lower.contains("openzeppelin") || lower.contains("@openzeppelin")
+        });
+        if has_openzeppelin_import {
+            suggestions.push("File imports OpenZeppelin - DAL has built-in reentrancy protection; modifiers can be mapped to @secure".to_string());
+        }
+
         for contract in &ast.contracts {
             self.analyze_contract(contract, &mut warnings, &mut errors, &mut suggestions, &mut unsupported_features);
         }
         
         // Calculate compatibility score
         let compatibility_score = self.calculate_compatibility_score(&warnings, &errors, &unsupported_features);
+
+        let used_libraries = ast.imports.clone();
         
         Ok(AnalysisReport {
             compatibility_score,
@@ -45,6 +58,7 @@ impl ConversionAnalyzer {
             errors,
             suggestions,
             unsupported_features,
+            used_libraries,
         })
     }
     
@@ -75,8 +89,8 @@ impl ConversionAnalyzer {
             self.analyze_function(func, warnings, errors, suggestions);
         }
         
-        // Check for common patterns
-        if self.has_reentrancy_risk(contract) {
+        // Check for common patterns (reentrancy: centralized in security module)
+        if super::security::SecurityConverter::new().has_reentrancy_risk(contract) {
             suggestions.push(format!("Contract '{}' should use @secure attribute for reentrancy protection", contract.name));
         }
         
@@ -119,16 +133,8 @@ impl ConversionAnalyzer {
         }
     }
     
-    fn has_reentrancy_risk(&self, contract: &Contract) -> bool {
-        contract.functions.iter().any(|f| {
-            matches!(f.visibility, Visibility::Public | Visibility::External) &&
-            matches!(f.mutability, super::parser::Mutability::Payable | super::parser::Mutability::NonPayable)
-        })
-    }
-    
     fn uses_openzeppelin(&self, contract: &Contract) -> bool {
-        // Check if contract mentions OpenZeppelin patterns
-        // This is a simplified check - in real implementation, would check imports
+        // Check modifiers for OpenZeppelin patterns; imports are checked in analyze() via ast.imports
         contract.functions.iter().any(|f| {
             f.modifiers.iter().any(|m| 
                 m.contains("onlyOwner") || 

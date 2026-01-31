@@ -32,6 +32,8 @@ pub struct DALFunction {
     pub return_type: Option<String>,
     pub attributes: Vec<String>,
     pub body: Option<String>,
+    /// Optional comment (e.g. "Multiple returns collapsed to first; original returns (T1, T2)").
+    pub comment: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -58,19 +60,31 @@ impl SolidityConverter {
         }
     }
     
-    /// Convert Solidity AST to DAL AST
+    /// Convert Solidity AST to DAL AST (nested contracts become separate services with Parent_Nested names).
     pub fn convert(&self, solidity_ast: SolidityAST) -> Result<DALAST, String> {
         let mut services = Vec::new();
-        
         for contract in solidity_ast.contracts {
-            let service = self.convert_contract(contract)?;
-            services.push(service);
+            services.extend(self.convert_contract_and_nested(contract, None)?);
         }
-        
         Ok(DALAST { services })
     }
-    
-    fn convert_contract(&self, contract: Contract) -> Result<Service, String> {
+
+    /// Convert a contract and its nested contracts to a flat list of services (nested: "Parent_Child").
+    fn convert_contract_and_nested(&self, contract: Contract, name_prefix: Option<String>) -> Result<Vec<Service>, String> {
+        let name = match &name_prefix {
+            None => contract.name.clone(),
+            Some(p) => format!("{}_{}", p, contract.name),
+        };
+        let service = self.convert_contract(&contract, Some(name))?;
+        let mut out = vec![service];
+        let prefix = name_prefix.map(|p| format!("{}_{}", p, contract.name)).unwrap_or(contract.name.clone());
+        for nested in contract.nested_contracts {
+            out.extend(self.convert_contract_and_nested(nested, Some(prefix.clone()))?);
+        }
+        Ok(out)
+    }
+
+    fn convert_contract(&self, contract: &Contract, name_override: Option<String>) -> Result<Service, String> {
         let mut attributes = Vec::new();
         
         // Add trust model (default to hybrid for migrated contracts)
@@ -79,8 +93,8 @@ impl SolidityConverter {
         // Add blockchain attribute (default to ethereum)
         attributes.push("@chain(\"ethereum\")".to_string());
         
-        // Add security attributes based on contract analysis
-        if self.has_reentrancy_risk(&contract) {
+        // Add security attributes based on contract analysis (centralized in security module)
+        if super::security::SecurityConverter::new().has_reentrancy_risk(&contract) {
             attributes.push("@secure".to_string());
         }
         
@@ -100,7 +114,7 @@ impl SolidityConverter {
             .collect::<Result<Vec<_>, _>>()?;
         
         Ok(Service {
-            name: contract.name,
+            name: name_override.unwrap_or_else(|| contract.name.clone()),
             attributes,
             fields,
             functions,
@@ -133,7 +147,9 @@ impl SolidityConverter {
         match func.mutability {
             Mutability::View => attributes.push("@view".to_string()),
             Mutability::Pure => attributes.push("@pure".to_string()),
-            Mutability::Payable => {}, // Handle separately if needed
+            Mutability::Payable => {
+                attributes.push("// @payable (value handling in DAL may differ)".to_string());
+            }
             Mutability::NonPayable => {},
         }
         
@@ -145,22 +161,30 @@ impl SolidityConverter {
             })
             .collect();
         
-        // Convert return type
-        let return_type = if func.returns.is_empty() {
-            None
+        // Convert return type; multiple returns collapsed to first, with comment
+        let (return_type, comment) = if func.returns.is_empty() {
+            (None, None)
         } else if func.returns.len() == 1 {
-            Some(self.type_mapper.convert_type(&func.returns[0].param_type))
+            (Some(self.type_mapper.convert_type(&func.returns[0].param_type)), None)
         } else {
-            // Multiple returns - use tuple or struct (simplified to first return)
-            Some(self.type_mapper.convert_type(&func.returns[0].param_type))
+            let first = self.type_mapper.convert_type(&func.returns[0].param_type);
+            let original = func.returns.iter()
+                .map(|p| self.type_mapper.convert_type(&p.param_type))
+                .collect::<Vec<_>>()
+                .join(", ");
+            (
+                Some(first),
+                Some(format!("Multiple returns collapsed to first; original returns ({})", original)),
+            )
         };
-        
+
         Ok(DALFunction {
             name: func.name.clone(),
             parameters,
             return_type,
             attributes,
             body: func.body.clone(),
+            comment,
         })
     }
     
@@ -178,13 +202,6 @@ impl SolidityConverter {
         })
     }
     
-    fn has_reentrancy_risk(&self, contract: &Contract) -> bool {
-        // Simple heuristic: if contract has external payable functions, add security
-        contract.functions.iter().any(|f| {
-            matches!(f.visibility, Visibility::Public | Visibility::External) &&
-            matches!(f.mutability, Mutability::Payable | Mutability::NonPayable)
-        })
-    }
 }
 
 impl Default for SolidityConverter {
