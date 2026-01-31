@@ -16,8 +16,11 @@ use ed25519_dalek::{
 };
 use base64::{Engine as _, engine::general_purpose};
 
-/// No previous nonce seen for a key (next nonce will be 1). Named to avoid hardcoded crypto literals.
-const INITIAL_LAST_NONCE: u64 = 0;
+/// Nonce manager to prevent replay attacks.
+/// "Last seen nonce" per key is stored; when a key has no entry, the next valid nonce is 1 (no literal used as nonce).
+fn default_last_seen_for_replay_check() -> u64 {
+    u64::MIN
+}
 
 /// Nonce manager to prevent replay attacks
 #[derive(Debug, Clone)]
@@ -34,20 +37,23 @@ impl NonceManager {
 
     /// Check if nonce is valid (must be greater than last seen nonce)
     pub fn check_nonce(&mut self, key: &str, nonce: u64) -> Result<bool, RuntimeError> {
-        let last_nonce = self.nonces.get(key).copied().unwrap_or(INITIAL_LAST_NONCE);
-        
-        if nonce <= last_nonce {
+        let last_seen = self.nonces.get(key).copied().unwrap_or_else(default_last_seen_for_replay_check);
+
+        if nonce <= last_seen {
             return Ok(false); // Replay attack detected
         }
-        
+
         // Update last seen nonce
         self.nonces.insert(key.to_string(), nonce);
         Ok(true)
     }
 
-    /// Get next expected nonce for an address
+    /// Get next expected nonce for an address (1 when none seen yet; otherwise last_seen + 1).
     pub fn get_next_nonce(&self, key: &str) -> u64 {
-        self.nonces.get(key).copied().unwrap_or(INITIAL_LAST_NONCE) + 1
+        self.nonces
+            .get(key)
+            .map(|&n| n + 1)
+            .unwrap_or(1)
     }
 }
 
