@@ -315,8 +315,8 @@ ls -la examples/hello_world_demo.dal
 
 - **Documentation**: See README.md and CHANGELOG.md in the package
 - **Examples**: Check the examples/ directory
-
-
+- **Issues**: Report at https://github.com/distagentlang/dist_agent_lang/issues
+- **Email**: team@distagentlang.com
 
 ---
 
