@@ -20,7 +20,6 @@ PHASE*.md
 
 # Internal/planning documentation (do not publish)
 /docs/PRODUCTION_ROADMAP.md
-/docs/ADVANCED_SECURITY_BEST_PRACTICES.md
 /docs/ADVANCED_SECURITY_BLOCKING_BEHAVIOR.md
 /docs/ADVANCED_SECURITY_DESIGN.md
 /docs/IMPLEMENTATION_SUMMARY.md

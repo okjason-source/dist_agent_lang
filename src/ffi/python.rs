@@ -139,7 +139,7 @@ fn dal_to_python_value(value: Value) -> PyObject {
         Value::Float(f) => f.into_py(py),
         Value::String(s) | Value::Closure(s) => s.into_py(py),
         Value::Bool(b) => b.into_py(py),
-        Value::Null => py.None().unbind(),
+        Value::Null => py.None(),
         Value::Array(items) | Value::List(items) => {
             let py_list = pyo3::types::PyList::empty(py);
             for v in items {
@@ -171,7 +171,7 @@ fn dal_to_python_value(value: Value) -> PyObject {
         Value::Result(ok, _err) => dal_to_python_value(*ok),
         Value::Option(opt) => match opt {
             Some(v) => dal_to_python_value(*v),
-            None => py.None().unbind(),
+            None => py.None(),
         },
     })
 }
