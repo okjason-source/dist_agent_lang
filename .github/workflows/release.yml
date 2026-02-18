@@ -140,9 +140,24 @@ jobs:
           cp -r src examples docs Cargo.toml Cargo.lock README.md LICENSE CHANGELOG.md dist_agent_lang-${VERSION}/ 2>/dev/null || true
           tar -czf artifacts/dist_agent_lang-${VERSION}-source.tar.gz dist_agent_lang-${VERSION}/
 
+      - name: Determine if pre-release
+        id: prerelease
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          if [ "$MAJOR" -lt 1 ] || ([ "$MAJOR" -eq 1 ] && [ "$MINOR" -lt 1 ]); then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
           files: artifacts/*
           generate_release_notes: true
           body: |

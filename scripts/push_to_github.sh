@@ -39,6 +39,7 @@ if [[ ! -f .gitignore ]]; then
 
 # Mutation testing and logs (do not publish)
 /mutants.out/
+/mutants.out.old/
 /logs/
 *.log
 

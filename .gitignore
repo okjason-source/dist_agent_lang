@@ -1,6 +1,8 @@
 # Build and install
 /target/
 **/target/
+/staging/
+**/staging/
 
 # Mutation testing and logs (do not publish)
 /mutants.out/
