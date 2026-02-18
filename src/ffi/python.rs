@@ -21,7 +21,7 @@ fn dist_agent_lang(_py: Python, m: &PyModule) -> PyResult<()> {
 
 /// Python runtime wrapper
 #[cfg(feature = "python-ffi")]
-#[pyclass]
+#[pyclass(unsendable)]
 pub struct DistAgentLangRuntime {
     runtime: Runtime,
 }
@@ -153,13 +153,32 @@ fn dal_to_python_value(value: Value) -> PyValue {
             }
             py_list.into()
         }
-        Value::Map(map) => {
+        Value::Map(map) | Value::Struct(_, map) => {
             let py_dict = pyo3::types::PyDict::new(py);
             for (k, v) in map {
                 py_dict.set_item(k, dal_to_python_value(v)).unwrap();
             }
             py_dict.into()
         }
+        Value::List(list) => {
+            let py_list = pyo3::types::PyList::empty(py);
+            for v in list {
+                py_list.append(dal_to_python_value(v)).unwrap();
+            }
+            py_list.into()
+        }
+        Value::Set(set) => {
+            let py_list = pyo3::types::PyList::empty(py);
+            for v in set {
+                py_list.append(v).unwrap();
+            }
+            py_list.into()
+        }
+        Value::Result(ok, _err) => dal_to_python_value(*ok),
+        Value::Option(opt) => match opt {
+            Some(v) => dal_to_python_value(*v),
+            None => py.None(),
+        },
     })
 }
 
