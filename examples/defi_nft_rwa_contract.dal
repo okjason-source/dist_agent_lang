@@ -1,0 +1,808 @@
+// Example: DeFi Smart Contract with NFT RWAs and KYC/AML
+// This demonstrates dist_agent_lang's capabilities for building completely decentralized services
+// with built-in KYC/AML compliance and Real World Asset tokenization
+
+@trust("hybrid")
+@ai
+@chain("arbitrum")
+@advanced_security("strict")
+@secure
+service DeFiNFT_RWA {
+    // Core state variables
+    total_assets: int = 0;
+    total_value_locked: int = 0;
+    assets: map<int, map<string, any>>;
+    users: map<string, map<string, any>>;
+    kyc_providers: map<string, map<string, any>>;
+    aml_checks: map<string, map<string, any>>;
+    
+    fn initialize() {
+        log::info("defi", {
+            "event": "contract_initialized",
+            "total_assets": self.total_assets,
+            "total_value_locked": self.total_value_locked
+        });
+    }
+    
+    // Asset Management Functions
+    
+    fn tokenize_asset(
+        owner: string,
+        asset_type: string,
+        value: int,
+        metadata: map<string, string>,
+        legal_docs: map<string, string>,
+        insurance_info: map<string, string>
+    ) -> int {
+        // KYC/AML verification required for asset tokenization
+        if (!self.verify_user_compliance(owner, "asset_tokenization")) {
+            throw "User compliance verification failed";
+        }
+        
+        let asset_id = self.total_assets + 1;
+        let current_time = chain::get_block_timestamp(1);
+        
+        let asset = {
+            "id": asset_id,
+            "owner": owner,
+            "asset_type": asset_type,
+            "value": value,
+            "collateral_value": value * 80 / 100, // 80% of value as collateral
+            "tokenized_amount": 0,
+            "kyc_required": true,
+            "aml_required": true,
+            "metadata": metadata,
+            "legal_documents": legal_docs,
+            "insurance_info": insurance_info,
+            "appraisal_history": {},
+            "trading_history": {},
+            "liquidity_pools": {},
+            "loan_history": {},
+            "governance_votes": {},
+            "created_at": current_time,
+            "updated_at": current_time
+        };
+        
+        self.assets[asset_id] = asset;
+        self.total_assets = asset_id;
+        self.total_value_locked = self.total_value_locked + value;
+        
+        // Initial appraisal
+        self.add_appraisal(asset_id, "system", value, "initial_valuation", 0.95);
+        
+        log::audit("asset_tokenized", {
+            "asset_id": asset_id,
+            "owner": owner,
+            "asset_type": asset_type,
+            "value": value,
+            "kyc_verified": true,
+            "aml_verified": true
+        });
+        
+        return asset_id;
+    }
+    
+    fn add_appraisal(
+        asset_id: int,
+        appraiser: string,
+        value: int,
+        methodology: string,
+        confidence_level: float
+    ) -> int {
+        if (!self.assets.contains(asset_id) ) {
+            throw "Asset not found";
+        }
+        
+        let appraisal_id = self.assets[asset_id]["appraisal_history"].size() + 1;
+        let current_time = chain::get_block_timestamp(1);
+        
+        let appraisal = {
+            "id": appraisal_id,
+            "appraiser": appraiser,
+            "value": value,
+            "methodology": methodology,
+            "confidence_level": confidence_level,
+            "appraisal_date": current_time,
+            "next_appraisal_date": current_time + 365 * 24 * 60 * 60 // 1 year
+        };
+        
+        self.assets[asset_id]["appraisal_history"][appraisal_id] = appraisal;
+        self.assets[asset_id]["value"] = value;
+        self.assets[asset_id]["updated_at"] = current_time;
+        
+        return appraisal_id;
+    }
+    
+    // KYC/AML Functions
+    
+    fn register_kyc_provider(
+        provider_id: string,
+        name: string,
+        api_endpoint: string,
+        api_key: string
+    ) -> bool {
+        let provider = {
+            "id": provider_id,
+            "name": name,
+            "verification_levels": {
+                "basic": {
+                    "level": "basic",
+                    "requirements": { "identity": "required", "address": "required" },
+                    "verification_time": 24 * 60 * 60, // 24 hours
+                    "cost": 10,
+                    "compliance_score": 0.8
+                },
+                "enhanced": {
+                    "level": "enhanced",
+                    "requirements": { "identity": "required", "address": "required", "income": "required" },
+                    "verification_time": 48 * 60 * 60, // 48 hours
+                    "cost": 25,
+                    "compliance_score": 0.9
+                },
+                "premium": {
+                    "level": "premium",
+                    "requirements": { "identity": "required", "address": "required", "income": "required", "source_of_funds": "required" },
+                    "verification_time": 72 * 60 * 60, // 72 hours
+                    "cost": 50,
+                    "compliance_score": 0.95
+                }
+            },
+            "compliance_standards": { "gdpr": true, "sox": true, "pci": true },
+            "api_endpoint": api_endpoint,
+            "api_key": api_key,
+            "success_rate": 0.98,
+            "response_time": 5000, // 5 seconds
+            "is_active": true
+        };
+        
+        self.kyc_providers[provider_id] = provider;
+        
+        log::audit("kyc_provider_registered", {
+            "provider_id": provider_id,
+            "name": name,
+            "compliance_standards": { "gdpr": true, "sox": true, "pci": true }
+        });
+        
+        return true;
+    }
+    
+    fn perform_kyc_verification(
+        user_address: string,
+        provider_id: string,
+        level: string,
+        user_data: map<string, string>
+    ) -> bool {
+        if (!self.kyc_providers.contains(provider_id) ) {
+            throw "KYC provider not found";
+        }
+        
+        let provider = self.kyc_providers[provider_id];
+        if (!provider["verification_levels"].contains(level) ) {
+            throw "KYC level not supported";
+        }
+        
+        // Simulate KYC verification via external API
+        let verification_result = kyc_verify_identity(provider["api_endpoint"], provider["api_key"], user_data);
+        
+        if (verification_result["status"] == "verified" ) {
+            let user_profile = {
+                "address": user_address,
+                "kyc_status": "verified",
+                "kyc_level": level,
+                "aml_status": "pending",
+                "risk_score": 0.1,
+                "kyc_provider": provider_id,
+                "kyc_data": user_data,
+                "aml_checks": {},
+                "trading_limits": { "daily": 10000, "monthly": 100000 },
+                "compliance_flags": { "kyc_verified": true, "aml_pending": true },
+                "verification_date": chain::get_block_timestamp(1),
+                "last_updated": chain::get_block_timestamp(1)
+            };
+            
+            self.users[user_address] = user_profile;
+            
+            log::audit("kyc_verified", {
+                "user": user_address,
+                "provider": provider_id,
+                "level": level,
+                "verification_date": user_profile["verification_date"]
+            });
+            
+            return true;
+        } else {
+            throw "KYC verification failed: " + verification_result["reason"];
+        }
+    }
+    
+    fn perform_aml_check(
+        user_address: string,
+        check_type: string
+    ) -> string {
+        if (!self.users.contains(user_address) ) {
+            throw "User not found";
+        }
+        
+        let user = self.users[user_address];
+        let check_id = "aml_" + user_address + "_" + chain::get_block_timestamp(1);
+        
+        // Simulate AML check via external API
+        let aml_result = aml_perform_check(check_type, user_address, user["kyc_data"]);
+        
+        let aml_check = {
+            "id": check_id,
+            "user": user_address,
+            "check_type": check_type,
+            "status": aml_result["status"],
+            "risk_score": aml_result["risk_score"],
+            "findings": aml_result["findings"],
+            "recommendations": aml_result["recommendations"],
+            "performed_at": chain::get_block_timestamp(1),
+            "expires_at": chain::get_block_timestamp(1) + 365 * 24 * 60 * 60 // 1 year
+        };
+        
+        self.aml_checks[check_id] = aml_check;
+        self.users[user_address]["aml_checks"][check_id] = aml_check;
+        
+        if (aml_result["status"] == "passed" ) {
+            self.users[user_address]["aml_status"] = "passed";
+            self.users[user_address]["risk_score"] = aml_result["risk_score"];
+            self.users[user_address]["compliance_flags"]["aml_verified"] = true;
+        } else {
+            self.users[user_address]["aml_status"] = "failed";
+            self.users[user_address]["compliance_flags"]["aml_failed"] = true;
+        }
+        
+        self.users[user_address]["last_updated"] = chain::get_block_timestamp(1);
+        
+        log::audit("aml_check_performed", {
+            "user": user_address,
+            "check_id": check_id,
+            "check_type": check_type,
+            "status": aml_result["status"],
+            "risk_score": aml_result["risk_score"]
+        });
+        
+        return check_id;
+    }
+    
+    fn verify_user_compliance(user_address: string, operation: string) -> bool {
+        if (!self.users.contains(user_address) ) {
+            return false;
+        }
+        
+        let user = self.users[user_address];
+        
+        // Check KYC status
+        if (user["kyc_status"] != "verified" ) {
+            return false;
+        }
+        
+        // Check AML status
+        if (user["aml_status"] != "passed" ) {
+            return false;
+        }
+        
+        // Check risk score
+        if (user["risk_score"] > 0.7 ) {
+            return false;
+        }
+        
+        // Check trading limits based on operation
+        let current_limits = self.get_trading_limits(user_address, operation);
+        if (current_limits["exceeded"] == true ) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    fn get_trading_limits(user_address: string, operation: string) -> map<string, any> {
+        if (!self.users.contains(user_address) ) {
+            return { "exceeded": true, "reason": "user_not_found" };
+        }
+        
+        let user = self.users[user_address];
+        let daily_limit = user["trading_limits"]["daily"];
+        let monthly_limit = user["trading_limits"]["monthly"];
+        
+        // Calculate current usage (simplified)
+        let daily_usage = 0; // Would be calculated from recent transactions
+        let monthly_usage = 0; // Would be calculated from recent transactions
+        
+        return {
+            "daily_limit": daily_limit,
+            "monthly_limit": monthly_limit,
+            "daily_usage": daily_usage,
+            "monthly_usage": monthly_usage,
+//             "exceeded": daily_usage > daily_limit 
+        };
+    }
+    
+    // Trading Functions
+    
+    fn trade_asset(
+        asset_id: int,
+        seller: string,
+        buyer: string,
+        price: int,
+        quantity: int,
+        trade_type: string
+    ) -> int {
+        // Verify both parties compliance
+        if (!self.verify_user_compliance(seller, "asset_trading") ) {
+            throw "Seller compliance verification failed";
+        }
+        
+        if (!self.verify_user_compliance(buyer, "asset_trading") ) {
+            throw "Buyer compliance verification failed";
+        }
+        
+        if (!self.assets.contains(asset_id) ) {
+            throw "Asset not found";
+        }
+        
+        let asset = self.assets[asset_id];
+        if (asset["owner"] != seller ) {
+            throw "Seller does not own this asset";
+        }
+        
+        let trade_id = asset["trading_history"].size() + 1;
+        let current_time = chain::get_block_timestamp(1);
+        
+        let trade = {
+            "id": trade_id,
+            "asset_id": asset_id,
+            "seller": seller,
+            "buyer": buyer,
+            "price": price,
+            "quantity": quantity,
+            "trade_type": trade_type,
+            "timestamp": current_time,
+            "kyc_verified": true,
+            "aml_verified": true
+        };
+        
+        // Update asset ownership
+        self.assets[asset_id]["owner"] = buyer;
+        self.assets[asset_id]["trading_history"][trade_id] = trade;
+        self.assets[asset_id]["updated_at"] = current_time;
+        
+        log::audit("asset_traded", {
+            "trade_id": trade_id,
+            "asset_id": asset_id,
+            "seller": seller,
+            "buyer": buyer,
+            "price": price,
+            "quantity": quantity,
+            "kyc_verified": true,
+            "aml_verified": true
+        });
+        
+        return trade_id;
+    }
+    
+    // Liquidity Functions
+    
+    fn add_liquidity(
+        asset_id: int,
+        provider: string,
+        amount: int
+    ) -> string {
+        if (!self.verify_user_compliance(provider, "liquidity_provision") ) {
+            throw "Provider compliance verification failed";
+        }
+        
+        if (!self.assets.contains(asset_id) ) {
+            throw "Asset not found";
+        }
+        
+        let pool_id = "pool_" + asset_id + "_" + provider;
+        let current_time = chain::get_block_timestamp(1);
+        
+        if (self.assets[asset_id]["liquidity_pools"].contains(pool_id) ) {
+            // Update existing pool
+            self.assets[asset_id]["liquidity_pools"][pool_id]["total_liquidity"] = 
+                self.assets[asset_id]["liquidity_pools"][pool_id]["total_liquidity"] + amount;
+            self.assets[asset_id]["liquidity_pools"][pool_id]["providers"][provider] = 
+                self.assets[asset_id]["liquidity_pools"][pool_id]["providers"][provider] + amount;
+        } else {
+            // Create new pool
+            let pool = {
+                "id": pool_id,
+                "asset_id": asset_id,
+                "total_liquidity": amount,
+                "providers": { provider: amount },
+                "fees": { "trading": 0.003, "withdrawal": 0.001 },
+                "apr": 0.08, // 8% APR
+                "created_at": current_time,
+                "last_updated": current_time
+            };
+            
+            self.assets[asset_id]["liquidity_pools"][pool_id] = pool;
+        }
+        
+        self.assets[asset_id]["updated_at"] = current_time;
+        
+        log::audit("liquidity_added", {
+            "pool_id": pool_id,
+            "asset_id": asset_id,
+            "provider": provider,
+            "amount": amount,
+            "kyc_verified": true,
+            "aml_verified": true
+        });
+        
+        return pool_id;
+    }
+    
+    // Lending Functions
+    
+    fn issue_loan(
+        asset_id: int,
+        borrower: string,
+        amount: int,
+        term: int
+    ) -> int {
+        if (!self.verify_user_compliance(borrower, "loan_borrowing") ) {
+            throw "Borrower compliance verification failed";
+        }
+        
+        if (!self.assets.contains(asset_id) ) {
+            throw "Asset not found";
+        }
+        
+        let asset = self.assets[asset_id];
+        if (asset["owner"] != borrower ) {
+            throw "Borrower does not own this asset";
+        }
+        
+        if (amount > asset["collateral_value"] ) {
+            throw "Loan amount exceeds collateral value";
+        }
+        
+        let loan_id = asset["loan_history"].size() + 1;
+        let current_time = chain::get_block_timestamp(1);
+        let interest_rate = 0.05; // 5% annual interest
+        
+        let loan = {
+            "id": loan_id,
+            "asset_id": asset_id,
+            "borrower": borrower,
+            "amount": amount,
+            "collateral_value": asset["collateral_value"],
+            "interest_rate": interest_rate,
+            "term": term,
+            "status": "active",
+            "kyc_verified": true,
+            "aml_verified": true,
+            "created_at": current_time,
+            "due_date": current_time + term
+        };
+        
+        self.assets[asset_id]["loan_history"][loan_id] = loan;
+        self.assets[asset_id]["updated_at"] = current_time;
+        
+        log::audit("loan_issued", {
+            "loan_id": loan_id,
+            "asset_id": asset_id,
+            "borrower": borrower,
+            "amount": amount,
+            "collateral_value": asset["collateral_value"],
+            "kyc_verified": true,
+            "aml_verified": true
+        });
+        
+        return loan_id;
+    }
+    
+    fn repay_loan(loan_id: int, borrower: string, amount: int) -> bool {
+        // Find the loan
+        let found_loan = false;
+        let asset_id = 0;
+        
+        for asset_id_key in self.assets  {
+            let asset = self.assets[asset_id_key];
+            if (asset["loan_history"].contains(loan_id) ) {
+                let loan = asset["loan_history"][loan_id];
+                if (loan["borrower"] == borrower && loan["status"] == "active" ) {
+                    self.assets[asset_id_key]["loan_history"][loan_id]["status"] = "repaid";
+                    self.assets[asset_id_key]["updated_at"] = chain::get_block_timestamp(1);
+                    found_loan = true;
+                    asset_id = asset["id"];
+                    break;
+                }
+            }
+        }
+        
+        if (!found_loan ) {
+            throw "Loan not found or not active";
+        }
+        
+        log::audit("loan_repaid", {
+            "loan_id": loan_id,
+            "asset_id": asset_id,
+            "borrower": borrower,
+            "amount": amount
+        });
+        
+        return true;
+    }
+    
+    // Governance Functions
+    
+    fn create_governance_proposal(
+        proposer: string,
+        proposal_type: string,
+        description: string,
+        parameters: map<string, any>
+    ) -> int {
+        if (!self.verify_user_compliance(proposer, "governance") ) {
+            throw "Proposer compliance verification failed";
+        }
+        
+        let proposal_id = self.get_total_proposals() + 1;
+        
+        log::audit("governance_proposal_created", {
+            "proposal_id": proposal_id,
+            "proposer": proposer,
+            "proposal_type": proposal_type,
+            "description": description
+        });
+        
+        return proposal_id;
+    }
+    
+    fn vote_on_proposal(
+        proposal_id: int,
+        voter: string,
+        vote: bool,
+        weight: int
+    ) -> bool {
+        if (!self.verify_user_compliance(voter, "governance") ) {
+            throw "Voter compliance verification failed";
+        }
+        
+        let vote_id = self.get_total_votes() + 1;
+        let current_time = chain::get_block_timestamp(1);
+        
+        let governance_vote = {
+            "id": vote_id,
+            "proposal_id": proposal_id,
+            "voter": voter,
+            "vote": vote,
+            "weight": weight,
+            "timestamp": current_time
+        };
+        
+        // Store vote (simplified - would be in a separate governance contract)
+        log::audit("governance_vote_cast", {
+            "vote_id": vote_id,
+            "proposal_id": proposal_id,
+            "voter": voter,
+            "vote": vote,
+            "weight": weight
+        });
+        
+        return true;
+    }
+    
+    // Utility Functions
+    
+    fn get_asset_info(asset_id: int) -> map<string, any> {
+        if (!self.assets.contains(asset_id) ) {
+            throw "Asset not found";
+        }
+        
+        let asset = self.assets[asset_id];
+        return {
+            "id": asset["id"],
+            "owner": asset["owner"],
+            "asset_type": asset["asset_type"],
+            "value": asset["value"],
+            "collateral_value": asset["collateral_value"],
+            "kyc_required": asset["kyc_required"],
+            "aml_required": asset["aml_required"],
+            "created_at": asset["created_at"],
+            "updated_at": asset["updated_at"]
+        };
+    }
+    
+    fn get_user_profile(user_address: string) -> map<string, any> {
+        if (!self.users.contains(user_address) ) {
+            throw "User not found";
+        }
+        
+        let user = self.users[user_address];
+        return {
+            "address": user["address"],
+            "kyc_status": user["kyc_status"],
+            "kyc_level": user["kyc_level"],
+            "aml_status": user["aml_status"],
+            "risk_score": user["risk_score"],
+            "verification_date": user["verification_date"],
+            "last_updated": user["last_updated"]
+        };
+    }
+    
+    fn get_total_proposals() -> int {
+        return 0; // Simplified - would be tracked in governance contract
+    }
+    
+    fn get_total_votes() -> int {
+        return 0; // Simplified - would be tracked in governance contract
+    }
+}
+
+// KYC Namespace Functions (simulated)
+fn kyc_verify_identity(api_endpoint: string, api_key: string, user_data: map<string, string>) -> map<string, any> {
+    // Simulate external KYC verification
+    log::info("kyc", {
+        "event": "verifying_identity",
+        "api_endpoint": api_endpoint
+    });
+    
+    // Simulate API call delay
+    // await 2000; // 2 seconds - not available in our language
+    
+    return {
+        "status": "verified",
+        "confidence": 0.95,
+        "provider_response": "identity_verified",
+        "verification_id": "kyc_" + chain::get_block_timestamp(1)
+    };
+}
+
+// AML Namespace Functions (simulated)
+fn aml_perform_check(check_type: string, user_address: string, user_data: map<string, string>) -> map<string, any> {
+    // Simulate external AML check
+    log::info("aml", {
+        "event": "performing_check",
+        "check_type": check_type,
+        "user_address": user_address
+    });
+    
+    // Simulate API call delay
+    // await 3000; // 3 seconds - not available in our language
+    
+    return {
+        "status": "passed",
+        "risk_score": 0.1,
+        "findings": { "sanctions": "clear", "pep": "clear", "adverse_media": "clear" },
+        "recommendations": { "monitoring": "low", "frequency": "annual" },
+        "check_id": "aml_" + check_type + "_" + chain::get_block_timestamp(1)
+    };
+}
+
+// Main function to demonstrate the DeFi NFT RWA contract
+fn main() {
+    let defi_contract = DeFiNFT_RWA::new();
+    defi_contract.initialize();
+    
+    // Register KYC provider
+    let kyc_result = defi_contract.register_kyc_provider(
+        "kyc_provider_1",
+        "SecureKYC Inc.",
+        "https://api.securekyc.com/v1",
+        "sk_live_123456789"
+    );
+    
+    log::info("main", {
+        "event": "kyc_provider_registered",
+        "result": kyc_result
+    });
+    
+    // Perform KYC verification for a user
+    let user_data = {
+        "full_name": "John Doe",
+        "date_of_birth": "1990-01-01",
+        "address": "123 Main St, City, Country",
+        "nationality": "US",
+        "document_type": "passport",
+        "document_number": "US123456789"
+    };
+    
+    let kyc_verification = defi_contract.perform_kyc_verification(
+        "0x1234567890123456789012345678901234567890",
+        "kyc_provider_1",
+        "enhanced",
+        user_data
+    );
+    
+    log::info("main", {
+        "event": "kyc_verification_completed",
+        "result": kyc_verification
+    });
+    
+    // Perform AML check
+    let aml_check_id = defi_contract.perform_aml_check(
+        "0x1234567890123456789012345678901234567890",
+        "sanctions"
+    );
+    
+    log::info("main", {
+        "event": "aml_check_completed",
+        "check_id": aml_check_id
+    });
+    
+    // Tokenize a real estate asset
+    let asset_metadata = {
+        "property_type": "residential",
+        "address": "456 Oak Ave, City, Country",
+        "square_feet": "2500",
+        "bedrooms": "3",
+        "bathrooms": "2",
+        "year_built": "2010"
+    };
+    
+    let legal_docs = {
+        "deed": "ipfs://QmDeedHash123",
+        "title_insurance": "ipfs://QmTitleInsuranceHash456",
+        "survey": "ipfs://QmSurveyHash789"
+    };
+    
+    let insurance_info = {
+        "policy_number": "INS123456",
+        "coverage_amount": "500000",
+        "provider": "SecureInsurance Co.",
+        "expiry_date": "2025-12-31"
+    };
+    
+    let asset_id = defi_contract.tokenize_asset(
+        "0x1234567890123456789012345678901234567890",
+        "real_estate",
+        500000, // $500,000 value
+        asset_metadata,
+        legal_docs,
+        insurance_info
+    );
+    
+    log::info("main", {
+        "event": "asset_tokenized",
+        "asset_id": asset_id
+    });
+    
+    // Add liquidity to the asset
+    let pool_id = defi_contract.add_liquidity(
+        asset_id,
+        "0x9876543210987654321098765432109876543210",
+        100000 // $100,000 liquidity
+    );
+    
+    log::info("main", {
+        "event": "liquidity_pool_created",
+        "pool_id": pool_id
+    });
+    
+    // Issue a loan against the asset
+    let loan_id = defi_contract.issue_loan(
+        asset_id,
+        "0x1234567890123456789012345678901234567890",
+        200000, // $200,000 loan
+        365 * 24 * 60 * 60 // 1 year term
+    );
+    
+    log::info("main", {
+        "event": "loan_issued",
+        "loan_id": loan_id
+    });
+    
+    // Get asset information
+    let asset_info = defi_contract.get_asset_info(asset_id);
+    log::info("main", {
+        "event": "asset_info_retrieved",
+        "asset_info": asset_info
+    });
+    
+    // Get user profile
+    let user_profile = defi_contract.get_user_profile("0x1234567890123456789012345678901234567890");
+    log::info("main", {
+        "event": "user_profile_retrieved",
+        "user_profile": user_profile
+    });
+    
+    log::info("main", {
+        "event": "defi_nft_rwa_demo_completed",
+        "status": "success"
+    });
+}

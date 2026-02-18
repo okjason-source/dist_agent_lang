@@ -1,0 +1,110 @@
+@trust("hybrid")
+@web
+@ai
+@chain("ethereum")
+service AuthIntegrationTest {
+    fn test_auth_session() -> bool {
+        log::info("test", "Testing Auth Session Creation");
+        
+        let session = auth::session("user123", ["admin", "moderator"]);
+        log::info("test", "Created session: " + session);
+        
+        let has_admin_role = auth::has_role(session, "admin");
+        let has_moderator_role = auth::has_role(session, "moderator");
+        let has_user_role = auth::has_role(session, "user");
+        
+        log::info("test", "Has admin role: " + has_admin_role);
+        log::info("test", "Has moderator role: " + has_moderator_role);
+        log::info("test", "Has user role: " + has_user_role);
+        
+        return has_admin_role && has_moderator_role && !has_user_role;
+    }
+    
+    fn test_auth_permissions() -> bool {
+        log::info("test", "Testing Auth Permissions");
+        
+        let session = auth::session("user456", ["user"]);
+        log::info("test", "Created user session: " + session);
+        
+        let has_read = auth::has_permission(session, "read");
+        let has_write = auth::has_permission(session, "write");
+        let has_admin = auth::has_permission(session, "admin");
+        
+        log::info("test", "Has read permission: " + has_read);
+        log::info("test", "Has write permission: " + has_write);
+        log::info("test", "Has admin permission: " + has_admin);
+        
+        return has_read && has_write && !has_admin;
+    }
+    
+    fn test_auth_credentials() -> bool {
+        log::info("test", "Testing Auth Credentials");
+        
+        let admin_user = auth::validate_credentials("admin", "admin123");
+        let regular_user = auth::validate_credentials("user", "user123");
+        let invalid_user = auth::validate_credentials("invalid", "password");
+        
+        log::info("test", "Admin user ID: " + admin_user);
+        log::info("test", "Regular user ID: " + regular_user);
+        log::info("test", "Invalid user ID: " + invalid_user);
+        
+        return admin_user != "" && regular_user != "" && invalid_user == "";
+    }
+    
+    fn test_auth_roles() -> bool {
+        log::info("test", "Testing Auth Roles");
+        
+        let admin_role = auth::get_role("admin");
+        let moderator_role = auth::get_role("moderator");
+        let user_role = auth::get_role("user");
+        let invalid_role = auth::get_role("invalid");
+        
+        log::info("test", "Admin role: " + admin_role);
+        log::info("test", "Moderator role: " + moderator_role);
+        log::info("test", "User role: " + user_role);
+        log::info("test", "Invalid role: " + invalid_role);
+        
+        return admin_role != "" && moderator_role != "" && user_role != "" && invalid_role == "";
+    }
+    
+    fn test_trust_validation_with_auth() -> bool {
+        log::info("test", "Testing Trust Validation with Auth");
+        
+        let session = auth::session("admin_user", ["admin"]);
+        log::info("test", "Created admin session: " + session);
+        
+        let has_admin_role = auth::has_role(session, "admin");
+        let has_admin_permission = auth::has_permission(session, "admin");
+        
+        log::info("test", "Admin role check: " + has_admin_role);
+        log::info("test", "Admin permission check: " + has_admin_permission);
+        
+        if has_admin_role && has_admin_permission {
+            log::info("test", "Admin user has proper permissions for trust validation");
+            return true;
+        } else {
+            log::error("test", "Admin user missing required permissions");
+            return false;
+        }
+    }
+    
+    fn run_all_tests() -> bool {
+        log::info("test", "=== Running Auth Integration Tests ===");
+        
+        let session_test = self.test_auth_session();
+        let permissions_test = self.test_auth_permissions();
+        let credentials_test = self.test_auth_credentials();
+        let roles_test = self.test_auth_roles();
+        let trust_test = self.test_trust_validation_with_auth();
+        
+        let all_passed = session_test && permissions_test && credentials_test && roles_test && trust_test;
+        
+        if all_passed {
+            log::info("test", "🎉 All auth integration tests passed!");
+        } else {
+            log::error("test", "❌ Some auth integration tests failed");
+        }
+        
+        return all_passed;
+    }
+}

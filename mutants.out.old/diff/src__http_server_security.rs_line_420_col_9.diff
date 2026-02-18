@@ -1,0 +1,22 @@
+--- src/http_server_security.rs
++++ replace SecurityLogger::log_rate_limit with ()
+@@ -412,18 +412,17 @@
+         eprintln!(
+             "[SECURITY] [{}] {} - IP: {} - Details: {}",
+             timestamp, event_type, ip_str, details
+         );
+     }
+     
+     /// Log rate limit violation
+     pub fn log_rate_limit(ip: &str) {
+-        Self::log_event("RATE_LIMIT", "Too many requests", Some(ip));
+-        log::warn!(target: "security::rate_limit", "Rate limit exceeded for IP: {}", ip);
++        () /* ~ changed by cargo-mutants ~ */
+     }
+     
+     /// Log authentication failure
+     pub fn log_auth_failure(ip: &str, reason: &str) {
+         Self::log_event("AUTH_FAILURE", reason, Some(ip));
+         log::error!(target: "security::auth", "Authentication failed for IP {}: {}", ip, reason);
+     }
+     

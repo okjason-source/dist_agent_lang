@@ -1,0 +1,20 @@
+@trust("hybrid")
+@chain("ethereum", "solana")
+service TestNFT {
+    name: string = "TestNFT";
+    chain_deployments: map<string, string> = {};
+    
+    fn initialize(contract_owner: string) {
+        self.owner = contract_owner;
+    }
+    
+    fn set_chain_deployment(chain: string, address: string) {
+        if (msg::sender() != self.owner) {
+            print("Only owner can set chain deployments");
+            return;
+        }
+        self.chain_deployments[chain] = address;
+        print("Chain deployment set: " + chain + " -> " + address);
+    }
+}
+

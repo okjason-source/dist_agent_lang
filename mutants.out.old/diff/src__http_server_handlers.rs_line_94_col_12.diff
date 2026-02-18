@@ -1,0 +1,21 @@
+--- src/http_server_handlers.rs
++++ delete ! in path_pattern_matches
+@@ -86,17 +86,17 @@
+ /// Check if a route pattern (e.g. "/users/:id") matches a request path (e.g. "/users/123").
+ fn path_pattern_matches(pattern: &str, path: &str) -> bool {
+     let pattern_segments: Vec<&str> = pattern.split('/').filter(|s| !s.is_empty()).collect();
+     let path_segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
+     if pattern_segments.len() != path_segments.len() {
+         return false;
+     }
+     for (p, v) in pattern_segments.iter().zip(path_segments.iter()) {
+-        if !(*p == *v || (p.starts_with(':') && !v.is_empty())) {
++        if  /* ~ changed by cargo-mutants ~ */(*p == *v || (p.starts_with(':') && !v.is_empty())) {
+             return false;
+         }
+     }
+     true
+ }
+ 
+ /// Extract path params from a request path using a route pattern (e.g. "/users/:id" and "/users/123" -> {"id": "123"}).
+ fn path_params_from_match(pattern: &str, path: &str) -> Option<HashMap<String, String>> {

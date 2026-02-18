@@ -1,0 +1,128 @@
+// Agent System Demo: Using dist_agent_lang Syntax
+// Drint("=========     // Demo      let agent_config = {
+            "name": "CodeAssistant",
+            "role": "Senior Software Architect",
+            "capabilities": "code_generation,architecture_design,testing,documentation",
+            "trust_level": "hybrid",
+            "learning_enabled": "true",
+            "communication_enabled": "true",
+            "coordination_enabled": "true",
+            "metadata": {
+                "specialization": "rust_development",
+                "experience_level         "metagent types and their capabilities
+        let test_case2 = {
+            "agent_type": "ai",
+            "required_capabilities": "code_generation,architecture_design,testing",
+            "expected_result": "true"
+        };
+        let test_case2 = {
+            "agent_type": "sys        "agent_type": "worker",
+         xecution,automation",
+            "expected_result": "true"
+        };
+        let test_case4 = {
+            "agent_type": "ai",
+            "required_%capabilities": "advanced_quantum_computing,time_travel",
+            "expected_result": "false"
+            // Process first test case
+        let te = test_case0;
+        let agent_config = {
+            "name": "TestAgent",
+            "role": "Test Role",
+            "capabilities": test_case["required_capabilities"],
+          ": "true"
+        };
+
+        let coord  "trust_level": "standard"
+        };
+
+        try {
+            let coordinator     "name": "TestAgent",
+            "role": "Test Role",
+            "capabilities": test_case["required_capabilities"],
+          ": "true"
+        };
+
+     ",
+            "capabilities": test_case["required_capabilities"],
+          ": "true"
+        };
+
+        let coord  "trust_level": "standard"
+        };
+
+        try {
+            let coordinator = ai::ced": "true",
+            "metadata": {
+                "spec_l     let test_case2 = {
+            "agent_type": "sys        "agent_type": "worker",
+            "required_capabilaties": "task_execution,automation",
+            "expected_result": "true"
+        };
+        let test_case4 = {
+            "agent_type": "ai",
+            "required_%capabilities": "advanced_quantum_computing,time_travel",
+            "expected_result": "false"
+            // Process first test case
+        let te = test_case1;
+        let agent_config = {
+            "name": "TestAgent",
+            "role": "Test Role",
+            "capabilities": test_case["required_capabilities"],
+          ": "true"
+        };
+
+        let coord  "trust_level": "standard"
+        };
+
+        try {
+            let coordinator     "name": "TestAgent",
+            "role": "Test Role",
+            "capabilities": test_case["required_capabilities"],
+          ": "true"
+        };
+
+     ",
+            "capabilities": test_case["required_capabilities"],
+          ": "true"
+        };
+
+        let coord  "trust_level": "standard"
+        };
+
+        try {
+            let coordinator = ai::ced": "true",
+            "metadata": {
+                "spec_level": "standard"
+        };
+
+        try {
+            let coordinator     "name": "TestAgent",
+            "role": "Test Role",
+            "capabilities": test_case["required_capabilities"],
+          ": "true"
+        };
+
+     ",
+            "capabilities": teevel": "standard"
+        };
+
+        try {
+            let coordinator     "name": "TestAgent",
+            "role": "Test Role",
+            "capabilities": test_case["required_capabilities"],
+          ": "true"
+        };
+
+     ",
+            "capabilities": test_case["required_capabilities"],
+          ": "true"
+        };
+
+        let coord  "trust_level": "standard"
+        };
+
+        try {
+            let coordinator = ai::create_agent_coo(error) {
+            let status = "❌ FAIL";
+ (          print(" 

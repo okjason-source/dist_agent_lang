@@ -1,0 +1,131 @@
+// Solidity ABI Integration Example
+// Shows how to use chain::call for Solidity contract interaction
+// ABI parsing and type safety are available via add_sol (Rust stdlib)
+
+@trust("hybrid")
+@chain("ethereum")
+service SolidityABIIntegration {
+    // Uniswap V2 Router on Ethereum mainnet
+    uniswap_router: string = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+    chain_id: int = 1;
+
+    fn initialize() {
+        log::info("integration", "Uniswap contract ready at " + self.uniswap_router);
+    }
+
+    // Swap tokens via chain::call (mirrors swapExactTokensForTokens ABI)
+    fn swap_tokens_type_safe(
+        amount_in: int,
+        amount_out_min: int,
+        path: list<string>,
+        to: string,
+        deadline: int
+    ) -> string {
+        // Build args map for chain::call
+        let path_str = "0x1111111111111111111111111111111111111111,0x2222222222222222222222222222222222222222";
+        let result = chain::call(
+            self.chain_id,
+            self.uniswap_router,
+            "swapExactTokensForTokens",
+            {
+                "amountIn": to_string(amount_in),
+                "amountOutMin": to_string(amount_out_min),
+                "path": path_str,
+                "to": to,
+                "deadline": to_string(deadline)
+            }
+        );
+        return result;
+    }
+
+    // Get quote (mirrors getAmountsOut ABI)
+    fn get_quote_type_safe(
+        amount_in: int,
+        path: list<string>
+    ) -> string {
+        let path_str = "0x1111111111111111111111111111111111111111,0x2222222222222222222222222222222222222222";
+        let result = chain::call(
+            self.chain_id,
+            self.uniswap_router,
+            "getAmountsOut",
+            {
+                "amountIn": to_string(amount_in),
+                "path": path_str
+            }
+        );
+        return result;
+    }
+
+    fn setup_swap_listener() {
+        log::info("integration", "Swap event listener would register here (add_sol::listen_to_event)");
+    }
+
+    fn handle_swap_event(event_data: map<string, string>) {
+        log::info("swap_event", "Swap detected");
+        if (event_data["sender"] != "") {
+            log::info("swap_event", "  Sender: " + event_data["sender"]);
+        }
+        if (event_data["amount0In"] != "") {
+            log::info("swap_event", "  Amount0In: " + event_data["amount0In"]);
+        }
+        if (event_data["amount1Out"] != "") {
+            log::info("swap_event", "  Amount1Out: " + event_data["amount1Out"]);
+        }
+        if (event_data["to"] != "") {
+            log::info("swap_event", "  To: " + event_data["to"]);
+        }
+    }
+
+    fn parse_swap_result(result: string) -> list<int> {
+        return [1000000, 950000];
+    }
+
+    fn parse_amounts_result(result: string) -> list<int> {
+        return [1000000, 950000];
+    }
+}
+
+// Auto-generated wrapper example - uses chain::call directly
+@trust("hybrid")
+service UniswapRouterWrapper {
+    contract_address: string = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+    chain_id: int = 1;
+
+    fn swapExactTokensForTokens(
+        amountIn: int,
+        amountOutMin: int,
+        path: list<string>,
+        to: string,
+        deadline: int
+    ) -> string {
+        let path_str = "0x1111111111111111111111111111111111111111,0x2222222222222222222222222222222222222222";
+        return chain::call(
+            self.chain_id,
+            self.contract_address,
+            "swapExactTokensForTokens",
+            {
+                "amountIn": to_string(amountIn),
+                "amountOutMin": to_string(amountOutMin),
+                "path": path_str,
+                "to": to,
+                "deadline": to_string(deadline)
+            }
+        );
+    }
+
+    fn getAmountsOut(
+        amountIn: int,
+        path: list<string>
+    ) -> string {
+        let path_str = "0x1111111111111111111111111111111111111111,0x2222222222222222222222222222222222222222";
+        return chain::call(
+            self.chain_id,
+            self.contract_address,
+            "getAmountsOut",
+            {
+                "amountIn": to_string(amountIn),
+                "path": path_str
+            }
+        );
+    }
+}

@@ -1,0 +1,3 @@
+// Minimal empty service
+@trust("hybrid")
+service Empty {}

@@ -1,0 +1,649 @@
+// Hello World and Core Language Features Demo
+// Basic examples showing dist_agent_lang as a general-purpose language
+
+// =====================================================
+// BASIC SYNTAX AND FEATURES
+// =====================================================
+
+// Simple Hello World
+fn main() {
+    println!("Hello, dist_agent_lang!");
+
+    // Variables and types
+    let message = "Hello, World!";
+    let number = 42;
+    let pi = 3.14159;
+    let is_active = true;
+    let data = null;
+
+    // Collections
+    let numbers = [1, 2, 3, 4, 5];
+    let user = {
+        "name": "Alice",
+        "age": 30,
+        "email": "alice@example.com",
+        "active": true
+    };
+
+    // Print different types
+    println!("Message: {}", message);
+    println!("Number: {}", number);
+    println!("Pi: {}", pi);
+    println!("Active: {}", is_active);
+    println!("Numbers: {}", numbers);
+    println!("User: {}", user);
+
+    // Function calls
+    let result = add_numbers(10, 20);
+    println!("10 + 20 = {}", result);
+
+    // Control flow
+    if number > 40 {
+        println!("Number is greater than 40");
+    } else {
+        println!("Number is 40 or less");
+    }
+
+    // Loops
+    println!("Counting to 5:");
+    for i in 1..6 {
+        println!("Count: {}", i);
+    }
+
+    // Array iteration
+    println!("Numbers in array:");
+    for num in numbers {
+        println!("Number: {}", num);
+    }
+
+    // Map iteration
+    println!("User properties:");
+    for key, value in user {
+        println!("{}: {}", key, value);
+    }
+}
+
+// Function definition
+fn add_numbers(a: i64, b: i64) -> i64 {
+    return a + b;
+}
+
+// Function with multiple return values
+fn calculate_stats(numbers: List<i64>) -> Statistics {
+    if numbers.length() == 0 {
+        return {
+            "count": 0,
+            "sum": 0,
+            "mean": 0.0,
+            "min": 0,
+            "max": 0
+        };
+    }
+
+    let sum = numbers.sum();
+    let mean = sum as Float / numbers.length();
+    let min = numbers.min();
+    let max = numbers.max();
+
+    return {
+        "count": numbers.length(),
+        "sum": sum,
+        "mean": mean,
+        "min": min,
+        "max": max
+    };
+}
+
+// =====================================================
+// OBJECT-ORIENTED FEATURES
+// =====================================================
+
+// Simple class-like structure with methods
+service CalculatorService {
+    operations_count: i64,
+
+    fn initialize() {
+        self.operations_count = 0;
+        println!("Calculator initialized");
+    }
+
+    fn add(a: Float, b: Float) -> Float {
+        self.operations_count += 1;
+        return a + b;
+    }
+
+    fn subtract(a: Float, b: Float) -> Float {
+        self.operations_count += 1;
+        return a - b;
+    }
+
+    fn multiply(a: Float, b: Float) -> Float {
+        self.operations_count += 1;
+        return a * b;
+    }
+
+    fn divide(a: Float, b: Float) -> Float {
+        if b == 0.0 {
+            throw Error::new("DivisionByZero", "Cannot divide by zero");
+        }
+        self.operations_count += 1;
+        return a / b;
+    }
+
+    fn get_operations_count() -> i64 {
+        return self.operations_count;
+    }
+
+    fn reset() {
+        self.operations_count = 0;
+        println!("Calculator reset");
+    }
+}
+
+// Using the calculator service
+fn demo_calculator() {
+    let calc = CalculatorService::new();
+
+    let result1 = calc.add(10.5, 5.2);
+    println!("10.5 + 5.2 = {}", result1);
+
+    let result2 = calc.multiply(result1, 2.0);
+    println!("Result * 2 = {}", result2);
+
+    let result3 = calc.divide(result2, 3.0);
+    println("Result / 3 = {}", result3);
+
+    println("Total operations: {}", calc.get_operations_count());
+}
+
+// =====================================================
+// ERROR HANDLING
+// =====================================================
+
+fn demo_error_handling() {
+    // Try-catch blocks
+    try {
+        let result = risky_operation();
+        println!("Operation successful: {}", result);
+    } catch (error) {
+        println!("Error caught: {}", error.message);
+        println!("Error type: {}", error.type);
+    } finally {
+        println!("Cleanup completed");
+    }
+
+    // Multiple catch blocks
+    try {
+        let data = fetch_data("invalid_url");
+        process_data(data);
+    } catch (NetworkError e) {
+        println!("Network error: {}", e.message);
+        retry_operation();
+    } catch (ValidationError e) {
+        println!("Validation error: {}", e.message);
+        show_validation_errors(e.errors);
+    } catch (e) {
+        println!("Unexpected error: {}", e.message);
+    }
+}
+
+fn risky_operation() -> String {
+    // Simulate a risky operation that might fail
+    if random() > 0.7 {
+        throw Error::new("RandomFailure", "Operation failed randomly");
+    }
+    return "Success!";
+}
+
+fn fetch_data(url: String) -> any {
+    if url.contains("invalid") {
+        throw NetworkError::new("Invalid URL provided");
+    }
+    return { "data": "fetched successfully" };
+}
+
+fn process_data(data: any) {
+    if data.data == null {
+        throw ValidationError::new("Missing data field", ["data"]);
+    }
+    println!("Processing: {}", data.data);
+}
+
+// =====================================================
+// ASYNC/AWAIT FEATURES
+// =====================================================
+
+// @async
+fn demo_async_operations() {
+    println!("Starting async operations...");
+
+    // Sequential async calls
+    let result1 = await fetch_user_data(1);
+    println!("User 1: {}", result1.name);
+
+    let result2 = await fetch_user_data(2);
+    println!("User 2: {}", result2.name);
+
+    // Parallel async calls
+    let promises = [
+        fetch_user_data_async(1),
+        fetch_user_data_async(2),
+        fetch_user_data_async(3)
+    ];
+
+    let results = await Promise::all(promises);
+
+    println!("All users fetched:");
+    for result in results {
+        println!("- {}", result.name);
+    }
+
+    // Async with timeout
+    try {
+        let result = await Promise::race([
+            fetch_slow_data(),
+            timeout_promise(5000) // 5 second timeout
+        ]);
+        println!("Fastest result: {}", result);
+    } catch (TimeoutError e) {
+        println("Operation timed out");
+    }
+}
+
+fn fetch_user_data(user_id: i64) -> Promise<User> {
+    return new Promise((resolve, reject) => {
+        // Simulate async database query
+        set_timeout(() => {
+            if user_id <= 0 {
+                reject(Error::new("InvalidUserId", "User ID must be positive"));
+                return;
+            }
+
+            resolve({
+                "id": user_id,
+                "name": format!("User {}", user_id),
+                "email": format!("user{}@example.com", user_id)
+            });
+        }, 100); // 100ms delay
+    });
+}
+
+fn fetch_user_data_async(user_id: i64) -> Promise<User> {
+    return fetch_user_data(user_id); // Same implementation
+}
+
+fn fetch_slow_data() -> Promise<String> {
+    return new Promise((resolve) => {
+        set_timeout(() => {
+            resolve("Slow data fetched");
+        }, 3000); // 3 second delay
+    });
+}
+
+fn timeout_promise(ms: i64) -> Promise<Error> {
+    return new Promise((_, reject) => {
+        set_timeout(() => {
+            reject(TimeoutError::new("Operation timed out"));
+        }, ms);
+    });
+}
+
+// =====================================================
+// GENERICS AND TYPE SYSTEM
+// =====================================================
+
+fn demo_generics() {
+    // Generic functions
+    let result1 = identity(42);
+    let result2 = identity("Hello");
+    let result3 = identity([1, 2, 3]);
+
+    println!("Identity results:");
+    println!("Number: {}", result1);
+    println!("String: {}", result2);
+    println!("Array: {}", result3);
+
+    // Generic containers
+    let number_list = GenericList<i64>::new();
+    number_list.add(1);
+    number_list.add(2);
+    number_list.add(3);
+
+    let string_list = GenericList<String>::new();
+    string_list.add("Hello");
+    string_list.add("World");
+
+    println!("Number list: {}", number_list.get_all());
+    println!("String list: {}", string_list.get_all());
+
+    // Generic result types
+    let success_result = Result<i64, String>::ok(42);
+    let error_result = Result<i64, String>::err("Something went wrong");
+
+    println!("Success result: {}", success_result.unwrap());
+    println!("Error result: {}", error_result.unwrap_err());
+}
+
+// Generic identity function
+fn identity<T>(value: T) -> T {
+    return value;
+}
+
+// Generic container class
+service GenericList<T> {
+    items: List<T>,
+
+    fn initialize() {
+        self.items = [];
+    }
+
+    fn add(item: T) {
+        self.items.push(item);
+    }
+
+    fn remove(index: i64) -> T {
+        return self.items.remove(index);
+    }
+
+    fn get(index: i64) -> T {
+        return self.items[index];
+    }
+
+    fn get_all() -> List<T> {
+        return self.items;
+    }
+
+    fn size() -> i64 {
+        return self.items.length();
+    }
+
+    fn is_empty() -> bool {
+        return self.items.length() == 0;
+    }
+}
+
+// Generic Result type
+enum Result<T, E> {
+    Ok(T),
+    Err(E)
+}
+
+impl Result<T, E> {
+    fn ok(value: T) -> Result<T, E> {
+        return Result::Ok(value);
+    }
+
+    fn err(error: E) -> Result<T, E> {
+        return Result::Err(error);
+    }
+
+    fn is_ok() -> bool {
+        return match self {
+            Result::Ok(_) => true,
+            Result::Err(_) => false
+        };
+    }
+
+    fn is_err() -> bool {
+        return !self.is_ok();
+    }
+
+    fn unwrap() -> T {
+        match self {
+            Result::Ok(value) => return value,
+            Result::Err(_) => throw Error::new("UnwrapError", "Called unwrap on Err value")
+        }
+    }
+
+    fn unwrap_err() -> E {
+        match self {
+            Result::Ok(_) => throw Error::new("UnwrapError", "Called unwrap_err on Ok value"),
+            Result::Err(error) => return error
+        }
+    }
+}
+
+// =====================================================
+// STANDARD LIBRARY USAGE
+// =====================================================
+
+fn demo_standard_library() {
+    // String operations
+    let text = "Hello, dist_agent_lang!";
+    println!("Original: {}", text);
+    println!("Uppercase: {}", text.to_uppercase());
+    println!("Length: {}", text.length());
+    println!("Contains 'lang': {}", text.contains("lang"));
+
+    // Array operations
+    let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    println!("Original array: {}", numbers);
+    println!("Filtered (even): {}", numbers.filter(n => n % 2 == 0));
+    println!("Mapped (*2): {}", numbers.map(n => n * 2));
+    println!("Sum: {}", numbers.sum());
+    println!("Average: {}", numbers.average());
+    println!("Max: {}", numbers.max());
+    println!("Min: {}", numbers.min());
+
+    // Date/Time operations
+    let now = Date::now();
+    println!("Current date/time: {}", now);
+    println!("Timestamp: {}", now.timestamp());
+    println!("Formatted: {}", now.format("YYYY-MM-DD HH:mm:ss"));
+
+    let yesterday = now.subtract_days(1);
+    println!("Yesterday: {}", yesterday);
+
+    // JSON operations
+    let data = {
+        "name": "Alice",
+        "age": 30,
+        "hobbies": ["reading", "coding", "gaming"],
+        "address": {
+            "street": "123 Main St",
+            "city": "Anytown",
+            "country": "USA"
+        }
+    };
+
+    let json_string = json::stringify(data);
+    println!("JSON: {}", json_string);
+
+    let parsed_data = json::parse(json_string);
+    println!("Parsed name: {}", parsed_data.name);
+    println!("Parsed city: {}", parsed_data.address.city);
+
+    // File operations
+    let content = "Hello, file system!";
+    fs::write_file("example.txt", content);
+    println!("File written");
+
+    let read_content = fs::read_file("example.txt");
+    println!("File content: {}", read_content);
+
+    let files = fs::list_directory(".");
+    println!("Files in directory: {}", files);
+
+    // HTTP operations
+    let response = web::get("https://jsonplaceholder.typicode.com/posts/1");
+    if response.status == 200 {
+        let post = json::parse(response.body);
+        println!("Fetched post title: {}", post.title);
+    }
+
+    // Random operations
+    println!("Random number: {}", random());
+    println!("Random between 1-10: {}", random_between(1, 10));
+    println!("Random choice: {}", random_choice(["apple", "banana", "cherry"]));
+}
+
+// =====================================================
+// ADVANCED LANGUAGE FEATURES
+// =====================================================
+
+fn demo_advanced_features() {
+    // Closures and higher-order functions
+    let numbers = [1, 2, 3, 4, 5];
+
+    let is_even = |n: i64| -> bool { return n % 2 == 0; };
+    let square = |n: i64| -> i64 { return n * n; };
+    let sum = |a: i64, b: i64| -> i64 { return a + b; };
+
+    let even_numbers = numbers.filter(is_even);
+    let squared_numbers = numbers.map(square);
+    let total = numbers.reduce(sum, 0);
+
+    println!("Even numbers: {}", even_numbers);
+    println!("Squared numbers: {}", squared_numbers);
+    println!("Sum: {}", total);
+
+    // Pattern matching
+    let value = 42;
+
+    match value {
+        0 => println!("Zero"),
+        1..10 => println!("Single digit"),
+        11..100 => println!("Two digits"),
+        _ => println!("Large number")
+    }
+
+    // Destructuring
+    let point = { "x": 10, "y": 20 };
+    let { x, y } = point;
+    println!("Point: x={}, y={}", x, y);
+
+    let coordinates = [10, 20, 30];
+    let [first, second, third] = coordinates;
+    println!("Coordinates: {}, {}, {}", first, second, third);
+
+    // Spread operator
+    let base_config = { "debug": false, "timeout": 5000 };
+    let full_config = {
+        ...base_config,
+        "host": "localhost",
+        "port": 8080
+    };
+    println!("Full config: {}", full_config);
+
+    // Optional chaining
+    let user = {
+        "name": "Alice",
+        "profile": {
+            "age": 30,
+            "address": {
+                "city": "New York"
+            }
+        }
+    };
+
+    let city = user.profile?.address?.city ?? "Unknown";
+    println!("City: {}", city);
+
+    // Null coalescing
+    let display_name = user.nickname ?? user.name ?? "Anonymous";
+    println!("Display name: {}", display_name);
+}
+
+// =====================================================
+// MAIN EXECUTION
+// =====================================================
+
+fn run_all_demos() {
+    println!("=== dist_agent_lang General Purpose Language Demo ===\n");
+
+    println!("1. Basic Syntax Demo");
+    main();
+    println!();
+
+    println!("2. Object-Oriented Features Demo");
+    demo_calculator();
+    println!();
+
+    println!("3. Error Handling Demo");
+    demo_error_handling();
+    println!();
+
+    println!("4. Async/Await Demo");
+    demo_async_operations();
+    println!();
+
+    println!("5. Generics Demo");
+    demo_generics();
+    println!();
+
+    println!("6. Standard Library Demo");
+    demo_standard_library();
+    println!();
+
+    println!("7. Advanced Features Demo");
+    demo_advanced_features();
+    println!();
+
+    println!("=== Demo Complete ===");
+}
+
+// =====================================================
+// CUSTOM ERROR TYPES
+// =====================================================
+
+struct NetworkError {
+    message: String,
+    status_code: i64,
+    url: String
+}
+
+impl NetworkError {
+    fn new(message: String) -> NetworkError {
+        return NetworkError {
+            message: message,
+            status_code: 0,
+            url: ""
+        };
+    }
+}
+
+struct ValidationError {
+    message: String,
+    errors: List<String>
+}
+
+impl ValidationError {
+    fn new(message: String, errors: List<String>) -> ValidationError {
+        return ValidationError {
+            message: message,
+            errors: errors
+        };
+    }
+}
+
+struct TimeoutError {
+    message: String,
+    timeout_ms: i64
+}
+
+impl TimeoutError {
+    fn new(message: String) -> TimeoutError {
+        return TimeoutError {
+            message: message,
+            timeout_ms: 0
+        };
+    }
+}
+
+// =====================================================
+// UTILITY STRUCTURES
+// =====================================================
+
+struct User {
+    id: i64,
+    name: String,
+    email: String
+}
+
+struct Statistics {
+    count: i64,
+    sum: i64,
+    mean: Float,
+    min: i64,
+    max: i64
+}

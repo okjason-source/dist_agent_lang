@@ -1,0 +1,126 @@
+// Hello World and Core Language Features Demo
+// Demonstrates dist_agent_lang syntax: variables, control flow, functions, and services.
+// All code uses only supported grammar.
+
+// =====================================================
+// TOP-LEVEL FUNCTIONS
+// =====================================================
+
+fn main() {
+    let message = "Hello, World!";
+    let number = 42;
+    let pi = 3.14159;
+    let is_active = true;
+    let data = null;
+
+    let numbers = [1, 2, 3, 4, 5];
+    let user = {
+        "name": "Alice",
+        "age": 30,
+        "email": "alice@example.com",
+        "active": true
+    };
+
+    log::info("hello", message);
+    log::info("number", { "value": number });
+
+    let result = add_numbers(10, 20);
+    log::info("add", { "result": result });
+
+    if (number > 40) {
+        log::info("check", "Number is greater than 40");
+    } else {
+        log::info("check", "Number is 40 or less");
+    }
+
+    for num in numbers {
+        log::info("loop", { "num": num });
+    }
+}
+
+fn add_numbers(a: int, b: int) -> int {
+    return a + b;
+}
+
+// Return a map (object) - do not use custom type names like Statistics
+fn calculate_stats(numbers: list<any>) -> map<string, any> {
+    if (numbers.length() == 0) {
+        return {
+            "count": 0,
+            "sum": 0,
+            "mean": 0.0,
+            "min": 0,
+            "max": 0
+        };
+    }
+
+    let sum = numbers.sum();
+    let count = numbers.length();
+    let mean = sum / count;
+    let min = numbers.min();
+    let max = numbers.max();
+
+    return {
+        "count": count,
+        "sum": sum,
+        "mean": mean,
+        "min": min,
+        "max": max
+    };
+}
+
+// =====================================================
+// SERVICE EXAMPLE
+// =====================================================
+
+service CalculatorService {
+    operations_count: int;
+
+    fn initialize() {
+        self.operations_count = 0;
+    }
+
+    fn add(a: float, b: float) -> float {
+        self.operations_count = self.operations_count + 1;
+        return a + b;
+    }
+
+    fn subtract(a: float, b: float) -> float {
+        self.operations_count = self.operations_count + 1;
+        return a - b;
+    }
+
+    fn multiply(a: float, b: float) -> float {
+        self.operations_count = self.operations_count + 1;
+        return a * b;
+    }
+
+    fn divide(a: float, b: float) -> float {
+        if (b == 0.0) {
+            log::error("calculator", "Cannot divide by zero");
+            return 0.0;
+        }
+        self.operations_count = self.operations_count + 1;
+        return a / b;
+    }
+
+    fn get_operations_count() -> int {
+        return self.operations_count;
+    }
+
+    fn reset() {
+        self.operations_count = 0;
+    }
+}
+
+// Demo using the calculator (call methods on service type)
+fn demo_calculator() {
+    let result1 = 10.5 + 5.2;
+    let result2 = result1 * 2.0;
+    let result3 = result2 / 3.0;
+    log::info("calculator_demo", {
+        "add": result1,
+        "multiply": result2,
+        "divide": result3
+    });
+}

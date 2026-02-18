@@ -1,0 +1,653 @@
+// KEYS Token Implementation using dist_agent_lang
+// This demonstrates how to replace the traditional Solidity + JavaScript stack
+// with a unified dist_agent_lang solution
+
+// @trust("hybrid")
+// @secure
+// @limit(10000)
+// @chain("ethereum")
+service KEYS_Token {
+    // Token Configuration
+    name: string = "KEYS Token",
+    symbol: string = "KEYS",
+    decimals: int = 18,
+    total_supply: int = 120000000 * 10^18,
+    
+    // Reserve Addresses
+    minting_reserve: string,
+    liquidity_reserve: string,
+    ico_reserve: string,
+    team_vesting: string,
+    airdrop_reserve: string,
+    
+    // Tokenomics Allocations (in wei)
+    allocations: map<string, int> = {
+        "minting": 35_000_000 * 10^18,    // 35%
+        "liquidity": 15_000_000 * 10^18,  // 15%
+        "ico": 20_000_000 * 10^18,        // 20%
+        "team": 20_000_000 * 10^18,        // 20%
+        "airdrop": 10_000_000 * 10^18     // 10%
+    },
+    
+    // State Tracking
+    initial_distribution_done: bool = false,
+    balances: map<string, int>,
+    allowances: map<string, map<string, int>>,
+    
+    // Airdrop System
+    airdrop_allocations: map<string, map<string, int>>,  // project_id => (user => amount)
+    claimed_airdrops: map<string, map<string, bool>>,    // project_id => (user => claimed)
+    
+    // Events
+    event Transfer { from: string, to: string, amount: int },
+    event Approval { owner: string, spender: string, amount: int },
+    event AirdropClaimed { project_id: string, recipient: string, amount: int },
+    event DistributionCompleted { timestamp: int },
+    event TokensMinted { to: string, amount: int }
+}
+
+// Core Token Functions
+impl KEYS_Token {
+    @txn
+    @secure
+    fn initialize_tokenomics(
+        minting_addr: string,
+        liquidity_addr: string,
+        ico_addr: string,
+        team_addr: string,
+        airdrop_addr: string
+    ) -> bool {
+        // Verify admin permissions
+        if !auth::has_role(auth::session(), "admin") {
+            log::error("token", "Only admin can initialize tokenomics");
+            return false;
+        }
+        
+        // Set reserve addresses
+        self.minting_reserve = minting_addr;
+        self.liquidity_reserve = liquidity_addr;
+        self.ico_reserve = ico_addr;
+        self.team_vesting = team_addr;
+        self.airdrop_reserve = airdrop_addr;
+        
+        // Mint total supply to contract owner
+        let owner = auth::session().user_id;
+        self.balances[owner] = self.total_supply;
+        
+        log::info("token", "Tokenomics initialized successfully");
+        return true;
+    }
+    
+    @txn
+    @limit(5000)
+    fn initial_distribution() -> bool {
+        if !auth::has_role(auth::session(), "admin") {
+            log::error("token", "Only admin can perform initial distribution");
+            return false;
+        }
+        
+        if self.initial_distribution_done {
+            log::error("token", "Initial distribution already completed");
+            return false;
+        }
+        
+        let owner = auth::session().user_id;
+        
+        // Transfer tokens to reserve addresses
+        self.transfer(self.minting_reserve, self.allocations["minting"]);
+        self.transfer(self.liquidity_reserve, self.allocations["liquidity"]);
+        self.transfer(self.ico_reserve, self.allocations["ico"]);
+        self.transfer(self.team_vesting, self.allocations["team"]);
+        self.transfer(self.airdrop_reserve, self.allocations["airdrop"]);
+        
+        self.initial_distribution_done = true;
+        
+        // Emit event
+        self.emit(DistributionCompleted { timestamp: chain::timestamp() });
+        
+        log::info("token", "Initial distribution completed successfully");
+        return true;
+    }
+    
+    @txn
+    @limit(3000)
+    fn transfer(to: string, amount: int) -> bool {
+        let from = auth::session().user_id;
+        
+        if amount <= 0 {
+            log::error("token", "Transfer amount must be positive");
+            return false;
+        }
+        
+        if self.balances[from] < amount {
+            log::error("token", "Insufficient balance for transfer");
+            return false;
+        }
+        
+        // Update balances
+        self.balances[from] = self.balances[from] - amount;
+        self.balances[to] = self.balances[to] + amount;
+        
+        // Emit transfer event
+        self.emit(Transfer { from: from, to: to, amount: amount });
+        
+        log::info("token", "Transfer completed: " + amount + " KEYS from " + from + " to " + to);
+        return true;
+    }
+    
+    @txn
+    @limit(2000)
+    fn approve(spender: string, amount: int) -> bool {
+        let owner = auth::session().user_id;
+        
+        self.allowances[owner][spender] = amount;
+        
+        // Emit approval event
+        self.emit(Approval { owner: owner, spender: spender, amount: amount });
+        
+        log::info("token", "Approval granted: " + amount + " KEYS to " + spender);
+        return true;
+    }
+    
+    @txn
+    @limit(3000)
+    fn transfer_from(from: string, to: string, amount: int) -> bool {
+        let spender = auth::session().user_id;
+        
+        if self.balances[from] < amount {
+            log::error("token", "Insufficient balance for transfer_from");
+            return false;
+        }
+        
+        if self.allowances[from][spender] < amount {
+            log::error("token", "Insufficient allowance for transfer_from");
+            return false;
+        }
+        
+        // Update balances and allowances
+        self.balances[from] = self.balances[from] - amount;
+        self.balances[to] = self.balances[to] + amount;
+        self.allowances[from][spender] = self.allowances[from][spender] - amount;
+        
+        // Emit transfer event
+        self.emit(Transfer { from: from, to: to, amount: amount });
+        
+        log::info("token", "Transfer_from completed: " + amount + " KEYS from " + from + " to " + to);
+        return true;
+    }
+    
+    // Airdrop Functions
+    @txn
+    @limit(5000)
+    fn set_airdrop_allocation(
+        project_id: string,
+        recipients: array<string>,
+        amounts: array<int>
+    ) -> bool {
+        if !auth::has_role(auth::session(), "admin") {
+            log::error("airdrop", "Only admin can set airdrop allocations");
+            return false;
+        }
+        
+        if recipients.length() != amounts.length() {
+            log::error("airdrop", "Recipients and amounts arrays must have same length");
+            return false;
+        }
+        
+        // Set allocations
+        for i in 0..recipients.length() {
+            self.airdrop_allocations[project_id][recipients[i]] = amounts[i];
+        }
+        
+        log::info("airdrop", "Airdrop allocations set for project: " + project_id);
+        return true;
+    }
+    
+    @txn
+    @limit(3000)
+    fn claim_airdrop(project_id: string) -> bool {
+        let user_id = auth::session().user_id;
+        
+        // Check if already claimed
+        if self.claimed_airdrops[project_id][user_id] {
+            log::error("airdrop", "Airdrop already claimed for project: " + project_id);
+            return false;
+        }
+        
+        // Get allocation amount
+        let amount = self.airdrop_allocations[project_id][user_id];
+        if amount <= 0 {
+            log::error("airdrop", "No airdrop allocated for user in project: " + project_id);
+            return false;
+        }
+        
+        // Check if airdrop reserve has sufficient balance
+        if self.balances[self.airdrop_reserve] < amount {
+            log::error("airdrop", "Insufficient airdrop reserve balance");
+            return false;
+        }
+        
+        // Mark as claimed and transfer tokens
+        self.claimed_airdrops[project_id][user_id] = true;
+        self.balances[self.airdrop_reserve] = self.balances[self.airdrop_reserve] - amount;
+        self.balances[user_id] = self.balances[user_id] + amount;
+        
+        // Emit airdrop claimed event
+        self.emit(AirdropClaimed {
+            project_id: project_id,
+            recipient: user_id,
+            amount: amount
+        });
+        
+        log::info("airdrop", "Airdrop claimed: " + amount + " KEYS for project " + project_id);
+        return true;
+    }
+    
+    // Query Functions
+    fn balance_of(account: string) -> int {
+        return self.balances[account];
+    }
+    
+    fn allowance(owner: string, spender: string) -> int {
+        return self.allowances[owner][spender];
+    }
+    
+    fn get_airdrop_allocation(project_id: string, user: string) -> int {
+        return self.airdrop_allocations[project_id][user];
+    }
+    
+    fn has_claimed_airdrop(project_id: string, user: string) -> bool {
+        return self.claimed_airdrops[project_id][user];
+    }
+    
+    fn get_token_stats() -> map<string, any> {
+        let circulating_supply = 0;
+        for balance in self.balances {
+            circulating_supply = circulating_supply + balance;
+        }
+        
+        return {
+            "total_supply": self.total_supply,
+            "circulating_supply": circulating_supply,
+            "name": self.name,
+            "symbol": self.symbol,
+            "decimals": self.decimals,
+            "initial_distribution_done": self.initial_distribution_done
+        };
+    }
+}
+
+// User Interface Service
+// @trust("hybrid")
+service KEYS_UserInterface {
+    current_user: string,
+    contract_address: string,
+    
+    fn initialize(user_id: string, contract_addr: string) {
+        self.current_user = user_id;
+        self.contract_address = contract_addr;
+    }
+    
+    fn render_user_dashboard() -> string {
+        let balance = chain::query(self.contract_address, "balance_of", [self.current_user]);
+        let stats = chain::query(self.contract_address, "get_token_stats", []);
+        
+        return self.generate_dashboard_html({
+            "user": self.current_user,
+            "balance": balance,
+            "token_name": stats["name"],
+            "token_symbol": stats["symbol"],
+            "total_supply": stats["total_supply"],
+            "circulating_supply": stats["circulating_supply"]
+        });
+    }
+    
+    fn claim_airdrop(project_id: string) -> bool {
+        let result = chain::call(self.contract_address, "claim_airdrop", [project_id]);
+        
+        if result.success {
+            self.show_success_notification("Airdrop claimed successfully!");
+            return true;
+        } else {
+            self.show_error_notification("Failed to claim airdrop: " + result.error);
+            return false;
+        }
+    }
+    
+    fn transfer_tokens(to: string, amount: int) -> bool {
+        let result = chain::call(self.contract_address, "transfer", [to, amount]);
+        
+        if result.success {
+            self.show_success_notification("Transfer completed successfully!");
+            return true;
+        } else {
+            self.show_error_notification("Transfer failed: " + result.error);
+            return false;
+        }
+    }
+    
+    fn get_available_airdrops() -> array<string> {
+        // This would query the blockchain for available airdrops
+        // For now, return a mock list
+        return ["project_alpha", "project_beta", "project_gamma"];
+    }
+    
+    // UI Helper Functions
+    fn generate_dashboard_html(data: map<string, any>) -> string {
+        return "
+        <div class='dashboard'>
+            <h1>Welcome, " + data["user"] + "</h1>
+            <div class='balance-card'>
+                <h2>Your Balance</h2>
+                <p>" + data["balance"] + " " + data["token_symbol"] + "</p>
+            </div>
+            <div class='stats-card'>
+                <h2>Token Statistics</h2>
+                <p>Total Supply: " + data["total_supply"] + "</p>
+                <p>Circulating Supply: " + data["circulating_supply"] + "</p>
+            </div>
+        </div>";
+    }
+    
+    fn show_success_notification(message: string) {
+        log::info("ui", "Success: " + message);
+    }
+    
+    fn show_error_notification(message: string) {
+        log::error("ui", "Error: " + message);
+    }
+}
+
+// Admin Interface Service
+// @trust("hybrid")
+// @secure
+service KEYS_AdminInterface {
+    contract_address: string,
+    
+    fn initialize(contract_addr: string) {
+        self.contract_address = contract_addr;
+    }
+    
+    fn render_admin_dashboard() -> string {
+        let stats = chain::query(self.contract_address, "get_token_stats", []);
+        let admin = auth::session().user_id;
+        
+        return self.generate_admin_dashboard_html({
+            "admin": admin,
+            "stats": stats,
+            "contract_address": self.contract_address
+        });
+    }
+    
+    fn create_airdrop_campaign(
+        project_id: string,
+        recipients: array<string>,
+        amounts: array<int>
+    ) -> bool {
+        if !auth::has_role(auth::session(), "admin") {
+            self.show_error_notification("Admin access required");
+            return false;
+        }
+        
+        let result = chain::call(self.contract_address, "set_airdrop_allocation", [
+            project_id, recipients, amounts
+        ]);
+        
+        if result.success {
+            self.show_success_notification("Airdrop campaign created: " + project_id);
+            log::audit("admin", "Created airdrop campaign: " + project_id);
+            return true;
+        } else {
+            self.show_error_notification("Failed to create airdrop campaign: " + result.error);
+            return false;
+        }
+    }
+    
+    fn perform_initial_distribution() -> bool {
+        if !auth::has_role(auth::session(), "admin") {
+            self.show_error_notification("Admin access required");
+            return false;
+        }
+        
+        let result = chain::call(self.contract_address, "initial_distribution", []);
+        
+        if result.success {
+            self.show_success_notification("Initial distribution completed");
+            log::audit("admin", "Initial distribution performed");
+            return true;
+        } else {
+            self.show_error_notification("Failed to perform initial distribution: " + result.error);
+            return false;
+        }
+    }
+    
+    fn get_admin_stats() -> map<string, any> {
+        let stats = chain::query(self.contract_address, "get_token_stats", []);
+        
+        return {
+            "total_supply": stats["total_supply"],
+            "circulating_supply": stats["circulating_supply"],
+            "initial_distribution_done": stats["initial_distribution_done"],
+            "admin_address": auth::session().user_id,
+            "contract_address": self.contract_address
+        };
+    }
+    
+    // UI Helper Functions
+    fn generate_admin_dashboard_html(data: map<string, any>) -> string {
+        return "
+        <div class='admin-dashboard'>
+            <h1>Admin Dashboard</h1>
+            <div class='admin-info'>
+                <p>Admin: " + data["admin"] + "</p>
+                <p>Contract: " + data["contract_address"] + "</p>
+            </div>
+            <div class='token-stats'>
+                <h2>Token Statistics</h2>
+                <p>Total Supply: " + data["stats"]["total_supply"] + "</p>
+                <p>Circulating Supply: " + data["stats"]["circulating_supply"] + "</p>
+                <p>Initial Distribution: " + data["stats"]["initial_distribution_done"] + "</p>
+            </div>
+        </div>";
+    }
+    
+    fn show_success_notification(message: string) {
+        log::info("admin", "Success: " + message);
+    }
+    
+    fn show_error_notification(message: string) {
+        log::error("admin", "Error: " + message);
+    }
+}
+
+// Deployment Service
+// @trust("hybrid")
+// @secure
+service KEYS_Deployment {
+    fn deploy_keys_token() -> string {
+        // Deploy the KEYS token contract
+        let contract_address = chain::deploy("KEYS_Token", {
+            "name": "KEYS Token",
+            "symbol": "KEYS",
+            "decimals": 18,
+            "total_supply": 120000000 * 10^18
+        });
+        
+        if contract_address != "" {
+            log::info("deployment", "KEYS Token deployed at: " + contract_address);
+            
+            // Initialize tokenomics
+            let result = chain::call(contract_address, "initialize_tokenomics", [
+                self.get_minting_reserve(),
+                self.get_liquidity_reserve(),
+                self.get_ico_reserve(),
+                self.get_team_vesting(),
+                self.get_airdrop_reserve()
+            ]);
+            
+            if result.success {
+                log::info("deployment", "Tokenomics initialized successfully");
+                return contract_address;
+            } else {
+                log::error("deployment", "Failed to initialize tokenomics: " + result.error);
+                return "";
+            }
+        } else {
+            log::error("deployment", "Failed to deploy KEYS Token contract");
+            return "";
+        }
+    }
+    
+    fn verify_deployment(contract_address: string) -> bool {
+        let code = chain::get_code(contract_address);
+        if code.length() > 0 {
+            log::info("verification", "Contract verified at: " + contract_address);
+            return true;
+        } else {
+            log::error("verification", "Contract verification failed");
+            return false;
+        }
+    }
+    
+    // Helper functions for reserve addresses
+    fn get_minting_reserve() -> string {
+        return "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+    }
+    
+    fn get_liquidity_reserve() -> string {
+        return "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+    }
+    
+    fn get_ico_reserve() -> string {
+        return "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+    }
+    
+    fn get_team_vesting() -> string {
+        return "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+    }
+    
+    fn get_airdrop_reserve() -> string {
+        return "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+    }
+}
+
+// Test Suite
+// @test
+service KEYS_TokenTests {
+    fn test_token_deployment() -> bool {
+        // Deploy test contract
+        let contract = chain::deploy("KEYS_Token", {
+            "name": "Test KEYS",
+            "symbol": "TKEYS",
+            "decimals": 18,
+            "total_supply": 1000000 * 10^18
+        });
+        
+        // Verify deployment
+        let total_supply = chain::query(contract, "get_token_stats", [])["total_supply"];
+        assert(total_supply == 1000000 * 10^18, "Total supply mismatch");
+        
+        return true;
+    }
+    
+    fn test_airdrop_functionality() -> bool {
+        let contract = self.deploy_test_contract();
+        let user = "test_user_123";
+        
+        // Set airdrop allocation
+        let result = chain::call(contract, "set_airdrop_allocation", [
+            "test_project",
+            [user],
+            [1000 * 10^18]
+        ]);
+        
+        assert(result.success, "Failed to set airdrop allocation");
+        
+        // Claim airdrop
+        let claim_result = chain::call(contract, "claim_airdrop", ["test_project"]);
+        assert(claim_result.success, "Failed to claim airdrop");
+        
+        // Verify balance
+        let balance = chain::query(contract, "balance_of", [user]);
+        assert(balance == 1000 * 10^18, "Balance mismatch after airdrop");
+        
+        return true;
+    }
+    
+    fn test_transfer_functionality() -> bool {
+        let contract = self.deploy_test_contract();
+        let user1 = "user1";
+        let user2 = "user2";
+        
+        // Transfer tokens
+        let result = chain::call(contract, "transfer", [user2, 500 * 10^18]);
+        assert(result.success, "Transfer failed");
+        
+        // Verify balances
+        let balance1 = chain::query(contract, "balance_of", [user1]);
+        let balance2 = chain::query(contract, "balance_of", [user2]);
+        
+        assert(balance2 == 500 * 10^18, "Recipient balance incorrect");
+        
+        return true;
+    }
+    
+    fn test_admin_permissions() -> bool {
+        let contract = self.deploy_test_contract();
+        let non_admin = "non_admin_user";
+        
+        // Try to set airdrop allocation as non-admin
+        let result = chain::call(contract, "set_airdrop_allocation", [
+            "test_project",
+            [non_admin],
+            [1000 * 10^18]
+        ]);
+        
+        assert(!result.success, "Non-admin should not be able to set allocations");
+        
+        return true;
+    }
+    
+    fn deploy_test_contract() -> string {
+        return chain::deploy("KEYS_Token", {
+            "name": "Test KEYS",
+            "symbol": "TKEYS",
+            "decimals": 18,
+            "total_supply": 1000000 * 10^18
+        });
+    }
+}
+
+// Example Usage
+fn main() {
+    // Deploy the KEYS token
+    let deployment = KEYS_Deployment::new();
+    let contract_address = deployment.deploy_keys_token();
+    
+    if contract_address != "" {
+        // Initialize user interface
+        let user_ui = KEYS_UserInterface::new();
+        user_ui.initialize("user123", contract_address);
+        
+        // Initialize admin interface
+        let admin_ui = KEYS_AdminInterface::new();
+        admin_ui.initialize(contract_address);
+        
+        // Perform initial distribution
+        admin_ui.perform_initial_distribution();
+        
+        // Create an airdrop campaign
+        admin_ui.create_airdrop_campaign(
+            "project_alpha",
+            ["user1", "user2", "user3"],
+            [100 * 10^18, 200 * 10^18, 300 * 10^18]
+        );
+        
+        // User claims airdrop
+        user_ui.claim_airdrop("project_alpha");
+        
+        log::info("main", "KEYS Token system initialized successfully");
+    } else {
+        log::error("main", "Failed to deploy KEYS Token system");
+    }
+}

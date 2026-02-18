@@ -1,0 +1,13 @@
+let x = 10;
+let y = 5;
+
+fn test_addition(a, b) {
+    return a + b;
+}
+
+fn test_division(a, b) {
+    return a / b;
+}
+
+let addition_result = test_addition(100, 200);
+let division_result = test_division(x, y);

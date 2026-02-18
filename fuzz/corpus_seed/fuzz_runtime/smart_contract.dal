@@ -1,0 +1,243 @@
+// Example: DeFi Smart Contract with Hybrid Trust
+// This demonstrates the language's capabilities for building decentralized applications
+// that integrate with centralized services
+
+@trust("hybrid")
+@secure
+service DeFiProtocol {
+    // State variables
+    total_supply: int;
+    balances: map<string, int>;
+    oracle_feeds: map<string, OracleFeed>;
+    admin_addresses: set<string>;
+    
+    // Events
+    event Transfer(from: string, to: string, amount: int);
+    event PriceUpdate(asset: string, price: int);
+    event AdminAction(admin: string, action: string);
+}
+
+@txn
+@limit(10000)
+fn initialize_protocol() -> bool {
+    // Initialize the protocol with basic parameters
+    let admin = auth::session().user_id;
+    
+    if (!auth::has_role(auth::session(), "admin") ) {
+        log::error("Unauthorized initialization attempt", {
+            "user": admin,
+            "required_role": "admin"
+        });
+        return false;
+    }
+    
+    // Set up oracle feeds for price data
+    let btc_feed = oracle::create_source("bitcoin_price", "https://api.coingecko.com/api/v3/simple/price");
+    let eth_feed = oracle::create_source("ethereum_price", "https://api.coingecko.com/api/v3/simple/price");
+    
+    // Initialize balances
+    balances["admin"] = 1000000; // 1M tokens to admin
+    total_supply = 1000000;
+    
+    log::audit("protocol_initialized", {
+        "admin": admin,
+        "total_supply": total_supply,
+        "timestamp": timestamp()
+    });
+    
+    true
+}
+
+@txn
+@secure
+fn transfer(from: string, to: string, amount: int) -> bool {
+    // Transfer tokens between addresses
+    if (amount <= 0 ) {
+        log::warning("Invalid transfer amount", { "amount": amount });
+        return false;
+    }
+    
+    if (balances[from] < amount ) {
+        log::error("Insufficient balance", {
+            "from": from,
+            "balance": balances[from],
+            "amount": amount
+        });
+        return false;
+    }
+    
+    // Perform the transfer
+    balances[from] = balances[from] - amount;
+    balances[to] = balances[to] + amount;
+    
+    // Emit transfer event
+    event Transfer { from: from, to: to, amount: amount };
+    
+    log::audit("transfer_executed", {
+        "from": from,
+        "to": to,
+        "amount": amount,
+        "new_balance_from": balances[from],
+        "new_balance_to": balances[to]
+    });
+    
+    true
+}
+
+@trust("hybrid")
+fn get_asset_price(asset: string) -> int {
+    // Get current price from oracle with fallback to centralized API
+    let oracle_query = oracle::create_query(asset + "_price");
+    let response = oracle::fetch("price_feed", oracle_query);
+    let price = response.data;
+    return price;
+}
+
+@txn
+@limit(5000)
+fn create_liquidity_pool(asset: string, initial_amount: int) -> bool {
+    // Create a new liquidity pool for an asset
+    let admin = auth::session().user_id;
+    
+    if (!auth::has_role(auth::session(), "admin") ) {
+        log::error("Unauthorized pool creation", { "user": admin });
+        return false;
+    }
+    
+    // Validate initial amount
+    if (initial_amount <= 0 ) {
+        log::error("Invalid initial amount", { "amount": initial_amount });
+        return false;
+    }
+    
+    // Get current asset price
+    let asset_price = get_asset_price(asset);
+    if (asset_price <= 0 ) {
+        log::error("Invalid asset price", { "asset": asset, "price": asset_price });
+        return false;
+    }
+    
+    // Calculate pool tokens to mint
+    let pool_tokens = initial_amount * asset_price / 1000; // Simplified calculation
+    
+    // Mint pool tokens
+    let pool_id = chain::mint("pool_" + asset, {
+        "asset": asset,
+        "initial_amount": initial_amount,
+        "pool_tokens": pool_tokens,
+        "created_by": admin,
+        "created_at": timestamp()
+    });
+    
+    log::audit("liquidity_pool_created", {
+        "pool_id": pool_id,
+        "asset": asset,
+        "initial_amount": initial_amount,
+        "pool_tokens": pool_tokens,
+        "admin": admin
+    });
+    
+    event AdminAction { admin: admin, action: "create_pool" };
+    
+    true
+}
+
+@secure
+fn sync_with_external_system() -> bool {
+    // Synchronize data with external centralized system
+    let sync_target = sync::create_sync_target("https://api.defi-protocol.com/sync", "http")
+        .with_credentials({
+            "api_key": "your_api_key_here",
+            "api_secret": "your_api_secret_here"
+        });
+    
+    let sync_data = {
+        "total_supply": total_supply,
+        "active_users": balances.len(),
+        "last_updated": timestamp()
+    };
+    
+    let result = sync::push(sync_data, sync_target);
+    log::info("Data synchronized", { "timestamp": timestamp() });
+    return true;
+}
+
+@txn
+@limit(1000)
+fn emergency_pause() -> bool {
+    // Emergency pause functionality
+    let admin = auth::session().user_id;
+    
+    if (!auth::has_role(auth::session(), "super_admin") ) {
+        log::error("Unauthorized emergency pause", { "user": admin });
+        return false;
+    }
+    
+    // Pause all operations
+    log::audit("emergency_pause_activated", {
+        "admin": admin,
+        "timestamp": timestamp(),
+        "reason": "emergency_pause"
+    });
+    
+    event AdminAction { admin: admin, action: "emergency_pause" };
+    
+    // Notify external systems
+    let webhook_config = service::create_webhook("https://alerts.defi-protocol.com/emergency", "POST");
+    let alert_data = {
+        "action": "emergency_pause",
+        "admin": admin,
+        "timestamp": timestamp(),
+        "severity": "critical"
+    };
+    
+    let result = service::webhook(webhook_config, alert_data);
+    log::info("Emergency alert sent", { "admin": admin });
+    
+    true
+}
+
+// Main function to demonstrate the protocol
+fn main() {
+    log::info("DeFi Protocol starting", { "version": "1.0.0" });
+    
+    // Initialize the protocol
+    if (!initialize_protocol() ) {
+        log::error("Failed to initialize protocol", {});
+        return;
+    }
+    
+    // Create a liquidity pool
+    if (create_liquidity_pool("BTC", 1000) ) {
+        log::info("BTC liquidity pool created", { "amount": 1000 });
+    }
+    
+    // Perform some transfers
+    if (transfer("admin", "user1", 10000) ) {
+        log::info("Transfer completed", { "from": "admin", "to": "user1", "amount": 10000 });
+    }
+    
+    if (transfer("admin", "user2", 5000) ) {
+        log::info("Transfer completed", { "from": "admin", "to": "user2", "amount": 5000 });
+    }
+    
+    // Get current prices
+    let btc_price = get_asset_price("BTC");
+    let eth_price = get_asset_price("ETH");
+    
+    log::info("Current prices", {
+        "BTC": btc_price,
+        "ETH": eth_price
+    });
+    
+    // Sync with external system
+    if (sync_with_external_system() ) {
+        log::info("External sync completed", {});
+    }
+    
+    log::info("DeFi Protocol demo completed", {
+        "total_transfers": 2,
+        "pools_created": 1,
+        "price_queries": 2
+    });
+}

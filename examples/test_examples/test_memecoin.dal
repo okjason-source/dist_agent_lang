@@ -1,0 +1,131 @@
+@trust("decentralized")
+@chain("ethereum")
+service TEST {
+    name: string = "TEST";
+    symbol: string = "TEST";
+    decimals: int = 18;
+    total_supply: int = 1000000000;
+    balances: map<string, int> = {};
+    owner: string = "";
+    
+    fn initialize(initial_owner: string) {
+        self.owner = initial_owner;
+        self.balances[initial_owner] = self.total_supply;
+        print("TEST Memecoin initialized!");
+        print("Total supply: " + self.total_supply);
+        print("Owner: " + initial_owner);
+    }
+    
+    fn get_name() -> string {
+        return self.name;
+    }
+    
+    fn get_symbol() -> string {
+        return self.symbol;
+    }
+    
+    fn get_total_supply() -> int {
+        return self.total_supply;
+    }
+    
+    fn get_decimals() -> int {
+        return self.decimals;
+    }
+    
+    fn balance_of(address: string) -> int {
+        if (self.balances[address] == null) {
+            return 0;
+        }
+        return self.balances[address];
+    }
+    
+    fn transfer(to: string, amount: int) -> bool {
+        let from = msg::sender();
+        let sender_balance = self.balance_of(from);
+        if (sender_balance < amount) {
+            print("Insufficient balance!");
+            return false;
+        }
+        if (amount <= 0) {
+            print("Invalid transfer amount!");
+            return false;
+        }
+        self.balances[from] = sender_balance - amount;
+        let to_balance = self.balance_of(to);
+        self.balances[to] = to_balance + amount;
+        print("Transfer successful!");
+        print("From: " + from);
+        print("To: " + to);
+        print("Amount: " + amount);
+        return true;
+    }
+    
+    fn transfer_from(from: string, to: string, amount: int) -> bool {
+        if (msg::sender() != self.owner && msg::sender() != from) {
+            print("Unauthorized transfer!");
+            return false;
+        }
+        let from_balance = self.balance_of(from);
+        if (from_balance < amount) {
+            print("Insufficient balance!");
+            return false;
+        }
+        self.balances[from] = from_balance - amount;
+        let to_balance = self.balance_of(to);
+        self.balances[to] = to_balance + amount;
+        print("Transfer from successful!");
+        return true;
+    }
+    
+    fn mint(to: string, amount: int) -> bool {
+        if (msg::sender() != self.owner) {
+            print("Only owner can mint!");
+            return false;
+        }
+        if (amount <= 0) {
+            print("Invalid mint amount!");
+            return false;
+        }
+        let to_balance = self.balance_of(to);
+        self.balances[to] = to_balance + amount;
+        self.total_supply = self.total_supply + amount;
+        print("Minted " + amount + " TEST tokens to " + to);
+        return true;
+    }
+    
+    fn burn(amount: int) -> bool {
+        let sender = msg::sender();
+        let sender_balance = self.balance_of(sender);
+        if (sender_balance < amount) {
+            print("Insufficient balance to burn!");
+            return false;
+        }
+        if (amount <= 0) {
+            print("Invalid burn amount!");
+            return false;
+        }
+        self.balances[sender] = sender_balance - amount;
+        self.total_supply = self.total_supply - amount;
+        print("Burned " + amount + " TEST tokens");
+        return true;
+    }
+    
+    fn get_info() -> map<string, any> {
+        return {
+            "name": self.name,
+            "symbol": self.symbol,
+            "decimals": self.decimals,
+            "total_supply": self.total_supply,
+            "owner": self.owner
+        };
+    }
+}
+
+let test_coin = TEST::new();
+test_coin.initialize("0x1234567890123456789012345678901234567890");
+let info = test_coin.get_info();
+print("=== TEST Memecoin Contract Info ===");
+print("Name: " + info["name"]);
+print("Symbol: " + info["symbol"]);
+print("Total Supply: " + info["total_supply"]);
+print("Owner: " + info["owner"]);

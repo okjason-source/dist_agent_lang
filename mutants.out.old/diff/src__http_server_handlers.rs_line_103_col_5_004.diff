@@ -1,0 +1,35 @@
+--- src/http_server_handlers.rs
++++ replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([("xyzzy".into(), String::new())]))
+@@ -95,31 +95,17 @@
+             return false;
+         }
+     }
+     true
+ }
+ 
+ /// Extract path params from a request path using a route pattern (e.g. "/users/:id" and "/users/123" -> {"id": "123"}).
+ fn path_params_from_match(pattern: &str, path: &str) -> Option<HashMap<String, String>> {
+-    let pattern_segments: Vec<&str> = pattern.split('/').filter(|s| !s.is_empty()).collect();
+-    let path_segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
+-    if pattern_segments.len() != path_segments.len() {
+-        return None;
+-    }
+-    let mut params = HashMap::new();
+-    for (p, v) in pattern_segments.iter().zip(path_segments.iter()) {
+-        if p.starts_with(':') && !v.is_empty() {
+-            let param_name = p.trim_start_matches(':');
+-            params.insert(param_name.to_string(), (*v).to_string());
+-        } else if *p != *v {
+-            return None;
+-        }
+-    }
+-    Some(params)
++    Some(HashMap::from_iter([("xyzzy".into(), String::new())])) /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ /// Get route handler name and path params from method and path. Supports exact match and path-param patterns.
+ pub fn get_route_handler_name_and_params(
+     server: &crate::stdlib::web::HttpServer,
+     method: &str,
+     path: &str,
+ ) -> Option<(String, HashMap<String, String>)> {

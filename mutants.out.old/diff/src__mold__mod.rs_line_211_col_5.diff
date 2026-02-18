@@ -1,0 +1,25 @@
+--- src/mold/mod.rs
++++ replace scaffold_mold -> Result<(), String> with Ok(())
+@@ -203,21 +203,10 @@
+             }
+         }
+     }
+     Err(format!("mold not found: {} (tried path, {}.mold.json, {}.mold.dal, and local list)", path_or_name, path_or_name, path_or_name))
+ }
+ 
+ /// Scaffold a new mold file at `out_path` with minimal JSON (strict fields only).
+ pub fn scaffold_mold(name: &str, out_path: &Path) -> Result<(), String> {
+-    let content = format!(
+-        r#"{{
+-  "name": "{}",
+-  "version": "1.0",
+-  "agent": {{
+-    "type": "AI"
+-  }}
+-}}
+-"#,
+-        name
+-    );
+-    std::fs::write(out_path, content).map_err(|e| format!("write {}: {}", out_path.display(), e))
++    Ok(()) /* ~ changed by cargo-mutants ~ */
+ }

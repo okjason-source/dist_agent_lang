@@ -1,0 +1,5 @@
+service SimpleTest {
+    fn test_function() -> bool {
+        return true;
+    }
+}

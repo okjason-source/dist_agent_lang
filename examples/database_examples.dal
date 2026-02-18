@@ -1,0 +1,895 @@
+// Phase 3: Database & Storage Integration Examples
+// Demonstrates comprehensive data persistence and storage capabilities
+
+// Example 1: Advanced Database Service with Connection Pooling
+@persistent
+@trust("hybrid")
+@chain("ethereum")
+@secure
+service AdvancedDatabaseService {
+    // Enhanced state with connection pooling
+    primary_pool: string;
+    read_replica_pool: string;
+    cache: string;
+    migration_manager: string;
+
+    fn initialize() -> Result<Unit, Error> {
+        // Create connection pools for better performance
+        let primary_pool = database::create_connection_pool(
+            "primary_pool",
+            "postgresql://localhost:5432/myapp",
+            20, // max connections
+            5   // min connections
+        );
+
+        let read_replica_pool = database::create_connection_pool(
+            "read_replica_pool",
+            "postgresql://replica:5432/myapp",
+            50, // max connections for read replicas
+            10  // min connections
+        );
+
+        // Create multi-level caching
+        let cache_config = {
+            "cache_type": "redis",
+            "max_size": 1000,
+            "ttl_seconds": 3600,
+            "redis_url": "redis://localhost:6379"
+        };
+        let cache = database::create_cache(cache_config);
+
+        // Setup migration system
+        let migration_manager = database::create_migration_manager("schema_migrations");
+
+        // Initialize database schema
+        self.initialize_database_schema();
+
+        // Setup monitoring
+        self.setup_performance_monitoring();
+
+        self.primary_pool = primary_pool;
+        self.read_replica_pool = read_replica_pool;
+        self.cache = cache;
+        self.migration_manager = migration_manager;
+
+        log::info("database", {
+            "service": "AdvancedDatabaseService",
+            "status": "initialized",
+            "primary_pool": primary_pool,
+            "read_replica_pool": read_replica_pool,
+            "cache": cache
+        });
+
+        return Ok(Unit);
+    }
+
+    fn initialize_database_schema() -> Result<Unit, Error> {
+        // Create migration for initial schema
+        let create_sql = "CREATE TABLE IF NOT EXISTS users (" +
+            "id SERIAL PRIMARY KEY, " +
+            "username VARCHAR(255) UNIQUE NOT NULL, " +
+            "email VARCHAR(255) UNIQUE NOT NULL, " +
+            "wallet_address VARCHAR(42), " +
+            "profile_data JSONB, " +
+            "created_at TIMESTAMP DEFAULT NOW(), " +
+            "updated_at TIMESTAMP DEFAULT NOW()" +
+            "); " +
+            "CREATE TABLE IF NOT EXISTS products (" +
+            "id SERIAL PRIMARY KEY, " +
+            "name VARCHAR(255) NOT NULL, " +
+            "description TEXT, " +
+            "price DECIMAL(10,2) NOT NULL, " +
+            "category VARCHAR(100), " +
+            "inventory_count INTEGER DEFAULT 0, " +
+            "metadata JSONB, " +
+            "created_at TIMESTAMP DEFAULT NOW()" +
+            "); " +
+            "CREATE TABLE IF NOT EXISTS orders (" +
+            "id SERIAL PRIMARY KEY, " +
+            "user_id INTEGER REFERENCES users(id), " +
+            "total_amount DECIMAL(10,2) NOT NULL, " +
+            "status VARCHAR(50) DEFAULT 'pending', " +
+            "order_data JSONB, " +
+            "blockchain_tx_hash VARCHAR(66), " +
+            "created_at TIMESTAMP DEFAULT NOW()" +
+            "); " +
+            "CREATE INDEX idx_users_wallet ON users(wallet_address); " +
+            "CREATE INDEX idx_products_category ON products(category); " +
+            "CREATE INDEX idx_orders_user ON orders(user_id); " +
+            "CREATE INDEX idx_orders_status ON orders(status);";
+        
+        let drop_sql = "DROP TABLE IF EXISTS orders; " +
+            "DROP TABLE IF EXISTS products; " +
+            "DROP TABLE IF EXISTS users;";
+        
+        let migration = database::create_migration("001", "create_initial_tables", create_sql, drop_sql);
+
+        // Apply migration
+        let connection = database::get_connection_from_pool(self.primary_pool);
+        let success = database::apply_migration(self.migration_manager, connection, migration);
+
+        if (!success) {
+            return Err(Error::new("Migration failed", "Failed to apply initial schema migration"));
+        }
+
+        return Ok(Unit);
+    }
+
+    fn setup_performance_monitoring() -> Result<Unit, Error> {
+        // Setup query performance monitoring
+        log::info("database", {
+            "action": "performance_monitoring_setup",
+            "message": "Database performance monitoring enabled"
+        });
+
+        return Ok(Unit);
+    }
+
+    // === ADVANCED QUERY OPERATIONS ===
+
+    fn create_user_with_validation(user_data: any) -> Result<User, Error> {
+        // Validate input data
+        let validation_rules = [
+            database::create_validation_rule("username", "required", Value::String(""), "Username is required"),
+            database::create_validation_rule("username", "min_length", Value::Int(3), "Username must be at least 3 characters"),
+            database::create_validation_rule("email", "required", Value::String(""), "Email is required"),
+            database::create_validation_rule("email", "email", Value::String(""), "Valid email is required"),
+            database::create_validation_rule("wallet_address", "required", Value::String(""), "Wallet address is required")
+        ];
+
+        let validation_result = database::validate_data(user_data, validation_rules);
+
+        if (!validation_result.is_valid) {
+            return Err(Error::new("Validation failed", validation_result.errors.join(", ")));
+        }
+
+        // Check cache first
+        let cache_key = "user_wallet_" + user_data["wallet_address"];
+        let cached_user = database::cache_get(self.cache, cache_key);
+
+        if (cached_user.is_some()) {
+            log::info("database", { "action": "cache_hit", "key": cache_key });
+            return Ok(cached_user.unwrap());
+        }
+
+        // Create user using query builder for type safety
+        let qb = database::create_query_builder("users");
+        database::qb_select(qb, ["id", "username", "email", "wallet_address", "profile_data"]);
+
+        let insert_sql = "INSERT INTO users (username, email, wallet_address, profile_data) VALUES ($1, $2, $3, $4) RETURNING id, username, email, wallet_address, profile_data";
+
+        let connection = database::get_connection_from_pool(self.primary_pool);
+        let result = database::query(connection, insert_sql, [
+            user_data["username"],
+            user_data["email"],
+            user_data["wallet_address"],
+            user_data["profile_data"]
+        ]);
+
+        // Cache the result
+        database::cache_set(self.cache, cache_key, result[0], Some(300)); // 5 minute TTL
+
+        // Return connection to pool
+        database::return_connection_to_pool(self.primary_pool, connection);
+
+        // Log query performance
+        database::log_query_stats(insert_sql, 45, 1); // Simulated execution time
+
+        return Ok(result[0]);
+    }
+
+    fn get_user_with_joins(user_id: int) -> Result<UserWithOrders, Error> {
+        // Use query builder for complex joins
+        let qb = database::create_query_builder("users");
+        database::qb_select(qb, [
+            "u.id", "u.username", "u.email", "u.wallet_address",
+            "o.id as order_id", "o.total_amount", "o.status", "o.created_at as order_date"
+        ]);
+
+        database::qb_join(qb, "LEFT", "orders", "u.id", "=", Value::String("o.user_id"));
+        database::qb_where(qb, "u.id", "=", Value::Int(user_id));
+        database::qb_order_by(qb, "o.created_at", "DESC");
+        database::qb_limit(qb, 10); // Get user's last 10 orders
+
+        let sql = database::qb_build_sql(qb);
+
+        let connection = database::get_connection_from_pool(self.read_replica_pool);
+        let result = database::qb_execute(qb, connection);
+
+        // Return connection to pool
+        database::return_connection_to_pool(self.read_replica_pool, connection);
+
+        return Ok(result);
+    }
+
+    fn get_popular_products_with_cache(category: string, limit: int) -> Result<list<any>, Error> {
+        let cache_key = "popular_products_" + category + "_" + limit.to_string();
+
+        // Check cache first
+        let cached_result = database::cache_get(self.cache, cache_key);
+
+        if (cached_result.is_some()) {
+            log::info("database", { "action": "cache_hit", "key": cache_key });
+            return Ok(cached_result.unwrap());
+        }
+
+        // Query from database
+        let qb = database::create_query_builder("products");
+        database::qb_select(qb, ["id", "name", "description", "price", "category", "inventory_count"]);
+
+        if (!category.is_empty()) {
+            database::qb_where(qb, "category", "=", Value::String(category));
+        }
+
+        database::qb_where(qb, "inventory_count", ">", Value::Int(0));
+        database::qb_order_by(qb, "price", "ASC");
+        database::qb_limit(qb, limit);
+
+        let connection = database::get_connection_from_pool(self.read_replica_pool);
+        let result = database::qb_execute(qb, connection);
+
+        // Cache the result for 10 minutes
+        database::cache_set(self.cache, cache_key, result, Some(600));
+
+        // Return connection to pool
+        database::return_connection_to_pool(self.read_replica_pool, connection);
+
+        return Ok(result);
+    }
+
+    // === FILE SYSTEM OPERATIONS ===
+
+    fn save_user_document(user_id: int, document_name: string, content: string) -> Result<string, Error> {
+        // Create user documents directory
+        let user_dir = "/data/users/" + user_id.to_string() + "/documents";
+        database::create_directory(user_dir.clone());
+
+        // Save document
+        let file_path = user_dir + "/" + document_name + ".json";
+        let success = database::write_file(file_path.clone(), content);
+
+        if (!success) {
+            return Err(Error::new("File save failed", "Failed to save user document"));
+        }
+
+        // Update user's document metadata
+        let metadata = {
+            "document_name": document_name,
+            "file_path": file_path.clone(),
+            "size": content.length,
+            "uploaded_at": chain::get_block_timestamp(1),
+            "checksum": crypto::hash(content, "SHA256")
+        };
+
+        let update_sql = "
+            UPDATE users
+//             SET profile_data = profile_data 
+            WHERE id = $2
+        ";
+
+        let connection = database::get_connection_from_pool(self.primary_pool);
+        database::query(connection, update_sql, [metadata, user_id]);
+        database::return_connection_to_pool(self.primary_pool, connection);
+
+        return Ok(file_path);
+    }
+
+    fn get_user_documents(user_id: int) -> Result<list<any>, Error> {
+        let user_dir = "/data/users/" + user_id.to_string() + "/documents";
+
+        if (!database::file_exists(user_dir.clone())) {
+            return Ok([]); // No documents yet
+        }
+
+        let files = database::list_directory(user_dir);
+
+        // Get detailed info for each file
+        let documents = [];
+        for file_path in files {
+            let file_info = database::get_file_info(file_path);
+            let file_type = "other";
+            if (file_path.ends_with(".json")) {
+                file_type = "json";
+            }
+            let doc = {
+                "name": file_info.name,
+                "path": file_info.path,
+                "size": file_info.size,
+                "modified_at": file_info.modified_at,
+                "type": file_type
+            };
+            documents.push(doc);
+        }
+
+        return Ok(documents);
+    }
+
+    // === BACKUP AND REPLICATION ===
+
+    fn create_database_backup(backup_type: string) -> Result<BackupInfo, Error> {
+        let encryption_key = null;
+        if (backup_type == "secure") {
+            encryption_key = "my_encryption_key";
+        }
+        let exclude_tables = [];
+        if (backup_type == "minimal") {
+            exclude_tables = ["audit_logs", "temp_data"];
+        }
+        let backup_options = {
+            "include_data": backup_type == "full",
+            "include_schema": true,
+            "compression": true,
+            "encryption_key": encryption_key,
+            "exclude_tables": exclude_tables
+        };
+
+        let connection = database::get_connection_from_pool(self.primary_pool);
+        let backup_info = database::create_backup(connection, backup_options);
+        database::return_connection_to_pool(self.primary_pool, connection);
+
+        // Store backup metadata
+        let metadata_path = "/backups/metadata/" + backup_info.backup_path + ".json";
+        let metadata = {
+            "backup_id": backup_info.backup_path,
+            "created_at": backup_info.backup_date,
+            "size": backup_info.size,
+            "tables_count": backup_info.tables_count,
+            "rows_count": backup_info.rows_count,
+            "backup_type": backup_type
+        };
+
+        database::write_file(metadata_path, json::serialize(metadata));
+
+        log::info("database", {
+            "action": "backup_created",
+            "backup_id": backup_info.backup_path,
+            "type": backup_type,
+            "size": backup_info.size
+        });
+
+        return Ok(backup_info);
+    }
+
+    fn restore_from_backup(backup_id: string) -> Result<bool, Error> {
+        // Read backup metadata
+        let metadata_path = "/backups/metadata/" + backup_id + ".json";
+        let metadata_content = database::read_file(metadata_path);
+
+        if (metadata_content.is_empty()) {
+            return Err(Error::new("Backup not found", "Backup " + backup_id + " not found"));
+        }
+
+        let metadata = json::parse(metadata_content);
+
+        // Perform restore
+        let connection = database::get_connection_from_pool(self.primary_pool);
+        let success = database::restore_from_backup(connection, backup_id);
+        database::return_connection_to_pool(self.primary_pool, connection);
+
+        if (success) {
+            log::info("database", {
+                "action": "backup_restored",
+                "backup_id": backup_id,
+                "tables_restored": metadata["tables_count"],
+                "rows_restored": metadata["rows_count"]
+            });
+        }
+
+        return Ok(success);
+    }
+
+    // === PERFORMANCE MONITORING ===
+
+    fn get_performance_report() -> PerformanceReport {
+        let metrics = database::get_database_metrics(self.primary_pool);
+
+        let report = {
+            "period": "last_24_hours",
+            "total_queries": metrics.total_queries,
+            "slow_queries": metrics.slow_queries,
+            "average_response_time": metrics.average_query_time,
+            "cache_hit_ratio": metrics.cache_hit_ratio,
+            "active_connections": metrics.connections_active,
+            "idle_connections": metrics.connections_idle,
+            "top_slow_queries": self.get_top_slow_queries(),
+            "connection_pool_status": self.get_connection_pool_status(),
+            "generated_at": chain::get_block_timestamp(1)
+        };
+
+        // Cache the report for 5 minutes
+        database::cache_set(self.cache, "performance_report", report, Some(300));
+
+        return report;
+    }
+
+    fn get_top_slow_queries() -> list<any> {
+        // In a real implementation, this would query a performance monitoring table
+        return [
+            {
+                "query": "SELECT * FROM orders WHERE user_id = $1",
+                "avg_execution_time": 2500,
+                "call_count": 150,
+                "last_executed": "2024-01-01T10:30:00Z"
+            },
+            {
+                "query": "SELECT * FROM products WHERE category = $1 ORDER BY price",
+                "avg_execution_time": 1800,
+                "call_count": 89,
+                "last_executed": "2024-01-01T10:25:00Z"
+            }
+        ];
+    }
+
+    fn get_connection_pool_status() -> ConnectionPoolStatus {
+        return {
+            "primary_pool": {
+                "active_connections": 8,
+                "idle_connections": 12,
+                "total_connections": 20,
+                "waiting_requests": 0
+            },
+            "read_replica_pool": {
+                "active_connections": 25,
+                "idle_connections": 25,
+                "total_connections": 50,
+                "waiting_requests": 2
+            }
+        };
+    }
+
+    // === CACHING STRATEGIES ===
+
+    fn get_user_with_smart_cache(user_id: int) -> Result<User, Error> {
+        let cache_key = "user_" + user_id.to_string();
+
+        // Try cache first
+        let cached_user = database::cache_get(self.cache, cache_key);
+
+        if (cached_user.is_some()) {
+            log::info("database", { "action": "cache_hit", "user_id": user_id });
+            return Ok(cached_user.unwrap());
+        }
+
+        // Cache miss - query database
+        log::info("database", { "action": "cache_miss", "user_id": user_id });
+
+        let qb = database::create_query_builder("users");
+        database::qb_select(qb, ["id", "username", "email", "wallet_address", "profile_data"]);
+        database::qb_where(qb, "id", "=", Value::Int(user_id));
+
+        let connection = database::get_connection_from_pool(self.read_replica_pool);
+        let result = database::qb_execute(qb, connection);
+        database::return_connection_to_pool(self.read_replica_pool, connection);
+
+        if (result.is_empty()) {
+            return Err(Error::new("User not found", "User with ID " + user_id.to_string() + " not found"));
+        }
+
+        let user = result[0];
+
+        // Cache with appropriate TTL based on user activity
+        let ttl = 3600; // Default 1 hour
+        if (self.is_recently_active(user_id)) {
+            ttl = 600; // 10 min for recently active users
+        }
+        database::cache_set(self.cache, cache_key, user, Some(ttl));
+
+        return Ok(user);
+    }
+
+    fn invalidate_user_cache(user_id: int) -> bool {
+        let cache_keys = [
+            // format!("user_{}", user_id),
+            // format!("user_wallet_{}", user_id),
+            // format!("user_orders_{}", user_id)
+        ];
+
+        let mut success_count = 0;
+        for key in cache_keys  {
+            if (database::cache_delete(self.cache, key)) {
+                success_count = success_count + 1;
+            }
+        }
+
+        log::info("database", {
+            "action": "cache_invalidated",
+            "user_id": user_id,
+            "keys_invalidated": success_count
+        });
+
+        return success_count > 0;
+    }
+
+    fn is_recently_active(user_id: int) -> bool {
+        // Check if (user has been active in the last hour
+        // This would typically query an activity log table
+        return true; // Simplified
+    }
+
+    // === DATA VALIDATION EXAMPLES ===
+
+    fn validate_order_data(order_data: any) -> ValidationResult {
+        let rules = [
+            database::create_validation_rule("user_id", "required", Value::String(""), "User ID is required"),
+            database::create_validation_rule("total_amount", "required", Value::String(""), "Total amount is required"),
+            database::create_validation_rule("total_amount", "min", Value::Float(0.01), "Total amount must be greater than 0"),
+            database::create_validation_rule("items", "required", Value::String(""), "Order must have items"),
+            database::create_validation_rule("items", "min_length", Value::Int(1), "Order must have at least one item")
+        ];
+
+        return database::validate_data(order_data, rules);
+    }
+
+    fn process_order_with_validation(order_data: any) -> Result<Order, Error> {
+        let validation = self.validate_order_data(order_data);
+
+        if (!validation.is_valid) {
+            return Err(Error::new("Order validation failed", validation.errors.join(", ")));
+        }
+
+        // Process the order
+        let order_sql = "
+            INSERT INTO orders (user_id, total_amount, order_data)
+            VALUES ($1, $2, $3)
+            RETURNING id, user_id, total_amount, status, order_data, created_at
+        ";
+
+        let connection = database::get_connection_from_pool(self.primary_pool);
+        let result = database::query(connection, order_sql, [
+            order_data["user_id"],
+            order_data["total_amount"],
+            order_data["order_data"]
+        ]);
+        database::return_connection_to_pool(self.primary_pool, connection);
+
+        // Invalidate relevant caches
+        self.invalidate_user_cache(order_data["user_id"]);
+
+        // Log query performance
+        database::log_query_stats(order_sql, 120, 1);
+
+        return Ok(result[0]);
+    }
+}
+
+// Example 2: File Storage Service
+// @persistent
+// @trust("hybrid")
+@secure
+service FileStorageService {
+    base_path: string;
+    max_file_size: int;
+    allowed_extensions: list<string>;
+
+    fn initialize() {
+        self.base_path = "/data/storage";
+        self.max_file_size = 10485760; // 10MB
+        self.allowed_extensions = ["pdf", "doc", "docx", "txt", "json", "jpg", "png", "gif"];
+
+        // Create storage directory structure
+        database::create_directory(self.base_path + "/documents");
+        database::create_directory(self.base_path + "/images");
+        database::create_directory(self.base_path + "/temp");
+
+        log::info("storage", {
+            "service": "FileStorageService",
+            "base_path": self.base_path,
+            "max_file_size": self.max_file_size
+        });
+    }
+
+    fn store_file(file_name: string, content: string, category: string) -> Result<FileMetadata, Error> {
+        // Validate file
+        if (content.length > self.max_file_size) {
+            return Err(Error::new("File too large", "File size " + content.length.to_string() + " exceeds maximum " + self.max_file_size.to_string()));
+        }
+
+        let extension = self.get_file_extension(file_name);
+        if (!self.allowed_extensions.contains(extension)) {
+            return Err(Error::new("Invalid file type", "Extension " + extension + " not allowed"));
+        }
+
+        // Generate unique filename
+        let unique_filename = chain::get_block_timestamp(1).to_string() + "_" + file_name;
+        let file_path = self.base_path + "/" + category + "/" + unique_filename;
+
+        // Save file
+        let success = database::write_file(file_path.clone(), content);
+
+        if (!success) {
+            return Err(Error::new("File save failed", "Failed to write file to storage"));
+        }
+
+        // Create metadata
+        let metadata = {
+            "file_id": crypto::generate_random(16),
+            "original_name": file_name,
+            "stored_name": unique_filename,
+            "path": file_path.clone(),
+            "size": content.length,
+            "extension": extension,
+            "category": category,
+            "uploaded_at": chain::get_block_timestamp(1),
+            "checksum": crypto::hash(content, "SHA256"),
+            "mime_type": self.get_mime_type(extension)
+        };
+
+        // Store metadata in database
+        let metadata_sql = "
+            INSERT INTO file_metadata (file_id, original_name, stored_name, path, size, extension, category, uploaded_at, checksum, mime_type)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        ";
+
+        // Save metadata (simplified - would use actual database connection)
+        let metadata_path = self.base_path + "/metadata/" + metadata["file_id"] + ".json";
+        database::write_file(metadata_path, json::serialize(metadata));
+
+        log::info("storage", {
+            "action": "file_stored",
+            "file_id": metadata["file_id"],
+            "file_name": file_name,
+            "size": content.length,
+            "category": category
+        });
+
+        return Ok(metadata);
+    }
+
+    fn retrieve_file(file_id: string) -> Result<FileContent, Error> {
+        // Load metadata
+        let metadata_path = self.base_path + "/metadata/" + file_id + ".json";
+        let metadata_content = database::read_file(metadata_path);
+
+        if (metadata_content.is_empty()) {
+            return Err(Error::new("File not found", "File " + file_id + " not found"));
+        }
+
+        let metadata = json::parse(metadata_content);
+        let file_content = database::read_file(metadata["path"]);
+
+        if (file_content.is_empty()) {
+            return Err(Error::new("File read failed", "Failed to read file " + file_id));
+        }
+
+        // Verify checksum
+        let calculated_checksum = crypto::hash(file_content, "SHA256");
+        if (calculated_checksum != metadata["checksum"]) {
+            return Err(Error::new("File integrity check failed", "File checksum mismatch"));
+        }
+
+        return Ok({
+            "file_id": file_id,
+            "content": file_content,
+            "metadata": metadata
+        });
+    }
+
+    fn delete_file(file_id: string) -> Result<bool, Error> {
+        // Load metadata
+        let metadata_path = self.base_path + "/metadata/" + file_id + ".json";
+        let metadata_content = database::read_file(metadata_path);
+
+        if (metadata_content.is_empty()) {
+            return Err(Error::new("File not found", "File " + file_id + " not found"));
+        }
+
+        let metadata = json::parse(metadata_content);
+
+        // Delete actual file
+        let file_deleted = database::delete_file(metadata["path"]);
+
+        // Delete metadata file
+        let metadata_deleted = database::delete_file(metadata_path);
+
+        let success = file_deleted && metadata_deleted;
+
+        if (success) {
+            log::info("storage", {
+                "action": "file_deleted",
+                "file_id": file_id,
+                "file_path": metadata["path"]
+            });
+        }
+
+        return Ok(success);
+    }
+
+    fn get_file_extension(filename: string) -> string {
+        let parts = filename.split(".");
+        if (parts.length > 1) {
+            return parts[parts.length - 1];
+        }
+        return "";
+    }
+
+    fn get_mime_type(extension: string) -> string {
+        let mime_types = {
+            "pdf": "application/pdf",
+            "doc": "application/msword",
+            "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "txt": "text/plain",
+            "json": "application/json",
+            "jpg": "image/jpeg",
+            "png": "image/png",
+            "gif": "image/gif"
+        };
+
+        return mime_types.get(extension).unwrap_or("application/octet-stream");
+    }
+}
+
+// Example 3: Caching Layer Service
+// @cached
+// @trust("hybrid")
+service CachingService {
+    primary_cache: any; // Redis cache
+    backup_cache: any; // Memory cache (in-memory cache)    
+    cache_strategy: string;
+
+    fn initialize() {
+        self.cache_strategy = "primary_with_backup";
+        // Create multi-level caching
+        let primary_config = {
+            "cache_type": "redis",
+            "max_size": 10000,
+            "ttl_seconds": 3600,
+            "redis_url": "redis://localhost:6379"
+        };
+
+        let backup_config = {
+            "cache_type": "memory",
+            "max_size": 5000,
+            "ttl_seconds": 1800
+        };
+
+        self.primary_cache = database::create_cache(primary_config);
+        self.backup_cache = database::create_cache(backup_config);
+        self.cache_strategy = "primary_with_backup";
+
+        log::info("cache", {
+            "service": "CachingService",
+            "strategy": self.cache_strategy,
+            "primary_cache": self.primary_cache,
+            "backup_cache": self.backup_cache
+        });
+    }
+
+    fn get_with_fallback(key: string) -> Option<any> {
+        // Try primary cache first
+        let primary_result = database::cache_get(self.primary_cache, key);
+
+        if (primary_result.is_some()) {
+            log::info("cache", { "action": "primary_hit", "key": key });
+            return primary_result;
+        }
+
+        // Try backup cache
+        let backup_result = database::cache_get(self.backup_cache, key);
+
+        if (backup_result.is_some()) {
+            log::info("cache", { "action": "backup_hit", "key": key });
+            // Promote to primary cache
+            database::cache_set(self.primary_cache, key, backup_result.unwrap(), Some(1800));
+            return backup_result;
+        }
+
+        log::info("cache", { "action": "cache_miss", "key": key });
+        return None;
+    }
+
+    fn set_with_strategy(key: string, value: any, ttl: Option<int>) {
+        // Set in primary cache
+        database::cache_set(self.primary_cache, key.clone(), value.clone(), ttl);
+
+        // Also set in backup cache with shorter TTL
+//         let backup_ttl = ttl.map(
+        database::cache_set(self.backup_cache, key, value, Some(backup_ttl));
+
+        log::info("cache", {
+            "action": "set_with_strategy",
+            "strategy": self.cache_strategy,
+            "ttl": ttl.unwrap_or(3600),
+            "backup_ttl": backup_ttl
+        });
+    }
+
+    fn invalidate_pattern(pattern: string) {
+        // This would require more advanced cache operations
+        // For now, we'll just clear both caches
+        let primary_cleared = database::cache_clear(self.primary_cache);
+        let backup_cleared = database::cache_clear(self.backup_cache);
+
+        log::info("cache", {
+            "action": "pattern_invalidated",
+            "pattern": pattern,
+            "primary_cleared": primary_cleared,
+            "backup_cleared": backup_cleared
+        });
+    }
+
+    fn get_cache_statistics() -> CacheStats {
+        // In a real implementation, this would query cache metrics
+        return {
+            "primary_cache": {
+                "hits": 1250,
+                "misses": 89,
+                "hit_ratio": 0.934,
+                "entries": 567,
+                "size_mb": 45.2
+            },
+            "backup_cache": {
+                "hits": 340,
+                "misses": 23,
+                "hit_ratio": 0.937,
+                "entries": 234,
+                "size_mb": 12.8
+            },
+            "overall_hit_ratio": 0.935,
+            "total_requests": 1702,
+            "last_updated": chain::get_block_timestamp(1)
+        };
+    }
+}
+
+// Main demonstration
+fn main() {
+    log::info("main", { "message": "Starting Phase 3: Database & Storage Integration Examples" });
+
+    // Initialize all services
+    let db_service = AdvancedDatabaseService::new();
+    db_service.initialize();
+
+    let file_service = FileStorageService::new();
+    file_service.initialize();
+
+    let cache_service = CachingService::new();
+    cache_service.initialize();
+
+    // Demonstrate advanced database operations
+    let user_data = {
+        "username": "alice_blockchain",
+        "email": "alice@example.com",
+        "wallet_address": "0x742d35Cc0097C2ea0B8ae56f94B50F8c1e6F7B85",
+        "profile_data": {
+            "bio": "Blockchain enthusiast",
+            "joined_from": "web_app",
+            "preferences": {
+                "notifications": true,
+                "language": "en"
+            }
+        }
+    };
+
+    let user = db_service.create_user_with_validation(user_data);
+    log::info("example", { "action": "user_created", "user_id": user["id"] });
+
+    // Demonstrate file storage
+    let document_content = json::serialize({
+        "user_id": user["id"],
+        "document_type": "kyc_verification",
+        "verified_at": chain::get_block_timestamp(1),
+        "verification_status": "approved"
+    });
+
+    let file_metadata = file_service.store_file("kyc_verification.json", document_content, "documents");
+    log::info("example", { "action": "document_stored", "file_id": file_metadata["file_id"] });
+
+    // Demonstrate caching
+    cache_service.set_with_strategy("user_" + user["id"].to_string(), user, Some(600));
+    let cached_user = cache_service.get_with_fallback("user_" + user["id"].to_string());
+    log::info("example", { "action": "cache_test", "cache_hit": cached_user.is_some() });
+
+    // Demonstrate backup
+    let backup = db_service.create_database_backup("full");
+    log::info("example", { "action": "backup_created", "backup_id": backup["backup_path"] });
+
+    // Get performance report
+    let performance_report = db_service.get_performance_report();
+    log::info("example", {
+        "action": "performance_report",
+        "total_queries": performance_report["total_queries"],
+        "cache_hit_ratio": performance_report["cache_hit_ratio"]
+    });
+
+    log::info("main", { "message": "Phase 3 examples completed successfully" });
+}

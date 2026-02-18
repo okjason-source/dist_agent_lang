@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synth.Task — Robots & Brains | dist_agent_lang</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f5ff;
+            --primary-glow: rgba(0, 245, 255, 0.5);
+            --secondary: #ff00aa;
+            --secondary-glow: rgba(255, 0, 170, 0.4);
+            --success: #39ff14;
+            --danger: #ff3366;
+            --warning: #ffaa00;
+            --discoball: #e0e8ff;
+            --brain: #b366ff;
+            --bg: #0a0a12;
+            --card-bg: rgba(18, 18, 28, 0.85);
+            --card-border: rgba(0, 245, 255, 0.2);
+            --text: #e8ecff;
+            --text-muted: #8892b0;
+            --shadow: 0 0 30px rgba(0, 245, 255, 0.1);
+            --font-display: 'Orbitron', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Discoball sparkle background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 10%, rgba(255, 0, 170, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 20%, rgba(0, 245, 255, 0.06) 0%, transparent 45%),
+                radial-gradient(ellipse 100% 100% at 50% 50%, rgba(179, 102, 255, 0.04) 0%, transparent 60%),
+                linear-gradient(180deg, #0a0a12 0%, #0d0d18 50%, #0a0a12 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Animated disco sparkles */
+        .disco-sparkles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--discoball);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary), 0 0 20px var(--secondary);
+            animation: sparkleMove 8s ease-in-out infinite;
+        }
+        .sparkle:nth-child(1) { left: 10%; top: 15%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { left: 25%; top: 8%; animation-delay: 1s; }
+        .sparkle:nth-child(3) { left: 75%; top: 12%; animation-delay: 2s; }
+        .sparkle:nth-child(4) { left: 90%; top: 20%; animation-delay: 0.5s; }
+        .sparkle:nth-child(5) { left: 15%; top: 70%; animation-delay: 3s; }
+        .sparkle:nth-child(6) { left: 85%; top: 65%; animation-delay: 1.5s; }
+        .sparkle:nth-child(7) { left: 50%; top: 5%; animation-delay: 2.5s; }
+        @keyframes sparkleMove {
+            0%, 100% { opacity: 0.3; transform: scale(1) translate(0, 0); }
+            50% { opacity: 0.9; transform: scale(1.5) translate(10px, -15px); }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 28px 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: var(--shadow), inset 0 0 60px rgba(0, 245, 255, 0.03);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-family: var(--font-display);
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 2.4em;
+            text-shadow: 0 0 20px var(--primary-glow);
+            letter-spacing: 0.05em;
+        }
+
+        .header .theme-icons {
+            font-size: 1.4em;
+            margin-bottom: 6px;
+            letter-spacing: 0.2em;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95em;
+        }
+
+        .header p strong {
+            color: var(--brain);
+        }
+
+        .todo-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .todo-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: var(--font-mono);
+            background: rgba(10, 10, 18, 0.6);
+            color: var(--text);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .todo-input input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .todo-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .todo-input button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, #00c8d4 100%);
+            color: #0a0a12;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: var(--font-display);
+            font-weight: 600;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease, transform 0.2s ease;
+        }
+
+        .todo-input button:hover {
+            box-shadow: 0 0 25px var(--primary-glow);
+            transform: translateY(-1px);
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            flex-wrap: wrap;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--card-border);
+            background: rgba(10, 10, 18, 0.6);
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-family: var(--font-mono);
+        }
+
+        .filter-btn.active {
+            background: rgba(0, 245, 255, 0.15);
+            color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--text);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow);
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card h3 {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 5px;
+            font-family: var(--font-display);
+        }
+
+        .stat-card .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary-glow);
+            font-family: var(--font-display);
+        }
+
+        .todo-list {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(0, 245, 255, 0.08);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .todo-item:last-child {
+            border-bottom: none;
+        }
+
+        .todo-item:hover {
+            background: rgba(0, 245, 255, 0.04);
+        }
+
+        .todo-item.completed {
+            opacity: 0.65;
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .todo-content {
+            flex: 1;
+        }
+
+        .todo-text {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .todo-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .todo-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            transition: opacity 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .edit-btn {
+            background: var(--warning);
+            color: #0a0a12;
+        }
+
+        .delete-btn {
+            background: var(--danger);
+            color: white;
+        }
+
+        .todo-btn:hover {
+            opacity: 0.9;
+            box-shadow: 0 0 12px rgba(255, 51, 102, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: var(--text);
+            font-family: var(--font-display);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .todo-input {
+                flex-direction: column;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 245, 255, 0.2);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="disco-sparkles">
+        <span class="sparkle"></span>
+        <span class="sparkle"></span>
+        <span class="sparkle"></span>
+        <span class="sparkle"></span>
+        <span class="sparkle"></span>
+        <span class="sparkle"></span>
+        <span class="sparkle"></span>
+    </div>
+    <div class="container">
+        <div class="header">
+            <div class="theme-icons"></div>
+            <h3>Synth.Task</h3>
+            <p>🤖 + 🧠 + 🪩 vibes. Built with <strong>dist_agent_lang</strong>.</p>
+        </div>
+
+        <!-- Todo Input -->
+        <div class="todo-input">
+            <input type="text" id="todo-input" placeholder="Enter task for the neural queue..." maxlength="200">
+            <button onclick="addTodo()">Add Todo</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <button class="filter-btn active" onclick="setFilter('all')">All</button>
+            <button class="filter-btn" onclick="setFilter('active')">Active</button>
+            <button class="filter-btn" onclick="setFilter('completed')">Completed</button>
+            <button class="filter-btn" onclick="clearCompleted()">Clear Completed</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total</h3>
+                <div class="number" id="total-count">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active</h3>
+                <div class="number" id="active-count">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Completed</h3>
+                <div class="number" id="completed-count">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Completion Rate</h3>
+                <div class="number" id="completion-rate">0%</div>
+            </div>
+        </div>
+
+        <!-- Todo List -->
+        <div class="todo-list" id="todo-list">
+            <div class="empty-state">
+                <h3>Neural queue empty</h3>
+                <p>Drop a task above. Agents are waiting. ✨</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by <a href="https://github.com/dist_agent_lang" target="_blank">dist_agent_lang</a> — robots, brains & discoballs</p>
+        </div>
+    </div>
+
+    <!-- dist_agent_lang Integration Script -->
+    <script type="module">
+        /**
+         * Todo App Frontend - Connects to dist_agent_lang backend API
+         * 
+         * Configuration:
+         * - Set apiBaseUrl to match your backend server (default: http://localhost:8080/api)
+         * - For authentication, implement login flow and store session_token in localStorage
+         * - The app will fallback to localStorage if API is unavailable (for demo purposes)
+         * 
+         * Backend Requirements:
+         * - Run todo_backend_service.dal to start the API server
+         * - Ensure CORS is enabled on the backend
+         * - API endpoints: /api/todos (GET, POST), /api/todos/:id (GET, PUT, DELETE), /api/todos/completed (DELETE)
+         */
+        class DistAgentFrontend {
+            constructor() {
+                this.todos = [];
+                this.currentFilter = 'all';
+                this.apiBaseUrl = 'http://localhost:8080/api';
+                this.sessionToken = localStorage.getItem('session_token') || null;
+                this.initializeEventListeners();
+                this.loadTodos();
+            }
+
+            initializeEventListeners() {
+                const input = document.getElementById('todo-input');
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.addTodo();
+                    }
+                });
+            }
+
+            async addTodo() {
+                const input = document.getElementById('todo-input');
+                const text = input.value.trim();
+
+                if (!text) {
+                    this.showError('Please enter a todo item');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/todos`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': this.sessionToken ? `Bearer ${this.sessionToken}` : ''
+                        },
+                        body: JSON.stringify({ text })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || 'Failed to create todo');
+                    }
+
+                    const result = await response.json();
+                    this.todos.push(result.todo);
+                    input.value = '';
+                    this.renderTodos();
+                    this.updateStats();
+                    this.showSuccess('Todo added successfully');
+                } catch (error) {
+                    console.error('Error adding todo:', error);
+                    this.showError(error.message || 'Failed to add todo. Please try again.');
+                }
+            }
+
+            async toggleTodo(id) {
+                const todo = this.todos.find(t => t.id === id);
+                if (!todo) return;
+
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/todos/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': this.sessionToken ? `Bearer ${this.sessionToken}` : ''
+                        },
+                        body: JSON.stringify({ completed: !todo.completed })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || 'Failed to update todo');
+                    }
+
+                    const result = await response.json();
+                    const index = this.todos.findIndex(t => t.id === id);
+                    if (index !== -1) {
+                        this.todos[index] = result.todo;
+                    }
+                    this.renderTodos();
+                    this.updateStats();
+                } catch (error) {
+                    console.error('Error toggling todo:', error);
+                    this.showError('Failed to update todo. Please try again.');
+                }
+            }
+
+            async deleteTodo(id) {
+                if (!confirm('Are you sure you want to delete this todo?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/todos/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': this.sessionToken ? `Bearer ${this.sessionToken}` : ''
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || 'Failed to delete todo');
+                    }
+
+                    this.todos = this.todos.filter(t => t.id !== id);
+                    this.renderTodos();
+                    this.updateStats();
+                    this.showSuccess('Todo deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting todo:', error);
+                    this.showError('Failed to delete todo. Please try again.');
+                }
+            }
+
+            async editTodo(id, newText) {
+                if (!newText || !newText.trim()) {
+                    this.showError('Todo text cannot be empty');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/todos/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': this.sessionToken ? `Bearer ${this.sessionToken}` : ''
+                        },
+                        body: JSON.stringify({ text: newText.trim() })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || 'Failed to update todo');
+                    }
+
+                    const result = await response.json();
+                    const index = this.todos.findIndex(t => t.id === id);
+                    if (index !== -1) {
+                        this.todos[index] = result.todo;
+                    }
+                    this.renderTodos();
+                    this.showSuccess('Todo updated successfully');
+                } catch (error) {
+                    console.error('Error updating todo:', error);
+                    this.showError('Failed to update todo. Please try again.');
+                }
+            }
+
+            setFilter(filter) {
+                this.currentFilter = filter;
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                this.renderTodos();
+            }
+
+            async clearCompleted() {
+                const completedCount = this.todos.filter(t => t.completed).length;
+                if (completedCount === 0) {
+                    this.showError('No completed todos to clear');
+                    return;
+                }
+
+                if (!confirm(`Are you sure you want to delete ${completedCount} completed todo(s)?`)) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/todos/completed`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': this.sessionToken ? `Bearer ${this.sessionToken}` : ''
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || 'Failed to clear completed todos');
+                    }
+
+                    this.todos = this.todos.filter(t => !t.completed);
+                    this.renderTodos();
+                    this.updateStats();
+                    this.showSuccess(`Cleared ${completedCount} completed todo(s)`);
+                } catch (error) {
+                    console.error('Error clearing completed todos:', error);
+                    this.showError('Failed to clear completed todos. Please try again.');
+                }
+            }
+
+            getFilteredTodos() {
+                switch (this.currentFilter) {
+                    case 'active':
+                        return this.todos.filter(t => !t.completed);
+                    case 'completed':
+                        return this.todos.filter(t => t.completed);
+                    default:
+                        return this.todos;
+                }
+            }
+
+            renderTodos() {
+                const todoList = document.getElementById('todo-list');
+                const filteredTodos = this.getFilteredTodos();
+
+                if (filteredTodos.length === 0) {
+                    todoList.innerHTML = `
+                        <div class="empty-state">
+                            <h3>${this.getEmptyStateMessage()}</h3>
+                            <p>${this.getEmptyStateSubmessage()}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                todoList.innerHTML = filteredTodos.map(todo => `
+                    <div class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+                        <input type="checkbox"
+                               class="todo-checkbox"
+                               ${todo.completed ? 'checked' : ''}
+                               onchange="app.toggleTodo('${todo.id}')">
+                        <div class="todo-content">
+                            <div class="todo-text">${this.escapeHtml(todo.text)}</div>
+                            <div class="todo-meta">
+                                Created: ${new Date(todo.createdAt).toLocaleDateString()}
+                                ${todo.completed ? ` • Completed: ${new Date(todo.updatedAt || todo.createdAt).toLocaleDateString()}` : ''}
+                            </div>
+                        </div>
+                        <div class="todo-actions">
+                            <button class="todo-btn edit-btn" onclick="app.editTodoPrompt('${todo.id}')">Edit</button>
+                            <button class="todo-btn delete-btn" onclick="app.deleteTodo('${todo.id}')">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            getEmptyStateMessage() {
+                switch (this.currentFilter) {
+                    case 'active':
+                        return 'No active tasks';
+                    case 'completed':
+                        return 'No completed tasks';
+                    default:
+                        return 'Neural queue empty';
+                }
+            }
+
+            getEmptyStateSubmessage() {
+                switch (this.currentFilter) {
+                    case 'active':
+                        return 'All tasks complete. Brain = satisfied. 🤖';
+                    case 'completed':
+                        return 'Nothing in the done pile yet. Get to it!';
+                    default:
+                        return 'Drop a task above. Agents are waiting. ✨';
+                }
+            }
+
+            updateStats() {
+                const total = this.todos.length;
+                const active = this.todos.filter(t => !t.completed).length;
+                const completed = this.todos.filter(t => t.completed).length;
+                const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                document.getElementById('total-count').textContent = total;
+                document.getElementById('active-count').textContent = active;
+                document.getElementById('completed-count').textContent = completed;
+                document.getElementById('completion-rate').textContent = `${completionRate}%`;
+            }
+
+            editTodoPrompt(id) {
+                const todo = this.todos.find(t => t.id === id);
+                if (!todo) return;
+
+                const newText = prompt('Edit todo:', todo.text);
+                if (newText && newText.trim() && newText.trim() !== todo.text) {
+                    this.editTodo(id, newText.trim());
+                }
+            }
+
+            async loadTodos() {
+                try {
+                    const filter = this.currentFilter === 'all' ? '' : `?filter=${this.currentFilter}`;
+                    const response = await fetch(`${this.apiBaseUrl}/todos${filter}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': this.sessionToken ? `Bearer ${this.sessionToken}` : ''
+                        }
+                    });
+
+                    if (!response.ok) {
+                        // If unauthorized, might need to login first
+                        if (response.status === 401) {
+                            console.warn('Not authenticated. Some features may not work.');
+                            // Fallback to localStorage for demo purposes
+                            this.todos = JSON.parse(localStorage.getItem('dist_agent_todos') || '[]');
+                            this.renderTodos();
+                            this.updateStats();
+                            return;
+                        }
+                        const error = await response.json();
+                        throw new Error(error.error?.message || 'Failed to load todos');
+                    }
+
+                    const result = await response.json();
+                    this.todos = result.todos || [];
+                    this.renderTodos();
+                    this.updateStats();
+                } catch (error) {
+                    console.error('Error loading todos:', error);
+                    // Fallback to localStorage for demo purposes
+                    this.todos = JSON.parse(localStorage.getItem('dist_agent_todos') || '[]');
+                    this.renderTodos();
+                    this.updateStats();
+                    this.showError('Failed to load todos from server. Using local storage.');
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            showError(message) {
+                // Simple error notification - could be enhanced with a toast library
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: var(--danger);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    box-shadow: var(--shadow);
+                    z-index: 1000;
+                    max-width: 300px;
+                `;
+                errorDiv.textContent = message;
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
+            }
+
+            showSuccess(message) {
+                // Simple success notification
+                const successDiv = document.createElement('div');
+                successDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: var(--success);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    box-shadow: var(--shadow);
+                    z-index: 1000;
+                    max-width: 300px;
+                `;
+                successDiv.textContent = message;
+                document.body.appendChild(successDiv);
+                setTimeout(() => successDiv.remove(), 3000);
+            }
+        }
+
+        // Global app instance
+        window.app = new DistAgentFrontend();
+
+        // Global functions for onclick handlers
+        window.addTodo = () => window.app.addTodo();
+        window.setFilter = (filter) => window.app.setFilter(filter);
+        window.clearCompleted = () => window.app.clearCompleted();
+    </script>
+</body>
+</html>

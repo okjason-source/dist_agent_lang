@@ -1,0 +1,10 @@
+@trust("hybrid")
+@web
+@ai
+@chain("ethereum")
+service SimpleCallTest {
+    fn test_function() -> bool {
+        let result = some_function("test");
+        return result;
+    }
+}

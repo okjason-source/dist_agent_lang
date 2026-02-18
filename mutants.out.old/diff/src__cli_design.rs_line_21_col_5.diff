@@ -1,0 +1,32 @@
+--- src/cli_design.rs
++++ replace print_banner with ()
+@@ -13,28 +13,17 @@
+ 
+ /// Version string from Cargo
+ pub fn version() -> &'static str {
+     env!("CARGO_PKG_VERSION")
+ }
+ 
+ /// Print branded banner (respects --no-banner, --quiet)
+ pub fn print_banner(bin: &str, no_banner: bool, quiet: bool) {
+-    if no_banner {
+-        return;
+-    }
+-    if quiet {
+-        println!("{} v{} — {}", bin, version(), TAGLINE);
+-        return;
+-    }
+-    println!();
+-    println!("┌──────────────────────────────────────────────────────────────────────┐");
+-    println!("│  {} v{}  —  {}  │", bin, version(), TAGLINE_FULL);
+-    println!("└──────────────────────────────────────────────────────────────────────┘");
+-    println!();
++    () /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ /// Help content organized by use case (project-type agnostic, AI-forward)
+ pub fn help_content(bin: &str) -> String {
+     format!(r#"
+ GET STARTED
+   new <name> [--type <type>]  Create a new project
+                               Types: ai, iot, agent, chain, web, cli, lib

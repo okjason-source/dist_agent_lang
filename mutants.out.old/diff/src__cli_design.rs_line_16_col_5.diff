@@ -1,0 +1,21 @@
+--- src/cli_design.rs
++++ replace version -> &'static str with ""
+@@ -8,17 +8,17 @@
+ /// Brand tagline — used in banner and help (short form for banner)
+ pub const TAGLINE: &str = "Web, Blockchain & AI";
+ 
+ /// Full tagline for version output
+ pub const TAGLINE_FULL: &str = "Unified language for Web, Blockchain & AI";
+ 
+ /// Version string from Cargo
+ pub fn version() -> &'static str {
+-    env!("CARGO_PKG_VERSION")
++    "" /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ /// Print branded banner (respects --no-banner, --quiet)
+ pub fn print_banner(bin: &str, no_banner: bool, quiet: bool) {
+     if no_banner {
+         return;
+     }
+     if quiet {

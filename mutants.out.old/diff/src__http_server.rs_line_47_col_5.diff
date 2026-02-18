@@ -1,0 +1,107 @@
+--- src/http_server.rs
++++ replace start_http_server -> Result<(), Box<dyn std::error::Error>> with Ok(())
+@@ -39,103 +39,17 @@
+     // Arc-wrapped so we can clone for spawn_blocking (keeps async runtime responsive)
+     pub runtime_factory: Option<Arc<Box<dyn Fn() -> Runtime + Send + Sync>>>,
+     /// Optional callback to persist scope changes after handler execution (shared state).
+     pub scope_writeback: Option<Arc<Box<dyn Fn(&crate::runtime::scope::Scope) + Send + Sync>>>,
+ }
+ 
+ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::error::Error>> {
+     // Runtime factory for creating new runtime instances per request
+-    let runtime_factory = Arc::new(Box::new(|| Runtime::new()) as Box<dyn Fn() -> Runtime + Send + Sync>);
+-    
+-    let state = Arc::new(RwLock::new(WebServerState {
+-        server: server.clone(),
+-        handlers: HashMap::new(),
+-        runtime_factory: Some(runtime_factory),
+-        scope_writeback: None,
+-    }));
+-
+-    // Create CORS layer
+-    let cors = CorsLayer::new()
+-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+-        .allow_origin(Any);
+-
+-    // Create router from server configuration (uses routes from server.routes)
+-    // Security middleware order (from outer to inner):
+-    // 1. CORS
+-    // 2. Security headers (applied to all responses)
+-    // 3. Rate limiting
+-    // 4. Request size limiting
+-    // 5. Input validation
+-    // 6. User middleware (applied in handle_with_middleware)
+-    
+-    // Create router with routes from server configuration
+-    // Note: We need to add layers before with_state() to maintain correct types
+-    // So we'll build the router manually here to have control over layer ordering
+-    let mut router = Router::new();
+-    
+-    // Add routes from server configuration (same logic as create_router_with_middleware)
+-    for (route_key, route) in &server.routes {
+-        if let Some((method_str, path)) = route_key.split_once(':') {
+-            let method = method_str.to_uppercase();
+-            let handler_name = route.handler.clone();
+-            let state_clone = state.clone();
+-            
+-            let handler = move |request: axum::extract::Request| {
+-                let state = state_clone.clone();
+-                let handler_name = handler_name.clone();
+-                async move {
+-                    crate::http_server_handlers::handle_with_middleware(
+-                        axum::extract::State(state),
+-                        request,
+-                        &handler_name,
+-                    ).await
+-                }
+-            };
+-            
+-            match method.as_str() {
+-                "GET" => router = router.route(path, axum::routing::get(handler)),
+-                "POST" => router = router.route(path, axum::routing::post(handler)),
+-                "PUT" => router = router.route(path, axum::routing::put(handler)),
+-                "DELETE" => router = router.route(path, axum::routing::delete(handler)),
+-                _ => router = router.route(path, axum::routing::get(handler)),
+-            }
+-        }
+-    }
+-    
+-    // Add default routes if no routes configured
+-    if server.routes.is_empty() {
+-        router = router
+-            .route("/", axum::routing::get(home_handler))
+-            .route("/health", axum::routing::get(health_handler));
+-    }
+-    
+-    // Shared rate limiter so all requests are counted (default 100 req/min).
+-    // Without this, the middleware would create a new limiter per request and rate limiting would never trigger.
+-    let rate_limiter = Arc::new(RateLimiter::new(100, 60));
+-
+-    // Add security middleware layers, then state.
+-    // Extension(rate_limiter) is added last so it runs first on the request and rate_limit_middleware sees it in extensions.
+-    let app = router
+-        .layer(middleware::from_fn(security_headers_middleware))
+-        .layer(middleware::from_fn(rate_limit_middleware))
+-        .layer(middleware::from_fn(request_size_middleware))
+-        .layer(middleware::from_fn(input_validation_middleware))
+-        .layer(cors)
+-        .layer(Extension(rate_limiter))
+-        .with_state(state);
+-
+-    // Start server
+-    let addr = format!("127.0.0.1:{}", server.port);
+-    println!("🚀 Starting HTTP server on {}", addr);
+-    
+-    let listener = tokio::net::TcpListener::bind(&addr).await?;
+-    axum::serve(listener, app).await?;
+-
+-    Ok(())
++    Ok(()) /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ async fn home_handler() -> Html<String> {
+     let html = r#"
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">

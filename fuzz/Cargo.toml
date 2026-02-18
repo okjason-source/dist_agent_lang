@@ -1,0 +1,42 @@
+[package]
+name = "dist_agent_lang-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.dist_agent_lang]
+path = ".."
+
+[[bin]]
+name = "fuzz_lexer"
+path = "fuzz_targets/fuzz_lexer.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_parser"
+path = "fuzz_targets/fuzz_parser.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_runtime"
+path = "fuzz_targets/fuzz_runtime.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_stdlib"
+path = "fuzz_targets/fuzz_stdlib.rs"
+test = false
+doc = false
+bench = false

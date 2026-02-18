@@ -1,0 +1,199 @@
+// Simple Web API Example using Phase 2 Web Framework
+// Demonstrates basic web server, API endpoints, and frontend integration
+
+@web
+@trust("hybrid")
+service SimpleAPI {
+    server: string;
+    
+    fn main() {
+        // Create server with Phase 2 framework
+        let server = web::create_server(3000);
+        
+        // Add basic middleware
+        web::add_middleware(server, "logger", "log_requests", 0);
+        
+        // Define API routes
+        web::add_route(server, "GET", "/", "home_page");
+        web::add_route(server, "GET", "/api/status", "api_status");
+        web::add_route(server, "POST", "/api/users", "create_user");
+        web::add_route(server, "GET", "/api/users", "list_users");
+        
+        // Start server
+        let result = web::start_server(server);
+        log::info("api", { "status": result, "port": 3000 });
+    }
+    
+    fn home_page(request: HttpRequest) -> HttpResponse {
+        // Create simple HTML page
+        let page = web::create_html_page("Simple API Demo");
+        web::add_css_file(page, "/style.css");
+        web::add_js_file(page, "/app.js");
+        
+        // Create page content
+        let content = web::create_element("div", None);
+        web::add_attribute(content, "class", "container");
+        
+        let title = web::create_element("h1", Some("Simple API Demo"));
+        let description = web::create_element("p", Some("This demonstrates the Phase 2 web framework capabilities."));
+        
+        let user_form = self.create_user_form();
+        let user_list = web::create_element("div", None);
+        web::add_attribute(user_list, "id", "user-list");
+        
+        web::append_child(content, title);
+        web::append_child(content, description);
+        web::append_child(content, user_form);
+        web::append_child(content, user_list);
+        web::append_child(page.body, content);
+        
+        let html = web::render_html_page(page);
+        return web::html_response(html);
+    }
+    
+    fn create_user_form() -> HtmlElement {
+        let form = web::create_form("/api/users", "POST");
+        web::add_attribute(form, "id", "user-form");
+        
+        let name_input = web::create_input("text", "name", "Enter name");
+        let email_input = web::create_input("email", "email", "Enter email");
+        let submit_button = web::create_button("Create User", "submit");
+        
+        web::append_child(form, name_input);
+        web::append_child(form, email_input);
+        web::append_child(form, submit_button);
+        
+        return form;
+    }
+    
+    fn api_status(request: HttpRequest) -> HttpResponse {
+        return web::json_response({
+            "status": "online",
+            "version": "1.0.0",
+            "framework": "dist_agent_lang Phase 2",
+            "timestamp": chain::get_block_timestamp(1)
+        });
+    }
+    
+    fn create_user(request: HttpRequest) -> HttpResponse {
+        // Create API endpoint with validation
+        let endpoint = web::create_api_endpoint("/api/users", "POST", "create_user");
+        web::add_auth_requirement(endpoint, false);
+        web::add_rate_limit(endpoint, 60, 5);
+        
+        // Validate request
+        if (!web::validate_json_request(request, endpoint.input_schema)) {
+            return web::error_response(400, "Invalid request format");
+        }
+        
+        // Simulate user creation
+        let user_id = crypto::generate_random(16);
+        
+        return web::json_response({
+            "success": true,
+            "user_id": user_id,
+            "message": "User created successfully"
+        });
+    }
+    
+    fn list_users(request: HttpRequest) -> HttpResponse {
+        // Simulate user list
+        let users = [
+            { "id": "1", "name": "Alice", "email": "alice@example.com" },
+            { "id": "2", "name": "Bob", "email": "bob@example.com" }
+        ];
+        
+        return web::json_response({
+            "users": users,
+            "count": users.length
+        });
+    }
+}
+
+// WebSocket Chat Example
+@web
+service ChatServer {
+    ws_server: string;
+    
+    fn main() {
+        // Create WebSocket server
+        let ws_server = web::create_websocket_server(3001);
+        
+        log::info("chat", { "message": "Chat server started on port 3001" });
+        
+        // Simulate connections
+        self.simulate_chat_activity();
+    }
+    
+    fn simulate_chat_activity() {
+        // Add some connections
+        web::add_websocket_connection(self.ws_server, "conn1", Some("user1"));
+        web::add_websocket_connection(self.ws_server, "conn2", Some("user2"));
+        
+        // Create chat room
+        web::join_room(self.ws_server, "conn1", "general");
+        web::join_room(self.ws_server, "conn2", "general");
+        
+        // Broadcast welcome message
+        let welcome_msg = "Welcome to the chat! Phase 2 WebSocket support is active.";
+        let broadcast_count = web::broadcast_to_room(self.ws_server, "general", welcome_msg);
+        
+        log::info("chat", { 
+            "action": "broadcast",
+            "room": "general",
+            "recipients": broadcast_count,
+            "message": welcome_msg
+        });
+    }
+}
+
+// Template System Example
+@web
+service TemplateDemo {
+    fn main() {
+        // Create advanced template
+        let template = web::create_template("user_profile", "
+            <div class='profile-card'>
+                <h2>{{name}}</h2>
+                <p>Email: {{email}}</p>
+                <p>Joined: {{join_date}}</p>
+                <div class='stats'>
+                    <span>Posts: {{post_count}}</span>
+                    <span>Followers: {{follower_count}}</span>
+                </div>
+            </div>
+        ");
+        
+        // Add template variables
+        web::add_template_variable(template, "name", Value::String("John Doe"));
+        web::add_template_variable(template, "email", Value::String("john@example.com"));
+        web::add_template_variable(template, "join_date", Value::String("2024-01-15"));
+        web::add_template_variable(template, "post_count", Value::Int(42));
+        web::add_template_variable(template, "follower_count", Value::Int(1337));
+        
+        // Render template
+        let rendered = web::render_advanced_template(template);
+        
+        log::info("template", { 
+            "template_name": template.name,
+            "variables_count": template.variables.length,
+            "rendered_length": rendered.length
+        });
+    }
+}
+
+fn main() {
+    log::info("main", { "message": "Starting Phase 2 Web Framework Examples" });
+    
+    // Run all examples
+    let api = SimpleAPI::new();
+    api.main();
+    
+    let chat = ChatServer::new();
+    chat.main();
+    
+    let templates = TemplateDemo::new();
+    templates.main();
+    
+    log::info("main", { "message": "All Phase 2 examples completed successfully" });
+}

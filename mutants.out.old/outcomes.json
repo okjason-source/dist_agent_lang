@@ -1,0 +1,3762 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 72.787807811,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 40.936656572,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/cli.rs",
+          "function": {
+            "function_name": "chain_subcommand_to_args",
+            "return_type": "-> Vec<String>",
+            "span": {
+              "start": {
+                "line": 430,
+                "column": 1
+              },
+              "end": {
+                "line": 466,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 432,
+              "column": 5
+            },
+            "end": {
+              "line": 465,
+              "column": 6
+            }
+          },
+          "replacement": "vec![]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__cli.rs_line_432_col_5.log",
+      "diff_path": "diff/src__cli.rs_line_432_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 9.943049452,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 41.822463379,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/cli.rs",
+          "function": {
+            "function_name": "chain_subcommand_to_args",
+            "return_type": "-> Vec<String>",
+            "span": {
+              "start": {
+                "line": 430,
+                "column": 1
+              },
+              "end": {
+                "line": 466,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 432,
+              "column": 5
+            },
+            "end": {
+              "line": 465,
+              "column": 6
+            }
+          },
+          "replacement": "vec![String::new()]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__cli.rs_line_432_col_5_001.log",
+      "diff_path": "diff/src__cli.rs_line_432_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 10.458729237,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 52.436535573,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/cli.rs",
+          "function": {
+            "function_name": "chain_subcommand_to_args",
+            "return_type": "-> Vec<String>",
+            "span": {
+              "start": {
+                "line": 430,
+                "column": 1
+              },
+              "end": {
+                "line": 466,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 432,
+              "column": 5
+            },
+            "end": {
+              "line": 465,
+              "column": 6
+            }
+          },
+          "replacement": "vec![\"xyzzy\".into()]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__cli.rs_line_432_col_5_002.log",
+      "diff_path": "diff/src__cli.rs_line_432_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 11.937637919,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 47.363522117,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/cli_design.rs",
+          "function": {
+            "function_name": "version",
+            "return_type": "-> &'static str",
+            "span": {
+              "start": {
+                "line": 14,
+                "column": 1
+              },
+              "end": {
+                "line": 17,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 16,
+              "column": 5
+            },
+            "end": {
+              "line": 16,
+              "column": 30
+            }
+          },
+          "replacement": "\"\"",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__cli_design.rs_line_16_col_5.log",
+      "diff_path": "diff/src__cli_design.rs_line_16_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 13.036870306,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 51.736936741,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/cli_design.rs",
+          "function": {
+            "function_name": "version",
+            "return_type": "-> &'static str",
+            "span": {
+              "start": {
+                "line": 14,
+                "column": 1
+              },
+              "end": {
+                "line": 17,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 16,
+              "column": 5
+            },
+            "end": {
+              "line": 16,
+              "column": 30
+            }
+          },
+          "replacement": "\"xyzzy\"",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__cli_design.rs_line_16_col_5_001.log",
+      "diff_path": "diff/src__cli_design.rs_line_16_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 13.656128971,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 46.038343161,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/cli_design.rs",
+          "function": {
+            "function_name": "print_banner",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 19,
+                "column": 1
+              },
+              "end": {
+                "line": 33,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 21,
+              "column": 5
+            },
+            "end": {
+              "line": 32,
+              "column": 16
+            }
+          },
+          "replacement": "()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__cli_design.rs_line_21_col_5.log",
+      "diff_path": "diff/src__cli_design.rs_line_21_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 12.737716762,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 55.053654006,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/cli_design.rs",
+          "function": {
+            "function_name": "help_content",
+            "return_type": "-> String",
+            "span": {
+              "start": {
+                "line": 35,
+                "column": 1
+              },
+              "end": {
+                "line": 109,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 37,
+              "column": 5
+            },
+            "end": {
+              "line": 108,
+              "column": 9
+            }
+          },
+          "replacement": "String::new()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__cli_design.rs_line_37_col_5.log",
+      "diff_path": "diff/src__cli_design.rs_line_37_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 16.287768833,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 51.513654114,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/cli_design.rs",
+          "function": {
+            "function_name": "help_content",
+            "return_type": "-> String",
+            "span": {
+              "start": {
+                "line": 35,
+                "column": 1
+              },
+              "end": {
+                "line": 109,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 37,
+              "column": 5
+            },
+            "end": {
+              "line": 108,
+              "column": 9
+            }
+          },
+          "replacement": "\"xyzzy\".into()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__cli_design.rs_line_37_col_5_001.log",
+      "diff_path": "diff/src__cli_design.rs_line_37_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 12.602706156,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 50.168675549,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/mold/mod.rs",
+          "function": {
+            "function_name": "use_mold_and_spawn",
+            "return_type": "-> Result<crate::stdlib::agent::AgentContext, String>",
+            "span": {
+              "start": {
+                "line": 19,
+                "column": 1
+              },
+              "end": {
+                "line": 35,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 27,
+              "column": 5
+            },
+            "end": {
+              "line": 34,
+              "column": 63
+            }
+          },
+          "replacement": "Ok(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__mold__mod.rs_line_27_col_5.log",
+      "diff_path": "diff/src__mold__mod.rs_line_27_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 14.126819367,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 49.859726904,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/mold/mod.rs",
+          "function": {
+            "function_name": "use_mold_and_spawn",
+            "return_type": "-> Result<crate::stdlib::agent::AgentContext, String>",
+            "span": {
+              "start": {
+                "line": 19,
+                "column": 1
+              },
+              "end": {
+                "line": 35,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 29,
+              "column": 8
+            },
+            "end": {
+              "line": 29,
+              "column": 9
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__mold__mod.rs_line_29_col_8.log",
+      "diff_path": "diff/src__mold__mod.rs_line_29_col_8.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 10.696002394,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 57.808876128,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/mold/mod.rs",
+          "function": {
+            "function_name": "load_mold_from_source",
+            "return_type": "-> Result<MoldConfig, String>",
+            "span": {
+              "start": {
+                "line": 117,
+                "column": 1
+              },
+              "end": {
+                "line": 136,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 119,
+              "column": 5
+            },
+            "end": {
+              "line": 135,
+              "column": 6
+            }
+          },
+          "replacement": "Ok(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__mold__mod.rs_line_119_col_5.log",
+      "diff_path": "diff/src__mold__mod.rs_line_119_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 14.395345021,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 56.904970015,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/mold/mod.rs",
+          "function": {
+            "function_name": "list_local_paths",
+            "return_type": "-> Vec<PathBuf>",
+            "span": {
+              "start": {
+                "line": 149,
+                "column": 1
+              },
+              "end": {
+                "line": 174,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 152,
+              "column": 5
+            },
+            "end": {
+              "line": 173,
+              "column": 8
+            }
+          },
+          "replacement": "vec![]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__mold__mod.rs_line_152_col_5.log",
+      "diff_path": "diff/src__mold__mod.rs_line_152_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 17.629687041,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 61.230899942,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/mold/mod.rs",
+          "function": {
+            "function_name": "list_local_paths",
+            "return_type": "-> Vec<PathBuf>",
+            "span": {
+              "start": {
+                "line": 149,
+                "column": 1
+              },
+              "end": {
+                "line": 174,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 152,
+              "column": 5
+            },
+            "end": {
+              "line": 173,
+              "column": 8
+            }
+          },
+          "replacement": "vec![Default::default()]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__mold__mod.rs_line_152_col_5_001.log",
+      "diff_path": "diff/src__mold__mod.rs_line_152_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 15.232249634,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 55.476688449,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/mold/mod.rs",
+          "function": {
+            "function_name": "list_local_paths",
+            "return_type": "-> Vec<PathBuf>",
+            "span": {
+              "start": {
+                "line": 149,
+                "column": 1
+              },
+              "end": {
+                "line": 174,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 164,
+              "column": 53
+            },
+            "end": {
+              "line": 164,
+              "column": 55
+            }
+          },
+          "replacement": "&&",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__mold__mod.rs_line_164_col_53.log",
+      "diff_path": "diff/src__mold__mod.rs_line_164_col_53.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 16.13381215,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 62.660064742,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/mold/mod.rs",
+          "function": {
+            "function_name": "resolve_mold_path",
+            "return_type": "-> Result<PathBuf, String>",
+            "span": {
+              "start": {
+                "line": 176,
+                "column": 1
+              },
+              "end": {
+                "line": 207,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 179,
+              "column": 24
+            },
+            "end": {
+              "line": 179,
+              "column": 26
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__mold__mod.rs_line_179_col_24.log",
+      "diff_path": "diff/src__mold__mod.rs_line_179_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 13.950620687,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 63.215967585,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/mold/mod.rs",
+          "function": {
+            "function_name": "resolve_mold_path",
+            "return_type": "-> Result<PathBuf, String>",
+            "span": {
+              "start": {
+                "line": 176,
+                "column": 1
+              },
+              "end": {
+                "line": 207,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 197,
+              "column": 90
+            },
+            "end": {
+              "line": 197,
+              "column": 92
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__mold__mod.rs_line_197_col_90.log",
+      "diff_path": "diff/src__mold__mod.rs_line_197_col_90.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 11.61989237,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 56.445388433,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/mold/mod.rs",
+          "function": {
+            "function_name": "resolve_mold_path",
+            "return_type": "-> Result<PathBuf, String>",
+            "span": {
+              "start": {
+                "line": 176,
+                "column": 1
+              },
+              "end": {
+                "line": 207,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 201,
+              "column": 23
+            },
+            "end": {
+              "line": 201,
+              "column": 25
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__mold__mod.rs_line_201_col_23.log",
+      "diff_path": "diff/src__mold__mod.rs_line_201_col_23.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 11.408637695,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 67.720871261,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/mold/mod.rs",
+          "function": {
+            "function_name": "scaffold_mold",
+            "return_type": "-> Result<(), String>",
+            "span": {
+              "start": {
+                "line": 209,
+                "column": 1
+              },
+              "end": {
+                "line": 223,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 211,
+              "column": 5
+            },
+            "end": {
+              "line": 222,
+              "column": 98
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__mold__mod.rs_line_211_col_5.log",
+      "diff_path": "diff/src__mold__mod.rs_line_211_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 17.123253732,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 80.378614881,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server.rs",
+          "function": {
+            "function_name": "start_http_server",
+            "return_type": "-> Result<(), Box<dyn std::error::Error>>",
+            "span": {
+              "start": {
+                "line": 45,
+                "column": 1
+              },
+              "end": {
+                "line": 134,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 47,
+              "column": 5
+            },
+            "end": {
+              "line": 133,
+              "column": 11
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server.rs_line_47_col_5.log",
+      "diff_path": "diff/src__http_server.rs_line_47_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 33.804007826,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 74.199221951,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server.rs",
+          "function": {
+            "function_name": "start_http_server",
+            "return_type": "-> Result<(), Box<dyn std::error::Error>>",
+            "span": {
+              "start": {
+                "line": 45,
+                "column": 1
+              },
+              "end": {
+                "line": 134,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 95,
+              "column": 17
+            },
+            "end": {
+              "line": 95,
+              "column": 83
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server.rs_line_95_col_17.log",
+      "diff_path": "diff/src__http_server.rs_line_95_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 32.819137451,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 91.051973796,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server.rs",
+          "function": {
+            "function_name": "start_http_server",
+            "return_type": "-> Result<(), Box<dyn std::error::Error>>",
+            "span": {
+              "start": {
+                "line": 45,
+                "column": 1
+              },
+              "end": {
+                "line": 134,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 96,
+              "column": 17
+            },
+            "end": {
+              "line": 96,
+              "column": 85
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server.rs_line_96_col_17.log",
+      "diff_path": "diff/src__http_server.rs_line_96_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 27.974269354,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 111.210681478,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server.rs",
+          "function": {
+            "function_name": "start_http_server",
+            "return_type": "-> Result<(), Box<dyn std::error::Error>>",
+            "span": {
+              "start": {
+                "line": 45,
+                "column": 1
+              },
+              "end": {
+                "line": 134,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 98,
+              "column": 17
+            },
+            "end": {
+              "line": 98,
+              "column": 89
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server.rs_line_98_col_17.log",
+      "diff_path": "diff/src__http_server.rs_line_98_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 21.181401213,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 82.029115446,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server.rs",
+          "function": {
+            "function_name": "home_handler",
+            "return_type": "-> Html<String>",
+            "span": {
+              "start": {
+                "line": 136,
+                "column": 1
+              },
+              "end": {
+                "line": 481,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 137,
+              "column": 5
+            },
+            "end": {
+              "line": 480,
+              "column": 27
+            }
+          },
+          "replacement": "Html::from(String::new())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server.rs_line_137_col_5.log",
+      "diff_path": "diff/src__http_server.rs_line_137_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 12.566754593,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 49.226525425,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_security.rs",
+          "function": {
+            "function_name": "RequestSizeLimiter::validate_request",
+            "return_type": "-> Result<(), StatusCode>",
+            "span": {
+              "start": {
+                "line": 370,
+                "column": 5
+              },
+              "end": {
+                "line": 392,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 387,
+              "column": 24
+            },
+            "end": {
+              "line": 387,
+              "column": 25
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_security.rs_line_387_col_24.log",
+      "diff_path": "diff/src__http_server_security.rs_line_387_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 14.411589933,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 72.538144237,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_security.rs",
+          "function": {
+            "function_name": "SecurityLogger::log_rate_limit",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 418,
+                "column": 5
+              },
+              "end": {
+                "line": 422,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 420,
+              "column": 9
+            },
+            "end": {
+              "line": 421,
+              "column": 90
+            }
+          },
+          "replacement": "()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_security.rs_line_420_col_9.log",
+      "diff_path": "diff/src__http_server_security.rs_line_420_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 15.949496866,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 71.214456245,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_security.rs",
+          "function": {
+            "function_name": "SecurityLogger::log_invalid_input",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 430,
+                "column": 5
+              },
+              "end": {
+                "line": 434,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 432,
+              "column": 9
+            },
+            "end": {
+              "line": 433,
+              "column": 90
+            }
+          },
+          "replacement": "()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_security.rs_line_432_col_9.log",
+      "diff_path": "diff/src__http_server_security.rs_line_432_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 15.183647379,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 69.820677184,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_security.rs",
+          "function": {
+            "function_name": "SecurityLogger::log_suspicious_activity",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 441,
+                "column": 5
+              },
+              "end": {
+                "line": 445,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 443,
+              "column": 9
+            },
+            "end": {
+              "line": 444,
+              "column": 105
+            }
+          },
+          "replacement": "()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_security.rs_line_443_col_9.log",
+      "diff_path": "diff/src__http_server_security.rs_line_443_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 15.355721717,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 70.567621381,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_security.rs",
+          "function": {
+            "function_name": "SecurityLogger::log_token_validation_failure",
+            "return_type": "",
+            "span": {
+              "start": {
+                "line": 447,
+                "column": 5
+              },
+              "end": {
+                "line": 450,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 449,
+              "column": 9
+            },
+            "end": {
+              "line": 449,
+              "column": 101
+            }
+          },
+          "replacement": "()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_security.rs_line_449_col_9.log",
+      "diff_path": "diff/src__http_server_security.rs_line_449_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 15.737644367,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 70.758761419,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_pattern_matches",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 86,
+                "column": 1
+              },
+              "end": {
+                "line": 99,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 88,
+              "column": 5
+            },
+            "end": {
+              "line": 98,
+              "column": 9
+            }
+          },
+          "replacement": "true",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_88_col_5.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_88_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 18.688344052,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 69.944539379,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_pattern_matches",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 86,
+                "column": 1
+              },
+              "end": {
+                "line": 99,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 88,
+              "column": 5
+            },
+            "end": {
+              "line": 98,
+              "column": 9
+            }
+          },
+          "replacement": "false",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_88_col_5_001.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_88_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 14.236285815,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 68.8990372,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_pattern_matches",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 86,
+                "column": 1
+              },
+              "end": {
+                "line": 99,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 88,
+              "column": 69
+            },
+            "end": {
+              "line": 88,
+              "column": 70
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_88_col_69.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_88_col_69.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 17.503694424,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 72.606979422,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_pattern_matches",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 86,
+                "column": 1
+              },
+              "end": {
+                "line": 99,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 90,
+              "column": 31
+            },
+            "end": {
+              "line": 90,
+              "column": 33
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_90_col_31.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_90_col_31.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 16.388048935,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 72.530700495,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_pattern_matches",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 86,
+                "column": 1
+              },
+              "end": {
+                "line": 99,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 94,
+              "column": 12
+            },
+            "end": {
+              "line": 94,
+              "column": 13
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_94_col_12.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_94_col_12.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 13.848065994,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 75.301233353,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_pattern_matches",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 86,
+                "column": 1
+              },
+              "end": {
+                "line": 99,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 94,
+              "column": 17
+            },
+            "end": {
+              "line": 94,
+              "column": 19
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_94_col_17.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_94_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 15.811618784,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 84.46756812,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_pattern_matches",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 86,
+                "column": 1
+              },
+              "end": {
+                "line": 99,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 94,
+              "column": 46
+            },
+            "end": {
+              "line": 94,
+              "column": 48
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_94_col_46.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_94_col_46.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 17.444664699,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 76.745027185,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_pattern_matches",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 86,
+                "column": 1
+              },
+              "end": {
+                "line": 99,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 94,
+              "column": 49
+            },
+            "end": {
+              "line": 94,
+              "column": 50
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_94_col_49.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_94_col_49.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 17.594103409,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 95.161587862,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 103,
+              "column": 5
+            },
+            "end": {
+              "line": 117,
+              "column": 17
+            }
+          },
+          "replacement": "None",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_103_col_5.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_103_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 27.292356888,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 100.567215963,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 103,
+              "column": 5
+            },
+            "end": {
+              "line": 117,
+              "column": 17
+            }
+          },
+          "replacement": "Some(HashMap::new())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_103_col_5_001.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_103_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 18.066579657,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 88.841477032,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 103,
+              "column": 5
+            },
+            "end": {
+              "line": 117,
+              "column": 17
+            }
+          },
+          "replacement": "Some(HashMap::from_iter([(String::new(), String::new())]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_103_col_5_002.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_103_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 22.783954236,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 89.435815362,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 103,
+              "column": 5
+            },
+            "end": {
+              "line": 117,
+              "column": 17
+            }
+          },
+          "replacement": "Some(HashMap::from_iter([(String::new(), \"xyzzy\".into())]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_103_col_5_003.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_103_col_5_003.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 17.414992621,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 86.048097338,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 103,
+              "column": 5
+            },
+            "end": {
+              "line": 117,
+              "column": 17
+            }
+          },
+          "replacement": "Some(HashMap::from_iter([(\"xyzzy\".into(), String::new())]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_103_col_5_004.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_103_col_5_004.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 20.782256496,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 92.005398626,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 103,
+              "column": 5
+            },
+            "end": {
+              "line": 117,
+              "column": 17
+            }
+          },
+          "replacement": "Some(HashMap::from_iter([(\"xyzzy\".into(), \"xyzzy\".into())]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_103_col_5_005.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_103_col_5_005.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 20.34565004,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 101.173148731,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 103,
+              "column": 69
+            },
+            "end": {
+              "line": 103,
+              "column": 70
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_103_col_69.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_103_col_69.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 28.386106331,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 109.139472154,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 104,
+              "column": 63
+            },
+            "end": {
+              "line": 104,
+              "column": 64
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_104_col_63.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_104_col_63.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 18.626863766,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 89.745500516,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 105,
+              "column": 31
+            },
+            "end": {
+              "line": 105,
+              "column": 33
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_105_col_31.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_105_col_31.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 17.071797516,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 73.505377171,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 110,
+              "column": 31
+            },
+            "end": {
+              "line": 110,
+              "column": 33
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_110_col_31.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_110_col_31.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 18.943931287,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 86.888749541,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 110,
+              "column": 34
+            },
+            "end": {
+              "line": 110,
+              "column": 35
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_110_col_34.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_110_col_34.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 17.04029683,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 93.682207232,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "path_params_from_match",
+            "return_type": "-> Option<HashMap<String, String>>",
+            "span": {
+              "start": {
+                "line": 101,
+                "column": 1
+              },
+              "end": {
+                "line": 118,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 113,
+              "column": 22
+            },
+            "end": {
+              "line": 113,
+              "column": 24
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_113_col_22.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_113_col_22.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 18.0121113,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 89.306680499,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "get_route_handler_name_and_params",
+            "return_type": "-> Option<(String, HashMap<String, String>)>",
+            "span": {
+              "start": {
+                "line": 120,
+                "column": 1
+              },
+              "end": {
+                "line": 146,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 126,
+              "column": 5
+            },
+            "end": {
+              "line": 145,
+              "column": 9
+            }
+          },
+          "replacement": "None",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_126_col_5.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_126_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 24.651796158,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 86.722639668,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_handlers.rs",
+          "function": {
+            "function_name": "get_route_handler_name_and_params",
+            "return_type": "-> Option<(String, HashMap<String, String>)>",
+            "span": {
+              "start": {
+                "line": 120,
+                "column": 1
+              },
+              "end": {
+                "line": 146,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 138,
+              "column": 17
+            },
+            "end": {
+              "line": 138,
+              "column": 19
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_handlers.rs_line_138_col_17.log",
+      "diff_path": "diff/src__http_server_handlers.rs_line_138_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 24.225694841,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 89.72224883,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_integration.rs",
+          "function": {
+            "function_name": "create_router_with_options",
+            "return_type": "-> Router",
+            "span": {
+              "start": {
+                "line": 31,
+                "column": 1
+              },
+              "end": {
+                "line": 102,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 74,
+              "column": 17
+            },
+            "end": {
+              "line": 76,
+              "column": 18
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_integration.rs_line_74_col_17.log",
+      "diff_path": "diff/src__http_server_integration.rs_line_74_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 21.587555785,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 97.707815366,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_integration.rs",
+          "function": {
+            "function_name": "create_router_with_options",
+            "return_type": "-> Router",
+            "span": {
+              "start": {
+                "line": 31,
+                "column": 1
+              },
+              "end": {
+                "line": 102,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 17
+            },
+            "end": {
+              "line": 82,
+              "column": 18
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_integration.rs_line_80_col_17.log",
+      "diff_path": "diff/src__http_server_integration.rs_line_80_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 22.499055007,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 125.722141218,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_integration.rs",
+          "function": {
+            "function_name": "create_router_with_options",
+            "return_type": "-> Router",
+            "span": {
+              "start": {
+                "line": 31,
+                "column": 1
+              },
+              "end": {
+                "line": 102,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 83,
+              "column": 17
+            },
+            "end": {
+              "line": 85,
+              "column": 18
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_integration.rs_line_83_col_17.log",
+      "diff_path": "diff/src__http_server_integration.rs_line_83_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 26.312189518,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 136.875982775,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_integration.rs",
+          "function": {
+            "function_name": "home_handler",
+            "return_type": "-> Response<Body>",
+            "span": {
+              "start": {
+                "line": 104,
+                "column": 1
+              },
+              "end": {
+                "line": 107,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 106,
+              "column": 5
+            },
+            "end": {
+              "line": 106,
+              "column": 66
+            }
+          },
+          "replacement": "Response::new(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_integration.rs_line_106_col_5.log",
+      "diff_path": "diff/src__http_server_integration.rs_line_106_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 29.384675119,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 150.913531408,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_integration.rs",
+          "function": {
+            "function_name": "home_handler",
+            "return_type": "-> Response<Body>",
+            "span": {
+              "start": {
+                "line": 104,
+                "column": 1
+              },
+              "end": {
+                "line": 107,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 106,
+              "column": 5
+            },
+            "end": {
+              "line": 106,
+              "column": 66
+            }
+          },
+          "replacement": "Response::from(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_integration.rs_line_106_col_5_001.log",
+      "diff_path": "diff/src__http_server_integration.rs_line_106_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 38.396761981,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 141.643097401,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_integration.rs",
+          "function": {
+            "function_name": "health_handler",
+            "return_type": "-> Response<Body>",
+            "span": {
+              "start": {
+                "line": 109,
+                "column": 1
+              },
+              "end": {
+                "line": 112,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 111,
+              "column": 5
+            },
+            "end": {
+              "line": 111,
+              "column": 30
+            }
+          },
+          "replacement": "Response::new(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_integration.rs_line_111_col_5.log",
+      "diff_path": "diff/src__http_server_integration.rs_line_111_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 30.540403804,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 160.350040433,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/http_server_integration.rs",
+          "function": {
+            "function_name": "health_handler",
+            "return_type": "-> Response<Body>",
+            "span": {
+              "start": {
+                "line": 109,
+                "column": 1
+              },
+              "end": {
+                "line": 112,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 111,
+              "column": 5
+            },
+            "end": {
+              "line": 111,
+              "column": 30
+            }
+          },
+          "replacement": "Response::from(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__http_server_integration.rs_line_111_col_5_001.log",
+      "diff_path": "diff/src__http_server_integration.rs_line_111_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 31.328379877,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 127.151364712,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/ffi/mod.rs",
+          "function": {
+            "function_name": "FFIConfig::both",
+            "return_type": "-> Self",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 5
+              },
+              "end": {
+                "line": 64,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 63,
+              "column": 9
+            },
+            "end": {
+              "line": 63,
+              "column": 24
+            }
+          },
+          "replacement": "Default::default()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__ffi__mod.rs_line_63_col_9.log",
+      "diff_path": "diff/src__ffi__mod.rs_line_63_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 28.216473547,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 158.859753731,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "package": "dist_agent_lang",
+          "file": "src/ffi/mod.rs",
+          "function": {
+            "function_name": "FFIConfig::auto_detect",
+            "return_type": "-> Self",
+            "span": {
+              "start": {
+                "line": 66,
+                "column": 5
+              },
+              "end": {
+                "line": 78,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 70,
+              "column": 9
+            },
+            "end": {
+              "line": 77,
+              "column": 10
+            }
+          },
+          "replacement": "Default::default()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__ffi__mod.rs_line_70_col_9.log",
+      "diff_path": "diff/src__ffi__mod.rs_line_70_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 23.949810322,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 115.488520903,
+          "process_status": "Success",
+          "argv": [
+            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=dist_agent_lang@1.0.5",
+            "--tests"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 59,
+  "missed": 59,
+  "caught": 0,
+  "timeout": 0,
+  "unviable": 0,
+  "success": 0,
+  "start_time": "2026-02-14T05:23:46.50905Z",
+  "end_time": null,
+  "cargo_mutants_version": "26.0.0"
+}

@@ -1,0 +1,92 @@
+@trust("hybrid")
+@web
+@chain("ethereum")
+service SimpleWebTest {
+    fn test_web_server() -> bool {
+        log::info("test", "Testing Web Server with Trust Validation");
+        
+        let server = web::create_server(3000);
+        log::info("test", "Created HTTP server on port 3000");
+        
+        let route1 = web::add_route(server, "GET", "/", "home_handler");
+        let route2 = web::add_route(server, "GET", "/api/balance", "balance_handler");
+        
+        log::info("test", "Added routes: " + route1 + ", " + route2);
+        
+        let middleware = web::add_middleware(server, "cors", "cors_handler", 1);
+        log::info("test", "Added middleware: " + middleware);
+        
+        let cors_config = web::configure_cors(server, true);
+        log::info("test", "Configured CORS: " + cors_config);
+        
+        let static_files = web::serve_static_files(server, "/static");
+        log::info("test", "Configured static files: " + static_files);
+        
+        let result = web::start_server(server);
+        
+        match result {
+            Ok(message) => {
+                log::info("test", "Web server started successfully: " + message);
+                return true;
+            }
+            Err(error) => {
+                log::error("test", "Failed to start web server: " + error);
+                return false;
+            }
+        }
+    }
+    
+    fn test_web_client() -> bool {
+        log::info("test", "Testing Web Client");
+        
+        let client = web::create_client("https://api.example.com");
+        log::info("test", "Created HTTP client for https://api.example.com");
+        
+        let get_response = web::get_request("https://api.example.com/data");
+        match get_response {
+            Ok(response) => {
+                log::info("test", "GET request successful: " + response.status);
+                log::info("test", "Response body: " + response.body);
+            }
+            Err(error) => {
+                log::error("test", "GET request failed: " + error);
+                return false;
+            }
+        }
+        
+        let post_data = {
+            "name": "test",
+            "value": 123
+        };
+        let post_response = web::post_request("https://api.example.com/data", post_data);
+        match post_response {
+            Ok(response) => {
+                log::info("test", "POST request successful: " + response.status);
+                log::info("test", "Response body: " + response.body);
+            }
+            Err(error) => {
+                log::error("test", "POST request failed: " + error);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    fn run_all_tests() -> bool {
+        log::info("test", "Running All Web Tests");
+        
+        let server_test = self.test_web_server();
+        let client_test = self.test_web_client();
+        
+        let all_passed = server_test && client_test;
+        
+        if all_passed {
+            log::info("test", "All web tests passed!");
+        } else {
+            log::error("test", "Some web tests failed");
+        }
+        
+        return all_passed;
+    }
+}

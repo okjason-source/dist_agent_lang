@@ -1,0 +1,3 @@
+let safe_x = 10;
+let safe_y = 2;
+let safe_result = safe_x / safe_y;

@@ -1,0 +1,22 @@
+--- src/ffi/mod.rs
++++ replace FFIConfig::auto_detect -> Self with Default::default()
+@@ -62,18 +62,11 @@
+     pub fn both() -> Self {
+         Self::default()
+     }
+ 
+     /// Auto-detect configuration based on environment
+     pub fn auto_detect() -> Self {
+         // Check if we're in a local context (same process)
+         // If both are available, default to "both" with auto-selection
+-        Self {
+-            interface_type: InterfaceType::Both,
+-            enable_http: true, // Always enable HTTP as fallback
+-            enable_ffi: true,  // Enable FFI if available
+-            python_enabled: cfg!(feature = "python-ffi"),
+-            rust_enabled: true,
+-            c_enabled: cfg!(feature = "c-ffi"),
+-        }
++        Default::default() /* ~ changed by cargo-mutants ~ */
+     }
+ }

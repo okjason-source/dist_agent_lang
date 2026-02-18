@@ -1,0 +1,17 @@
+{
+  "name": "verify_mold",
+  "version": "1.0",
+  "agent": {
+    "type": "AI",
+    "role": "",
+    "capabilities": [],
+    "trustLevel": "standard",
+    "learning": true,
+    "communication": true,
+    "coordination": true,
+    "memoryLimit": "256MB"
+  },
+  "parameters": {},
+  "dependencies": [],
+  "metadata": {}
+}

@@ -1,0 +1,9 @@
+@trust("hybrid")
+@chain("ethereum", "solana")
+service TestNFT {
+    name: string = "TestNFT";
+}
+
+let nft = TestNFT::new();
+print("NFT created");
+

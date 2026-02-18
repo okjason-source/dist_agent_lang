@@ -1,0 +1,137 @@
+// Test file to demonstrate admin and cloudadmin trust validation
+// This shows how @trust, @web, @ai, and @chain attributes work together
+
+@trust("centralized")
+@web
+@ai
+@chain("ethereum")
+service CentralizedService {
+    // In centralized trust, all operations are allowed
+    fn test_admin_operations() -> bool {
+        // These should all succeed in centralized trust
+        let kill_result = admin::kill("process_123", "resource_violation");
+        let auth_result = cloudadmin::authorize("admin", "write", "database");
+        let web_result = web::create_server(3000);
+        let ai_result = ai::spawn_agent("data_processor");
+        let chain_result = chain::deploy(1, "MyContract", {});
+        
+        log::info("test", "Centralized service - all operations allowed");
+        return true;
+    }
+}
+
+@trust("hybrid")
+@web
+@ai
+@chain("ethereum")
+service HybridService {
+    // In hybrid trust, operations require specific privileges
+    fn test_hybrid_operations() -> bool {
+        // Web, AI, and Chain operations should work (have @web, @ai, @chain)
+        let web_result = web::create_server(3000);
+        let ai_result = ai::spawn_agent("data_processor");
+        let chain_result = chain::deploy(1, "MyContract", {});
+        
+        // Admin operations should fail (no @admin attribute)
+        // cloudadmin operations should fail (no @cloudadmin attribute)
+        
+        log::info("test", "Hybrid service - web/ai/chain allowed, admin/cloudadmin restricted");
+        return true;
+    }
+}
+
+@trust("decentralized")
+@web
+@ai
+@chain("ethereum")
+service DecentralizedService {
+    // In decentralized trust, admin operations are completely restricted
+    fn test_decentralized_operations() -> bool {
+        // Web, AI, and Chain operations should work (have @web, @ai, @chain)
+        let web_result = web::create_server(3000);
+        let ai_result = ai::spawn_agent("data_processor");
+        let chain_result = chain::deploy(1, "MyContract", {});
+        
+        // Admin and cloudadmin operations should fail (decentralized trust)
+        
+        log::info("test", "Decentralized service - web/ai/chain allowed, admin/cloudadmin forbidden");
+        return true;
+    }
+}
+
+@trust("hybrid")
+@admin
+@cloudadmin
+@web
+@ai
+@chain("ethereum")
+service HybridAdminService {
+    // In hybrid trust with admin privileges, all operations should work
+    fn test_hybrid_admin_operations() -> bool {
+        // All operations should work (have admin/cloudadmin privileges)
+        let kill_result = admin::kill("process_123", "resource_violation");
+        let auth_result = cloudadmin::authorize("admin", "write", "database");
+        let web_result = web::create_server(3000);
+        let ai_result = ai::spawn_agent("data_processor");
+        let chain_result = chain::deploy(1, "MyContract", {});
+        
+        log::info("test", "Hybrid admin service - all operations allowed");
+        return true;
+    }
+}
+
+// Test runner service
+@trust("hybrid")
+service TrustValidationTest {
+    fn run_all_tests() -> bool {
+        log::info("test", "=== Testing Trust Validation System ===");
+        
+        // Test centralized service
+        log::info("test", "Testing CentralizedService...");
+        let centralized = CentralizedService::test_admin_operations();
+        
+        // Test hybrid service (no admin privileges)
+        log::info("test", "Testing HybridService...");
+        let hybrid = HybridService::test_hybrid_operations();
+        
+        // Test decentralized service
+        log::info("test", "Testing DecentralizedService...");
+        let decentralized = DecentralizedService::test_decentralized_operations();
+        
+        // Test hybrid service with admin privileges
+        log::info("test", "Testing HybridAdminService...");
+        let hybrid_admin = HybridAdminService::test_hybrid_admin_operations();
+        
+        log::info("test", "=== Trust Validation Tests Complete ===");
+        return centralized && hybrid && decentralized && hybrid_admin;
+    }
+    
+    fn test_trust_models() -> map<string, any> {
+        let results = {
+            "centralized": {
+                "admin_allowed": true,
+                "cloudadmin_allowed": true,
+                "web_allowed": true,
+                "ai_allowed": true,
+                "chain_allowed": true
+            },
+            "hybrid": {
+                "admin_allowed": false,  // Unless @admin attribute present
+                "cloudadmin_allowed": false,  // Unless @cloudadmin attribute present
+                "web_allowed": true,  // If @web attribute present
+                "ai_allowed": true,  // If @ai attribute present
+                "chain_allowed": true  // If @chain attribute present
+            },
+            "decentralized": {
+                "admin_allowed": false,
+                "cloudadmin_allowed": false,
+                "web_allowed": true,  // If @web attribute present
+                "ai_allowed": true,  // If @ai attribute present
+                "chain_allowed": true  // If @chain attribute present
+            }
+        };
+        
+        log::info("test", "Trust model permissions: " + results);
+        return results;
+    }
+}

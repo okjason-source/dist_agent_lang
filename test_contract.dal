@@ -1,0 +1,22 @@
+// Simple Token Contract
+chain contract Token {
+    let owner: string = "0x0"
+    let balances: map<string, int> = {}
+    let totalSupply: int = 0
+    
+    fn init(initialSupply: int) {
+        owner = msg.sender
+        totalSupply = initialSupply
+        balances[owner] = initialSupply
+    }
+    
+    fn transfer(to: string, amount: int) -> bool {
+        let from = msg.sender
+        if balances[from] >= amount {
+            balances[from] = balances[from] - amount
+            balances[to] = balances[to] + amount
+            return true
+        }
+        return false
+    }
+}

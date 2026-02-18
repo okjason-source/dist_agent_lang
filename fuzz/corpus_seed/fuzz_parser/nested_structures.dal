@@ -1,0 +1,7 @@
+// Deeply nested structures
+service Nested {
+    fn test() {
+        let x = { "a": { "b": { "c": { "d": { "e": 1 } } } } };
+        let y = [[[[[1]]]]];
+    }
+}

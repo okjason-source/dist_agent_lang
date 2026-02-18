@@ -1,0 +1,30 @@
+# Build and install
+/target/
+**/target/
+
+# Mutation testing and logs (do not publish)
+/mutants.out/
+/logs/
+*.log
+
+# Development / project / testing documentation (do not publish)
+/docs/development/
+/docs/project/
+/docs/beta/
+/docs/testing/
+
+# Root-level internal planning docs (optional)
+*_PLAN.md
+*_STATUS.md
+PHASE*.md
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*~
+
+# Fuzz artifacts (keep corpus if you want; uncomment to exclude)
+# /fuzz/corpus/
+# /fuzz/artifacts/

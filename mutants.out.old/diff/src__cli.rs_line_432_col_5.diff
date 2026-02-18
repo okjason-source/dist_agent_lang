@@ -1,0 +1,47 @@
+--- src/cli.rs
++++ replace chain_subcommand_to_args -> Vec<String> with vec![]
+@@ -424,43 +424,10 @@
+     /// Parse args; handles --help and --version via clap
+     pub fn parse() -> Self {
+         Self::parse_from(std::env::args())
+     }
+ }
+ 
+ /// Convert chain subcommand to args slice for existing handlers
+ pub fn chain_subcommand_to_args(sub: &ChainSubcommand) -> Vec<String> {
+-    use ChainSubcommand::*;
+-    match sub {
+-        List => vec!["list".to_string()],
+-        Config { chain_id } => vec!["config".to_string(), chain_id.to_string()],
+-        GasPrice { chain_id } => vec!["gas-price".to_string(), chain_id.to_string()],
+-        Balance { chain_id, address } => vec!["balance".to_string(), chain_id.to_string(), address.clone()],
+-        TxStatus { chain_id, tx_hash } => vec!["tx-status".to_string(), chain_id.to_string(), tx_hash.clone()],
+-        BlockTime { chain_id } => vec!["block-time".to_string(), chain_id.to_string()],
+-        Deploy { chain_id, contract, args } => {
+-            let mut v = vec!["deploy".to_string(), chain_id.to_string(), contract.clone()];
+-            if let Some(a) = args {
+-                v.push("--args".to_string());
+-                v.push(a.clone());
+-            }
+-            v
+-        }
+-        Call { chain_id, address, function, args } => {
+-            let mut v = vec!["call".to_string(), chain_id.to_string(), address.clone(), function.clone()];
+-            if let Some(a) = args {
+-                v.push("--args".to_string());
+-                v.push(a.clone());
+-            }
+-            v
+-        }
+-        Mint { name, meta } => {
+-            let mut v = vec!["mint".to_string(), name.clone()];
+-            if let Some(m) = meta {
+-                v.push("--meta".to_string());
+-                v.push(m.clone());
+-            }
+-            v
+-        }
+-        Asset { id } => vec!["asset".to_string(), id.clone()],
+-    }
++    vec![] /* ~ changed by cargo-mutants ~ */
+ }

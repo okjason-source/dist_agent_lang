@@ -1,0 +1,58 @@
+// Example demonstrating function-level @secure attribute
+// This shows how function-level attributes override service-level attributes
+
+// Example 1: Mixed security in a single service
+service MixedSecurityService {
+    fn public_read() -> string {
+        // No @secure - public access
+        return "public data";
+    }
+    
+    @secure
+    fn secure_write(data: string) {
+        // Function-level @secure - requires authentication
+        // Reentrancy protection enabled
+        // Audit logging enabled
+    }
+}
+
+// Example 2: Service-level secure with function-level override
+@secure  // All methods secure by default
+service SecureServiceWithPublicMethod {
+    fn secure_method() -> string {
+        // ✅ Protected (inherits from service @secure - no function attribute needed)
+        return "secure data";
+    }
+    
+    fn another_secure_method() -> string {
+        // ✅ Also protected (inherits from service @secure)
+        return "also secure";
+    }
+    
+    @public
+    fn public_method() -> string {
+        // Public (function-level @public overrides service @secure)
+        return "public data";
+    }
+    
+    @secure
+    fn explicitly_secure() -> string {
+        // Protected (explicit function-level, same as inheriting from service)
+        return "explicitly secure";
+    }
+}
+
+// Example 3: Public service with secure method
+@public
+service PublicServiceWithSecureMethod {
+    fn public_method() -> string {
+        // Public (inherits from service @public)
+        return "public";
+    }
+    
+    @secure
+    fn secure_method() -> string {
+        // Secure (function-level @secure overrides service @public)
+        return "secure";
+    }
+}

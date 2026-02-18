@@ -1,0 +1,20 @@
+@trust("hybrid")
+@chain("ethereum", "solana")
+service TestNFT {
+    name: string = "TestNFT";
+    symbol: string = "TST";
+    owner: string = "";
+    total_supply: int = 0;
+    max_supply: int = 10000;
+    base_uri: string = "https://api.testnft.com/metadata/";
+    
+    token_owners: map<int, string> = {};
+    token_uris: map<int, string> = {};
+    balances: map<string, int> = {};
+    approved: map<int, string> = {};
+    operator_approvals: map<string, map<string, bool>> = {};
+    
+    chain_deployments: map<string, string> = {};
+    cross_chain_locks: map<int, string> = {};
+}
+

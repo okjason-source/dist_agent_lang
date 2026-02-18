@@ -1,0 +1,21 @@
+--- src/http_server_security.rs
++++ replace SecurityLogger::log_token_validation_failure with ()
+@@ -441,17 +441,17 @@
+     /// Log suspicious activity
+     pub fn log_suspicious_activity(ip: &str, activity: &str) {
+         Self::log_event("SUSPICIOUS_ACTIVITY", activity, Some(ip));
+         log::error!(target: "security::suspicious", "Suspicious activity from IP {}: {}", ip, activity);
+     }
+     
+     /// Log token validation failure
+     pub fn log_token_validation_failure(ip: &str, reason: &str) {
+-        log::warn!(target: "security::token", "Token validation failed from IP {}: {}", ip, reason);
++        () /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+ 
+     #[test]

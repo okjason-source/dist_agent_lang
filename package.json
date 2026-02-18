@@ -1,0 +1,82 @@
+{
+  "name": "dist_agent_lang",
+  "version": "1.0.3",
+  "description": "A hybrid compiled programming language for AI agents, blockchain, and distributed systems",
+  "main": "src/main.rs",
+  "license": "MIT",
+  "keywords": [
+    "programming-language",
+    "ai-agents",
+    "blockchain",
+    "distributed-systems",
+    "smart-contracts",
+    "cross-chain",
+    "compiler",
+    "runtime"
+  ],
+  "author": {
+    "name": "OK Jason",
+    "email": "jason.dinh.developer@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/okjason-source/dist_agent_lang.git"
+  },
+  "homepage": "https://distagentlang.com",
+  "bugs": {
+    "url": "https://github.com/okjason-source/dist_agent_lang/issues"
+  },
+  "engines": {
+    "rust": ">=1.70.0",
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "cargo build --release",
+    "build:debug": "cargo build",
+    "test": "cargo test",
+    "test:all": "cargo test --all-features",
+    "check": "cargo check",
+    "clippy": "cargo clippy",
+    "fmt": "cargo fmt",
+    "clean": "cargo clean",
+    "install": "cargo install --path .",
+    "run": "cargo run",
+    "bench": "cargo bench",
+    "docs": "cargo doc --no-deps --open",
+    "package": "npm run build && npm run create-release",
+    "create-release": "node scripts/create-release.js",
+    "install-cli": "cargo install --path . --bin dist_agent_lang",
+    "publish": "cargo publish"
+  },
+  "dependencies": {
+    "chrono": "^0.4.31",
+    "log": "^0.4.20",
+    "serde": "^1.0.193",
+    "serde_json": "^1.0.108",
+    "tokio": "^1.35.1",
+    "uuid": "^1.6.1",
+    "hex": "^0.4.3",
+    "sha2": "^0.10.8",
+    "rand": "^0.8.5"
+  },
+  "devDependencies": {
+    "criterion": "^0.5.1",
+    "mockall": "^0.12.1",
+    "proptest": "^1.4.0"
+  },
+  "files": [
+    "src/",
+    "examples/",
+    "docs/",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "scripts/",
+    "templates/",
+    "bin/"
+  ],
+  "bin": {
+    "dist_agent_lang": "./target/release/dist_agent_lang"
+  }
+}

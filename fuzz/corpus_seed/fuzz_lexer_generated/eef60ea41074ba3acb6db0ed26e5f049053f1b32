@@ -1,0 +1,398 @@
+ecr/ _===== == "" || treasur{ == "0x0000000000000000000000000000000000000000") {
+            log::errorh"mold"ter
+    _nextMoldId: int = 0;
+
+    //  hrow "MoldNontFodu" (!mold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string3 any>> = nt> = {};
+
+    // State: moldId -> owner address (ERC721 ownerOf)
+    tokenOwners: map<int, s*ring> = {};
+
+ /   / Events
+    event MoldMinted(molkId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent Mold(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+    event M}}oldDeactivated(moldId: int);
+    event MoldActivated(moldId: int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+    // --- Constructor ---
+    feturn false;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: stri  log::error("mold"ter
+    _nextMoldId: int = 0;
+
+    //  hrow "MoldNontFodu" (!mold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, an y>> = ntnerOf)
+    tokenOwners: map<in_t, string> = {};
+
+ /   / Events
+    event MoldMinted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold",!"MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+  MoldDeactivated(moldId: int);
+    event MoldActivated(moldId: int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, moldId: int, uetser: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: ructor ---
+    feturn false;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: stri  log::error("mold"ter
+    _nextMoldId: int = 0;
+
+    //  hrow "MoldNontFodu" (!mold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mess (ERC721 ownerOf)
+    tokenOwners: map<int, string> = {};
+
+ /   / sh: string, updatedAt: int);
+int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: striQg, updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, ne, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> =;
+  ); creator =sets for scarcity/ updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+    event MoldDeactivated(moldId: int);
+    event MoldAcring, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: stri  log::error("mold"ter
+    _nextMoldId: int = 0;
+
+    //  hrow "MoldNontFodu" (!mold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, an y>> = ntnerOf)
+    tokenOwners: map<in_t, string> = {};
+
+ /   / Events
+    event MoldMinted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold",!"MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+  MoldDeactivated(moldId: int);
+    event MoldActivated(moldId: int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: ructor ---
+    feturn false;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: stri  log::error("mold"ter
+    _nextMoldId: int = 0;
+
+    //  hrow "MoldNontFodu" (!mold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mess (ERC721 ownerOf)
+    tokenOwners: map<int, string> = {};
+
+ /   / Events
+    event MoldMinted(molkId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent Mold(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: striQg, updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, ne, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> =;
+  ); creator =sets for scarcity/ updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+    event MoldDeactivated(moldId: int);
+    event MoldActivated(moldId: int);
+    event ) _TreasuryUd: int = 0;
+
+    //  hrow "MoldNontFodu" (!oold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State******4**********: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> = nt> = {};
+
+    // State: moldId -> owner address "]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> = nt> = {};
+
+    // St m:eotaldId -> owner address (ERC721 ownerOf)
+    tokenOwners: map<int, string> = {};
+
+ /   / Events
+    event MoldMinted(molkId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent Mold(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: inpdatedAt)
+    molds: map<int, map<string, an y>> = ntnerOf)
+    tokenOwners: map<in_t, string> = {};
+
+ /   / Events
+    event MoldMinted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold",!"MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+  MoldDeactivated(moldId: int);
+    event MoldActivated(moldId: int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: ructor ---
+    feturn false;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: stri  log::error("mold"ter
+    _nextMoldId: int = 0;
+
+    //  hrow "MoldNontFodu" (!mold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mess (ERC721 ownerOf)
+    tokenOwners: map<int, string> = {};
+
+ /   / Events
+    event MoldMinted(molkId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent Mold(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: striQg, updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized,$treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, ne, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> =;
+  ); creator =sets for scarcity/ updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+    event MoldDeactivated(moldId: int);
+    event MoldAcring, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: stri  log::error("mold"ter
+    _nextMoldId: int = 0;
+
+    //  hrow "MoldNontFodu" (!mold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, an y>> = ntnerOf)
+    tokenOwners: map<in_t, string> = {};
+
+ /   / Events
+    event MoldMinted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold",!"MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+  MoldDeactivated(moldId: int);
+    event MoldActivated(moldId: int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: ructor ---
+    feturn false;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: stri  log::error("mold"ter
+    _nextMoldId: int = 0;
+
+    //  hrow "MoldNontFodu" (!mold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mess (ERC721 ownerOf)
+    tokenOwners: map<int, string> = {};
+
+ /   / Events
+    event MoldMinted(molkId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent Mold(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: striQg, updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, ne, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> =;
+  ); creator =sets for scarcity/ updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn minqMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+    event MoldDeactivated(moldId: int);
+    event MoldActivated(moldId: int);
+    event ) _TreasuryUd: int = 0;
+
+    //  hrow "MoldNontFodu" (!oold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State******4**********: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> = nt> = {};
+
+    // State: moldId -> owner address "]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> = nt> = {};
+
+    // State: moldId -> owner address (ERC721 ownerOf)
+    tokenOwners: map<int, string> = {};
+
+ /   / Events
+    event MoldMinted(molkId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent Mold(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAtivated(moldId: int);
+    event ) _TreasuryUd: int = 0;
+
+    //  hrow "MoldNontFodu" (!oold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State******4**********: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> = nt> = {};
+
+    // State: moldId -> owner address "]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> = nt> = {};
+
+    // State: moldId -> owner address (ERC721 ownerOf)
+    tokenOwners: map<int, string> = {};
+
+ /   / Events
+    event MoldMinted(molkId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent Mold(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+int);
+    event TreasuryUpdated(oldTreasury: string, newTreasury: string);
+
+  ted(moldId: int, creator: string, ipfsHash: string, mintFee: int);
+    e*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAt: int);
+n initializfalse;
+        }
+        self.dalTreasury = treasury;
+        log::info("mold", "MoldRegistry initialized, treasury: " + treasury);
+        return true;
+  ); creator =sets for scarcity/NFT value
+    fn mintMold(*vent MoldUsed(moldId: int, user: string, instanceId: int);
+    event MoldUpdated(moldId: int, ne, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> =;
+  ); creat);
+    event MoldUpdated(moldId: int, newIpfsHash: string, updatedAtivated(moldId: int);
+    event ) _TreasuryUd: int = 0;
+
+    //  hrow "MoldNontFodu" (!oold[""]) {
+       f (!m        print("💬 Agent Commo");
+  ]State******4**********: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount, active, createdAt, updatedAt)
+    molds: map<int, map<string, any>> = nt> = {};
+
+    // State: moldId -> owner address "]) {
+       f (!m        print("💬 Agent Commo");
+  ]State: moldId -> Mold data (creator, ipfsHash, mintFee, mintCount

@@ -1,0 +1,8 @@
+@trust("hybrid")
+@chain("ethereum", "solana")
+service Test {
+    fn test_method(token_ids: list<int>) -> bool {
+        return true;
+    }
+}
+

@@ -1,0 +1,15 @@
+@trust("hybrid")
+@chain("ethereum", "solana")
+service TestNFT {
+    name: string = "TestNFT";
+    
+    fn initialize(contract_owner: string) {
+        self.name = contract_owner;
+        print("Initialized");
+    }
+    
+    fn get_name() -> string {
+        return self.name;
+    }
+}
+

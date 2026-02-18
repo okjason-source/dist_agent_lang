@@ -1,0 +1,11 @@
+@trust("hybrid")
+@chain("ethereum", "solana")
+service Test {
+    fn test(token_ids: list<int>) -> bool {
+        if (token_ids.length() > 10) {
+            return false;
+        }
+        return true;
+    }
+}
+

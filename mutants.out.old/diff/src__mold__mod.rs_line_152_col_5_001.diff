@@ -1,0 +1,42 @@
+--- src/mold/mod.rs
++++ replace list_local_paths -> Vec<PathBuf> with vec![Default::default()]
+@@ -144,38 +144,17 @@
+     let mold = load_mold_from_source(source, base)?;
+     let config = mold_config_to_agent_config(&mold, name_override)?;
+     spawn(config)
+ }
+ 
+ /// Discover local mold files under `base`: base, base/mold, base/mold/samples.
+ /// Returns paths for files named `*.mold.json` or `*.mold.dal`.
+ pub fn list_local_paths(base: &Path) -> Vec<PathBuf> {
+-    let mut out = Vec::new();
+-    let dirs = [
+-        base.to_path_buf(),
+-        base.join("mold"),
+-        base.join("mold").join("samples"),
+-    ];
+-    for dir in &dirs {
+-        if let Ok(entries) = std::fs::read_dir(dir) {
+-            for e in entries.flatten() {
+-                let p = e.path();
+-                if p.is_file() {
+-                    let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+-                    if name.ends_with(".mold.json") || name.ends_with(".mold.dal") {
+-                        out.push(p);
+-                    }
+-                }
+-            }
+-        }
+-    }
+-    out.sort();
+-    out.dedup();
+-    out
++    vec![Default::default()] /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ /// Resolve path or name to a mold file path. If `path_or_name` is an existing path, return it; else try list_local and match by stem or mold name.
+ pub fn resolve_mold_path(base: &Path, path_or_name: &str) -> Result<PathBuf, String> {
+     let p = Path::new(path_or_name);
+     if p.is_absolute() && p.exists() {
+         return Ok(p.to_path_buf());
+     }

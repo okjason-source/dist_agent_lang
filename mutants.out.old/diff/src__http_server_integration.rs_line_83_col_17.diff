@@ -1,0 +1,23 @@
+--- src/http_server_integration.rs
++++ delete match arm "DELETE" in create_router_with_options
+@@ -75,19 +75,17 @@
+                     router = router.route(path, get(handler));
+                 }
+                 "POST" => {
+                     router = router.route(path, post(handler));
+                 }
+                 "PUT" => {
+                     router = router.route(path, axum::routing::put(handler));
+                 }
+-                "DELETE" => {
+-                    router = router.route(path, axum::routing::delete(handler));
+-                }
++                 /* ~ changed by cargo-mutants ~ */
+                 _ => {
+                     // Default to GET
+                     router = router.route(path, get(handler));
+                 }
+             }
+         }
+     }
+     

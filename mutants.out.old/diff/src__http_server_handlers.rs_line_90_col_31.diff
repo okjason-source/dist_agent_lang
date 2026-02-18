@@ -1,0 +1,21 @@
+--- src/http_server_handlers.rs
++++ replace != with == in path_pattern_matches
+@@ -82,17 +82,17 @@
+         Err(e) => error_response(500, &e),
+     }
+ }
+ 
+ /// Check if a route pattern (e.g. "/users/:id") matches a request path (e.g. "/users/123").
+ fn path_pattern_matches(pattern: &str, path: &str) -> bool {
+     let pattern_segments: Vec<&str> = pattern.split('/').filter(|s| !s.is_empty()).collect();
+     let path_segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
+-    if pattern_segments.len() != path_segments.len() {
++    if pattern_segments.len() == /* ~ changed by cargo-mutants ~ */ path_segments.len() {
+         return false;
+     }
+     for (p, v) in pattern_segments.iter().zip(path_segments.iter()) {
+         if !(*p == *v || (p.starts_with(':') && !v.is_empty())) {
+             return false;
+         }
+     }
+     true

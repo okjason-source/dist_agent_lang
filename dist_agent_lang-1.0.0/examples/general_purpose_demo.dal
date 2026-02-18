@@ -1,0 +1,1010 @@
+// General Purpose Programming Examples in dist_agent_lang
+// Demonstrating the language's capabilities across different domains
+
+// =====================================================
+// 1. DATA PROCESSING & ANALYSIS
+// =====================================================
+
+// @ai
+// @chain("ethereum")
+service DataAnalyticsService {
+    datasets: map<string, any>,
+    ml_models: map<string, any>,
+
+    fn initialize() {
+        log::info("analytics", {
+            "service": "DataAnalyticsService",
+            "status": "initializing"
+        });
+    }
+
+    fn process_sales_data(raw_data: List<any>) -> AnalysisResult {
+        // Data cleaning and transformation
+        let cleaned_data = [];
+        for item in raw_data {
+            if item["sales"] > 0 && item["date"] != null {
+                cleaned_data.push(item);
+            }
+        }
+
+        // Statistical analysis
+        let stats = this.calculate_statistics(cleaned_data);
+
+        // Trend analysis using AI
+        let trends = ai::analyze_trends(cleaned_data, "sales");
+
+        // Generate insights
+        let insights = this.generate_business_insights(stats, trends);
+
+        return AnalysisResult {
+            "total_records": raw_data.length(),
+            "valid_records": cleaned_data.length(),
+            "statistics": stats,
+            "trends": trends,
+            "insights": insights,
+            "recommendations": this.generate_recommendations(insights)
+        };
+    }
+
+    fn calculate_statistics(data: List<any>) -> Statistics {
+        let sales_values = [];
+        for item in data {
+            sales_values.push(item["sales"]);
+        }
+        let total_sales = 0;
+        for value in sales_values {
+            total_sales = total_sales + value;
+        }
+        let average_sales = total_sales / sales_values.size();
+        let min_sales = sales_values[0];
+        let max_sales = sales_values[0];
+        for value in sales_values {
+            if value < min_sales {
+                min_sales = value;
+            }
+            if value > max_sales {
+                max_sales = value;
+            }
+        }
+
+        // Calculate standard deviation
+        let variance_sum = 0;
+        for sales in sales_values {
+            variance_sum = variance_sum + (sales - average_sales) * (sales - average_sales);
+        }
+        let variance = variance_sum / sales_values.size();
+        let std_dev = variance ** 0.5;
+
+        return {
+            "count": sales_values.size(),
+            "sum": total_sales,
+            "mean": average_sales,
+            "min": min_sales,
+            "max": max_sales,
+            "std_dev": std_dev,
+            "quartiles": this.calculate_quartiles(sales_values)
+        };
+    }
+
+    fn generate_business_insights(stats: Statistics, trends: any) -> List<String> {
+        let insights = [];
+
+        if stats["mean"] > 1000 {
+            insights.push("High average sales indicates strong market position");
+        }
+
+        if trends["growth_rate"] > 0.1 {
+            insights.push("Strong sales growth detected - consider expansion");
+        } else if trends["growth_rate"] < -0.05 {
+            insights.push("Sales decline detected - investigate market conditions");
+        }
+
+        if stats["std_dev"] > stats["mean"] * 0.5 {
+            insights.push("High sales volatility - consider risk mitigation strategies");
+        }
+
+        return insights;
+    }
+
+    fn calculate_quartiles(values: List<Float>) -> Quartiles {
+        // Simple sort implementation
+        let sorted = [];
+        for value in values {
+            sorted.push(value);
+        }
+        // Sort the array (simplified)
+        let n = sorted.size();
+
+        return {
+            "q1": sorted[(n * 0.25)],
+            "q2": sorted[(n * 0.5)],  // median
+            "q3": sorted[(n * 0.75)]
+        };
+    }
+}
+
+// =====================================================
+// 2. WEB APPLICATION FRAMEWORK
+// =====================================================
+
+// @web
+service WebApplicationFramework {
+    routes: Map<String, Route>,
+    middleware: Map<String, Function>,
+    templates: Map<String, String>,
+
+    fn initialize() {
+        // Setup routes
+        self.routes = {
+            "GET /": this.home_page,
+            "GET /users": this.list_users,
+            "POST /users": this.create_user,
+            "GET /users/:id": this.get_user,
+            "PUT /users/:id": this.update_user,
+            "DELETE /users/:id": this.delete_user,
+            "GET /api/data": this.api_data
+        };
+
+        // Setup middleware
+        self.middleware = {
+            "auth": this.authentication_middleware,
+            "cors": this.cors_middleware,
+            "logging": this.logging_middleware,
+            "rate_limit": this.rate_limiting_middleware
+        };
+
+        // Setup template engine
+        self.templates = {
+            "layout": this.load_template("layout.html"),
+            "home": this.load_template("home.html"),
+            "user_list": this.load_template("user_list.html"),
+            "user_form": this.load_template("user_form.html")
+        };
+    }
+
+    fn handle_request(request: HttpRequest) -> HttpResponse {
+        // Apply middleware
+        let processed_request = this.apply_middleware(request, ["logging", "cors", "auth"]);
+
+        // Route the request
+        let route = self.find_route(processed_request.method, processed_request.path);
+
+        if route == null {
+            return this.not_found_response();
+        }
+
+        // Execute route handler
+        let response = route.handler(processed_request);
+
+        // Apply response middleware
+        return this.apply_response_middleware(response, ["rate_limit"]);
+    }
+
+    fn home_page(request: HttpRequest) -> HttpResponse {
+        let user_count = database::query(self.db, "SELECT COUNT(*) FROM users")[0].count;
+        let recent_posts = database::query(self.db, "SELECT * FROM posts ORDER BY created_at DESC LIMIT 5");
+
+        let html = template::render(self.templates["home"], {
+            "user_count": user_count,
+            "recent_posts": recent_posts,
+            "current_user": request.user
+        });
+
+        return HttpResponse {
+            "status": 200,
+            "headers": { "Content-Type": "text/html" },
+            "body": html
+        };
+    }
+
+    fn api_data(request: HttpRequest) -> HttpResponse {
+        let data = {
+            "users": database::query(self.db, "SELECT id, name, email FROM users"),
+            "stats": this.get_system_stats(),
+            "timestamp": chain::get_block_timestamp()
+        };
+
+        return HttpResponse {
+            "status": 200,
+            "headers": { "Content-Type": "application/json" },
+            "body": json::stringify(data)
+        };
+    }
+
+    fn apply_middleware(request: HttpRequest, middleware_names: List<String>) -> HttpRequest {
+        let mut processed_request = request;
+
+        for middleware_name in middleware_names {
+            let middleware = self.middleware[middleware_name];
+            processed_request = middleware(processed_request);
+
+            // Stop processing if middleware returns null (e.g., auth failure)
+            if processed_request == null {
+                break;
+            }
+        }
+
+        return processed_request;
+    }
+
+    fn authentication_middleware(request: HttpRequest) -> HttpRequest {
+        let auth_header = request.headers["Authorization"];
+
+        if auth_header == null {
+            // Return 401 response instead of modifying request
+            return null; // Signal auth failure
+        }
+
+        let token = auth_header.replace("Bearer ", "");
+        let user = this.validate_jwt_token(token);
+
+        if user == null {
+            return null; // Signal auth failure
+        }
+
+        request.user = user;
+        return request;
+    }
+
+    fn logging_middleware(request: HttpRequest) -> HttpRequest {
+        log::info("web", {
+            "method": request.method,
+            "path": request.path,
+            "ip": request.remote_addr,
+            "timestamp": chain::get_block_timestamp()
+        });
+
+        return request;
+    }
+}
+
+// =====================================================
+// 3. CONCURRENT & ASYNC PROGRAMMING
+// =====================================================
+
+// @async
+service ConcurrentProcessingService {
+    workers: List<Worker>,
+    task_queue: Queue<any>,
+    results: Map<String, any>,
+
+    fn initialize() {
+        // Start worker pool
+        for i in 0..10 {
+            let worker = spawn worker_process(i);
+            self.workers.push(worker);
+        }
+
+        self.task_queue = Queue::new();
+        self.results = Map::new();
+    }
+
+    fn process_batch_async(tasks: List<any>) -> Promise<BatchResult> {
+        let batch_id = generate_id();
+        let promises = [];
+
+        // Submit all tasks asynchronously
+        for task in tasks {
+            let task_id = format!("{}_{}", batch_id, task.index);
+            let promise = this.submit_task_async(task_id, task);
+            promises.push(promise);
+        }
+
+        // Return promise that resolves when all tasks complete
+        return Promise::all(promises).then(results => {
+            return BatchResult {
+                "batch_id": batch_id,
+                "total_tasks": tasks.length(),
+                "completed_tasks": results.filter(r => r.success).length(),
+                "failed_tasks": results.filter(r => !r.success).length(),
+                "results": results,
+                "duration": Date.now() - batch_start_time
+            };
+        });
+    }
+
+    fn submit_task_async(task_id: String, task: any) -> Promise<TaskResult> {
+        return new Promise((resolve, reject) => {
+            // Add task to queue
+            self.task_queue.push({
+                "id": task_id,
+                "data": task,
+                "resolve": resolve,
+                "reject": reject
+            });
+        });
+    }
+
+    fn worker_process(worker_id: i64) {
+        while true {
+            // Get next task from queue
+            let task = self.task_queue.pop();
+
+            if task == null {
+                // No tasks available, wait
+                sleep(100);
+                continue;
+            }
+
+            try {
+                // Process the task
+                let result = this.process_task(task.data);
+
+                // Store result
+                self.results[task.id] = result;
+
+                // Resolve the promise
+                task.resolve(TaskResult {
+                    "task_id": task.id,
+                    "success": true,
+                    "result": result,
+                    "processing_time": Date.now() - task.start_time
+                });
+
+            } catch (error) {
+                // Reject the promise on error
+                task.reject(TaskResult {
+                    "task_id": task.id,
+                    "success": false,
+                    "error": error.message,
+                    "processing_time": Date.now() - task.start_time
+                });
+            }
+        }
+    }
+
+    fn process_task(task: any) -> any {
+        // Simulate different types of processing
+        match task.type {
+            "data_transformation" => {
+                return this.transform_data(task.data);
+            },
+            "api_call" => {
+                return web::fetch(task.url, task.options);
+            },
+            "file_processing" => {
+                return fs::process_file(task.file_path);
+            },
+            "computation" => {
+                return this.perform_computation(task.parameters);
+            },
+            _ => {
+                throw Error::new("UnknownTaskType", format!("Unknown task type: {}", task.type));
+            }
+        }
+    }
+
+    // Parallel data processing example
+    fn parallel_data_processing(datasets: List<any>) -> Promise<ProcessingResult> {
+        let start_time = Date.now();
+
+        // Process multiple datasets in parallel
+        let processing_promises = datasets.map(dataset =>
+            this.process_dataset_async(dataset)
+        );
+
+        return Promise::all(processing_promises).then(results => {
+            let total_records = results.sum(r => r.records_processed);
+            let total_errors = results.sum(r => r.errors);
+
+            return ProcessingResult {
+                "datasets_processed": results.length(),
+                "total_records": total_records,
+                "total_errors": total_errors,
+                "average_processing_time": results.map(r => r.processing_time).average(),
+                "total_time": Date.now() - start_time,
+                "results": results
+            };
+        });
+    }
+}
+
+// =====================================================
+// 4. SCIENTIFIC COMPUTING
+// =====================================================
+
+// @ai
+service ScientificComputingService {
+    numerical_methods: Map<String, Function>,
+    statistical_models: Map<String, any>,
+
+    fn initialize() {
+        // Setup numerical methods
+        self.numerical_methods = {
+            "newton_raphson": this.newton_raphson_method,
+            "runge_kutta": this.runge_kutta_method,
+            "monte_carlo": this.monte_carlo_simulation,
+            "finite_difference": this.finite_difference_method
+        };
+
+        // Setup statistical models
+        self.statistical_models = {
+            "linear_regression": this.linear_regression_model,
+            "logistic_regression": this.logistic_regression_model,
+            "neural_network": this.neural_network_model
+        };
+    }
+
+    fn solve_differential_equation(equation: String, initial_conditions: any, parameters: any) -> Solution {
+        // Parse the differential equation
+        let parsed_equation = this.parse_differential_equation(equation);
+
+        // Choose appropriate numerical method
+        let method = this.select_numerical_method(parsed_equation);
+
+        // Solve using the selected method
+        let solution = method(parsed_equation, initial_conditions, parameters);
+
+        return Solution {
+            "method_used": method.name,
+            "solution_points": solution.points,
+            "convergence": solution.convergence,
+            "error_estimate": solution.error,
+            "computation_time": solution.time
+        };
+    }
+
+    fn newton_raphson_method(equation: any, initial_guess: Float, tolerance: Float) -> RootResult {
+        let x = initial_guess;
+        let max_iterations = 100;
+        let iteration = 0;
+
+        while iteration < max_iterations {
+            let fx = this.evaluate_function(equation, x);
+            let dfx = this.evaluate_derivative(equation, x);
+
+            if abs(dfx) < 1e-10 {
+                throw Error::new("DerivativeError", "Derivative too small");
+            }
+
+            let x_new = x - fx / dfx;
+
+            if abs(x_new - x) < tolerance {
+                return RootResult {
+                    "root": x_new,
+                    "iterations": iteration + 1,
+                    "converged": true,
+                    "final_error": abs(x_new - x)
+                };
+            }
+
+            x = x_new;
+            iteration += 1;
+        }
+
+        return RootResult {
+            "root": x,
+            "iterations": max_iterations,
+            "converged": false,
+            "final_error": abs(this.evaluate_function(equation, x))
+        };
+    }
+
+    fn monte_carlo_simulation(parameters: MonteCarloParams) -> SimulationResult {
+        let samples = [];
+        let start_time = Date.now();
+
+        for i in 0..parameters.num_samples {
+            let sample = this.generate_random_sample(parameters.distribution);
+            let result = this.evaluate_simulation_function(sample, parameters.function);
+            samples.push(result);
+        }
+
+        let mean = samples.average();
+        let variance = samples.map(s => (s - mean) ** 2).sum() / samples.length();
+        let std_dev = variance ** 0.5;
+
+        // Confidence interval
+        let confidence_level = 0.95;
+        let z_score = 1.96; // for 95% confidence
+        let margin_error = z_score * std_dev / sqrt(samples.length());
+
+        return SimulationResult {
+            "num_samples": parameters.num_samples,
+            "mean": mean,
+            "variance": variance,
+            "std_dev": std_dev,
+            "confidence_interval": {
+                "lower": mean - margin_error,
+                "upper": mean + margin_error,
+                "level": confidence_level
+            },
+            "computation_time": Date.now() - start_time
+        };
+    }
+
+    fn linear_regression_model(data_points: List<Point>) -> RegressionResult {
+        let n = data_points.length();
+
+        // Calculate sums
+        let sum_x = data_points.sum(p => p.x);
+        let sum_y = data_points.sum(p => p.y);
+        let sum_xy = data_points.sum(p => p.x * p.y);
+        let sum_x2 = data_points.sum(p => p.x * p.x);
+
+        // Calculate slope and intercept
+        let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
+        let intercept = (sum_y - slope * sum_x) / n;
+
+        // Calculate R-squared
+        let y_mean = sum_y / n;
+        let ss_res = data_points.sum(p => (p.y - (slope * p.x + intercept)) ** 2);
+        let ss_tot = data_points.sum(p => (p.y - y_mean) ** 2);
+        let r_squared = 1 - (ss_res / ss_tot);
+
+        // Calculate predictions
+        let predictions = data_points.map(p => slope * p.x + intercept);
+
+        return RegressionResult {
+            "slope": slope,
+            "intercept": intercept,
+            "r_squared": r_squared,
+            "predictions": predictions,
+            "residuals": data_points.map((p, i) => p.y - predictions[i]),
+            "equation": format!("y = {}x + {}", slope, intercept)
+        };
+    }
+
+    fn neural_network_model(training_data: any, architecture: any) -> NeuralNetwork {
+        // Initialize neural network
+        let network = this.initialize_neural_network(architecture);
+
+        // Training loop
+        let epochs = architecture.epochs || 100;
+        let learning_rate = architecture.learning_rate || 0.01;
+
+        for epoch in 0..epochs {
+            let epoch_loss = 0.0;
+
+            // Forward pass and backpropagation for each training sample
+            for sample in training_data.samples {
+                let prediction = this.forward_pass(network, sample.input);
+                let loss = this.calculate_loss(prediction, sample.output);
+                epoch_loss += loss;
+
+                // Backpropagation
+                let gradients = this.backward_pass(network, prediction, sample.output);
+                this.update_weights(network, gradients, learning_rate);
+            }
+
+            // Log progress
+            if epoch % 10 == 0 {
+                log::info("neural_network", {
+                    "epoch": epoch,
+                    "loss": epoch_loss / training_data.samples.length(),
+                    "learning_rate": learning_rate
+                });
+            }
+        }
+
+        return NeuralNetwork {
+            "architecture": architecture,
+            "weights": network.weights,
+            "biases": network.biases,
+            "training_complete": true,
+            "final_loss": epoch_loss / training_data.samples.length()
+        };
+    }
+}
+
+// =====================================================
+// 5. SYSTEM ADMINISTRATION & AUTOMATION
+// =====================================================
+
+// @admin
+service SystemAutomationService {
+    monitored_services: Map<String, ServiceStatus>,
+    automation_rules: Map<String, AutomationRule>,
+    alert_channels: Map<String, AlertChannel>,
+
+    fn initialize() {
+        // Setup service monitoring
+        self.monitored_services = {
+            "database": {
+                "name": "PostgreSQL",
+                "check_command": "pg_isready -h localhost",
+                "restart_command": "systemctl restart postgresql",
+                "health_endpoint": "http://localhost:5432/health"
+            },
+            "web_server": {
+                "name": "Nginx",
+                "check_command": "systemctl is-active nginx",
+                "restart_command": "systemctl restart nginx",
+                "health_endpoint": "http://localhost/health"
+            },
+            "cache": {
+                "name": "Redis",
+                "check_command": "redis-cli ping",
+                "restart_command": "systemctl restart redis",
+                "health_endpoint": null
+            }
+        };
+
+        // Setup automation rules
+        self.automation_rules = {
+            "auto_restart": {
+                "condition": "service_down",
+                "action": "restart_service",
+                "max_attempts": 3,
+                "cooldown_minutes": 5
+            },
+            "scale_up": {
+                "condition": "high_load",
+                "action": "increase_instances",
+                "threshold": 0.8,
+                "cooldown_minutes": 10
+            },
+            "cleanup": {
+                "condition": "disk_usage_high",
+                "action": "cleanup_old_files",
+                "threshold": 0.9,
+                "retention_days": 30
+            }
+        };
+
+        // Setup alert channels
+        self.alert_channels = {
+            "email": {
+                "type": "email",
+                "recipients": ["admin@company.com", "devops@company.com"],
+                "template": "system_alert.html"
+            },
+            "slack": {
+                "type": "slack",
+                "webhook_url": "https://hooks.slack.com/services/...",
+                "channel": "#alerts",
+                "username": "SystemMonitor"
+            },
+            "sms": {
+                "type": "twilio",
+                "account_sid": "AC...",
+                "auth_token": "your_auth_token",
+                "from_number": "+1234567890",
+                "to_numbers": ["+0987654321"]
+            }
+        };
+    }
+
+    fn monitor_system_health() -> SystemHealthReport {
+        let services_status = {};
+        let system_metrics = this.collect_system_metrics();
+        let alerts = [];
+
+        // Check each monitored service
+        for service_name, service_config in self.monitored_services {
+            let status = this.check_service_health(service_name, service_config);
+
+            services_status[service_name] = status;
+
+            // Check automation rules
+            for rule_name, rule in self.automation_rules {
+                if this.evaluate_rule_condition(rule, status, system_metrics) {
+                    let action_result = this.execute_automation_action(rule, service_name);
+                    alerts.push({
+                        "rule": rule_name,
+                        "service": service_name,
+                        "action": rule.action,
+                        "result": action_result,
+                        "timestamp": chain::get_block_timestamp()
+                    });
+                }
+            }
+        }
+
+        // Send alerts if any
+        if alerts.length() > 0 {
+            this.send_alerts(alerts);
+        }
+
+        return SystemHealthReport {
+            "timestamp": chain::get_block_timestamp(),
+            "services": services_status,
+            "system_metrics": system_metrics,
+            "alerts": alerts,
+            "overall_status": this.calculate_overall_status(services_status)
+        };
+    }
+
+    fn check_service_health(service_name: String, config: any) -> ServiceHealth {
+        let health_check = {
+            "name": service_name,
+            "status": "unknown",
+            "response_time": null,
+            "last_checked": chain::get_block_timestamp(),
+            "error_message": null
+        };
+
+        try {
+            // Check if service is running
+            let start_time = Date.now();
+            let check_result = system::execute_command(config.check_command);
+            let response_time = Date.now() - start_time;
+
+            if check_result.success {
+                health_check.status = "healthy";
+                health_check.response_time = response_time;
+            } else {
+                health_check.status = "unhealthy";
+                health_check.error_message = check_result.stderr;
+            }
+
+            // Additional health check via HTTP if available
+            if config.health_endpoint != null {
+                let http_check = web::get(config.health_endpoint);
+                if http_check.status != 200 {
+                    health_check.status = "degraded";
+                    health_check.error_message = "HTTP health check failed";
+                }
+            }
+
+        } catch (error) {
+            health_check.status = "error";
+            health_check.error_message = error.message;
+        }
+
+        return health_check;
+    }
+
+    fn collect_system_metrics() -> SystemMetrics {
+        return {
+            "cpu_usage": system::get_cpu_usage(),
+            "memory_usage": system::get_memory_usage(),
+            "disk_usage": system::get_disk_usage(),
+            "network_io": system::get_network_io(),
+            "load_average": system::get_load_average(),
+            "uptime": system::get_uptime(),
+            "temperature": system::get_cpu_temperature()
+        };
+    }
+
+    fn execute_automation_action(rule: AutomationRule, service_name: String) -> ActionResult {
+        match rule.action {
+            "restart_service" => {
+                let service_config = self.monitored_services[service_name];
+                let restart_result = system::execute_command(service_config.restart_command);
+
+                return ActionResult {
+                    "action": "restart_service",
+                    "service": service_name,
+                    "success": restart_result.success,
+                    "output": restart_result.stdout,
+                    "error": restart_result.stderr
+                };
+            },
+            "increase_instances" => {
+                let scale_result = cloud::scale_service(service_name, "up", 1);
+
+                return ActionResult {
+                    "action": "increase_instances",
+                    "service": service_name,
+                    "success": scale_result.success,
+                    "new_instance_count": scale_result.new_count,
+                    "scaling_time": scale_result.duration
+                };
+            },
+            "cleanup_old_files" => {
+                let cleanup_result = fs::cleanup_old_files("/var/log", rule.retention_days);
+
+                return ActionResult {
+                    "action": "cleanup_old_files",
+                    "path": "/var/log",
+                    "files_deleted": cleanup_result.deleted_count,
+                    "space_freed": cleanup_result.bytes_freed,
+                    "success": true
+                };
+            },
+            _ => {
+                return ActionResult {
+                    "action": rule.action,
+                    "success": false,
+                    "error": "Unknown action type"
+                };
+            }
+        }
+    }
+
+    fn send_alerts(alerts: List<any>) {
+        for channel_name, channel_config in self.alert_channels {
+            match channel_config.type {
+                "email" => {
+                    this.send_email_alert(channel_config, alerts);
+                },
+                "slack" => {
+                    this.send_slack_alert(channel_config, alerts);
+                },
+                "sms" => {
+                    this.send_sms_alert(channel_config, alerts);
+                }
+            }
+        }
+    }
+
+    fn backup_system_data() -> BackupResult {
+        let timestamp = chain::get_block_timestamp();
+        let backup_id = format!("backup_{}", timestamp);
+
+        // Backup database
+        let db_backup = database::create_backup({
+            "type": "postgresql",
+            "output_file": format!("/backups/db_{}.sql", backup_id),
+            "compression": "gzip"
+        });
+
+        // Backup application files
+        let app_backup = fs::create_backup({
+            "source_path": "/var/www/myapp",
+            "output_file": format!("/backups/app_{}.tar.gz", backup_id),
+            "exclude_patterns": ["*.log", "tmp/*", "cache/*"]
+        });
+
+        // Backup configuration
+        let config_backup = fs::copy_files({
+            "source_path": "/etc/myapp",
+            "destination_path": format!("/backups/config_{}", backup_id)
+        });
+
+        // Upload to cloud storage
+        let cloud_upload = cloud::upload_backup({
+            "backup_id": backup_id,
+            "files": [db_backup.file_path, app_backup.file_path, config_backup.destination_path],
+            "retention_days": 30
+        });
+
+        return BackupResult {
+            "backup_id": backup_id,
+            "timestamp": timestamp,
+            "components": {
+                "database": db_backup.success,
+                "application": app_backup.success,
+                "configuration": config_backup.success,
+                "cloud_upload": cloud_upload.success
+            },
+            "total_size": db_backup.size + app_backup.size + config_backup.size,
+            "duration": Date.now() - timestamp
+        };
+    }
+}
+
+// =====================================================
+// UTILITY STRUCTURES
+// =====================================================
+
+struct AnalysisResult {
+    total_records: i64,
+    valid_records: i64,
+    statistics: Statistics,
+    trends: any,
+    insights: List<String>,
+    recommendations: List<String>
+}
+
+struct Statistics {
+    count: i64,
+    sum: Float,
+    mean: Float,
+    min: Float,
+    max: Float,
+    std_dev: Float,
+    quartiles: Quartiles
+}
+
+struct Quartiles {
+    q1: Float,
+    q2: Float,
+    q3: Float
+}
+
+struct BatchResult {
+    batch_id: String,
+    total_tasks: i64,
+    completed_tasks: i64,
+    failed_tasks: i64,
+    results: List<TaskResult>,
+    duration: i64
+}
+
+struct TaskResult {
+    task_id: String,
+    success: bool,
+    result: any,
+    error: String,
+    processing_time: i64
+}
+
+struct Solution {
+    method_used: String,
+    solution_points: List<Point>,
+    convergence: bool,
+    error_estimate: Float,
+    computation_time: i64
+}
+
+struct RootResult {
+    root: Float,
+    iterations: i64,
+    converged: bool,
+    final_error: Float
+}
+
+struct MonteCarloParams {
+    num_samples: i64,
+    distribution: String,
+    function: String
+}
+
+struct SimulationResult {
+    num_samples: i64,
+    mean: Float,
+    variance: Float,
+    std_dev: Float,
+    confidence_interval: any,
+    computation_time: i64
+}
+
+struct Point {
+    x: Float,
+    y: Float
+}
+
+struct RegressionResult {
+    slope: Float,
+    intercept: Float,
+    r_squared: Float,
+    predictions: List<Float>,
+    residuals: List<Float>,
+    equation: String
+}
+
+struct NeuralNetwork {
+    architecture: any,
+    weights: List<List<Float>>,
+    biases: List<List<Float>>,
+    training_complete: bool,
+    final_loss: Float
+}
+
+struct SystemHealthReport {
+    timestamp: i64,
+    services: Map<String, ServiceHealth>,
+    system_metrics: SystemMetrics,
+    alerts: List<any>,
+    overall_status: String
+}
+
+struct ServiceHealth {
+    name: String,
+    status: String,
+    response_time: i64,
+    last_checked: i64,
+    error_message: String
+}
+
+struct SystemMetrics {
+    cpu_usage: Float,
+    memory_usage: Float,
+    disk_usage: Float,
+    network_io: any,
+    load_average: List<Float>,
+    uptime: i64,
+    temperature: Float
+}
+
+struct ActionResult {
+    action: String,
+    service: String,
+    success: bool,
+    output: String,
+    error: String,
+    new_instance_count: i64,
+    scaling_time: i64,
+    files_deleted: i64,
+    space_freed: i64
+}
+
+struct BackupResult {
+    backup_id: String,
+    timestamp: i64,
+    components: any,
+    total_size: i64,
+    duration: i64
+}

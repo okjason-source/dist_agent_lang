@@ -1,0 +1,42 @@
+// Test mold:: stdlib - load, spawn_from, list
+// Run from dist_agent_lang: dal run examples/test_mold_stdlib.dal
+// Uses verify_mold.mold.json in dist_agent_lang root
+// mold::get_info and mold::use_mold require web3 feature + on-chain MoldRegistry
+
+@trust("hybrid")
+fn main() {
+    log::info("mold_test", { "message": "Testing mold:: load, spawn_from, list" });
+
+    // List local molds
+    let paths = mold::list();
+    log::info("mold_test", {
+        "test": "list",
+        "paths": paths
+    });
+
+    // Load mold config (returns map with name, version, agent {...})
+    let config = mold::load("verify_mold");
+    log::info("mold_test", {
+        "test": "load",
+        "mold_name": config.name,
+        "version": config.version
+    });
+
+    // Spawn agent from mold (optional name override)
+    let agent_id = mold::spawn_from("verify_mold", "MoldTestAgent");
+    log::info("mold_test", {
+        "test": "spawn_from",
+        "agent_id": agent_id,
+        "result": "passed"
+    });
+
+    let status = ai::get_agent_status(agent_id);
+    log::info("mold_test", {
+        "test": "agent_status",
+        "agent_id": agent_id,
+        "status": status,
+        "result": "passed"
+    });
+
+    log::info("mold_test", { "message": "All mold:: stdlib tests passed" });
+}

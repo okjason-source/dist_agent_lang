@@ -1,0 +1,10 @@
+@trust("hybrid")
+@web
+@ai
+@chain("ethereum")
+service LogTest {
+    fn test_function() -> bool {
+        log::info("test", "Testing Auth Session Creation");
+        return true;
+    }
+}

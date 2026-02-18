@@ -1,0 +1,23 @@
+--- src/http_server_integration.rs
++++ delete match arm "GET" in create_router_with_options
+@@ -66,19 +66,17 @@
+                         request,
+                         &handler_name,
+                     ).await
+                 }
+             };
+             
+             // Add route based on method
+             match method.as_str() {
+-                "GET" => {
+-                    router = router.route(path, get(handler));
+-                }
++                 /* ~ changed by cargo-mutants ~ */
+                 "POST" => {
+                     router = router.route(path, post(handler));
+                 }
+                 "PUT" => {
+                     router = router.route(path, axum::routing::put(handler));
+                 }
+                 "DELETE" => {
+                     router = router.route(path, axum::routing::delete(handler));

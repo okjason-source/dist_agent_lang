@@ -1,0 +1,4 @@
+// Minimal service with one function
+service Test {
+    fn main() {}
+}

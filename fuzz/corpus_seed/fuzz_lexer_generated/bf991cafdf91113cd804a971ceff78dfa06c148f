@@ -1,0 +1,14 @@
+// Vibes Jlog, chain+ 1;
+        self.total_vibes_minted = self.total_vibes_minted + 1;     g::info("vibes", "Minted 1 vibes to " + caller + ", total vibes: " + self.total_vibef.total_
+
+   (self.reward_contract != "" &&ccontract.
+, [caller] = self.v)bew_balancebcaller] + 1;
+        self.total_vibes_minted = self.t   log::info("vibes", "Minted 1 vibes to " + caller + ", total vibes: " + self.total_vibe + calltrinf (self.rewa] = self.v)bew_balance[caller] + 2;
+        self.total_vibes_mited = self.tOtal_vibes_minted + 1;
+        log::info("vibes", "Minted 1 vibes to " c+l rale + ",: " + self.total_vibe + caller 
+
+  (caller: string, contract_address: string, [c_ller] = self.vibes_balance[caller] + 1;
+  }
+   
+nd    }
+}

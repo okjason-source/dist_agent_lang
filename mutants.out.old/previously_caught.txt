@@ -1,0 +1,1833 @@
+src/mold/mod.rs:178:5: replace resolve_mold_path -> Result<PathBuf, String> with Ok(Default::default())
+src/http_server.rs:97:17: delete match arm "PUT" in start_http_server
+src/http_server_security_middleware.rs:22:5: replace rate_limit_middleware -> Response with Default::default()
+src/http_server_security_middleware.rs:49:5: replace request_size_middleware -> Response with Default::default()
+src/http_server_security_middleware.rs:85:5: replace auth_middleware -> Response with Default::default()
+src/http_server_security_middleware.rs:122:5: replace input_validation_middleware -> Response with Default::default()
+src/http_server_handlers.rs:94:23: replace || with && in path_pattern_matches
+src/http_server_handlers.rs:154:5: replace get_route_handler_name -> Option<String> with None
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router with Default::default()
+src/lexer/lexer.rs:112:45: replace < with <= in Lexer::next_token_immutable
+src/http_server_security.rs:438:9: replace SecurityLogger::log_auth_success with ()
+src/http_server_handlers.rs:89:63: delete ! in path_pattern_matches
+src/lexer/lexer.rs:413:79: replace + with * in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:648:24: replace < with == in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:648:24: replace < with > in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:648:24: replace < with <= in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:650:19: replace == with != in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:651:26: replace += with -= in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:651:26: replace += with *= in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:654:26: replace == with != in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:655:26: replace += with *= in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:657:29: replace < with == in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:657:29: replace < with > in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:666:30: replace += with *= in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:673:26: replace == with != in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:682:26: replace += with -= in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:683:24: replace += with -= in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:693:5: replace decode_escape -> char with Default::default()
+src/mold/parser.rs:8:5: replace parse_mold_content -> Result<MoldConfig, String> with Ok(Default::default())
+src/mold/parser.rs:12:8: delete ! in parse_mold_content
+src/mold/ipfs.rs:49:5: replace cat -> Result<String, String> with Ok(String::new())
+src/mold/web3.rs:133:5: replace mold_id_by_ipfs_hash -> Result<u64, String> with Ok(0)
+src/parser/parser.rs:38:9: replace Parser::new_with_positions -> Self with Default::default()
+src/http_server_handlers.rs:26:5: replace handle_with_middleware -> Response<Body> with Response::new(Default::default())
+src/http_server_handlers.rs:26:5: replace handle_with_middleware -> Response<Body> with Response::from(Default::default())
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::new()))
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([(String::new(), String::new())])))
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([(String::new(), "xyzzy".into())])))
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([("xyzzy".into(), String::new())])))
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([("xyzzy".into(), "xyzzy".into())])))
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::new()))
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([(String::new(), String::new())])))
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([(String::new(), "xyzzy".into())])))
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([("xyzzy".into(), String::new())])))
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([("xyzzy".into(), "xyzzy".into())])))
+src/http_server_handlers.rs:154:5: replace get_route_handler_name -> Option<String> with Some(String::new())
+src/http_server_handlers.rs:154:5: replace get_route_handler_name -> Option<String> with Some("xyzzy".into())
+src/http_server_integration.rs:28:5: replace create_router_with_runtime_factory -> Router with Default::default()
+src/http_server_integration.rs:40:5: replace create_router_with_options -> Router with Default::default()
+src/http_server_integration.rs:77:17: delete match arm "POST" in create_router_with_options
+src/lexer/lexer.rs:266:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:458:53: replace < with > in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((0, 0, 0, String::new()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((0, 0, 0, "xyzzy".into()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((0, 0, 1, String::new()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((0, 0, 1, "xyzzy".into()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((0, 1, 0, String::new()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((0, 1, 0, "xyzzy".into()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((0, 1, 1, String::new()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((0, 1, 1, "xyzzy".into()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((1, 0, 0, String::new()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((1, 0, 0, "xyzzy".into()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((1, 0, 1, String::new()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((1, 0, 1, "xyzzy".into()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((1, 1, 0, String::new()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((1, 1, 0, "xyzzy".into()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((1, 1, 1, String::new()))
+src/lexer/lexer.rs:645:9: replace Lexer::read_string_immutable_with_positions -> Result<(usize, usize, usize, String), LexerError> with Ok((1, 1, 1, "xyzzy".into()))
+src/lexer/lexer.rs:645:18: replace += with -= in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:645:18: replace += with *= in Lexer::read_string_immutable_with_positions
+src/lexer/lexer.rs:646:16: replace += with *= in Lexer::read_string_immutable_with_positions
+src/http_server.rs:137:5: replace home_handler -> Html<String> with Html::new()
+src/http_server.rs:137:5: replace home_handler -> Html<String> with Html::from_iter([String::new()])
+src/http_server.rs:137:5: replace home_handler -> Html<String> with Html::new(String::new())
+src/http_server.rs:137:5: replace home_handler -> Html<String> with Html::from_iter(["xyzzy".into()])
+src/http_server.rs:137:5: replace home_handler -> Html<String> with Html::new("xyzzy".into())
+src/http_server.rs:137:5: replace home_handler -> Html<String> with Html::from("xyzzy".into())
+src/http_server.rs:485:5: replace balance_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:485:5: replace balance_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:485:5: replace balance_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:485:5: replace balance_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:497:5: replace connect_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:497:5: replace connect_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:497:5: replace connect_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:497:5: replace connect_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:508:5: replace transfer_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:508:5: replace transfer_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:508:5: replace transfer_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:508:5: replace transfer_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:519:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:519:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:519:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:519:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:530:5: replace health_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:530:5: replace health_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:530:5: replace health_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:530:5: replace health_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server_handlers.rs:26:5: replace handle_with_middleware -> Response<Body> with Response::new()
+src/http_server_handlers.rs:26:5: replace handle_with_middleware -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_integration.rs:106:5: replace home_handler -> Response<Body> with Response::new()
+src/http_server_integration.rs:106:5: replace home_handler -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_integration.rs:111:5: replace health_handler -> Response<Body> with Response::new()
+src/http_server_integration.rs:111:5: replace health_handler -> Response<Body> with Response::from_iter([Default::default()])
+src/lib.rs:82:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:82:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:82:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/cli.rs:426:9: replace Cli::parse -> Self with Default::default()
+src/http_server_security.rs:45:74: replace < with <= in RateLimiter::check_rate_limit
+src/http_server_security.rs:65:5: replace security_headers_middleware -> Response with Default::default()
+src/http_server_security.rs:401:9: replace SecurityLogger::log_event with ()
+src/lexer/lexer.rs:45:27: replace > with == in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:45:27: replace > with >= in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:113:52: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:174:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:180:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:197:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:231:75: replace + with * in Lexer::next_token_immutable
+src/lib.rs:41:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:50:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:61:5: replace execute_dal_with_scope -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/cli.rs:404:9: replace Cli::parse -> Self with Default::default()
+src/mold/mod.rs:47:5: replace mold_config_to_agent_config -> Result<AgentConfig, String> with Ok(Default::default())
+src/mold/mod.rs:83:5: replace json_value_to_runtime_value -> Value with Default::default()
+src/mold/mod.rs:112:5: replace create_from_mold_path -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/mold/mod.rs:144:5: replace create_from_mold_source -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/lexer/lexer.rs:39:47: replace * with + in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:99:13: delete match arm 'a'..= 'z' | 'A'..= 'Z' | '_' | '$' in Lexer::next_token_immutable
+src/lexer/lexer.rs:266:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:400:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 1, 0)
+src/lexer/lexer.rs:400:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 1, 1)
+src/lexer/lexer.rs:400:24: replace < with == in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:400:24: replace < with > in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:400:24: replace < with <= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:403:17: delete match arm ' ' | '\t' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:407:17: delete match arm '\n' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:420:17: delete match arm '/' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:404:30: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:405:28: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:405:28: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:408:26: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:408:26: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:410:30: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:422:37: replace < with == in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:422:37: replace < with > in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:422:37: replace < with <= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:422:33: replace + with - in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:422:33: replace + with * in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:423:59: replace + with - in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:423:59: replace + with * in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:424:36: replace == with != in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:426:38: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:426:38: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:427:44: replace < with == in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:427:44: replace < with > in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:427:44: replace < with <= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:429:47: replace == with != in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:430:42: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:432:46: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:434:54: replace == with != in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:446:43: replace == with != in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:449:44: replace + with - in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:484:9: replace Lexer::is_keyword -> Option<Keyword> with None
+src/lexer/lexer.rs:560:9: replace Lexer::read_identifier_immutable -> (usize, String) with (0, String::new())
+src/lexer/lexer.rs:560:9: replace Lexer::read_identifier_immutable -> (usize, String) with (0, "xyzzy".into())
+src/lexer/lexer.rs:560:9: replace Lexer::read_identifier_immutable -> (usize, String) with (1, String::new())
+src/lexer/lexer.rs:560:9: replace Lexer::read_identifier_immutable -> (usize, String) with (1, "xyzzy".into())
+src/lexer/lexer.rs:561:24: replace < with == in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:561:24: replace < with > in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:561:24: replace < with <= in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:563:50: replace || with && in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:563:37: replace || with && in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:563:43: replace == with != in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:563:56: replace == with != in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:564:26: replace += with -= in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:578:24: replace < with == in Lexer::read_number_immutable
+src/lexer/lexer.rs:578:24: replace < with > in Lexer::read_number_immutable
+src/lexer/lexer.rs:578:24: replace < with <= in Lexer::read_number_immutable
+src/lexer/lexer.rs:581:26: replace += with -= in Lexer::read_number_immutable
+src/lexer/lexer.rs:588:40: replace && with || in Lexer::read_number_immutable
+src/lexer/lexer.rs:588:21: replace < with == in Lexer::read_number_immutable
+src/lexer/lexer.rs:588:21: replace < with > in Lexer::read_number_immutable
+src/lexer/lexer.rs:588:21: replace < with <= in Lexer::read_number_immutable
+src/lexer/lexer.rs:588:64: replace == with != in Lexer::read_number_immutable
+src/lexer/lexer.rs:590:48: replace && with || in Lexer::read_number_immutable
+src/lexer/lexer.rs:590:29: replace < with == in Lexer::read_number_immutable
+src/lexer/lexer.rs:590:29: replace < with > in Lexer::read_number_immutable
+src/lexer/lexer.rs:590:71: replace + with - in Lexer::read_number_immutable
+src/lexer/lexer.rs:590:71: replace + with * in Lexer::read_number_immutable
+src/lexer/lexer.rs:592:26: replace += with -= in Lexer::read_number_immutable
+src/lexer/lexer.rs:592:26: replace += with *= in Lexer::read_number_immutable
+src/lexer/lexer.rs:595:32: replace < with == in Lexer::read_number_immutable
+src/lexer/lexer.rs:595:32: replace < with > in Lexer::read_number_immutable
+src/lexer/lexer.rs:598:34: replace += with -= in Lexer::read_number_immutable
+src/lexer/lexer.rs:622:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((0, String::new()))
+src/lexer/lexer.rs:622:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((0, "xyzzy".into()))
+src/lexer/lexer.rs:622:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((1, String::new()))
+src/lexer/lexer.rs:622:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((1, "xyzzy".into()))
+src/lexer/lexer.rs:622:18: replace += with -= in Lexer::read_string_immutable
+src/lexer/lexer.rs:622:18: replace += with *= in Lexer::read_string_immutable
+src/lexer/lexer.rs:624:24: replace < with == in Lexer::read_string_immutable
+src/lexer/lexer.rs:624:24: replace < with > in Lexer::read_string_immutable
+src/lexer/lexer.rs:624:24: replace < with <= in Lexer::read_string_immutable
+src/lexer/lexer.rs:626:19: replace == with != in Lexer::read_string_immutable
+src/lexer/lexer.rs:631:26: replace += with -= in Lexer::read_string_immutable
+src/lexer/lexer.rs:631:26: replace += with *= in Lexer::read_string_immutable
+src/lexer/lexer.rs:633:26: replace == with != in Lexer::read_string_immutable
+src/lexer/lexer.rs:634:26: replace += with -= in Lexer::read_string_immutable
+src/lexer/lexer.rs:634:26: replace += with *= in Lexer::read_string_immutable
+src/lexer/lexer.rs:636:26: replace += with -= in Lexer::read_string_immutable
+src/lexer/lexer.rs:484:9: replace Lexer::is_keyword -> Option<Keyword> with Some(Default::default())
+src/lexer/lexer.rs:574:9: replace Lexer::read_number_immutable -> Result<(usize, Literal), LexerError> with Ok((0, Default::default()))
+src/lexer/lexer.rs:574:9: replace Lexer::read_number_immutable -> Result<(usize, Literal), LexerError> with Ok((1, Default::default()))
+src/http_server_security.rs:426:9: replace SecurityLogger::log_auth_failure with ()
+src/lib.rs:39:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:48:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/mold/mod.rs:29:5: replace mold_config_to_agent_config -> Result<AgentConfig, String> with Ok(Default::default())
+src/mold/mod.rs:57:5: replace json_value_to_runtime_value -> Value with Default::default()
+src/mold/mod.rs:86:5: replace create_from_mold_path -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/mold/mod.rs:118:5: replace create_from_mold_source -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/http_server.rs:97:17: delete match arm "DELETE" in start_http_server
+src/lexer/tokens.rs:500:9: replace <impl fmt::Display for TokenStruct>::fmt -> fmt::Result with Ok(Default::default())
+src/lexer/tokens.rs:506:9: replace <impl fmt::Display for Token>::fmt -> fmt::Result with Ok(Default::default())
+src/lexer/tokens.rs:529:9: replace CompilationTarget::from_string -> Option<Self> with None
+src/lexer/tokens.rs:530:13: delete match arm "blockchain" in CompilationTarget::from_string
+src/lexer/tokens.rs:531:13: delete match arm "wasm" | "webassembly" in CompilationTarget::from_string
+src/lexer/tokens.rs:532:13: delete match arm "native" in CompilationTarget::from_string
+src/lexer/tokens.rs:533:13: delete match arm "mobile" in CompilationTarget::from_string
+src/lexer/tokens.rs:534:13: delete match arm "edge" in CompilationTarget::from_string
+src/lexer/tokens.rs:540:9: replace CompilationTarget::to_string -> String with String::new()
+src/lexer/tokens.rs:540:9: replace CompilationTarget::to_string -> String with "xyzzy".into()
+src/lexer/tokens.rs:601:9: replace TrustLevel::from_string -> Option<Self> with None
+src/lexer/tokens.rs:602:13: delete match arm "decentralized" in TrustLevel::from_string
+src/lexer/tokens.rs:603:13: delete match arm "hybrid" in TrustLevel::from_string
+src/lexer/tokens.rs:604:13: delete match arm "centralized" in TrustLevel::from_string
+src/lexer/tokens.rs:610:9: replace TrustLevel::to_string -> String with String::new()
+src/lexer/tokens.rs:610:9: replace TrustLevel::to_string -> String with "xyzzy".into()
+src/lexer/tokens.rs:685:5: replace get_trust_profiles -> HashMap<TrustLevel, SecurityProfile> with HashMap::new()
+src/lexer/tokens.rs:774:9: replace BlockchainNetwork::from_string -> Option<Self> with None
+src/lexer/tokens.rs:775:13: delete match arm "ethereum" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:776:13: delete match arm "polygon" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:777:13: delete match arm "binance" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:778:13: delete match arm "solana" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:779:13: delete match arm "avalanche" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:780:13: delete match arm "arbitrum" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:781:13: delete match arm "optimism" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:787:9: replace BlockchainNetwork::to_string -> String with String::new()
+src/lexer/tokens.rs:787:9: replace BlockchainNetwork::to_string -> String with "xyzzy".into()
+src/lexer/tokens.rs:800:9: replace BlockchainNetwork::is_evm_compatible -> bool with true
+src/lexer/tokens.rs:800:9: replace BlockchainNetwork::is_evm_compatible -> bool with false
+src/lexer/tokens.rs:811:9: replace BlockchainNetwork::is_solana_compatible -> bool with true
+src/lexer/tokens.rs:811:9: replace BlockchainNetwork::is_solana_compatible -> bool with false
+src/lexer/tokens.rs:1052:9: replace InterfaceLanguage::from_string -> Option<Self> with None
+src/lexer/tokens.rs:1053:13: delete match arm "typescript" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1054:13: delete match arm "javascript" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1055:13: delete match arm "python" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1056:13: delete match arm "rust" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1057:13: delete match arm "java" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1058:13: delete match arm "go" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1064:9: replace InterfaceLanguage::to_string -> String with String::new()
+src/lexer/tokens.rs:1064:9: replace InterfaceLanguage::to_string -> String with "xyzzy".into()
+src/lexer/lexer.rs:274:13: delete match arm '?' in Lexer::next_token_immutable
+src/lexer/lexer.rs:279:13: delete match arm ',' in Lexer::next_token_immutable
+src/lexer/lexer.rs:284:13: delete match arm ';' in Lexer::next_token_immutable
+src/lexer/lexer.rs:289:13: delete match arm '[' in Lexer::next_token_immutable
+src/lexer/lexer.rs:294:13: delete match arm ']' in Lexer::next_token_immutable
+src/lexer/lexer.rs:299:13: delete match arm '{' in Lexer::next_token_immutable
+src/lexer/lexer.rs:304:13: delete match arm '}' in Lexer::next_token_immutable
+src/lexer/lexer.rs:309:13: delete match arm '(' in Lexer::next_token_immutable
+src/lexer/lexer.rs:314:13: delete match arm ')' in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:265:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:265:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:269:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:269:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:275:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:275:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:280:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:280:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:285:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:285:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:290:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:290:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:295:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:295:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:296:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:300:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:300:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:305:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:305:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:310:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:310:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:315:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:315:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:325:20: replace <= with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:393:9: replace Lexer::skip_whitespace with ()
+src/lexer/lexer.rs:400:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 0, 0)
+src/lexer/lexer.rs:400:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 0, 1)
+src/lexer/lexer.rs:400:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 1, 0)
+src/lexer/lexer.rs:400:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 1, 1)
+src/lexer/lexer.rs:400:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 0, 0)
+src/lexer/lexer.rs:400:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 0, 1)
+src/lexer/tokens.rs:529:9: replace CompilationTarget::from_string -> Option<Self> with Some(Default::default())
+src/lexer/tokens.rs:571:9: replace TargetConstraint::with_allowed_operations -> Self with Default::default()
+src/lexer/tokens.rs:576:9: replace TargetConstraint::with_forbidden_operations -> Self with Default::default()
+src/lexer/tokens.rs:581:9: replace TargetConstraint::with_required_attributes -> Self with Default::default()
+src/lexer/tokens.rs:586:9: replace TargetConstraint::with_trust_profiles -> Self with Default::default()
+src/lexer/tokens.rs:601:9: replace TrustLevel::from_string -> Option<Self> with Some(Default::default())
+src/lexer/tokens.rs:639:9: replace SecurityProfile::with_allowed_apis -> Self with Default::default()
+src/lexer/tokens.rs:644:9: replace SecurityProfile::with_forbidden_apis -> Self with Default::default()
+src/lexer/tokens.rs:649:9: replace SecurityProfile::with_required_checks -> Self with Default::default()
+src/lexer/tokens.rs:654:9: replace SecurityProfile::with_audit_requirements -> Self with Default::default()
+src/lexer/tokens.rs:678:9: replace Permission::with_conditions -> Self with Default::default()
+src/lexer/tokens.rs:685:5: replace get_trust_profiles -> HashMap<TrustLevel, SecurityProfile> with HashMap::from_iter([(Default::default(), Default::default())])
+src/lexer/tokens.rs:774:9: replace BlockchainNetwork::from_string -> Option<Self> with Some(Default::default())
+src/lexer/tokens.rs:846:9: replace ChainConfig::with_chain_id -> Self with Default::default()
+src/lexer/tokens.rs:851:9: replace ChainConfig::with_rpc_url -> Self with Default::default()
+src/lexer/tokens.rs:856:9: replace ChainConfig::with_gas_config -> Self with Default::default()
+src/lexer/tokens.rs:862:9: replace ChainConfig::with_native_token -> Self with Default::default()
+src/lexer/tokens.rs:867:9: replace ChainConfig::with_supported_operations -> Self with Default::default()
+src/lexer/tokens.rs:872:9: replace ChainConfig::with_forbidden_operations -> Self with Default::default()
+src/lexer/tokens.rs:905:5: replace get_chain_configs -> HashMap<BlockchainNetwork, ChainConfig> with HashMap::from_iter([(Default::default(), Default::default())])
+src/lexer/tokens.rs:1052:9: replace InterfaceLanguage::from_string -> Option<Self> with Some(Default::default())
+src/lexer/tokens.rs:1145:5: replace get_target_constraints -> HashMap<CompilationTarget, TargetConstraint> with HashMap::from_iter([(Default::default(), Default::default())])
+src/http_server_converters.rs:107:40: replace * with +
+src/http_server_converters.rs:107:33: replace * with +
+src/http_server_handlers.rs:24:5: replace handle_with_middleware -> Response<Body> with Response::new(Default::default())
+src/http_server_handlers.rs:24:5: replace handle_with_middleware -> Response<Body> with Response::from(Default::default())
+src/lexer/lexer.rs:142:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:142:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:148:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:152:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:152:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:158:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:158:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:163:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:163:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:168:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:168:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:181:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:181:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:189:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:189:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:201:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:201:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:209:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:213:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:213:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:221:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:225:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:225:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:233:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:343:9: replace Lexer::read_number -> Result<i64, LexerError> with Ok(-1)
+src/lexer/lexer.rs:458:46: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:537:9: replace Lexer::peek_next -> Option<char> with Some(Default::default())
+src/lexer/lexer.rs:615:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((0, "xyzzy".into()))
+src/lexer/lexer.rs:627:26: replace += with *= in Lexer::read_string_immutable
+src/parser/parser.rs:165:36: replace < with == in Parser::parse_statement
+src/parser/parser.rs:165:36: replace < with > in Parser::parse_statement
+src/parser/parser.rs:230:26: replace + with * in Parser::parse_statement
+src/parser/parser.rs:245:45: replace + with - in Parser::parse_let_statement
+src/parser/parser.rs:245:45: replace + with * in Parser::parse_let_statement
+src/parser/parser.rs:249:30: replace += with -= in Parser::parse_let_statement
+src/parser/parser.rs:249:30: replace += with *= in Parser::parse_let_statement
+src/parser/parser.rs:272:45: replace + with - in Parser::parse_return_statement
+src/parser/parser.rs:272:45: replace + with * in Parser::parse_return_statement
+src/parser/parser.rs:287:18: replace > with < in Parser::parse_block_statement
+src/parser/parser.rs:301:32: replace < with == in Parser::parse_block_statement
+src/parser/parser.rs:301:32: replace < with > in Parser::parse_block_statement
+src/parser/parser.rs:307:90: replace + with - in Parser::parse_block_statement
+src/parser/parser.rs:325:18: replace > with < in Parser::parse_assignment
+src/parser/parser.rs:341:75: replace + with - in Parser::parse_assignment
+src/parser/parser.rs:344:17: delete match arm Expression::Identifier(name) in Parser::parse_assignment
+src/parser/parser.rs:347:17: delete match arm Expression::FieldAccess(object_expr, field_name) in Parser::parse_assignment
+src/parser/parser.rs:350:17: delete match arm Expression::IndexAccess(container, index_expr) in Parser::parse_assignment
+src/parser/parser.rs:404:32: replace < with == in Parser::parse_or
+src/parser/parser.rs:404:32: replace < with > in Parser::parse_or
+src/parser/parser.rs:423:32: replace < with == in Parser::parse_and
+src/parser/parser.rs:423:32: replace < with > in Parser::parse_and
+src/parser/parser.rs:442:32: replace < with == in Parser::parse_equality
+src/parser/parser.rs:442:32: replace < with > in Parser::parse_equality
+src/parser/parser.rs:466:32: replace < with == in Parser::parse_comparison
+src/parser/parser.rs:466:32: replace < with > in Parser::parse_comparison
+src/parser/parser.rs:472:21: delete match arm Operator::Less | Operator::LessEqual | Operator::Greater | Operator::GreaterEqual in Parser::parse_comparison
+src/parser/parser.rs:493:32: replace < with == in Parser::parse_term
+src/parser/parser.rs:493:32: replace < with > in Parser::parse_term
+src/parser/parser.rs:499:21: delete match arm Operator::Plus | Operator::Minus in Parser::parse_term
+src/parser/parser.rs:520:32: replace < with == in Parser::parse_factor
+src/parser/parser.rs:520:32: replace < with > in Parser::parse_factor
+src/parser/parser.rs:526:21: delete match arm Operator::Star | Operator::Slash | Operator::Percent in Parser::parse_factor
+src/parser/parser.rs:554:17: delete match arm Operator::Minus | Operator::Not in Parser::parse_unary
+src/parser/parser.rs:569:32: replace < with == in Parser::parse_unary
+src/parser/parser.rs:569:32: replace < with > in Parser::parse_unary
+src/parser/parser.rs:576:102: replace + with - in Parser::parse_unary
+src/parser/parser.rs:626:17: delete match arm Token::Literal(Literal::Int(value)) in Parser::parse_primary
+src/parser/parser.rs:629:17: delete match arm Token::Literal(Literal::Float(value)) in Parser::parse_primary
+src/parser/parser.rs:632:17: delete match arm Token::Literal(Literal::String(value)) in Parser::parse_primary
+src/parser/parser.rs:635:17: delete match arm Token::Literal(Literal::Bool(value)) in Parser::parse_primary
+src/parser/parser.rs:638:17: delete match arm Token::Literal(Literal::Null) in Parser::parse_primary
+src/parser/parser.rs:641:17: delete match arm Token::Identifier(name) in Parser::parse_primary
+src/parser/parser.rs:782:17: delete match arm Token::Keyword(Keyword::Throw) in Parser::parse_primary
+src/parser/parser.rs:787:17: delete match arm Token::Keyword(_) in Parser::parse_primary
+src/parser/parser.rs:793:17: delete match arm Token::Punctuation(Punctuation::LeftParen) in Parser::parse_primary
+src/parser/parser.rs:799:17: delete match arm Token::Punctuation(Punctuation::LeftBrace) in Parser::parse_primary
+src/parser/parser.rs:803:17: delete match arm Token::Punctuation(Punctuation::LeftBracket) in Parser::parse_primary
+src/parser/parser.rs:627:41: replace + with - in Parser::parse_primary
+src/parser/parser.rs:630:41: replace + with * in Parser::parse_primary
+src/parser/parser.rs:636:41: replace + with * in Parser::parse_primary
+src/parser/parser.rs:639:41: replace + with * in Parser::parse_primary
+src/parser/parser.rs:645:92: replace + with - in Parser::parse_primary
+src/parser/parser.rs:690:106: replace + with - in Parser::parse_primary
+src/parser/parser.rs:690:106: replace + with * in Parser::parse_primary
+src/parser/parser.rs:691:76: replace + with - in Parser::parse_primary
+src/parser/parser.rs:691:76: replace + with * in Parser::parse_primary
+src/parser/parser.rs:706:109: replace + with - in Parser::parse_primary
+src/parser/parser.rs:706:109: replace + with * in Parser::parse_primary
+src/parser/parser.rs:707:96: replace + with - in Parser::parse_primary
+src/parser/parser.rs:707:96: replace + with * in Parser::parse_primary
+src/parser/parser.rs:714:103: replace + with - in Parser::parse_primary
+src/parser/parser.rs:715:76: replace + with - in Parser::parse_primary
+src/parser/parser.rs:715:76: replace + with * in Parser::parse_primary
+src/parser/parser.rs:731:45: replace + with - in Parser::parse_primary
+src/lexer/lexer.rs:545:9: replace Lexer::advance with ()
+src/lexer/lexer.rs:545:26: replace < with == in Lexer::advance
+src/lexer/lexer.rs:545:26: replace < with > in Lexer::advance
+src/lexer/lexer.rs:545:26: replace < with <= in Lexer::advance
+src/lexer/lexer.rs:546:27: replace += with -= in Lexer::advance
+src/http_server_converters.rs:107:40: replace * with /
+src/http_server_converters.rs:107:33: replace * with /
+src/http_server_converters.rs:111:5: replace extract_body -> Result<String, String> with Ok(String::new())
+src/http_server_handlers.rs:76:5: replace path_pattern_matches -> bool with true
+src/http_server_handlers.rs:76:5: replace path_pattern_matches -> bool with false
+src/http_server_handlers.rs:76:69: delete ! in path_pattern_matches
+src/http_server_handlers.rs:77:63: delete ! in path_pattern_matches
+src/http_server_handlers.rs:78:31: replace != with == in path_pattern_matches
+src/http_server_handlers.rs:82:12: delete ! in path_pattern_matches
+src/http_server_handlers.rs:82:23: replace || with && in path_pattern_matches
+src/http_server_handlers.rs:82:17: replace == with != in path_pattern_matches
+src/http_server_handlers.rs:82:46: replace && with || in path_pattern_matches
+src/http_server_handlers.rs:82:49: delete ! in path_pattern_matches
+src/http_server_handlers.rs:91:5: replace path_params_from_match -> Option<HashMap<String, String>> with None
+src/http_server_handlers.rs:91:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::new())
+src/http_server_handlers.rs:91:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([(String::new(), String::new())]))
+src/http_server_handlers.rs:91:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([(String::new(), "xyzzy".into())]))
+src/http_server_handlers.rs:91:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([("xyzzy".into(), String::new())]))
+src/http_server_handlers.rs:91:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([("xyzzy".into(), "xyzzy".into())]))
+src/http_server_handlers.rs:91:69: delete ! in path_params_from_match
+src/http_server_handlers.rs:92:63: delete ! in path_params_from_match
+src/http_server_handlers.rs:93:31: replace != with == in path_params_from_match
+src/http_server_handlers.rs:98:31: replace && with || in path_params_from_match
+src/http_server_handlers.rs:101:22: replace != with == in path_params_from_match
+src/http_server_handlers.rs:126:17: replace && with || in get_route_handler_name_and_params
+src/http_server_integration.rs:91:5: replace health_handler -> Response<Body> with Response::from(Default::default())
+src/lexer/lexer.rs:112:41: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:112:41: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:180:34: replace += with -= in Lexer::next_token_immutable
+src/http_server_middleware.rs:114:9: delete match arm Value::Map(map) in value_to_http_request
+src/http_server_middleware.rs:301:9: delete match arm Value::Map(map) in value_to_http_response
+src/http_server_middleware.rs:342:9: delete match arm Value::String(s) in value_to_http_response
+src/http_server_security.rs:371:9: replace RequestSizeLimiter::validate_request -> Result<(), StatusCode> with Ok(())
+src/http_server_security.rs:371:22: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:371:22: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:371:22: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:376:23: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:376:23: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:376:23: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:383:54: replace + with - in RequestSizeLimiter::validate_request
+src/http_server_security.rs:383:54: replace + with * in RequestSizeLimiter::validate_request
+src/http_server_security.rs:386:24: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:386:24: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:386:24: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_converters.rs:111:5: replace extract_body -> Result<String, String> with Ok("xyzzy".into())
+src/http_server_converters.rs:122:5: replace http_response_to_axum_response -> Response<Body> with Response::new(Default::default())
+src/http_server_converters.rs:122:5: replace http_response_to_axum_response -> Response<Body> with Response::from(Default::default())
+src/http_server_converters.rs:179:5: replace error_response -> Response<Body> with Response::new(Default::default())
+src/http_server_converters.rs:179:5: replace error_response -> Response<Body> with Response::from(Default::default())
+src/http_server_converters.rs:199:5: replace json_response -> Response<Body> with Response::new(Default::default())
+src/http_server_converters.rs:199:5: replace json_response -> Response<Body> with Response::from(Default::default())
+src/http_server_handlers.rs:98:34: delete ! in path_params_from_match
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with None
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::new()))
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([(String::new(), String::new())])))
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([(String::new(), "xyzzy".into())])))
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([("xyzzy".into(), String::new())])))
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([("xyzzy".into(), "xyzzy".into())])))
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::new()))
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([(String::new(), String::new())])))
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([(String::new(), "xyzzy".into())])))
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([("xyzzy".into(), String::new())])))
+src/http_server_handlers.rs:114:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([("xyzzy".into(), "xyzzy".into())])))
+src/http_server_handlers.rs:142:5: replace get_route_handler_name -> Option<String> with None
+src/http_server_handlers.rs:142:5: replace get_route_handler_name -> Option<String> with Some(String::new())
+src/http_server_handlers.rs:142:5: replace get_route_handler_name -> Option<String> with Some("xyzzy".into())
+src/solidity_converter/mod.rs:20:5: replace convert_file -> Result<String, String> with Ok(String::new())
+src/solidity_converter/mod.rs:20:5: replace convert_file -> Result<String, String> with Ok("xyzzy".into())
+src/lexer/tokens.rs:904:5: replace get_chain_configs -> HashMap<BlockchainNetwork, ChainConfig> with HashMap::new()
+src/lexer/tokens.rs:1075:9: replace InterfaceLanguage::file_extension -> &str with ""
+src/lexer/tokens.rs:1075:9: replace InterfaceLanguage::file_extension -> &str with "xyzzy"
+src/lexer/tokens.rs:1144:5: replace get_target_constraints -> HashMap<CompilationTarget, TargetConstraint> with HashMap::new()
+src/lexer/lexer.rs:23:9: replace Lexer::tokenize -> Result<Vec<Token>, LexerError> with Ok(vec![])
+src/lexer/lexer.rs:27:9: replace Lexer::tokenize_immutable -> Result<Vec<Token>, LexerError> with Ok(vec![])
+src/lexer/lexer.rs:42:24: replace < with <= in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:156:13: delete match arm '*' in Lexer::next_token_immutable
+src/lexer/lexer.rs:161:13: delete match arm '/' in Lexer::next_token_immutable
+src/lexer/lexer.rs:166:13: delete match arm '%' in Lexer::next_token_immutable
+src/lexer/lexer.rs:194:13: delete match arm '!' in Lexer::next_token_immutable
+src/lexer/lexer.rs:206:13: delete match arm '<' in Lexer::next_token_immutable
+src/lexer/lexer.rs:218:13: delete match arm '>' in Lexer::next_token_immutable
+src/lexer/lexer.rs:230:13: delete match arm '&' in Lexer::next_token_immutable
+src/lexer/lexer.rs:240:13: delete match arm '|' in Lexer::next_token_immutable
+src/lexer/lexer.rs:262:13: delete match arm '.' in Lexer::next_token_immutable
+src/lexer/lexer.rs:267:13: delete match arm '?' in Lexer::next_token_immutable
+src/lexer/lexer.rs:282:13: delete match arm '[' in Lexer::next_token_immutable
+src/lexer/lexer.rs:287:13: delete match arm ']' in Lexer::next_token_immutable
+src/lexer/lexer.rs:105:21: delete match arm "true" in Lexer::next_token_immutable
+src/lexer/lexer.rs:106:21: delete match arm "false" in Lexer::next_token_immutable
+src/lexer/lexer.rs:107:21: delete match arm "null" in Lexer::next_token_immutable
+src/lexer/lexer.rs:112:64: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:110:41: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:110:41: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:110:41: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:111:53: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:112:45: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:112:45: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:113:57: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:113:52: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:148:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:151:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:151:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:157:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:157:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:162:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:162:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:167:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:167:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:40: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:40: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:40: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:36: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:36: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:82: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:184:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:184:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:185:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:185:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:196:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:196:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:197:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:200:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:200:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:208:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:208:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:209:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:212:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:212:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:220:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:220:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:221:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:224:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:224:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:231:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:231:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:231:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:231:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:231:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:231:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:231:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:231:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:232:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:232:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:233:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:241:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:241:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:241:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:241:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:241:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:241:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:241:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:241:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:242:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:242:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:243:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:252:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:252:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:253:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:308:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:308:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:318:20: replace <= with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:393:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 0, 0)
+src/lexer/lexer.rs:393:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 0, 1)
+src/lexer/lexer.rs:393:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 1, 0)
+src/lexer/lexer.rs:393:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 1, 1)
+src/lexer/lexer.rs:393:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 0, 0)
+src/lexer/lexer.rs:393:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 0, 1)
+src/lexer/lexer.rs:393:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 1, 0)
+src/lexer/lexer.rs:393:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 1, 1)
+src/lexer/lexer.rs:393:24: replace < with == in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:393:24: replace < with > in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:393:24: replace < with <= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:396:17: delete match arm ' ' | '\t' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:400:17: delete match arm '\n' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:413:17: delete match arm '/' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:397:30: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:398:28: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:398:28: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:401:26: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:401:26: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:403:30: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:415:37: replace < with == in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:415:37: replace < with > in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:415:37: replace < with <= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:415:33: replace + with - in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:415:33: replace + with * in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:416:59: replace + with - in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:416:59: replace + with * in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:417:36: replace == with != in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:419:38: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:419:38: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:420:44: replace < with == in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:420:44: replace < with > in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:420:44: replace < with <= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:422:47: replace == with != in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:423:42: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:425:46: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:427:54: replace == with != in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:439:43: replace == with != in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:441:38: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:442:44: replace + with - in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:477:9: replace Lexer::is_keyword -> Option<Keyword> with None
+src/lexer/lexer.rs:553:9: replace Lexer::read_identifier_immutable -> (usize, String) with (0, String::new())
+src/lexer/lexer.rs:553:9: replace Lexer::read_identifier_immutable -> (usize, String) with (0, "xyzzy".into())
+src/lexer/lexer.rs:553:9: replace Lexer::read_identifier_immutable -> (usize, String) with (1, String::new())
+src/lexer/lexer.rs:553:9: replace Lexer::read_identifier_immutable -> (usize, String) with (1, "xyzzy".into())
+src/lexer/lexer.rs:554:24: replace < with == in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:554:24: replace < with > in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:554:24: replace < with <= in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:556:37: replace || with && in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:556:43: replace == with != in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:557:26: replace += with -= in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:571:24: replace < with == in Lexer::read_number_immutable
+src/lexer/lexer.rs:571:24: replace < with > in Lexer::read_number_immutable
+src/lexer/lexer.rs:571:24: replace < with <= in Lexer::read_number_immutable
+src/lexer/lexer.rs:574:26: replace += with -= in Lexer::read_number_immutable
+src/lexer/lexer.rs:581:40: replace && with || in Lexer::read_number_immutable
+src/lexer/lexer.rs:581:21: replace < with == in Lexer::read_number_immutable
+src/lexer/lexer.rs:581:21: replace < with > in Lexer::read_number_immutable
+src/lexer/lexer.rs:581:21: replace < with <= in Lexer::read_number_immutable
+src/lexer/lexer.rs:581:64: replace == with != in Lexer::read_number_immutable
+src/lexer/lexer.rs:583:29: replace < with == in Lexer::read_number_immutable
+src/lexer/lexer.rs:583:29: replace < with > in Lexer::read_number_immutable
+src/lexer/lexer.rs:583:71: replace + with * in Lexer::read_number_immutable
+src/lexer/lexer.rs:585:26: replace += with -= in Lexer::read_number_immutable
+src/lexer/lexer.rs:585:26: replace += with *= in Lexer::read_number_immutable
+src/lexer/lexer.rs:588:32: replace < with == in Lexer::read_number_immutable
+src/lexer/lexer.rs:588:32: replace < with > in Lexer::read_number_immutable
+src/lexer/lexer.rs:591:34: replace += with -= in Lexer::read_number_immutable
+src/lexer/lexer.rs:615:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((0, String::new()))
+src/lexer/lexer.rs:615:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((1, String::new()))
+src/lexer/lexer.rs:615:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((1, "xyzzy".into()))
+src/lexer/lexer.rs:615:18: replace += with -= in Lexer::read_string_immutable
+src/lexer/lexer.rs:615:18: replace += with *= in Lexer::read_string_immutable
+src/lexer/lexer.rs:617:24: replace < with == in Lexer::read_string_immutable
+src/lexer/lexer.rs:617:24: replace < with > in Lexer::read_string_immutable
+src/lexer/lexer.rs:617:24: replace < with <= in Lexer::read_string_immutable
+src/lexer/lexer.rs:619:19: replace == with != in Lexer::read_string_immutable
+src/lexer/lexer.rs:624:26: replace += with -= in Lexer::read_string_immutable
+src/lexer/lexer.rs:624:26: replace += with *= in Lexer::read_string_immutable
+src/lexer/lexer.rs:626:26: replace == with != in Lexer::read_string_immutable
+src/lexer/lexer.rs:627:26: replace += with -= in Lexer::read_string_immutable
+src/lexer/lexer.rs:629:26: replace += with -= in Lexer::read_string_immutable
+src/parser/parser.rs:89:21: replace < with > in Parser::get_token_position
+src/parser/parser.rs:108:24: replace < with == in Parser::parse
+src/parser/parser.rs:108:24: replace < with > in Parser::parse
+src/parser/parser.rs:108:24: replace < with <= in Parser::parse
+src/parser/parser.rs:150:18: replace > with < in Parser::parse_statement
+src/parser/parser.rs:226:84: replace + with - in Parser::parse_statement
+src/lexer/lexer.rs:33:9: replace Lexer::tokenize_with_positions_immutable -> Result<Vec<crate::lexer::tokens::TokenWithPosition>, LexerError> with Ok(vec![])
+src/lexer/lexer.rs:39:47: replace * with / in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:42:24: replace < with == in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:42:24: replace < with > in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:44:24: replace += with -= in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:45:27: replace > with < in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:56:25: replace >= with < in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:64:24: replace <= with > in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:88:21: replace >= with < in Lexer::next_token_immutable
+src/lexer/lexer.rs:99:13: delete match arm 'a'..= 'z' | 'A'..= 'Z' | '_' in Lexer::next_token_immutable
+src/lexer/lexer.rs:126:13: delete match arm '0'..= '9' in Lexer::next_token_immutable
+src/lexer/lexer.rs:133:13: delete match arm '"' in Lexer::next_token_immutable
+src/lexer/lexer.rs:140:13: delete match arm '+' in Lexer::next_token_immutable
+src/lexer/lexer.rs:145:13: delete match arm '-' in Lexer::next_token_immutable
+src/lexer/lexer.rs:172:13: delete match arm '@' in Lexer::next_token_immutable
+src/lexer/lexer.rs:178:13: delete match arm '=' in Lexer::next_token_immutable
+src/lexer/lexer.rs:250:13: delete match arm ':' in Lexer::next_token_immutable
+src/lexer/lexer.rs:272:13: delete match arm ',' in Lexer::next_token_immutable
+src/lexer/lexer.rs:277:13: delete match arm ';' in Lexer::next_token_immutable
+src/lexer/lexer.rs:292:13: delete match arm '{' in Lexer::next_token_immutable
+src/lexer/lexer.rs:297:13: delete match arm '}' in Lexer::next_token_immutable
+src/lexer/lexer.rs:302:13: delete match arm '(' in Lexer::next_token_immutable
+src/lexer/lexer.rs:307:13: delete match arm ')' in Lexer::next_token_immutable
+src/lexer/lexer.rs:110:60: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:141:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:141:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:147:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:147:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:173:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:173:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:59: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:87: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:82: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:188:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:188:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:256:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:256:34: replace += with *= in Lexer::next_token_immutable
+src/lib.rs:38:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:47:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/http_server_converters.rs:122:5: replace http_response_to_axum_response -> Response<Body> with Response::new()
+src/http_server_converters.rs:122:5: replace http_response_to_axum_response -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_converters.rs:179:5: replace error_response -> Response<Body> with Response::new()
+src/http_server_converters.rs:179:5: replace error_response -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_converters.rs:199:5: replace json_response -> Response<Body> with Response::new()
+src/http_server_converters.rs:199:5: replace json_response -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_handlers.rs:24:5: replace handle_with_middleware -> Response<Body> with Response::new()
+src/http_server_handlers.rs:24:5: replace handle_with_middleware -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server.rs:136:5: replace home_handler -> Html<String> with Html::new()
+src/http_server.rs:136:5: replace home_handler -> Html<String> with Html::from_iter([String::new()])
+src/http_server.rs:136:5: replace home_handler -> Html<String> with Html::new(String::new())
+src/http_server.rs:136:5: replace home_handler -> Html<String> with Html::from_iter(["xyzzy".into()])
+src/http_server.rs:136:5: replace home_handler -> Html<String> with Html::new("xyzzy".into())
+src/http_server.rs:136:5: replace home_handler -> Html<String> with Html::from("xyzzy".into())
+src/http_server.rs:484:5: replace balance_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:484:5: replace balance_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:484:5: replace balance_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:484:5: replace balance_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:496:5: replace connect_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:496:5: replace connect_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:496:5: replace connect_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:496:5: replace connect_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:507:5: replace transfer_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:507:5: replace transfer_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:507:5: replace transfer_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:507:5: replace transfer_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:518:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:518:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:518:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:518:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:529:5: replace health_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:529:5: replace health_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:529:5: replace health_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:529:5: replace health_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/lexer/lexer.rs:477:9: replace Lexer::is_keyword -> Option<Keyword> with Some(Default::default())
+src/lexer/lexer.rs:567:9: replace Lexer::read_number_immutable -> Result<(usize, Literal), LexerError> with Ok((0, Default::default()))
+src/lexer/lexer.rs:567:9: replace Lexer::read_number_immutable -> Result<(usize, Literal), LexerError> with Ok((1, Default::default()))
+src/parser/parser.rs:36:9: replace Parser::new_with_positions -> Self with Default::default()
+src/parser/parser.rs:99:9: replace Parser::error_unexpected_token -> ParserError with Default::default()
+src/parser/parser.rs:105:9: replace Parser::parse -> Result<Program, ParserError> with Ok(Default::default())
+src/parser/parser.rs:120:9: replace Parser::parse_with_recovery -> (Program, Vec<ParserError>) with (Default::default(), vec![])
+src/parser/parser.rs:120:9: replace Parser::parse_with_recovery -> (Program, Vec<ParserError>) with (Default::default(), vec![Default::default()])
+src/parser/parser.rs:150:9: replace Parser::parse_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:150:9: replace Parser::parse_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:245:9: replace Parser::parse_let_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:245:9: replace Parser::parse_let_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:272:9: replace Parser::parse_return_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:272:9: replace Parser::parse_return_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:287:9: replace Parser::parse_block_statement -> Result<(usize, BlockStatement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:287:9: replace Parser::parse_block_statement -> Result<(usize, BlockStatement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:316:9: replace Parser::parse_expression -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:316:9: replace Parser::parse_expression -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:320:9: replace Parser::parse_expression_with_depth -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:320:9: replace Parser::parse_expression_with_depth -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:325:9: replace Parser::parse_assignment -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:325:9: replace Parser::parse_assignment -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:400:9: replace Parser::parse_or -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:400:9: replace Parser::parse_or -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:419:9: replace Parser::parse_and -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:419:9: replace Parser::parse_and -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:438:9: replace Parser::parse_equality -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:438:9: replace Parser::parse_equality -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:462:9: replace Parser::parse_comparison -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:462:9: replace Parser::parse_comparison -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:489:9: replace Parser::parse_term -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:489:9: replace Parser::parse_term -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:516:9: replace Parser::parse_factor -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:516:9: replace Parser::parse_factor -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:544:9: replace Parser::parse_unary -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:544:9: replace Parser::parse_unary -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:624:9: replace Parser::parse_primary -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:624:9: replace Parser::parse_primary -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/http_server.rs:477:5: replace balance_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:477:5: replace balance_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:477:5: replace balance_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:477:5: replace balance_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:489:5: replace connect_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:489:5: replace connect_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:489:5: replace connect_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:489:5: replace connect_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:500:5: replace transfer_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:500:5: replace transfer_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:500:5: replace transfer_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:500:5: replace transfer_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:511:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:511:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:511:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:511:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:522:5: replace health_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:522:5: replace health_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:522:5: replace health_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:522:5: replace health_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/lexer/lexer.rs:23:9: replace Lexer::tokenize -> Result<Vec<Token>, LexerError> with Ok(vec![Default::default()])
+src/lexer/lexer.rs:27:9: replace Lexer::tokenize_immutable -> Result<Vec<Token>, LexerError> with Ok(vec![Default::default()])
+src/lexer/lexer.rs:33:9: replace Lexer::tokenize_with_positions_immutable -> Result<Vec<crate::lexer::tokens::TokenWithPosition>, LexerError> with Ok(vec![Default::default()])
+src/lexer/lexer.rs:80:9: replace Lexer::next_token -> Result<Token, LexerError> with Ok(Default::default())
+src/lexer/lexer.rs:88:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((0, 0, 0, Default::default()))
+src/lexer/lexer.rs:88:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((0, 0, 1, Default::default()))
+src/lexer/lexer.rs:88:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((0, 1, 0, Default::default()))
+src/lexer/lexer.rs:88:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((0, 1, 1, Default::default()))
+src/lexer/lexer.rs:88:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((1, 0, 0, Default::default()))
+src/lexer/lexer.rs:88:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((1, 0, 1, Default::default()))
+src/lexer/lexer.rs:88:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((1, 1, 0, Default::default()))
+src/lexer/lexer.rs:88:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((1, 1, 1, Default::default()))
+src/http_server_security.rs:258:9: replace JwtConfig::with_expiration -> Self with Default::default()
+src/http_server_security.rs:311:9: replace AuthValidator::generate_token -> Result<String, String> with Ok(String::new())
+src/http_server_security.rs:311:9: replace AuthValidator::generate_token -> Result<String, String> with Ok("xyzzy".into())
+src/http_server_security.rs:326:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:326:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:332:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:332:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:338:9: replace AuthValidator::extract_token -> Option<String> with None
+src/http_server_security.rs:338:9: replace AuthValidator::extract_token -> Option<String> with Some(String::new())
+src/http_server_security.rs:338:9: replace AuthValidator::extract_token -> Option<String> with Some("xyzzy".into())
+src/http_server_security.rs:283:9: replace AuthValidator::validate_api_key -> Result<Claims, String> with Ok(Default::default())
+src/lexer/lexer.rs:476:9: replace Lexer::is_keyword -> Option<Keyword> with Some(Default::default())
+src/lexer/lexer.rs:566:9: replace Lexer::read_number_immutable -> Result<(usize, Literal), LexerError> with Ok((0, Default::default()))
+src/lexer/lexer.rs:566:9: replace Lexer::read_number_immutable -> Result<(usize, Literal), LexerError> with Ok((1, Default::default()))
+src/parser/parser.rs:166:9: replace Parser::parse_let_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:166:9: replace Parser::parse_let_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:193:9: replace Parser::parse_return_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:193:9: replace Parser::parse_return_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:208:9: replace Parser::parse_block_statement -> Result<(usize, BlockStatement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:208:9: replace Parser::parse_block_statement -> Result<(usize, BlockStatement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:237:9: replace Parser::parse_expression -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:237:9: replace Parser::parse_expression -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:241:9: replace Parser::parse_expression_with_depth -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:241:9: replace Parser::parse_expression_with_depth -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:246:9: replace Parser::parse_assignment -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:246:9: replace Parser::parse_assignment -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:293:9: replace Parser::parse_or -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:293:9: replace Parser::parse_or -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:312:9: replace Parser::parse_and -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:312:9: replace Parser::parse_and -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:331:9: replace Parser::parse_equality -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:331:9: replace Parser::parse_equality -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:355:9: replace Parser::parse_comparison -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:355:9: replace Parser::parse_comparison -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:382:9: replace Parser::parse_term -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:382:9: replace Parser::parse_term -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:409:9: replace Parser::parse_factor -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:409:9: replace Parser::parse_factor -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:437:9: replace Parser::parse_unary -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:437:9: replace Parser::parse_unary -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:522:9: replace Parser::parse_primary -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:522:9: replace Parser::parse_primary -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:696:9: replace Parser::parse_function_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:696:9: replace Parser::parse_function_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:735:9: replace Parser::parse_async_function_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:735:9: replace Parser::parse_async_function_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:778:9: replace Parser::parse_parameters -> Result<(usize, Vec<Parameter>), ParserError> with Ok((0, vec![Default::default()]))
+src/parser/parser.rs:778:9: replace Parser::parse_parameters -> Result<(usize, Vec<Parameter>), ParserError> with Ok((1, vec![Default::default()]))
+src/parser/parser.rs:817:9: replace Parser::parse_spawn_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:817:9: replace Parser::parse_spawn_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:853:9: replace Parser::parse_agent_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:853:9: replace Parser::parse_agent_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:901:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:901:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:901:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:901:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:990:9: replace Parser::parse_array_literal -> Result<(usize, Vec<Expression>), ParserError> with Ok((0, vec![Default::default()]))
+src/parser/parser.rs:990:9: replace Parser::parse_array_literal -> Result<(usize, Vec<Expression>), ParserError> with Ok((1, vec![Default::default()]))
+src/parser/parser.rs:1080:9: replace Parser::parse_message_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1080:9: replace Parser::parse_message_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1098:9: replace Parser::parse_event_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1098:9: replace Parser::parse_event_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1113:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:1113:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:1113:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:1113:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:1151:9: replace Parser::parse_if_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1151:9: replace Parser::parse_if_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1196:9: replace Parser::parse_while_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1196:9: replace Parser::parse_while_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1217:9: replace Parser::parse_function_arguments -> Result<(usize, Vec<Expression>), ParserError> with Ok((0, vec![Default::default()]))
+src/parser/parser.rs:1217:9: replace Parser::parse_function_arguments -> Result<(usize, Vec<Expression>), ParserError> with Ok((1, vec![Default::default()]))
+src/parser/parser.rs:1268:9: replace Parser::parse_attribute -> Result<(usize, Attribute), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1268:9: replace Parser::parse_attribute -> Result<(usize, Attribute), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1343:9: replace Parser::parse_try_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1343:9: replace Parser::parse_try_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1374:9: replace Parser::parse_catch_block -> Result<(usize, CatchBlock), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1374:9: replace Parser::parse_catch_block -> Result<(usize, CatchBlock), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1414:9: replace Parser::parse_finally_block -> Result<(usize, BlockStatement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1414:9: replace Parser::parse_finally_block -> Result<(usize, BlockStatement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1425:9: replace Parser::parse_for_in_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1425:9: replace Parser::parse_for_in_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1444:9: replace Parser::parse_service_statement_with_attributes -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1444:9: replace Parser::parse_service_statement_with_attributes -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1525:9: replace Parser::parse_service_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1525:9: replace Parser::parse_service_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1603:9: replace Parser::parse_service_field -> Result<(usize, ServiceField), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1603:9: replace Parser::parse_service_field -> Result<(usize, ServiceField), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1716:9: replace Parser::parse_event_declaration -> Result<(usize, EventDeclaration), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1716:9: replace Parser::parse_event_declaration -> Result<(usize, EventDeclaration), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1768:9: replace Parser::parse_compile_target_attribute -> Result<(usize, CompilationTargetInfo), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1768:9: replace Parser::parse_compile_target_attribute -> Result<(usize, CompilationTargetInfo), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1872:9: replace Parser::expect_token -> Result<(usize, &Token), ParserError> with Ok((0, Box::leak(Box::new(Default::default()))))
+src/parser/parser.rs:1872:9: replace Parser::expect_token -> Result<(usize, &Token), ParserError> with Ok((1, Box::leak(Box::new(Default::default()))))
+src/runtime/engine.rs:754:9: replace Runtime::call_auth_function -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:982:9: replace Runtime::call_log_function -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1002:9: replace Runtime::call_crypto_function -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1027:9: replace Runtime::execute -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1041:9: replace Runtime::execute_statement -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1227:9: replace Runtime::evaluate_expression -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1427:9: replace Runtime::add_values -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1428:80: replace + with - in Runtime::add_values
+src/runtime/engine.rs:1428:80: replace + with * in Runtime::add_values
+src/runtime/engine.rs:1436:9: replace Runtime::subtract_values -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1440:9: replace Runtime::multiply_values -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1444:9: replace Runtime::divide_values -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1448:9: replace Runtime::modulo_values -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1452:9: replace Runtime::compare_values -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1476:9: replace Runtime::logical_and -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1480:9: replace Runtime::logical_or -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1484:9: replace Runtime::negate_value -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:1491:9: replace Runtime::logical_not -> Result<Value, RuntimeError> with Ok(Default::default())
+src/lib.rs:41:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lexer/lexer.rs:472:9: replace Lexer::is_keyword -> Option<Keyword> with Some(Default::default())
+src/lexer/lexer.rs:561:9: replace Lexer::read_number_immutable -> Result<(usize, Literal), LexerError> with Ok((0, Default::default()))
+src/lexer/lexer.rs:561:9: replace Lexer::read_number_immutable -> Result<(usize, Literal), LexerError> with Ok((1, Default::default()))
+src/parser/parser.rs:189:9: replace Parser::parse_return_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:189:9: replace Parser::parse_return_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:204:9: replace Parser::parse_block_statement -> Result<(usize, BlockStatement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:204:9: replace Parser::parse_block_statement -> Result<(usize, BlockStatement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:233:9: replace Parser::parse_expression -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:233:9: replace Parser::parse_expression -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:237:9: replace Parser::parse_expression_with_depth -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:237:9: replace Parser::parse_expression_with_depth -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:242:9: replace Parser::parse_assignment -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:242:9: replace Parser::parse_assignment -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:289:9: replace Parser::parse_or -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:289:9: replace Parser::parse_or -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:308:9: replace Parser::parse_and -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:308:9: replace Parser::parse_and -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:327:9: replace Parser::parse_equality -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:327:9: replace Parser::parse_equality -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:351:9: replace Parser::parse_comparison -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:351:9: replace Parser::parse_comparison -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:375:9: replace Parser::parse_term -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:375:9: replace Parser::parse_term -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:399:9: replace Parser::parse_factor -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:399:9: replace Parser::parse_factor -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:423:9: replace Parser::parse_unary -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:423:9: replace Parser::parse_unary -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:500:9: replace Parser::parse_primary -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:500:9: replace Parser::parse_primary -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:674:9: replace Parser::parse_function_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:674:9: replace Parser::parse_function_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:713:9: replace Parser::parse_async_function_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:713:9: replace Parser::parse_async_function_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:756:9: replace Parser::parse_parameters -> Result<(usize, Vec<Parameter>), ParserError> with Ok((0, vec![Default::default()]))
+src/parser/parser.rs:756:9: replace Parser::parse_parameters -> Result<(usize, Vec<Parameter>), ParserError> with Ok((1, vec![Default::default()]))
+src/parser/parser.rs:795:9: replace Parser::parse_spawn_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:795:9: replace Parser::parse_spawn_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:831:9: replace Parser::parse_agent_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:831:9: replace Parser::parse_agent_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:878:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:878:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:878:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:878:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:948:9: replace Parser::parse_array_literal -> Result<(usize, Vec<Expression>), ParserError> with Ok((0, vec![Default::default()]))
+src/parser/parser.rs:948:9: replace Parser::parse_array_literal -> Result<(usize, Vec<Expression>), ParserError> with Ok((1, vec![Default::default()]))
+src/parser/parser.rs:1038:9: replace Parser::parse_message_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1038:9: replace Parser::parse_message_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1056:9: replace Parser::parse_event_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1056:9: replace Parser::parse_event_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1071:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:1071:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:1071:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:1071:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:1109:9: replace Parser::parse_if_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1109:9: replace Parser::parse_if_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1141:9: replace Parser::parse_function_arguments -> Result<(usize, Vec<Expression>), ParserError> with Ok((0, vec![Default::default()]))
+src/parser/parser.rs:1141:9: replace Parser::parse_function_arguments -> Result<(usize, Vec<Expression>), ParserError> with Ok((1, vec![Default::default()]))
+src/parser/parser.rs:1173:9: replace Parser::parse_attribute -> Result<(usize, Attribute), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1173:9: replace Parser::parse_attribute -> Result<(usize, Attribute), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1248:9: replace Parser::parse_try_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1248:9: replace Parser::parse_try_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1279:9: replace Parser::parse_catch_block -> Result<(usize, CatchBlock), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1279:9: replace Parser::parse_catch_block -> Result<(usize, CatchBlock), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1319:9: replace Parser::parse_finally_block -> Result<(usize, BlockStatement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1319:9: replace Parser::parse_finally_block -> Result<(usize, BlockStatement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1331:9: replace Parser::parse_service_statement_with_attributes -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1331:9: replace Parser::parse_service_statement_with_attributes -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1412:9: replace Parser::parse_service_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1412:9: replace Parser::parse_service_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1490:9: replace Parser::parse_service_field -> Result<(usize, ServiceField), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1490:9: replace Parser::parse_service_field -> Result<(usize, ServiceField), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1603:9: replace Parser::parse_event_declaration -> Result<(usize, EventDeclaration), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1603:9: replace Parser::parse_event_declaration -> Result<(usize, EventDeclaration), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1655:9: replace Parser::parse_compile_target_attribute -> Result<(usize, CompilationTargetInfo), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1655:9: replace Parser::parse_compile_target_attribute -> Result<(usize, CompilationTargetInfo), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1759:9: replace Parser::expect_token -> Result<(usize, &Token), ParserError> with Ok((0, Box::leak(Box::new(Default::default()))))
+src/parser/parser.rs:1759:9: replace Parser::expect_token -> Result<(usize, &Token), ParserError> with Ok((1, Box::leak(Box::new(Default::default()))))
+src/http_server_security.rs:384:54: replace + with * in RequestSizeLimiter::validate_request
+src/http_server_security.rs:387:24: replace > with == in RequestSizeLimiter::validate_request
+src/parser/parser.rs:292:32: replace < with == in Parser::parse_or
+src/parser/parser.rs:292:32: replace < with > in Parser::parse_or
+src/runtime/engine.rs:394:13: delete match arm "log" in Runtime::call_namespace_function
+src/runtime/engine.rs:395:13: delete match arm "crypto" in Runtime::call_namespace_function
+src/runtime/engine.rs:420:9: replace Runtime::call_service_instance_method -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:446:9: replace Runtime::call_oracle_function -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:471:9: replace Runtime::call_service_function -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:478:21: delete match arm Value::String(name) in Runtime::call_service_function
+src/runtime/engine.rs:543:9: replace Runtime::call_sync_function -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:570:9: replace Runtime::call_cap_function -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:595:9: replace Runtime::call_chain_function -> Result<Value, RuntimeError> with Ok(Default::default())
+src/lexer/lexer.rs:111:45: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:111:45: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:111:41: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:111:41: replace + with * in Lexer::next_token_immutable
+src/parser/parser.rs:148:26: replace + with - in Parser::parse_statement
+src/parser/parser.rs:354:32: replace < with == in Parser::parse_comparison
+src/parser/parser.rs:354:32: replace < with > in Parser::parse_comparison
+src/parser/parser.rs:357:21: delete match arm Operator::Less | Operator::LessEqual | Operator::Greater | Operator::GreaterEqual in Parser::parse_comparison
+src/parser/parser.rs:424:17: delete match arm Operator::Minus | Operator::Not in Parser::parse_unary
+src/parser/parser.rs:507:17: delete match arm Token::Literal(Literal::Bool(value)) in Parser::parse_primary
+src/parser/parser.rs:510:17: delete match arm Token::Literal(Literal::Null) in Parser::parse_primary
+src/parser/parser.rs:508:41: replace + with - in Parser::parse_primary
+src/parser/parser.rs:508:41: replace + with * in Parser::parse_primary
+src/parser/parser.rs:511:41: replace + with - in Parser::parse_primary
+src/parser/parser.rs:511:41: replace + with * in Parser::parse_primary
+src/parser/parser.rs:517:106: replace + with - in Parser::parse_primary
+src/parser/parser.rs:518:76: replace + with - in Parser::parse_primary
+src/parser/parser.rs:541:103: replace + with - in Parser::parse_primary
+src/parser/parser.rs:542:76: replace + with - in Parser::parse_primary
+src/parser/parser.rs:542:76: replace + with * in Parser::parse_primary
+src/parser/parser.rs:612:93: replace + with - in Parser::parse_primary
+src/parser/parser.rs:663:45: replace + with - in Parser::parse_function_statement
+src/parser/parser.rs:663:45: replace + with * in Parser::parse_function_statement
+src/parser/parser.rs:745:9: replace Parser::parse_parameters -> Result<(usize, Vec<Parameter>), ParserError> with Ok((0, vec![]))
+src/parser/parser.rs:745:9: replace Parser::parse_parameters -> Result<(usize, Vec<Parameter>), ParserError> with Ok((1, vec![]))
+src/parser/parser.rs:820:45: replace + with - in Parser::parse_agent_statement
+src/parser/parser.rs:867:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::new()))
+src/parser/parser.rs:867:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::new()))
+src/parser/parser.rs:871:30: replace += with -= in Parser::parse_object_literal
+src/parser/parser.rs:871:30: replace += with *= in Parser::parse_object_literal
+src/parser/parser.rs:881:17: delete match arm Token::Punctuation(Punctuation::RightBrace) in Parser::parse_object_literal
+src/parser/parser.rs:885:17: delete match arm Token::Identifier(key) in Parser::parse_object_literal
+src/parser/parser.rs:906:17: delete match arm Token::Literal(Literal::String(key)) in Parser::parse_object_literal
+src/parser/parser.rs:882:38: replace += with -= in Parser::parse_object_literal
+src/parser/parser.rs:882:38: replace += with *= in Parser::parse_object_literal
+src/parser/parser.rs:886:38: replace += with -= in Parser::parse_object_literal
+src/parser/parser.rs:886:38: replace += with *= in Parser::parse_object_literal
+src/parser/parser.rs:890:42: replace += with -= in Parser::parse_object_literal
+src/parser/parser.rs:890:42: replace += with *= in Parser::parse_object_literal
+src/parser/parser.rs:903:42: replace += with -= in Parser::parse_object_literal
+src/parser/parser.rs:903:42: replace += with *= in Parser::parse_object_literal
+src/parser/parser.rs:907:38: replace += with -= in Parser::parse_object_literal
+src/parser/parser.rs:907:38: replace += with *= in Parser::parse_object_literal
+src/parser/parser.rs:911:42: replace += with -= in Parser::parse_object_literal
+src/parser/parser.rs:911:42: replace += with *= in Parser::parse_object_literal
+src/parser/parser.rs:924:42: replace += with -= in Parser::parse_object_literal
+src/parser/parser.rs:924:42: replace += with *= in Parser::parse_object_literal
+src/parser/parser.rs:1044:45: replace + with - in Parser::parse_if_statement
+src/parser/parser.rs:1076:9: replace Parser::parse_function_arguments -> Result<(usize, Vec<Expression>), ParserError> with Ok((0, vec![]))
+src/parser/parser.rs:1076:9: replace Parser::parse_function_arguments -> Result<(usize, Vec<Expression>), ParserError> with Ok((1, vec![]))
+src/parser/parser.rs:1090:101: replace + with - in Parser::parse_function_arguments
+src/parser/parser.rs:1108:45: replace + with - in Parser::parse_attribute
+src/parser/parser.rs:1108:45: replace + with * in Parser::parse_attribute
+src/parser/parser.rs:1182:45: replace + with - in Parser::parse_try_statement
+src/parser/parser.rs:1182:45: replace + with * in Parser::parse_try_statement
+src/parser/parser.rs:1213:45: replace + with - in Parser::parse_catch_block
+src/parser/parser.rs:1213:45: replace + with * in Parser::parse_catch_block
+src/parser/parser.rs:1299:32: replace < with == in Parser::parse_service_statement_with_attributes
+src/parser/parser.rs:1299:32: replace < with > in Parser::parse_service_statement_with_attributes
+src/parser/parser.rs:1301:17: delete match arm Some(Token::Keyword(Keyword::Fn)) in Parser::parse_service_statement_with_attributes
+src/parser/parser.rs:1313:17: delete match arm Some(Token::Punctuation(Punctuation::RightBrace)) in Parser::parse_service_statement_with_attributes
+src/parser/parser.rs:1314:38: replace += with -= in Parser::parse_service_statement_with_attributes
+src/parser/parser.rs:1314:38: replace += with *= in Parser::parse_service_statement_with_attributes
+src/parser/parser.rs:1466:9: replace Parser::parse_type_expression -> Result<(usize, String), ParserError> with Ok((0, String::new()))
+src/parser/parser.rs:1466:9: replace Parser::parse_type_expression -> Result<(usize, String), ParserError> with Ok((0, "xyzzy".into()))
+src/parser/parser.rs:1466:9: replace Parser::parse_type_expression -> Result<(usize, String), ParserError> with Ok((1, String::new()))
+src/parser/parser.rs:1466:9: replace Parser::parse_type_expression -> Result<(usize, String), ParserError> with Ok((1, "xyzzy".into()))
+src/parser/parser.rs:1693:22: replace == with != in Parser::expect_token
+src/parser/parser.rs:1694:30: replace + with - in Parser::expect_token
+src/parser/parser.rs:1694:30: replace + with * in Parser::expect_token
+src/parser/parser.rs:1704:9: replace Parser::expect_identifier -> Result<(usize, String), ParserError> with Ok((0, String::new()))
+src/parser/parser.rs:1704:9: replace Parser::expect_identifier -> Result<(usize, String), ParserError> with Ok((0, "xyzzy".into()))
+src/parser/parser.rs:1704:9: replace Parser::expect_identifier -> Result<(usize, String), ParserError> with Ok((1, String::new()))
+src/parser/parser.rs:1704:9: replace Parser::expect_identifier -> Result<(usize, String), ParserError> with Ok((1, "xyzzy".into()))
+src/parser/parser.rs:1705:26: replace + with - in Parser::expect_identifier
+src/parser/parser.rs:1705:26: replace + with * in Parser::expect_identifier
+src/parser/parser.rs:1712:9: replace Parser::expect_identifier_or_keyword -> Result<(usize, String), ParserError> with Ok((0, String::new()))
+src/parser/parser.rs:1712:9: replace Parser::expect_identifier_or_keyword -> Result<(usize, String), ParserError> with Ok((0, "xyzzy".into()))
+src/parser/parser.rs:1712:9: replace Parser::expect_identifier_or_keyword -> Result<(usize, String), ParserError> with Ok((1, String::new()))
+src/parser/parser.rs:1712:9: replace Parser::expect_identifier_or_keyword -> Result<(usize, String), ParserError> with Ok((1, "xyzzy".into()))
+src/parser/parser.rs:1713:26: replace + with - in Parser::expect_identifier_or_keyword
+src/parser/parser.rs:1713:26: replace + with * in Parser::expect_identifier_or_keyword
+src/parser/error.rs:207:9: replace ParserError::column_number -> Option<usize> with Some(1)
+src/parser/parser.rs:663:9: replace Parser::parse_function_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:663:9: replace Parser::parse_function_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:702:9: replace Parser::parse_async_function_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:702:9: replace Parser::parse_async_function_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:745:9: replace Parser::parse_parameters -> Result<(usize, Vec<Parameter>), ParserError> with Ok((0, vec![Default::default()]))
+src/parser/parser.rs:745:9: replace Parser::parse_parameters -> Result<(usize, Vec<Parameter>), ParserError> with Ok((1, vec![Default::default()]))
+src/parser/parser.rs:784:9: replace Parser::parse_spawn_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:784:9: replace Parser::parse_spawn_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:820:9: replace Parser::parse_agent_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:820:9: replace Parser::parse_agent_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:867:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:867:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:867:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:867:9: replace Parser::parse_object_literal -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:973:9: replace Parser::parse_message_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:973:9: replace Parser::parse_message_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:991:9: replace Parser::parse_event_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:991:9: replace Parser::parse_event_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1006:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:1006:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((0, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:1006:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([(String::new(), Default::default())])))
+src/parser/parser.rs:1006:9: replace Parser::parse_message_data -> Result<(usize, HashMap<String, Expression>), ParserError> with Ok((1, HashMap::from_iter([("xyzzy".into(), Default::default())])))
+src/parser/parser.rs:1044:9: replace Parser::parse_if_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1044:9: replace Parser::parse_if_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1076:9: replace Parser::parse_function_arguments -> Result<(usize, Vec<Expression>), ParserError> with Ok((0, vec![Default::default()]))
+src/parser/parser.rs:1076:9: replace Parser::parse_function_arguments -> Result<(usize, Vec<Expression>), ParserError> with Ok((1, vec![Default::default()]))
+src/parser/parser.rs:1108:9: replace Parser::parse_attribute -> Result<(usize, Attribute), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1108:9: replace Parser::parse_attribute -> Result<(usize, Attribute), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1182:9: replace Parser::parse_try_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1182:9: replace Parser::parse_try_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1213:9: replace Parser::parse_catch_block -> Result<(usize, CatchBlock), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1213:9: replace Parser::parse_catch_block -> Result<(usize, CatchBlock), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1253:9: replace Parser::parse_finally_block -> Result<(usize, BlockStatement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1253:9: replace Parser::parse_finally_block -> Result<(usize, BlockStatement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1265:9: replace Parser::parse_service_statement_with_attributes -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1265:9: replace Parser::parse_service_statement_with_attributes -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1346:9: replace Parser::parse_service_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1346:9: replace Parser::parse_service_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1424:9: replace Parser::parse_service_field -> Result<(usize, ServiceField), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1424:9: replace Parser::parse_service_field -> Result<(usize, ServiceField), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1536:9: replace Parser::parse_event_declaration -> Result<(usize, EventDeclaration), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1536:9: replace Parser::parse_event_declaration -> Result<(usize, EventDeclaration), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1588:9: replace Parser::parse_compile_target_attribute -> Result<(usize, CompilationTargetInfo), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:1588:9: replace Parser::parse_compile_target_attribute -> Result<(usize, CompilationTargetInfo), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:1692:9: replace Parser::expect_token -> Result<(usize, &Token), ParserError> with Ok((0, Box::leak(Box::new(Default::default()))))
+src/parser/parser.rs:1692:9: replace Parser::expect_token -> Result<(usize, &Token), ParserError> with Ok((1, Box::leak(Box::new(Default::default()))))
+src/parser/error.rs:27:9: replace ErrorContext::with_file_path -> Self with Default::default()
+src/parser/error.rs:32:9: replace ErrorContext::with_source_code -> Self with Default::default()
+src/parser/error.rs:37:9: replace ErrorContext::add_call_stack -> Self with Default::default()
+src/parser/error.rs:42:9: replace ErrorContext::add_variable_scope -> Self with Default::default()
+src/parser/error.rs:47:9: replace ErrorContext::add_suggestion -> Self with Default::default()
+src/parser/error.rs:116:9: replace ParserError::unexpected_token -> Self with Default::default()
+src/parser/error.rs:129:9: replace ParserError::unexpected_eof -> Self with Default::default()
+src/parser/error.rs:136:9: replace ParserError::invalid_attribute -> Self with Default::default()
+src/parser/error.rs:144:9: replace ParserError::missing_closing_brace -> Self with Default::default()
+src/parser/error.rs:152:9: replace ParserError::invalid_function_call -> Self with Default::default()
+src/parser/error.rs:161:9: replace ParserError::type_mismatch -> Self with Default::default()
+src/parser/error.rs:170:9: replace ParserError::semantic_error -> Self with Default::default()
+src/parser/error.rs:179:9: replace ParserError::with_context -> Self with Default::default()
+src/parser/error.rs:208:13: delete match arm ParserError::UnexpectedToken{column, ..} in ParserError::column_number
+src/parser/error.rs:215:9: replace ParserError::context -> &ErrorContext with Box::leak(Box::new(Default::default()))
+src/parser/error.rs:229:9: replace ParserError::format_with_source -> String with String::new()
+src/parser/error.rs:229:9: replace ParserError::format_with_source -> String with "xyzzy".into()
+src/parser/error.rs:234:33: replace && with || in ParserError::format_with_source
+src/parser/error.rs:234:29: replace > with == in ParserError::format_with_source
+src/parser/error.rs:234:29: replace > with < in ParserError::format_with_source
+src/parser/error.rs:234:29: replace > with >= in ParserError::format_with_source
+src/parser/error.rs:234:45: replace <= with > in ParserError::format_with_source
+src/parser/error.rs:235:55: replace - with + in ParserError::format_with_source
+src/parser/error.rs:235:55: replace - with / in ParserError::format_with_source
+src/parser/error.rs:239:59: replace + with - in ParserError::format_with_source
+src/parser/error.rs:239:59: replace + with * in ParserError::format_with_source
+src/parser/error.rs:239:54: replace + with - in ParserError::format_with_source
+src/parser/error.rs:239:54: replace + with * in ParserError::format_with_source
+src/parser/error.rs:247:12: delete ! in ParserError::format_with_source
+src/parser/error.rs:255:12: delete ! in ParserError::format_with_source
+src/parser/error.rs:308:9: replace <impl ErrorReporter for SimpleErrorReporter>::report_error with ()
+src/parser/error.rs:312:9: replace <impl ErrorReporter for SimpleErrorReporter>::report_warning with ()
+src/parser/error.rs:316:9: replace <impl ErrorReporter for SimpleErrorReporter>::has_errors -> bool with true
+src/parser/error.rs:316:9: replace <impl ErrorReporter for SimpleErrorReporter>::has_errors -> bool with false
+src/parser/error.rs:316:9: delete ! in <impl ErrorReporter for SimpleErrorReporter>::has_errors
+src/parser/error.rs:320:9: replace <impl ErrorReporter for SimpleErrorReporter>::get_errors -> Vec<ParserError> with vec![]
+src/parser/error.rs:320:9: replace <impl ErrorReporter for SimpleErrorReporter>::get_errors -> Vec<ParserError> with vec![Default::default()]
+src/parser/error.rs:324:9: replace <impl ErrorReporter for SimpleErrorReporter>::clear_errors with ()
+src/parser/error.rs:334:9: replace <impl ErrorRecovery for crate::parser::Parser>::recover_from_error -> Result<(), ParserError> with Ok(())
+src/parser/error.rs:348:9: replace <impl ErrorRecovery for crate::parser::Parser>::skip_to_synchronization_point -> bool with false
+src/parser/error.rs:354:9: replace <impl ErrorRecovery for crate::parser::Parser>::insert_missing_token -> bool with false
+src/parser/error.rs:358:9: replace <impl ErrorRecovery for crate::parser::Parser>::generate_suggestions -> Vec<String> with vec![]
+src/parser/error.rs:358:9: replace <impl ErrorRecovery for crate::parser::Parser>::generate_suggestions -> Vec<String> with vec![String::new()]
+src/parser/error.rs:358:9: replace <impl ErrorRecovery for crate::parser::Parser>::generate_suggestions -> Vec<String> with vec!["xyzzy".into()]
+src/parser/error.rs:359:13: delete match arm ParserError::UnexpectedToken{expected, ..} in <impl ErrorRecovery for crate::parser::Parser>::generate_suggestions
+src/parser/error.rs:366:13: delete match arm ParserError::MissingClosingBrace{..} in <impl ErrorRecovery for crate::parser::Parser>::generate_suggestions
+src/parser/error.rs:372:13: delete match arm ParserError::InvalidFunctionCall{..} in <impl ErrorRecovery for crate::parser::Parser>::generate_suggestions
+src/runtime/engine.rs:75:9: replace Runtime::with_capacities -> Self with Default::default()
+src/runtime/engine.rs:95:9: replace Runtime::push with ()
+src/runtime/engine.rs:99:9: replace Runtime::pop -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:103:9: replace Runtime::peek -> Result<&Value, RuntimeError> with Ok(Box::leak(Box::new(Default::default())))
+src/runtime/engine.rs:107:9: replace Runtime::set_variable with ()
+src/runtime/engine.rs:111:9: replace Runtime::get_variable -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:118:9: replace Runtime::value_to_string -> Result<String, RuntimeError> with Ok(String::new())
+src/runtime/engine.rs:118:9: replace Runtime::value_to_string -> Result<String, RuntimeError> with Ok("xyzzy".into())
+src/runtime/engine.rs:119:13: delete match arm Value::String(s) in Runtime::value_to_string
+src/runtime/engine.rs:120:13: delete match arm Value::Int(i) in Runtime::value_to_string
+src/runtime/engine.rs:121:13: delete match arm Value::Float(f) in Runtime::value_to_string
+src/runtime/engine.rs:122:13: delete match arm Value::Bool(b) in Runtime::value_to_string
+src/runtime/engine.rs:123:13: delete match arm Value::Null in Runtime::value_to_string
+src/runtime/engine.rs:129:9: replace Runtime::value_to_int -> Result<i64, RuntimeError> with Ok(0)
+src/runtime/engine.rs:129:9: replace Runtime::value_to_int -> Result<i64, RuntimeError> with Ok(1)
+src/runtime/engine.rs:129:9: replace Runtime::value_to_int -> Result<i64, RuntimeError> with Ok(-1)
+src/runtime/engine.rs:130:13: delete match arm Value::Int(i) in Runtime::value_to_int
+src/runtime/engine.rs:131:13: delete match arm Value::Float(f) in Runtime::value_to_int
+src/runtime/engine.rs:132:13: delete match arm Value::String(s) in Runtime::value_to_int
+src/runtime/engine.rs:135:13: delete match arm Value::Bool(b) in Runtime::value_to_int
+src/runtime/engine.rs:141:9: replace Runtime::execute_program -> Result<Option<Value>, RuntimeError> with Ok(None)
+src/runtime/engine.rs:141:9: replace Runtime::execute_program -> Result<Option<Value>, RuntimeError> with Ok(Some(Default::default()))
+src/runtime/engine.rs:155:36: replace > with == in Runtime::execute_program
+src/runtime/engine.rs:155:36: replace > with < in Runtime::execute_program
+src/runtime/engine.rs:155:36: replace > with >= in Runtime::execute_program
+src/runtime/engine.rs:177:9: replace Runtime::register_function with ()
+src/runtime/engine.rs:183:9: replace Runtime::is_sensitive_function -> bool with true
+src/runtime/engine.rs:183:9: replace Runtime::is_sensitive_function -> bool with false
+src/runtime/engine.rs:194:9: replace Runtime::call_function -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:199:17: replace == with != in Runtime::call_function
+src/runtime/engine.rs:201:27: replace != with == in Runtime::call_function
+src/runtime/engine.rs:208:17: delete match arm Value::Map(ref map) in Runtime::call_function
+src/runtime/engine.rs:218:17: delete match arm Value::Array(ref arr) in Runtime::call_function
+src/runtime/engine.rs:210:25: delete match arm Value::String(s) in Runtime::call_function
+src/runtime/engine.rs:211:25: delete match arm Value::Int(i) in Runtime::call_function
+src/runtime/engine.rs:220:25: delete match arm Value::Int(i) in Runtime::call_function
+src/runtime/engine.rs:233:17: replace == with != in Runtime::call_function
+src/runtime/engine.rs:236:27: replace != with == in Runtime::call_function
+src/runtime/engine.rs:254:29: delete match arm Value::String(s) in Runtime::call_function
+src/runtime/engine.rs:255:29: delete match arm Value::Int(i) in Runtime::call_function
+src/runtime/engine.rs:267:82: replace || with && in Runtime::call_function
+src/runtime/engine.rs:268:52: replace && with || in Runtime::call_function
+src/runtime/engine.rs:292:17: delete match arm Value::Map(_) in Runtime::call_function
+src/runtime/engine.rs:298:17: delete match arm Value::Array(_) in Runtime::call_function
+src/runtime/engine.rs:317:28: replace == with != in Runtime::call_function
+src/runtime/engine.rs:340:42: replace == with != in Runtime::call_function
+src/runtime/engine.rs:374:9: replace Runtime::call_namespace_function -> Result<Value, RuntimeError> with Ok(Default::default())
+src/runtime/engine.rs:375:24: replace != with == in Runtime::call_namespace_function
+src/runtime/engine.rs:388:13: delete match arm "oracle" in Runtime::call_namespace_function
+src/runtime/engine.rs:389:13: delete match arm "service" in Runtime::call_namespace_function
+src/runtime/engine.rs:390:13: delete match arm "sync" in Runtime::call_namespace_function
+src/runtime/engine.rs:391:13: delete match arm "cap" in Runtime::call_namespace_function
+src/runtime/engine.rs:392:13: delete match arm "chain" in Runtime::call_namespace_function
+src/http_server_security.rs:45:74: replace < with == in RateLimiter::check_rate_limit
+src/http_server_security.rs:45:74: replace < with > in RateLimiter::check_rate_limit
+src/http_server_security.rs:47:33: replace >= with < in RateLimiter::check_rate_limit
+src/http_server_security.rs:96:9: replace InputValidator::validate_string -> Result<(), String> with Ok(())
+src/http_server_security.rs:96:24: replace > with == in InputValidator::validate_string
+src/http_server_security.rs:96:24: replace > with < in InputValidator::validate_string
+src/http_server_security.rs:96:24: replace > with >= in InputValidator::validate_string
+src/http_server_security.rs:146:9: replace InputValidator::validate_number -> Result<(), String> with Ok(())
+src/http_server_security.rs:146:24: replace || with && in InputValidator::validate_number
+src/http_server_security.rs:146:18: replace < with == in InputValidator::validate_number
+src/http_server_security.rs:146:18: replace < with > in InputValidator::validate_number
+src/http_server_security.rs:146:18: replace < with <= in InputValidator::validate_number
+src/http_server_security.rs:146:33: replace > with == in InputValidator::validate_number
+src/http_server_security.rs:146:33: replace > with < in InputValidator::validate_number
+src/http_server_security.rs:146:33: replace > with >= in InputValidator::validate_number
+src/http_server_security.rs:154:9: replace InputValidator::validate_address -> Result<(), String> with Ok(())
+src/http_server_security.rs:154:12: delete ! in InputValidator::validate_address
+src/http_server_security.rs:158:26: replace != with == in InputValidator::validate_address
+src/http_server_security.rs:162:12: delete ! in InputValidator::validate_address
+src/http_server_security.rs:171:9: replace InputValidator::sanitize_string -> String with String::new()
+src/http_server_security.rs:171:9: replace InputValidator::sanitize_string -> String with "xyzzy".into()
+src/http_server_security.rs:173:84: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:173:71: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:173:58: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:173:45: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:173:51: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:173:64: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:173:77: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:173:90: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:225:9: replace Claims::is_expired -> bool with true
+src/http_server_security.rs:225:9: replace Claims::is_expired -> bool with false
+src/http_server_security.rs:226:18: replace < with == in Claims::is_expired
+src/http_server_security.rs:226:18: replace < with > in Claims::is_expired
+src/http_server_security.rs:226:18: replace < with <= in Claims::is_expired
+src/http_server_security.rs:259:9: replace JwtConfig::with_expiration -> Self with Default::default()
+src/http_server_security.rs:312:9: replace AuthValidator::generate_token -> Result<String, String> with Ok(String::new())
+src/http_server_security.rs:312:9: replace AuthValidator::generate_token -> Result<String, String> with Ok("xyzzy".into())
+src/http_server_security.rs:327:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:327:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:333:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:333:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:339:9: replace AuthValidator::extract_token -> Option<String> with None
+src/http_server_security.rs:339:9: replace AuthValidator::extract_token -> Option<String> with Some(String::new())
+src/http_server_security.rs:339:9: replace AuthValidator::extract_token -> Option<String> with Some("xyzzy".into())
+src/http_server_security.rs:372:9: replace RequestSizeLimiter::validate_request -> Result<(), StatusCode> with Ok(())
+src/http_server_security.rs:372:22: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:372:22: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:372:22: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:377:23: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:377:23: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:377:23: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:384:54: replace + with - in RequestSizeLimiter::validate_request
+src/http_server_security.rs:387:24: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_middleware.rs:267:9: replace <impl std::fmt::Display for MiddlewareError>::fmt -> std::fmt::Result with Ok(Default::default())
+src/http_server_converters.rs:15:5: replace percent_decode -> String with String::new()
+src/http_server_converters.rs:15:5: replace percent_decode -> String with "xyzzy".into()
+src/http_server_converters.rs:19:15: replace == with != in percent_decode
+src/http_server_converters.rs:34:22: replace == with != in percent_decode
+src/http_server_converters.rs:129:5: replace http_response_to_axum_response -> Response<Body> with Response::new(Default::default())
+src/http_server_converters.rs:129:5: replace http_response_to_axum_response -> Response<Body> with Response::from(Default::default())
+src/http_server_converters.rs:186:5: replace error_response -> Response<Body> with Response::new(Default::default())
+src/http_server_converters.rs:186:5: replace error_response -> Response<Body> with Response::from(Default::default())
+src/http_server_converters.rs:206:5: replace json_response -> Response<Body> with Response::new(Default::default())
+src/http_server_converters.rs:206:5: replace json_response -> Response<Body> with Response::from(Default::default())
+src/http_server_handlers.rs:74:5: replace get_route_handler_name -> Option<String> with Some(String::new())
+src/http_server_handlers.rs:74:5: replace get_route_handler_name -> Option<String> with Some("xyzzy".into())
+src/ffi/mod.rs:41:9: replace FFIConfig::http_only -> Self with Default::default()
+src/ffi/mod.rs:52:9: replace FFIConfig::ffi_only -> Self with Default::default()
+src/lexer/tokens.rs:148:9: replace <impl fmt::Display for TokenType>::fmt -> fmt::Result with Ok(Default::default())
+src/lexer/tokens.rs:499:9: replace <impl fmt::Display for TokenStruct>::fmt -> fmt::Result with Ok(Default::default())
+src/lexer/tokens.rs:505:9: replace <impl fmt::Display for Token>::fmt -> fmt::Result with Ok(Default::default())
+src/lexer/tokens.rs:528:9: replace CompilationTarget::from_string -> Option<Self> with None
+src/lexer/tokens.rs:529:13: delete match arm "blockchain" in CompilationTarget::from_string
+src/lexer/tokens.rs:530:13: delete match arm "wasm" | "webassembly" in CompilationTarget::from_string
+src/lexer/tokens.rs:531:13: delete match arm "native" in CompilationTarget::from_string
+src/lexer/tokens.rs:532:13: delete match arm "mobile" in CompilationTarget::from_string
+src/lexer/tokens.rs:533:13: delete match arm "edge" in CompilationTarget::from_string
+src/lexer/tokens.rs:539:9: replace CompilationTarget::to_string -> String with String::new()
+src/lexer/tokens.rs:539:9: replace CompilationTarget::to_string -> String with "xyzzy".into()
+src/lexer/tokens.rs:600:9: replace TrustLevel::from_string -> Option<Self> with None
+src/lexer/tokens.rs:601:13: delete match arm "decentralized" in TrustLevel::from_string
+src/lexer/tokens.rs:602:13: delete match arm "hybrid" in TrustLevel::from_string
+src/lexer/tokens.rs:603:13: delete match arm "centralized" in TrustLevel::from_string
+src/lexer/tokens.rs:609:9: replace TrustLevel::to_string -> String with String::new()
+src/lexer/tokens.rs:609:9: replace TrustLevel::to_string -> String with "xyzzy".into()
+src/lexer/tokens.rs:684:5: replace get_trust_profiles -> HashMap<TrustLevel, SecurityProfile> with HashMap::new()
+src/lexer/tokens.rs:773:9: replace BlockchainNetwork::from_string -> Option<Self> with None
+src/lexer/tokens.rs:774:13: delete match arm "ethereum" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:775:13: delete match arm "polygon" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:776:13: delete match arm "binance" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:777:13: delete match arm "solana" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:778:13: delete match arm "avalanche" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:779:13: delete match arm "arbitrum" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:780:13: delete match arm "optimism" in BlockchainNetwork::from_string
+src/lexer/tokens.rs:786:9: replace BlockchainNetwork::to_string -> String with String::new()
+src/lexer/tokens.rs:786:9: replace BlockchainNetwork::to_string -> String with "xyzzy".into()
+src/lexer/tokens.rs:799:9: replace BlockchainNetwork::is_evm_compatible -> bool with true
+src/lexer/tokens.rs:799:9: replace BlockchainNetwork::is_evm_compatible -> bool with false
+src/lexer/tokens.rs:810:9: replace BlockchainNetwork::is_solana_compatible -> bool with true
+src/lexer/tokens.rs:810:9: replace BlockchainNetwork::is_solana_compatible -> bool with false
+src/lexer/tokens.rs:1051:9: replace InterfaceLanguage::from_string -> Option<Self> with None
+src/lexer/tokens.rs:1052:13: delete match arm "typescript" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1053:13: delete match arm "javascript" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1054:13: delete match arm "python" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1055:13: delete match arm "rust" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1056:13: delete match arm "java" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1057:13: delete match arm "go" in InterfaceLanguage::from_string
+src/lexer/tokens.rs:1063:9: replace InterfaceLanguage::to_string -> String with String::new()
+src/lexer/tokens.rs:1063:9: replace InterfaceLanguage::to_string -> String with "xyzzy".into()
+src/lexer/lexer.rs:22:9: replace Lexer::tokenize -> Result<Vec<Token>, LexerError> with Ok(vec![])
+src/lexer/lexer.rs:26:9: replace Lexer::tokenize_immutable -> Result<Vec<Token>, LexerError> with Ok(vec![])
+src/lexer/lexer.rs:32:9: replace Lexer::tokenize_with_positions_immutable -> Result<Vec<crate::lexer::tokens::TokenWithPosition>, LexerError> with Ok(vec![])
+src/lexer/lexer.rs:38:47: replace * with / in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:41:24: replace < with == in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:41:24: replace < with > in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:41:24: replace < with <= in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:43:24: replace += with -= in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:44:27: replace > with < in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:55:25: replace >= with < in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:63:24: replace <= with > in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:87:21: replace >= with < in Lexer::next_token_immutable
+src/lexer/lexer.rs:98:13: delete match arm 'a'..= 'z' | 'A'..= 'Z' | '_' in Lexer::next_token_immutable
+src/lexer/lexer.rs:125:13: delete match arm '0'..= '9' in Lexer::next_token_immutable
+src/lexer/lexer.rs:132:13: delete match arm '"' in Lexer::next_token_immutable
+src/lexer/lexer.rs:139:13: delete match arm '+' in Lexer::next_token_immutable
+src/lexer/lexer.rs:144:13: delete match arm '-' in Lexer::next_token_immutable
+src/lexer/lexer.rs:155:13: delete match arm '*' in Lexer::next_token_immutable
+src/lexer/lexer.rs:160:13: delete match arm '/' in Lexer::next_token_immutable
+src/lexer/lexer.rs:165:13: delete match arm '%' in Lexer::next_token_immutable
+src/lexer/lexer.rs:171:13: delete match arm '@' in Lexer::next_token_immutable
+src/lexer/lexer.rs:177:13: delete match arm '=' in Lexer::next_token_immutable
+src/lexer/lexer.rs:189:13: delete match arm '!' in Lexer::next_token_immutable
+src/lexer/lexer.rs:201:13: delete match arm '<' in Lexer::next_token_immutable
+src/lexer/lexer.rs:213:13: delete match arm '>' in Lexer::next_token_immutable
+src/lexer/lexer.rs:225:13: delete match arm '&' in Lexer::next_token_immutable
+src/lexer/lexer.rs:235:13: delete match arm '|' in Lexer::next_token_immutable
+src/lexer/lexer.rs:245:13: delete match arm ':' in Lexer::next_token_immutable
+src/lexer/lexer.rs:257:13: delete match arm '.' in Lexer::next_token_immutable
+src/lexer/lexer.rs:262:13: delete match arm '?' in Lexer::next_token_immutable
+src/lexer/lexer.rs:267:13: delete match arm ',' in Lexer::next_token_immutable
+src/lexer/lexer.rs:272:13: delete match arm ';' in Lexer::next_token_immutable
+src/lexer/lexer.rs:277:13: delete match arm '[' in Lexer::next_token_immutable
+src/lexer/lexer.rs:282:13: delete match arm ']' in Lexer::next_token_immutable
+src/lexer/lexer.rs:287:13: delete match arm '{' in Lexer::next_token_immutable
+src/lexer/lexer.rs:292:13: delete match arm '}' in Lexer::next_token_immutable
+src/lexer/lexer.rs:297:13: delete match arm '(' in Lexer::next_token_immutable
+src/lexer/lexer.rs:302:13: delete match arm ')' in Lexer::next_token_immutable
+src/lexer/lexer.rs:104:21: delete match arm "true" in Lexer::next_token_immutable
+src/lexer/lexer.rs:105:21: delete match arm "false" in Lexer::next_token_immutable
+src/lexer/lexer.rs:106:21: delete match arm "null" in Lexer::next_token_immutable
+src/lexer/lexer.rs:111:64: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:109:60: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:109:41: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:109:41: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:140:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:140:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:145:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:145:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:145:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:145:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:145:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:145:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:145:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:145:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:145:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:146:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:147:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:150:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:150:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:156:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:156:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:161:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:161:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:166:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:166:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:172:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:172:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:178:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:178:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:178:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:178:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:178:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:178:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:178:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:178:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:178:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:179:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:180:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:180:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:183:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:190:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:190:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:190:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:190:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:190:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:190:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:190:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:190:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:190:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:191:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:191:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:192:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:195:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:203:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:203:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:204:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:207:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:214:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:214:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:214:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:214:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:214:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:214:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:214:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:214:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:214:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:215:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:215:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:216:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:219:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:226:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:226:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:226:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:226:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:226:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:226:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:226:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:226:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:227:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:227:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:228:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:236:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:236:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:236:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:236:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:236:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:236:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:236:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:236:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:237:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:237:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:238:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:246:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:246:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:246:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:246:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:246:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:246:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:246:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:246:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:246:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:247:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:247:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:248:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:251:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:258:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:258:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:263:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:263:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:268:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:268:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:273:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:273:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:278:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:278:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:283:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:283:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:288:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:288:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:293:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:293:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:298:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:298:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:303:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:303:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:313:20: replace <= with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:388:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 0, 0)
+src/lexer/lexer.rs:388:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 0, 1)
+src/lexer/lexer.rs:388:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 1, 0)
+src/lexer/lexer.rs:388:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 1, 1)
+src/lexer/lexer.rs:388:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 0, 0)
+src/lexer/lexer.rs:388:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 0, 1)
+src/lexer/lexer.rs:388:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 1, 0)
+src/lexer/lexer.rs:388:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 1, 1)
+src/lexer/lexer.rs:388:24: replace < with == in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:388:24: replace < with > in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:388:24: replace < with <= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:391:17: delete match arm ' ' | '\t' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:395:17: delete match arm '\n' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:393:28: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:393:28: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:396:26: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:396:26: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:398:30: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:415:9: replace Lexer::is_keyword -> Option<Keyword> with None
+src/lexer/lexer.rs:490:9: replace Lexer::read_identifier_immutable -> (usize, String) with (0, String::new())
+src/lexer/lexer.rs:490:9: replace Lexer::read_identifier_immutable -> (usize, String) with (0, "xyzzy".into())
+src/lexer/lexer.rs:490:9: replace Lexer::read_identifier_immutable -> (usize, String) with (1, String::new())
+src/lexer/lexer.rs:490:9: replace Lexer::read_identifier_immutable -> (usize, String) with (1, "xyzzy".into())
+src/lexer/lexer.rs:491:24: replace < with == in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:491:24: replace < with > in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:491:24: replace < with <= in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:493:37: replace || with && in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:493:43: replace == with != in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:494:26: replace += with -= in Lexer::read_identifier_immutable
+src/lexer/lexer.rs:504:9: replace Lexer::read_number_immutable -> Result<(usize, i64), LexerError> with Ok((0, 0))
+src/lexer/lexer.rs:504:9: replace Lexer::read_number_immutable -> Result<(usize, i64), LexerError> with Ok((0, 1))
+src/lexer/lexer.rs:504:9: replace Lexer::read_number_immutable -> Result<(usize, i64), LexerError> with Ok((0, -1))
+src/lexer/lexer.rs:504:9: replace Lexer::read_number_immutable -> Result<(usize, i64), LexerError> with Ok((1, 0))
+src/lexer/lexer.rs:504:9: replace Lexer::read_number_immutable -> Result<(usize, i64), LexerError> with Ok((1, 1))
+src/lexer/lexer.rs:504:9: replace Lexer::read_number_immutable -> Result<(usize, i64), LexerError> with Ok((1, -1))
+src/lexer/lexer.rs:505:24: replace < with == in Lexer::read_number_immutable
+src/lexer/lexer.rs:505:24: replace < with > in Lexer::read_number_immutable
+src/lexer/lexer.rs:505:24: replace < with <= in Lexer::read_number_immutable
+src/lexer/lexer.rs:508:26: replace += with -= in Lexer::read_number_immutable
+src/lexer/lexer.rs:521:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((0, String::new()))
+src/lexer/lexer.rs:521:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((0, "xyzzy".into()))
+src/lexer/lexer.rs:521:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((1, String::new()))
+src/lexer/lexer.rs:521:9: replace Lexer::read_string_immutable -> Result<(usize, String), LexerError> with Ok((1, "xyzzy".into()))
+src/lexer/lexer.rs:521:18: replace += with -= in Lexer::read_string_immutable
+src/lexer/lexer.rs:521:18: replace += with *= in Lexer::read_string_immutable
+src/lexer/lexer.rs:523:24: replace < with == in Lexer::read_string_immutable
+src/lexer/lexer.rs:523:24: replace < with > in Lexer::read_string_immutable
+src/lexer/lexer.rs:523:24: replace < with <= in Lexer::read_string_immutable
+src/lexer/lexer.rs:525:19: replace == with != in Lexer::read_string_immutable
+src/lexer/lexer.rs:530:26: replace += with -= in Lexer::read_string_immutable
+src/lexer/lexer.rs:530:26: replace += with *= in Lexer::read_string_immutable
+src/lexer/lexer.rs:532:26: replace == with != in Lexer::read_string_immutable
+src/lexer/lexer.rs:533:26: replace += with -= in Lexer::read_string_immutable
+src/lexer/lexer.rs:535:26: replace += with -= in Lexer::read_string_immutable
+src/parser/ast.rs:217:9: replace Program::add_statement with ()
+src/parser/ast.rs:229:9: replace BlockStatement::add_statement with ()
+src/parser/parser.rs:40:21: replace < with > in Parser::get_token_position
+src/parser/parser.rs:59:24: replace < with == in Parser::parse
+src/parser/parser.rs:59:24: replace < with > in Parser::parse
+src/parser/parser.rs:59:24: replace < with <= in Parser::parse
+src/parser/parser.rs:69:18: replace > with < in Parser::parse_statement
+src/parser/parser.rs:84:36: replace < with == in Parser::parse_statement
+src/parser/parser.rs:84:36: replace < with > in Parser::parse_statement
+src/parser/parser.rs:141:84: replace + with - in Parser::parse_statement
+src/parser/parser.rs:162:45: replace + with - in Parser::parse_let_statement
+src/parser/parser.rs:162:45: replace + with * in Parser::parse_let_statement
+src/parser/parser.rs:188:45: replace + with - in Parser::parse_return_statement
+src/parser/parser.rs:188:45: replace + with * in Parser::parse_return_statement
+src/parser/parser.rs:203:18: replace > with < in Parser::parse_block_statement
+src/parser/parser.rs:217:32: replace < with == in Parser::parse_block_statement
+src/parser/parser.rs:217:32: replace < with > in Parser::parse_block_statement
+src/parser/parser.rs:223:90: replace + with - in Parser::parse_block_statement
+src/parser/parser.rs:241:18: replace > with < in Parser::parse_assignment
+src/parser/parser.rs:257:75: replace + with - in Parser::parse_assignment
+src/parser/parser.rs:260:17: delete match arm Expression::Identifier(name) in Parser::parse_assignment
+src/parser/parser.rs:330:32: replace < with == in Parser::parse_equality
+src/parser/parser.rs:330:32: replace < with > in Parser::parse_equality
+src/parser/parser.rs:378:32: replace < with == in Parser::parse_term
+src/parser/parser.rs:378:32: replace < with > in Parser::parse_term
+src/parser/parser.rs:381:21: delete match arm Operator::Plus | Operator::Minus in Parser::parse_term
+src/parser/parser.rs:402:32: replace < with == in Parser::parse_factor
+src/parser/parser.rs:402:32: replace < with > in Parser::parse_factor
+src/parser/parser.rs:405:21: delete match arm Operator::Star | Operator::Slash in Parser::parse_factor
+src/parser/parser.rs:501:17: delete match arm Token::Literal(Literal::Int(value)) in Parser::parse_primary
+src/parser/parser.rs:504:17: delete match arm Token::Literal(Literal::String(value)) in Parser::parse_primary
+src/parser/parser.rs:513:17: delete match arm Token::Identifier(name) in Parser::parse_primary
+src/parser/parser.rs:610:17: delete match arm Token::Punctuation(Punctuation::LeftParen) in Parser::parse_primary
+src/parser/parser.rs:616:17: delete match arm Token::Punctuation(Punctuation::LeftBrace) in Parser::parse_primary
+src/parser/parser.rs:502:41: replace + with - in Parser::parse_primary
+src/parser/parser.rs:502:41: replace + with * in Parser::parse_primary
+src/parser/parser.rs:505:41: replace + with - in Parser::parse_primary
+src/parser/parser.rs:505:41: replace + with * in Parser::parse_primary
+src/parser/parser.rs:533:109: replace + with - in Parser::parse_primary
+src/parser/parser.rs:533:109: replace + with * in Parser::parse_primary
+src/parser/parser.rs:534:96: replace + with - in Parser::parse_primary
+src/parser/parser.rs:534:96: replace + with * in Parser::parse_primary
+src/parser/parser.rs:558:45: replace + with - in Parser::parse_primary
+src/parser/parser.rs:558:45: replace + with * in Parser::parse_primary
+src/http_server_security.rs:284:9: replace AuthValidator::validate_api_key -> Result<Claims, String> with Ok(Default::default())
+src/http_server_security_middleware.rs:169:5: replace extract_ip -> IpAddr with Default::default()
+src/http_server_middleware.rs:16:5: replace execute_middleware_chain -> Result<HttpRequest, MiddlewareError> with Ok(Default::default())
+src/http_server_middleware.rs:33:5: replace execute_middleware -> Result<HttpRequest, MiddlewareError> with Ok(Default::default())
+src/http_server_middleware.rs:59:5: replace http_request_to_value -> Value with Default::default()
+src/http_server_middleware.rs:113:5: replace value_to_http_request -> Result<HttpRequest, String> with Ok(Default::default())
+src/http_server_middleware.rs:284:5: replace execute_route_handler -> Result<HttpResponse, MiddlewareError> with Ok(HttpResponse::Ok().finish())
+src/http_server_middleware.rs:300:5: replace value_to_http_response -> Result<HttpResponse, String> with Ok(HttpResponse::Ok().finish())
+src/http_server_converters.rs:46:5: replace axum_request_to_http_request -> HttpRequest with Default::default()
+src/http_server_converters.rs:129:5: replace http_response_to_axum_response -> Response<Body> with Response::new()
+src/http_server_converters.rs:129:5: replace http_response_to_axum_response -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_converters.rs:186:5: replace error_response -> Response<Body> with Response::new()
+src/http_server_converters.rs:186:5: replace error_response -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_converters.rs:206:5: replace json_response -> Response<Body> with Response::new()
+src/http_server_converters.rs:206:5: replace json_response -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_handlers.rs:23:5: replace handle_with_middleware -> Response<Body> with Response::new()
+src/http_server_handlers.rs:23:5: replace handle_with_middleware -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::from_iter([Arc::new(RwLock::new())])
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::new(Arc::new(RwLock::new()))
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::from(Arc::new(RwLock::new()))
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::from_iter([Arc::new(RwLock::from_iter([Default::default()]))])
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::new(Arc::new(RwLock::from_iter([Default::default()])))
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::from(Arc::new(RwLock::from_iter([Default::default()])))
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::from_iter([Arc::new(RwLock::new(Default::default()))])
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::new(Arc::new(RwLock::new(Default::default())))
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::from(Arc::new(RwLock::new(Default::default())))
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::from_iter([Arc::new(RwLock::from(Default::default()))])
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::new(Arc::new(RwLock::from(Default::default())))
+src/http_server_integration.rs:20:5: replace create_router_with_middleware -> Router<Arc<RwLock<WebServerState>>> with Router::from(Arc::new(RwLock::from(Default::default())))
+src/http_server_integration.rs:86:5: replace home_handler -> Response<Body> with Response::new()
+src/http_server_integration.rs:86:5: replace home_handler -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_integration.rs:91:5: replace health_handler -> Response<Body> with Response::new()
+src/http_server_integration.rs:91:5: replace health_handler -> Response<Body> with Response::from_iter([Default::default()])
+src/solidity_converter/mod.rs:44:5: replace analyze_file -> Result<analyzer::AnalysisReport, String> with Ok(Default::default())
+src/lexer/tokens.rs:528:9: replace CompilationTarget::from_string -> Option<Self> with Some(Default::default())
+src/lexer/tokens.rs:570:9: replace TargetConstraint::with_allowed_operations -> Self with Default::default()
+src/lexer/tokens.rs:575:9: replace TargetConstraint::with_forbidden_operations -> Self with Default::default()
+src/lexer/tokens.rs:580:9: replace TargetConstraint::with_required_attributes -> Self with Default::default()
+src/lexer/tokens.rs:585:9: replace TargetConstraint::with_trust_profiles -> Self with Default::default()
+src/lexer/tokens.rs:600:9: replace TrustLevel::from_string -> Option<Self> with Some(Default::default())
+src/lexer/tokens.rs:638:9: replace SecurityProfile::with_allowed_apis -> Self with Default::default()
+src/lexer/tokens.rs:643:9: replace SecurityProfile::with_forbidden_apis -> Self with Default::default()
+src/lexer/tokens.rs:648:9: replace SecurityProfile::with_required_checks -> Self with Default::default()
+src/lexer/tokens.rs:653:9: replace SecurityProfile::with_audit_requirements -> Self with Default::default()
+src/lexer/tokens.rs:677:9: replace Permission::with_conditions -> Self with Default::default()
+src/lexer/tokens.rs:684:5: replace get_trust_profiles -> HashMap<TrustLevel, SecurityProfile> with HashMap::from_iter([(Default::default(), Default::default())])
+src/lexer/tokens.rs:773:9: replace BlockchainNetwork::from_string -> Option<Self> with Some(Default::default())
+src/lexer/tokens.rs:845:9: replace ChainConfig::with_chain_id -> Self with Default::default()
+src/lexer/tokens.rs:850:9: replace ChainConfig::with_rpc_url -> Self with Default::default()
+src/lexer/tokens.rs:855:9: replace ChainConfig::with_gas_config -> Self with Default::default()
+src/lexer/tokens.rs:861:9: replace ChainConfig::with_native_token -> Self with Default::default()
+src/lexer/tokens.rs:866:9: replace ChainConfig::with_supported_operations -> Self with Default::default()
+src/lexer/tokens.rs:871:9: replace ChainConfig::with_forbidden_operations -> Self with Default::default()
+src/lexer/tokens.rs:904:5: replace get_chain_configs -> HashMap<BlockchainNetwork, ChainConfig> with HashMap::from_iter([(Default::default(), Default::default())])
+src/lexer/tokens.rs:1051:9: replace InterfaceLanguage::from_string -> Option<Self> with Some(Default::default())
+src/lexer/tokens.rs:1144:5: replace get_target_constraints -> HashMap<CompilationTarget, TargetConstraint> with HashMap::from_iter([(Default::default(), Default::default())])
+src/lexer/lexer.rs:22:9: replace Lexer::tokenize -> Result<Vec<Token>, LexerError> with Ok(vec![Default::default()])
+src/lexer/lexer.rs:26:9: replace Lexer::tokenize_immutable -> Result<Vec<Token>, LexerError> with Ok(vec![Default::default()])
+src/lexer/lexer.rs:32:9: replace Lexer::tokenize_with_positions_immutable -> Result<Vec<crate::lexer::tokens::TokenWithPosition>, LexerError> with Ok(vec![Default::default()])
+src/lexer/lexer.rs:79:9: replace Lexer::next_token -> Result<Token, LexerError> with Ok(Default::default())
+src/lexer/lexer.rs:87:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((0, 0, 0, Default::default()))
+src/lexer/lexer.rs:87:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((0, 0, 1, Default::default()))
+src/lexer/lexer.rs:87:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((0, 1, 0, Default::default()))
+src/lexer/lexer.rs:87:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((0, 1, 1, Default::default()))
+src/lexer/lexer.rs:87:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((1, 0, 0, Default::default()))
+src/lexer/lexer.rs:87:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((1, 0, 1, Default::default()))
+src/lexer/lexer.rs:87:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((1, 1, 0, Default::default()))
+src/lexer/lexer.rs:87:9: replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((1, 1, 1, Default::default()))
+src/lexer/lexer.rs:415:9: replace Lexer::is_keyword -> Option<Keyword> with Some(Default::default())
+src/parser/parser.rs:30:9: replace Parser::new_with_positions -> Self with Default::default()
+src/parser/parser.rs:50:9: replace Parser::error_unexpected_token -> ParserError with Default::default()
+src/parser/parser.rs:56:9: replace Parser::parse -> Result<Program, ParserError> with Ok(Default::default())
+src/parser/parser.rs:69:9: replace Parser::parse_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:69:9: replace Parser::parse_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:162:9: replace Parser::parse_let_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:162:9: replace Parser::parse_let_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:188:9: replace Parser::parse_return_statement -> Result<(usize, Statement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:188:9: replace Parser::parse_return_statement -> Result<(usize, Statement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:203:9: replace Parser::parse_block_statement -> Result<(usize, BlockStatement), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:203:9: replace Parser::parse_block_statement -> Result<(usize, BlockStatement), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:232:9: replace Parser::parse_expression -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:232:9: replace Parser::parse_expression -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:236:9: replace Parser::parse_expression_with_depth -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:236:9: replace Parser::parse_expression_with_depth -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:241:9: replace Parser::parse_assignment -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:241:9: replace Parser::parse_assignment -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:288:9: replace Parser::parse_or -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:288:9: replace Parser::parse_or -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:307:9: replace Parser::parse_and -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:307:9: replace Parser::parse_and -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:326:9: replace Parser::parse_equality -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:326:9: replace Parser::parse_equality -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:350:9: replace Parser::parse_comparison -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:350:9: replace Parser::parse_comparison -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:374:9: replace Parser::parse_term -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:374:9: replace Parser::parse_term -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:398:9: replace Parser::parse_factor -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:398:9: replace Parser::parse_factor -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:422:9: replace Parser::parse_unary -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:422:9: replace Parser::parse_unary -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/parser/parser.rs:499:9: replace Parser::parse_primary -> Result<(usize, Expression), ParserError> with Ok((0, Default::default()))
+src/parser/parser.rs:499:9: replace Parser::parse_primary -> Result<(usize, Expression), ParserError> with Ok((1, Default::default()))
+src/http_server_security.rs:38:9: replace RateLimiter::check_rate_limit -> Result<(), StatusCode> with Ok(())
+src/lib.rs:32:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:39:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/http_server.rs:129:5: replace home_handler -> Html<String> with Html::new()
+src/http_server.rs:129:5: replace home_handler -> Html<String> with Html::from_iter([String::new()])
+src/http_server.rs:129:5: replace home_handler -> Html<String> with Html::new(String::new())
+src/http_server.rs:129:5: replace home_handler -> Html<String> with Html::from_iter(["xyzzy".into()])
+src/http_server.rs:129:5: replace home_handler -> Html<String> with Html::new("xyzzy".into())
+src/http_server.rs:129:5: replace home_handler -> Html<String> with Html::from("xyzzy".into())
+src/http_server.rs:476:5: replace balance_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:476:5: replace balance_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:476:5: replace balance_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:476:5: replace balance_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:487:5: replace connect_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:487:5: replace connect_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:487:5: replace connect_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:487:5: replace connect_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:497:5: replace transfer_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:497:5: replace transfer_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:497:5: replace transfer_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:497:5: replace transfer_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:507:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:507:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:507:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:507:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:518:5: replace health_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:518:5: replace health_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:518:5: replace health_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:518:5: replace health_handler -> Json<serde_json::Value> with Json::from(Default::default())

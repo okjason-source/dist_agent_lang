@@ -1,0 +1,22 @@
+--- src/http_server_security.rs
++++ replace SecurityLogger::log_invalid_input with ()
+@@ -424,18 +424,17 @@
+     /// Log authentication failure
+     pub fn log_auth_failure(ip: &str, reason: &str) {
+         Self::log_event("AUTH_FAILURE", reason, Some(ip));
+         log::error!(target: "security::auth", "Authentication failed for IP {}: {}", ip, reason);
+     }
+     
+     /// Log invalid input
+     pub fn log_invalid_input(ip: &str, input: &str) {
+-        Self::log_event("INVALID_INPUT", input, Some(ip));
+-        log::warn!(target: "security::input", "Invalid input from IP {}: {}", ip, input);
++        () /* ~ changed by cargo-mutants ~ */
+     }
+     
+     /// Log successful authentication
+     pub fn log_auth_success(ip: &str, user_id: &str) {
+         log::info!(target: "security::auth", "Successful authentication for user {} from IP {}", user_id, ip);
+     }
+     
+     /// Log suspicious activity

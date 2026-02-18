@@ -1,0 +1,121 @@
+@trust("hybrid")
+@chain("ethereum", "solana")
+service TestNFT {
+    name: string = "TestNFT";
+    symbol: string = "TST";
+    owner: string = "";
+    total_supply: int = 0;
+    max_supply: int = 10000;
+    base_uri: string = "https://api.testnft.com/metadata/";
+    
+    token_owners: map<int, string> = {};
+    token_uris: map<int, string> = {};
+    balances: map<string, int> = {};
+    approved: map<int, string> = {};
+    operator_approvals: map<string, map<string, bool>> = {};
+    
+    chain_deployments: map<string, string> = {};
+    cross_chain_locks: map<int, string> = {};
+    
+    fn initialize(contract_owner: string) {
+        self.owner = contract_owner;
+        self.chain_deployments["ethereum"] = "";
+        self.chain_deployments["solana"] = "";
+        print("TestNFT contract initialized with hybrid trust");
+        print("Owner: " + contract_owner);
+        print("Max supply: " + self.max_supply);
+    }
+    
+    fn set_chain_deployment(chain: string, address: string) {
+        if (msg::sender() != self.owner) {
+            print("Only owner can set chain deployments");
+            return;
+        }
+        self.chain_deployments[chain] = address;
+        print("Chain deployment set: " + chain + " -> " + address);
+    }
+    
+    fn get_name() -> string {
+        return self.name;
+    }
+    
+    fn get_symbol() -> string {
+        return self.symbol;
+    }
+    
+    fn get_total_supply() -> int {
+        return self.total_supply;
+    }
+    
+    fn get_max_supply() -> int {
+        return self.max_supply;
+    }
+    
+    fn balance_of(owner: string) -> int {
+        if (self.balances[owner] == null) {
+            return 0;
+        }
+        return self.balances[owner];
+    }
+    
+    fn owner_of(token_id: int) -> string {
+        if (self.token_owners[token_id] == null) {
+            print("Token does not exist");
+            return "";
+        }
+        return self.token_owners[token_id];
+    }
+    
+    fn token_uri(token_id: int) -> string {
+        if (self.token_uris[token_id] != null) {
+            return self.token_uris[token_id];
+        }
+        return self.base_uri + token_id;
+    }
+    
+    fn set_token_uri(token_id: int, uri: string) {
+        if (msg::sender() != self.owner) {
+            print("Only owner can set token URI");
+            return;
+        }
+        if (self.token_owners[token_id] == null) {
+            print("Token does not exist");
+            return;
+        }
+        self.token_uris[token_id] = uri;
+        print("Token URI set for token " + token_id);
+    }
+    
+    fn mint(to: string, token_id: int) -> bool {
+        if (msg::sender() != self.owner) {
+            print("Only owner can mint");
+            return false;
+        }
+        if (self.token_owners[token_id] != null) {
+            print("Token already exists");
+            return false;
+        }
+        if (self.total_supply >= self.max_supply) {
+            print("Max supply reached");
+            return false;
+        }
+        
+        self.token_owners[token_id] = to;
+        if (self.balances[to] == null) {
+            self.balances[to] = 0;
+        }
+        self.balances[to] = self.balances[to] + 1;
+        self.total_supply = self.total_supply + 1;
+        
+        print("Minted token " + token_id + " to " + to);
+        return true;
+    }
+    
+    fn mint_batch(to: string, token_ids: list<int>) -> bool {
+        if (msg::sender() != self.owner) {
+            print("Only owner can mint");
+            return false;
+        }
+        if (self.total_supply + token_ids.length() > self.max_supply) {
+            print("Minting would exceed max supply");
+}

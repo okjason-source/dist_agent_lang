@@ -1,0 +1,439 @@
+<=<=<//
+// MoldRegistry - DAL Implementation
+// Mints ad mnanages Mold NFTs. Cano(nical Solidity: MoldRegistry.sol
+// Plan A: mold/PLAN_A.md | Spec: mold/DEFINITION.md
+// Fee split: 30% DAL[moldId] = mold;
+        event MoldDeactivated { moldId: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(calle77777Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+            log::error("mold", "Not mold owner")       mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 1. rd    }= caller) {
+            log        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, mo ---
+    fn activate        log::info("vibes", "Minte" && sel;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+ Id: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= callmoldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool {
+ <s       if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd   ldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+ Id: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.re"NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool //
+// MoldRegistry - DAL Imte mold ---
+    fn activate     cmold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, oldId] !rd_mr "vibes", "Minte" 0. rd    }= g::error("mold", "Not mold owner");
+            throw "NotMoldOwner";
+        }
+ elf.rewaRd__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() 					-> intter != "")::cqll*0. rd    }
+  {
+     	4			d() -> iself.reward__resuacl;ihon:l:lca(0. Mold(caller: string, moldId: int) -> bool [moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller)ctivate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minta" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihons[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mouaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself_resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes",<=<=<//
+// MoldRegistry - DAL Implementation
+// Mints and manages Mold NFTs. Cano(nical Solidity: MoldRegistry.sol
+// Plan A: mold/PL;N_A.md | Spec: mold/DEFINITION.md
+// Fee split: 30% DAL[moldId] = mold;
+        event MoldDeactivated { moldId: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("ribes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. ---
+    fn activate        log::info("vibes", "Minte" && self.r)ward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter " !=")::call*0.          throw "NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+    ller) {
+ Id: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0) rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[mol(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[mif (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+   /         log::error("mold", "Not mold =owner");
+            throw "NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+  ld = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool {
+ <s       if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd   ldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+ Id: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+            log::eMold NFTs. Cano(nical Solidity: MoldRegistry.sol
+// Plan A: mold/PLAN_A.md | Spec: mold/DEFINITION.md
+// Fee split: 30% DAL[moldId] = mold;
+        event MoldDeactivated { moldId: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: st];
+    // MoldRegistry - DAL Implementation
+// Mints and mages Mold NFTs. Cano(nical Solidity: MoldRegistry.sol
+// Plan A: mold/PLAN_A.md | Spec: mold/DEFINITION.md
+// Fee split: 30% DAL[moldId] = mold;
+        event MoldDeactiva      mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(ca    if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 1. rd    }= caller) {
+            log        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, mo ---
+    fn activate        log::info("vibes", "Minte" && sel;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+ Id: moldId };
+ activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= callmoldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool {
+ <s       if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd   ldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+ Id: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.re"NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool //
+// MoldRegistry - DAL Imte mold ---
+    fn activate     cmold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, oldId] !rd_mr "vibes", "Minte" 0. rd    }= g::error("mold", "Not mold owner");
+            throw "NotMoldOwner";
+        }
+ elf.rewaRd__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() 					-> intter != "")::cqll*0. rd    }
+  {
+     	4			d() -> iself.reward__resuacl;ihon:l:lca(0. Mold(caller: string, moldId: int) -> bool [moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller)ctivate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minta" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihons[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mouaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+   ller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+            log::error("mold", "Not mold =owner");
+            throw "NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+  ld = self.molds[moldId];
+   
+            throw "NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(callecaller) {
+    ller) {
+ Id: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, moldLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+            log::error("mold", "Not mold owner");
+       , "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, mo ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter " !=")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(callnr: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+            log::error("mold", "Not mold owner");
+            throw "NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+ 
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+            log::error("mold", "Not mold owner")       mold["active"] = trucall*0. rd    }
+  {
+     / Fee split: 30% DAL[moldId] = mold;
+        event MoldDeactivated { moldId: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(cqller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+ Id: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", lf.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0.esuaclihnn::call(0. rd_mr "vibes", "Minte"  }= caller) {
+            log::error("mold", "Not mold owner")       mold["active"] = trucall*0. rd    }
+  {
+     d((0. rd_mr "vibes", "Minta" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihons[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mouaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd             log::error("mold", "Not mold =owner");
+            throw "NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+  ld = self.molds[moldId];
+   
+            throw "NotMoldOwner";
+        }
+        let mold = self.mo. rd    }= caller) {
+            log::error("mold", "Not mold =owner");
+            throw "NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+  ld = self.molds[moldId];
+  n true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.re"NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+            log::error("mold", "Not] mold =owner");
+            throw "NotMoldOwner";
+            return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rj_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != ""ld = self.molds[moldId];
+  ld = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool {
+ <s       if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd   ldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+ Id: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.re"NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool //
+// MoldRegistry - DAL Imte mold ---
+    fn activate     cmold["active"] = trucall*5. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, oldId] !rd_mr "vibes", "Minte" 0. rd    }= g::error("mold", "Not mold owner");
+            throw "NotMoldOwner";
+        }
+ elf.rewaRd__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() 					-> intter != "")::cqll*0. rd    }
+  {
+     	4			d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool [moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller)ctivate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minta" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihons[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__rectivate        log::info("vibes_resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  te" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: str")::call*0. rd    }
+  te" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+ Id: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__rusuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+            log::error("mold", "Not mold owner");
+            throw "NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool {
+        ds[moldId];
+  ld = self.molds[moldId];
+   
+               d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter " !=")::call*0.          throw "NotMoldOwner";
+        }
+        let mold = self.molds[moldId];
+        mold["active"] = trucall*0. rd    }
+  {
+     d() -> iself.reward__resuaclihnn::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. rd    }= caller) {
+    ller) {
+ Id: moldId };
+        return true;
+    }
+
+    // --- Creator: activate mold ---
+    fn activate        log::info("vibes", "Minte" && self.reward__resuaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != ""suaclihnn::call(0. Mouaclihnn::call(0. rd_mr "vibes", "Minte" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself_resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0.__resuacl;ihon::call(0. Mold(caller: str -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0.esuaclihnn::call(0. rd_mr "vibes", "Minte"  }= caller) {
+            log::error("mold", "Not mold owner")       mold["active"] = trucall*0. rd    }
+  {
+     d((0. rd_mr "vibes", "Minta" 0. rd    }
+  {
+     d() -> intter != "")::call*0. rd    }
+  {
+     d() -> iself.reward__resuacl;ihons[moldId];
+  )::call*0) rd    }
+  {
+     d() -> iself.reward__resuacl;ihon::call(0. Mold(caller: string, moldId: int) -> bool {
+        if (self.tokenOwners[moldId] !rd_mr "vibes", "Minte" 0. r      mold["active"] =d    }= caller) {
+            log::err

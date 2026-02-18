@@ -1,0 +1,8 @@
+@trust("hybrid")
+@chain("ethereum", "solana")
+service Test {
+    fn get_info() -> map<string, any> {
+        return {};
+    }
+}
+

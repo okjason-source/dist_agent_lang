@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/dist_agent_lang/dist_agent_lang/discussions
+    about: Ask questions, share ideas, and discuss dist_agent_lang with the community
+  - name: 📖 Documentation
+    url: https://github.com/dist_agent_lang/dist_agent_lang/tree/main/docs
+    about: Browse our comprehensive documentation
+  - name: 🧪 Testing Guide
+    url: https://github.com/dist_agent_lang/dist_agent_lang/blob/main/TESTING_GUIDE.md
+    about: Learn how to test dist_agent_lang and report bugs
+  - name: 🤝 Contributing Guide
+    url: https://github.com/dist_agent_lang/dist_agent_lang/blob/main/CONTRIBUTING.md
+    about: Learn how to contribute to dist_agent_lang

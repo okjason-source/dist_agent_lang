@@ -1,0 +1,37 @@
+--- src/mold/mod.rs
++++ replace load_mold_from_source -> Result<MoldConfig, String> with Ok(Default::default())
+@@ -111,33 +111,17 @@
+ ) -> Result<crate::stdlib::agent::AgentContext, String> {
+     let mold = load_mold_from_path(path)?;
+     let config = mold_config_to_agent_config(&mold, name_override)?;
+     spawn(config)
+ }
+ 
+ /// Load mold from a source: local path/name (resolved with `base`) or `ipfs://<cid>` (requires http-interface).
+ pub fn load_mold_from_source(source: &str, base: &Path) -> Result<MoldConfig, String> {
+-    let source = source.trim();
+-    if source.starts_with("ipfs://") {
+-        #[cfg(feature = "http-interface")]
+-        {
+-            let cid = source.trim_start_matches("ipfs://").trim_end_matches('/');
+-            let content = download_mold_from_ipfs(cid)?;
+-            parse_mold_content(&content)
+-        }
+-        #[cfg(not(feature = "http-interface"))]
+-        {
+-            let _ = base;
+-            Err("IPFS sources require building with http-interface feature (default)".to_string())
+-        }
+-    } else {
+-        let path = resolve_mold_path(base, source)?;
+-        load_mold_from_path(&path)
+-    }
++    Ok(Default::default()) /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ /// Create agent from mold source (path/name or ipfs://cid). Name override optional.
+ pub fn create_from_mold_source(
+     source: &str,
+     base: &Path,
+     name_override: Option<&str>,
+ ) -> Result<crate::stdlib::agent::AgentContext, String> {

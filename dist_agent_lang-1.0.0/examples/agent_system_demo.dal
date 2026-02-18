@@ -1,0 +1,523 @@
+// Agent System Demo: Using dist_agent_lang Syntax
+// Demonstrating AI agent and workflow management capabilities
+
+@trust("hybrid")
+service AgentSystemDemo {
+    demo_agents: map<string, string>,
+    coordination_examples: vector<map<string, any>>,
+
+    fn initialize() {
+        log::info("agent_demo", {
+            "event": "initializing_agent_system_demo",
+            "message": "Demonstrating AI agent system with dist_agent_lang"
+        });
+
+        self.demo_agents = {};
+        self.coordination_examples = [];
+
+        // Initialize demo scenarios
+        self.setup_agent_lifecycle_demo();
+        self.setup_coordination_demo();
+        self.setup_communication_demo();
+        self.setup_evolution_demo();
+    }
+
+    fn setup_agent_lifecycle_demo() {
+        print("🔄 Agent Lifecycle Demo");
+        print("========================");
+
+        // Demonstrate agent creation using AI module
+        let agent_config = {
+            "name": "CodeAssistant",
+            "role": "Senior Software Architect",
+            "capabilities": ["code_generation", "architecture_design", "testing", "documentation"],
+            "trust_level": "hybrid",
+            "learning_enabled": true,
+            "communication_enabled": true,
+            "coordination_enabled": true,
+            "metadata": {
+                "specialization": "rust_development",
+                "experience_level": "expert",
+                "preferred_patterns": ["async_await", "builder_pattern", "strategy_pattern"]
+            }
+        };
+
+        // Create agent using AI module
+        let agent = ai::create_agent(agent_config);
+        let coordinator = ai::create_agent_coordinator();
+        let agent_id = ai::add_agent_to_coordinator(coordinator, agent);
+
+        print("✅ Created AI Agent: " + agent_id);
+        print("   - Type: AI Agent");
+        print("   - Role: Senior Software Architect");
+        print("   - Capabilities: Code Generation, Architecture Design, Testing");
+        print("");
+
+        // Store for later demonstrations
+        self.demo_agents["code_assistant"] = agent_id;
+    }
+
+    fn setup_coordination_demo() {
+        print("🤝 Agent Coordination Demo");
+        print("==========================");
+
+        // Create multiple agents for coordination
+        let analyst_config = {
+            "name": "DataAnalyst",
+            "role": "Data Analysis Specialist",
+            "capabilities": ["data_analysis", "pattern_recognition", "insights_generation"],
+            "trust_level": "hybrid"
+        };
+
+        let executor_config = {
+            "name": "TaskExecutor",
+            "role": "Task Execution Specialist",
+            "capabilities": ["task_execution", "automation", "workflow_management"],
+            "trust_level": "standard"
+        };
+
+        let coordinator = ai::create_agent_coordinator();
+        let analyst = ai::create_agent(analyst_config);
+        let executor = ai::create_agent(executor_config);
+        
+        let analyst_id = ai::add_agent_to_coordinator(coordinator, analyst);
+        let executor_id = ai::add_agent_to_coordinator(coordinator, executor);
+
+        print("✅ Created Analyst Agent: " + analyst_id);
+        print("✅ Created Executor Agent: " + executor_id);
+        print("");
+
+        // Demonstrate coordination through workflow
+        let workflow_config = {
+            "workflow_id": "coordination_workflow_001",
+            "name": "Data Analysis Workflow",
+            "steps": [
+                {
+                    "step_id": "data_analysis",
+                    "task_type": "data_analysis",
+                    "agent_id": analyst_id,
+                    "dependencies": []
+                },
+                {
+                    "step_id": "task_execution",
+                    "task_type": "task_execution",
+                    "agent_id": executor_id,
+                    "dependencies": ["data_analysis"]
+                }
+            ]
+        };
+
+        let workflow = ai::create_workflow(coordinator, workflow_config);
+        let coordination_result = ai::execute_workflow(coordinator, workflow.workflow_id);
+
+        print("✅ Coordination Result: " + coordination_result);
+        print("");
+
+        // Store coordination example
+        self.coordination_examples.push({
+            "analyst": analyst_id,
+            "executor": executor_id,
+            "task": "behavior_analysis",
+            "result": coordination_result
+        });
+    }
+
+    fn setup_communication_demo() {
+        print("💬 Agent Communication Demo");
+        print("===========================");
+
+        // Get agents from previous demos
+        let code_assistant = self.demo_agents["code_assistant"];
+
+        // Create a system agent for communication demo
+        let system_config = {
+            "name": "SystemMonitor",
+            "role": "System Monitoring Agent",
+            "capabilities": ["monitoring", "alerts", "performance_tracking"],
+            "trust_level": "standard"
+        };
+
+        let coordinator = ai::create_agent_coordinator();
+        let system_agent = ai::create_agent(system_config);
+        let system_agent_id = ai::add_agent_to_coordinator(coordinator, system_agent);
+
+        // Demonstrate structured communication through tasks
+        let task = ai::create_task(system_agent_id, "status_update", "Send system status update", {
+            "cpu_usage": 45,
+            "memory_usage": 67,
+            "active_tasks": 12,
+            "system_health": "good"
+        });
+
+        let message_result = ai::execute_task(system_agent_id, task.id);
+
+        print("✅ Communication Result: " + message_result);
+        print("   - From: System Monitor Agent");
+        print("   - To: Code Assistant Agent");
+        print("   - Type: Status Update");
+        print("");
+    }
+
+    fn setup_evolution_demo() {
+        print("🧬 Agent Evolution Demo");
+        print("=======================");
+
+        let base_agent_config = {
+            "name": "LearningAgent",
+            "role": "Adaptive Learning Agent",
+            "capabilities": ["basic_learning", "pattern_recognition"],
+            "trust_level": "hybrid",
+            "learning_enabled": true
+        };
+
+        let coordinator = ai::create_agent_coordinator();
+        let learning_agent = ai::create_agent(base_agent_config);
+        let learning_agent_id = ai::add_agent_to_coordinator(coordinator, learning_agent);
+
+        // Demonstrate evolution through learning tasks
+        let evolution_task = ai::create_task(learning_agent_id, "learning", "Learn new capabilities", {
+            "new_capabilities": ["advanced_analytics", "predictive_modeling"],
+            "improved_skills": ["data_visualization", "report_generation"],
+            "performance_improvements": ["response_time", "accuracy", "reliability"],
+            "learning_context": {
+                "tasks_completed": 150,
+                "success_rate": 0.94,
+                "user_feedback": "excellent_adaptive_behavior"
+            }
+        });
+
+        let evolution_result = ai::execute_task(learning_agent_id, evolution_task.id);
+
+        print("✅ Evolution Result: " + evolution_result);
+        print("   - Base Capabilities: Basic Learning, Pattern Recognition");
+        print("   - New Capabilities: Advanced Analytics, Predictive Modeling");
+        print("   - Performance Improvements: Response Time, Accuracy, Reliability");
+        print("");
+    }
+
+    fn demonstrate_capability_validation() {
+        print("✅ Agent Capability Validation");
+        print("==============================");
+
+        // Test different agent types and their capabilities
+        let test_cases = [
+            {
+                "agent_type": "ai",
+                "required_capabilities": ["code_generation", "architecture_design", "testing"],
+                "expected_result": true
+            },
+            {
+                "agent_type": "system",
+                "required_capabilities": ["monitoring", "resource_management"],
+                "expected_result": true
+            },
+            {
+                "agent_type": "worker",
+                "required_capabilities": ["task_execution", "automation"],
+                "expected_result": true
+            },
+            {
+                "agent_type": "ai",
+                "required_capabilities": ["advanced_quantum_computing", "time_travel"],
+                "expected_result": false
+            }
+        ];
+
+        for test_case in test_cases {
+            // In dist_agent_lang, we validate through agent creation
+            let agent_config = {
+                "name": "TestAgent",
+                "role": "Test Role",
+                "capabilities": test_case.required_capabilities,
+                "trust_level": "standard"
+            };
+
+            try {
+                let coordinator = ai::create_agent_coordinator();
+                let agent = ai::create_agent(agent_config);
+                let agent_id = ai::add_agent_to_coordinator(coordinator, agent);
+                
+                let status = test_case.expected_result ? "✅ PASS" : "❌ FAIL";
+                print("   " + status + " " + test_case.agent_type + " agent with capabilities: " + test_case.required_capabilities);
+            } catch error {
+                let status = !test_case.expected_result ? "✅ PASS" : "❌ FAIL";
+                print("   " + status + " " + test_case.agent_type + " agent with capabilities: " + test_case.required_capabilities);
+            }
+        }
+        print("");
+    }
+
+    fn demonstrate_task_management() {
+        print("📋 Task Management Demo");
+        print("========================");
+
+        // Create various types of tasks
+        let coordinator = ai::create_agent_coordinator();
+        let agent = ai::create_agent({
+            "name": "TaskManager",
+            "role": "Task Management Specialist",
+            "capabilities": ["task_management", "automation"],
+            "trust_level": "standard"
+        });
+        let agent_id = ai::add_agent_to_coordinator(coordinator, agent);
+
+        let tasks = [
+            ai::create_task(agent_id, "implementation", "Implement user authentication system", { "priority": "high" }),
+            ai::create_task(agent_id, "optimization", "Optimize database queries for performance", { "priority": "medium" }),
+            ai::create_task(agent_id, "documentation", "Write comprehensive API documentation", { "priority": "low" }),
+            ai::create_task(agent_id, "security", "Fix critical security vulnerability", { "priority": "critical" })
+        ];
+
+        for task in tasks {
+            print("✅ Created task: " + task.id);
+        }
+        print("");
+    }
+
+    fn run_complete_demo() -> map<string, any> {
+        print("🚀 Complete Agent System Demo");
+        print("==============================");
+        print("");
+
+        // Run all demonstrations
+        self.setup_agent_lifecycle_demo();
+        self.setup_coordination_demo();
+        self.setup_communication_demo();
+        self.setup_evolution_demo();
+        self.demonstrate_capability_validation();
+        self.demonstrate_task_management();
+
+        // Summary
+        print("🎉 Demo Complete!");
+        print("");
+        print("📊 Summary:");
+        print("   - Created " + self.demo_agents.size() + " demo agents");
+        print("   - Demonstrated " + self.coordination_examples.size() + " coordination examples");
+        print("   - Showed structured agent lifecycle management");
+        print("   - Demonstrated agent communication patterns");
+        print("   - Illustrated agent evolution and learning");
+        print("   - Validated agent capabilities and configurations");
+        print("");
+        print("💡 Key Benefits of dist_agent_lang AI System:");
+        print("   - Clear, structured API design");
+        print("   - Consistent configuration patterns");
+        print("   - Proper separation of concerns");
+        print("   - Comprehensive validation and error handling");
+        print("   - Built-in workflow management");
+        print("   - Native AI integration");
+        print("");
+
+        return {
+            "demo_agents_created": self.demo_agents.size(),
+            "coordination_examples": self.coordination_examples.size(),
+            "pattern_benefits": [
+                "structured_api_design",
+                "consistent_configuration",
+                "separation_of_concerns",
+                "comprehensive_validation",
+                "workflow_management",
+                "ai_integration"
+            ],
+            "status": "demo_completed_successfully"
+        };
+    }
+}
+
+// =====================================================
+// PRACTICAL USAGE EXAMPLES
+// =====================================================
+
+@trust("hybrid")
+service PracticalAgentUsage {
+    // Example: AI-Powered Code Review System
+    fn create_code_review_system() -> map<string, any> {
+        // Create specialized agents for code review
+        let reviewer_configs = [
+            {
+                "name": "SecurityReviewer",
+                "role": "Security Code Reviewer",
+                "capabilities": ["security_analysis", "vulnerability_detection", "compliance_checking"],
+                "specialization": "security_focused"
+            },
+            {
+                "name": "PerformanceReviewer",
+                "role": "Performance Code Reviewer",
+                "capabilities": ["performance_analysis", "optimization_suggestions", "bottleneck_identification"],
+                "specialization": "performance_focused"
+            },
+            {
+                "name": "QualityReviewer",
+                "role": "Code Quality Reviewer",
+                "capabilities": ["code_quality_analysis", "best_practices_check", "maintainability_assessment"],
+                "specialization": "quality_focused"
+            }
+        ];
+
+        // Spawn reviewer agents
+        let coordinator = ai::create_agent_coordinator();
+        let reviewers = [];
+
+        for config in reviewer_configs {
+            let agent = ai::create_agent(config);
+            let agent_id = ai::add_agent_to_coordinator(coordinator, agent);
+            reviewers.push(agent_id);
+        }
+
+        return {
+            "system_name": "MultiAgentCodeReview",
+            "reviewers": reviewers,
+            "capabilities": ["comprehensive_analysis", "specialized_feedback", "coordinated_review"],
+            "status": "ready_for_code_review"
+        };
+    }
+
+    // Example: Intelligent Task Management System
+    fn create_task_management_system() -> map<string, any> {
+        // Create task management agents
+        let planner_config = {
+            "name": "TaskPlanner",
+            "role": "Task Planning Specialist",
+            "capabilities": ["task_breakdown", "priority_assessment", "dependency_analysis"],
+            "coordination_enabled": true
+        };
+
+        let executor_config = {
+            "name": "TaskExecutor",
+            "role": "Task Execution Specialist",
+            "capabilities": ["task_execution", "progress_tracking", "status_reporting"],
+            "automation_focused": true
+        };
+
+        let monitor_config = {
+            "name": "ProgressMonitor",
+            "role": "Progress Monitoring Agent",
+            "capabilities": ["progress_tracking", "bottleneck_detection", "performance_analysis"],
+            "monitoring_focused": true
+        };
+
+        // Spawn the agents
+        let coordinator = ai::create_agent_coordinator();
+        
+        let planner = ai::create_agent(planner_config);
+        let planner_id = ai::add_agent_to_coordinator(coordinator, planner);
+        
+        let executor = ai::create_agent(executor_config);
+        let executor_id = ai::add_agent_to_coordinator(coordinator, executor);
+        
+        let monitor = ai::create_agent(monitor_config);
+        let monitor_id = ai::add_agent_to_coordinator(coordinator, monitor);
+
+        return {
+            "system_name": "IntelligentTaskManager",
+            "agents": {
+                "planner": planner_id,
+                "executor": executor_id,
+                "monitor": monitor_id
+            },
+            "workflow": ["plan", "execute", "monitor", "optimize"],
+            "status": "task_management_system_ready"
+        };
+    }
+
+    // Example: Real-time Collaboration System
+    fn create_collaboration_system() -> map<string, any> {
+        // Create collaboration agents
+        let facilitator_config = {
+            "name": "CollaborationFacilitator",
+            "role": "Collaboration Facilitator",
+            "capabilities": ["meeting_management", "consensus_building", "conflict_resolution"],
+            "communication_focused": true
+        };
+
+        let scribe_config = {
+            "name": "MeetingScribe",
+            "role": "Meeting Documentation Specialist",
+            "capabilities": ["note_taking", "action_item_tracking", "summary_generation"],
+            "documentation_focused": true
+        };
+
+        let coordinator_config = {
+            "name": "TeamCoordinator",
+            "role": "Team Coordination Agent",
+            "capabilities": ["resource_allocation", "schedule_management", "progress_sync"],
+            "coordination_focused": true
+        };
+
+        // Spawn collaboration agents
+        let coordinator = ai::create_agent_coordinator();
+        
+        let facilitator = ai::create_agent(facilitator_config);
+        let facilitator_id = ai::add_agent_to_coordinator(coordinator, facilitator);
+        
+        let scribe = ai::create_agent(scribe_config);
+        let scribe_id = ai::add_agent_to_coordinator(coordinator, scribe);
+        
+        let team_coordinator = ai::create_agent(coordinator_config);
+        let team_coordinator_id = ai::add_agent_to_coordinator(coordinator, team_coordinator);
+
+        return {
+            "system_name": "RealTimeCollaborationHub",
+            "agents": {
+                "facilitator": facilitator_id,
+                "scribe": scribe_id,
+                "coordinator": team_coordinator_id
+            },
+            "features": ["real_time_collaboration", "automated_documentation", "intelligent_coordination"],
+            "status": "collaboration_system_active"
+        };
+    }
+}
+
+// =====================================================
+// DEMONSTRATION SCRIPT
+// =====================================================
+
+fn demonstrate_agent_system() {
+    print("🎯 Agent System Demo with dist_agent_lang");
+    print("=========================================");
+    print("");
+
+    // Initialize demo service
+    let demo = AgentSystemDemo::new();
+    let result = demo.run_complete_demo();
+
+    print("✅ Agent system demonstration completed successfully!");
+    print("📊 Results: " + result);
+}
+
+fn demonstrate_practical_usage() {
+    print("🏗️  Practical Agent Usage Examples");
+    print("==================================");
+    print("");
+
+    let practical = PracticalAgentUsage::new();
+
+    // Create different types of agent systems
+    let code_review_system = practical.create_code_review_system();
+    let task_management_system = practical.create_task_management_system();
+    let collaboration_system = practical.create_collaboration_system();
+
+    print("✅ Code Review System: " + code_review_system);
+    print("✅ Task Management System: " + task_management_system);
+    print("✅ Collaboration System: " + collaboration_system);
+}
+
+// Main demonstration
+fn main() {
+    demonstrate_agent_system();
+    print("");
+    demonstrate_practical_usage();
+    print("");
+    print("🎉 All agent system demonstrations completed!");
+    print("");
+    print("💡 Key Takeaways:");
+    print("   • Agent system uses dist_agent_lang AI module");
+    print("   • Structured agent creation and management");
+    print("   • Consistent configuration patterns");
+    print("   • Clear separation of concerns");
+    print("   • Comprehensive validation and error handling");
+    print("   • Built-in workflow management");
+    print("   • Native AI integration capabilities");
+    print("");
+    print("🚀 The agent system demonstrates dist_agent_lang's AI capabilities!");
+}

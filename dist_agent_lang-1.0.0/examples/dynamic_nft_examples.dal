@@ -1,0 +1,956 @@
+// Dynamic NFT Examples - Real-World Implementations
+// Specific examples of dynamic NFTs using dist_agent_lang
+
+@trust("hybrid")
+@ai
+@chain("ethereum")
+service DynamicNFTExamples {
+
+    // =====================================================
+    // EXAMPLE 1: WEATHER-BASED ART NFT
+    // =====================================================
+
+    fn create_weather_art_nft(artist_address: string) -> map<string, any> {
+        let weather_feed = oracle::create_weather_feed({
+            "location": "New York",
+            "metrics": ["temperature", "humidity", "precipitation", "wind_speed"],
+            "update_interval": 1800000 // 30 minutes
+        });
+
+        let executable_code = r#"
+            // Dynamic art generation based on weather
+            fn update_art_based_on_weather() {
+                let weather_data = oracle::get_weather_data("New York");
+                let temperature = weather_data.temperature;
+                let humidity = weather_data.humidity;
+
+                // Generate art colors based on temperature
+                let colors = if temperature < 0 {
+                    ["#E3F2FD", "#BBDEFB", "#90CAF9"] // Cold blue tones
+                } else if temperature < 10 {
+                    ["#FFF3E0", "#FFE0B2", "#FFCC02"] // Cool yellow tones
+                } else if temperature < 20 {
+                    ["#F3E5F5", "#CE93D8", "#BA68C8"] // Warm purple tones
+                } else {
+                    ["#FFEBE3", "#FFAB91", "#FF7043"] // Hot orange tones
+                };
+
+                // Generate patterns based on humidity
+                let pattern_complexity = if humidity < 30 {
+                    "minimalist"
+                } else if humidity < 60 {
+                    "moderate"
+                } else {
+                    "complex"
+                };
+
+                // Update NFT metadata with new art properties
+                update_metadata({
+                    "current_temperature": temperature,
+                    "current_humidity": humidity,
+                    "art_style": "weather_adaptive",
+                    "color_palette": colors,
+                    "pattern_complexity": pattern_complexity,
+                    "last_weather_update": chain::get_block_timestamp(),
+                    "weather_influenced": true
+                });
+
+                // Trigger visual update on frontend
+                trigger_action("update_visual_representation", {
+                    "colors": colors,
+                    "pattern": pattern_complexity,
+                    "weather_data": weather_data
+                });
+            }
+
+            // Execute every 30 minutes when weather changes
+            schedule_execution("every_30_minutes", update_art_based_on_weather);
+        "#;
+
+        let nft_config = {
+            "name": "Weather Reactive Art #1",
+            "description": "An NFT that changes its appearance based on New York weather conditions",
+            "collection": "weather_art",
+            "chain": "ethereum",
+            "executable_code": executable_code,
+            "dynamic_properties": {
+                "weather_feed": weather_feed,
+                "location": "New York",
+                "update_frequency": 1800000,
+                "art_properties": ["colors", "patterns", "intensity"]
+            },
+            "ai_enabled": true
+        };
+
+        let xnft = chain::create_xnft(artist_address, nft_config);
+
+        return {
+            "nft": xnft,
+            "weather_feed": weather_feed,
+            "location": "New York",
+            "last_weather_update": null,
+            "current_art_properties": {
+                "colors": ["#E3F2FD", "#BBDEFB", "#90CAF9"],
+                "pattern": "minimalist",
+                "intensity": 0.5
+            }
+        };
+    }
+
+    // =====================================================
+    // EXAMPLE 2: SPORTS TEAM PERFORMANCE NFT
+    // =====================================================
+
+    fn create_sports_team_nft(team_name: string, fan_address: string) -> map<string, any> {
+        let sports_feed = oracle::create_sports_feed({
+            "league": "NFL",
+            "team": team_name,
+            "metrics": ["wins", "losses", "points_scored", "points_allowed", "rank"],
+            "update_interval": 3600000 // 1 hour
+        });
+
+        let executable_code = r#"
+            fn update_team_performance() {
+                let performance_data = oracle::get_sports_data(team_name);
+
+                // Calculate team strength based on recent performance
+                let recent_games = performance_data.recent_games;
+                let win_rate = recent_games.filter(g => g.result == "win").length() / recent_games.length();
+
+                // Update NFT appearance based on performance
+                let appearance = if win_rate >= 0.8 {
+                    {
+                        "rarity": "legendary",
+                        "colors": ["#FFD700", "#FFA500", "#FF6347"], // Gold, orange, red
+                        "effects": ["glowing", "animated"],
+                        "accessories": ["championship_ring", "trophy"]
+                    }
+                } else if win_rate >= 0.6 {
+                    {
+                        "rarity": "epic",
+                        "colors": ["#9370DB", "#8A2BE2", "#4B0082"], // Purple tones
+                        "effects": ["sparkling"],
+                        "accessories": ["medal"]
+                    }
+                } else if win_rate >= 0.4 {
+                    {
+                        "rarity": "rare",
+                        "colors": ["#4169E1", "#0000FF", "#00008B"], // Blue tones
+                        "effects": ["steady"],
+                        "accessories": ["ribbon"]
+                    }
+                } else {
+                    {
+                        "rarity": "common",
+                        "colors": ["#696969", "#808080", "#A9A9A9"], // Gray tones
+                        "effects": ["static"],
+                        "accessories": []
+                    }
+                };
+
+                // Update metadata with current performance
+                update_metadata({
+                    "team_name": team_name,
+                    "current_win_rate": win_rate,
+                    "league_rank": performance_data.rank,
+                    "season_record": format("{}-{}", performance_data.wins, performance_data.losses),
+                    "appearance": appearance,
+                    "last_performance_update": chain::get_block_timestamp(),
+                    "performance_trend": calculate_trend(recent_games)
+                });
+
+                // Special actions for significant events
+                if performance_data.recent_games[0].is_playoffs && performance_data.recent_games[0].result == "win" {
+                    trigger_action("playoff_celebration", {
+                        "team": team_name,
+                        "game_result": performance_data.recent_games[0]
+                    });
+                }
+            }
+
+            fn calculate_trend(games) -> string {
+                let recent_performance = games.slice(0, 5); // Last 5 games
+                let recent_win_rate = recent_performance.filter(g => g.result == "win").length() / recent_performance.length();
+
+                let older_performance = games.slice(5, 10); // Previous 5 games
+                let older_win_rate = older_performance.filter(g => g.result == "win").length() / older_performance.length();
+
+                if recent_win_rate > older_win_rate + 0.2 {
+                    return "improving";
+                } else if recent_win_rate < older_win_rate - 0.2 {
+                    return "declining";
+                } else {
+                    return "stable";
+                }
+            }
+
+            // Execute when team performance data updates
+            schedule_execution("on_sports_data_update", update_team_performance);
+        "#;
+
+        let nft_config = {
+            "name": team_name + " Fan NFT",
+            "description": "Dynamic NFT that reflects the performance of " + team_name,
+            "collection": "sports_fan_nfts",
+            "chain": "polygon", // Cheaper for frequent updates
+            "executable_code": executable_code,
+            "dynamic_properties": {
+                "sports_feed": sports_feed,
+                "team_name": team_name,
+                "performance_metrics": ["win_rate", "rank", "trend"],
+                "appearance_properties": ["rarity", "colors", "effects", "accessories"]
+            },
+            "ai_enabled": true
+        };
+
+        let xnft = chain::create_xnft(fan_address, nft_config);
+
+        return {
+            "nft": xnft,
+            "sports_feed": sports_feed,
+            "team_name": team_name,
+            "current_performance": null,
+            "appearance": {
+                "rarity": "common",
+                "colors": ["#696969", "#808080", "#A9A9A9"],
+                "effects": ["static"],
+                "accessories": []
+            }
+        };
+    }
+
+    // =====================================================
+    // EXAMPLE 3: FITNESS ACHIEVEMENT NFT
+    // =====================================================
+
+    fn create_fitness_achievement_nft(user_address: string) -> map<string, any> {
+        let health_feed = oracle::create_health_feed({
+            "user_id": user_address,
+            "metrics": ["steps", "calories_burned", "active_minutes", "heart_rate"],
+            "devices": ["fitbit", "apple_watch", "garmin"],
+            "update_interval": 3600000 // 1 hour
+        });
+
+        let executable_code = r#"
+            fn update_fitness_achievement() {
+                let health_data = oracle::get_health_data(user_address);
+
+                // Calculate fitness level based on weekly metrics
+                let weekly_stats = calculate_weekly_stats(health_data);
+                let fitness_level = determine_fitness_level(weekly_stats);
+
+                // Update NFT appearance based on fitness level
+                let appearance = get_appearance_for_level(fitness_level);
+
+                // Check for achievements
+                let achievements = check_achievements(weekly_stats);
+
+                // Update metadata
+                update_metadata({
+                    "fitness_level": fitness_level,
+                    "weekly_stats": weekly_stats,
+                    "achievements": achievements,
+                    "appearance": appearance,
+                    "last_health_update": chain::get_block_timestamp(),
+                    "motivational_message": generate_motivational_message(fitness_level, weekly_stats)
+                });
+
+                // Trigger achievement celebrations
+                for achievement in achievements.new_achievements {
+                    trigger_action("achievement_unlocked", {
+                        "achievement": achievement,
+                        "fitness_level": fitness_level,
+                        "celebration_effects": get_celebration_effects(achievement)
+                    });
+                }
+
+                // AI-powered personalized recommendations
+                if ai_enabled {
+                    let recommendations = ai::generate_fitness_recommendations(weekly_stats, fitness_level);
+                    trigger_action("personalized_recommendations", {
+                        "recommendations": recommendations,
+                        "current_level": fitness_level
+                    });
+                }
+            }
+
+            fn calculate_weekly_stats(health_data) -> any {
+                let weekly_steps = health_data.steps.reduce((sum, day) => sum + day.count, 0);
+                let weekly_calories = health_data.calories_burned.reduce((sum, day) => sum + day.amount, 0);
+                let weekly_active_minutes = health_data.active_minutes.reduce((sum, day) => sum + day.minutes, 0);
+
+                return {
+                    "total_steps": weekly_steps,
+                    "total_calories": weekly_calories,
+                    "total_active_minutes": weekly_active_minutes,
+                    "average_daily_steps": weekly_steps / 7,
+                    "average_daily_calories": weekly_calories / 7,
+                    "days_active": health_data.steps.filter(day => day.count > 1000).length()
+                };
+            }
+
+            fn determine_fitness_level(weekly_stats) -> string {
+                let steps_score = weekly_stats.average_daily_steps / 10000; // 10k steps baseline
+                let calories_score = weekly_stats.average_daily_calories / 2000; // 2000 calories baseline
+                let active_score = weekly_stats.total_active_minutes / 150; // 150 minutes/week baseline
+
+                let overall_score = (steps_score + calories_score + active_score) / 3;
+
+                if overall_score >= 1.5 {
+                    return "elite";
+                } else if overall_score >= 1.2 {
+                    return "advanced";
+                } else if overall_score >= 0.9 {
+                    return "intermediate";
+                } else if overall_score >= 0.6 {
+                    return "beginner";
+                } else {
+                    return "inactive";
+                }
+            }
+
+            fn get_appearance_for_level(level) -> any {
+                return match level {
+                    "elite" => {
+                        "rarity": "legendary",
+                        "colors": ["#FFD700", "#FFA500", "#FF4500"], // Gold, orange, red
+                        "effects": ["glowing", "particles", "animated"],
+                        "accessories": ["crown", "medal", "flames"]
+                    },
+                    "advanced" => {
+                        "rarity": "epic",
+                        "colors": ["#9370DB", "#8A2BE2", "#4B0082"], // Purple tones
+                        "effects": ["sparkling", "gradient"],
+                        "accessories": ["star", "badge"]
+                    },
+                    "intermediate" => {
+                        "rarity": "rare",
+                        "colors": ["#4169E1", "#0000FF", "#00008B"], // Blue tones
+                        "effects": ["pulsing"],
+                        "accessories": ["ribbon"]
+                    },
+                    "beginner" => {
+                        "rarity": "uncommon",
+                        "colors": ["#32CD32", "#228B22", "#006400"], // Green tones
+                        "effects": ["static"],
+                        "accessories": ["leaf"]
+                    },
+                    "inactive" => {
+                        "rarity": "common",
+                        "colors": ["#696969", "#808080", "#A9A9A9"], // Gray tones
+                        "effects": ["static"],
+                        "accessories": []
+                    }
+                };
+            }
+
+            fn check_achievements(weekly_stats) -> any {
+                let new_achievements = [];
+
+                // Step achievements
+                if weekly_stats.total_steps >= 70000 {
+                    new_achievements.push("week_warrior");
+                }
+                if weekly_stats.average_daily_steps >= 10000 {
+                    new_achievements.push("daily_champion");
+                }
+
+                // Active minutes achievements
+                if weekly_stats.total_active_minutes >= 150 {
+                    new_achievements.push("activity_master");
+                }
+
+                // Streak achievements
+                if weekly_stats.days_active >= 7 {
+                    new_achievements.push("perfect_week");
+                }
+
+                return {
+                    "new_achievements": new_achievements,
+                    "total_achievements": new_achievements.length()
+                };
+            }
+
+            fn generate_motivational_message(level, stats) -> string {
+                let messages = {
+                    "elite": ["You're crushing it! Keep up the amazing work!", "Elite level achieved - you're a fitness legend!"],
+                    "advanced": ["Great progress! You're becoming a fitness powerhouse!", "Advanced level - the results show!"],
+                    "intermediate": ["Good work! Keep pushing to the next level!", "You're building great habits!"],
+                    "beginner": ["Every step counts! You're on the right path!", "Welcome to your fitness journey!"],
+                    "inactive": ["Ready to start? Every journey begins with a single step!", "Your fitness adventure awaits!"]
+                };
+
+                return messages[level][random_between(0, messages[level].length() - 1)];
+            }
+
+            // Execute every hour when health data updates
+            schedule_execution("every_hour", update_fitness_achievement);
+        "#;
+
+        let nft_config = {
+            "name": "Personal Fitness Tracker",
+            "description": "Dynamic NFT that evolves with your fitness journey and achievements",
+            "collection": "fitness_achievements",
+            "chain": "polygon",
+            "executable_code": executable_code,
+            "dynamic_properties": {
+                "health_feed": health_feed,
+                "fitness_metrics": ["steps", "calories", "active_minutes", "achievements"],
+                "appearance_properties": ["fitness_level", "colors", "effects", "accessories"],
+                "motivational_features": true
+            },
+            "ai_enabled": true
+        };
+
+        let xnft = chain::create_xnft(user_address, nft_config);
+
+        return {
+            "nft": xnft,
+            "health_feed": health_feed,
+            "current_fitness_level": "beginner",
+            "weekly_stats": null,
+            "achievements": [],
+            "appearance": {
+                "rarity": "uncommon",
+                "colors": ["#32CD32", "#228B22", "#006400"],
+                "effects": ["static"],
+                "accessories": ["leaf"]
+            }
+        };
+    }
+
+    // =====================================================
+    // EXAMPLE 4: REAL ESTATE INVESTMENT NFT
+    // =====================================================
+
+    fn create_real_estate_investment_nft(property_id: string, investor_address: string) -> map<string, any> {
+        let property_feed = oracle::create_real_estate_feed({
+            "property_id": property_id,
+            "metrics": ["price_per_sqft", "occupancy_rate", "rental_income", "market_trend"],
+            "data_sources": ["zillow", "realtor_com", "local_assessments"],
+            "update_interval": 86400000 // Daily updates
+        });
+
+        let executable_code = r#"
+            fn update_property_valuation() {
+                let property_data = oracle::get_real_estate_data(property_id);
+
+                // Calculate current property value
+                let current_value = property_data.price_per_sqft * property_data.square_feet;
+
+                // Assess investment performance
+                let performance_metrics = calculate_investment_performance(property_data);
+
+                // Update NFT appearance based on performance
+                let appearance = get_investment_appearance(performance_metrics);
+
+                // Check for significant events
+                let significant_events = detect_significant_events(property_data);
+
+                // Update metadata
+                update_metadata({
+                    "property_id": property_id,
+                    "current_value": current_value,
+                    "price_per_sqft": property_data.price_per_sqft,
+                    "occupancy_rate": property_data.occupancy_rate,
+                    "rental_income": property_data.rental_income,
+                    "performance_metrics": performance_metrics,
+                    "appearance": appearance,
+                    "last_market_update": chain::get_block_timestamp(),
+                    "significant_events": significant_events
+                });
+
+                // Trigger alerts for important events
+                for event in significant_events {
+                    trigger_action("market_event_alert", {
+                        "event_type": event.type,
+                        "severity": event.severity,
+                        "description": event.description,
+                        "impact": event.impact
+                    });
+                }
+
+                // AI-powered investment insights
+                if ai_enabled {
+                    let insights = ai::generate_investment_insights(property_data, performance_metrics);
+                    trigger_action("investment_insights", {
+                        "insights": insights,
+                        "recommendations": insights.recommendations
+                    });
+                }
+            }
+
+            fn calculate_investment_performance(property_data) -> any {
+                let purchase_price = property_data.purchase_price;
+                let current_value = property_data.price_per_sqft * property_data.square_feet;
+                let appreciation = (current_value - purchase_price) / purchase_price;
+
+                let monthly_rental_income = property_data.rental_income;
+                let annual_rental_yield = (monthly_rental_income * 12) / current_value;
+
+                let occupancy_rate = property_data.occupancy_rate;
+                let effective_yield = annual_rental_yield * (occupancy_rate / 100);
+
+                return {
+                    "total_appreciation": appreciation,
+                    "annual_appreciation_rate": appreciation / property_data.holding_period_years,
+                    "rental_yield": annual_rental_yield,
+                    "effective_yield": effective_yield,
+                    "occupancy_rate": occupancy_rate,
+                    "cash_flow": monthly_rental_income * (occupancy_rate / 100) - property_data.monthly_costs,
+                    "performance_rating": calculate_performance_rating(appreciation, effective_yield)
+                };
+            }
+
+            fn calculate_performance_rating(appreciation, yield_rate) -> string {
+                let score = (appreciation * 0.6) + (yield_rate * 0.4);
+
+                if score >= 0.15 {
+                    return "excellent";
+                } else if score >= 0.10 {
+                    return "very_good";
+                } else if score >= 0.05 {
+                    return "good";
+                } else if score >= 0.02 {
+                    return "fair";
+                } else {
+                    return "poor";
+                }
+            }
+
+            fn get_investment_appearance(performance) -> any {
+                return match performance.performance_rating {
+                    "excellent" => {
+                        "rarity": "legendary",
+                        "colors": ["#FFD700", "#FFA500", "#FF6347"], // Gold, orange, coral
+                        "effects": ["glowing", "shimmering", "3d_model"],
+                        "accessories": ["trophy", "gold_star", "champion_belt"]
+                    },
+                    "very_good" => {
+                        "rarity": "epic",
+                        "colors": ["#9370DB", "#8A2BE2", "#4B0082"], // Purple tones
+                        "effects": ["sparkling", "gradient_animation"],
+                        "accessories": ["medal", "certificate"]
+                    },
+                    "good" => {
+                        "rarity": "rare",
+                        "colors": ["#4169E1", "#0000FF", "#00008B"], // Blue tones
+                        "effects": ["gentle_pulse", "subtle_glow"],
+                        "accessories": ["badge", "ribbon"]
+                    },
+                    "fair" => {
+                        "rarity": "uncommon",
+                        "colors": ["#32CD32", "#228B22", "#006400"], // Green tones
+                        "effects": ["static"],
+                        "accessories": ["checkmark"]
+                    },
+                    "poor" => {
+                        "rarity": "common",
+                        "colors": ["#696969", "#808080", "#A9A9A9"], // Gray tones
+                        "effects": ["static"],
+                        "accessories": []
+                    }
+                };
+            }
+
+            fn detect_significant_events(property_data) -> any {
+                let events = [];
+
+                // Price change events
+                let price_change_pct = property_data.price_change_30_days;
+                if price_change_pct >= 0.10 {
+                    events.push({
+                        "type": "price_appreciation",
+                        "severity": "high",
+                        "description": "Property value increased by " + (price_change_pct * 100).to_i64() + "%",
+                        "impact": "positive"
+                    });
+                } else if price_change_pct <= -0.10 {
+                    events.push({
+                        "type": "price_depreciation",
+                        "severity": "high",
+                        "description": "Property value decreased by " + (price_change_pct * -100).to_i64() + "%",
+                        "impact": "negative"
+                    });
+                }
+
+                // Occupancy change events
+                let occupancy_change = property_data.occupancy_change_30_days;
+                if occupancy_change <= -0.20 {
+                    events.push({
+                        "type": "occupancy_drop",
+                        "severity": "medium",
+                        "description": "Occupancy decreased by " + (occupancy_change * -100).to_i64() + "%",
+                        "impact": "negative"
+                    });
+                }
+
+                // Market trend changes
+                if property_data.market_trend == "hot" {
+                    events.push({
+                        "type": "hot_market",
+                        "severity": "medium",
+                        "description": "Property market is heating up",
+                        "impact": "positive"
+                    });
+                }
+
+                return events;
+            }
+
+            // Execute daily when property data updates
+            schedule_execution("daily", update_property_valuation);
+        "#;
+
+        let nft_config = {
+            "name": "Property Investment NFT - " + property_id,
+            "description": "Dynamic NFT representing a real estate investment with live market data",
+            "collection": "real_estate_investments",
+            "chain": "ethereum",
+            "executable_code": executable_code,
+            "dynamic_properties": {
+                "property_feed": property_feed,
+                "property_id": property_id,
+                "investment_metrics": ["valuation", "yield", "appreciation", "occupancy"],
+                "market_data": ["price_trends", "rental_rates", "economic_indicators"],
+                "alert_triggers": ["price_changes", "occupancy_changes", "market_events"]
+            },
+            "ai_enabled": true
+        };
+
+        let xnft = chain::create_xnft(investor_address, nft_config);
+
+        return {
+            "nft": xnft,
+            "property_feed": property_feed,
+            "property_id": property_id,
+            "current_valuation": null,
+            "performance_metrics": null,
+            "appearance": {
+                "rarity": "common",
+                "colors": ["#696969", "#808080", "#A9A9A9"],
+                "effects": ["static"],
+                "accessories": []
+            }
+        };
+    }
+
+    // =====================================================
+    // EXAMPLE 5: MUSIC ROYALTY STREAMING NFT
+    // =====================================================
+
+    fn create_music_royalty_nft(artist_address: string, song_id: string) -> map<string, any> {
+        let music_feed = oracle::create_music_feed({
+            "song_id": song_id,
+            "metrics": ["streams", "downloads", "royalty_earnings", "chart_position"],
+            "platforms": ["spotify", "apple_music", "youtube", "tidal"],
+            "update_interval": 3600000 // 1 hour
+        });
+
+        let executable_code = r#"
+            fn update_music_royalty_status() {
+                let music_data = oracle::get_music_data(song_id);
+
+                // Calculate royalty earnings
+                let total_streams = music_data.streams.reduce((sum, platform) => sum + platform.count, 0);
+                let total_royalty = music_data.royalty_earnings.reduce((sum, platform) => sum + platform.amount, 0);
+
+                // Determine song popularity tier
+                let popularity_tier = determine_popularity_tier(total_streams);
+
+                // Update NFT appearance based on popularity
+                let appearance = get_music_appearance(popularity_tier);
+
+                // Generate musical visualizations
+                let visualization_data = generate_music_visualization(music_data);
+
+                // Update metadata
+                update_metadata({
+                    "song_id": song_id,
+                    "total_streams": total_streams,
+                    "total_royalty": total_royalty,
+                    "popularity_tier": popularity_tier,
+                    "chart_position": music_data.chart_position,
+                    "platform_breakdown": music_data.streams,
+                    "appearance": appearance,
+                    "visualization_data": visualization_data,
+                    "last_stream_update": chain::get_block_timestamp(),
+                    "royalty_distribution": calculate_royalty_distribution(total_royalty)
+                });
+
+                // Trigger fan engagement events
+                if music_data.chart_position <= 10 {
+                    trigger_action("chart_success_celebration", {
+                        "position": music_data.chart_position,
+                        "streams": total_streams,
+                        "celebration_effects": get_chart_celebration_effects(music_data.chart_position)
+                    });
+                }
+
+                // AI-powered music insights
+                if ai_enabled {
+                    let insights = ai::analyze_music_performance(music_data);
+                    trigger_action("music_insights", {
+                        "insights": insights,
+                        "predictions": insights.stream_predictions,
+                        "recommendations": insights.artist_recommendations
+                    });
+                }
+            }
+
+            fn determine_popularity_tier(total_streams) -> string {
+                if total_streams >= 100000000 {
+                    return "diamond";
+                } else if total_streams >= 50000000 {
+                    return "platinum";
+                } else if total_streams >= 10000000 {
+                    return "gold";
+                } else if total_streams >= 1000000 {
+                    return "silver";
+                } else if total_streams >= 100000 {
+                    return "bronze";
+                } else {
+                    return "emerging";
+                }
+            }
+
+            fn get_music_appearance(tier) -> any {
+                return match tier {
+                    "diamond" => {
+                        "rarity": "legendary",
+                        "colors": ["#B9F2FF", "#87CEEB", "#4169E1"], // Diamond-like colors
+                        "effects": ["shimmering", "prismatic", "floating_notes"],
+                        "accessories": ["diamond", "crown", "starfield"]
+                    },
+                    "platinum" => {
+                        "rarity": "epic",
+                        "colors": ["#E5E4E2", "#C0C0C0", "#A8A8A8"], // Platinum tones
+                        "effects": ["metallic_shine", "soft_glow"],
+                        "accessories": ["platinum_record", "microphone"]
+                    },
+                    "gold" => {
+                        "rarity": "rare",
+                        "colors": ["#FFD700", "#FFA500", "#FF6347"], // Gold tones
+                        "effects": ["golden_glow", "sparkles"],
+                        "accessories": ["gold_record", "trophy"]
+                    },
+                    "silver" => {
+                        "rarity": "uncommon",
+                        "colors": ["#C0C0C0", "#A8A8A8", "#808080"], // Silver tones
+                        "effects": ["subtle_shine"],
+                        "accessories": ["silver_medal"]
+                    },
+                    "bronze" => {
+                        "rarity": "common",
+                        "colors": ["#CD7F32", "#A0522D", "#8B4513"], // Bronze tones
+                        "effects": ["static"],
+                        "accessories": ["bronze_medal"]
+                    },
+                    "emerging" => {
+                        "rarity": "common",
+                        "colors": ["#FFFFFF", "#F0F0F0", "#E0E0E0"], // Clean white
+                        "effects": ["static"],
+                        "accessories": ["music_note"]
+                    }
+                };
+            }
+
+            fn generate_music_visualization(music_data) -> any {
+                // Generate waveform visualization from streaming data
+                let waveform = [];
+                for i in 0..100 {
+                    let amplitude = sin(i * 0.1) * (music_data.average_volume || 0.5);
+                    waveform.push(amplitude);
+                }
+
+                // Generate frequency spectrum
+                let spectrum = [];
+                for i in 0..50 {
+                    let frequency = i * 100; // Hz
+                    let intensity = music_data.frequency_data ?
+                        music_data.frequency_data[i] || 0 : random();
+                    spectrum.push({
+                        "frequency": frequency,
+                        "intensity": intensity
+                    });
+                }
+
+                return {
+                    "waveform": waveform,
+                    "spectrum": spectrum,
+                    "beat_intensity": music_data.beat_intensity || 0.5,
+                    "tempo": music_data.tempo || 120
+                };
+            }
+
+            fn calculate_royalty_distribution(total_royalty) -> any {
+                // Simplified royalty distribution
+                let artist_share = total_royalty * 0.7;    // 70% to artist
+                let label_share = total_royalty * 0.2;     // 20% to label
+                let platform_share = total_royalty * 0.05; // 5% to platform
+                let charity_share = total_royalty * 0.05;  // 5% to charity
+
+                return {
+                    "artist": artist_share,
+                    "label": label_share,
+                    "platform": platform_share,
+                    "charity": charity_share,
+                    "distribution_date": chain::get_block_timestamp()
+                };
+            }
+
+            fn get_chart_celebration_effects(position) -> any {
+                if position == 1 {
+                    return {
+                        "effects": ["fireworks", "confetti", "golden_sparkles"],
+                        "duration": 10000,
+                        "sound_effect": "champion_fanfare"
+                    };
+                } else if position <= 5 {
+                    return {
+                        "effects": ["sparkles", "rising_stars"],
+                        "duration": 5000,
+                        "sound_effect": "success_chime"
+                    };
+                } else {
+                    return {
+                        "effects": ["gentle_glow"],
+                        "duration": 3000,
+                        "sound_effect": "notification_ping"
+                    };
+                }
+            }
+
+            // Execute every hour when streaming data updates
+            schedule_execution("every_hour", update_music_royalty_status);
+        "#;
+
+        let nft_config = {
+            "name": "Music Royalty NFT - " + song_id,
+            "description": "Dynamic NFT representing music streaming royalties and popularity metrics",
+            "collection": "music_royalties",
+            "chain": "polygon",
+            "executable_code": executable_code,
+            "dynamic_properties": {
+                "music_feed": music_feed,
+                "song_id": song_id,
+                "streaming_metrics": ["total_streams", "royalty_earnings", "chart_position"],
+                "visualization_data": ["waveform", "spectrum", "beat_intensity"],
+                "royalty_distribution": ["artist_share", "platform_fees", "charity_contribution"]
+            },
+            "ai_enabled": true
+        };
+
+        let xnft = chain::create_xnft(artist_address, nft_config);
+
+        return {
+            "nft": xnft,
+            "music_feed": music_feed,
+            "song_id": song_id,
+            "current_popularity_tier": "emerging",
+            "total_streams": 0,
+            "total_royalty": 0.0,
+            "appearance": {
+                "rarity": "common",
+                "colors": ["#FFFFFF", "#F0F0F0", "#E0E0E0"],
+                "effects": ["static"],
+                "accessories": ["music_note"]
+            }
+        };
+    }
+}
+
+// =====================================================
+// DEMONSTRATION SCRIPT
+// =====================================================
+
+fn demonstrate_weather_art_nft() {
+    print("🌤️ Weather-Based Art NFT Demo");
+    print("===============================");
+
+    let dynamic_nft = DynamicNFTExamples::new();
+    
+    let weather_nft = dynamic_nft.create_weather_art_nft("0x123...");
+    print("✅ Weather Art NFT created: " + weather_nft.nft.address);
+    print("✅ Weather feed initialized: " + weather_nft.weather_feed.id);
+    print("✅ Location: " + weather_nft.location);
+}
+
+fn demonstrate_sports_team_nft() {
+    print("🏈 Sports Team Performance NFT Demo");
+    print("===================================");
+
+    let dynamic_nft = DynamicNFTExamples::new();
+    
+    let sports_nft = dynamic_nft.create_sports_team_nft("New York Giants", "0x456...");
+    print("✅ Sports Team NFT created: " + sports_nft.nft.address);
+    print("✅ Team: " + sports_nft.team_name);
+    print("✅ Sports feed initialized: " + sports_nft.sports_feed.id);
+}
+
+fn demonstrate_fitness_nft() {
+    print("💪 Fitness Achievement NFT Demo");
+    print("===============================");
+
+    let dynamic_nft = DynamicNFTExamples::new();
+    
+    let fitness_nft = dynamic_nft.create_fitness_achievement_nft("0x789...");
+    print("✅ Fitness NFT created: " + fitness_nft.nft.address);
+    print("✅ Health feed initialized: " + fitness_nft.health_feed.id);
+    print("✅ Current fitness level: " + fitness_nft.current_fitness_level);
+}
+
+fn demonstrate_real_estate_nft() {
+    print("🏠 Real Estate Investment NFT Demo");
+    print("===================================");
+
+    let dynamic_nft = DynamicNFTExamples::new();
+    
+    let real_estate_nft = dynamic_nft.create_real_estate_investment_nft("PROP_001", "0xabc...");
+    print("✅ Real Estate NFT created: " + real_estate_nft.nft.address);
+    print("✅ Property ID: " + real_estate_nft.property_id);
+    print("✅ Property feed initialized: " + real_estate_nft.property_feed.id);
+}
+
+fn demonstrate_music_royalty_nft() {
+    print("🎵 Music Royalty Streaming NFT Demo");
+    print("====================================");
+
+    let dynamic_nft = DynamicNFTExamples::new();
+    
+    let music_nft = dynamic_nft.create_music_royalty_nft("0xdef...", "SONG_123");
+    print("✅ Music Royalty NFT created: " + music_nft.nft.address);
+    print("✅ Song ID: " + music_nft.song_id);
+    print("✅ Music feed initialized: " + music_nft.music_feed.id);
+}
+
+// Main demonstration
+fn main() {
+    print("🚀 Dynamic NFT Examples Demo");
+    print("============================");
+    print("");
+
+    demonstrate_weather_art_nft();
+    print("");
+    demonstrate_sports_team_nft();
+    print("");
+    demonstrate_fitness_nft();
+    print("");
+    demonstrate_real_estate_nft();
+    print("");
+    demonstrate_music_royalty_nft();
+    print("");
+
+    print("🎉 All dynamic NFT demonstrations completed!");
+    print("");
+    print("💡 Key Features Demonstrated:");
+    print("   • Oracle data feeds (weather, sports, health, real estate, music)");
+    print("   • Chain:: namespace for blockchain operations");
+    print("   • AI-powered insights and recommendations");
+    print("   • Dynamic metadata updates based on external data");
+    print("   • Real-time visual appearance changes");
+    print("   • Achievement systems and celebrations");
+    print("   • Cross-chain compatibility");
+    print("");
+    print("🚀 Dynamic NFTs are production-ready with real-world data integration!");
+}

@@ -1,0 +1,1234 @@
+// Phase 6: Edge Computing Examples
+// Refactored to use bond (orchestration), ai (agents), iot (devices/edge), and mold (agent configs)
+//
+// Bond: Connects IoT → AI → DB/chain flows
+// AI: Edge agents for analysis and coordination
+// IoT: Devices, sensors, edge nodes, actuators
+// Mold: Agent config objects (name, type, role, capabilities) passed to ai::spawn_agent
+
+@trust("hybrid")
+service SmartCityEdgeManager {
+    edge_nodes: list<any>;
+    city_sensors: list<any>;
+    traffic_systems: list<any>;
+    environmental_monitors: list<any>;
+    public_safety_systems: list<any>;
+    data_processing_pipelines: list<any>;
+    edge_agents: map<string, string>;
+    city_db: string;
+
+    fn initialize_smart_city_infrastructure() {
+        log::info("iot", { "message": "Initializing Smart City Edge Infrastructure" });
+        self.edge_nodes = [];
+        self.city_sensors = [];
+        self.traffic_systems = [];
+        self.environmental_monitors = [];
+        self.public_safety_systems = [];
+        self.data_processing_pipelines = [];
+        self.edge_agents = {};
+        self.city_db = database::connect("city_db");
+
+        self.deploy_city_edge_nodes();
+        self.setup_city_sensor_networks();
+        self.configure_traffic_systems();
+        self.initialize_environmental_monitoring();
+        self.setup_public_safety_systems();
+        self.create_data_processing_pipelines();
+        self.spawn_edge_ai_agents();
+    }
+
+    fn spawn_edge_ai_agents() {
+        // Mold-style agent configs for edge AI
+        let traffic_mold = {
+            "name": "TrafficEdgeAnalyst",
+            "type": "ai",
+            "role": "traffic_optimization",
+            "capabilities": ["congestion_analysis", "signal_timing", "predictive_flow"]
+        };
+        let env_mold = {
+            "name": "EnvironmentalMonitor",
+            "type": "ai",
+            "role": "environmental_analysis",
+            "capabilities": ["air_quality", "anomaly_detection", "recommendations"]
+        };
+        let safety_mold = {
+            "name": "SafetyCoordinator",
+            "type": "system",
+            "role": "emergency_response",
+            "capabilities": ["threat_detection", "incident_classification", "response_coordination"]
+        };
+
+        self.edge_agents["traffic"] = ai::spawn_agent(traffic_mold);
+        self.edge_agents["environmental"] = ai::spawn_agent(env_mold);
+        self.edge_agents["safety"] = ai::spawn_agent(safety_mold);
+
+        let coordinator_id = ai::create_agent_coordinator();
+        log::info("iot", {
+            "message": "Edge AI agents spawned (mold configs)",
+            "agents": self.edge_agents,
+            "coordinator": coordinator_id
+        });
+    }
+
+    fn deploy_city_edge_nodes() {
+        let city_zones = [
+            { "name": "downtown", "lat": 40.7589, "lon": -73.9851, "population_density": "high" },
+            { "name": "residential", "lat": 40.7282, "lon": -73.7949, "population_density": "medium" },
+            { "name": "industrial", "lat": 40.6782, "lon": -74.1285, "population_density": "medium" },
+            { "name": "commercial", "lat": 40.7505, "lon": -73.9934, "population_density": "high" },
+            { "name": "park_recreational", "lat": 40.7829, "lon": -73.9654, "population_density": "low" }
+        ];
+
+        for zone in city_zones {
+            let node_id = "city_edge_" + zone.name;
+            let is_high = zone.population_density == "high";
+            let cpu_cores = 16;
+            let memory_gb = 32.0;
+            let storage_cap = 500000000000;
+            let bandwidth = 10000000000;
+            if (!is_high) {
+                cpu_cores = 8;
+                memory_gb = 16.0;
+                storage_cap = 100000000000;
+                bandwidth = 1000000000;
+            }
+            let edge_config = {
+                "node_id": node_id,
+                "name": "Smart City Edge Node - " + zone.name,
+                "location": {
+                    "latitude": zone.lat,
+                    "longitude": zone.lon,
+                    "accuracy": 5.0
+                },
+                "capabilities": [
+                    "real_time_processing",
+                    "ai_inference",
+                    "data_aggregation",
+                    "predictive_analytics",
+                    "anomaly_detection",
+                    "traffic_optimization",
+                    "emergency_response"
+                ],
+                "processing_power": {
+                    "cpu_cores": cpu_cores,
+                    "memory_gb": memory_gb,
+                    "gpu_available": is_high,
+                    "ai_acceleration": true
+                },
+                "storage_capacity": storage_cap,
+                "network_bandwidth": bandwidth,
+                "power_source": "grid",
+                "backup_power": "battery"
+            };
+
+            iot::create_edge_node(edge_config);
+            self.edge_nodes.push({ "node_id": node_id, "zone": zone });
+        }
+    }
+
+    fn setup_city_sensor_networks() {
+        let sensor_types = [
+            { "type": "traffic_camera", "count_per_zone": 8, "sampling_rate": 30 },
+            { "type": "air_quality", "count_per_zone": 4, "sampling_rate": 300 },
+            { "type": "crowd_density", "count_per_zone": 6, "sampling_rate": 60 },
+            { "type": "energy_monitor", "count_per_zone": 15, "sampling_rate": 300 }
+        ];
+
+        for edge_node in self.edge_nodes {
+            let node_id = edge_node.node_id;
+            for sensor_type in sensor_types {
+                for i in 0..sensor_type.count_per_zone {
+                    let idx = i + 1;
+                    let sensor_id = node_id + "_" + sensor_type.type + "_" + idx;
+                    let sensor_config = {
+                        "sensor_id": sensor_id,
+                        "name": sensor_type.type + " Sensor " + idx,
+                        "sensor_type": sensor_type.type,
+                        "sampling_rate": sensor_type.sampling_rate,
+                        "edge_node": node_id
+                    };
+                    iot::add_sensor_to_device(node_id, sensor_config);
+                    self.city_sensors.push({ "sensor_id": sensor_id, "node_id": node_id });
+                }
+            }
+        }
+    }
+
+    fn configure_traffic_systems() {
+        for edge_node in self.edge_nodes {
+            let node_id = edge_node.node_id;
+            let system_id = node_id + "_traffic";
+            let traffic_system_config = {
+                "system_id": system_id,
+                "name": "Traffic Management - " + node_id,
+                "capabilities": ["signal_control", "congestion_detection", "emergency_vehicle_priority"],
+                "connected_cameras": 8,
+                "traffic_lights": 12,
+                "detection_zones": 6
+            };
+
+            iot::register_device(traffic_system_config);
+            self.traffic_systems.push({ "system_id": system_id, "node_id": node_id });
+
+            for i in 0..12 {
+                let light_id = system_id + "_traffic_light_" + (i + 1);
+                iot::add_actuator_to_device(system_id, {
+                    "actuator_id": light_id,
+                    "name": "Traffic Light " + (i + 1),
+                    "actuator_type": "traffic_signal",
+                    "supported_commands": ["green", "yellow", "red", "flash"]
+                });
+            }
+        }
+    }
+
+    fn initialize_environmental_monitoring() {
+        for edge_node in self.edge_nodes {
+            let node_id = edge_node.node_id;
+            let monitor_id = node_id + "_env_monitor";
+            let env_monitor_config = {
+                "monitor_id": monitor_id,
+                "name": "Environmental Monitor - " + node_id,
+                "capabilities": ["air_quality", "noise_pollution", "weather_monitoring"],
+                "alert_thresholds": {
+                    "air_quality_index": 150,
+                    "noise_level_db": 70,
+                    "temperature_celsius": 35
+                }
+            };
+            iot::register_device(env_monitor_config);
+            self.environmental_monitors.push({ "monitor_id": monitor_id, "node_id": node_id });
+        }
+    }
+
+    fn setup_public_safety_systems() {
+        for edge_node in self.edge_nodes {
+            let node_id = edge_node.node_id;
+            let system_id = node_id + "_safety";
+            let safety_system_config = {
+                "system_id": system_id,
+                "name": "Public Safety System - " + node_id,
+                "capabilities": ["emergency_detection", "crowd_monitoring", "incident_reporting", "emergency_alerting"],
+                "emergency_protocols": {
+                    "fire_detection": "activate_fire_response",
+                    "medical_emergency": "dispatch_ambulance",
+                    "security_threat": "alert_authorities",
+                    "crowd_control": "manage_access"
+                }
+            };
+            iot::register_device(safety_system_config);
+            self.public_safety_systems.push({ "system_id": system_id, "node_id": node_id });
+        }
+    }
+
+    fn create_data_processing_pipelines() {
+        let pipeline_configs = [
+            {
+                "name": "traffic_optimization",
+                "data_sources": ["traffic_camera", "crowd_density", "parking_sensor"],
+                "processing_steps": ["object_detection", "congestion_analysis", "predictive_modeling"],
+                "output_sinks": ["traffic_control_system", "city_command_center", "public_app"]
+            },
+            {
+                "name": "environmental_monitoring",
+                "data_sources": ["air_quality", "weather_station", "noise_monitor"],
+                "processing_steps": ["data_validation", "trend_analysis", "anomaly_detection"],
+                "output_sinks": ["environmental_agency", "public_alert_system", "research_database"]
+            },
+            {
+                "name": "public_safety",
+                "data_sources": ["crowd_density", "traffic_camera", "emergency_sensors"],
+                "processing_steps": ["threat_detection", "incident_classification", "response_coordination"],
+                "output_sinks": ["emergency_services", "police_department", "city_monitoring"]
+            },
+            {
+                "name": "energy_management",
+                "data_sources": ["energy_monitor", "weather_station", "building_sensors"],
+                "processing_steps": ["consumption_analysis", "efficiency_optimization", "demand_prediction"],
+                "output_sinks": ["utility_company", "building_management", "city_planning"]
+            }
+        ];
+
+        for config in pipeline_configs {
+            self.data_processing_pipelines.push({
+                "pipeline_id": "pipeline_" + config.name,
+                "name": config.name,
+                "edge_node": "city_edge_downtown",
+                "data_sources": config.data_sources,
+                "processing_steps": config.processing_steps,
+                "output_sinks": config.output_sinks,
+                "processing_priority": "high",
+                "real_time_processing": true,
+                "data_retention_days": 30
+            });
+        }
+    }
+
+    // Bond: IoT → AI → edge processing flow
+    fn bond_iot_to_ai(edge_node_id: string, sensor_data: any) -> any {
+        let processed = iot::process_data_at_edge(edge_node_id, sensor_data, "city_data_processing");
+        let traffic_agent_id = self.edge_agents["traffic"];
+        let task_id = ai::create_task(traffic_agent_id, "analysis", "Analyze traffic and environmental data", "high");
+        return {
+            "processed": processed,
+            "agent_id": traffic_agent_id,
+            "task_id": task_id,
+            "edge_node_id": edge_node_id
+        };
+    }
+
+    // Bond: AI results → cloud / chain sync
+    fn bond_ai_to_cloud(device_id: string, report: any) {
+        iot::sync_device_data_to_cloud(device_id, report);
+        log::info("bond", { "flow": "ai_to_cloud", "device_id": device_id });
+    }
+
+    fn process_real_time_city_data() {
+        let processing_report = {
+            "timestamp": chain::get_block_timestamp(1),
+            "data_points_processed": 0,
+            "ai_inferences_performed": 0,
+            "alerts_generated": 0,
+            "traffic_optimizations": 0,
+            "energy_savings": 0.0,
+            "response_time_ms": 0
+        };
+
+        for edge_node in self.edge_nodes {
+            let node_id = edge_node.node_id;
+            let sensor_data = self.collect_edge_sensor_data(node_id);
+            processing_report.data_points_processed = processing_report.data_points_processed + 1;
+
+            let bond_result = self.bond_iot_to_ai(node_id, sensor_data);
+            processing_report.ai_inferences_performed = processing_report.ai_inferences_performed + 15;
+
+            let ai_analysis = self.perform_edge_ai_analysis(bond_result.processed);
+            let alerts_actions = self.generate_city_alerts_actions(ai_analysis);
+            processing_report.alerts_generated = processing_report.alerts_generated + alerts_actions.alerts_count;
+            processing_report.traffic_optimizations = processing_report.traffic_optimizations + alerts_actions.traffic_actions;
+            processing_report.energy_savings = processing_report.energy_savings + alerts_actions.energy_savings;
+
+            iot::cache_data_at_edge(node_id, "city_processing_results", bond_result, 3600);
+        }
+
+        processing_report.response_time_ms = 150;
+        self.bond_ai_to_cloud("city_edge_coordinator", processing_report);
+
+        log::info("iot", {
+            "city_processing_report": processing_report,
+            "performance_metrics": {
+                "throughput": processing_report.data_points_processed * 1000 / 150,
+                "efficiency": processing_report.energy_savings / (processing_report.data_points_processed + 1)
+            }
+        });
+    }
+
+    fn collect_edge_sensor_data(edge_node_id: string) -> any {
+        let sensor_data = {
+            "edge_node_id": edge_node_id,
+            "traffic_data": [],
+            "environmental_data": [],
+            "crowd_data": [],
+            "energy_data": [],
+            "timestamp": chain::get_block_timestamp(1)
+        };
+
+        for i in 0..8 {
+            let sensor_id = edge_node_id + "_traffic_camera_" + (i + 1);
+            let reading = iot::read_sensor_data(sensor_id);
+            sensor_data.traffic_data.push(reading);
+        }
+        for i in 0..4 {
+            let sensor_id = edge_node_id + "_air_quality_" + (i + 1);
+            let reading = iot::read_sensor_data(sensor_id);
+            sensor_data.environmental_data.push(reading);
+        }
+        for i in 0..6 {
+            let sensor_id = edge_node_id + "_crowd_density_" + (i + 1);
+            let reading = iot::read_sensor_data(sensor_id);
+            sensor_data.crowd_data.push(reading);
+        }
+        for i in 0..15 {
+            let sensor_id = edge_node_id + "_energy_monitor_" + (i + 1);
+            let reading = iot::read_sensor_data(sensor_id);
+            sensor_data.energy_data.push(reading);
+        }
+
+        return sensor_data;
+    }
+
+    fn perform_edge_ai_analysis(data: any) -> any {
+        let analysis_results = {
+            "inference_count": 15,
+            "traffic_analysis": {
+                "congestion_level": "low",
+                "optimal_signal_timing": {},
+                "predicted_flow": []
+            },
+            "environmental_analysis": {
+                "air_quality_index": 85,
+                "pollution_sources": [],
+                "recommended_actions": []
+            },
+            "crowd_analysis": {
+                "density_level": "normal",
+                "safety_score": 95,
+                "capacity_warnings": []
+            },
+            "energy_analysis": {
+                "efficiency_score": 88,
+                "optimization_opportunities": [],
+                "predicted_demand": []
+            },
+            "anomaly_detection": {
+                "anomalies_detected": 2,
+                "anomaly_types": ["unusual_traffic_pattern", "energy_spike"],
+                "confidence_levels": [0.92, 0.87]
+            }
+        };
+        return analysis_results;
+    }
+
+    fn generate_city_alerts_actions(analysis: any) -> any {
+        let alerts_actions = {
+            "alerts_count": 0,
+            "traffic_actions": 0,
+            "energy_savings": 0.0,
+            "alerts": [],
+            "actions": []
+        };
+
+        if (analysis.traffic_analysis.congestion_level == "high") {
+            alerts_actions.actions.push({
+                "action_type": "traffic_signal_optimization",
+                "target_intersections": ["intersection_1", "intersection_2"],
+                "new_timing": { "green_time": 45, "yellow_time": 5, "red_time": 60 },
+                "expected_improvement": "25%_flow_increase"
+            });
+            alerts_actions.traffic_actions = alerts_actions.traffic_actions + 1;
+        }
+
+        if (analysis.environmental_analysis.air_quality_index > 150) {
+            alerts_actions.alerts.push({
+                "alert_type": "poor_air_quality",
+                "severity": "medium",
+                "affected_zones": ["downtown", "commercial"],
+                "recommended_actions": ["reduce_vehicle_emissions", "activate_air_purification"]
+            });
+            alerts_actions.alerts_count = alerts_actions.alerts_count + 1;
+        }
+
+        if (analysis.energy_analysis.efficiency_score < 85) {
+            alerts_actions.actions.push({
+                "action_type": "energy_optimization",
+                "target_buildings": ["building_1", "building_2"],
+                "optimization_type": "load_balancing",
+                "expected_savings_kwh": 150.5
+            });
+            alerts_actions.energy_savings = 150.5;
+        }
+
+        for anomaly in analysis.anomaly_detection.anomaly_types {
+            alerts_actions.alerts.push({
+                "alert_type": "system_anomaly",
+                "anomaly_type": anomaly,
+                "severity": "low",
+                "investigation_required": true
+            });
+            alerts_actions.alerts_count = alerts_actions.alerts_count + 1;
+        }
+
+        return alerts_actions;
+    }
+
+    fn optimize_city_operations() {
+        let optimization_report = {
+            "timestamp": chain::get_block_timestamp(1),
+            "traffic_optimization": {
+                "average_speed_improvement": 15.2,
+                "emissions_reduction": 8.5,
+                "travel_time_savings": 120
+            },
+            "energy_optimization": {
+                "total_savings_kwh": 2450.5,
+                "peak_demand_reduction": 12.3,
+                "cost_savings_usd": 1850.75
+            },
+            "environmental_impact": {
+                "air_quality_improvement": 6.2,
+                "noise_reduction": 4.8,
+                "greenhouse_gas_reduction": 125.5
+            },
+            "public_safety": {
+                "incident_prevention_rate": 94.2,
+                "response_time_improvement": 35.1,
+                "emergency_detection_accuracy": 98.7
+            }
+        };
+
+        let actions = self.generate_optimization_actions(optimization_report);
+        for action in actions {
+            self.execute_optimization_action(action);
+        }
+
+        self.bond_ai_to_cloud("city_edge_coordinator", optimization_report);
+
+        log::info("iot", {
+            "city_optimization_report": optimization_report,
+            "total_benefits": {
+                "energy_savings": optimization_report.energy_optimization.total_savings_kwh,
+                "cost_savings": optimization_report.energy_optimization.cost_savings_usd,
+                "environmental_benefit": optimization_report.environmental_impact.greenhouse_gas_reduction
+            }
+        });
+    }
+
+    fn generate_optimization_actions(report: any) -> list<any> {
+        let actions = [];
+
+        if (report.traffic_optimization.average_speed_improvement < 20) {
+            actions.push({
+                "action_type": "traffic_signal_timing",
+                "target": "city_intersections",
+                "optimization_algorithm": "adaptive_timing",
+                "expected_improvement": 8.5
+            });
+        }
+
+        if (report.energy_optimization.peak_demand_reduction < 15) {
+            actions.push({
+                "action_type": "demand_response",
+                "target": "commercial_buildings",
+                "optimization_strategy": "peak_shaving",
+                "expected_savings": 850.25
+            });
+        }
+
+        if (report.environmental_impact.air_quality_improvement < 10) {
+            actions.push({
+                "action_type": "emission_control",
+                "target": "traffic_systems",
+                "optimization_method": "eco_routing",
+                "expected_improvement": 12.3
+            });
+        }
+
+        return actions;
+    }
+
+    fn execute_optimization_action(action: any) {
+        if (action.action_type == "traffic_signal_timing") {
+            for i in 0..12 {
+                let cmd = {
+                    "command": "update_timing",
+                    "parameters": {
+                        "algorithm": "adaptive",
+                        "congestion_weight": 0.7,
+                        "emergency_weight": 0.3
+                    }
+                };
+                iot::send_actuator_command("traffic_light_" + (i + 1), "optimize", cmd);
+            }
+        } else if (action.action_type == "demand_response") {
+            for i in 0..10 {
+                let cmd = {
+                    "command": "demand_response",
+                    "parameters": {
+                        "target_reduction": 15,
+                        "duration_minutes": 30,
+                        "compensation_rate": 0.25
+                    }
+                };
+                iot::send_actuator_command("building_management_" + (i + 1), "optimize_energy", cmd);
+            }
+        } else if (action.action_type == "emission_control") {
+            let eco_config = {
+                "command": "enable_eco_routing",
+                "parameters": {
+                    "priority_routes": ["route_a", "route_b"],
+                    "emission_threshold": 50,
+                    "rerouting_enabled": true
+                }
+            };
+            iot::send_actuator_command("traffic_management_system", "eco_mode", eco_config);
+        }
+
+        log::info("iot", {
+            "optimization_action_executed": action.action_type,
+            "target": action.target
+        });
+    }
+
+    fn handle_city_emergencies() {
+        for edge_node in self.edge_nodes {
+            let node_id = edge_node.node_id;
+            let emergency_check = {
+                "edge_node_id": node_id,
+                "emergency_types": [
+                    "fire_detected",
+                    "chemical_spill",
+                    "traffic_accident",
+                    "medical_emergency",
+                    "security_threat",
+                    "infrastructure_failure"
+                ],
+                "detection_sensors": ["camera", "air_quality", "motion", "sound"],
+                "response_protocols": {
+                    "fire_detected": "fire_department_response",
+                    "chemical_spill": "hazmat_response",
+                    "traffic_accident": "emergency_medical_response",
+                    "security_threat": "police_response"
+                }
+            };
+
+            let emergency_analysis = self.analyze_emergency_conditions(node_id);
+            if (emergency_analysis.emergency_detected) {
+                self.activate_emergency_response(emergency_analysis);
+            }
+        }
+    }
+
+    fn analyze_emergency_conditions(edge_node_id: string) -> any {
+        let analysis = {
+            "edge_node_id": edge_node_id,
+            "emergency_detected": false,
+            "emergency_type": "",
+            "confidence_level": 0.0,
+            "affected_area": "",
+            "severity_level": "",
+            "immediate_actions_required": [],
+            "response_resources_needed": []
+        };
+
+        let ts = chain::get_block_timestamp(1);
+        let emergency_probability = (ts % 100);
+        if (emergency_probability > 95) {
+            analysis.emergency_detected = true;
+            analysis.emergency_type = "traffic_accident";
+            analysis.confidence_level = 0.87;
+            analysis.affected_area = "intersection_5";
+            analysis.severity_level = "medium";
+            analysis.immediate_actions_required = ["divert_traffic", "dispatch_ambulance"];
+            analysis.response_resources_needed = ["ambulance", "police_unit", "fire_truck"];
+        }
+
+        return analysis;
+    }
+
+    fn activate_emergency_response(emergency_data: any) {
+        let emergency_response = {
+            "emergency_id": "emergency_" + chain::get_block_timestamp(1),
+            "emergency_type": emergency_data.emergency_type,
+            "location": emergency_data.affected_area,
+            "severity": emergency_data.severity_level,
+            "timestamp": chain::get_block_timestamp(1),
+            "response_coordinated": true,
+            "resources_activated": []
+        };
+
+        for action in emergency_data.immediate_actions_required {
+            if (action == "divert_traffic") {
+                let traffic_diversion = {
+                    "command": "divert_traffic",
+                    "parameters": {
+                        "affected_intersections": ["intersection_5", "intersection_6"],
+                        "alternative_routes": ["route_alpha", "route_beta"],
+                        "duration_minutes": 60
+                    }
+                };
+                iot::send_actuator_command("traffic_management_system", "emergency_routing", traffic_diversion);
+                emergency_response.resources_activated.push("traffic_diversion_system");
+            } else if (action == "dispatch_ambulance") {
+                let ambulance_dispatch = {
+                    "command": "dispatch_emergency",
+                    "parameters": {
+                        "service_type": "ambulance",
+                        "priority": "high",
+                        "location": emergency_data.affected_area,
+                        "estimated_response_time": 8
+                    }
+                };
+                iot::publish_message("emergency_services", "emergency_dispatch", ambulance_dispatch);
+                emergency_response.resources_activated.push("emergency_medical_services");
+            }
+        }
+
+        let emergency_alert = {
+            "alert_type": "city_emergency",
+            "emergency_id": emergency_response.emergency_id,
+            "emergency_type": emergency_data.emergency_type,
+            "location": emergency_data.affected_area,
+            "severity": emergency_data.severity_level,
+            "timestamp": emergency_response.timestamp,
+            "response_actions": emergency_data.immediate_actions_required
+        };
+
+        let emergency_channels = ["police_department", "fire_department", "emergency_medical", "city_management"];
+        for channel in emergency_channels {
+            iot::publish_message(channel, "emergency_broadcast", emergency_alert);
+        }
+
+        log::info("iot", {
+            "emergency_response_activated": emergency_response,
+            "resources_activated_count": 1,
+            "response_channels_notified": 4
+        });
+    }
+
+    fn generate_city_performance_report() {
+        let performance_report = {
+            "report_type": "city_performance_analysis",
+            "report_period": "daily",
+            "generated_at": chain::get_block_timestamp(1),
+            "edge_nodes_active": self.edge_nodes.length,
+            "sensors_monitored": self.city_sensors.length,
+            "data_points_processed": 1500000,
+            "ai_inferences_performed": 50000,
+            "alerts_generated": 25,
+            "optimizations_implemented": 15,
+            "performance_metrics": {
+                "average_response_time_ms": 145,
+                "system_uptime_percentage": 99.7,
+                "data_processing_throughput": 8500,
+                "ai_inference_accuracy": 94.2
+            },
+            "service_quality": {
+                "traffic_flow_efficiency": 87.5,
+                "energy_usage_efficiency": 91.2,
+                "environmental_quality_index": 82.3,
+                "public_safety_score": 96.1
+            },
+            "cost_savings": {
+                "energy_costs_usd": 2850.50,
+                "traffic_congestion_costs_usd": 12500.75,
+                "emergency_response_costs_usd": 3200.25,
+                "total_savings_usd": 18551.50
+            },
+            "recommendations": []
+        };
+
+        if (performance_report.service_quality.traffic_flow_efficiency < 90) {
+            performance_report.recommendations.push("Implement advanced traffic prediction algorithms");
+        }
+        if (performance_report.performance_metrics.ai_inference_accuracy < 95) {
+            performance_report.recommendations.push("Update AI models with additional training data");
+        }
+
+        self.bond_ai_to_cloud("city_performance_monitor", performance_report);
+
+        log::info("iot", {
+            "city_performance_report_generated": performance_report.generated_at,
+            "total_savings": performance_report.cost_savings.total_savings_usd,
+            "recommendations_count": performance_report.recommendations.length
+        });
+    }
+}
+
+@trust("hybrid")
+service ManufacturingEdgeController {
+    production_lines: list<any>;
+    quality_control_systems: list<any>;
+    predictive_maintenance: list<any>;
+    supply_chain_monitoring: list<any>;
+    edge_processing_nodes: list<any>;
+    edge_agents: map<string, string>;
+
+    fn initialize_manufacturing_edge() {
+        log::info("iot", { "message": "Initializing Manufacturing Edge Computing System" });
+        self.production_lines = [];
+        self.quality_control_systems = [];
+        self.predictive_maintenance = [];
+        self.supply_chain_monitoring = [];
+        self.edge_processing_nodes = [];
+        self.edge_agents = {};
+
+        self.setup_production_monitoring();
+        self.configure_quality_control();
+        self.initialize_predictive_maintenance();
+        self.setup_supply_chain_monitoring();
+        self.deploy_edge_processing_nodes();
+        self.spawn_manufacturing_agents();
+    }
+
+    fn spawn_manufacturing_agents() {
+        let quality_mold = {
+            "name": "QualityInspector",
+            "type": "ai",
+            "role": "quality_assurance",
+            "capabilities": ["defect_classifier", "dimensional_verifier", "surface_analyzer"]
+        };
+        let maintenance_mold = {
+            "name": "PredictiveMaintenance",
+            "type": "ai",
+            "role": "failure_prediction",
+            "capabilities": ["time_series", "anomaly_detection", "regression"]
+        };
+
+        self.edge_agents["quality"] = ai::spawn_agent(quality_mold);
+        self.edge_agents["maintenance"] = ai::spawn_agent(maintenance_mold);
+
+        log::info("iot", {
+            "message": "Manufacturing edge agents spawned (mold configs)",
+            "agents": self.edge_agents
+        });
+    }
+
+    fn setup_production_monitoring() {
+        let production_lines = ["assembly_line_1", "assembly_line_2", "packaging_line", "quality_control"];
+
+        for line_name in production_lines {
+            let line_id = "prod_line_" + line_name;
+            let production_line = {
+                "line_id": line_id,
+                "name": "Production Line - " + line_name,
+                "capabilities": ["real_time_monitoring", "efficiency_tracking", "defect_detection"],
+                "sensors": ["vibration", "temperature", "pressure", "flow_rate", "power_consumption"],
+                "actuators": ["conveyor_speed", "robot_arm", "packaging_machine", "quality_gate"],
+                "target_output_per_hour": 500,
+                "quality_threshold": 99.5
+            };
+
+            self.production_lines.push(production_line);
+
+            for sensor_type in production_line.sensors {
+                let sensor_id = line_id + "_" + sensor_type + "_sensor";
+                iot::add_sensor_to_device(line_id, {
+                    "sensor_id": sensor_id,
+                    "name": sensor_type + " Sensor",
+                    "sensor_type": sensor_type,
+                    "sampling_rate": 1000,
+                    "critical_thresholds": {
+                        "vibration": { "warning": 5.0, "critical": 10.0 },
+                        "temperature": { "warning": 80.0, "critical": 100.0 },
+                        "pressure": { "warning": 50.0, "critical": 30.0 }
+                    }
+                });
+            }
+        }
+    }
+
+    fn configure_quality_control() {
+        for production_line in self.production_lines {
+            let line_id = production_line.line_id;
+            let system_id = line_id + "_quality";
+            let quality_system = {
+                "system_id": system_id,
+                "name": "Quality Control - " + line_id,
+                "capabilities": ["visual_inspection", "dimensional_check", "defect_detection"],
+                "inspection_points": ["assembly_stage", "packaging_stage", "final_check"],
+                "ai_models": ["defect_classifier", "dimensional_verifier", "surface_analyzer"],
+                "accuracy_target": 99.9,
+                "false_positive_rate": 0.1
+            };
+
+            self.quality_control_systems.push(quality_system);
+
+            iot::add_sensor_to_device(system_id, {
+                "sensor_id": system_id + "_vision_sensor",
+                "name": "High-Resolution Vision Sensor",
+                "sensor_type": "camera",
+                "resolution": "4K",
+                "frame_rate": 30,
+                "ai_processing": true
+            });
+
+            iot::add_actuator_to_device(system_id, {
+                "actuator_id": system_id + "_rejection_arm",
+                "name": "Product Rejection Arm",
+                "actuator_type": "robotic_arm",
+                "supported_commands": ["reject_product", "divert_to_rework", "mark_defective"]
+            });
+        }
+    }
+
+    fn initialize_predictive_maintenance() {
+        for production_line in self.production_lines {
+            let line_id = production_line.line_id;
+            let system_id = line_id + "_maintenance";
+            self.predictive_maintenance.push({
+                "system_id": system_id,
+                "name": "Predictive Maintenance - " + line_id,
+                "capabilities": ["failure_prediction", "maintenance_scheduling", "parts_inventory"],
+                "monitored_components": ["motors", "conveyors", "robots", "sensors", "actuators"],
+                "prediction_models": ["time_series", "anomaly_detection", "regression"],
+                "maintenance_thresholds": {
+                    "failure_probability": 0.8,
+                    "maintenance_cost_threshold": 5000,
+                    "downtime_risk_threshold": 0.7
+                }
+            });
+        }
+    }
+
+    fn setup_supply_chain_monitoring() {
+        let supply_chain_points = ["raw_materials", "component_assembly", "finished_goods", "shipping"];
+
+        for point in supply_chain_points {
+            self.supply_chain_monitoring.push({
+                "system_id": "supply_chain_" + point,
+                "name": "Supply Chain Monitor - " + point,
+                "capabilities": ["inventory_tracking", "quality_monitoring", "delivery_prediction"],
+                "tracked_items": ["components", "raw_materials", "finished_products"],
+                "monitoring_points": ["warehouse", "production_line", "shipping_dock"],
+                "alert_thresholds": {
+                    "low_inventory": 100,
+                    "quality_rejection_rate": 0.05,
+                    "delivery_delay_risk": 0.7
+                }
+            });
+        }
+    }
+
+    fn deploy_edge_processing_nodes() {
+        let edge_node_configs = [
+            {
+                "type": "production_monitoring",
+                "capabilities": ["real_time_processing", "production_analytics", "quality_assurance"],
+                "processing_power": { "cpu_cores": 16, "memory_gb": 32.0, "gpu": true },
+                "storage_capacity": 1000000000000
+            },
+            {
+                "type": "predictive_maintenance",
+                "capabilities": ["ai_inference", "time_series_analysis", "anomaly_detection"],
+                "processing_power": { "cpu_cores": 8, "memory_gb": 16.0, "gpu": true },
+                "storage_capacity": 500000000000
+            },
+            {
+                "type": "quality_control",
+                "capabilities": ["computer_vision", "deep_learning", "image_processing"],
+                "processing_power": { "cpu_cores": 12, "memory_gb": 24.0, "gpu": true },
+                "storage_capacity": 2000000000000
+            }
+        ];
+
+        for config in edge_node_configs {
+            let node_id = "manufacturing_edge_" + config.type;
+            iot::create_edge_node({
+                "node_id": node_id,
+                "name": "Manufacturing Edge Node - " + config.type,
+                "capabilities": config.capabilities,
+                "processing_power": config.processing_power,
+                "storage_capacity": config.storage_capacity,
+                "network_bandwidth": 10000000000,
+                "power_source": "industrial_grid"
+            });
+            self.edge_processing_nodes.push({ "node_id": node_id, "type": config.type });
+        }
+    }
+
+    // Bond: IoT sensors → AI predictive maintenance
+    fn bond_iot_to_predictive_maintenance(device_id: string, metric: string) -> any {
+        let prediction = iot::predict_device_failure(device_id, metric);
+        let agent_id = self.edge_agents["maintenance"];
+        let task_id = ai::create_task(agent_id, "analysis", "Analyze failure prediction", "high");
+        return {
+            "prediction": prediction,
+            "agent_id": agent_id,
+            "task_id": task_id,
+            "device_id": device_id
+        };
+    }
+
+    fn monitor_production_efficiency() {
+        let efficiency_report = {
+            "timestamp": chain::get_block_timestamp(1),
+            "production_lines_active": self.production_lines.length,
+            "overall_efficiency": 0.0,
+            "quality_rate": 0.0,
+            "downtime_minutes": 0,
+            "energy_consumption_kwh": 0.0,
+            "maintenance_events": 0,
+            "production_metrics": []
+        };
+
+        for production_line in self.production_lines {
+            let line_metrics = self.analyze_production_line(production_line.line_id);
+            efficiency_report.overall_efficiency = efficiency_report.overall_efficiency + line_metrics.efficiency;
+            efficiency_report.quality_rate = efficiency_report.quality_rate + line_metrics.quality_rate;
+            efficiency_report.downtime_minutes = efficiency_report.downtime_minutes + line_metrics.downtime;
+            efficiency_report.energy_consumption_kwh = efficiency_report.energy_consumption_kwh + line_metrics.energy_usage;
+            efficiency_report.maintenance_events = efficiency_report.maintenance_events + line_metrics.maintenance_count;
+            efficiency_report.production_metrics.push(line_metrics);
+        }
+
+        efficiency_report.overall_efficiency = efficiency_report.overall_efficiency / efficiency_report.production_lines_active;
+        efficiency_report.quality_rate = efficiency_report.quality_rate / efficiency_report.production_lines_active;
+
+        let optimizations = self.generate_production_optimizations(efficiency_report);
+        for optimization in optimizations {
+            self.implement_production_optimization(optimization);
+        }
+
+        iot::sync_device_data_to_cloud("manufacturing_controller", efficiency_report);
+
+        log::info("iot", {
+            "production_efficiency_report": efficiency_report,
+            "optimizations_applied": optimizations.length,
+            "quality_improvement_target": 0.5
+        });
+    }
+
+    fn analyze_production_line(line_id: string) -> any {
+        return {
+            "line_id": line_id,
+            "efficiency": 92.5,
+            "quality_rate": 99.2,
+            "downtime": 15,
+            "energy_usage": 1250.5,
+            "maintenance_count": 2,
+            "bottleneck_identified": "packaging_stage",
+            "optimization_opportunities": ["increase_conveyor_speed", "optimize_robot_paths", "reduce_setup_time"],
+            "predicted_failures": [
+                { "component": "motor_3", "probability": 0.15, "time_to_failure": 168 }
+            ]
+        };
+    }
+
+    fn generate_production_optimizations(report: any) -> list<any> {
+        let optimizations = [];
+
+        if (report.overall_efficiency < 95) {
+            optimizations.push({
+                "optimization_type": "production_efficiency",
+                "target_lines": ["assembly_line_1", "packaging_line"],
+                "actions": ["optimize_workflows", "reduce_changeover_time"],
+                "expected_improvement": 3.5,
+                "implementation_cost": 15000,
+                "roi_months": 4
+            });
+        }
+
+        if (report.quality_rate < 99.5) {
+            optimizations.push({
+                "optimization_type": "quality_improvement",
+                "target_lines": ["quality_control"],
+                "actions": ["upgrade_vision_systems", "implement_ai_inspection"],
+                "expected_improvement": 1.2,
+                "implementation_cost": 75000,
+                "roi_months": 8
+            });
+        }
+
+        if (report.energy_consumption_kwh > 2000) {
+            optimizations.push({
+                "optimization_type": "energy_efficiency",
+                "target_lines": ["all_lines"],
+                "actions": ["implement_energy_monitoring", "optimize_motor_usage"],
+                "expected_savings": 850,
+                "implementation_cost": 25000,
+                "roi_months": 3
+            });
+        }
+
+        return optimizations;
+    }
+
+    fn implement_production_optimization(optimization: any) {
+        if (optimization.optimization_type == "production_efficiency") {
+            for target_line in optimization.target_lines {
+                let cmd = {
+                    "command": "optimize_workflow",
+                    "parameters": {
+                        "optimization_type": "bottleneck_elimination",
+                        "target_stages": ["assembly", "packaging"],
+                        "expected_efficiency_gain": optimization.expected_improvement
+                    }
+                };
+                iot::send_actuator_command(target_line, "workflow_optimization", cmd);
+            }
+        } else if (optimization.optimization_type == "quality_improvement") {
+            let cmd = {
+                "command": "upgrade_system",
+                "parameters": {
+                    "upgrade_type": "ai_enhanced_inspection",
+                    "components": ["vision_sensors", "processing_algorithms"],
+                    "expected_accuracy_improvement": optimization.expected_improvement
+                }
+            };
+            iot::send_actuator_command("quality_control_system", "system_upgrade", cmd);
+        } else if (optimization.optimization_type == "energy_efficiency") {
+            let cmd = {
+                "command": "enable_energy_optimization",
+                "parameters": {
+                    "monitoring_enabled": true,
+                    "optimization_algorithm": "predictive_control",
+                    "target_savings": optimization.expected_savings
+                }
+            };
+            for target_line in optimization.target_lines {
+                iot::send_actuator_command(target_line, "energy_optimization", cmd);
+            }
+        }
+
+        log::info("iot", {
+            "optimization_implemented": optimization.optimization_type,
+            "target_lines": optimization.target_lines,
+            "implementation_cost": optimization.implementation_cost
+        });
+    }
+
+    fn perform_quality_assurance() {
+        let quality_report = {
+            "timestamp": chain::get_block_timestamp(1),
+            "products_inspected": 10000,
+            "defects_detected": 80,
+            "defect_rate": 0.8,
+            "quality_score": 99.1,
+            "inspection_accuracy": 99.2,
+            "false_positive_rate": 0.3,
+            "defect_categories": {},
+            "quality_trends": [],
+            "recommendations": []
+        };
+
+        if (quality_report.defect_rate > 1.0) {
+            quality_report.recommendations.push("Increase inspection frequency for high-defect components");
+        }
+        if (quality_report.false_positive_rate > 0.5) {
+            quality_report.recommendations.push("Retrain AI models to reduce false positives");
+        }
+
+        iot::sync_device_data_to_cloud("quality_monitor", quality_report);
+
+        log::info("iot", {
+            "quality_assurance_report": quality_report,
+            "defect_rate": quality_report.defect_rate,
+            "quality_score": quality_report.quality_score,
+            "recommendations_count": quality_report.recommendations.length
+        });
+    }
+
+    fn manage_supply_chain() {
+        let supply_chain_report = {
+            "timestamp": chain::get_block_timestamp(1),
+            "suppliers_active": 25,
+            "components_available": 4500,
+            "inventory_levels": {},
+            "delivery_delays": 2,
+            "quality_issues": 1,
+            "cost_variances": 1250.50,
+            "supply_risk_score": 0.35,
+            "recommendations": []
+        };
+
+        if (supply_chain_report.supply_risk_score > 0.7) {
+            supply_chain_report.recommendations.push("Diversify supplier base to reduce risk");
+        }
+        if (supply_chain_report.delivery_delays > 5) {
+            supply_chain_report.recommendations.push("Implement supplier performance monitoring");
+        }
+
+        log::info("iot", {
+            "supply_chain_report": supply_chain_report,
+            "supply_risk_score": supply_chain_report.supply_risk_score,
+            "total_inventory": supply_chain_report.components_available
+        });
+    }
+
+    fn generate_manufacturing_report() {
+        let manufacturing_report = {
+            "report_type": "manufacturing_performance",
+            "report_period": "daily",
+            "generated_at": chain::get_block_timestamp(1),
+            "production_lines": self.production_lines.length,
+            "quality_systems": self.quality_control_systems.length,
+            "edge_nodes": self.edge_processing_nodes.length,
+            "production_metrics": {
+                "total_output": 12500,
+                "efficiency_rate": 94.2,
+                "quality_rate": 98.7,
+                "downtime_hours": 2.5,
+                "energy_consumption": 18500.5
+            },
+            "quality_metrics": {
+                "inspection_accuracy": 99.1,
+                "defect_rate": 0.8,
+                "false_positive_rate": 0.3,
+                "quality_improvements": 12
+            },
+            "maintenance_metrics": {
+                "predictive_maintenance_accuracy": 92.5,
+                "preventive_maintenance_events": 8,
+                "emergency_repairs": 1,
+                "maintenance_cost_savings": 25000.0
+            },
+            "supply_chain_metrics": {
+                "supplier_performance": 89.2,
+                "inventory_efficiency": 87.5,
+                "supply_risk_score": 0.35,
+                "cost_savings": 18500.0
+            },
+            "cost_analysis": {
+                "production_cost_per_unit": 12.50,
+                "energy_cost_savings": 1250.75,
+                "maintenance_cost_savings": 25000.0,
+                "quality_improvement_savings": 8750.0,
+                "total_cost_savings": 44750.75
+            },
+            "recommendations": []
+        };
+
+        if (manufacturing_report.production_metrics.efficiency_rate < 95) {
+            manufacturing_report.recommendations.push("Implement lean manufacturing principles");
+        }
+        if (manufacturing_report.quality_metrics.defect_rate > 1.0) {
+            manufacturing_report.recommendations.push("Enhance quality control processes");
+        }
+        if (manufacturing_report.maintenance_metrics.predictive_maintenance_accuracy < 90) {
+            manufacturing_report.recommendations.push("Upgrade predictive maintenance algorithms");
+        }
+
+        iot::sync_device_data_to_cloud("manufacturing_controller", manufacturing_report);
+
+        log::info("iot", {
+            "manufacturing_report_generated": manufacturing_report.generated_at,
+            "total_output": manufacturing_report.production_metrics.total_output,
+            "efficiency_rate": manufacturing_report.production_metrics.efficiency_rate,
+            "total_savings": manufacturing_report.cost_analysis.total_cost_savings,
+            "recommendations_count": manufacturing_report.recommendations.length
+        });
+    }
+}
+
+fn main() {
+    log::info("main", { "message": "Starting Phase 6: IoT & Edge Computing (bond, ai, iot, mold)" });
+
+    let smart_city = SmartCityEdgeManager::new();
+    smart_city.initialize_smart_city_infrastructure();
+
+    let manufacturing = ManufacturingEdgeController::new();
+    manufacturing.initialize_manufacturing_edge();
+
+    smart_city.process_real_time_city_data();
+    smart_city.optimize_city_operations();
+    smart_city.handle_city_emergencies();
+    smart_city.generate_city_performance_report();
+
+    manufacturing.monitor_production_efficiency();
+    manufacturing.perform_quality_assurance();
+    manufacturing.manage_supply_chain();
+    manufacturing.generate_manufacturing_report();
+
+    log::info("main", { "message": "Phase 6 IoT & Edge Computing examples completed successfully!" });
+
+    log::info("summary", {
+        "message": "IoT & Edge Computing Integration Summary",
+        "bond_patterns": ["iot_to_ai", "ai_to_cloud"],
+        "ai_agents": ["traffic", "environmental", "safety", "quality", "maintenance"],
+        "capabilities": [
+            "Device registration and management",
+            "Real-time sensor data processing",
+            "Edge AI inference and analytics",
+            "Predictive maintenance systems",
+            "Quality control automation",
+            "Traffic and transportation optimization",
+            "Environmental monitoring networks",
+            "Emergency response coordination",
+            "Supply chain optimization",
+            "Energy management systems",
+            "Cloud integration and data synchronization",
+            "Mold-style agent configs for edge AI",
+            "Bond orchestration for IoT-AI-DB flows"
+        ]
+    });
+}

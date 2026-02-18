@@ -1,0 +1,21 @@
+--- src/http_server_security.rs
++++ replace > with >= in RequestSizeLimiter::validate_request
+@@ -379,17 +379,17 @@
+         }
+         
+         // Check header size (approximate)
+         let header_size: usize = headers
+             .iter()
+             .map(|(name, value)| name.as_str().len() + value.len())
+             .sum();
+         
+-        if header_size > self.max_header_size {
++        if header_size >= /* ~ changed by cargo-mutants ~ */ self.max_header_size {
+             return Err(StatusCode::REQUEST_HEADER_FIELDS_TOO_LARGE);
+         }
+         
+         Ok(())
+     }
+ }
+ 
+ /// Security event logger with structured logging

@@ -1,0 +1,40 @@
+--- src/http_server_handlers.rs
++++ replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with None
+@@ -118,36 +118,17 @@
+ }
+ 
+ /// Get route handler name and path params from method and path. Supports exact match and path-param patterns.
+ pub fn get_route_handler_name_and_params(
+     server: &crate::stdlib::web::HttpServer,
+     method: &str,
+     path: &str,
+ ) -> Option<(String, HashMap<String, String>)> {
+-    let method_upper = method.to_uppercase();
+-    let route_key = format!("{}:{}", method_upper, path);
+-
+-    // Exact match: no path params
+-    if let Some(route) = server.routes.get(&route_key) {
+-        return Some((route.handler.clone(), HashMap::new()));
+-    }
+-
+-    // Match path patterns (e.g. GET:/users/:id for path /users/123)
+-    for (key, route) in &server.routes {
+-        if let Some((route_method, route_path)) = key.split_once(':') {
+-            if route_method.eq_ignore_ascii_case(method)
+-                && path_pattern_matches(route_path, path)
+-            {
+-                let params = path_params_from_match(route_path, path).unwrap_or_default();
+-                return Some((route.handler.clone(), params));
+-            }
+-        }
+-    }
+-    None
++    None /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ /// Get route handler name from path and method. Supports exact match and path-param patterns (e.g. "/users/:id").
+ pub fn get_route_handler_name(
+     server: &crate::stdlib::web::HttpServer,
+     method: &str,
+     path: &str,
+ ) -> Option<String> {

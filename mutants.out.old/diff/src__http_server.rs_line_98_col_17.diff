@@ -1,0 +1,21 @@
+--- src/http_server.rs
++++ delete match arm "DELETE" in start_http_server
+@@ -90,17 +90,17 @@
+                     ).await
+                 }
+             };
+             
+             match method.as_str() {
+                 "GET" => router = router.route(path, axum::routing::get(handler)),
+                 "POST" => router = router.route(path, axum::routing::post(handler)),
+                 "PUT" => router = router.route(path, axum::routing::put(handler)),
+-                "DELETE" => router = router.route(path, axum::routing::delete(handler)),
++                 /* ~ changed by cargo-mutants ~ */
+                 _ => router = router.route(path, axum::routing::get(handler)),
+             }
+         }
+     }
+     
+     // Add default routes if no routes configured
+     if server.routes.is_empty() {
+         router = router

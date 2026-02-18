@@ -1,0 +1,7 @@
+@trust("hybrid")
+@web
+@ai
+@chain("ethereum")
+fn test_function() -> bool {
+    return true;
+}

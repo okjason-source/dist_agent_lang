@@ -1,0 +1,155 @@
+// Example: HTTP vs FFI Interface Selection
+// Demonstrates how users can choose between HTTP/REST and FFI based on their needs
+
+// ============================================
+// EXAMPLE 1: HTTP Interface (Distributed/Microservices)
+// ============================================
+@api("http")
+@trust("hybrid")
+service DistributedService {
+    // HTTP interface - best for:
+    // - Microservices architecture
+    // - Cross-network communication
+    // - Language-agnostic access
+    // - Easy deployment and scaling
+    
+    fn process_request(data: string) -> map<string, any> {
+        // This will be exposed via HTTP REST API
+        // Accessible from any language via HTTP calls
+        return {
+            "status": "success",
+            "data": data,
+            "interface": "http"
+        };
+    }
+}
+
+// ============================================
+// EXAMPLE 2: FFI Interface (High Performance)
+// ============================================
+@api("ffi")
+@trust("hybrid")
+service HighPerformanceService {
+    // FFI interface - best for:
+    // - High-frequency operations
+    // - Low-latency requirements
+    // - Local function calls
+    // - Maximum performance
+    
+    fn hash_data(data: string) -> string {
+        // This will be available via FFI
+        // Direct function call - zero HTTP overhead
+        // ~100-1000x faster than HTTP for high-frequency calls
+        return crypto::hash(data, "SHA256");
+    }
+    
+    fn sign_data(data: string, private_key: string) -> string {
+        // Cryptographic operations benefit greatly from FFI
+        // Avoids JSON serialization overhead
+        return crypto::sign(data, private_key);
+    }
+}
+
+// ============================================
+// EXAMPLE 3: Both Interfaces (Flexible)
+// ============================================
+@api("both")
+@trust("hybrid")
+service FlexibleService {
+    // Both HTTP and FFI available
+    // Users can choose based on their needs:
+    // - Use HTTP for distributed access
+    // - Use FFI for local high-performance calls
+    
+    fn compute(data: any) -> any {
+        // Available via both interfaces
+        // Runtime automatically routes to best interface
+        return process_data(data);
+    }
+    
+    @api("ffi")  // Function-level override - prefer FFI
+    fn high_frequency_operation(data: any) -> any {
+        // This function will prefer FFI when available
+        // Falls back to HTTP if (FFI not available
+        return fast_compute(data);
+    }
+    
+    @api("http")  // Function-level override - HTTP only
+    fn distributed_operation(data: any) -> any {
+        // This function will use HTTP
+        // Good for operations that need network access
+        return network_operation(data);
+    }
+}
+
+// ============================================
+// EXAMPLE 4: Performance-Critical Service
+// ============================================
+@api("ffi")
+@trust("hybrid")
+service CryptoService {
+    // Pure FFI service for maximum performance
+    // Ideal for:
+    // - Cryptographic operations
+    // - Real-time trading systems
+    // - Game engines
+    // - Scientific computing
+    
+    fn batch_hash(data_list: vector<string>) -> vector<string> {
+        // FFI allows processing millions of operations per second
+        // vs thousands via HTTP
+        let results = [];
+        for data in data_list  {
+            results.push(crypto::hash(data, "SHA256"));
+        }
+        return results;
+    }
+    
+    fn verify_batch(
+        data_list: vector<string>,
+        signature_list: vector<string>,
+        public_keys: vector<string>
+    ) -> vector<bool> {
+        // Batch verification with FFI
+        // ~1000x faster than HTTP for high-frequency operations
+        let results = [];
+        for (i in 0..data_list.len() ) {
+            let valid = crypto::verify(
+                data_list[i],
+                signature_list[i],
+                public_keys[i]
+            );
+            results.push(valid);
+        }
+        return results;
+    }
+}
+
+// ============================================
+// EXAMPLE 5: Microservice with HTTP
+// ============================================
+@api("http")
+@trust("hybrid")
+service MicroserviceAPI {
+    // HTTP-only service for microservices architecture
+    // Accessible from:
+    // - Node.js
+    // - Python
+    // - Go
+    // - Any HTTP client
+    
+    fn get_user_data(user_id: string) -> map<string, any> {
+        // HTTP endpoint: GET /api/MicroserviceAPI/get_user_data
+        let user = database::query("SELECT * FROM users WHERE id = ?", [user_id]);
+        return user;
+    }
+    
+    fn create_transaction(tx_data: map<string, any>) -> map<string, any> {
+        // HTTP endpoint: POST /api/MicroserviceAPI/create_transaction
+        let tx = chain::send_transaction(tx_data);
+        return {
+            "tx_hash": tx.hash,
+            "status": "pending"
+        };
+    }
+}

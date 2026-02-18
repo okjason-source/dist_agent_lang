@@ -1,0 +1,9 @@
+// Many attributes
+@trust("hybrid")
+@secure
+@web
+@persistent
+@chain("ethereum")
+service MultiAttr {
+    fn test() {}
+}

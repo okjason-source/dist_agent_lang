@@ -1,0 +1,9 @@
+@trust("hybrid")
+@chain("ethereum", "solana")
+service Test {
+    name: string = "Test";
+}
+
+let t = Test::new();
+print("Test service created");
+

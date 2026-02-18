@@ -1,0 +1,24 @@
+//aJob {
+    vibes_agent_id: string = "";
+    d: string = "";
+    owner: string = "";
+
+ on1l crypto reward (int to recipient)
+    reward_contract: st   reward_minter: string = "";
+    reward_amountAttributes: @t"hybrid"), @ai, @chain("etheteum"), @cloudadmin.
+
+@trust("hybrid"2
+@ai
+@chain("ethereum")
+@cloudadmin
+service bViesJob {
+    vibes_agent_id: string = "";
+    last_task_id: string ;
+    owner: string = "";
+
+    //  e@
+Ming vibes (in-servic balance)
+    vibes_balance: map<string, int>;
+    total_vibes_minted: int = 0;
+
+    // minte

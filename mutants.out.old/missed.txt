@@ -1,0 +1,59 @@
+src/cli.rs:432:5: replace chain_subcommand_to_args -> Vec<String> with vec![]
+src/cli.rs:432:5: replace chain_subcommand_to_args -> Vec<String> with vec![String::new()]
+src/cli.rs:432:5: replace chain_subcommand_to_args -> Vec<String> with vec!["xyzzy".into()]
+src/cli_design.rs:16:5: replace version -> &'static str with ""
+src/cli_design.rs:16:5: replace version -> &'static str with "xyzzy"
+src/cli_design.rs:21:5: replace print_banner with ()
+src/cli_design.rs:37:5: replace help_content -> String with String::new()
+src/cli_design.rs:37:5: replace help_content -> String with "xyzzy".into()
+src/mold/mod.rs:27:5: replace use_mold_and_spawn -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/mold/mod.rs:29:8: delete ! in use_mold_and_spawn
+src/mold/mod.rs:119:5: replace load_mold_from_source -> Result<MoldConfig, String> with Ok(Default::default())
+src/mold/mod.rs:152:5: replace list_local_paths -> Vec<PathBuf> with vec![]
+src/mold/mod.rs:152:5: replace list_local_paths -> Vec<PathBuf> with vec![Default::default()]
+src/mold/mod.rs:164:53: replace || with && in list_local_paths
+src/mold/mod.rs:179:24: replace && with || in resolve_mold_path
+src/mold/mod.rs:197:90: replace == with != in resolve_mold_path
+src/mold/mod.rs:201:23: replace == with != in resolve_mold_path
+src/mold/mod.rs:211:5: replace scaffold_mold -> Result<(), String> with Ok(())
+src/http_server.rs:47:5: replace start_http_server -> Result<(), Box<dyn std::error::Error>> with Ok(())
+src/http_server.rs:95:17: delete match arm "GET" in start_http_server
+src/http_server.rs:96:17: delete match arm "POST" in start_http_server
+src/http_server.rs:98:17: delete match arm "DELETE" in start_http_server
+src/http_server.rs:137:5: replace home_handler -> Html<String> with Html::from(String::new())
+src/http_server_security.rs:387:24: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:420:9: replace SecurityLogger::log_rate_limit with ()
+src/http_server_security.rs:432:9: replace SecurityLogger::log_invalid_input with ()
+src/http_server_security.rs:443:9: replace SecurityLogger::log_suspicious_activity with ()
+src/http_server_security.rs:449:9: replace SecurityLogger::log_token_validation_failure with ()
+src/http_server_handlers.rs:88:5: replace path_pattern_matches -> bool with true
+src/http_server_handlers.rs:88:5: replace path_pattern_matches -> bool with false
+src/http_server_handlers.rs:88:69: delete ! in path_pattern_matches
+src/http_server_handlers.rs:90:31: replace != with == in path_pattern_matches
+src/http_server_handlers.rs:94:12: delete ! in path_pattern_matches
+src/http_server_handlers.rs:94:17: replace == with != in path_pattern_matches
+src/http_server_handlers.rs:94:46: replace && with || in path_pattern_matches
+src/http_server_handlers.rs:94:49: delete ! in path_pattern_matches
+src/http_server_handlers.rs:103:5: replace path_params_from_match -> Option<HashMap<String, String>> with None
+src/http_server_handlers.rs:103:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::new())
+src/http_server_handlers.rs:103:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([(String::new(), String::new())]))
+src/http_server_handlers.rs:103:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([(String::new(), "xyzzy".into())]))
+src/http_server_handlers.rs:103:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([("xyzzy".into(), String::new())]))
+src/http_server_handlers.rs:103:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([("xyzzy".into(), "xyzzy".into())]))
+src/http_server_handlers.rs:103:69: delete ! in path_params_from_match
+src/http_server_handlers.rs:104:63: delete ! in path_params_from_match
+src/http_server_handlers.rs:105:31: replace != with == in path_params_from_match
+src/http_server_handlers.rs:110:31: replace && with || in path_params_from_match
+src/http_server_handlers.rs:110:34: delete ! in path_params_from_match
+src/http_server_handlers.rs:113:22: replace != with == in path_params_from_match
+src/http_server_handlers.rs:126:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with None
+src/http_server_handlers.rs:138:17: replace && with || in get_route_handler_name_and_params
+src/http_server_integration.rs:74:17: delete match arm "GET" in create_router_with_options
+src/http_server_integration.rs:80:17: delete match arm "PUT" in create_router_with_options
+src/http_server_integration.rs:83:17: delete match arm "DELETE" in create_router_with_options
+src/http_server_integration.rs:106:5: replace home_handler -> Response<Body> with Response::new(Default::default())
+src/http_server_integration.rs:106:5: replace home_handler -> Response<Body> with Response::from(Default::default())
+src/http_server_integration.rs:111:5: replace health_handler -> Response<Body> with Response::new(Default::default())
+src/http_server_integration.rs:111:5: replace health_handler -> Response<Body> with Response::from(Default::default())
+src/ffi/mod.rs:63:9: replace FFIConfig::both -> Self with Default::default()
+src/ffi/mod.rs:70:9: replace FFIConfig::auto_detect -> Self with Default::default()

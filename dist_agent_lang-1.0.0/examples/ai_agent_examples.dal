@@ -1,0 +1,1113 @@
+// Phase 4: AI Agent Framework Examples
+// Demonstrates comprehensive AI agent capabilities including:
+// - Agent lifecycle management and spawning
+// - Message passing and communication
+// - AI processing (text, image, generation)
+// - Agent coordination and orchestration
+// - Multi-agent collaboration workflows
+
+// Example 1: Basic AI Agent Service
+// @ai
+// @trust("hybrid")
+// @persistent
+service BasicAIAgentService {
+    // Agent configuration
+    agent_config: any,
+    active_agents: [string],
+    message_history: [any],
+
+    fn initialize() -> Result<Unit, Error> {
+        // Configure basic agent
+        let config = {
+            "agent_id": "basic_agent_001",
+            "name": "Basic Assistant",
+            "role": "general_assistant",
+            "capabilities": ["text_processing", "data_analysis", "task_execution"],
+            "memory_size": 1000,
+            "max_concurrent_tasks": 5,
+            "trust_level": "hybrid",
+            "communication_protocols": ["async_message", "direct_call"],
+            "ai_models": ["gpt", "bert", "custom"]
+        };
+
+        self.agent_config = config;
+        self.active_agents = [];
+        self.message_history = [];
+
+        log::info("ai", {
+            "service": "BasicAIAgentService",
+            "agent_config": config,
+            "message": "AI Agent Service initialized"
+        });
+
+        return Ok(());
+    }
+
+    fn spawn_basic_agent() -> Result<string, Error> {
+        // Spawn a new AI agent
+        let agent = ai::spawn_agent(self.agent_config);
+
+        if agent.is_none() {
+            return Err(Error::new("Agent Spawn Failed", "Failed to spawn AI agent"));
+        }
+
+        let agent_id = agent["id"];
+        self.active_agents.push(agent_id);
+
+        log::info("ai", {
+            "action": "agent_spawned",
+            "agent_id": agent_id,
+            "agent_name": agent["config"]["name"],
+            "capabilities": agent["config"]["capabilities"]
+        });
+
+        return Ok(agent_id);
+    }
+
+    fn send_task_to_agent(agent_id: string, task_description: string, task_data: any) -> Result<any, Error> {
+        // Create task message
+        let message = ai::send_message(
+            "service_coordinator",
+            agent_id,
+            "task_assignment",
+            {
+                "task_type": "general_task",
+                "description": task_description,
+                "data": task_data,
+                "priority": "normal",
+                "deadline": null
+            },
+            "normal"
+        );
+
+        // Store in message history
+        self.message_history.push({
+            "timestamp": chain::get_block_timestamp(1),
+            "from": "service_coordinator",
+            "to": agent_id,
+            "type": "task_assignment",
+            "content": message
+        });
+
+        // Simulate agent processing
+        let response = ai::process_message(agent_id, message);
+
+        log::info("ai", {
+            "action": "task_sent",
+            "agent_id": agent_id,
+            "task_description": task_description,
+            "message_id": message["id"]
+        });
+
+        return Ok(response);
+    }
+
+    fn get_agent_status_report() -> any {
+        let report = {
+            "total_agents": self.active_agents.length,
+            "active_agents": self.active_agents,
+            "total_messages": self.message_history.length,
+            "recent_messages": self.message_history.slice(-5), // Last 5 messages
+            "generated_at": chain::get_block_timestamp(1)
+        };
+
+        return report;
+    }
+}
+
+// Example 2: Advanced Multi-Agent Coordination Service
+// @ai
+// @trust("hybrid")
+// @persistent
+service AdvancedMultiAgentService {
+    coordinator: string,
+    specialized_agents: any,
+    active_workflows: [any],
+
+    fn initialize() -> Result<Unit, Error> {
+        // Create agent coordinator
+        let coordinator_id = ai::create_coordinator("advanced_coordinator");
+
+        // Create specialized agents
+        let text_agent_config = {
+            "agent_id": "text_processor",
+            "name": "Text Processing Agent",
+            "role": "nlp_specialist",
+            "capabilities": ["text_analysis", "sentiment_analysis", "summarization"],
+            "memory_size": 2000,
+            "ai_models": ["bert", "gpt", "t5"]
+        };
+
+        let data_agent_config = {
+            "agent_id": "data_processor",
+            "name": "Data Processing Agent",
+            "role": "data_specialist",
+            "capabilities": ["data_analysis", "statistics", "visualization"],
+            "memory_size": 1500,
+            "ai_models": ["pandas_ai", "sklearn"]
+        };
+
+        let image_agent_config = {
+            "agent_id": "image_processor",
+            "name": "Image Processing Agent",
+            "role": "vision_specialist",
+            "capabilities": ["image_analysis", "object_detection", "face_recognition"],
+            "memory_size": 3000,
+            "ai_models": ["resnet", "yolo", "facenet"]
+        };
+
+        // Spawn specialized agents
+        let text_agent = ai::spawn_agent(text_agent_config);
+        let data_agent = ai::spawn_agent(data_agent_config);
+        let image_agent = ai::spawn_agent(image_agent_config);
+
+        // Add agents to coordinator
+        ai::add_agent_to_coordinator(coordinator_id, text_agent);
+        ai::add_agent_to_coordinator(coordinator_id, data_agent);
+        ai::add_agent_to_coordinator(coordinator_id, image_agent);
+
+        self.coordinator = coordinator_id;
+        self.specialized_agents = {
+            "text": text_agent,
+            "data": data_agent,
+            "image": image_agent
+        };
+        self.active_workflows = [];
+
+        log::info("ai", {
+            "service": "AdvancedMultiAgentService",
+            "coordinator": coordinator_id,
+            "agents_count": 3,
+            "message": "Multi-agent coordination system initialized"
+        });
+
+        return Ok(());
+    }
+
+    fn create_content_analysis_workflow(content_type: string, content: any) -> Result<string, Error> {
+        // Determine which agents to use based on content type
+        let workflow_steps = [];
+
+        if content_type == "text_document" {
+            workflow_steps = [
+                {
+                    "step_id": "text_analysis",
+                    "agent_id": self.specialized_agents["text"]["id"],
+                    "task_type": "analyze_text",
+                    "dependencies": []
+                },
+                {
+                    "step_id": "sentiment_analysis",
+                    "agent_id": self.specialized_agents["text"]["id"],
+                    "task_type": "sentiment_analysis",
+                    "dependencies": ["text_analysis"]
+                },
+                {
+                    "step_id": "generate_summary",
+                    "agent_id": self.specialized_agents["text"]["id"],
+                    "task_type": "summarization",
+                    "dependencies": ["sentiment_analysis"]
+                }
+            ];
+        } else if content_type == "dataset" {
+            workflow_steps = [
+                {
+                    "step_id": "data_validation",
+                    "agent_id": self.specialized_agents["data"]["id"],
+                    "task_type": "validate_data",
+                    "dependencies": []
+                },
+                {
+                    "step_id": "statistical_analysis",
+                    "agent_id": self.specialized_agents["data"]["id"],
+                    "task_type": "statistics",
+                    "dependencies": ["data_validation"]
+                },
+                {
+                    "step_id": "generate_insights",
+                    "agent_id": self.specialized_agents["data"]["id"],
+                    "task_type": "insight_generation",
+                    "dependencies": ["statistical_analysis"]
+                }
+            ];
+        } else if content_type == "image" {
+            workflow_steps = [
+                {
+                    "step_id": "image_analysis",
+                    "agent_id": self.specialized_agents["image"]["id"],
+                    "task_type": "analyze_image",
+                    "dependencies": []
+                },
+                {
+                    "step_id": "object_detection",
+                    "agent_id": self.specialized_agents["image"]["id"],
+                    "task_type": "detect_objects",
+                    "dependencies": ["image_analysis"]
+                },
+                {
+                    "step_id": "generate_description",
+                    "agent_id": self.specialized_agents["image"]["id"],
+                    "task_type": "image_description",
+                    "dependencies": ["object_detection"]
+                }
+            ];
+        }
+
+        // Create workflow
+        let workflow_name = format!("{}_analysis_workflow", content_type);
+        let workflow = ai::create_workflow(self.coordinator, workflow_name, workflow_steps);
+
+        self.active_workflows.push(workflow);
+
+        log::info("ai", {
+            "action": "workflow_created",
+            "workflow_id": workflow["workflow_id"],
+            "content_type": content_type,
+            "steps_count": workflow_steps.length
+        });
+
+        return Ok(workflow["workflow_id"]);
+    }
+
+    fn execute_content_analysis(workflow_id: string, content: any) -> Result<any, Error> {
+        // Execute the workflow
+        let result = ai::execute_workflow(self.coordinator, workflow_id);
+
+        if !result {
+            return Err(Error::new("Workflow Execution Failed", format!("Failed to execute workflow {}", workflow_id)));
+        }
+
+        // Collect results from all agents
+        let workflow = self.active_workflows.find(|w| w["workflow_id"] == workflow_id);
+
+        if workflow.is_none() {
+            return Err(Error::new("Workflow Not Found", format!("Workflow {} not found", workflow_id)));
+        }
+
+        let results = {
+            "workflow_id": workflow_id,
+            "content_type": content["type"],
+            "analysis_results": {},
+            "execution_time": chain::get_block_timestamp(1) - workflow["created_at"],
+            "status": "completed"
+        };
+
+        // Get results from each step
+        for step in workflow["steps"] {
+            let agent_result = ai::get_agent_status(step["agent_id"]);
+            results["analysis_results"][step["step_id"]] = agent_result;
+        }
+
+        log::info("ai", {
+            "action": "workflow_executed",
+            "workflow_id": workflow_id,
+            "results_count": results["analysis_results"].length,
+            "execution_time": results["execution_time"]
+        });
+
+        return Ok(results);
+    }
+
+    fn get_coordination_metrics() -> any {
+        let coordinator_metrics = ai::get_coordinator_metrics(self.coordinator);
+
+        let metrics = {
+            "coordinator_id": self.coordinator,
+            "total_agents": self.specialized_agents.length,
+            "active_workflows": self.active_workflows.length,
+            "coordinator_metrics": coordinator_metrics,
+            "agent_metrics": {},
+            "generated_at": chain::get_block_timestamp(1)
+        };
+
+        // Get metrics for each specialized agent
+        for agent_type in ["text", "data", "image"] {
+            let agent = self.specialized_agents[agent_type];
+            let agent_metrics = ai::get_agent_metrics(agent["id"]);
+            metrics["agent_metrics"][agent_type] = agent_metrics;
+        }
+
+        return metrics;
+    }
+}
+
+// Example 3: Intelligent Customer Service Agent
+// @ai
+// @trust("hybrid")
+// @persistent
+service IntelligentCustomerService {
+    customer_agent: string,
+    knowledge_base_agent: string,
+    sentiment_agent: string,
+    escalation_agent: string,
+    active_conversations: any,
+
+    fn initialize() -> Result<Unit, Error> {
+        // Create specialized customer service agents
+        let customer_config = {
+            "agent_id": "customer_service_agent",
+            "name": "Customer Service Agent",
+            "role": "customer_support",
+            "capabilities": ["conversation_management", "query_resolution", "escalation_handling"],
+            "memory_size": 5000,
+            "max_concurrent_tasks": 10,
+            "ai_models": ["gpt", "bert", "sentiment_model"]
+        };
+
+        let knowledge_config = {
+            "agent_id": "knowledge_base_agent",
+            "name": "Knowledge Base Agent",
+            "role": "information_retrieval",
+            "capabilities": ["knowledge_search", "faq_lookup", "documentation_search"],
+            "memory_size": 10000,
+            "ai_models": ["semantic_search", "bert"]
+        };
+
+        let sentiment_config = {
+            "agent_id": "sentiment_agent",
+            "name": "Sentiment Analysis Agent",
+            "role": "emotion_detection",
+            "capabilities": ["sentiment_analysis", "emotion_detection", "urgency_detection"],
+            "memory_size": 2000,
+            "ai_models": ["sentiment_analyzer", "emotion_detector"]
+        };
+
+        let escalation_config = {
+            "agent_id": "escalation_agent",
+            "name": "Escalation Agent",
+            "role": "crisis_management",
+            "capabilities": ["priority_assessment", "escalation_routing", "supervisor_notification"],
+            "memory_size": 1500,
+            "ai_models": ["priority_classifier"]
+        };
+
+        // Spawn all agents
+        self.customer_agent = ai::spawn_agent(customer_config)["id"];
+        self.knowledge_base_agent = ai::spawn_agent(knowledge_config)["id"];
+        self.sentiment_agent = ai::spawn_agent(sentiment_config)["id"];
+        self.escalation_agent = ai::spawn_agent(escalation_config)["id"];
+
+        self.active_conversations = {};
+
+        log::info("ai", {
+            "service": "IntelligentCustomerService",
+            "agents_spawned": 4,
+            "message": "Intelligent customer service system initialized"
+        });
+
+        return Ok(());
+    }
+
+    fn handle_customer_inquiry(customer_id: string, inquiry_text: string, context: any) -> Result<any, Error> {
+        // Generate conversation ID
+        let conversation_id = format!("conv_{}_{}", customer_id, chain::get_block_timestamp(1));
+
+        // Initialize conversation
+        self.active_conversations[conversation_id] = {
+            "customer_id": customer_id,
+            "inquiry": inquiry_text,
+            "context": context,
+            "started_at": chain::get_block_timestamp(1),
+            "messages": [],
+            "status": "active",
+            "sentiment_history": [],
+            "escalation_level": "none"
+        };
+
+        // Analyze sentiment of the inquiry
+        let sentiment_analysis = ai::analyze_text(inquiry_text);
+
+        // Store sentiment
+        self.active_conversations[conversation_id]["sentiment_history"].push({
+            "timestamp": chain::get_block_timestamp(1),
+            "text": inquiry_text,
+            "sentiment": sentiment_analysis["sentiment"],
+            "confidence": sentiment_analysis["confidence"]
+        });
+
+        // Determine if escalation is needed
+        let needs_escalation = self.assess_escalation_need(sentiment_analysis, context);
+
+        if needs_escalation {
+            let escalation_result = self.escalate_inquiry(conversation_id, inquiry_text, sentiment_analysis);
+            return Ok(escalation_result);
+        }
+
+        // Search knowledge base for relevant information
+        let knowledge_results = ai::send_message(
+            self.customer_agent,
+            self.knowledge_base_agent,
+            "knowledge_search",
+            {
+                "query": inquiry_text,
+                "context": context,
+                "conversation_id": conversation_id
+            },
+            "high"
+        );
+
+        // Generate response using customer service agent
+        let response = ai::generate_text(format!(
+            "Customer inquiry: {}\n\nKnowledge base results: {}\n\nContext: {}\n\nGenerate a helpful, professional response:",
+            inquiry_text,
+            knowledge_results,
+            context
+        ));
+
+        // Store response in conversation
+        self.active_conversations[conversation_id]["messages"].push({
+            "timestamp": chain::get_block_timestamp(1),
+            "sender": "agent",
+            "message": response,
+            "message_type": "response"
+        });
+
+        let result = {
+            "conversation_id": conversation_id,
+            "response": response,
+            "sentiment": sentiment_analysis["sentiment"],
+            "escalated": false,
+            "knowledge_used": true,
+            "confidence": sentiment_analysis["confidence"]
+        };
+
+        log::info("ai", {
+            "action": "inquiry_handled",
+            "conversation_id": conversation_id,
+            "customer_id": customer_id,
+            "escalated": false,
+            "response_length": response.length
+        });
+
+        return Ok(result);
+    }
+
+    fn assess_escalation_need(sentiment_analysis: any, context: any) -> bool {
+        // Assess if inquiry needs escalation based on sentiment and context
+        let sentiment_score = sentiment_analysis["sentiment"];
+        let urgency_keywords = ["urgent", "emergency", "crisis", "immediately", "asap"];
+
+        let has_urgency_keywords = urgency_keywords.some(|keyword|
+            context["subject"].to_lower().contains(keyword) ||
+            context["description"].to_lower().contains(keyword)
+        );
+
+        let is_very_negative = sentiment_score < -0.7;
+        let is_high_priority = context["priority"] == "high" || context["priority"] == "critical";
+
+        return has_urgency_keywords || is_very_negative || is_high_priority;
+    }
+
+    fn escalate_inquiry(conversation_id: string, inquiry_text: string, sentiment_analysis: any) -> any {
+        // Send to escalation agent
+        let escalation_message = ai::send_message(
+            self.customer_agent,
+            self.escalation_agent,
+            "escalation_request",
+            {
+                "conversation_id": conversation_id,
+                "inquiry": inquiry_text,
+                "sentiment": sentiment_analysis,
+                "escalation_reason": "high_priority_or_negative_sentiment"
+            },
+            "critical"
+        );
+
+        // Update conversation status
+        self.active_conversations[conversation_id]["status"] = "escalated";
+        self.active_conversations[conversation_id]["escalation_level"] = "supervisor";
+
+        // Generate immediate acknowledgment response
+        let response = "Thank you for contacting us. I understand this is an urgent matter. I'm escalating this to our senior support team who will respond within the next 15 minutes.";
+
+        // Store escalation response
+        self.active_conversations[conversation_id]["messages"].push({
+            "timestamp": chain::get_block_timestamp(1),
+            "sender": "escalation_agent",
+            "message": response,
+            "message_type": "escalation_acknowledgment"
+        });
+
+        let result = {
+            "conversation_id": conversation_id,
+            "response": response,
+            "sentiment": sentiment_analysis["sentiment"],
+            "escalated": true,
+            "escalation_level": "supervisor",
+            "estimated_response_time": 900, // 15 minutes
+            "escalation_message_id": escalation_message["id"]
+        };
+
+        log::info("ai", {
+            "action": "inquiry_escalated",
+            "conversation_id": conversation_id,
+            "escalation_reason": "high_priority_or_negative_sentiment",
+            "escalation_level": "supervisor"
+        });
+
+        return result;
+    }
+
+    fn continue_conversation(conversation_id: string, customer_message: string) -> Result<any, Error> {
+        // Check if conversation exists
+        if !self.active_conversations.contains_key(conversation_id) {
+            return Err(Error::new("Conversation Not Found", format!("Conversation {} not found", conversation_id)));
+        }
+
+        let conversation = self.active_conversations[conversation_id];
+
+        // Analyze sentiment of new message
+        let sentiment_analysis = ai::analyze_text(customer_message);
+        conversation["sentiment_history"].push({
+            "timestamp": chain::get_block_timestamp(1),
+            "text": customer_message,
+            "sentiment": sentiment_analysis["sentiment"],
+            "confidence": sentiment_analysis["confidence"]
+        });
+
+        // Store customer message
+        conversation["messages"].push({
+            "timestamp": chain::get_block_timestamp(1),
+            "sender": "customer",
+            "message": customer_message,
+            "message_type": "customer_message"
+        });
+
+        // Generate contextual response
+        let conversation_history = conversation["messages"].slice(-5); // Last 5 messages
+        let context_prompt = format!(
+            "Conversation history: {}\n\nLatest customer message: {}\n\nCurrent sentiment: {}\n\nGenerate an appropriate response:",
+            conversation_history,
+            customer_message,
+            sentiment_analysis["sentiment"]
+        );
+
+        let response = ai::generate_text(context_prompt);
+
+        // Store agent response
+        conversation["messages"].push({
+            "timestamp": chain::get_block_timestamp(1),
+            "sender": "agent",
+            "message": response,
+            "message_type": "response"
+        });
+
+        let result = {
+            "conversation_id": conversation_id,
+            "response": response,
+            "sentiment": sentiment_analysis["sentiment"],
+            "conversation_status": conversation["status"],
+            "message_count": conversation["messages"].length
+        };
+
+        return Ok(result);
+    }
+
+    fn get_customer_service_metrics() -> any {
+        let total_conversations = self.active_conversations.length;
+        let escalated_conversations = self.active_conversations.values().filter(|conv| conv["status"] == "escalated").length;
+        let avg_sentiment = self.calculate_average_sentiment();
+
+        let metrics = {
+            "total_conversations": total_conversations,
+            "active_conversations": total_conversations,
+            "escalated_conversations": escalated_conversations,
+            "escalation_rate": if total_conversations > 0 { escalated_conversations / total_conversations } else { 0 },
+            "average_sentiment": avg_sentiment,
+            "agent_metrics": {
+                "customer_agent": ai::get_agent_metrics(self.customer_agent),
+                "knowledge_agent": ai::get_agent_metrics(self.knowledge_base_agent),
+                "sentiment_agent": ai::get_agent_metrics(self.sentiment_agent),
+                "escalation_agent": ai::get_agent_metrics(self.escalation_agent)
+            },
+            "generated_at": chain::get_block_timestamp(1)
+        };
+
+        return metrics;
+    }
+
+    fn calculate_average_sentiment() -> float {
+        let all_sentiments = [];
+
+        for conversation in self.active_conversations.values() {
+            for sentiment_entry in conversation["sentiment_history"] {
+                all_sentiments.push(sentiment_entry["sentiment"]);
+            }
+        }
+
+        if all_sentiments.is_empty() {
+            return 0.0;
+        }
+
+        let sum = all_sentiments.reduce(|acc, sentiment| acc + sentiment, 0.0);
+        return sum / all_sentiments.length;
+    }
+}
+
+// Example 4: AI-Powered Content Creation and Analysis
+// @ai
+// @trust("hybrid")
+// @persistent
+service ContentCreationService {
+    content_agent: string,
+    analysis_agent: string,
+    optimization_agent: string,
+    publishing_agent: string,
+    content_library: any,
+
+    fn initialize() -> Result<Unit, Error> {
+        // Create content creation agents
+        let content_config = {
+            "agent_id": "content_creator",
+            "name": "Content Creation Agent",
+            "role": "content_generator",
+            "capabilities": ["article_writing", "social_media_posts", "email_campaigns", "blog_posts"],
+            "memory_size": 8000,
+            "ai_models": ["gpt", "content_generator", "style_analyzer"]
+        };
+
+        let analysis_config = {
+            "agent_id": "content_analyzer",
+            "name": "Content Analysis Agent",
+            "role": "content_evaluator",
+            "capabilities": ["readability_analysis", "seo_analysis", "engagement_prediction", "tone_analysis"],
+            "memory_size": 4000,
+            "ai_models": ["readability_analyzer", "seo_analyzer", "engagement_predictor"]
+        };
+
+        let optimization_config = {
+            "agent_id": "content_optimizer",
+            "name": "Content Optimization Agent",
+            "role": "content_improver",
+            "capabilities": ["keyword_optimization", "readability_improvement", "engagement_boost", "a_b_testing"],
+            "memory_size": 6000,
+            "ai_models": ["optimizer", "a_b_tester", "performance_predictor"]
+        };
+
+        let publishing_config = {
+            "agent_id": "content_publisher",
+            "name": "Content Publishing Agent",
+            "role": "content_distributor",
+            "capabilities": ["platform_optimization", "timing_optimization", "audience_targeting", "performance_tracking"],
+            "memory_size": 3000,
+            "ai_models": ["platform_analyzer", "timing_optimizer"]
+        };
+
+        // Spawn agents
+        self.content_agent = ai::spawn_agent(content_config)["id"];
+        self.analysis_agent = ai::spawn_agent(analysis_config)["id"];
+        self.optimization_agent = ai::spawn_agent(optimization_config)["id"];
+        self.publishing_agent = ai::spawn_agent(publishing_config)["id"];
+
+        self.content_library = {};
+
+        log::info("ai", {
+            "service": "ContentCreationService",
+            "agents_spawned": 4,
+            "message": "AI-powered content creation system initialized"
+        });
+
+        return Ok(());
+    }
+
+    fn create_content_campaign(topic: string, content_type: string, target_audience: any, campaign_goals: [string]) -> Result<any, Error> {
+        // Generate content brief
+        let content_brief = {
+            "topic": topic,
+            "content_type": content_type,
+            "target_audience": target_audience,
+            "campaign_goals": campaign_goals,
+            "created_at": chain::get_block_timestamp(1),
+            "status": "draft"
+        };
+
+        // Generate initial content
+        let initial_content = ai::generate_text(format!(
+            "Create a {} about '{}' for {} audience. Campaign goals: {}\n\nGenerate engaging content:",
+            content_type,
+            topic,
+            target_audience["description"],
+            campaign_goals.join(", ")
+        ));
+
+        // Analyze content quality
+        let analysis = ai::analyze_text(initial_content);
+        let seo_analysis = self.perform_seo_analysis(initial_content, topic);
+
+        // Optimize content
+        let optimized_content = ai::send_message(
+            self.analysis_agent,
+            self.optimization_agent,
+            "content_optimization",
+            {
+                "original_content": initial_content,
+                "analysis": analysis,
+                "seo_analysis": seo_analysis,
+                "target_audience": target_audience,
+                "campaign_goals": campaign_goals
+            },
+            "high"
+        );
+
+        // Generate content variations for A/B testing
+        let variations = [];
+        for i in 0..3 {
+            let variation = ai::generate_text(format!(
+                "Create variation {} of this content: {}\n\nMake it unique but maintain the core message:",
+                i + 1,
+                optimized_content
+            ));
+            variations.push(variation);
+        }
+
+        // Store in content library
+        let content_id = format!("content_{}", generate_id());
+        self.content_library[content_id] = {
+            "brief": content_brief,
+            "original_content": initial_content,
+            "optimized_content": optimized_content,
+            "variations": variations,
+            "analysis": analysis,
+            "seo_analysis": seo_analysis,
+            "created_at": chain::get_block_timestamp(1),
+            "status": "ready_for_publishing"
+        };
+
+        let result = {
+            "content_id": content_id,
+            "content_type": content_type,
+            "topic": topic,
+            "optimized_content": optimized_content,
+            "variations_count": variations.length,
+            "seo_score": seo_analysis["score"],
+            "readability_score": analysis["readability"],
+            "estimated_engagement": self.predict_engagement(optimized_content, target_audience)
+        };
+
+        log::info("ai", {
+            "action": "content_created",
+            "content_id": content_id,
+            "content_type": content_type,
+            "topic": topic,
+            "variations": variations.length
+        });
+
+        return Ok(result);
+    }
+
+    fn perform_seo_analysis(content: string, topic: string) -> any {
+        // Simulate SEO analysis
+        let keywords = [topic, "ai", "technology", "innovation"];
+        let keyword_density = keywords.map(|keyword| {
+            let count = content.to_lower().split(keyword.to_lower()).length - 1;
+            let density = (count * keyword.length) / content.length;
+            return { "keyword": keyword, "count": count, "density": density };
+        });
+
+        return {
+            "score": 85,
+            "keywords": keyword_density,
+            "title_optimized": content.length < 60,
+            "meta_description": "Good meta description generated",
+            "headings": ["H1", "H2", "H3"],
+            "internal_links": 3,
+            "external_links": 2,
+            "images": 1
+        };
+    }
+
+    fn predict_engagement(content: string, audience: any) -> any {
+        // Simulate engagement prediction
+        let content_length = content.length;
+        let has_questions = content.contains("?") || content.contains("how") || content.contains("what") || content.contains("why");
+        let has_emojis = content.contains("😊") || content.contains("🚀") || content.contains("💡");
+        let has_numbers = content.matches(/\d+/).length > 0;
+
+        let engagement_score = 0.3 + // baseline
+            (if has_questions { 0.2 } else { 0 }) +
+            (if has_emojis { 0.1 } else { 0 }) +
+            (if has_numbers { 0.1 } else { 0 }) +
+            (if content_length > 500 && content_length < 2000 { 0.2 } else { 0 });
+
+        return {
+            "predicted_score": engagement_score,
+            "estimated_likes": (audience["size"] * engagement_score * 0.05).round(),
+            "estimated_shares": (audience["size"] * engagement_score * 0.02).round(),
+            "estimated_comments": (audience["size"] * engagement_score * 0.03).round(),
+            "best_posting_time": "14:00",
+            "predicted_reach": audience["size"] * engagement_score * 1.5
+        };
+    }
+
+    fn publish_content(content_id: string, platforms: [string], schedule: any) -> Result<any, Error> {
+        // Check if content exists
+        if !self.content_library.contains_key(content_id) {
+            return Err(Error::new("Content Not Found", format!("Content {} not found", content_id)));
+        }
+
+        let content = self.content_library[content_id];
+
+        // Optimize content for each platform
+        let platform_optimizations = {};
+        for platform in platforms {
+            let optimization = ai::send_message(
+                self.content_agent,
+                self.publishing_agent,
+                "platform_optimization",
+                {
+                    "content": content["optimized_content"],
+                    "platform": platform,
+                    "audience": content["brief"]["target_audience"],
+                    "schedule": schedule
+                },
+                "normal"
+            );
+
+            platform_optimizations[platform] = optimization;
+        }
+
+        // Schedule publishing
+        let publishing_schedule = {
+            "content_id": content_id,
+            "platforms": platforms,
+            "optimizations": platform_optimizations,
+            "schedule": schedule,
+            "scheduled_at": chain::get_block_timestamp(1) + schedule["delay_seconds"],
+            "status": "scheduled"
+        };
+
+        // Store publishing info
+        content["publishing"] = publishing_schedule;
+
+        let result = {
+            "content_id": content_id,
+            "platforms": platforms,
+            "scheduled_at": publishing_schedule["scheduled_at"],
+            "optimizations_count": platform_optimizations.length,
+            "estimated_reach": platforms.length * 10000 // Rough estimate
+        };
+
+        log::info("ai", {
+            "action": "content_scheduled",
+            "content_id": content_id,
+            "platforms": platforms.length,
+            "scheduled_at": publishing_schedule["scheduled_at"]
+        });
+
+        return Ok(result);
+    }
+
+    fn analyze_content_performance(content_id: string, performance_data: any) -> Result<any, Error> {
+        // Send performance data to analysis agent
+        let analysis = ai::send_message(
+            self.publishing_agent,
+            self.analysis_agent,
+            "performance_analysis",
+            {
+                "content_id": content_id,
+                "performance_data": performance_data,
+                "content": self.content_library[content_id],
+                "time_since_publish": chain::get_block_timestamp(1) - self.content_library[content_id]["publishing"]["scheduled_at"]
+            },
+            "normal"
+        );
+
+        // Generate insights and recommendations
+        let insights = ai::generate_text(format!(
+            "Analyze this content performance and provide recommendations: {}\n\nPerformance data: {}",
+            analysis,
+            performance_data
+        ));
+
+        // Store analysis results
+        if !self.content_library[content_id].contains_key("performance") {
+            self.content_library[content_id]["performance"] = [];
+        }
+
+        self.content_library[content_id]["performance"].push({
+            "timestamp": chain::get_block_timestamp(1),
+            "data": performance_data,
+            "analysis": analysis,
+            "insights": insights
+        });
+
+        let result = {
+            "content_id": content_id,
+            "analysis": analysis,
+            "insights": insights,
+            "recommendations": self.generate_recommendations(analysis),
+            "performance_score": self.calculate_performance_score(performance_data)
+        };
+
+        return Ok(result);
+    }
+
+    fn generate_recommendations(analysis: string) -> [string] {
+        // Extract recommendations from analysis
+        return [
+            "Increase posting frequency for similar content",
+            "Use more engaging headlines",
+            "Add more visual elements",
+            "Optimize posting times based on audience engagement",
+            "Create follow-up content based on this topic"
+        ];
+    }
+
+    fn calculate_performance_score(performance_data: any) -> float {
+        // Calculate overall performance score (0-100)
+        let engagement_rate = performance_data["likes"] / performance_data["impressions"];
+        let click_rate = performance_data["clicks"] / performance_data["impressions"];
+        let share_rate = performance_data["shares"] / performance_data["impressions"];
+
+        let score = (engagement_rate * 40) + (click_rate * 35) + (share_rate * 25);
+        return Math.min(100, Math.max(0, score * 100));
+    }
+
+    fn get_content_creation_metrics() -> any {
+        let total_content = self.content_library.length;
+        let published_content = self.content_library.values().filter(|c| c["status"] == "published").length;
+        let avg_seo_score = self.content_library.values().map(|c| c["seo_analysis"]["score"]).reduce(|acc, score| acc + score, 0) / total_content;
+        let avg_engagement = self.content_library.values().filter(|c| c.contains_key("performance")).map(|c| c["performance"].last()["score"]).reduce(|acc, score| acc + score, 0) / published_content;
+
+        let metrics = {
+            "total_content": total_content,
+            "published_content": published_content,
+            "draft_content": total_content - published_content,
+            "average_seo_score": avg_seo_score,
+            "average_engagement_score": avg_engagement,
+            "content_types": self.get_content_type_breakdown(),
+            "top_performing_topics": self.get_top_topics(),
+            "agent_metrics": {
+                "content_agent": ai::get_agent_metrics(self.content_agent),
+                "analysis_agent": ai::get_agent_metrics(self.analysis_agent),
+                "optimization_agent": ai::get_agent_metrics(self.optimization_agent),
+                "publishing_agent": ai::get_agent_metrics(self.publishing_agent)
+            },
+            "generated_at": chain::get_block_timestamp(1)
+        };
+
+        return metrics;
+    }
+
+    fn get_content_type_breakdown() -> any {
+        let breakdown = {};
+        for content in self.content_library.values() {
+            let content_type = content["brief"]["content_type"];
+            if !breakdown.contains_key(content_type) {
+                breakdown[content_type] = 0;
+            }
+            breakdown[content_type] += 1;
+        }
+        return breakdown;
+    }
+
+    fn get_top_topics() -> [any] {
+        // This would analyze performance data to find top topics
+        return [
+            { "topic": "AI Technology", "performance_score": 92, "content_count": 5 },
+            { "topic": "Digital Marketing", "performance_score": 88, "content_count": 3 },
+            { "topic": "Blockchain", "performance_score": 85, "content_count": 4 }
+        ];
+    }
+}
+
+// Main demonstration
+fn main() {
+    log::info("main", { "message": "Starting Phase 4: AI Agent Framework Examples" });
+
+    // Initialize all services
+    let basic_agent_service = BasicAIAgentService::new();
+    basic_agent_service.initialize();
+
+    let multi_agent_service = AdvancedMultiAgentService::new();
+    multi_agent_service.initialize();
+
+    let customer_service = IntelligentCustomerService::new();
+    customer_service.initialize();
+
+    let content_service = ContentCreationService::new();
+    content_service.initialize();
+
+    // Demonstrate basic agent functionality
+    let agent_id = basic_agent_service.spawn_basic_agent();
+    let task_result = basic_agent_service.send_task_to_agent(agent_id, "Analyze this text", { "text": "Hello, world!" });
+    let status_report = basic_agent_service.get_agent_status_report();
+
+    log::info("demo", { "action": "basic_agent_demo", "agent_id": agent_id, "status_report": status_report });
+
+    // Demonstrate multi-agent coordination
+    let workflow_id = multi_agent_service.create_content_analysis_workflow("text_document", {
+        "type": "text_document",
+        "content": "This is a sample document for analysis...",
+        "metadata": { "author": "Demo", "length": 100 }
+    });
+
+    let analysis_result = multi_agent_service.execute_content_analysis(workflow_id, {
+        "type": "text_document",
+        "content": "This is a sample document for analysis..."
+    });
+
+    let coordination_metrics = multi_agent_service.get_coordination_metrics();
+
+    log::info("demo", {
+        "action": "multi_agent_demo",
+        "workflow_id": workflow_id,
+        "analysis_result": analysis_result,
+        "coordination_metrics": coordination_metrics
+    });
+
+    // Demonstrate intelligent customer service
+    let inquiry_result = customer_service.handle_customer_inquiry(
+        "customer_123",
+        "I'm having trouble with my account login. Can you help me reset my password?",
+        {
+            "subject": "Password Reset Issue",
+            "description": "Unable to login to account",
+            "priority": "normal",
+            "channel": "web_chat"
+        }
+    );
+
+    let conversation_result = customer_service.continue_conversation(
+        inquiry_result["conversation_id"],
+        "I tried the reset link but it's not working."
+    );
+
+    let service_metrics = customer_service.get_customer_service_metrics();
+
+    log::info("demo", {
+        "action": "customer_service_demo",
+        "inquiry_result": inquiry_result,
+        "conversation_result": conversation_result,
+        "service_metrics": service_metrics
+    });
+
+    // Demonstrate content creation
+    let content_result = content_service.create_content_campaign(
+        "AI Agent Technology",
+        "blog_post",
+        {
+            "description": "Tech-savvy professionals",
+            "size": 50000,
+            "interests": ["AI", "technology", "innovation"]
+        },
+        ["increase_brand_awareness", "drive_traffic", "generate_leads"]
+    );
+
+    let publishing_result = content_service.publish_content(
+        content_result["content_id"],
+        ["linkedin", "twitter", "company_blog"],
+        { "delay_seconds": 3600, "best_time": "14:00" }
+    );
+
+    let content_metrics = content_service.get_content_creation_metrics();
+
+    log::info("demo", {
+        "action": "content_creation_demo",
+        "content_result": content_result,
+        "publishing_result": publishing_result,
+        "content_metrics": content_metrics
+    });
+
+    log::info("main", { "message": "Phase 4 AI Agent Framework examples completed successfully!" });
+}

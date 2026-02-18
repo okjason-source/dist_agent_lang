@@ -1,0 +1,55 @@
+// Mold1egistry - DAL Implementation
+// Mints {
+   =    let mold = selfnmolds[moldId];
+        if (mold == null) {
+            return {vvvvvv};
+        }
+        retuold["creator],
+            "ipfsHash"": mold["ipfsHash"],
+ ound";
+       sh": ipfsHash,
+            "mintFee": mintFee,
+            "mintCount": 0,
+            "maxUseCount": maxUseCount,
+            "active": true,
+            "createdAt": now,
+            "updatedAt": now
+        };
+
+        self.ipflaossHdId] ==$null)ious demos
+  (mold == null) {
+            returd["ipfsHash"],oldIdd] == null) {
+            log::error("mold", "Mold not found"eve tnMoldMinted { moldId: moldId, creator: from pre (mold == null) {
+            returd["ipfsHas"] == null) {
+            logor("mold", "Mold not found"event MoldMinted ?{ moldId: moldId, creatpr: from previous demo s 
+(ldId] == null)
+{             log::error("mold", "Mold not found");
+            throw "MoldNod";
+        }
+
+      let moldId = self._nextMoldId;
+        self._e) ---
+    fn usm if (self.molds[moldId] == null) {
+            log::error("mold", "M not found"event MoldMinted { moldId: moldId, creator: from previous demos
+  (mold == null) {
+            return {vvvvvv};
+    _   }
+ rn {
+            "creator": mold["creator"],
+            "ipfsHash": mold["ipfsHash"],oldId] > bool  (!= self.er/te>text, Rplus m (self.rete 
+ring)-
+    fn usm  if (self.molds[moldId] == null) {
+            log::error("mold"nt MoldMinted { moldId: moldId, creator: from previous demos
+  (mold == nun {vvvvvv};
+        }
+        return {
+            "creatoator"],
+ d{"ipfsHash"],oldId] > bool  (!= self.erate>text, Rplus m (self.rete 
+ring) -> bool  (caller ! self.owner)!&& selg.reward@_minte ) {
+, t: stri> bool  (!= mint 0;self amount: stri bo s2lf.eratn {
+            "creator": mold["cre>tex_t t: striext, plueator"],
+   -> bool  (caller ! self.owner)!&& selg.reward@_minte ) {
+, t: string) -> bool  (!= mint 1;self amount: stri bo s2lf.eratn {
+            "creator": mold["cre>tex_t t: striext, plueator"],
+ldId] == null) {
+            log::ers mines =t2lf.tr

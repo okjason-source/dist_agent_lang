@@ -1,0 +1,61 @@
+@trust("hybrid")
+@web
+@chain("ethereum")
+service TestWebApp {
+    server: web::HttpServer,
+    port: int = 3000,
+    
+    fn initialize() -> bool {
+        // Create HTTP server
+        self.server = web::create_server(self.port);
+        
+        // Add routes
+        web::add_route(self.server, "GET", "/", "serve_home_page");
+        web::add_route(self.server, "GET", "/api/balance", "get_balance");
+        web::add_route(self.server, "POST", "/api/connect", "connect_wallet");
+        
+        log::info("webapp", "Test web application initialized successfully");
+        return true;
+    }
+    
+    fn start() -> bool {
+        log::info("webapp", "Starting Test Web Application server");
+        
+        match web::start_server(self.server) {
+            Ok(result) => {
+                log::info("webapp", format!("Server started: {}", result));
+                return true;
+            },
+            Err(error) => {
+                log::error("webapp", format!("Failed to start server: {}", error));
+                return false;
+            }
+        }
+    }
+    
+    fn serve_home_page() -> web::HttpResponse {
+        let page = web::create_html_page("Test Web App - dist_agent_lang");
+        
+        let header = web::create_element("h1", Some("Hello from dist_agent_lang!"));
+        web::append_child(page.body, header);
+        
+        let html = web::render_html_page(page);
+        return web::html_response(html);
+    }
+    
+    fn get_balance() -> web::HttpResponse {
+        let data = HashMap::new();
+        data.insert("balance", Value::String("1000.0"));
+        data.insert("address", Value::String("0x1234567890abcdef"));
+        
+        return web::json_response(data);
+    }
+    
+    fn connect_wallet() -> web::HttpResponse {
+        let data = HashMap::new();
+        data.insert("success", Value::Bool(true));
+        data.insert("address", Value::String("0x1234567890abcdef"));
+        
+        return web::json_response(data);
+    }
+}

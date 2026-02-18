@@ -1,0 +1,301 @@
+@trust("hybrid")
+@chain("ethereum", "solana")
+service TestNFT {
+    name: string = "TestNFT";
+    symbol: string = "TST";
+    owner: string = "";
+    total_supply: int = 0;
+    max_supply: int = 10000;
+    base_uri: string = "https://api.testnft.com/metadata/";
+    
+    token_owners: map<int, string> = {};
+    token_uris: map<int, string> = {};
+    balances: map<string, int> = {};
+    approved: map<int, string> = {};
+    operator_approvals: map<string, map<string, bool>> = {};
+    
+    chain_deployments: map<string, string> = {};
+    cross_chain_locks: map<int, string> = {};
+    
+    fn initialize(contract_owner: string) {
+        self.owner = contract_owner;
+        self.chain_deployments["ethereum"] = "";
+        self.chain_deployments["solana"] = "";
+        print("TestNFT contract initialized with hybrid trust");
+        print("Owner: " + contract_owner);
+        print("Max supply: " + self.max_supply);
+    }
+    
+    fn set_chain_deployment(chain: string, address: string) {
+        if (msg::sender() != self.owner) {
+            print("Only owner can set chain deployments");
+            return;
+        }
+        self.chain_deployments[chain] = address;
+        print("Chain deployment set: " + chain + " -> " + address);
+    }
+    
+    fn get_name() -> string {
+        return self.name;
+    }
+    
+    fn get_symbol() -> string {
+        return self.symbol;
+    }
+    
+    fn get_total_supply() -> int {
+        return self.total_supply;
+    }
+    
+    fn get_max_supply() -> int {
+        return self.max_supply;
+    }
+    
+    fn balance_of(owner: string) -> int {
+        if (self.balances[owner] == null) {
+            return 0;
+        }
+        return self.balances[owner];
+    }
+    
+    fn owner_of(token_id: int) -> string {
+        if (self.token_owners[token_id] == null) {
+            print("Token does not exist");
+            return "";
+        }
+        return self.token_owners[token_id];
+    }
+    
+    fn token_uri(token_id: int) -> string {
+        if (self.token_uris[token_id] != null) {
+            return self.token_uris[token_id];
+        }
+        return self.base_uri + token_id;
+    }
+    
+    fn set_token_uri(token_id: int, uri: string) {
+        if (msg::sender() != self.owner) {
+            print("Only owner can set token URI");
+            return;
+        }
+        if (self.token_owners[token_id] == null) {
+            print("Token does not exist");
+            return;
+        }
+        self.token_uris[token_id] = uri;
+        print("Token URI set for token " + token_id);
+    }
+    
+    fn mint(to: string, token_id: int) -> bool {
+        if (msg::sender() != self.owner) {
+            print("Only owner can mint");
+            return false;
+        }
+        if (self.token_owners[token_id] != null) {
+            print("Token already exists");
+            return false;
+        }
+        if (self.total_supply >= self.max_supply) {
+            print("Max supply reached");
+            return false;
+        }
+        
+        self.token_owners[token_id] = to;
+        if (self.balances[to] == null) {
+            self.balances[to] = 0;
+        }
+        self.balances[to] = self.balances[to] + 1;
+        self.total_supply = self.total_supply + 1;
+        
+        print("Minted token " + token_id + " to " + to);
+        return true;
+    }
+    
+    fn mint_batch(to: string, token_ids: list<int>) -> bool {
+        if (msg::sender() != self.owner) {
+            print("Only owner can mint");
+            return false;
+        }
+        if (self.total_supply + token_ids.length() > self.max_supply) {
+            print("Minting would exceed max supply");
+            return false;
+        }
+        
+        for token_id in token_ids {
+            if (self.token_owners[token_id] != null) {
+                print("Token " + token_id + " already exists, skipping");
+                continue;
+            }
+            self.token_owners[token_id] = to;
+            if (self.balances[to] == null) {
+                self.balances[to] = 0;
+            }
+            self.balances[to] = self.balances[to] + 1;
+            self.total_supply = self.total_supply + 1;
+        }
+        
+        print("Batch minted " + token_ids.length() + " tokens to " + to);
+        return true;
+    }
+    
+    fn transfer_from(from: string, to: string, token_id: int) -> bool {
+        let owner = self.owner_of(token_id);
+        if (owner == "") {
+            return false;
+        }
+        
+        let sender = msg::sender();
+        if (sender != owner && sender != self.approved[token_id] && !self.is_approved_for_all(owner, sender)) {
+            print("Transfer not authorized");
+            return false;
+        }
+        
+        if (self.cross_chain_locks[token_id] != null) {
+            print("Token is locked for cross-chain transfer");
+            return false;
+        }
+        
+        self.token_owners[token_id] = to;
+        self.balances[from] = self.balances[from] - 1;
+        if (self.balances[to] == null) {
+            self.balances[to] = 0;
+        }
+        self.balances[to] = self.balances[to] + 1;
+        self.approved[token_id] = "";
+        
+        print("Transferred token " + token_id + " from " + from + " to " + to);
+        return true;
+    }
+    
+    fn safe_transfer_from(from: string, to: string, token_id: int) -> bool {
+        return self.transfer_from(from, to, token_id);
+    }
+    
+    fn approve(to: string, token_id: int) {
+        let owner = self.owner_of(token_id);
+        if (owner == "") {
+            print("Token does not exist");
+            return;
+        }
+        if (msg::sender() != owner && !self.is_approved_for_all(owner, msg::sender())) {
+            print("Not authorized to approve");
+            return;
+        }
+        self.approved[token_id] = to;
+        print("Approved token " + token_id + " to " + to);
+    }
+    
+    fn get_approved(token_id: int) -> string {
+        if (self.approved[token_id] == null) {
+            return "";
+        }
+        return self.approved[token_id];
+    }
+    
+    fn set_approval_for_all(operator: string, approved: bool) {
+        let owner = msg::sender();
+        if (self.operator_approvals[owner] == null) {
+            self.operator_approvals[owner] = {};
+        }
+        self.operator_approvals[owner][operator] = approved;
+        print("Set approval for all: " + operator + " -> " + approved);
+    }
+    
+    fn is_approved_for_all(owner: string, operator: string) -> bool {
+        if (self.operator_approvals[owner] == null) {
+            return false;
+        }
+        if (self.operator_approvals[owner][operator] == null) {
+            return false;
+        }
+        return self.operator_approvals[owner][operator];
+    }
+    
+    fn burn(token_id: int) -> bool {
+        let owner = self.owner_of(token_id);
+        if (owner == "") {
+            print("Token does not exist");
+            return false;
+        }
+        if (msg::sender() != owner && msg::sender() != self.owner) {
+            print("Not authorized to burn");
+            return false;
+        }
+        
+        self.token_owners[token_id] = "";
+        self.balances[owner] = self.balances[owner] - 1;
+        self.total_supply = self.total_supply - 1;
+        self.approved[token_id] = "";
+        if (self.token_uris[token_id] != null) {
+            self.token_uris[token_id] = "";
+        }
+        
+        print("Burned token " + token_id);
+        return true;
+    }
+    
+    fn lock_for_cross_chain(token_id: int, target_chain: string) -> bool {
+        let owner = self.owner_of(token_id);
+        if (owner == "") {
+            print("Token does not exist");
+            return false;
+        }
+        if (msg::sender() != owner) {
+            print("Only owner can lock token");
+            return false;
+        }
+        if (self.cross_chain_locks[token_id] != null) {
+            print("Token already locked");
+            return false;
+        }
+        
+        self.cross_chain_locks[token_id] = target_chain;
+        print("Locked token " + token_id + " for cross-chain transfer to " + target_chain);
+        return true;
+    }
+    
+    fn unlock_from_cross_chain(token_id: int, source_chain: string) -> bool {
+        if (msg::sender() != self.owner) {
+            print("Only owner can unlock token");
+            return false;
+        }
+        if (self.cross_chain_locks[token_id] != source_chain) {
+            print("Token not locked for this chain");
+            return false;
+        }
+        
+        self.cross_chain_locks[token_id] = "";
+        print("Unlocked token " + token_id + " from " + source_chain);
+        return true;
+    }
+    
+    fn cross_chain_mint(target_chain: string, to: string, token_id: int, source_chain: string) -> bool {
+        if (msg::sender() != self.owner) {
+            print("Only owner can perform cross-chain mint");
+            return false;
+        }
+        if (self.chain_deployments[target_chain] == null) {
+            print("Target chain not deployed");
+            return false;
+        }
+        
+        if (self.token_owners[token_id] != null) {
+            print("Token already exists, transferring instead");
+            return self.transfer_from(self.owner_of(token_id), to, token_id);
+        }
+        
+        return self.mint(to, token_id);
+    }
+    
+    fn get_chain_deployment(chain: string) -> string {
+        if (self.chain_deployments[chain] == null) {
+            return "";
+        }
+        return self.chain_deployments[chain];
+    }
+    
+    fn get_cross_chain_status(token_id: int) -> map<string, any> {
+        let is_locked = self.cross_chain_locks[token_id] != null;
+        let target_chain = "";
+        if (is_locked) {
+

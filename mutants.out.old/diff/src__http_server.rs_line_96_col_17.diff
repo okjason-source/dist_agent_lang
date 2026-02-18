@@ -1,0 +1,21 @@
+--- src/http_server.rs
++++ delete match arm "POST" in start_http_server
+@@ -88,17 +88,17 @@
+                         request,
+                         &handler_name,
+                     ).await
+                 }
+             };
+             
+             match method.as_str() {
+                 "GET" => router = router.route(path, axum::routing::get(handler)),
+-                "POST" => router = router.route(path, axum::routing::post(handler)),
++                 /* ~ changed by cargo-mutants ~ */
+                 "PUT" => router = router.route(path, axum::routing::put(handler)),
+                 "DELETE" => router = router.route(path, axum::routing::delete(handler)),
+                 _ => router = router.route(path, axum::routing::get(handler)),
+             }
+         }
+     }
+     
+     // Add default routes if no routes configured
