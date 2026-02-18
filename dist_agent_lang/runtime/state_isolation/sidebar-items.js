@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["AccessControl","IsolatedContractState","StateIsolationManager","StateMetadata","StateSnapshot"]};

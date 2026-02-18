@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["auto_detect","c","interface","python","rust","security"],"struct":["FFIConfig"]};

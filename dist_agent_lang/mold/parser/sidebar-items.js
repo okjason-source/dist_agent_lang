@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["load_mold_from_path","parse_mold_content"]};

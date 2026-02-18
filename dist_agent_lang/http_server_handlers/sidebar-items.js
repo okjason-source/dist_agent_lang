@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_route_handler_name","get_route_handler_name_and_params","handle_with_middleware"]};

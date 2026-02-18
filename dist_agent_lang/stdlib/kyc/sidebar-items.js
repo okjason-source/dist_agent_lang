@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["check_identity_match","get_compliance_report","get_provider_info","get_verification_levels","get_verification_status","list_providers","revoke_verification","validate_document","verify_identity"],"struct":["KYCLevel","KYCProvider","KYCVerification"]};

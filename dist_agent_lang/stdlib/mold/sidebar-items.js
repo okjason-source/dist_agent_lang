@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_info","list","load","spawn_from","use_mold"]};

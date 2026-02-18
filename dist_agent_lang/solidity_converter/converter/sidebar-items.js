@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["DALAST","DALEvent","DALFunction","DALParameter","Field","Service","SolidityConverter"]};

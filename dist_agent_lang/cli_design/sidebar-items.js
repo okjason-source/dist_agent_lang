@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["TAGLINE","TAGLINE_FULL"],"fn":["help_content","print_banner","version"]};

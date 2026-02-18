@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CallFrequency"],"struct":["InterfaceSelector","ServiceMetadata"]};

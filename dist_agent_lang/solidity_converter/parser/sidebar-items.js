@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ContractKind","Mutability","Visibility"],"struct":["Contract","Enum","Event","Function","Modifier","Parameter","SolidityAST","SolidityParser","StateVariable","Struct"]};

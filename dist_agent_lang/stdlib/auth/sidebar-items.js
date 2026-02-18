@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["authenticate","create_role","create_user","get_role","has_permission","has_role","init_auth_system","is_valid_session","register_bridge","session","validate_bridge_operation","validate_credentials","validate_token"],"struct":["Role","Session"]};

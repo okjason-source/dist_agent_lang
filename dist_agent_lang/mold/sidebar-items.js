@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["create_from_mold_path","create_from_mold_source","list_local_paths","load_mold_from_source","mold_config_to_agent_config","resolve_mold_path","scaffold_mold"],"mod":["config","ipfs","parser"]};

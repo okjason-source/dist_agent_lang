@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ObjectData","Value"],"fn":["create_array_object","create_map_object","create_struct_object","get_object_registry","init_object_registry"],"struct":["ObjectId","ObjectMetadata","ObjectRef","ObjectRegistry"]};

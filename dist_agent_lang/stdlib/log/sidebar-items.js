@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LogLevel"],"fn":["audit","clear","debug","error","get_entries","get_entries_by_level","get_entries_by_source","get_stats","info","initialize_file_logging","warning"],"struct":["LogEntry"]};

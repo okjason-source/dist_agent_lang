@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["init_security_manager","secure_deploy","secure_transfer"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["InterfaceType"],"fn":["json_to_value","value_to_json"],"struct":["FFIInterface"],"trait":["ServiceInterface"]};

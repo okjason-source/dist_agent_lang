@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["ai","call","create_ai_service","create_service_call","create_webhook","embeddings","image_generate","vision_analyze","webhook"],"struct":["AIService","ServiceCall","WebhookConfig"]};

@@ -1,0 +1,113 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/cli_design.rs`."><title>cli_design.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="dist_agent_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">dist_agent_lang/</div>cli_design.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! CLI design: branding, help layout, and AI-ready structure.
+<a href=#2 id=2 data-nosnippet>2</a>//!
+<a href=#3 id=3 data-nosnippet>3</a>//! Organized by use case for intuitive discovery across project types.
+<a href=#4 id=4 data-nosnippet>4</a>//! AI-first: "AI &amp; CODE ASSISTANCE" and "AGENTS &amp; AUTOMATION" appear early.
+<a href=#5 id=5 data-nosnippet>5</a>//! Future: `dal ask "&lt;prompt&gt;"` or `dal "&lt;natural language&gt;"` can be added
+<a href=#6 id=6 data-nosnippet>6</a>//! as primary entry points as AI integration evolves.
+<a href=#7 id=7 data-nosnippet>7</a>
+<a href=#8 id=8 data-nosnippet>8</a>/// Brand tagline — used in banner and help (short form for banner)
+<a href=#9 id=9 data-nosnippet>9</a></span><span class="kw">pub const </span>TAGLINE: <span class="kw-2">&amp;</span>str = <span class="string">"Web, Blockchain &amp; AI"</span>;
+<a href=#10 id=10 data-nosnippet>10</a>
+<a href=#11 id=11 data-nosnippet>11</a><span class="doccomment">/// Full tagline for version output
+<a href=#12 id=12 data-nosnippet>12</a></span><span class="kw">pub const </span>TAGLINE_FULL: <span class="kw-2">&amp;</span>str = <span class="string">"Unified language for Web, Blockchain &amp; AI"</span>;
+<a href=#13 id=13 data-nosnippet>13</a>
+<a href=#14 id=14 data-nosnippet>14</a><span class="doccomment">/// Version string from Cargo
+<a href=#15 id=15 data-nosnippet>15</a></span><span class="kw">pub fn </span>version() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+<a href=#16 id=16 data-nosnippet>16</a>    <span class="macro">env!</span>(<span class="string">"CARGO_PKG_VERSION"</span>)
+<a href=#17 id=17 data-nosnippet>17</a>}
+<a href=#18 id=18 data-nosnippet>18</a>
+<a href=#19 id=19 data-nosnippet>19</a><span class="doccomment">/// Print branded banner (respects --no-banner, --quiet)
+<a href=#20 id=20 data-nosnippet>20</a></span><span class="kw">pub fn </span>print_banner(bin: <span class="kw-2">&amp;</span>str, no_banner: bool, quiet: bool) {
+<a href=#21 id=21 data-nosnippet>21</a>    <span class="kw">if </span>no_banner {
+<a href=#22 id=22 data-nosnippet>22</a>        <span class="kw">return</span>;
+<a href=#23 id=23 data-nosnippet>23</a>    }
+<a href=#24 id=24 data-nosnippet>24</a>    <span class="kw">if </span>quiet {
+<a href=#25 id=25 data-nosnippet>25</a>        <span class="macro">println!</span>(<span class="string">"{} v{} — {}"</span>, bin, version(), TAGLINE);
+<a href=#26 id=26 data-nosnippet>26</a>        <span class="kw">return</span>;
+<a href=#27 id=27 data-nosnippet>27</a>    }
+<a href=#28 id=28 data-nosnippet>28</a>    <span class="macro">println!</span>();
+<a href=#29 id=29 data-nosnippet>29</a>    <span class="macro">println!</span>(<span class="string">"┌──────────────────────────────────────────────────────────────────────┐"</span>);
+<a href=#30 id=30 data-nosnippet>30</a>    <span class="macro">println!</span>(<span class="string">"│  {} v{}  —  {}  │"</span>, bin, version(), TAGLINE_FULL);
+<a href=#31 id=31 data-nosnippet>31</a>    <span class="macro">println!</span>(<span class="string">"└──────────────────────────────────────────────────────────────────────┘"</span>);
+<a href=#32 id=32 data-nosnippet>32</a>    <span class="macro">println!</span>();
+<a href=#33 id=33 data-nosnippet>33</a>}
+<a href=#34 id=34 data-nosnippet>34</a>
+<a href=#35 id=35 data-nosnippet>35</a><span class="doccomment">/// Help content organized by use case (project-type agnostic, AI-forward)
+<a href=#36 id=36 data-nosnippet>36</a></span><span class="kw">pub fn </span>help_content(bin: <span class="kw-2">&amp;</span>str) -&gt; String {
+<a href=#37 id=37 data-nosnippet>37</a>    <span class="macro">format!</span>(
+<a href=#38 id=38 data-nosnippet>38</a>        <span class="string">r#"
+<a href=#39 id=39 data-nosnippet>39</a>GET STARTED
+<a href=#40 id=40 data-nosnippet>40</a>  new &lt;name&gt; [--type &lt;type&gt;]  Create a new project
+<a href=#41 id=41 data-nosnippet>41</a>                              Types: ai, iot, agent, chain, web, cli, lib
+<a href=#42 id=42 data-nosnippet>42</a>  init                       Initialize DAL in current directory
+<a href=#43 id=43 data-nosnippet>43</a>  run &lt;file.dal&gt;             Run a DAL file
+<a href=#44 id=44 data-nosnippet>44</a>  test [file.test.dal]       Run tests
+<a href=#45 id=45 data-nosnippet>45</a>
+<a href=#46 id=46 data-nosnippet>46</a>BUILD &amp; DEVELOP
+<a href=#47 id=47 data-nosnippet>47</a>  check &lt;file.dal&gt;            Type check without executing
+<a href=#48 id=48 data-nosnippet>48</a>  fmt &lt;file.dal&gt; [--check]    Format code (--check for CI)
+<a href=#49 id=49 data-nosnippet>49</a>  lint &lt;file.dal&gt;             Lint for issues
+<a href=#50 id=50 data-nosnippet>50</a>  watch &lt;file.dal&gt;            Re-run on changes
+<a href=#51 id=51 data-nosnippet>51</a>  repl                        Interactive REPL
+<a href=#52 id=52 data-nosnippet>52</a>  bench [file] [--suite name]  Run benchmarks
+<a href=#53 id=53 data-nosnippet>53</a>  profile &lt;file&gt; [--memory]   Profile execution
+<a href=#54 id=54 data-nosnippet>54</a>  optimize &lt;file&gt; [-o out]    Apply AST optimizations
+<a href=#55 id=55 data-nosnippet>55</a>
+<a href=#56 id=56 data-nosnippet>56</a>AI &amp; CODE ASSISTANCE
+<a href=#57 id=57 data-nosnippet>57</a>  ai code "&lt;prompt&gt;"          Generate DAL from natural language
+<a href=#58 id=58 data-nosnippet>58</a>  ai code "&lt;p&gt;" -o &lt;file&gt;     Generate and save to file
+<a href=#59 id=59 data-nosnippet>59</a>  ai explain &lt;file&gt;           Explain what code does
+<a href=#60 id=60 data-nosnippet>60</a>  ai review &lt;file&gt;            Code review with suggestions
+<a href=#61 id=61 data-nosnippet>61</a>  ai audit &lt;file&gt;             Security audit for contracts
+<a href=#62 id=62 data-nosnippet>62</a>  ai test &lt;file&gt;              Generate test cases
+<a href=#63 id=63 data-nosnippet>63</a>  ai fix &lt;file&gt;               Suggest fixes for issues
+<a href=#64 id=64 data-nosnippet>64</a>  ai optimize-gas &lt;file&gt;      Gas optimization suggestions
+<a href=#65 id=65 data-nosnippet>65</a>
+<a href=#66 id=66 data-nosnippet>66</a>AGENTS &amp; AUTOMATION
+<a href=#67 id=67 data-nosnippet>67</a>  agent create &lt;type&gt; &lt;name&gt;  Create AI/system/worker agent
+<a href=#68 id=68 data-nosnippet>68</a>  agent send &lt;from&gt; &lt;to&gt; &lt;msg&gt;  Send message between agents
+<a href=#69 id=69 data-nosnippet>69</a>  agent list                  List agents
+<a href=#70 id=70 data-nosnippet>70</a>  agent mold                  Molds and reusable configs
+<a href=#71 id=71 data-nosnippet>71</a>
+<a href=#72 id=72 data-nosnippet>72</a>BLOCKCHAIN
+<a href=#73 id=73 data-nosnippet>73</a>  chain list                  List supported chains
+<a href=#74 id=74 data-nosnippet>74</a>  chain gas-price &lt;id&gt;        Get gas price
+<a href=#75 id=75 data-nosnippet>75</a>  chain balance &lt;id&gt; &lt;addr&gt;   Get address balance
+<a href=#76 id=76 data-nosnippet>76</a>  chain mint &lt;name&gt;           Mint asset
+<a href=#77 id=77 data-nosnippet>77</a>  chain asset &lt;id&gt;            Get asset info
+<a href=#78 id=78 data-nosnippet>78</a>
+<a href=#79 id=79 data-nosnippet>79</a>DATA &amp; INFRASTRUCTURE
+<a href=#80 id=80 data-nosnippet>80</a>  crypto hash &lt;data&gt; [alg]    Hash (sha256/sha512)
+<a href=#81 id=81 data-nosnippet>81</a>  crypto keygen [alg]         Generate keypair
+<a href=#82 id=82 data-nosnippet>82</a>  db connect &lt;conn&gt;           Test database connection
+<a href=#83 id=83 data-nosnippet>83</a>  db query &lt;conn&gt; "&lt;sql&gt;"     Execute query
+<a href=#84 id=84 data-nosnippet>84</a>  cloud authorize | grant     Cloud RBAC and audit
+<a href=#85 id=85 data-nosnippet>85</a>
+<a href=#86 id=86 data-nosnippet>86</a>DEVICES &amp; IoT
+<a href=#87 id=87 data-nosnippet>87</a>  iot register &lt;name&gt;         Register device
+<a href=#88 id=88 data-nosnippet>88</a>  iot status &lt;device_id&gt;      Device status
+<a href=#89 id=89 data-nosnippet>89</a>  iot ai-predict &lt;device&gt;     Predictive maintenance
+<a href=#90 id=90 data-nosnippet>90</a>
+<a href=#91 id=91 data-nosnippet>91</a>TOOLS
+<a href=#92 id=92 data-nosnippet>92</a>  web &lt;file.dal&gt;              Run web app
+<a href=#93 id=93 data-nosnippet>93</a>  web get &lt;url&gt;               HTTP GET
+<a href=#94 id=94 data-nosnippet>94</a>  convert &lt;input.sol&gt; [-o out] Solidity to DAL
+<a href=#95 id=95 data-nosnippet>95</a>  doc &lt;file.dal&gt; [--open]     Generate documentation
+<a href=#96 id=96 data-nosnippet>96</a>  completions [bash|zsh|fish]  Shell completions
+<a href=#97 id=97 data-nosnippet>97</a>
+<a href=#98 id=98 data-nosnippet>98</a>INFO
+<a href=#99 id=99 data-nosnippet>99</a>  help                        This message
+<a href=#100 id=100 data-nosnippet>100</a>  version                     Version information
+<a href=#101 id=101 data-nosnippet>101</a>
+<a href=#102 id=102 data-nosnippet>102</a>QUICK EXAMPLES
+<a href=#103 id=103 data-nosnippet>103</a>  {0} new my-token --type chain
+<a href=#104 id=104 data-nosnippet>104</a>  {0} ai code "Create an ERC20 token with 1M supply"
+<a href=#105 id=105 data-nosnippet>105</a>  {0} chain gas-price 1
+<a href=#106 id=106 data-nosnippet>106</a>  {0} run app.dal
+<a href=#107 id=107 data-nosnippet>107</a>
+<a href=#108 id=108 data-nosnippet>108</a>For subcommand help: {0} &lt;command&gt; --help
+<a href=#109 id=109 data-nosnippet>109</a>"#</span>,
+<a href=#110 id=110 data-nosnippet>110</a>        bin
+<a href=#111 id=111 data-nosnippet>111</a>    )
+<a href=#112 id=112 data-nosnippet>112</a>}
+</code></pre></div></section></main></body></html>

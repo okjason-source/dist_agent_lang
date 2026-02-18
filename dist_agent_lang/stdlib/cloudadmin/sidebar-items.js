@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["authorize","bridge_trusts","enforce_policy","validate_hybrid_trust"]};

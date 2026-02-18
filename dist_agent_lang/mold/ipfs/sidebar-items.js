@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_IPFS_API"],"fn":["cat","download_mold_from_ipfs","upload_file","upload_mold_to_ipfs"]};

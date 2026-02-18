@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["HashAlgorithm","SignatureAlgorithm"],"fn":["decrypt","decrypt_aes256","encrypt","encrypt_aes256","generate_keypair","hash","hash_bytes","random_hash","sign","verify"]};

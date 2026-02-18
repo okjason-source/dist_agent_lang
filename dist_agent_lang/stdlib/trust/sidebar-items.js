@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AdminLevel"],"fn":["authorize","bridge_trusts","create_admin_context","enforce_policy","get_admin_info","register_admin","remove_admin","validate_hybrid_trust"],"struct":["AdminContext","AdminPolicy"]};

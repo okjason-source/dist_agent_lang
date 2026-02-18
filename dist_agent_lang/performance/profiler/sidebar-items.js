@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_global_profiler"],"struct":["LanguageProfiler","MemoryProfiler","ProfileEvent","ProfileMetrics","Profiler"]};

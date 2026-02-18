@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["IsolationLevel","TransactionError","TransactionEvent","TransactionState"],"struct":["FileBackedStorage","InMemoryStorage","Savepoint","Transaction","TransactionLog","TransactionLogEntry","TransactionManager"],"trait":["StateStorage"],"type":["TransactionEventCallback"]};

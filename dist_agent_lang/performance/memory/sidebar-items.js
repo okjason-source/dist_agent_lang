@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_global_memory_manager"],"struct":["CollectionResult","GarbageCollector","MemoryBlock","MemoryManager","MemoryOptimizer","MemoryStats","ObjectPool","PoolStats","PooledObject"]};
