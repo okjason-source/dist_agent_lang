@@ -446,9 +446,9 @@ impl SecurityLogger {
         log::warn!(target: "security::input", "Invalid input from IP {}: {}", ip, input);
     }
 
-    /// Log successful authentication
-    pub fn log_auth_success(ip: &str, user_id: &str) {
-        log::info!(target: "security::auth", "Successful authentication for user {} from IP {}", user_id, ip);
+    /// Log successful authentication (user_id is not logged to avoid cleartext exposure)
+    pub fn log_auth_success(ip: &str, _user_id: &str) {
+        log::info!(target: "security::auth", "Successful authentication from IP {}", ip);
     }
 
     /// Log suspicious activity

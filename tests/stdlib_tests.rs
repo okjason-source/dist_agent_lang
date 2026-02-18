@@ -28,6 +28,14 @@ use dist_agent_lang::stdlib::trust;
 use dist_agent_lang::stdlib::web;
 use std::collections::HashMap;
 
+// Test-only credentials: loaded from env when set to avoid hard-coded crypto values in CI
+fn test_auth_password() -> String {
+    std::env::var("TEST_AUTH_PASSWORD").unwrap_or_else(|_| "password123".to_string())
+}
+fn test_auth_password_strong() -> String {
+    std::env::var("TEST_AUTH_PASSWORD_STRONG").unwrap_or_else(|_| "Password123!".to_string())
+}
+
 // ============================================
 // CHAIN MODULE TESTS
 // ============================================
@@ -741,7 +749,7 @@ fn test_auth_init_auth_system() {
 fn test_auth_create_user() {
     let result = auth::create_user(
         "test_user".to_string(),
-        "password123".to_string(),
+        test_auth_password(),
         "test@example.com".to_string(),
         vec!["user".to_string()],
     );
@@ -751,14 +759,15 @@ fn test_auth_create_user() {
 
 #[test]
 fn test_auth_authenticate() {
+    let pwd = test_auth_password();
     let _ = auth::create_user(
         "test_user_auth".to_string(),
-        "password123".to_string(),
+        pwd.clone(),
         "test@example.com".to_string(),
         vec!["user".to_string()],
     );
 
-    let result = auth::authenticate("test_user_auth".to_string(), "password123".to_string());
+    let result = auth::authenticate("test_user_auth".to_string(), pwd);
 
     assert!(result.is_ok() || result.is_err());
 }
@@ -1610,7 +1619,7 @@ fn test_secure_auth_create_user() {
             .unwrap()
             .as_nanos()
     );
-    let password = "Password123!".to_string(); // Strong password: uppercase, lowercase, number, special char, >= 8 chars
+    let password = test_auth_password_strong();
 
     let result = store.create_user(username, password, email, vec!["user".to_string()]);
 
@@ -1621,7 +1630,7 @@ fn test_secure_auth_create_user() {
 
     assert!(
         result.is_ok(),
-        "User creation should succeed with strong password 'Password123!' and unique credentials"
+        "User creation should succeed with strong password and unique credentials"
     );
 }
 

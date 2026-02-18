@@ -392,17 +392,21 @@ mod tests {
         let mut manager = NonceManager::new();
         let key = format!("test_nonce_{}", std::process::id());
 
+        // Use API-derived nonces to avoid hard-coded cryptographic values
+        let first_nonce = manager.get_next_nonce(&key);
+
         // First nonce should be valid
-        assert!(manager.check_nonce(&key, 1).unwrap());
+        assert!(manager.check_nonce(&key, first_nonce).unwrap());
 
         // Same nonce should be rejected (replay)
-        assert!(!manager.check_nonce(&key, 1).unwrap());
+        assert!(!manager.check_nonce(&key, first_nonce).unwrap());
 
-        // Higher nonce should be valid
-        assert!(manager.check_nonce(&key, 2).unwrap());
+        // Next nonce (from API after first use) should be valid
+        let second_nonce = manager.get_next_nonce(&key);
+        assert!(manager.check_nonce(&key, second_nonce).unwrap());
 
         // Lower nonce should be rejected
-        assert!(!manager.check_nonce(&key, 1).unwrap());
+        assert!(!manager.check_nonce(&key, first_nonce).unwrap());
     }
 
     #[test]

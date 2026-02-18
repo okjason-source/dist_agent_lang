@@ -4078,15 +4078,9 @@ fn handle_cloud_command(args: &[String]) {
             let resource = &args[3];
             let allowed = cloudadmin::authorize(user_id, operation, resource);
             if allowed {
-                println!(
-                    "✅ Authorized: {} may {} on {}",
-                    user_id, operation, resource
-                );
+                println!("✅ Authorized: [user] may {} on {}", operation, resource);
             } else {
-                println!(
-                    "❌ Denied: {} may not {} on {}",
-                    user_id, operation, resource
-                );
+                println!("❌ Denied: [user] may not {} on {}", operation, resource);
                 std::process::exit(1);
             }
         }
@@ -4121,7 +4115,7 @@ fn handle_cloud_command(args: &[String]) {
             };
             let perms = vec![scope];
             trust::register_admin(user_id.clone(), level, perms);
-            println!("✅ Granted role '{}' to {} (scope recorded)", role, user_id);
+            println!("✅ Granted role '{}' to [user] (scope recorded)", role);
         }
         "revoke" => {
             if args.len() < 2 {
@@ -4131,9 +4125,9 @@ fn handle_cloud_command(args: &[String]) {
             let user_id = &args[1];
             let removed = trust::remove_admin(user_id);
             if removed {
-                println!("✅ Revoked all roles for {}", user_id);
+                println!("✅ Revoked all roles for [user]");
             } else {
-                println!("⚠️  User {} was not in the registry (no change)", user_id);
+                println!("⚠️  User was not in the registry (no change)");
             }
         }
         "roles" => {
@@ -4150,12 +4144,12 @@ fn handle_cloud_command(args: &[String]) {
                         AdminLevel::Moderator => "moderator",
                         AdminLevel::User => "user",
                     };
-                    println!("👤 User: {}", user_id);
+                    println!("👤 User: [redacted]");
                     println!("   Level: {}", level_str);
                     println!("   Permissions: {}", perms.join(", "));
                 }
                 None => {
-                    println!("⚠️  User {} not found in admin registry", user_id);
+                    println!("⚠️  User not found in admin registry");
                     println!("   (Set ADMIN_IDS and ADMIN_LEVEL_<id> or use 'cloud grant' first)");
                 }
             }

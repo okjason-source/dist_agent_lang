@@ -936,7 +936,7 @@ mod tests {
         };
 
         let result = manager.validate_cross_chain_operation(operation);
-        assert!(result.is_ok(), "Operation validation failed: {:?}", result);
+        assert!(result.is_ok(), "Operation validation failed");
     }
 
     #[test]
