@@ -14,13 +14,18 @@ This directory contains GitHub-specific configuration files for the dist_agent_l
 │   └── config.yml          # Issue template configuration
 ├── workflows/              # GitHub Actions workflows
 │   ├── ci.yml             # Continuous Integration
-│   └── release.yml        # Release automation
+│   ├── codeql-analysis.yml # CodeQL security analysis
+│   ├── codeql.yml         # CodeQL configuration
+│   ├── release.yml        # Release automation
+│   └── security.yml       # Security checks
 ├── scripts/               # Utility scripts
 │   └── import_labels.sh   # Script to import GitHub labels
-├── labels.json            # Label definitions (reference)
+├── dependabot.yml         # Dependabot configuration
 ├── pull_request_template.md # PR template
-├── SETUP.md               # Setup instructions
-└── README.md              # This file
+├── CI_TROUBLESHOOTING.md  # CI/CD troubleshooting guide
+├── CODEQL_NOTES.md       # CodeQL setup notes
+├── SECURITY_SETUP.md     # Security setup instructions
+└── git_config.md         # This file
 ```
 
 ## 🚀 Quick Start
@@ -41,7 +46,7 @@ This directory contains GitHub-specific configuration files for the dist_agent_l
    - Create a test issue to verify templates work
    - Create a test PR to verify PR template works
 
-See [SETUP.md](SETUP.md) for detailed instructions.
+See [CI_TROUBLESHOOTING.md](CI_TROUBLESHOOTING.md) and [SECURITY_SETUP.md](SECURITY_SETUP.md) for detailed instructions.
 
 ### For Contributors
 
@@ -71,8 +76,10 @@ See [SETUP.md](SETUP.md) for detailed instructions.
 
 ### Documentation
 
-- **`SETUP.md`**: Step-by-step setup guide
-- **`README.md`**: This file
+- **`CI_TROUBLESHOOTING.md`**: CI/CD troubleshooting guide
+- **`CODEQL_NOTES.md`**: CodeQL setup and configuration notes
+- **`SECURITY_SETUP.md`**: Security setup instructions
+- **`git_config.md`**: This file
 
 ## 🔧 Maintenance
 
@@ -115,7 +122,13 @@ See [SETUP.md](SETUP.md) for detailed instructions.
 - Check repository permissions
 - Try manual creation as fallback
 
-See [SETUP.md](SETUP.md) for detailed troubleshooting.
+### CodeQL Errors
+
+- Check [CODEQL_NOTES.md](CODEQL_NOTES.md) for CodeQL-specific issues
+- Verify permissions in workflow files
+- Ensure CodeQL is enabled in repository settings
+
+See [CI_TROUBLESHOOTING.md](CI_TROUBLESHOOTING.md) for detailed troubleshooting.
 
 ---
 
