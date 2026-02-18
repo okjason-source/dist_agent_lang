@@ -4,7 +4,7 @@
 
 Welcome to **dist_agent_lang** (DAL) - the hybrid language for decentralized smart contracts and centralized services!
 
-This guide will get you from zero to your first deployed contract in **5 minutes**.
+This guide will get you from zero to your first DAL program in **5 minutes**.
 
 ---
 
@@ -24,149 +24,159 @@ export PATH="$PWD/target/release:$PATH"
 ```
 
 ### Option 3: From release binary
-Download from [GitHub Releases](https://github.com/okjason-source/dist_agent_lang/releases) and extract the binary to your PATH.
+Download from [GitHub Releases](https://github.com/okjason-source/dist_agent_lang/releases) and extract the binary (`dal` or `dal.exe`) to your PATH.
 
 ### Verify Installation
 ```bash
-dist_agent_lang --version
+dal --version
 # Expected: dist_agent_lang v1.0.5
 ```
 
 ---
 
-## 🎯 Your First Contract (3 minutes)
+## 🎯 Your First DAL Program (3 minutes)
 
-### Step 1: Create a New Project
+### Step 1: Create a New File
 ```bash
-# Create project directory
-mkdir my-first-contract
-cd my-first-contract
-
-# Create your first contract file
+# Create your first DAL file
 touch hello.dal
 ```
 
-### Step 2: Write Your Contract
+### Step 2: Write Your Program
 Copy this into `hello.dal`:
 
 ```dal
-// hello.dal - Your first smart contract!
+// hello.dal - Your first DAL program!
 
-@contract
-@blockchain("ethereum")
-@version("1.0.0")
-contract HelloWorld {
-    // State variable
-    string public greeting;
+fn main() {
+    let greeting = "Hello, dist_agent_lang!";
+    log::info("hello", greeting);
     
-    // Constructor
-    constructor(string memory _greeting) {
-        greeting = _greeting;
-    }
-    
-    // Update greeting
-    @public
-    function setGreeting(string memory newGreeting) {
-        greeting = newGreeting;
-    }
-    
-    // Get greeting
-    @public
-    @view
-    function getGreeting() -> string {
-        return greeting;
-    }
-    
-    // Greet someone
-    @public
-    @view
-    function greet(string memory name) -> string {
-        return greeting + ", " + name + "!";
-    }
+    let result = add_numbers(10, 20);
+    log::info("result", { "sum": result });
+}
+
+fn add_numbers(a: int, b: int) -> int {
+    return a + b;
 }
 ```
 
-### Step 3: Compile Your Contract
+### Step 3: Run It
 ```bash
-dal compile hello.dal
+dal run hello.dal
 
 # Output:
-# ✅ Compiled successfully: hello.dal
-# 📄 Output: build/HelloWorld.sol (Solidity)
-# 📄 Output: build/HelloWorld.wasm (WASM)
-# 📄 Output: build/HelloWorld.json (ABI)
+# 🚀 Running dist_agent_lang file: hello.dal
+# ✅ Tokenization successful! Generated 25 tokens
+# ✅ Parsing successful! Generated 2 statements
+# [INFO] "hello": "Hello, dist_agent_lang!"
+# [INFO] "result": {"sum": 30}
+# ✅ Execution successful!
 ```
 
-### Step 4: Test Your Contract
+---
+
+## 🌐 Your First Service (2 minutes)
+
+### Create a Service
+Create `greeting.dal`:
+
+```dal
+// greeting.dal - A simple service example
+
+@trust("hybrid")
+service GreetingService {
+    message: string = "Hello";
+    
+    fn initialize(msg: string) {
+        self.message = msg;
+    }
+    
+    fn greet(name: string) -> string {
+        return self.message + ", " + name + "!";
+    }
+    
+    fn get_message() -> string {
+        return self.message;
+    }
+}
+
+// Use the service
+fn main() {
+    let service = GreetingService::new();
+    service.initialize("Welcome");
+    
+    let greeting = service.greet("Alice");
+    log::info("greeting", greeting);
+    // Output: "Welcome, Alice!"
+}
+```
+
+### Run the Service
 ```bash
+dal run greeting.dal
+```
+
+---
+
+## 🧪 Test Your Code
+
+### Run Tests
+```bash
+# Run all tests in current directory
+dal test
+
+# Run tests for a specific file
 dal test hello.dal
+```
 
-# Creates a test environment and runs basic checks
-# ✅ All tests passed!
+### Create a Test File
+Create `hello.test.dal`:
+
+```dal
+// hello.test.dal - Test file
+
+fn test_add_numbers() {
+    let result = add_numbers(5, 3);
+    assert(result == 8, "5 + 3 should equal 8");
+}
+
+fn add_numbers(a: int, b: int) -> int {
+    return a + b;
+}
+```
+
+Run it:
+```bash
+dal test hello.test.dal
 ```
 
 ---
 
-## 🌐 Deploy Your Contract (1 minute)
+## 🔍 Code Quality Tools
 
-### Local Testnet (Fastest)
+### Check Syntax
 ```bash
-# Start local testnet
-dal testnet start
-
-# Deploy
-dal deploy hello.dal --network local --constructor "Hello, World"
-
-# Output:
-# 🚀 Deploying HelloWorld to local testnet...
-# ✅ Deployed at: 0x1234567890abcdef...
-# 📝 Transaction: 0xabcdef1234567890...
+dal check hello.dal
+# Validates syntax and type checking
 ```
 
-### Public Testnet (Sepolia, Mumbai, etc.)
+### Parse (Syntax Validation)
 ```bash
-# Set up your wallet (one-time setup)
-dal wallet create
-
-# Fund your wallet (get test tokens from faucet)
-dal wallet fund --network sepolia
-
-# Deploy to testnet
-dal deploy hello.dal --network sepolia --constructor "Hello, Testnet"
+dal parse hello.dal
+# Shows parse tree and validates syntax
 ```
 
----
-
-## 🧪 Interact with Your Contract
-
-### Using the CLI
+### Format Code
 ```bash
-# Read greeting
-dal call HelloWorld getGreeting --network local
-
-# Update greeting
-dal send HelloWorld setGreeting "Hello, DAL!" --network local
-
-# Greet someone
-dal call HelloWorld greet "Alice" --network local
-# Output: "Hello, DAL!, Alice!"
+dal fmt hello.dal
+# Formats your DAL code consistently
 ```
 
-### Using the Interactive Console
+### Lint Code
 ```bash
-# Start interactive console
-dal console --network local
-
-# In console:
-> let contract = await connect("HelloWorld");
-> await contract.getGreeting();
-"Hello, World"
-
-> await contract.setGreeting("Bonjour");
-Transaction: 0x...
-
-> await contract.greet("Bob");
-"Bonjour, Bob!"
+dal lint hello.dal
+# Checks for common issues and best practices
 ```
 
 ---
@@ -175,32 +185,29 @@ Transaction: 0x...
 
 Congratulations! You've just:
 - ✅ Installed dist_agent_lang
-- ✅ Written your first smart contract
-- ✅ Compiled it to multiple targets
-- ✅ Deployed to a local testnet
-- ✅ Interacted with your contract
+- ✅ Written your first DAL program
+- ✅ Created a service
+- ✅ Run tests
+- ✅ Used code quality tools
 
 ### Continue Learning
 
-1. **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Deploy to production networks
-2. **[Best Practices](BEST_PRACTICES.md)** - Write secure, efficient contracts
-3. **[Tutorials](tutorials/)** - Build real-world applications
-4. **[API Reference](API_REFERENCE.md)** - Explore the full feature set
+1. **[Syntax Reference](../syntax.md)** - Learn DAL syntax in detail
+2. **[Attributes Reference](../attributes.md)** - Understand `@trust`, `@secure`, `@chain`, etc.
+3. **[Standard Library](../STDLIB_REFERENCE.md)** - Explore 22 stdlib modules
+4. **[CLI Reference](../CLI_QUICK_REFERENCE.md)** - Complete command reference
+5. **[Examples](../../examples/)** - See real-world code examples
 
 ### Try More Examples
 
 ```bash
-# DeFi Token
-dal new token --template erc20
-cd token && dal compile . && dal deploy .
+# View available examples
+ls examples/
 
-# NFT Marketplace
-dal new marketplace --template nft
-cd marketplace && dal compile . && dal deploy .
-
-# Cross-Chain Bridge
-dal new bridge --template cross-chain
-cd bridge && dal compile . && dal deploy .
+# Run example programs
+dal run examples/hello_world_demo.dal
+dal run examples/smart_contract.dal
+dal run examples/ai_agent_examples.dal
 ```
 
 ---
@@ -214,104 +221,123 @@ cargo clean
 cargo build --release
 ```
 
-### Contract Compilation Fails
+### Syntax Errors
 ```bash
 # Check syntax
 dal check hello.dal
 
-# Verbose output
-dal compile hello.dal --verbose
+# Parse with verbose output
+dal parse hello.dal
 ```
 
-### Deployment Fails
+### Runtime Errors
 ```bash
-# Check network status
-dal network status --network local
-
-# Check wallet balance
-dal wallet balance
-
-# Increase gas limit
-dal deploy hello.dal --gas-limit 5000000
+# Run with verbose logging
+RUST_LOG=debug dal run hello.dal
 ```
 
 ---
 
 ## 💡 Quick Tips
 
-### 1. Use Templates
+### 1. Use the REPL
 ```bash
-dal new my-project --template [starter|token|nft|defi|dao]
+dal repl
+# Interactive shell for testing code snippets
 ```
 
-### 2. Hot Reload During Development
+### 2. Watch Mode
 ```bash
-dal watch hello.dal --auto-test
-# Auto-compiles and tests on file save
+dal watch hello.dal
+# Auto-runs on file save
 ```
 
-### 3. Format Your Code
+### 3. Create New Projects
 ```bash
-dal format hello.dal
-# Applies consistent formatting
+dal new my-project
+# Creates a new project structure
+
+dal new my-ai --type ai
+# Creates an AI-focused project
 ```
 
-### 4. Lint Your Code
+### 4. Format Before Committing
 ```bash
-dal lint hello.dal
-# Checks for common issues and best practices
-```
-
-### 5. Generate Documentation
-```bash
-dal doc hello.dal
-# Generates HTML documentation from your comments
+dal fmt hello.dal
+# Ensures consistent code style
 ```
 
 ---
 
 ## 🎓 Key Concepts (30-second overview)
 
+### Services
+Services are the main building blocks in DAL:
+
+```dal
+@trust("hybrid")
+@chain("ethereum")
+service MyService {
+    count: int = 0;
+    
+    fn increment() {
+        self.count = self.count + 1;
+    }
+}
+```
+
 ### Attributes
 Use attributes to control behavior:
-- `@contract` - Mark as a contract
-- `@public` - Public function
-- `@private` - Private function
-- `@view` - Read-only (no state changes)
-- `@async` - Asynchronous function
-- `@blockchain("ethereum")` - Target blockchain
+- `@trust("hybrid")` - Hybrid trust model
+- `@trust("decentralized")` - Fully decentralized
+- `@trust("centralized")` - Centralized trust
+- `@chain("ethereum")` - Target blockchain
+- `@secure` - Enable security features
+- `@txn` - Transaction context
+- `@limit(n)` - Resource limits
+
+### Standard Library Namespaces
+DAL provides 22 standard library modules:
+
+```dal
+// Logging
+log::info("category", "message");
+log::error("category", "error");
+
+// Authentication
+auth::create_user("alice", "password", "email");
+auth::authenticate("alice", "password");
+
+// Blockchain
+chain::deploy(1, "Contract", []);
+chain::call(1, "0x...", "function", []);
+
+// Crypto
+crypto::hash("data", "SHA256");
+crypto::sign("data", "private_key", SignatureAlgorithm::ECDSA);
+
+// And many more: oracle::, service::, database::, web::, ai::, etc.
+```
 
 ### Multi-Chain Support
 ```dal
-@contract
-@blockchain("ethereum")  // Deploy to Ethereum
-@blockchain("solana")    // AND Solana
-@blockchain("polygon")   // AND Polygon
-contract MultiChain {
-    // Automatically compiled for all chains!
+@trust("hybrid")
+@chain("ethereum", "polygon", "arbitrum")
+service MultiChainService {
+    // Automatically works across all specified chains!
 }
 ```
 
 ### Built-in Security
 ```dal
-@contract
-@reentrancy_guard        // Automatic reentrancy protection
-@safe_math               // Automatic overflow protection
-contract Secure {
-    // Your code is secure by default!
-}
-```
-
-### Oracle Integration
-```dal
-@contract
-contract PriceFeed {
-    @public
-    function getBTCPrice() -> int {
-        // Fetch from oracle with built-in security
-        let price = oracle::fetch("chainlink", "BTC/USD");
-        return price;
-    }
+@trust("hybrid")
+@secure
+service SecureService {
+    // Automatic:
+    // - Reentrancy protection
+    // - Safe math (overflow protection)
+    // - Audit logging
+    // - Capability checks
 }
 ```
 
@@ -325,19 +351,20 @@ contract PriceFeed {
 | **Type Safety** | ✅ Strong | ⚠️ Medium | ✅ Strong |
 | **Security** | ✅ Built-in | ⚠️ Manual | ⚠️ Manual |
 | **Oracle Access** | ✅ Native | ❌ External | ❌ External |
-| **Async/Await** | ✅ Native | ❌ | ✅ Native |
+| **AI Integration** | ✅ Native | ❌ | ⚠️ External |
+| **Hybrid Trust** | ✅ Native | ❌ | ❌ |
 | **Learning Curve** | 🟢 Moderate | 🟢 Easy | 🔴 Steep |
-| **Deployment** | ✅ Multi-target | ⚠️ EVM only | ⚠️ Single target |
+| **Agent Support** | ✅ First-class | ❌ | ⚠️ External |
 
 ---
 
 ## 🤝 Get Help
 
 - 📖 **Documentation**: [Full Docs](../Documentation.md)
-- 💬 **Discord**: [Join Community](#)
+- 📖 **Public Index**: [Public Documentation Index](../PUBLIC_DOCUMENTATION_INDEX.md)
+- 💬 **Discord**: [Join Community](https://discord.gg/tu7tg9eN)
 - 🐛 **Issues**: [GitHub Issues](https://github.com/okjason-source/dist_agent_lang/issues)
-- 📧 **Email**: support@dist-agent-lang.org
-- 🎓 **Tutorials**: [Learn by Building](tutorials/)
+- 📧 **Email**: jason.dinh.developer@gmail.com
 
 ---
 
@@ -348,21 +375,29 @@ Check out complete examples in the `examples/` directory:
 ```bash
 cd examples/
 
-# Token standards
-./01_hello_world.dal         # Simple greeting contract
-./02_nft_marketplace.dal     # NFT marketplace with royalties
-./03_trading_bot.dal         # Automated trading bot
-./04_error_handling.dal      # Error handling patterns
+# Core language features
+dal run hello_world_demo.dal
+dal run enhanced_language_features.dal
 
-# Advanced examples
-./defi_nft_rwa_contract.dal  # DeFi + NFT + RWA integration
-./multi_chain_operations.dal # Cross-chain operations
-./enhanced_language_features.dal # All language features
+# Services and smart contracts
+dal run smart_contract.dal
+dal run defi_nft_rwa_contract.dal
+
+# AI and agents
+dal run ai_agent_examples.dal
+dal run agent_system_demo.dal
+
+# Multi-chain
+dal run multi_chain_operations.dal
+dal run cross_chain_patterns.dal
+
+# Web and APIs
+dal run simple_web_api_example.dal
+dal run web_framework_examples.dal
 ```
 
 ---
 
 **🎉 Welcome to the DAL community! Let's build the future of decentralized applications together.**
 
-**Next:** [Deployment Guide →](DEPLOYMENT_GUIDE.md)
-
+**Next:** [Syntax Reference →](../syntax.md) | [CLI Reference →](../CLI_QUICK_REFERENCE.md) | [Standard Library →](../STDLIB_REFERENCE.md)
