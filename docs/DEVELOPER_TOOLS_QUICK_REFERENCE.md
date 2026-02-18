@@ -54,16 +54,6 @@ dal help                      # Show all commands
 dal version                   # Show version
 ```
 
-## Project Molds (Templates)
-
-| Mold | Use Case | Generated Files |
-|------|----------|-----------------|
-| **default** | General purpose | `main.dal`, `README.md` |
-| **contract** | Smart contracts | `contract.dal`, `README.md` |
-| **web** | Web applications | `web.dal`, `README.md` |
-| **cli** | CLI tools | `cli.dal`, `README.md` |
-| **lib** | Libraries | `lib.dal`, `README.md` |
-
 ## Typical Workflows
 
 ### Starting a New Project
@@ -138,4 +128,3 @@ dal optimize my_app.dal       # Apply optimizations
 **Status:** Phase 0 Complete ✅  
 **Commands:** 16 total (8 new)  
 **Build:** Compiling successfully  
-**Ready for:** Phase 1 implementation
