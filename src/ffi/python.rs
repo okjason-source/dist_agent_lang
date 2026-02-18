@@ -36,35 +36,30 @@ impl DistAgentLangRuntime {
         }
     }
 
-    /// Call a service function
-    fn call_function(
-        &mut self,
-        service_name: String,
-        function_name: String,
-        args: Vec<PyValue>,
-    ) -> PyResult<PyValue> {
-        // Convert Python values to dist_agent_lang values
+    /// Call a registered function by name
+    fn call_function(&mut self, name: String, args: Vec<PyObject>) -> PyResult<PyObject> {
         let dal_args: Vec<Value> = args
             .into_iter()
-            .map(|v| python_to_dal_value(v))
+            .map(python_to_dal_value)
             .collect::<Result<Vec<Value>, _>>()
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e))?;
 
-        // Execute function
         let result = self
             .runtime
-            .execute_function(&service_name, &function_name, &dal_args)
+            .call_function(&name, &dal_args)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
 
-        // Convert result back to Python
         Ok(dal_to_python_value(result))
     }
 
     /// Execute dist_agent_lang source code
-    fn execute(&mut self, source: String) -> PyResult<PyValue> {
+    fn execute(&mut self, source: String) -> PyResult<PyObject> {
+        let program = crate::parse_source(&source)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PySyntaxError, _>(format!("{}", e)))?;
+
         let result = self
             .runtime
-            .execute_source(&source)
+            .execute(&program)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
 
         Ok(dal_to_python_value(result))
@@ -81,52 +76,50 @@ fn hash_data(data: Vec<u8>, algorithm: Option<String>) -> PyResult<String> {
     Ok(result)
 }
 
-/// Sign data using dist_agent_lang crypto
+/// Sign data using dist_agent_lang crypto (key as hex/base64 string)
 #[cfg(feature = "python-ffi")]
 #[pyfunction]
-fn sign_data(data: Vec<u8>, private_key: Vec<u8>) -> PyResult<Vec<u8>> {
+fn sign_data(data: Vec<u8>, private_key: String) -> PyResult<String> {
     let signature = crate::stdlib::crypto_signatures::sign(&data, &private_key)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{}", e)))?;
     Ok(signature)
 }
 
-/// Verify signature using dist_agent_lang crypto
+/// Verify signature using dist_agent_lang crypto (signature and key as hex/base64 strings)
 #[cfg(feature = "python-ffi")]
 #[pyfunction]
-fn verify_signature(data: Vec<u8>, signature: Vec<u8>, public_key: Vec<u8>) -> PyResult<bool> {
+fn verify_signature(data: Vec<u8>, signature: String, public_key: String) -> PyResult<bool> {
     let valid = crate::stdlib::crypto_signatures::verify(&data, &signature, &public_key)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{}", e)))?;
     Ok(valid)
 }
 
-// Type aliases for Python values
 #[cfg(feature = "python-ffi")]
-type PyValue = PyObject;
-
-#[cfg(feature = "python-ffi")]
-fn python_to_dal_value(py_value: PyValue) -> Result<Value, String> {
+fn python_to_dal_value(py_value: PyObject) -> Result<Value, String> {
     Python::with_gil(|py| {
-        if py_value.is_instance_of::<pyo3::types::PyInt>(py)? {
-            let i: i64 = py_value.extract(py)?;
-            Ok(Value::Int(i))
-        } else if py_value.is_instance_of::<pyo3::types::PyFloat>(py)? {
-            let f: f64 = py_value.extract(py)?;
-            Ok(Value::Float(f))
-        } else if py_value.is_instance_of::<pyo3::types::PyString>(py)? {
-            let s: String = py_value.extract(py)?;
-            Ok(Value::String(s))
-        } else if py_value.is_instance_of::<pyo3::types::PyBool>(py)? {
-            let b: bool = py_value.extract(py)?;
+        let value = py_value.as_ref(py);
+        if value.is_instance_of::<pyo3::types::PyBool>() {
+            let b: bool = value.extract().map_err(|e| format!("{}", e))?;
             Ok(Value::Bool(b))
-        } else if py_value.is_none(py) {
+        } else if value.is_instance_of::<pyo3::types::PyInt>() {
+            let i: i64 = value.extract().map_err(|e| format!("{}", e))?;
+            Ok(Value::Int(i))
+        } else if value.is_instance_of::<pyo3::types::PyFloat>() {
+            let f: f64 = value.extract().map_err(|e| format!("{}", e))?;
+            Ok(Value::Float(f))
+        } else if value.is_instance_of::<pyo3::types::PyString>() {
+            let s: String = value.extract().map_err(|e| format!("{}", e))?;
+            Ok(Value::String(s))
+        } else if value.is_none() {
             Ok(Value::Null)
-        } else if py_value.is_instance_of::<pyo3::types::PyList>(py)? {
-            let list: Vec<PyObject> = py_value.extract(py)?;
+        } else if value.is_instance_of::<pyo3::types::PyList>() {
+            let list: Vec<PyObject> = value.extract().map_err(|e| format!("{}", e))?;
             let values: Result<Vec<Value>, String> =
-                list.into_iter().map(|v| python_to_dal_value(v)).collect();
+                list.into_iter().map(python_to_dal_value).collect();
             Ok(Value::Array(values?))
-        } else if py_value.is_instance_of::<pyo3::types::PyDict>(py)? {
-            let dict: std::collections::HashMap<String, PyObject> = py_value.extract(py)?;
+        } else if value.is_instance_of::<pyo3::types::PyDict>() {
+            let dict: std::collections::HashMap<String, PyObject> =
+                value.extract().map_err(|e| format!("{}", e))?;
             let mut value_map = std::collections::HashMap::new();
             for (k, v) in dict {
                 value_map.insert(k, python_to_dal_value(v)?);
@@ -139,33 +132,33 @@ fn python_to_dal_value(py_value: PyValue) -> Result<Value, String> {
 }
 
 #[cfg(feature = "python-ffi")]
-fn dal_to_python_value(value: Value) -> PyValue {
+fn dal_to_python_value(value: Value) -> PyObject {
     Python::with_gil(|py| match value {
         Value::Int(i) => i.into_py(py),
         Value::Float(f) => f.into_py(py),
-        Value::String(s) => s.into_py(py),
+        Value::String(s) | Value::Closure(s) => s.into_py(py),
         Value::Bool(b) => b.into_py(py),
         Value::Null => py.None(),
-        Value::Array(arr) => {
+        Value::Array(items) | Value::List(items) => {
             let py_list = pyo3::types::PyList::empty(py);
-            for v in arr {
+            for v in items {
                 py_list.append(dal_to_python_value(v)).unwrap();
             }
             py_list.into()
         }
-        Value::Map(map) | Value::Struct(_, map) => {
+        Value::Map(map) => {
             let py_dict = pyo3::types::PyDict::new(py);
             for (k, v) in map {
                 py_dict.set_item(k, dal_to_python_value(v)).unwrap();
             }
             py_dict.into()
         }
-        Value::List(list) => {
-            let py_list = pyo3::types::PyList::empty(py);
-            for v in list {
-                py_list.append(dal_to_python_value(v)).unwrap();
+        Value::Struct(_, fields) => {
+            let py_dict = pyo3::types::PyDict::new(py);
+            for (k, v) in fields {
+                py_dict.set_item(k, dal_to_python_value(v)).unwrap();
             }
-            py_list.into()
+            py_dict.into()
         }
         Value::Set(set) => {
             let py_list = pyo3::types::PyList::empty(py);
