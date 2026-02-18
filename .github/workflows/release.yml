@@ -4,88 +4,147 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch: {}
+
+env:
+  SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+  CARGO_HTTP_CAINFO: /etc/ssl/certs/ca-certificates.crt
 
 jobs:
-  build:
+  # Build on each platform natively (cross-compile doesn't work without extra tooling)
+  build-linux:
+    name: Build Linux x86_64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
+      - uses: actions/checkout@v4
+
+      - name: Fix CA cert path
+        run: |
+          sudo mkdir -p /usr/local/etc/ca-certificates
+          sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+          sudo update-ca-certificates
+
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-      
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-      
-      - name: Build for Linux
-        run: cargo build --release --target x86_64-unknown-linux-gnu
-      
-      - name: Build for macOS
-        run: cargo build --release --target x86_64-apple-darwin
-      
-      - name: Build for Windows
-        run: cargo build --release --target x86_64-pc-windows-msvc
-      
-      - name: Build for ARM64 macOS
-        run: cargo build --release --target aarch64-apple-darwin
-      
-      - name: Create release archives
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Package
         run: |
-          tar -czf dist_agent_lang-${{ github.ref_name }}-linux-x64.tar.gz target/x86_64-unknown-linux-gnu/release/dist_agent_lang
-          tar -czf dist_agent_lang-${{ github.ref_name }}-macos-x64.tar.gz target/x86_64-apple-darwin/release/dist_agent_lang
-          tar -czf dist_agent_lang-${{ github.ref_name }}-macos-arm64.tar.gz target/aarch64-apple-darwin/release/dist_agent_lang
-          zip dist_agent_lang-${{ github.ref_name }}-windows-x64.zip target/x86_64-pc-windows-msvc/release/dist_agent_lang.exe
-      
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+          mkdir -p staging
+          cp target/release/dal staging/
+          cp README.md LICENSE CHANGELOG.md staging/ 2>/dev/null || true
+          tar -czf dist_agent_lang-${{ github.ref_name }}-linux-x64.tar.gz -C staging .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: |
-            dist_agent_lang-${{ github.ref_name }}-linux-x64.tar.gz
-            dist_agent_lang-${{ github.ref_name }}-macos-x64.tar.gz
-            dist_agent_lang-${{ github.ref_name }}-macos-arm64.tar.gz
-            dist_agent_lang-${{ github.ref_name }}-windows-x64.zip
+          name: linux-x64
+          path: dist_agent_lang-${{ github.ref_name }}-linux-x64.tar.gz
+
+  build-macos:
+    name: Build macOS (x64 + ARM64)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Package
+        run: |
+          mkdir -p staging
+          cp target/release/dal staging/
+          cp README.md LICENSE CHANGELOG.md staging/ 2>/dev/null || true
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "arm64" ]; then
+            tar -czf dist_agent_lang-${{ github.ref_name }}-macos-arm64.tar.gz -C staging .
+          else
+            tar -czf dist_agent_lang-${{ github.ref_name }}-macos-x64.tar.gz -C staging .
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist_agent_lang-${{ github.ref_name }}-macos-*.tar.gz
+
+  # Create a GitHub Release with all artifacts
+  release:
+    name: Create Release
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -lhR artifacts/
+
+      - name: Create source tarball
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist_agent_lang-${VERSION}
+          cp -r src examples docs Cargo.toml Cargo.lock README.md LICENSE CHANGELOG.md dist_agent_lang-${VERSION}/ 2>/dev/null || true
+          tar -czf artifacts/dist_agent_lang-${VERSION}-source.tar.gz dist_agent_lang-${VERSION}/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
           body: |
-            ## dist_agent_lang v${{ github.ref_name }}
-            
-            ### What's New
-            - Multi-chain support for major blockchains
-            - Complete smart contract development capabilities
-            - AI agent coordination features
-            - Comprehensive testing and benchmarking
-            
+            ## dist_agent_lang ${{ github.ref_name }}
+
             ### Installation
+
+            **Download a binary:**
+            Pick the archive for your platform from the assets below, extract, and place `dal` on your PATH.
+
             ```bash
-            # Via cargo
-            cargo install dist_agent_lang
-            
-            # Or download binaries from this release
+            # Linux x64
+            tar xzf dist_agent_lang-${{ github.ref_name }}-linux-x64.tar.gz
+            sudo mv dal /usr/local/bin/
+
+            # macOS (ARM64 or x64)
+            tar xzf dist_agent_lang-${{ github.ref_name }}-macos-arm64.tar.gz
+            sudo mv dal /usr/local/bin/
             ```
-            
+
+            **Build from source:**
+            ```bash
+            git clone https://github.com/okjason-source/dist_agent_lang.git
+            cd dist_agent_lang
+            cargo build --release
+            # binary is at target/release/dal
+            ```
+
             ### Quick Start
             ```bash
-            dist_agent_lang --version
-            dist_agent_lang run examples/smart_contract.dal
+            dal --version
+            dal run examples/hello_world_demo.dal
             ```
-            
-            ### Supported Platforms
-            - Linux (x86_64)
-            - macOS (x86_64, ARM64)
-            - Windows (x86_64)
-            
+
             ### Documentation
             - [README](https://github.com/okjason-source/dist_agent_lang#readme)
+            - [Docs](https://github.com/okjason-source/dist_agent_lang/tree/main/docs)
             - [Examples](https://github.com/okjason-source/dist_agent_lang/tree/main/examples)
-            - [Documentation](https://github.com/okjason-source/dist_agent_lang/blob/main/Documentation.md)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -5,7 +5,7 @@ edition = "2021"
 description = "A hybrid programming language for decentralized and centralized network integration"
 authors = ["OK Jason <jason.dinh.developer@gmail.com>"]
 license = "MIT"
-repository = "https://github.com/dist_agent_lang/dist_agent_lang"
+repository = "https://github.com/okjason-source/dist_agent_lang"
 keywords = ["programming-language", "blockchain", "smart-contracts", "distributed-systems"]
 categories = ["development-tools"]
 

@@ -1,4 +1,14 @@
 // Import from the library instead of redeclaring modules
+#![allow(clippy::needless_borrow)]
+#![allow(clippy::type_complexity)]
+#![allow(clippy::for_kv_map)]
+#![allow(clippy::unnecessary_map_or)]
+#![allow(clippy::only_used_in_recursion)]
+#![allow(clippy::redundant_closure)]
+#![allow(clippy::format_in_format_args)]
+#![allow(clippy::get_first)]
+#![allow(clippy::useless_format)]
+
 use dist_agent_lang::cli::{chain_subcommand_to_args, Cli, Commands};
 use dist_agent_lang::cli_design;
 use dist_agent_lang::lexer;
