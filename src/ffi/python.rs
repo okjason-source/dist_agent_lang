@@ -11,7 +11,7 @@ use pyo3::prelude::*;
 /// Python FFI module for dist_agent_lang
 #[cfg(feature = "python-ffi")]
 #[pymodule]
-fn dist_agent_lang(_py: Python, m: &PyModule) -> PyResult<()> {
+fn dist_agent_lang(m: &pyo3::Bound<'_, pyo3::types::PyModule>) -> PyResult<()> {
     m.add_class::<DistAgentLangRuntime>()?;
     m.add_function(wrap_pyfunction!(hash_data, m)?)?;
     m.add_function(wrap_pyfunction!(sign_data, m)?)?;
@@ -97,7 +97,7 @@ fn verify_signature(data: Vec<u8>, signature: String, public_key: String) -> PyR
 #[cfg(feature = "python-ffi")]
 fn python_to_dal_value(py_value: PyObject) -> Result<Value, String> {
     Python::with_gil(|py| {
-        let value = py_value.as_ref(py);
+        let value = py_value.bind(py);
         if value.is_instance_of::<pyo3::types::PyBool>() {
             let b: bool = value.extract().map_err(|e| format!("{}", e))?;
             Ok(Value::Bool(b))
@@ -132,45 +132,46 @@ fn python_to_dal_value(py_value: PyObject) -> Result<Value, String> {
 }
 
 #[cfg(feature = "python-ffi")]
+#[allow(deprecated)] // IntoPy still works; IntoPyObject migration can follow
 fn dal_to_python_value(value: Value) -> PyObject {
     Python::with_gil(|py| match value {
         Value::Int(i) => i.into_py(py),
         Value::Float(f) => f.into_py(py),
         Value::String(s) | Value::Closure(s) => s.into_py(py),
         Value::Bool(b) => b.into_py(py),
-        Value::Null => py.None(),
+        Value::Null => py.None().unbind(),
         Value::Array(items) | Value::List(items) => {
             let py_list = pyo3::types::PyList::empty(py);
             for v in items {
                 py_list.append(dal_to_python_value(v)).unwrap();
             }
-            py_list.into()
+            py_list.unbind()
         }
         Value::Map(map) => {
             let py_dict = pyo3::types::PyDict::new(py);
             for (k, v) in map {
                 py_dict.set_item(k, dal_to_python_value(v)).unwrap();
             }
-            py_dict.into()
+            py_dict.unbind()
         }
         Value::Struct(_, fields) => {
             let py_dict = pyo3::types::PyDict::new(py);
             for (k, v) in fields {
                 py_dict.set_item(k, dal_to_python_value(v)).unwrap();
             }
-            py_dict.into()
+            py_dict.unbind()
         }
         Value::Set(set) => {
             let py_list = pyo3::types::PyList::empty(py);
             for v in set {
                 py_list.append(v).unwrap();
             }
-            py_list.into()
+            py_list.unbind()
         }
         Value::Result(ok, _err) => dal_to_python_value(*ok),
         Value::Option(opt) => match opt {
             Some(v) => dal_to_python_value(*v),
-            None => py.None(),
+            None => py.None().unbind(),
         },
     })
 }
