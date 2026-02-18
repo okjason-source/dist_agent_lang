@@ -1,6 +1,6 @@
 # `@advanced_security` Blocking Behavior
 
-## Yes, It Blocks Unprotected Execution Code
+## How It Blocks Unprotected Execution Code
 
 The `@advanced_security` attribute **DOES block** execution code that:
 1. Contains MEV-related patterns (arbitrage, frontrun, sandwich, etc.)
