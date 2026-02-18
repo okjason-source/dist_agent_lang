@@ -139,7 +139,7 @@
 <a href=#139 id=139 data-nosnippet>139</a>        Value::Float(f) =&gt; f.into_py(py),
 <a href=#140 id=140 data-nosnippet>140</a>        Value::String(s) | Value::Closure(s) =&gt; s.into_py(py),
 <a href=#141 id=141 data-nosnippet>141</a>        Value::Bool(b) =&gt; b.into_py(py),
-<a href=#142 id=142 data-nosnippet>142</a>        Value::Null =&gt; py.<span class="prelude-val">None</span>().unbind(),
+<a href=#142 id=142 data-nosnippet>142</a>        Value::Null =&gt; py.<span class="prelude-val">None</span>(),
 <a href=#143 id=143 data-nosnippet>143</a>        Value::Array(items) | Value::List(items) =&gt; {
 <a href=#144 id=144 data-nosnippet>144</a>            <span class="kw">let </span>py_list = pyo3::types::PyList::empty(py);
 <a href=#145 id=145 data-nosnippet>145</a>            <span class="kw">for </span>v <span class="kw">in </span>items {
@@ -171,7 +171,7 @@
 <a href=#171 id=171 data-nosnippet>171</a>        Value::Result(ok, _err) =&gt; dal_to_python_value(<span class="kw-2">*</span>ok),
 <a href=#172 id=172 data-nosnippet>172</a>        Value::Option(opt) =&gt; <span class="kw">match </span>opt {
 <a href=#173 id=173 data-nosnippet>173</a>            <span class="prelude-val">Some</span>(v) =&gt; dal_to_python_value(<span class="kw-2">*</span>v),
-<a href=#174 id=174 data-nosnippet>174</a>            <span class="prelude-val">None </span>=&gt; py.<span class="prelude-val">None</span>().unbind(),
+<a href=#174 id=174 data-nosnippet>174</a>            <span class="prelude-val">None </span>=&gt; py.<span class="prelude-val">None</span>(),
 <a href=#175 id=175 data-nosnippet>175</a>        },
 <a href=#176 id=176 data-nosnippet>176</a>    })
 <a href=#177 id=177 data-nosnippet>177</a>}
