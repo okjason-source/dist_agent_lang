@@ -1,9 +1,4 @@
 # Cargo configuration for dist_agent_lang
-# This fixes SSL certificate issues on macOS
-
-[http]
-# Point to the correct CA certificates bundle
-cainfo = "/usr/local/etc/ca-certificates/cert.pem"
 
 [build]
 # Incremental compilation for faster builds
