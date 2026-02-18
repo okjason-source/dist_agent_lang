@@ -13,6 +13,12 @@ pub struct TestRunner {
     pub stats: TestStats,
 }
 
+impl Default for TestRunner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TestRunner {
     pub fn new() -> Self {
         Self {
@@ -273,7 +279,7 @@ impl TestRunner {
         report.push_str("Test Report\n");
         report.push_str("===========\n\n");
 
-        report.push_str(&"Summary:\n".to_string());
+        report.push_str("Summary:\n");
         report.push_str(&format!("  Total: {}\n", self.stats.total_tests));
         report.push_str(&format!("  Passed: {}\n", self.stats.passed));
         report.push_str(&format!("  Failed: {}\n", self.stats.failed));

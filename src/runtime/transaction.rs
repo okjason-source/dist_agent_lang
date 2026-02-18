@@ -301,7 +301,7 @@ impl TransactionLog {
         if let Some(ref mut file) = self.file {
             // Write as line-delimited JSON
             serde_json::to_writer(&mut *file, &entry)
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+                .map_err(io::Error::other)?;
             file.write_all(b"\n")?;
             file.flush()?;
         }
@@ -443,7 +443,7 @@ impl FileBackedStorage {
 
         let writer = BufWriter::new(file);
         serde_json::to_writer_pretty(writer, &self.state)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            .map_err(io::Error::other)?;
 
         // Atomic rename (on Unix; on Windows this may fail if file is open)
         fs::rename(&temp_path, &self.file_path)?;

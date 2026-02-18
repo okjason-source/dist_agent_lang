@@ -7,6 +7,7 @@ on:
     branches: [ main ]
   release:
     types: [ published ]
+  workflow_dispatch: {}   # Run manually from Actions tab
 
 env:
   CARGO_TERM_COLOR: always

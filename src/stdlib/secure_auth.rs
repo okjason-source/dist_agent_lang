@@ -101,7 +101,7 @@ impl PasswordHasher {
     fn hmac_sha256(key: &[u8], data: &[u8]) -> Vec<u8> {
         const BLOCK_SIZE: usize = 64; // SHA256 block size
 
-        let mut key_padded = vec![0u8; BLOCK_SIZE];
+        let mut key_padded = [0u8; BLOCK_SIZE];
         if key.len() > BLOCK_SIZE {
             let mut hasher = Sha256::new();
             hasher.update(key);
