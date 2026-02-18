@@ -57,7 +57,10 @@ impl NonceManager {
 
     /// Get next expected nonce for an address (1 when none seen yet; otherwise last_seen + 1).
     pub fn get_next_nonce(&self, key: &str) -> u64 {
-        self.nonces.get(key).map(|&n| n + 1).unwrap_or(INITIAL_NONCE_VALUE)
+        self.nonces
+            .get(key)
+            .map(|&n| n + 1)
+            .unwrap_or(INITIAL_NONCE_VALUE)
     }
 }
 
