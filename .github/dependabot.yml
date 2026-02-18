@@ -25,4 +25,4 @@ updates:
           - "criterion*"
       security-updates:
         update-types:
-          - "security"
+          - "patch"

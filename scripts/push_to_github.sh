@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
-# push_to_github.sh — Commit and push dist_agent_lang to GitHub (user-facing only).
+# push_to_github.sh — Commit (if needed) and push dist_agent_lang to GitHub (user-facing only).
+# Use for initial push and for ongoing updates: run after making changes to sync to GitHub.
 #
 # Usage: run from dist_agent_lang:
 #   cd dist_agent_lang && ./scripts/push_to_github.sh
 # Or from repo root:
 #   ./dist_agent_lang/scripts/push_to_github.sh
+#
+# Optional: custom commit message
+#   ./scripts/push_to_github.sh "Fix dependabot config"
 #
 # Remote: https://github.com/okjason-source/dist_agent_lang
 # Excludes: docs/development, docs/project, docs/beta, docs/testing,
@@ -80,17 +84,17 @@ fi
 # --- Branch ---
 git branch -M "$BRANCH" 2>/dev/null || true
 
-# --- Stage and commit ---
+# --- Stage, commit (if needed), and push ---
 git add -A
 if git diff --cached --quiet; then
-  echo "Nothing to commit (working tree clean after .gitignore)."
-  exit 0
+  echo "Nothing to commit (working tree clean)."
+else
+  git status --short
+  git commit -m "$COMMIT_MSG"
+  echo "Committed."
 fi
-git status --short
-git commit -m "$COMMIT_MSG"
 
-# --- Push ---
 echo "Pushing to origin $BRANCH (okjason-source/dist_agent_lang)..."
 git push -u origin "$BRANCH"
 
-echo "Done. Open: https://github.com/okjason-source/dist_agent_lang"
+echo "Done. https://github.com/okjason-source/dist_agent_lang"
