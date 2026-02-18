@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dist_agent_lang - Hybrid Language for simplicity in a sophisticated future.</title>
+    <meta name="description" content="A hybrid compiled programming language for simplicity in a sophisticated future. Multi-chain support, built-in security, and native AI integration.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.svg">
+    <style>
+        :root {
+            /* Lush Nature Green Palette */
+            --primary: #2d5016;        /* Deep forest green */
+            --primary-dark: #1a3009;   /* Darker forest */
+            --primary-light: #4a7c2a;  /* Lighter forest */
+            --secondary: #3d6b1f;      /* Rich emerald */
+            --accent: #5a9f3a;         /* Bright grass green */
+            --accent-light: #7bc55a;   /* Lush spring green */
+            --success: #22c55e;        /* Vibrant green */
+            --text: #0f172a;          /* Dark slate for contrast */
+            --text-light: #334155;     /* Medium slate */
+            --bg: #f0fdf4;             /* Very light mint */
+            --bg-light: #dcfce7;       /* Light green tint */
+            --border: #86efac;         /* Soft green border */
+            --shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(34, 197, 94, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--primary-light) 100%);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(45, 80, 22, 0.3);
+            border-bottom: 2px solid var(--accent-light);
+        }
+
+        nav {
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: 
+                linear-gradient(to bottom, rgba(45, 80, 22, 0.85) 0%, rgba(61, 107, 31, 0.75) 100%),
+                url('ChatGPT Image Dec 30, 2025, 04_19_28 PM.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(122, 197, 90, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(90, 159, 58, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            color: white;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7), 0 0 20px rgba(122, 197, 90, 0.3);
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            margin-bottom: 1rem;
+            opacity: 0.98;
+            text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.6);
+            font-weight: 500;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: rgba(45, 80, 22, 0.7);
+            border: 2px solid rgba(122, 197, 90, 0.6);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Installation Section */
+        .installation {
+            width: 100%;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .install-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .install-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .install-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent);
+        }
+
+        .install-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+        }
+
+        .install-card .icon {
+            font-size: 2rem;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .code-block code {
+            display: block;
+            white-space: pre;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .copy-btn.copied {
+            background: var(--accent);
+            border-color: var(--accent-light);
+        }
+
+        /* Quick Start */
+        .quick-start {
+            background: linear-gradient(to bottom, var(--bg) 0%, var(--bg-light) 100%);
+            padding: 2rem;
+            border-top: 3px solid var(--accent-light);
+            border-bottom: 3px solid var(--accent-light);
+        }
+
+        .quick-start-content {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .step {
+            background: white;
+            border-left: 5px solid var(--accent);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .step:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .step h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        /* Features */
+        .features {
+            width: 100%;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .feature {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .feature p {
+            color: var(--text-light);
+        }
+
+        /* CTA Section */
+        .cta {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--primary-light) 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(122, 197, 90, 0.2) 0%, transparent 60%),
+                radial-gradient(circle at 70% 60%, rgba(90, 159, 58, 0.2) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .cta > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: white;
+            color: var(--primary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+            margin: 0.5rem;
+            border: 2px solid transparent;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(45, 80, 22, 0.3);
+            background: var(--bg-light);
+            border-color: var(--accent);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(122, 197, 90, 0.2);
+            border-color: var(--accent-light);
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 3px solid var(--accent-light);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
+        }
+
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                min-height: 100vh;
+                padding: 2rem 1rem;
+                background-attachment: scroll;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .install-methods {
+                grid-template-columns: 1fr;
+            }
+
+            .installation,
+            .features,
+            .quick-start,
+            .cta {
+                padding: 1.5rem 1rem;
+                margin: 1rem auto;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-light);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">
+                <span>🌿</span>
+                <span>dist_agent_lang</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="donations.html">Donations</a></li>
+                <li><a href="#install">Install</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#docs">Docs</a></li>
+                <li><a href="https://github.com/okjason-source/dist_agent_lang" target="_blank">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="version-badge">🌱 v1.0.5 Beta Release</div>
+            <h1>dist_agent_lang</h1>
+            <p>A hybrid compiled programming language for simplicity in a sophisticated future.</p>
+            <p style="margin-top: 1rem; font-size: 1rem; opacity: 0.9;">🌳 Growing the future of decentralized development</p>
+            <div>
+                <a href="#install" class="btn">Get Started</a>
+                <a href="https://github.com/okjason-source/dist_agent_lang" class="btn btn-secondary" target="_blank">View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section class="installation" id="install">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('source')">From Source</button>
+            <button class="tab" onclick="showTab('binary')">Binary Download</button>
+            <button class="tab" onclick="showTab('package')">Package Managers</button>
+        </div>
+
+        <!-- From Source Tab -->
+        <div id="source" class="tab-content active">
+            <div class="install-methods">
+                <div class="install-card">
+                    <h3><span class="icon">🔧</span> Build from Source</h3>
+                    <p>Recommended for development and latest features</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this, 'source-code')">Copy</button>
+                        <code id="source-code"># Clone repository
+git clone https://github.com/okjason-source/dist_agent_lang.git
+cd dist_agent_lang
+
+# Build
+cargo build --release
+
+# Test the binary
+./target/release/dal --version
+
+# Add to PATH (optional)
+export PATH="$PWD/target/release:$PATH"</code>
+                    </div>
+                    <p><strong>Requirements:</strong> Rust 1.70+ (install from <a href="https://rustup.rs" target="_blank">rustup.rs</a>)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Binary Download Tab -->
+        <div id="binary" class="tab-content">
+            <div class="install-methods">
+                <div class="install-card">
+                    <h3><span class="icon">💻</span> Linux / macOS</h3>
+                    <p>Download pre-built binary</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this, 'binary-linux')">Copy</button>
+                        <code id="binary-linux"># Download latest release for your platform
+# Linux x64:
+wget https://github.com/okjason-source/dist_agent_lang/releases/latest/download/dist_agent_lang-v1.0.5-linux-x64.tar.gz
+
+# macOS Intel:
+wget https://github.com/okjason-source/dist_agent_lang/releases/latest/download/dist_agent_lang-v1.0.5-macos-x64.tar.gz
+
+# macOS Apple Silicon:
+wget https://github.com/okjason-source/dist_agent_lang/releases/latest/download/dist_agent_lang-v1.0.5-macos-arm64.tar.gz
+
+# Extract
+tar -xzf dist_agent_lang-v1.0.5-*.tar.gz
+
+# Install (or use directly)
+sudo cp dal /usr/local/bin/
+
+# Verify
+dal --version</code>
+                    </div>
+                </div>
+
+                <div class="install-card">
+                    <h3><span class="icon">🪟</span> Windows</h3>
+                    <p>Download pre-built binary</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this, 'binary-windows')">Copy</button>
+                        <code id="binary-windows"># Download latest release
+# Download: dist_agent_lang-v1.0.5-windows-x64.zip
+# Extract the zip file
+# Open Command Prompt in extracted folder
+
+# Copy dal.exe to a folder in your PATH
+# (e.g., C:\Program Files\dist_agent_lang\)
+# Add that folder to your system PATH
+
+# Verify
+dal --version</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Package Managers Tab -->
+        <div id="package" class="tab-content">
+            <div class="install-methods">
+                <div class="install-card">
+                    <h3><span class="icon">🍺</span> Homebrew (macOS)</h3>
+                    <p>Install via Homebrew package manager</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this, 'homebrew')">Copy</button>
+                        <code id="homebrew"># Add tap (when available)
+brew tap distagentlang/dist_agent_lang
+
+# Install
+brew install dist_agent_lang
+
+# Verify
+dist_agent_lang --version</code>
+                    </div>
+                    <p><em>Note: Homebrew package coming soon</em></p>
+                </div>
+
+                <div class="install-card">
+                    <h3><span class="icon">📦</span> Cargo (Rust)</h3>
+                    <p>Install via Cargo package manager</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this, 'cargo')">Copy</button>
+                        <code id="cargo"># Install from crates.io (when published)
+cargo install dist_agent_lang
+
+# Or install from git
+cargo install --git https://github.com/okjason-source/dist_agent_lang.git --bin dal
+
+# Or clone and install locally
+git clone https://github.com/okjason-source/dist_agent_lang.git
+cd dist_agent_lang
+cargo install --path . --bin dal
+
+# Verify
+dal --version</code>
+                    </div>
+                    <p><em>Note: crates.io publication coming soon</em></p>
+                </div>
+
+                <div class="install-card">
+                    <h3><span class="icon">📦</span> npm (Node.js)</h3>
+                    <p>Install via npm package manager</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this, 'npm')">Copy</button>
+                        <code id="npm"># Install globally
+npm install -g dist-agent-lang
+
+# Verify
+dist_agent_lang --version</code>
+                    </div>
+                    <p><em>Note: npm package coming soon</em></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start -->
+    <section class="quick-start">
+        <div class="quick-start-content">
+        <h2 class="section-title">🌱 Quick Start</h2>
+        <p class="section-subtitle">Get up and running in 5 minutes</p>
+
+            <div class="step">
+                <h4>Step 1: Verify Installation</h4>
+                <div class="code-block">
+                    <code>dal --version
+# Should output:
+# dist_agent_lang v1.0.5
+# Beta Release - Actively Developed
+# Built with Rust</code>
+                </div>
+            </div>
+
+            <div class="step">
+                <h4>Step 2: Create Your First Program</h4>
+                <p>Create a file <code>hello.dal</code>:</p>
+                <div class="code-block">
+                    <code>@trust("hybrid")
+service HelloWorld {
+    fn main() {
+        print("Hello, dist_agent_lang!");
+    }
+}</code>
+                </div>
+                <p><strong>Note:</strong> Make sure you're in the correct directory when creating files.</p>
+            </div>
+
+            <div class="step">
+                <h4>Step 3: Run It</h4>
+                <div class="code-block">
+                    <code>dal run hello.dal
+# Output: Hello, dist_agent_lang!</code>
+                </div>
+                <p><strong>Tip:</strong> Check out the <code>examples/</code> directory in the repository for more examples!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <h2 class="section-title">🌳 Features</h2>
+        <p class="section-subtitle">Everything you need for modern development</p>
+
+        <div class="features-grid">
+            <div class="feature">
+                <div class="feature-icon">🤖</div>
+                <h3>AI Agent Framework</h3>
+                <p>Native support for AI agents with multi-agent coordination and workflow management</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">⛓️</div>
+                <h3>Multi-Chain Support</h3>
+                <p>Deploy to Ethereum, Polygon, Solana, Arbitrum, and more with a single codebase</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <h3>Built-in Security</h3>
+                <p>Automatic reentrancy protection, safe math, and comprehensive security features</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">🌐</div>
+                <h3>Hybrid Trust</h3>
+                <p>Seamlessly combine onchain and offchain systems with hybrid trust models</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">📚</div>
+                <h3>Rich Standard Library</h3>
+                <p>22 modules covering blockchain, AI, database, web, and more</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">🔄</div>
+                <h3>Solidity Converter</h3>
+                <p>Automatically convert Solidity contracts to DAL format</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>High Performance</h3>
+                <p>Compiled to native code with optimized execution for speed and efficiency</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">🛠️</div>
+                <h3>Developer Tools</h3>
+                <p>Comprehensive tooling including debugger, formatter, and package manager</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <h2>Wanna Code?</h2>
+        <p>Join our beta testing program and help shape the future of dist_agent_lang</p>
+        <div>
+                <a href="https://github.com/okjason-source/dist_agent_lang" class="btn" target="_blank">Star on GitHub</a>
+            <a href="#install" class="btn btn-secondary">Install Now</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-links">
+            <a href="https://github.com/okjason-source/dist_agent_lang" target="_blank">GitHub</a>
+            <a href="https://github.com/okjason-source/dist_agent_lang/issues" target="_blank">Issues</a>
+            <a href="donations.html">Donations</a>
+            <a href="#docs">Documentation</a>
+            <a href="https://discord.gg/tu7tg9eN" target="_blank" class="discord-link">💬 Discord</a>
+        </div>
+        <p>&copy; 2025 dist_agent_lang.</p>
+        <p>Made with 💚 by OKJason</p>
+    </footer>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs and content
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // Show selected tab and content
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function copyCode(button, codeId) {
+            const code = document.getElementById(codeId).textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
