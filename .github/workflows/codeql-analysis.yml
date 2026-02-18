@@ -13,6 +13,8 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    env:
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
     permissions:
       actions: read
       contents: read
@@ -26,6 +28,9 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Install CA certificates
+      run: sudo update-ca-certificates
 
     - name: Install Rust toolchain
       uses: actions-rs/toolchain@v1
