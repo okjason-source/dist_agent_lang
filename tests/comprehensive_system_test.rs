@@ -152,6 +152,12 @@ pub enum Value {
     Null,
 }
 
+impl Default for Runtime {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Runtime {
     pub fn new() -> Self {
         Self {
@@ -219,6 +225,12 @@ pub struct ComprehensiveTestSuite {
     pub total_tests: usize,
     pub passed_tests: usize,
     pub failed_tests: usize,
+}
+
+impl Default for ComprehensiveTestSuite {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ComprehensiveTestSuite {
@@ -435,7 +447,7 @@ fn test_phase2_compilation_targets() -> Result<HashMap<String, String>, String> 
     details.insert("native_target".to_string(), "PASSED".to_string());
 
     // Test target constraints
-    let constraint_test = validate_target_constraints(&blockchain_service);
+    let constraint_test = validate_target_constraints(blockchain_service);
     if constraint_test.is_ok() {
         details.insert("constraint_validation".to_string(), "PASSED".to_string());
     } else {
@@ -485,7 +497,7 @@ fn test_phase3_trust_models() -> Result<HashMap<String, String>, String> {
     details.insert("centralized_trust".to_string(), "PASSED".to_string());
 
     // Test trust validation
-    let trust_validation = validate_trust_model(&decentralized_service);
+    let trust_validation = validate_trust_model(decentralized_service);
     if trust_validation.is_ok() {
         details.insert("trust_validation".to_string(), "PASSED".to_string());
     } else {
@@ -547,11 +559,11 @@ fn test_phase5_interface_generation() -> Result<HashMap<String, String>, String>
 
     // Test TypeScript interface generation
     let ts_interface = generate_typescript_interface("TestService");
-    if ts_interface.is_ok() {
+    if let Ok(ts) = ts_interface {
         details.insert("typescript_generation".to_string(), "PASSED".to_string());
         details.insert(
             "ts_interface_size".to_string(),
-            format!("{} bytes", ts_interface.unwrap().len()),
+            format!("{} bytes", ts.len()),
         );
     } else {
         return Err("TypeScript interface generation failed".to_string());
@@ -559,11 +571,11 @@ fn test_phase5_interface_generation() -> Result<HashMap<String, String>, String>
 
     // Test Python interface generation
     let py_interface = generate_python_interface("TestService");
-    if py_interface.is_ok() {
+    if let Ok(py) = py_interface {
         details.insert("python_generation".to_string(), "PASSED".to_string());
         details.insert(
             "py_interface_size".to_string(),
-            format!("{} bytes", py_interface.unwrap().len()),
+            format!("{} bytes", py.len()),
         );
     } else {
         return Err("Python interface generation failed".to_string());
@@ -571,11 +583,11 @@ fn test_phase5_interface_generation() -> Result<HashMap<String, String>, String>
 
     // Test Rust interface generation
     let rust_interface = generate_rust_interface("TestService");
-    if rust_interface.is_ok() {
+    if let Ok(rs) = rust_interface {
         details.insert("rust_generation".to_string(), "PASSED".to_string());
         details.insert(
             "rust_interface_size".to_string(),
-            format!("{} bytes", rust_interface.unwrap().len()),
+            format!("{} bytes", rs.len()),
         );
     } else {
         return Err("Rust interface generation failed".to_string());
@@ -583,15 +595,12 @@ fn test_phase5_interface_generation() -> Result<HashMap<String, String>, String>
 
     // Test client library generation
     let client_library = generate_client_library("TestService");
-    if client_library.is_ok() {
+    if let Ok(lib) = client_library {
         details.insert(
             "client_library_generation".to_string(),
             "PASSED".to_string(),
         );
-        details.insert(
-            "library_size".to_string(),
-            format!("{} bytes", client_library.unwrap().len()),
-        );
+        details.insert("library_size".to_string(), format!("{} bytes", lib.len()));
     } else {
         return Err("Client library generation failed".to_string());
     }

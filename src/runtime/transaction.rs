@@ -1339,7 +1339,7 @@ mod tests {
             .unwrap();
         manager.commit(&tx_id).unwrap();
 
-        assert!(!manager.get_transaction(&tx_id).is_some());
+        assert!(manager.get_transaction(&tx_id).is_none());
         assert_eq!(manager.get_committed("key1"), Some(Value::Int(42)));
     }
 

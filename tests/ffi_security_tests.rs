@@ -68,7 +68,7 @@ fn test_ffi_type_safety() {
     // Test all value types convert safely
     let values = vec![
         Value::Int(42),
-        Value::Float(3.14),
+        Value::Float(3.15),
         Value::String("test".to_string()),
         Value::Bool(true),
         Value::Null,
@@ -176,9 +176,6 @@ fn test_ffi_memory_safety() {
         let code = format!("let x{} = {};", i, i);
         let _ = runtime.execute(&code);
     }
-
-    // If we get here without OOM, memory is being managed
-    assert!(true);
 }
 
 /// Test: FFI should validate array bounds

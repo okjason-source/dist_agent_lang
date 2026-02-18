@@ -894,11 +894,11 @@ fn test_value_to_string_all_types() {
     assert_eq!(result.unwrap(), "42", "Int(42) should convert to \"42\"");
 
     // Test Float
-    let result = runtime.value_to_string(&Value::Float(3.14));
+    let result = runtime.value_to_string(&Value::Float(3.15));
     assert!(result.is_ok(), "value_to_string(Float) should succeed");
     assert!(
-        result.unwrap().contains("3.14"),
-        "Float(3.14) should convert to string containing \"3.14\""
+        result.unwrap().contains("3.15"),
+        "Float(3.15) should convert to string containing \"3.15\""
     );
 
     // Test Bool
@@ -959,9 +959,9 @@ fn test_value_to_int_all_types() {
     assert_eq!(result.unwrap(), 42, "Int(42) should convert to 42");
 
     // Test Float
-    let result = runtime.value_to_int(&Value::Float(3.14));
+    let result = runtime.value_to_int(&Value::Float(3.15));
     assert!(result.is_ok(), "value_to_int(Float) should succeed");
-    assert_eq!(result.unwrap(), 3, "Float(3.14) should convert to 3");
+    assert_eq!(result.unwrap(), 3, "Float(3.15) should convert to 3");
 
     // Test String (valid number)
     let result = runtime.value_to_int(&Value::String("123".to_string()));

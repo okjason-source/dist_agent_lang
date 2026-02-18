@@ -334,7 +334,7 @@ fn test_value_size_estimation() {
     // Test that values can be created and measured
     let test_values = vec![
         Value::Int(42),
-        Value::Float(3.14),
+        Value::Float(3.15),
         Value::String("hello".to_string()),
         Value::Bool(true),
         Value::Null,

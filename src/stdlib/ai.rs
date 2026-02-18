@@ -2559,12 +2559,12 @@ mod wrapper_tests {
         // Normal value
         let result = detect_anomaly(&data, 11.5);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), false);
+        assert!(!result.unwrap());
 
         // Anomalous value
         let result = detect_anomaly(&data, 50.0);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), true);
+        assert!(result.unwrap());
     }
 
     #[test]

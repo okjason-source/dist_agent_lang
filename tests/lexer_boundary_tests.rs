@@ -25,7 +25,7 @@ fn test_next_token_immutable_comparison_boundary() {
     // Should tokenize all characters and end with EOF
     // If comparison is wrong (>= -> >), it might try to read past end
     // If comparison is wrong (>= -> ==), it might try to read past end
-    assert!(tokens.len() > 0, "Should tokenize input");
+    assert!(!tokens.is_empty(), "Should tokenize input");
 
     // Last token should be EOF (not an error from reading past end)
     let last_token = &tokens[tokens.len() - 1];
@@ -234,10 +234,10 @@ fn test_get_trust_profiles_return_value() {
     );
 
     // Verify profiles have expected structure (not empty/default)
-    if let Some(_profile) = profiles.get(&TrustLevel::Decentralized) {
-        // Profile should have some configuration (not default)
-        assert!(true, "Decentralized profile should have configuration");
-    }
+    assert!(
+        profiles.get(&TrustLevel::Decentralized).is_some(),
+        "Decentralized profile should have configuration"
+    );
 }
 
 // ============================================================================

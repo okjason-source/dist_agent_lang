@@ -8,8 +8,6 @@ use dist_agent_lang::Runtime;
 fn test_runtime_initialization() {
     // Test that runtime initializes with security features
     let _runtime = Runtime::new();
-    // Runtime should be initialized successfully
-    assert!(true);
 }
 
 #[test]
@@ -237,10 +235,5 @@ fn test_runtime_security_features() {
     // (Manager is a struct, not Option, so it's always present)
     // We can verify it exists by checking it doesn't panic when accessed
     let _manager = &runtime.cross_chain_manager;
-    assert!(true, "CrossChainSecurityManager should be initialized");
-
-    // Test advanced security manager is initialized
-    // (Manager is a struct, not Option, so it's always present)
     let _security = &runtime.advanced_security;
-    assert!(true, "AdvancedSecurityManager should be initialized");
 }
