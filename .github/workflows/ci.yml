@@ -24,7 +24,7 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: 1.70
+        toolchain: stable
         override: true
     
     - name: Cache dependencies
@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [1.70, stable, beta]
+        rust: [stable]
     
     steps:
     - uses: actions/checkout@v4
@@ -92,7 +92,7 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: 1.70
+        toolchain: stable
         override: true
     
     - name: Install cargo-audit
@@ -112,7 +112,7 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: 1.70
+        toolchain: stable
         override: true
     
     - name: Cache dependencies
@@ -148,7 +148,7 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: 1.70
+        toolchain: stable
         override: true
         target: ${{ matrix.target }}
     
@@ -206,7 +206,7 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: 1.70
+        toolchain: stable
         override: true
     
     - name: Install Node.js
@@ -269,7 +269,7 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: 1.70
+        toolchain: stable
         override: true
     
     - name: Build documentation

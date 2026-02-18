@@ -77,9 +77,10 @@ name = "performance_benchmarks"
 harness = false
 
 # Exclude .rs files in examples/ directory from compilation
-# These are dist_agent_lang source files, not Rust files
-[package.metadata.docs.rs]
-cargo-args = ["-Zunstable-options", "-Zskip-rustdoc-targets=examples"]
+# These are dist_agent_lang source files, not Rust code.
+# (docs.rs uses nightly and may support cargo-args; stable Cargo ignores it and warns.)
+# [package.metadata.docs.rs]
+# cargo-args = ["-Zunstable-options", "-Zskip-rustdoc-targets=examples"]
 
 # Note: Cargo automatically discovers example binaries in examples/ directory
 # To prevent dist_agent_lang source files (.rs files with dist_agent_lang syntax)
