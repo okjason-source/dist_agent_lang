@@ -2,7 +2,7 @@
 # Multi-stage build for optimized container image
 
 # Stage 1: Build stage
-FROM rust:1.70-slim as builder
+FROM rust:slim as builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
@@ -48,8 +48,8 @@ RUN useradd -m -u 1000 dist_agent_lang
 WORKDIR /app
 
 # Copy binary from builder stage
-COPY --from=builder /app/target/release/dist_agent_lang /usr/local/bin/
-RUN chmod +x /usr/local/bin/dist_agent_lang
+COPY --from=builder /app/target/release/dal /usr/local/bin/
+RUN chmod +x /usr/local/bin/dal
 
 # Copy examples and documentation
 COPY --from=builder /app/examples/ ./examples/
@@ -74,10 +74,10 @@ EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD dist_agent_lang --version || exit 1
+    CMD dal --version || exit 1
 
 # Default command
-ENTRYPOINT ["dist_agent_lang"]
+ENTRYPOINT ["dal"]
 
 # Default arguments
 CMD ["--help"]

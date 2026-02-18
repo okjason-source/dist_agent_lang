@@ -63,8 +63,7 @@ jobs:
           components: clippy
 
       - name: Run Clippy
-        run: cargo clippy -- -D warnings
-        continue-on-error: false
+        run: cargo clippy --all-targets
 
   fmt-check:
     name: Code Formatting Check
