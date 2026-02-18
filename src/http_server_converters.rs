@@ -1,20 +1,15 @@
 // HTTP Server Request/Response Converters
 // Converts between Axum HTTP types and dist_agent_lang types
 
-use axum::{
-    extract::Request,
-    http::StatusCode,
-    response::Response,
-    body::Body,
-};
 use crate::stdlib::web::{HttpRequest, HttpResponse};
+use axum::{body::Body, extract::Request, http::StatusCode, response::Response};
 use std::collections::HashMap;
 
 /// Simple percent decoding (for query parameters)
 fn percent_decode(input: &str) -> String {
     let mut result = String::new();
     let mut chars = input.chars().peekable();
-    
+
     while let Some(ch) = chars.next() {
         if ch == '%' {
             let mut hex = String::new();
@@ -37,7 +32,7 @@ fn percent_decode(input: &str) -> String {
             result.push(ch);
         }
     }
-    
+
     result
 }
 
@@ -46,7 +41,7 @@ pub async fn axum_request_to_http_request(mut request: Request) -> HttpRequest {
     let method = request.method().to_string();
     let uri = request.uri();
     let path = uri.path().to_string();
-    
+
     // Extract headers
     let mut headers = HashMap::new();
     for (name, value) in request.headers() {
@@ -54,7 +49,7 @@ pub async fn axum_request_to_http_request(mut request: Request) -> HttpRequest {
             headers.insert(name.to_string(), value_str.to_string());
         }
     }
-    
+
     // Extract query parameters
     let mut query_params = HashMap::new();
     if let Some(query) = uri.query() {
@@ -67,10 +62,10 @@ pub async fn axum_request_to_http_request(mut request: Request) -> HttpRequest {
             }
         }
     }
-    
+
     // Extract path parameters (would be set by route extractors)
     let path_params = HashMap::new();
-    
+
     // Extract cookies
     let mut cookies = HashMap::new();
     if let Some(cookie_header) = request.headers().get("Cookie") {
@@ -82,14 +77,14 @@ pub async fn axum_request_to_http_request(mut request: Request) -> HttpRequest {
             }
         }
     }
-    
+
     // Extract body (using axum's body extractor pattern)
     let body = extract_body(&mut request).await.unwrap_or_default();
-    
+
     // Session and user are empty initially (set by middleware)
     let session = HashMap::new();
     let user = None;
-    
+
     HttpRequest {
         method,
         path,
@@ -119,13 +114,12 @@ async fn extract_body(request: &mut Request) -> Result<String, String> {
 
 /// Convert HttpResponse to Axum Response
 pub fn http_response_to_axum_response(response: HttpResponse) -> Response<Body> {
-    let status = StatusCode::from_u16(response.status as u16)
-        .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-    
+    let status =
+        StatusCode::from_u16(response.status as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+
     // Build response with status
-    let mut axum_response = Response::builder()
-        .status(status);
-    
+    let mut axum_response = Response::builder().status(status);
+
     // Add headers
     for (key, value) in &response.headers {
         if let (Ok(header_name), Ok(header_value)) = (
@@ -135,7 +129,7 @@ pub fn http_response_to_axum_response(response: HttpResponse) -> Response<Body> 
             axum_response = axum_response.header(header_name, header_value);
         }
     }
-    
+
     // Add cookies
     for cookie in &response.cookies {
         let cookie_value = format!(
@@ -150,19 +144,19 @@ pub fn http_response_to_axum_response(response: HttpResponse) -> Response<Body> 
             },
             if cookie.secure { "; Secure" } else { "" },
         );
-        
+
         if let Ok(header_value) = axum::http::HeaderValue::from_str(&cookie_value) {
             axum_response = axum_response.header("Set-Cookie", header_value);
         }
     }
-    
+
     // Handle redirect
     if let Some(ref redirect_url) = response.redirect_url {
         if let Ok(header_value) = axum::http::HeaderValue::from_str(redirect_url) {
             axum_response = axum_response.header("Location", header_value);
         }
     }
-    
+
     // Set body
     axum_response
         .body(Body::from(response.body))
@@ -176,9 +170,8 @@ pub fn http_response_to_axum_response(response: HttpResponse) -> Response<Body> 
 
 /// Create error response
 pub fn error_response(status: u16, message: &str) -> Response<Body> {
-    let status_code = StatusCode::from_u16(status)
-        .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-    
+    let status_code = StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+
     Response::builder()
         .status(status_code)
         .header("Content-Type", "application/json")
@@ -207,4 +200,3 @@ pub fn json_response(data: serde_json::Value) -> Response<Body> {
                 .unwrap()
         })
 }
-

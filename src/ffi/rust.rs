@@ -1,8 +1,8 @@
 // Rust FFI bindings (C-compatible)
 // Provides direct function calls for Rust codebases
 
-use crate::runtime::values::Value;
 use crate::runtime::engine::Runtime;
+use crate::runtime::values::Value;
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_int};
 
@@ -27,7 +27,10 @@ impl RustFFIRuntime {
     ) -> Result<Value, String> {
         // Note: Runtime doesn't have execute_function method
         // This would need to be implemented via execute_source or execute_program
-        Err("FFI call_function requires runtime integration - use execute_source instead".to_string())
+        Err(
+            "FFI call_function requires runtime integration - use execute_source instead"
+                .to_string(),
+        )
     }
 
     /// Execute dist_agent_lang source code with security checks
@@ -35,14 +38,13 @@ impl RustFFIRuntime {
         // Apply security checks
         use crate::ffi::security::{FFIInputValidator, FFIResourceLimits};
         let limits = FFIResourceLimits::default();
-        
+
         // Validate input
         FFIInputValidator::validate_source(source, &limits)?;
-        
+
         // Parse and execute source
         use crate::parse_source;
-        let program = parse_source(source)
-            .map_err(|e| format!("Parse error: {}", e))?;
+        let program = parse_source(source).map_err(|e| format!("Parse error: {}", e))?;
         self.runtime
             .execute_program(program)
             .map_err(|e| format!("Execution error: {}", e))?;
@@ -86,9 +88,7 @@ pub extern "C" fn dist_agent_lang_hash(
         }
 
         let data_slice = std::slice::from_raw_parts(data, data_len);
-        let algo_str = CStr::from_ptr(algorithm)
-            .to_str()
-            .unwrap_or("SHA256");
+        let algo_str = CStr::from_ptr(algorithm).to_str().unwrap_or("SHA256");
 
         match crate::stdlib::crypto::hash_bytes(data_slice, algo_str) {
             Ok(hash) => {
@@ -164,9 +164,10 @@ pub extern "C" fn dist_agent_lang_verify(
         // Security check: validate input sizes
         use crate::ffi::security::FFIResourceLimits;
         let limits = FFIResourceLimits::default();
-        if data_len > limits.max_input_size || 
-           sig_len > limits.max_input_size || 
-           key_len > limits.max_input_size {
+        if data_len > limits.max_input_size
+            || sig_len > limits.max_input_size
+            || key_len > limits.max_input_size
+        {
             return -4; // Input too large
         }
 
@@ -177,7 +178,13 @@ pub extern "C" fn dist_agent_lang_verify(
         let sig_str = std::str::from_utf8(sig_slice).unwrap_or("");
         let key_str = std::str::from_utf8(key_slice).unwrap_or("");
         match crate::stdlib::crypto_signatures::verify(data_slice, sig_str, key_str) {
-            Ok(valid) => if valid { 1 } else { 0 },
+            Ok(valid) => {
+                if valid {
+                    1
+                } else {
+                    0
+                }
+            }
             Err(_) => -2,
         }
     }

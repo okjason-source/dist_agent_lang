@@ -1,8 +1,8 @@
+use std::collections::VecDeque;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use std::collections::VecDeque;
 
 #[derive(Debug, Clone)]
 pub struct ThreadPoolStats {
@@ -67,7 +67,7 @@ impl ThreadPool {
     {
         let job = Box::new(f);
         self.sender.send(Message::NewJob(job)).unwrap();
-        
+
         // Update stats
         if let Ok(mut stats) = self.stats.lock() {
             stats.queued_tasks += 1;
@@ -132,7 +132,7 @@ impl Worker {
                             stats.active_threads = stats.active_threads.saturating_sub(1);
                             stats.idle_threads += 1;
                             stats.queued_tasks = stats.queued_tasks.saturating_sub(1);
-                            
+
                             if result.is_ok() {
                                 stats.completed_tasks += 1;
                             } else {
@@ -140,9 +140,11 @@ impl Worker {
                             }
 
                             // Update average duration
-                            let total_duration = stats.average_task_duration * stats.completed_tasks as u32;
+                            let total_duration =
+                                stats.average_task_duration * stats.completed_tasks as u32;
                             let new_total = total_duration + duration;
-                            stats.average_task_duration = new_total / (stats.completed_tasks + 1) as u32;
+                            stats.average_task_duration =
+                                new_total / (stats.completed_tasks + 1) as u32;
                         }
                     }
                     Message::Terminate => {
@@ -224,7 +226,7 @@ impl AsyncScheduler {
                     break;
                 }
             }
-            
+
             if let Some(index) = insert_index {
                 queue.insert(index, async_task);
             } else {
@@ -241,11 +243,11 @@ impl AsyncScheduler {
             if let Some(task) = queue.pop_front() {
                 let task_id = task.id;
                 let task_name = task.name.clone();
-                
+
                 let running_tasks = self.running_tasks.clone();
                 self.thread_pool.execute(move || {
                     let start_time = Instant::now();
-                    
+
                     // Add to running tasks
                     if let Ok(mut running) = running_tasks.lock() {
                         running.push(RunningTask {
@@ -330,7 +332,7 @@ impl ParallelExecutor {
             let items = Arc::clone(&items);
             let f = Arc::clone(&f);
             let sender = sender.clone();
-            
+
             thread_pool.execute(move || {
                 let item = items[i].clone();
                 let result = f(item);
@@ -341,7 +343,7 @@ impl ParallelExecutor {
         // Collect results
         let mut results = Vec::new();
         results.resize_with(items.len(), || unsafe { std::mem::zeroed() });
-        
+
         for _ in 0..items.len() {
             if let Ok((index, result)) = receiver.recv() {
                 results[index] = result;
@@ -440,13 +442,25 @@ impl ConcurrencyProfiler {
         if let Ok(stats_vec) = self.thread_pool_stats.lock() {
             if let Some(latest_stats) = stats_vec.last() {
                 report.push_str("Thread Pool Status:\n");
-                report.push_str(&format!("  Total Threads: {}\n", latest_stats.total_threads));
-                report.push_str(&format!("  Active Threads: {}\n", latest_stats.active_threads));
+                report.push_str(&format!(
+                    "  Total Threads: {}\n",
+                    latest_stats.total_threads
+                ));
+                report.push_str(&format!(
+                    "  Active Threads: {}\n",
+                    latest_stats.active_threads
+                ));
                 report.push_str(&format!("  Idle Threads: {}\n", latest_stats.idle_threads));
                 report.push_str(&format!("  Queued Tasks: {}\n", latest_stats.queued_tasks));
-                report.push_str(&format!("  Completed Tasks: {}\n", latest_stats.completed_tasks));
+                report.push_str(&format!(
+                    "  Completed Tasks: {}\n",
+                    latest_stats.completed_tasks
+                ));
                 report.push_str(&format!("  Failed Tasks: {}\n", latest_stats.failed_tasks));
-                report.push_str(&format!("  Average Task Duration: {:?}\n", latest_stats.average_task_duration));
+                report.push_str(&format!(
+                    "  Average Task Duration: {:?}\n",
+                    latest_stats.average_task_duration
+                ));
             }
         }
 

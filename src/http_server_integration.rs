@@ -1,19 +1,19 @@
 // HTTP Server Integration
 // Integrates middleware and handlers into the HTTP server router
 
+use crate::http_server::WebServerState;
+use crate::http_server_converters::error_response;
+use crate::http_server_handlers::handle_with_middleware;
+use crate::stdlib::web::HttpServer;
 use axum::{
+    body::Body,
     extract::{Request, State},
     response::Response,
-    body::Body,
     routing::{get, post},
     Router,
 };
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use crate::http_server::WebServerState;
-use crate::http_server_handlers::handle_with_middleware;
-use crate::http_server_converters::error_response;
-use crate::stdlib::web::HttpServer;
 
 /// Create router with middleware support
 pub fn create_router_with_middleware(server: HttpServer) -> Router {
@@ -37,38 +37,34 @@ pub fn create_router_with_options<F>(
 where
     F: Fn() -> crate::runtime::engine::Runtime + Send + Sync + 'static,
 {
-    let runtime_factory = Arc::new(Box::new(factory) as Box<dyn Fn() -> crate::runtime::engine::Runtime + Send + Sync>);
-    
+    let runtime_factory = Arc::new(
+        Box::new(factory) as Box<dyn Fn() -> crate::runtime::engine::Runtime + Send + Sync>
+    );
+
     let state = Arc::new(RwLock::new(WebServerState {
         server: server.clone(),
         handlers: std::collections::HashMap::new(),
         runtime_factory: Some(runtime_factory),
         scope_writeback,
     }));
-    
+
     let mut router = Router::new();
-    
+
     // Add routes from server configuration
     for (route_key, route) in &server.routes {
         // Parse route key (format: "METHOD:/path")
         if let Some((method_str, path)) = route_key.split_once(':') {
             let method = method_str.to_uppercase();
             let handler_name = route.handler.clone();
-            
+
             // Create handler closure
             let state_clone = state.clone();
             let handler = move |request: Request| {
                 let state = state_clone.clone();
                 let handler_name = handler_name.clone();
-                async move {
-                    handle_with_middleware(
-                        State(state),
-                        request,
-                        &handler_name,
-                    ).await
-                }
+                async move { handle_with_middleware(State(state), request, &handler_name).await }
             };
-            
+
             // Add route based on method
             match method.as_str() {
                 "GET" => {
@@ -90,14 +86,14 @@ where
             }
         }
     }
-    
+
     // Add default routes if server has no routes configured
     if server.routes.is_empty() {
         router = router
             .route("/", get(home_handler))
             .route("/health", get(health_handler));
     }
-    
+
     router.with_state(state)
 }
 
@@ -110,4 +106,3 @@ async fn home_handler() -> Response<Body> {
 async fn health_handler() -> Response<Body> {
     error_response(200, "OK")
 }
-

@@ -13,7 +13,7 @@ pub struct TestContext {
     pub services: HashMap<String, String>, // service_name -> instance_id
     pub instance_to_service: HashMap<String, String>, // instance_id -> service_name (for call_service_method)
     pub variables: HashMap<String, Value>,
-    pub setup_hooks: Vec<String>, // Code to run before each test
+    pub setup_hooks: Vec<String>,    // Code to run before each test
     pub teardown_hooks: Vec<String>, // Code to run after each test
 }
 
@@ -199,12 +199,19 @@ pub fn expect_throws(code: &str, expected_error: &str) -> Result<(), String> {
 }
 
 /// Deploy a service for testing (similar to Hardhat's deployContract)
-pub fn deploy_service(service_name: String, _constructor_args: Vec<Value>) -> Result<String, String> {
+pub fn deploy_service(
+    service_name: String,
+    _constructor_args: Vec<Value>,
+) -> Result<String, String> {
     let mut context = TEST_CONTEXT.lock().unwrap();
 
     let instance_id = format!("test_{}_{}", service_name, context.services.len());
-    context.services.insert(service_name.clone(), instance_id.clone());
-    context.instance_to_service.insert(instance_id.clone(), service_name);
+    context
+        .services
+        .insert(service_name.clone(), instance_id.clone());
+    context
+        .instance_to_service
+        .insert(instance_id.clone(), service_name);
 
     Ok(instance_id)
 }
@@ -212,13 +219,19 @@ pub fn deploy_service(service_name: String, _constructor_args: Vec<Value>) -> Re
 /// Get a deployed service instance
 pub fn get_service(service_name: String) -> Result<String, String> {
     let context = TEST_CONTEXT.lock().unwrap();
-    context.services.get(&service_name)
+    context
+        .services
+        .get(&service_name)
         .cloned()
         .ok_or_else(|| format!("Service {} not deployed", service_name))
 }
 
 /// Call a service method (similar to Hardhat's contract.method()). Resolves instance_id to service namespace and invokes via runtime (e.g. chain::get_balance, service::ai).
-pub fn call_service_method(instance_id: String, method_name: String, args: Vec<Value>) -> Result<Value, String> {
+pub fn call_service_method(
+    instance_id: String,
+    method_name: String,
+    args: Vec<Value>,
+) -> Result<Value, String> {
     let service_name = {
         let context = TEST_CONTEXT.lock().unwrap();
         context
@@ -243,7 +256,9 @@ pub fn set_var(name: String, value: Value) {
 /// Get a test variable
 pub fn get_var(name: String) -> Result<Value, String> {
     let context = TEST_CONTEXT.lock().unwrap();
-    context.variables.get(&name)
+    context
+        .variables
+        .get(&name)
         .cloned()
         .ok_or_else(|| format!("Variable {} not found", name))
 }
@@ -295,9 +310,8 @@ pub fn expect_valid_trust_model(model: &str) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!(
-            "Invalid trust model: '{}'. Valid options: {:?}", 
-            model, 
-            valid_models
+            "Invalid trust model: '{}'. Valid options: {:?}",
+            model, valid_models
         ))
     }
 }
@@ -305,16 +319,23 @@ pub fn expect_valid_trust_model(model: &str) -> Result<(), String> {
 /// Validate that a blockchain chain identifier is valid
 pub fn expect_valid_chain(chain: &str) -> Result<(), String> {
     let valid_chains = [
-        "ethereum", "polygon", "bsc", "solana", "bitcoin", 
-        "avalanche", "arbitrum", "optimism", "base", "near"
+        "ethereum",
+        "polygon",
+        "bsc",
+        "solana",
+        "bitcoin",
+        "avalanche",
+        "arbitrum",
+        "optimism",
+        "base",
+        "near",
     ];
     if valid_chains.contains(&chain) {
         Ok(())
     } else {
         Err(format!(
-            "Invalid chain: '{}'. Valid options: {:?}", 
-            chain, 
-            valid_chains
+            "Invalid chain: '{}'. Valid options: {:?}",
+            chain, valid_chains
         ))
     }
 }
@@ -331,14 +352,13 @@ pub fn expect_type(value: &Value, expected_type: &str) -> Result<(), String> {
         Value::Closure(_) => "function",
         _ => value.type_name(),
     };
-    
+
     if actual_type == expected_type {
         Ok(())
     } else {
         Err(format!(
-            "Type mismatch: expected '{}', but got '{}'", 
-            expected_type, 
-            actual_type
+            "Type mismatch: expected '{}', but got '{}'",
+            expected_type, actual_type
         ))
     }
 }
@@ -363,9 +383,8 @@ pub fn expect_contains(haystack: &str, needle: &str) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!(
-            "String '{}' does not contain '{}'", 
-            haystack, 
-            needle
+            "String '{}' does not contain '{}'",
+            haystack, needle
         ))
     }
 }
@@ -376,9 +395,8 @@ pub fn expect_starts_with(string: &str, prefix: &str) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!(
-            "String '{}' does not start with '{}'", 
-            string, 
-            prefix
+            "String '{}' does not start with '{}'",
+            string, prefix
         ))
     }
 }
@@ -391,14 +409,13 @@ pub fn expect_length(value: Value, expected_len: usize) -> Result<(), String> {
         Value::Map(m) => m.len(),
         _ => return Err(format!("Value {:?} does not have a length", value)),
     };
-    
+
     if actual_len == expected_len {
         Ok(())
     } else {
         Err(format!(
-            "Length mismatch: expected {}, got {}", 
-            expected_len, 
-            actual_len
+            "Length mismatch: expected {}, got {}",
+            expected_len, actual_len
         ))
     }
 }
@@ -411,7 +428,7 @@ pub fn expect_not_empty(value: Value) -> Result<(), String> {
         Value::Map(m) => m.is_empty(),
         _ => return Err(format!("Value {:?} is not a collection", value)),
     };
-    
+
     if !is_empty {
         Ok(())
     } else {
@@ -434,7 +451,11 @@ pub fn expect_has_key(map: Value, key: &str) -> Result<(), String> {
 }
 
 /// Validate that a service in the given source has the specified attribute. Parses source and checks AST.
-pub fn expect_has_attribute(source: &str, service_name: &str, attr_name: &str) -> Result<(), String> {
+pub fn expect_has_attribute(
+    source: &str,
+    service_name: &str,
+    attr_name: &str,
+) -> Result<(), String> {
     use crate::parser::ast::Statement;
     let program = crate::parse_source(source).map_err(|e| e.to_string())?;
     for stmt in &program.statements {
@@ -448,7 +469,10 @@ pub fn expect_has_attribute(source: &str, service_name: &str, attr_name: &str) -
                         "Service '{}' does not have @{} attribute (has: {:?})",
                         service_name,
                         attr_name,
-                        svc.attributes.iter().map(|a| a.name.as_str()).collect::<Vec<_>>()
+                        svc.attributes
+                            .iter()
+                            .map(|a| a.name.as_str())
+                            .collect::<Vec<_>>()
                     ))
                 };
             }
@@ -462,19 +486,19 @@ pub fn expect_compatible_attributes(attributes: Vec<&str>) -> Result<(), String>
     // Rule: @trust requires @chain
     let has_trust = attributes.contains(&"trust");
     let has_chain = attributes.contains(&"chain");
-    
+
     if has_trust && !has_chain {
         return Err("Services with @trust attribute must also have @chain attribute".to_string());
     }
-    
+
     // Rule: @secure and @public are mutually exclusive
     let has_secure = attributes.contains(&"secure");
     let has_public = attributes.contains(&"public");
-    
+
     if has_secure && has_public {
         return Err("@secure and @public attributes are mutually exclusive".to_string());
     }
-    
+
     Ok(())
 }
 
@@ -540,7 +564,11 @@ mod tests {
         // Code that throws: throw "oops"
         let code = r#"throw "oops""#;
         let result = expect_throws(code, "oops");
-        assert!(result.is_ok(), "expect_throws should pass when code throws: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "expect_throws should pass when code throws: {:?}",
+            result
+        );
     }
 
     #[test]
@@ -562,17 +590,22 @@ mod tests {
     fn test_deploy_and_call_service_method() {
         clear_test_suites();
         let id = deploy_service("chain".to_string(), vec![]).expect("deploy");
-        let result = call_service_method(id, "get_balance".to_string(), vec![
-            Value::Int(1),
-            Value::String("0x123".to_string()),
-        ]);
+        let result = call_service_method(
+            id,
+            "get_balance".to_string(),
+            vec![Value::Int(1), Value::String("0x123".to_string())],
+        );
         // get_balance may return mock or real; we only check it doesn't panic and returns Ok or Err consistently
         let _ = result;
     }
 
     #[test]
     fn test_call_service_method_unknown_instance() {
-        let result = call_service_method("nonexistent_id".to_string(), "get_balance".to_string(), vec![]);
+        let result = call_service_method(
+            "nonexistent_id".to_string(),
+            "get_balance".to_string(),
+            vec![],
+        );
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("not found"));
     }

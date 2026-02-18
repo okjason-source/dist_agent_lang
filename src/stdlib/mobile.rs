@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::runtime::values::Value;
+use std::collections::HashMap;
 
 // Mobile Framework - Phase 5
 // Comprehensive mobile application development with:
@@ -786,13 +786,20 @@ pub struct LocalNotification {
 
 // Application Management
 pub fn create_app(name: String, bundle_id: String, platform: MobilePlatform) -> MobileApp {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("app_name".to_string(), Value::String(name.clone()));
-        data.insert("bundle_id".to_string(), Value::String(bundle_id.clone()));
-        data.insert("message".to_string(), Value::String("Creating mobile app".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("app_name".to_string(), Value::String(name.clone()));
+            data.insert("bundle_id".to_string(), Value::String(bundle_id.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating mobile app".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     MobileApp {
         id: format!("app_{}", generate_id()),
@@ -819,13 +826,23 @@ pub fn create_app(name: String, bundle_id: String, platform: MobilePlatform) -> 
 pub fn add_screen_to_app(app: &mut MobileApp, screen: MobileScreen) -> Result<bool, String> {
     app.screens.push(screen);
 
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("app_id".to_string(), Value::String(app.id.clone()));
-        data.insert("screen_count".to_string(), Value::Int(app.screens.len() as i64));
-        data.insert("message".to_string(), Value::String("Added screen to mobile app".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("app_id".to_string(), Value::String(app.id.clone()));
+            data.insert(
+                "screen_count".to_string(),
+                Value::Int(app.screens.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Added screen to mobile app".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Ok(true)
 }
@@ -835,13 +852,20 @@ pub fn set_root_screen(app: &mut MobileApp, screen_id: String) -> Result<bool, S
         app.navigation.current_screen = Some(screen_id.clone());
         app.navigation.screens = vec![screen_id.clone()];
 
-        crate::stdlib::log::info("mobile", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("app_id".to_string(), Value::String(app.id.clone()));
-            data.insert("root_screen".to_string(), Value::String(screen_id));
-            data.insert("message".to_string(), Value::String("Set root screen for mobile app".to_string()));
-            data
-        }, Some("mobile"));
+        crate::stdlib::log::info(
+            "mobile",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert("app_id".to_string(), Value::String(app.id.clone()));
+                data.insert("root_screen".to_string(), Value::String(screen_id));
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Set root screen for mobile app".to_string()),
+                );
+                data
+            },
+            Some("mobile"),
+        );
 
         Ok(true)
     } else {
@@ -854,14 +878,24 @@ pub fn push_screen(app: &mut MobileApp, screen_id: String) -> Result<bool, Strin
         app.navigation.screens.push(screen_id.clone());
         app.navigation.current_screen = Some(screen_id.clone());
 
-        crate::stdlib::log::info("mobile", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("app_id".to_string(), Value::String(app.id.clone()));
-            data.insert("pushed_screen".to_string(), Value::String(screen_id));
-            data.insert("navigation_stack_size".to_string(), Value::Int(app.navigation.screens.len() as i64));
-            data.insert("message".to_string(), Value::String("Pushed screen to navigation stack".to_string()));
-            data
-        }, Some("mobile"));
+        crate::stdlib::log::info(
+            "mobile",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert("app_id".to_string(), Value::String(app.id.clone()));
+                data.insert("pushed_screen".to_string(), Value::String(screen_id));
+                data.insert(
+                    "navigation_stack_size".to_string(),
+                    Value::Int(app.navigation.screens.len() as i64),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Pushed screen to navigation stack".to_string()),
+                );
+                data
+            },
+            Some("mobile"),
+        );
 
         Ok(true)
     } else {
@@ -878,14 +912,27 @@ pub fn pop_screen(app: &mut MobileApp) -> Result<String, String> {
     let new_current = app.navigation.screens.last().cloned();
     app.navigation.current_screen = new_current;
 
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("app_id".to_string(), Value::String(app.id.clone()));
-        data.insert("popped_screen".to_string(), Value::String(popped_screen.clone()));
-        data.insert("navigation_stack_size".to_string(), Value::Int(app.navigation.screens.len() as i64));
-        data.insert("message".to_string(), Value::String("Popped screen from navigation stack".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("app_id".to_string(), Value::String(app.id.clone()));
+            data.insert(
+                "popped_screen".to_string(),
+                Value::String(popped_screen.clone()),
+            );
+            data.insert(
+                "navigation_stack_size".to_string(),
+                Value::Int(app.navigation.screens.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Popped screen from navigation stack".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Ok(popped_screen)
 }
@@ -903,22 +950,41 @@ pub fn create_screen(title: String) -> MobileScreen {
     }
 }
 
-pub fn add_component_to_screen(screen: &mut MobileScreen, component: MobileComponent) -> Result<bool, String> {
+pub fn add_component_to_screen(
+    screen: &mut MobileScreen,
+    component: MobileComponent,
+) -> Result<bool, String> {
     screen.components.push(component);
 
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("screen_id".to_string(), Value::String(screen.id.clone()));
-        data.insert("component_count".to_string(), Value::Int(screen.components.len() as i64));
-        data.insert("message".to_string(), Value::String("Added component to mobile screen".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("screen_id".to_string(), Value::String(screen.id.clone()));
+            data.insert(
+                "component_count".to_string(),
+                Value::Int(screen.components.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Added component to mobile screen".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Ok(true)
 }
 
 // UI Component Creation
-pub fn create_mobile_label(text: String, x: i64, y: i64, width: i64, height: i64) -> MobileComponent {
+pub fn create_mobile_label(
+    text: String,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+) -> MobileComponent {
     let properties = MobileComponentProperties {
         id: format!("label_{}", generate_id()),
         x,
@@ -953,7 +1019,13 @@ pub fn create_mobile_label(text: String, x: i64, y: i64, width: i64, height: i64
     MobileComponent::Label(label)
 }
 
-pub fn create_mobile_button(title: String, x: i64, y: i64, width: i64, height: i64) -> MobileComponent {
+pub fn create_mobile_button(
+    title: String,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+) -> MobileComponent {
     let properties = MobileComponentProperties {
         id: format!("button_{}", generate_id()),
         x,
@@ -983,7 +1055,13 @@ pub fn create_mobile_button(title: String, x: i64, y: i64, width: i64, height: i
     MobileComponent::Button(button)
 }
 
-pub fn create_mobile_text_field(placeholder: String, x: i64, y: i64, width: i64, height: i64) -> MobileComponent {
+pub fn create_mobile_text_field(
+    placeholder: String,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+) -> MobileComponent {
     let properties = MobileComponentProperties {
         id: format!("textfield_{}", generate_id()),
         x,
@@ -1136,11 +1214,18 @@ pub fn create_mobile_web_view(x: i64, y: i64, width: i64, height: i64) -> Mobile
 
 // Device Hardware Integration
 pub fn get_camera() -> Camera {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Accessing mobile camera".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Accessing mobile camera".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Camera {
         device_id: "default_camera".to_string(),
@@ -1148,29 +1233,55 @@ pub fn get_camera() -> Camera {
         flash_mode: FlashMode::Auto,
         focus_mode: FocusMode::ContinuousAutoFocus,
         exposure_mode: ExposureMode::ContinuousAutoExposure,
-        resolution: Size { width: 1920, height: 1080 },
+        resolution: Size {
+            width: 1920,
+            height: 1080,
+        },
     }
 }
 
 pub fn capture_photo(camera: &mut Camera) -> Result<Vec<u8>, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("camera_id".to_string(), Value::String(camera.device_id.clone()));
-        data.insert("resolution".to_string(), Value::String(format!("{}x{}", camera.resolution.width, camera.resolution.height)));
-        data.insert("message".to_string(), Value::String("Capturing photo with mobile camera".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "camera_id".to_string(),
+                Value::String(camera.device_id.clone()),
+            );
+            data.insert(
+                "resolution".to_string(),
+                Value::String(format!(
+                    "{}x{}",
+                    camera.resolution.width, camera.resolution.height
+                )),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Capturing photo with mobile camera".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     // Simulated photo capture
     Ok(vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255])
 }
 
 pub fn get_gps_location() -> Result<Location, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Getting GPS location".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Getting GPS location".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     // Simulated GPS location
     Ok(Location {
@@ -1188,11 +1299,18 @@ pub fn get_gps_location() -> Result<Location, String> {
 }
 
 pub fn get_accelerometer_data() -> Result<AccelerometerData, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Getting accelerometer data".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Getting accelerometer data".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     // Simulated accelerometer data
     Ok(AccelerometerData {
@@ -1204,11 +1322,18 @@ pub fn get_accelerometer_data() -> Result<AccelerometerData, String> {
 }
 
 pub fn get_gyroscope_data() -> Result<GyroscopeData, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Getting gyroscope data".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Getting gyroscope data".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     // Simulated gyroscope data
     Ok(GyroscopeData {
@@ -1221,37 +1346,70 @@ pub fn get_gyroscope_data() -> Result<GyroscopeData, String> {
 
 // Notifications
 pub fn send_push_notification(notification: PushNotification) -> Result<bool, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("notification_id".to_string(), Value::String(notification.id.clone()));
-        data.insert("title".to_string(), Value::String(notification.title.clone()));
-        data.insert("message".to_string(), Value::String("Sending push notification".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "notification_id".to_string(),
+                Value::String(notification.id.clone()),
+            );
+            data.insert(
+                "title".to_string(),
+                Value::String(notification.title.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Sending push notification".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Ok(true)
 }
 
 pub fn schedule_local_notification(notification: LocalNotification) -> Result<bool, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("notification_id".to_string(), Value::String(notification.id.clone()));
-        data.insert("fire_date".to_string(), Value::String(notification.fire_date.clone()));
-        data.insert("message".to_string(), Value::String("Scheduling local notification".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "notification_id".to_string(),
+                Value::String(notification.id.clone()),
+            );
+            data.insert(
+                "fire_date".to_string(),
+                Value::String(notification.fire_date.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Scheduling local notification".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Ok(true)
 }
 
 // App Permissions
 pub fn request_permission(permission: String) -> Result<bool, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("permission".to_string(), Value::String(permission.clone()));
-        data.insert("message".to_string(), Value::String("Requesting mobile app permission".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("permission".to_string(), Value::String(permission.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Requesting mobile app permission".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Ok(true)
 }
@@ -1263,32 +1421,53 @@ pub fn check_permission_status(_permission: String) -> String {
 
 // Mobile Wallet Integration
 pub fn create_mobile_wallet() -> Result<String, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Creating mobile wallet".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating mobile wallet".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Ok(format!("wallet_{}", generate_id()))
 }
 
 pub fn scan_qr_code() -> Result<String, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Scanning QR code".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Scanning QR code".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     // Simulated QR code scan
     Ok("https://example.com/wallet/123".to_string())
 }
 
 pub fn perform_nfc_scan() -> Result<String, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Performing NFC scan".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Performing NFC scan".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     // Simulated NFC scan
     Ok("04:12:34:56:78:9A:BC:DE".to_string())
@@ -1296,11 +1475,18 @@ pub fn perform_nfc_scan() -> Result<String, String> {
 
 // App Store Integration
 pub fn check_for_updates() -> Result<bool, String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Checking for app updates".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Checking for app updates".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     // Simulated update check
     Ok(false)
@@ -1311,13 +1497,20 @@ pub fn rate_app(rating: i64, review: Option<String>) -> Result<bool, String> {
         return Err("Rating must be between 1 and 5".to_string());
     }
 
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("rating".to_string(), Value::Int(rating));
-        data.insert("has_review".to_string(), Value::Bool(review.is_some()));
-        data.insert("message".to_string(), Value::String("Submitting app rating".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("rating".to_string(), Value::Int(rating));
+            data.insert("has_review".to_string(), Value::Bool(review.is_some()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Submitting app rating".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Ok(true)
 }
@@ -1330,25 +1523,39 @@ pub fn generate_id() -> String {
 
 // App Lifecycle
 pub fn run_mobile_app(app: &MobileApp) -> Result<(), String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("app_id".to_string(), Value::String(app.id.clone()));
-        data.insert("app_name".to_string(), Value::String(app.name.clone()));
-        data.insert("message".to_string(), Value::String("Starting mobile app".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("app_id".to_string(), Value::String(app.id.clone()));
+            data.insert("app_name".to_string(), Value::String(app.name.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Starting mobile app".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Ok(())
 }
 
 pub fn terminate_mobile_app(app: &MobileApp) -> Result<(), String> {
-    crate::stdlib::log::info("mobile", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("app_id".to_string(), Value::String(app.id.clone()));
-        data.insert("app_name".to_string(), Value::String(app.name.clone()));
-        data.insert("message".to_string(), Value::String("Terminating mobile app".to_string()));
-        data
-    }, Some("mobile"));
+    crate::stdlib::log::info(
+        "mobile",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("app_id".to_string(), Value::String(app.id.clone()));
+            data.insert("app_name".to_string(), Value::String(app.name.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Terminating mobile app".to_string()),
+            );
+            data
+        },
+        Some("mobile"),
+    );
 
     Ok(())
 }

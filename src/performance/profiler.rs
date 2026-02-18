@@ -1,6 +1,6 @@
-use std::time::{Duration, Instant};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone)]
 pub struct ProfileEvent {
@@ -60,15 +60,23 @@ impl Profiler {
             return None;
         }
 
-        let event_id = format!("{}_{}", name, std::time::Instant::now().elapsed().as_nanos());
+        let event_id = format!(
+            "{}_{}",
+            name,
+            std::time::Instant::now().elapsed().as_nanos()
+        );
         let thread_id = std::time::Instant::now().elapsed().as_nanos() as u64;
-        
+
         let event = ProfileEvent {
             name: name.to_string(),
             start_time: Instant::now(),
             end_time: None,
             duration: None,
-            memory_before: if self.memory_tracking { Some(Self::get_memory_usage()) } else { None },
+            memory_before: if self.memory_tracking {
+                Some(Self::get_memory_usage())
+            } else {
+                None
+            },
             memory_after: None,
             thread_id,
             call_stack: Vec::new(), // Could be enhanced with actual stack traces
@@ -87,7 +95,11 @@ impl Profiler {
         }
 
         let end_time = Instant::now();
-        let memory_after = if self.memory_tracking { Some(Self::get_memory_usage()) } else { None };
+        let memory_after = if self.memory_tracking {
+            Some(Self::get_memory_usage())
+        } else {
+            None
+        };
 
         if let Ok(mut active) = self.active_events.lock() {
             if let Some(mut event) = active.remove(event_id) {
@@ -102,9 +114,9 @@ impl Profiler {
         }
     }
 
-    pub fn profile_scope<F, R>(&self, name: &str, f: F) -> R 
-    where 
-        F: FnOnce() -> R
+    pub fn profile_scope<F, R>(&self, name: &str, f: F) -> R
+    where
+        F: FnOnce() -> R,
     {
         let event_id = self.start_profile(name);
         let result = f();
@@ -116,21 +128,23 @@ impl Profiler {
 
     pub fn get_metrics(&self) -> HashMap<String, ProfileMetrics> {
         let mut metrics = HashMap::new();
-        
+
         if let Ok(events) = self.events.lock() {
             for event in events.iter() {
-                let entry = metrics.entry(event.name.clone()).or_insert_with(|| ProfileMetrics {
-                    total_calls: 0,
-                    total_duration: Duration::ZERO,
-                    average_duration: Duration::ZERO,
-                    min_duration: Duration::MAX,
-                    max_duration: Duration::ZERO,
-                    memory_peak: 0,
-                    memory_average: 0,
-                });
+                let entry = metrics
+                    .entry(event.name.clone())
+                    .or_insert_with(|| ProfileMetrics {
+                        total_calls: 0,
+                        total_duration: Duration::ZERO,
+                        average_duration: Duration::ZERO,
+                        min_duration: Duration::MAX,
+                        max_duration: Duration::ZERO,
+                        memory_peak: 0,
+                        memory_average: 0,
+                    });
 
                 entry.total_calls += 1;
-                
+
                 if let Some(duration) = event.duration {
                     entry.total_duration += duration;
                     entry.min_duration = entry.min_duration.min(duration);
@@ -158,7 +172,7 @@ impl Profiler {
     pub fn generate_report(&self) -> String {
         let metrics = self.get_metrics();
         let mut report = String::new();
-        
+
         report.push_str("Performance Profile Report\n");
         report.push_str("========================\n\n");
 
@@ -166,12 +180,18 @@ impl Profiler {
             report.push_str(&format!("Function: {}\n", name));
             report.push_str(&format!("  Total Calls: {}\n", metric.total_calls));
             report.push_str(&format!("  Total Duration: {:?}\n", metric.total_duration));
-            report.push_str(&format!("  Average Duration: {:?}\n", metric.average_duration));
+            report.push_str(&format!(
+                "  Average Duration: {:?}\n",
+                metric.average_duration
+            ));
             report.push_str(&format!("  Min Duration: {:?}\n", metric.min_duration));
             report.push_str(&format!("  Max Duration: {:?}\n", metric.max_duration));
             if metric.memory_peak > 0 {
                 report.push_str(&format!("  Memory Peak: {} bytes\n", metric.memory_peak));
-                report.push_str(&format!("  Memory Average: {} bytes\n", metric.memory_average));
+                report.push_str(&format!(
+                    "  Memory Average: {} bytes\n",
+                    metric.memory_average
+                ));
             }
             report.push('\n');
         }
@@ -232,30 +252,30 @@ macro_rules! profile_end {
 pub struct LanguageProfiler;
 
 impl LanguageProfiler {
-    pub fn profile_lexer<F, R>(f: F) -> R 
-    where 
-        F: FnOnce() -> R
+    pub fn profile_lexer<F, R>(f: F) -> R
+    where
+        F: FnOnce() -> R,
     {
         profile!("lexer", f)
     }
 
-    pub fn profile_parser<F, R>(f: F) -> R 
-    where 
-        F: FnOnce() -> R
+    pub fn profile_parser<F, R>(f: F) -> R
+    where
+        F: FnOnce() -> R,
     {
         profile!("parser", f)
     }
 
-    pub fn profile_runtime<F, R>(f: F) -> R 
-    where 
-        F: FnOnce() -> R
+    pub fn profile_runtime<F, R>(f: F) -> R
+    where
+        F: FnOnce() -> R,
     {
         profile!("runtime", f)
     }
 
-    pub fn profile_stdlib<F, R>(namespace: &str, f: F) -> R 
-    where 
-        F: FnOnce() -> R
+    pub fn profile_stdlib<F, R>(namespace: &str, f: F) -> R
+    where
+        F: FnOnce() -> R,
     {
         profile!(&format!("stdlib_{}", namespace), f)
     }
@@ -297,7 +317,7 @@ impl MemoryProfiler {
                 for (type_name, allocated) in allocations.iter() {
                     let deallocated = deallocations.get(type_name).unwrap_or(&0);
                     let current = allocated.saturating_sub(*deallocated);
-                    
+
                     report.push_str(&format!("Type: {}\n", type_name));
                     report.push_str(&format!("  Total Allocated: {} bytes\n", allocated));
                     report.push_str(&format!("  Total Deallocated: {} bytes\n", deallocated));

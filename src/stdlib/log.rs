@@ -50,7 +50,7 @@ pub fn initialize_file_logging() -> Result<(), String> {
     }
 
     let log_file_path = get_log_file_path();
-    
+
     // Create log directory if it doesn't exist
     if let Some(parent) = log_file_path.parent() {
         std::fs::create_dir_all(parent)
@@ -64,10 +64,10 @@ pub fn initialize_file_logging() -> Result<(), String> {
             *handle = None; // Close current handle
         }
     }
-    
+
     // Check if rotation is needed before opening
     rotate_logs_if_needed()?;
-    
+
     // Open log file in append mode (after potential rotation)
     let file = OpenOptions::new()
         .create(true)
@@ -76,7 +76,7 @@ pub fn initialize_file_logging() -> Result<(), String> {
         .map_err(|e| format!("Failed to open log file {}: {}", log_file_path.display(), e))?;
 
     *LOG_FILE_HANDLE.lock().unwrap() = Some(file);
-    
+
     Ok(())
 }
 
@@ -126,7 +126,7 @@ fn log_retention_days() -> u64 {
 /// Rotate log files if current file exceeds size limit
 fn rotate_logs_if_needed() -> Result<(), String> {
     let log_file_path = get_log_file_path();
-    
+
     if !log_file_path.exists() {
         // File doesn't exist yet, just clean up old logs
         cleanup_old_logs()?;
@@ -135,14 +135,14 @@ fn rotate_logs_if_needed() -> Result<(), String> {
 
     let metadata = std::fs::metadata(&log_file_path)
         .map_err(|e| format!("Failed to get log file metadata: {}", e))?;
-    
+
     if metadata.len() >= max_log_file_size() {
         rotate_log_file(&log_file_path)?;
     }
-    
+
     // Clean up old log files
     cleanup_old_logs()?;
-    
+
     Ok(())
 }
 
@@ -152,11 +152,11 @@ fn rotate_log_file(log_file_path: &Path) -> Result<(), String> {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
-    
+
     let rotated_name = format!("{}.{}", log_file_path.display(), timestamp);
     std::fs::rename(log_file_path, &rotated_name)
         .map_err(|e| format!("Failed to rotate log file: {}", e))?;
-    
+
     Ok(())
 }
 
@@ -170,8 +170,8 @@ fn cleanup_old_logs() -> Result<(), String> {
         .as_secs()
         - (retention_days * 24 * 60 * 60);
 
-    let entries = std::fs::read_dir(&log_dir)
-        .map_err(|e| format!("Failed to read log directory: {}", e))?;
+    let entries =
+        std::fs::read_dir(&log_dir).map_err(|e| format!("Failed to read log directory: {}", e))?;
 
     for entry in entries {
         if let Ok(entry) = entry {
@@ -189,7 +189,7 @@ fn cleanup_old_logs() -> Result<(), String> {
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -219,11 +219,11 @@ fn write_to_file(entry: &LogEntry) -> Result<(), io::Error> {
             entry.source.replace('"', "\\\""),
             format_data_as_json(&entry.data)
         );
-        
+
         file.write_all(json_entry.as_bytes())?;
         file.flush()?;
     }
-    
+
     Ok(())
 }
 
@@ -245,12 +245,12 @@ fn format_data_as_json(data: &HashMap<String, Value>) -> String {
 }
 
 /// Log an informational message
-/// 
+///
 /// # Arguments
 /// * `message` - The message to log
 /// * `data` - Additional data to include with the log
 /// * `source` - Optional source identifier (defaults to "system" if None)
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::log;
@@ -269,12 +269,12 @@ pub fn info(message: &str, data: HashMap<String, Value>, source: Option<&str>) {
 }
 
 /// Log a warning message
-/// 
+///
 /// # Arguments
 /// * `message` - The warning message
 /// * `data` - Additional data to include with the warning
 /// * `source` - Optional source identifier (defaults to "system" if None)
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::log;
@@ -291,11 +291,11 @@ pub fn warning(message: &str, data: HashMap<String, Value>, source: Option<&str>
 }
 
 /// Log an error message
-/// 
+///
 /// # Arguments
 /// * `message` - The error message
 /// * `data` - Additional data to include with the error
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::log;
@@ -312,12 +312,12 @@ pub fn error(message: &str, data: HashMap<String, Value>, source: Option<&str>) 
 }
 
 /// Log an audit event
-/// 
+///
 /// # Arguments
 /// * `event` - The audit event name
 /// * `data` - Additional data to include with the audit
 /// * `source` - Optional source identifier (defaults to "audit" if None)
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::log;
@@ -335,12 +335,12 @@ pub fn audit(event: &str, data: HashMap<String, Value>, source: Option<&str>) {
 }
 
 /// Log a debug message
-/// 
+///
 /// # Arguments
 /// * `message` - The debug message
 /// * `data` - Additional data to include with the debug info
 /// * `source` - Optional source identifier (defaults to "debug" if None)
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::log;
@@ -375,8 +375,8 @@ fn max_entries() -> usize {
 fn sink_console() -> bool {
     match env::var("LOG_SINK").as_deref() {
         Ok("none") | Ok("file") => false, // Only file, no console
-        Ok("both") => true, // Both console and file
-        _ => true, // Default: console only
+        Ok("both") => true,               // Both console and file
+        _ => true,                        // Default: console only
     }
 }
 
@@ -433,10 +433,10 @@ fn log_message(level: LogLevel, message: &str, data: HashMap<String, Value>, sou
 }
 
 /// Get all log entries
-/// 
+///
 /// # Returns
 /// * `Vec<LogEntry>` - All stored log entries
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::log;
@@ -451,13 +451,13 @@ pub fn get_entries() -> Vec<LogEntry> {
 }
 
 /// Get log entries by level
-/// 
+///
 /// # Arguments
 /// * `level` - The log level to filter by
-/// 
+///
 /// # Returns
 /// * `Vec<LogEntry>` - Filtered log entries
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::log;
@@ -465,32 +465,34 @@ pub fn get_entries() -> Vec<LogEntry> {
 /// let audit_entries = log::get_entries_by_level(LogLevel::Audit);
 /// ```
 pub fn get_entries_by_level(level: LogLevel) -> Vec<LogEntry> {
-    get_entries().into_iter()
+    get_entries()
+        .into_iter()
         .filter(|entry| entry.level == level)
         .collect()
 }
 
 /// Get log entries by source
-/// 
+///
 /// # Arguments
 /// * `source` - The source to filter by
-/// 
+///
 /// # Returns
 /// * `Vec<LogEntry>` - Filtered log entries
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::log;
 /// let audit_logs = log::get_entries_by_source("audit");
 /// ```
 pub fn get_entries_by_source(source: &str) -> Vec<LogEntry> {
-    get_entries().into_iter()
+    get_entries()
+        .into_iter()
         .filter(|entry| entry.source == source)
         .collect()
 }
 
 /// Clear all log entries
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::log;
@@ -503,10 +505,10 @@ pub fn clear() {
 }
 
 /// Get log statistics
-/// 
+///
 /// # Returns
 /// * `HashMap<String, Value>` - Log statistics
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::log;
@@ -515,9 +517,12 @@ pub fn clear() {
 pub fn get_stats() -> HashMap<String, Value> {
     let entries = get_entries();
     let mut stats = HashMap::new();
-    
-    stats.insert("total_entries".to_string(), Value::Int(entries.len() as i64));
-    
+
+    stats.insert(
+        "total_entries".to_string(),
+        Value::Int(entries.len() as i64),
+    );
+
     // Count by level
     let mut level_counts = HashMap::new();
     for entry in &entries {
@@ -528,25 +533,25 @@ pub fn get_stats() -> HashMap<String, Value> {
             LogLevel::Audit => "audit",
             LogLevel::Debug => "debug",
         };
-        
+
         let count = level_counts.entry(level_str.to_string()).or_insert(0);
         *count += 1;
     }
-    
+
     for (level, count) in level_counts {
         stats.insert(format!("count_{}", level), Value::Int(count));
     }
-    
+
     // Count by source
     let mut source_counts = HashMap::new();
     for entry in &entries {
         let count = source_counts.entry(entry.source.clone()).or_insert(0);
         *count += 1;
     }
-    
+
     for (source, count) in source_counts {
         stats.insert(format!("source_{}", source), Value::Int(count));
     }
-    
+
     stats
 }

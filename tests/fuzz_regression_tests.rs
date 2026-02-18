@@ -232,7 +232,10 @@ fn test_fuzz_runtime_timeout_infinite_loop_returns_error() {
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
             let result = runtime.execute_program(program);
-            assert!(result.is_err(), "Infinite loop should return ExecutionTimeout");
+            assert!(
+                result.is_err(),
+                "Infinite loop should return ExecutionTimeout"
+            );
             let err = result.unwrap_err();
             assert!(
                 err.to_string().to_lowercase().contains("timeout"),
@@ -259,7 +262,14 @@ fn test_fuzz_runtime_crash_stack_overflow_and_no_panic() {
                     let mut runtime = Runtime::new();
                     let result = runtime.execute_program(program);
                     // Must not panic. Result may be Ok or Err (recursion depth exceeded).
-                    assert!(result.is_ok() || result.as_ref().unwrap_err().to_string().contains("recursion"));
+                    assert!(
+                        result.is_ok()
+                            || result
+                                .as_ref()
+                                .unwrap_err()
+                                .to_string()
+                                .contains("recursion")
+                    );
                 }
             }
         })
@@ -267,4 +277,3 @@ fn test_fuzz_runtime_crash_stack_overflow_and_no_panic() {
         .join()
         .unwrap();
 }
-

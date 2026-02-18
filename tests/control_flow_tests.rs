@@ -3,18 +3,21 @@
 
 use dist_agent_lang::lexer::Lexer;
 use dist_agent_lang::parser::Parser;
-use dist_agent_lang::runtime::Runtime;
 use dist_agent_lang::runtime::values::Value;
+use dist_agent_lang::runtime::Runtime;
 
 fn parse_and_execute(source: &str) -> Result<Value, String> {
     let lexer = Lexer::new(source);
-    let tokens_with_pos = lexer.tokenize_with_positions_immutable()
+    let tokens_with_pos = lexer
+        .tokenize_with_positions_immutable()
         .map_err(|e| format!("Lexer error: {:?}", e))?;
     let mut parser = Parser::new_with_positions(tokens_with_pos);
-    let program = parser.parse()
+    let program = parser
+        .parse()
         .map_err(|e| format!("Parser error: {:?}", e))?;
     let mut runtime = Runtime::new();
-    runtime.execute_program(program)
+    runtime
+        .execute_program(program)
         .map_err(|e| format!("Runtime error: {:?}", e))?
         .ok_or_else(|| "No return value".to_string())
 }
@@ -31,7 +34,7 @@ fn test_break_in_while_loop() {
         }
         count
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Int(5));
 }
@@ -50,7 +53,7 @@ fn test_continue_in_while_loop() {
         }
         sum
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     // Sum of odd numbers 1+3+5+7+9 = 25
     assert_eq!(result, Value::Int(25));
@@ -68,7 +71,7 @@ fn test_break_with_value() {
         }
         result
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Int(42));
 }
@@ -85,7 +88,7 @@ fn test_loop_statement() {
         }
         count
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Int(10));
 }
@@ -102,7 +105,7 @@ fn test_continue_in_for_loop() {
         }
         sum
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     // Sum of odd numbers: 1 + 3 + 5 = 9
     assert_eq!(result, Value::Int(9));
@@ -120,7 +123,7 @@ fn test_break_in_for_loop() {
         }
         count
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Int(5));
 }
@@ -135,7 +138,7 @@ fn test_match_literal_pattern() {
             default => 0
         }
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Int(100));
 }
@@ -150,7 +153,7 @@ fn test_match_string_pattern() {
             default => -1
         }
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Int(1));
 }
@@ -163,7 +166,7 @@ fn test_match_identifier_pattern() {
             x => x * 2
         }
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Int(84));
 }
@@ -176,7 +179,7 @@ fn test_match_wildcard_pattern() {
             _ => 100
         }
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Int(100));
 }
@@ -192,7 +195,7 @@ fn test_match_range_pattern() {
             default => "F"
         }
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::String("B".to_string()));
 }
@@ -207,7 +210,7 @@ fn test_match_default_case() {
             default => "other"
         }
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::String("other".to_string()));
 }
@@ -221,7 +224,7 @@ fn test_match_no_default() {
             2 => "two"
         }
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Null);
 }
@@ -245,7 +248,7 @@ fn test_nested_loops_with_break() {
         }
         outer
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Int(2));
 }
@@ -264,7 +267,7 @@ fn test_break_in_match_case() {
         }
         result
     "#;
-    
+
     let result = parse_and_execute(source).unwrap();
     assert_eq!(result, Value::Int(1));
 }

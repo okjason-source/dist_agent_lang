@@ -62,12 +62,14 @@ fn test_complete_swap_workflow() {
         event SwapExecuted(from: string, to: string, amount: int);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
-    
+
     // Verify service structure
-    let service_count = program.statements.iter()
+    let service_count = program
+        .statements
+        .iter()
         .filter(|s| matches!(s, Statement::Service(_)))
         .count();
     assert_eq!(service_count, 1);
@@ -109,7 +111,7 @@ fn test_lending_workflow() {
         event DepositCompleted(user: string, amount: int, tx_hash: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -166,7 +168,7 @@ fn test_staking_workflow() {
         event Unstaked(user: string, amount: int);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -208,7 +210,7 @@ fn test_multi_step_transaction() {
         event TransferCompleted(from: string, to: string, amount: int);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -253,7 +255,7 @@ fn test_cross_chain_deployment() {
         event DeployedToChain(chain_id: int, address: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -307,7 +309,7 @@ fn test_cross_chain_transfer_simulation() {
         event TokensMinted(chain_id: int, amount: int);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -340,7 +342,7 @@ fn test_chain_selection_logic() {
         }
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -391,7 +393,7 @@ fn test_ai_powered_defi() {
         event AITradeExecuted(agent_id: string, result: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -434,7 +436,7 @@ fn test_intelligent_contract_deployment() {
         event ContractDeployed(agent_id: string, chain_id: int, address: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -480,7 +482,7 @@ fn test_market_analysis_integration() {
         event MarketAnalysisComplete(agent_id: string, insights: map<string, any>);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -533,7 +535,7 @@ fn test_secure_transaction_workflow() {
         event SecureTransactionExecuted(tx_hash: string, verified: bool);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -577,7 +579,7 @@ fn test_audit_trail_workflow() {
         event AuditLogged(operation: string, result: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -611,7 +613,7 @@ fn test_crypto_hash_workflow() {
         event DataVerified(data_hash: string, verified: bool);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -673,7 +675,7 @@ fn test_multi_agent_coordination() {
         event MessageSent(from_agent: string, to_agent: string, message_type: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -733,7 +735,7 @@ fn test_workflow_with_dependencies() {
         event WorkflowCompleted(workflow_id: string, final_result: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -810,7 +812,7 @@ fn test_parallel_agent_execution() {
         event ParallelExecutionCompleted(results: map<string, string>);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -858,7 +860,7 @@ fn test_solidity_contract_orchestration() {
         event SolidityFunctionCalled(function_name: string, result: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -899,7 +901,7 @@ fn test_solidity_event_listening() {
         event TransferProcessed(from: string, to: string, amount: int);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -978,7 +980,7 @@ fn test_complete_defi_ecosystem() {
         event CompleteWorkflowExecuted(user: string, result: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -1042,7 +1044,7 @@ fn test_ai_orchestrated_multi_chain_workflow() {
         event MultiChainWorkflowCompleted(results: map<int, string>);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -1103,7 +1105,7 @@ fn test_security_audit_workflow() {
         event SecureOperationExecuted(operation: string, result: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -1138,7 +1140,7 @@ fn test_all_workflows_parse() {
         test_ai_orchestrated_multi_chain_workflow,
         test_security_audit_workflow,
     ];
-    
+
     // All tests should compile and parse successfully
     assert!(workflow_tests.len() >= 20);
 }

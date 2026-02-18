@@ -1,7 +1,14 @@
+use crate::http_server_security::{security_headers_middleware, RateLimiter};
+use crate::http_server_security_middleware::{
+    input_validation_middleware, rate_limit_middleware, request_size_middleware,
+};
+use crate::runtime::engine::Runtime;
+use crate::stdlib::web::HttpServer;
+use axum::routing::Router;
 use axum::{
     http::Method,
-    response::{Html, Json},
     middleware,
+    response::{Html, Json},
     Extension,
 };
 use serde::{Deserialize, Serialize};
@@ -9,13 +16,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
-use crate::runtime::engine::Runtime;
-use crate::stdlib::web::HttpServer;
-use crate::http_server_security::{security_headers_middleware, RateLimiter};
-use crate::http_server_security_middleware::{
-    rate_limit_middleware, request_size_middleware, input_validation_middleware,
-};
-use axum::routing::Router;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebRequest {
@@ -44,8 +44,9 @@ pub struct WebServerState {
 
 pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::error::Error>> {
     // Runtime factory for creating new runtime instances per request
-    let runtime_factory = Arc::new(Box::new(|| Runtime::new()) as Box<dyn Fn() -> Runtime + Send + Sync>);
-    
+    let runtime_factory =
+        Arc::new(Box::new(|| Runtime::new()) as Box<dyn Fn() -> Runtime + Send + Sync>);
+
     let state = Arc::new(RwLock::new(WebServerState {
         server: server.clone(),
         handlers: HashMap::new(),
@@ -66,19 +67,19 @@ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::er
     // 4. Request size limiting
     // 5. Input validation
     // 6. User middleware (applied in handle_with_middleware)
-    
+
     // Create router with routes from server configuration
     // Note: We need to add layers before with_state() to maintain correct types
     // So we'll build the router manually here to have control over layer ordering
     let mut router = Router::new();
-    
+
     // Add routes from server configuration (same logic as create_router_with_middleware)
     for (route_key, route) in &server.routes {
         if let Some((method_str, path)) = route_key.split_once(':') {
             let method = method_str.to_uppercase();
             let handler_name = route.handler.clone();
             let state_clone = state.clone();
-            
+
             let handler = move |request: axum::extract::Request| {
                 let state = state_clone.clone();
                 let handler_name = handler_name.clone();
@@ -87,10 +88,11 @@ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::er
                         axum::extract::State(state),
                         request,
                         &handler_name,
-                    ).await
+                    )
+                    .await
                 }
             };
-            
+
             match method.as_str() {
                 "GET" => router = router.route(path, axum::routing::get(handler)),
                 "POST" => router = router.route(path, axum::routing::post(handler)),
@@ -100,14 +102,14 @@ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::er
             }
         }
     }
-    
+
     // Add default routes if no routes configured
     if server.routes.is_empty() {
         router = router
             .route("/", axum::routing::get(home_handler))
             .route("/health", axum::routing::get(health_handler));
     }
-    
+
     // Shared rate limiter so all requests are counted (default 100 req/min).
     // Without this, the middleware would create a new limiter per request and rate limiting would never trigger.
     let rate_limiter = Arc::new(RateLimiter::new(100, 60));
@@ -126,7 +128,7 @@ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::er
     // Start server
     let addr = format!("127.0.0.1:{}", server.port);
     println!("🚀 Starting HTTP server on {}", addr);
-    
+
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     axum::serve(listener, app).await?;
 
@@ -476,7 +478,7 @@ async fn home_handler() -> Html<String> {
 </body>
 </html>
     "#;
-    
+
     Html(html.to_string())
 }
 
@@ -488,7 +490,7 @@ async fn balance_handler() -> Json<serde_json::Value> {
         "address": "0x1234567890abcdef",
         "message": "Balance retrieved successfully"
     });
-    
+
     Json(response)
 }
 
@@ -499,7 +501,7 @@ async fn connect_handler() -> Json<serde_json::Value> {
         "message": "Wallet connected successfully",
         "address": "0x1234567890abcdef"
     });
-    
+
     Json(response)
 }
 
@@ -510,7 +512,7 @@ async fn transfer_handler() -> Json<serde_json::Value> {
         "message": "Transfer completed successfully",
         "transaction": "0xabcdef1234567890"
     });
-    
+
     Json(response)
 }
 
@@ -522,7 +524,7 @@ async fn airdrop_handler() -> Json<serde_json::Value> {
         "amount": "100.0",
         "transaction": "0x1234567890abcdef"
     });
-    
+
     Json(response)
 }
 
@@ -533,6 +535,6 @@ async fn health_handler() -> Json<serde_json::Value> {
         "language": "dist_agent_lang",
         "timestamp": chrono::Utc::now().to_rfc3339()
     });
-    
+
     Json(response)
 }

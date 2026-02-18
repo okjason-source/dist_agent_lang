@@ -34,8 +34,8 @@ pub fn use_mold_and_spawn(
     create_from_mold_source(&ipfs_source, base, name_override)
 }
 
-use crate::stdlib::agent::{spawn, AgentConfig, AgentType, LifecycleHooks};
 use crate::runtime::values::Value;
+use crate::stdlib::agent::{spawn, AgentConfig, AgentType, LifecycleHooks};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -58,7 +58,10 @@ pub fn mold_config_to_agent_config(
         .map(|(k, v)| (k.clone(), json_value_to_runtime_value(v)))
         .collect();
     metadata.insert("mold_name".to_string(), Value::String(mold.name.clone()));
-    metadata.insert("mold_version".to_string(), Value::String(mold.version.clone()));
+    metadata.insert(
+        "mold_version".to_string(),
+        Value::String(mold.version.clone()),
+    );
 
     let lifecycle = mold.lifecycle.as_ref().map(|l| LifecycleHooks {
         on_create: l.on_create.clone(),
@@ -93,9 +96,9 @@ fn json_value_to_runtime_value(v: &serde_json::Value) -> Value {
             }
         }
         serde_json::Value::String(s) => Value::String(s.clone()),
-        serde_json::Value::Array(arr) => Value::List(
-            arr.iter().map(json_value_to_runtime_value).collect(),
-        ),
+        serde_json::Value::Array(arr) => {
+            Value::List(arr.iter().map(json_value_to_runtime_value).collect())
+        }
         serde_json::Value::Object(obj) => Value::Map(
             obj.iter()
                 .map(|(k, v)| (k.clone(), json_value_to_runtime_value(v)))
@@ -194,7 +197,12 @@ pub fn resolve_mold_path(base: &Path, path_or_name: &str) -> Result<PathBuf, Str
     }
     let list = list_local_paths(base);
     for path in &list {
-        if path.file_stem().and_then(|s| s.to_str()).map(|s| s.trim_end_matches(".mold") == path_or_name).unwrap_or(false) {
+        if path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .map(|s| s.trim_end_matches(".mold") == path_or_name)
+            .unwrap_or(false)
+        {
             return Ok(path.clone());
         }
         if let Ok(m) = load_mold_from_path(path) {
@@ -203,7 +211,10 @@ pub fn resolve_mold_path(base: &Path, path_or_name: &str) -> Result<PathBuf, Str
             }
         }
     }
-    Err(format!("mold not found: {} (tried path, {}.mold.json, {}.mold.dal, and local list)", path_or_name, path_or_name, path_or_name))
+    Err(format!(
+        "mold not found: {} (tried path, {}.mold.json, {}.mold.dal, and local list)",
+        path_or_name, path_or_name, path_or_name
+    ))
 }
 
 /// Scaffold a new mold file at `out_path` with minimal JSON (strict fields only).

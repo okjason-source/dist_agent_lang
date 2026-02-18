@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use crate::runtime::values::Value;
 use crate::runtime::Runtime;
+use std::collections::HashMap;
 
 /// Mock function definition
 #[derive(Debug, Clone)]
@@ -24,47 +24,47 @@ impl MockFunction {
             expected_calls: None,
         }
     }
-    
+
     pub fn with_namespace(mut self, namespace: &str) -> Self {
         self.namespace = Some(namespace.to_string());
         self
     }
-    
+
     pub fn returns(mut self, value: Value) -> Self {
         self.return_value = Some(value);
         self
     }
-    
+
     pub fn with_side_effect(mut self, side_effect: MockSideEffect) -> Self {
         self.side_effects.push(side_effect);
         self
     }
-    
+
     pub fn expects_calls(mut self, count: usize) -> Self {
         self.expected_calls = Some(count);
         self
     }
-    
-    pub fn validates_arguments<F>(self, _validator: F) -> Self 
-    where 
-        F: Fn(&[Value]) -> Result<(), String> + 'static 
+
+    pub fn validates_arguments<F>(self, _validator: F) -> Self
+    where
+        F: Fn(&[Value]) -> Result<(), String> + 'static,
     {
         // Validator functionality removed for simplicity
         self
     }
-    
+
     pub fn call(&mut self, args: &[Value]) -> Result<Value, String> {
         self.call_count += 1;
-        
+
         // Execute side effects
         for side_effect in &self.side_effects {
             side_effect.execute(args)?;
         }
-        
+
         // Return mock value
         Ok(self.return_value.clone().unwrap_or(Value::Null))
     }
-    
+
     pub fn verify(&self) -> Result<(), String> {
         if let Some(expected) = self.expected_calls {
             if self.call_count != expected {
@@ -103,9 +103,7 @@ impl MockSideEffect {
                 println!("[MOCK] {}", message);
                 Ok(())
             }
-            MockSideEffect::ThrowError(error) => {
-                Err(error.clone())
-            }
+            MockSideEffect::ThrowError(error) => Err(error.clone()),
             MockSideEffect::Delay(duration) => {
                 std::thread::sleep(*duration);
                 Ok(())
@@ -128,50 +126,58 @@ impl MockRegistry {
             enabled: true,
         }
     }
-    
+
     pub fn register(&mut self, mock: MockFunction) {
         let key = self.get_mock_key(&mock.name, mock.namespace.as_deref());
         self.mocks.insert(key, mock);
     }
-    
+
     pub fn get_mock(&mut self, name: &str, namespace: Option<&str>) -> Option<&mut MockFunction> {
         let key = self.get_mock_key(name, namespace);
         self.mocks.get_mut(&key)
     }
-    
-    pub fn call_mock(&mut self, name: &str, namespace: Option<&str>, args: &[Value]) -> Result<Value, String> {
+
+    pub fn call_mock(
+        &mut self,
+        name: &str,
+        namespace: Option<&str>,
+        args: &[Value],
+    ) -> Result<Value, String> {
         if !self.enabled {
             return Err("Mock registry is disabled".to_string());
         }
-        
+
         if let Some(mock) = self.get_mock(name, namespace) {
             mock.call(args)
         } else {
-            Err(format!("No mock found for '{}{}'", 
-                namespace.map(|ns| format!("{}::", ns)).unwrap_or_default(), 
-                name))
+            Err(format!(
+                "No mock found for '{}{}'",
+                namespace.map(|ns| format!("{}::", ns)).unwrap_or_default(),
+                name
+            ))
         }
     }
-    
+
     pub fn verify_all(&self) -> Result<(), String> {
         for (key, mock) in &self.mocks {
-            mock.verify().map_err(|e| format!("Mock '{}': {}", key, e))?;
+            mock.verify()
+                .map_err(|e| format!("Mock '{}': {}", key, e))?;
         }
         Ok(())
     }
-    
+
     pub fn clear(&mut self) {
         self.mocks.clear();
     }
-    
+
     pub fn enable(&mut self) {
         self.enabled = true;
     }
-    
+
     pub fn disable(&mut self) {
         self.enabled = false;
     }
-    
+
     fn get_mock_key(&self, name: &str, namespace: Option<&str>) -> String {
         match namespace {
             Some(ns) => format!("{}::{}", ns, name),
@@ -201,45 +207,47 @@ impl MockBuilder {
             arguments_validator: None,
         }
     }
-    
+
     pub fn in_namespace(mut self, namespace: &str) -> Self {
         self.namespace = Some(namespace.to_string());
         self
     }
-    
+
     pub fn returns(mut self, value: Value) -> Self {
         self.return_value = Some(value);
         self
     }
-    
+
     pub fn logs(mut self, message: &str) -> Self {
-        self.side_effects.push(MockSideEffect::LogMessage(message.to_string()));
+        self.side_effects
+            .push(MockSideEffect::LogMessage(message.to_string()));
         self
     }
-    
+
     pub fn throws(mut self, error: &str) -> Self {
-        self.side_effects.push(MockSideEffect::ThrowError(error.to_string()));
+        self.side_effects
+            .push(MockSideEffect::ThrowError(error.to_string()));
         self
     }
-    
+
     pub fn delays(mut self, duration: std::time::Duration) -> Self {
         self.side_effects.push(MockSideEffect::Delay(duration));
         self
     }
-    
+
     pub fn expects_calls(mut self, count: usize) -> Self {
         self.expected_calls = Some(count);
         self
     }
-    
-    pub fn validates_args<F>(mut self, validator: F) -> Self 
-    where 
-        F: Fn(&[Value]) -> Result<(), String> + 'static 
+
+    pub fn validates_args<F>(mut self, validator: F) -> Self
+    where
+        F: Fn(&[Value]) -> Result<(), String> + 'static,
     {
         self.arguments_validator = Some(Box::new(validator));
         self
     }
-    
+
     pub fn build(self) -> MockFunction {
         MockFunction {
             name: self.name,
@@ -265,22 +273,22 @@ impl MockRuntime {
             mock_registry: MockRegistry::new(),
         }
     }
-    
+
     pub fn with_mock(mut self, mock: MockFunction) -> Self {
         self.mock_registry.register(mock);
         self
     }
-    
+
     pub fn execute_with_mocks(&mut self, _source_code: &str) -> Result<Value, String> {
         // In a real implementation, this would:
         // 1. Parse the source code
         // 2. Intercept function calls to check for mocks
         // 3. Execute the code with mock support
-        
+
         // For now, we'll just return a placeholder
         Ok(Value::String("Mock execution completed".to_string()))
     }
-    
+
     pub fn verify_mocks(&self) -> Result<(), String> {
         self.mock_registry.verify_all()
     }
@@ -289,35 +297,35 @@ impl MockRuntime {
 /// Convenience functions for creating common mocks
 pub mod mock_helpers {
     use super::*;
-    
+
     pub fn mock_chain_mint() -> MockBuilder {
         MockBuilder::new("mint")
             .in_namespace("chain")
             .returns(Value::Int(12345))
             .logs("Mock chain::mint called")
     }
-    
+
     pub fn mock_oracle_fetch() -> MockBuilder {
         MockBuilder::new("fetch")
             .in_namespace("oracle")
             .returns(Value::String("mock_price_data".to_string()))
             .logs("Mock oracle::fetch called")
     }
-    
+
     pub fn mock_service_call() -> MockBuilder {
         MockBuilder::new("call")
             .in_namespace("service")
             .returns(Value::String("mock_service_response".to_string()))
             .logs("Mock service::call called")
     }
-    
+
     pub fn mock_auth_session() -> MockBuilder {
         MockBuilder::new("session")
             .in_namespace("auth")
             .returns(Value::String("mock_session_id".to_string()))
             .logs("Mock auth::session called")
     }
-    
+
     pub fn mock_crypto_hash() -> MockBuilder {
         MockBuilder::new("hash")
             .in_namespace("crypto")
@@ -339,27 +347,33 @@ impl MockTestUtils for MockRuntime {
         self.mock_registry.enable();
         self.mock_registry.clone()
     }
-    
+
     fn teardown_mocks(&mut self) {
         self.mock_registry.clear();
         self.mock_registry.disable();
     }
-    
+
     fn assert_mock_called(&self, name: &str, namespace: Option<&str>, expected_calls: usize) {
         let key = self.mock_registry.get_mock_key(name, namespace);
         if let Some(mock) = self.mock_registry.mocks.get(&key) {
-            assert_eq!(mock.call_count, expected_calls, 
-                "Mock '{}' was called {} times, expected {}", key, mock.call_count, expected_calls);
+            assert_eq!(
+                mock.call_count, expected_calls,
+                "Mock '{}' was called {} times, expected {}",
+                key, mock.call_count, expected_calls
+            );
         } else {
             panic!("Mock '{}' not found", key);
         }
     }
-    
+
     fn assert_mock_not_called(&self, name: &str, namespace: Option<&str>) {
         let key = self.mock_registry.get_mock_key(name, namespace);
         if let Some(mock) = self.mock_registry.mocks.get(&key) {
-            assert_eq!(mock.call_count, 0, 
-                "Mock '{}' was called {} times, expected 0", key, mock.call_count);
+            assert_eq!(
+                mock.call_count, 0,
+                "Mock '{}' was called {} times, expected 0",
+                key, mock.call_count
+            );
         }
     }
 }

@@ -1,8 +1,8 @@
 // Auto-detection logic for interface selection
 // When @api attribute is not specified, intelligently chooses HTTP or FFI
 
-use crate::runtime::values::Value;
 use crate::ffi::interface::InterfaceType;
+use crate::runtime::values::Value;
 
 /// Service metadata for auto-detection
 #[derive(Debug, Clone)]
@@ -16,9 +16,9 @@ pub struct ServiceMetadata {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CallFrequency {
-    Low,      // < 10 calls/sec
-    Medium,   // 10-1000 calls/sec
-    High,     // > 1000 calls/sec
+    Low,    // < 10 calls/sec
+    Medium, // 10-1000 calls/sec
+    High,   // > 1000 calls/sec
 }
 
 impl ServiceMetadata {
@@ -46,20 +46,39 @@ impl ServiceMetadata {
     /// Analyze function name to determine operation type
     pub fn analyze_function(function_name: &str) -> (bool, bool) {
         let network_patterns = [
-            "chain::", "database::", "network_", "remote_",
-            "fetch", "request", "api_", "http_", "web_",
+            "chain::",
+            "database::",
+            "network_",
+            "remote_",
+            "fetch",
+            "request",
+            "api_",
+            "http_",
+            "web_",
         ];
 
         let compute_patterns = [
-            "hash", "sign", "verify", "encrypt", "decrypt",
-            "compute", "calculate", "process", "transform",
-            "batch_", "parallel_", "fast_", "crypto::",
+            "hash",
+            "sign",
+            "verify",
+            "encrypt",
+            "decrypt",
+            "compute",
+            "calculate",
+            "process",
+            "transform",
+            "batch_",
+            "parallel_",
+            "fast_",
+            "crypto::",
         ];
 
-        let has_network = network_patterns.iter()
+        let has_network = network_patterns
+            .iter()
             .any(|pattern| function_name.contains(pattern));
-        
-        let has_compute = compute_patterns.iter()
+
+        let has_compute = compute_patterns
+            .iter()
             .any(|pattern| function_name.contains(pattern));
 
         (has_network, has_compute)
@@ -82,7 +101,8 @@ impl InterfaceSelector {
 
     /// Register service metadata for better auto-detection
     pub fn register_service(&mut self, metadata: ServiceMetadata) {
-        self.service_metadata.insert(metadata.name.clone(), metadata);
+        self.service_metadata
+            .insert(metadata.name.clone(), metadata);
     }
 
     /// Select interface for a service call
@@ -96,23 +116,23 @@ impl InterfaceSelector {
         if let Some(metadata) = self.service_metadata.get(service_name) {
             // Use service-level detection
             let service_interface = metadata.detect_interface_type();
-            
+
             // Override with function-level analysis if needed
             let (has_network, has_compute) = ServiceMetadata::analyze_function(function_name);
-            
+
             if has_network && !has_compute {
                 return InterfaceType::HTTP;
             }
             if has_compute && !has_network {
                 return InterfaceType::FFI;
             }
-            
+
             return service_interface;
         }
 
         // Fallback: analyze function name
         let (has_network, has_compute) = ServiceMetadata::analyze_function(function_name);
-        
+
         if has_network && !has_compute {
             InterfaceType::HTTP
         } else if has_compute && !has_network {

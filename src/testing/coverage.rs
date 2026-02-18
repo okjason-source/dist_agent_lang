@@ -1,6 +1,6 @@
-use std::collections::HashSet;
 use crate::parser::ast::*;
 use crate::testing::framework::TestCoverage;
+use std::collections::HashSet;
 
 /// Coverage tracker for monitoring code execution
 #[derive(Debug, Clone)]
@@ -26,25 +26,25 @@ impl CoverageTracker {
             source_code: None,
         }
     }
-    
+
     pub fn with_source_code(mut self, source_code: String) -> Self {
         self.total_lines = source_code.lines().count();
         self.source_code = Some(source_code);
         self
     }
-    
+
     pub fn mark_line_executed(&mut self, line: usize) {
         self.executed_lines.insert(line);
     }
-    
+
     pub fn mark_function_executed(&mut self, function_name: &str) {
         self.executed_functions.insert(function_name.to_string());
     }
-    
+
     pub fn mark_branch_executed(&mut self, line: usize, condition: &str) {
         self.executed_branches.insert((line, condition.to_string()));
     }
-    
+
     pub fn get_coverage(&self) -> TestCoverage {
         TestCoverage {
             lines_covered: self.executed_lines.len(),
@@ -54,7 +54,7 @@ impl CoverageTracker {
             total_branches: self.total_branches,
         }
     }
-    
+
     pub fn line_coverage_percentage(&self) -> f64 {
         if self.total_lines == 0 {
             0.0
@@ -62,7 +62,7 @@ impl CoverageTracker {
             (self.executed_lines.len() as f64 / self.total_lines as f64) * 100.0
         }
     }
-    
+
     pub fn function_coverage_percentage(&self) -> f64 {
         if self.total_functions == 0 {
             0.0
@@ -70,7 +70,7 @@ impl CoverageTracker {
             (self.executed_functions.len() as f64 / self.total_functions as f64) * 100.0
         }
     }
-    
+
     pub fn branch_coverage_percentage(&self) -> f64 {
         if self.total_branches == 0 {
             0.0
@@ -78,34 +78,40 @@ impl CoverageTracker {
             (self.executed_branches.len() as f64 / self.total_branches as f64) * 100.0
         }
     }
-    
+
     pub fn generate_coverage_report(&self) -> String {
         let mut report = String::new();
         report.push_str("Code Coverage Report\n");
         report.push_str("===================\n\n");
-        
-        report.push_str(&format!("Line Coverage: {:.1}% ({}/{})\n", 
-            self.line_coverage_percentage(), 
-            self.executed_lines.len(), 
-            self.total_lines));
-        
-        report.push_str(&format!("Function Coverage: {:.1}% ({}/{})\n", 
-            self.function_coverage_percentage(), 
-            self.executed_functions.len(), 
-            self.total_functions));
-        
-        report.push_str(&format!("Branch Coverage: {:.1}% ({}/{})\n", 
-            self.branch_coverage_percentage(), 
-            self.executed_branches.len(), 
-            self.total_branches));
-        
+
+        report.push_str(&format!(
+            "Line Coverage: {:.1}% ({}/{})\n",
+            self.line_coverage_percentage(),
+            self.executed_lines.len(),
+            self.total_lines
+        ));
+
+        report.push_str(&format!(
+            "Function Coverage: {:.1}% ({}/{})\n",
+            self.function_coverage_percentage(),
+            self.executed_functions.len(),
+            self.total_functions
+        ));
+
+        report.push_str(&format!(
+            "Branch Coverage: {:.1}% ({}/{})\n",
+            self.branch_coverage_percentage(),
+            self.executed_branches.len(),
+            self.total_branches
+        ));
+
         // Show uncovered lines
         if let Some(source) = &self.source_code {
             let lines: Vec<&str> = source.lines().collect();
             let uncovered_lines: Vec<usize> = (1..=lines.len())
                 .filter(|&line| !self.executed_lines.contains(&line))
                 .collect();
-            
+
             if !uncovered_lines.is_empty() {
                 report.push_str("\nUncovered Lines:\n");
                 for line_num in uncovered_lines {
@@ -115,7 +121,7 @@ impl CoverageTracker {
                 }
             }
         }
-        
+
         report
     }
 }
@@ -131,17 +137,17 @@ impl CoverageAnalyzer {
             tracker: CoverageTracker::new(),
         }
     }
-    
+
     pub fn analyze_ast(&mut self, ast: &Program) {
         // Count total functions and branches
         self.count_functions_and_branches(ast);
-        
+
         // Analyze each statement
         for statement in &ast.statements {
             self.analyze_statement(statement);
         }
     }
-    
+
     fn count_functions_and_branches(&mut self, ast: &Program) {
         for statement in &ast.statements {
             match statement {
@@ -156,7 +162,7 @@ impl CoverageAnalyzer {
             }
         }
     }
-    
+
     fn count_branches_in_block(&mut self, block: &BlockStatement) {
         for statement in &block.statements {
             match statement {
@@ -178,7 +184,7 @@ impl CoverageAnalyzer {
             }
         }
     }
-    
+
     fn analyze_statement(&mut self, statement: &Statement) {
         match statement {
             Statement::Let(let_stmt) => {
@@ -209,13 +215,13 @@ impl CoverageAnalyzer {
             _ => {}
         }
     }
-    
+
     fn analyze_block(&mut self, block: &BlockStatement) {
         for statement in &block.statements {
             self.analyze_statement(statement);
         }
     }
-    
+
     fn analyze_expression(&mut self, expression: &Expression) {
         match expression {
             Expression::Literal(_) => {}
@@ -263,33 +269,33 @@ impl CoverageInstrumentation {
             enabled: false,
         }
     }
-    
+
     pub fn enable(&mut self) {
         self.enabled = true;
     }
-    
+
     pub fn disable(&mut self) {
         self.enabled = false;
     }
-    
+
     pub fn instrument_line(&mut self, line: usize) {
         if self.enabled {
             self.tracker.mark_line_executed(line);
         }
     }
-    
+
     pub fn instrument_function(&mut self, function_name: &str) {
         if self.enabled {
             self.tracker.mark_function_executed(function_name);
         }
     }
-    
+
     pub fn instrument_branch(&mut self, line: usize, condition: &str) {
         if self.enabled {
             self.tracker.mark_branch_executed(line, condition);
         }
     }
-    
+
     pub fn get_coverage(&self) -> TestCoverage {
         self.tracker.get_coverage()
     }
@@ -306,39 +312,45 @@ impl CoverageReporter {
             trackers: Vec::new(),
         }
     }
-    
+
     pub fn add_tracker(&mut self, tracker: CoverageTracker) {
         self.trackers.push(tracker);
     }
-    
+
     pub fn generate_summary_report(&self) -> String {
         let mut report = String::new();
         report.push_str("Coverage Summary Report\n");
         report.push_str("======================\n\n");
-        
+
         let mut total_lines = 0;
         let mut total_covered_lines = 0;
         let mut total_functions = 0;
         let mut total_covered_functions = 0;
         let mut total_branches = 0;
         let mut total_covered_branches = 0;
-        
+
         for (i, tracker) in self.trackers.iter().enumerate() {
             report.push_str(&format!("File {}:\n", i + 1));
-            report.push_str(&format!("  Line Coverage: {:.1}% ({}/{})\n", 
+            report.push_str(&format!(
+                "  Line Coverage: {:.1}% ({}/{})\n",
                 tracker.line_coverage_percentage(),
                 tracker.executed_lines.len(),
-                tracker.total_lines));
-            report.push_str(&format!("  Function Coverage: {:.1}% ({}/{})\n", 
+                tracker.total_lines
+            ));
+            report.push_str(&format!(
+                "  Function Coverage: {:.1}% ({}/{})\n",
                 tracker.function_coverage_percentage(),
                 tracker.executed_functions.len(),
-                tracker.total_functions));
-            report.push_str(&format!("  Branch Coverage: {:.1}% ({}/{})\n", 
+                tracker.total_functions
+            ));
+            report.push_str(&format!(
+                "  Branch Coverage: {:.1}% ({}/{})\n",
                 tracker.branch_coverage_percentage(),
                 tracker.executed_branches.len(),
-                tracker.total_branches));
+                tracker.total_branches
+            ));
             report.push('\n');
-            
+
             total_lines += tracker.total_lines;
             total_covered_lines += tracker.executed_lines.len();
             total_functions += tracker.total_functions;
@@ -346,40 +358,47 @@ impl CoverageReporter {
             total_branches += tracker.total_branches;
             total_covered_branches += tracker.executed_branches.len();
         }
-        
+
         // Overall summary
         let overall_line_coverage = if total_lines > 0 {
             (total_covered_lines as f64 / total_lines as f64) * 100.0
         } else {
             0.0
         };
-        
+
         let overall_function_coverage = if total_functions > 0 {
             (total_covered_functions as f64 / total_functions as f64) * 100.0
         } else {
             0.0
         };
-        
+
         let overall_branch_coverage = if total_branches > 0 {
             (total_covered_branches as f64 / total_branches as f64) * 100.0
         } else {
             0.0
         };
-        
+
         report.push_str("Overall Summary:\n");
-        report.push_str(&format!("  Line Coverage: {:.1}% ({}/{})\n", 
-            overall_line_coverage, total_covered_lines, total_lines));
-        report.push_str(&format!("  Function Coverage: {:.1}% ({}/{})\n", 
-            overall_function_coverage, total_covered_functions, total_functions));
-        report.push_str(&format!("  Branch Coverage: {:.1}% ({}/{})\n", 
-            overall_branch_coverage, total_covered_branches, total_branches));
-        
+        report.push_str(&format!(
+            "  Line Coverage: {:.1}% ({}/{})\n",
+            overall_line_coverage, total_covered_lines, total_lines
+        ));
+        report.push_str(&format!(
+            "  Function Coverage: {:.1}% ({}/{})\n",
+            overall_function_coverage, total_covered_functions, total_functions
+        ));
+        report.push_str(&format!(
+            "  Branch Coverage: {:.1}% ({}/{})\n",
+            overall_branch_coverage, total_covered_branches, total_branches
+        ));
+
         report
     }
-    
+
     pub fn generate_html_report(&self) -> String {
         let mut html = String::new();
-        html.push_str(r#"<!DOCTYPE html>
+        html.push_str(
+            r#"<!DOCTYPE html>
 <html>
 <head>
     <title>Coverage Report</title>
@@ -397,8 +416,9 @@ impl CoverageReporter {
 </head>
 <body>
     <h1>Code Coverage Report</h1>
-"#);
-        
+"#,
+        );
+
         // Calculate overall coverage
         let mut total_lines = 0;
         let mut total_covered_lines = 0;
@@ -406,7 +426,7 @@ impl CoverageReporter {
         let mut total_covered_functions = 0;
         let mut total_branches = 0;
         let mut total_covered_branches = 0;
-        
+
         for tracker in &self.trackers {
             total_lines += tracker.total_lines;
             total_covered_lines += tracker.executed_lines.len();
@@ -415,26 +435,27 @@ impl CoverageReporter {
             total_branches += tracker.total_branches;
             total_covered_branches += tracker.executed_branches.len();
         }
-        
+
         let overall_line_coverage = if total_lines > 0 {
             (total_covered_lines as f64 / total_lines as f64) * 100.0
         } else {
             0.0
         };
-        
+
         let overall_function_coverage = if total_functions > 0 {
             (total_covered_functions as f64 / total_functions as f64) * 100.0
         } else {
             0.0
         };
-        
+
         let overall_branch_coverage = if total_branches > 0 {
             (total_covered_branches as f64 / total_branches as f64) * 100.0
         } else {
             0.0
         };
-        
-        html.push_str(&format!(r#"
+
+        html.push_str(&format!(
+            r#"
     <div class="summary">
         <h2>Overall Coverage</h2>
         <p><strong>Line Coverage:</strong> {:.1}% ({}/{})</p>
@@ -453,18 +474,43 @@ impl CoverageReporter {
         </div>
     </div>
 "#,
-            overall_line_coverage, total_covered_lines, total_lines,
-            if overall_line_coverage < 50.0 { "low-coverage" } else if overall_line_coverage < 80.0 { "medium-coverage" } else { "" },
             overall_line_coverage,
-            overall_function_coverage, total_covered_functions, total_functions,
-            if overall_function_coverage < 50.0 { "low-coverage" } else if overall_function_coverage < 80.0 { "medium-coverage" } else { "" },
+            total_covered_lines,
+            total_lines,
+            if overall_line_coverage < 50.0 {
+                "low-coverage"
+            } else if overall_line_coverage < 80.0 {
+                "medium-coverage"
+            } else {
+                ""
+            },
+            overall_line_coverage,
             overall_function_coverage,
-            overall_branch_coverage, total_covered_branches, total_branches,
-            if overall_branch_coverage < 50.0 { "low-coverage" } else if overall_branch_coverage < 80.0 { "medium-coverage" } else { "" },
+            total_covered_functions,
+            total_functions,
+            if overall_function_coverage < 50.0 {
+                "low-coverage"
+            } else if overall_function_coverage < 80.0 {
+                "medium-coverage"
+            } else {
+                ""
+            },
+            overall_function_coverage,
+            overall_branch_coverage,
+            total_covered_branches,
+            total_branches,
+            if overall_branch_coverage < 50.0 {
+                "low-coverage"
+            } else if overall_branch_coverage < 80.0 {
+                "medium-coverage"
+            } else {
+                ""
+            },
             overall_branch_coverage
         ));
-        
-        html.push_str(r#"
+
+        html.push_str(
+            r#"
     <table>
         <thead>
             <tr>
@@ -475,10 +521,12 @@ impl CoverageReporter {
             </tr>
         </thead>
         <tbody>
-"#);
-        
+"#,
+        );
+
         for (i, tracker) in self.trackers.iter().enumerate() {
-            html.push_str(&format!(r#"
+            html.push_str(&format!(
+                r#"
             <tr>
                 <td>File {}</td>
                 <td>{:.1}%</td>
@@ -492,13 +540,15 @@ impl CoverageReporter {
                 tracker.branch_coverage_percentage()
             ));
         }
-        
-        html.push_str(r#"
+
+        html.push_str(
+            r#"
         </tbody>
     </table>
 </body>
-</html>"#);
-        
+</html>"#,
+        );
+
         html
     }
-} 
+}

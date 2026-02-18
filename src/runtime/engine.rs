@@ -1,18 +1,18 @@
-use std::collections::HashMap;
-use std::collections::VecDeque;
-use std::sync::mpsc;
-use crate::runtime::values::Value;
-use crate::runtime::scope::Scope;
+use crate::parser::ast::{BlockStatement, Program, ServiceStatement, Statement};
+use crate::runtime::advanced_security::AdvancedSecurityManager;
+use crate::runtime::control_flow::{ControlFlow, StatementOutcome, StatementResult};
 use crate::runtime::functions::{Function, RuntimeError};
 use crate::runtime::reentrancy::ReentrancyGuard;
 use crate::runtime::safe_math::SafeMath;
+use crate::runtime::scope::Scope;
 use crate::runtime::state_isolation::StateIsolationManager;
 use crate::runtime::transaction::TransactionManager;
+use crate::runtime::values::Value;
 use crate::stdlib::cross_chain_security::CrossChainSecurityManager;
-use crate::runtime::advanced_security::AdvancedSecurityManager;
-use crate::parser::ast::{BlockStatement, Program, ServiceStatement, Statement};
 use crate::stdlib::log;
-use crate::runtime::control_flow::{ControlFlow, StatementOutcome, StatementResult};
+use std::collections::HashMap;
+use std::collections::VecDeque;
+use std::sync::mpsc;
 
 /// In-memory agent state: status, message queue, task queue (for ai:: and agent::).
 #[derive(Debug, Clone)]
@@ -59,8 +59,8 @@ pub struct Runtime {
     pub call_stack: Vec<CallFrame>,
     pub services: HashMap<String, ServiceInstance>, // NEW: Service instances
     pub current_service: Option<ServiceContext>, // NEW: Current service context for trust validation
-    pub reentrancy_guard: ReentrancyGuard, // NEW: Re-entrancy protection
-    pub state_manager: StateIsolationManager, // NEW: State isolation manager
+    pub reentrancy_guard: ReentrancyGuard,       // NEW: Re-entrancy protection
+    pub state_manager: StateIsolationManager,    // NEW: State isolation manager
     pub cross_chain_manager: CrossChainSecurityManager, // NEW: Cross-chain security manager
     pub advanced_security: AdvancedSecurityManager, // NEW: Advanced security features
     pub transaction_manager: TransactionManager, // NEW: Transaction manager for ACID operations
@@ -124,16 +124,17 @@ impl Runtime {
             scope: Scope::new(),
             functions: HashMap::with_capacity(16), // Pre-allocate for built-ins
             user_functions: HashMap::with_capacity(8), // DAL top-level functions
-            call_stack: Vec::with_capacity(8), // Pre-allocate call stack
-            services: HashMap::with_capacity(8), // NEW: Pre-allocate for services
-            current_service: None, // NEW: Initialize current service context
+            call_stack: Vec::with_capacity(8),     // Pre-allocate call stack
+            services: HashMap::with_capacity(8),   // NEW: Pre-allocate for services
+            current_service: None,                 // NEW: Initialize current service context
             reentrancy_guard: ReentrancyGuard::new(), // NEW: Re-entrancy protection
             state_manager: StateIsolationManager::new(), // NEW: State isolation manager
             cross_chain_manager: CrossChainSecurityManager::new(), // NEW: Cross-chain security manager
             advanced_security: AdvancedSecurityManager::new(), // NEW: Advanced security features
-            transaction_manager: TransactionManager::from_env().unwrap_or_else(|_| TransactionManager::new()), // NEW: Transaction manager
+            transaction_manager: TransactionManager::from_env()
+                .unwrap_or_else(|_| TransactionManager::new()), // NEW: Transaction manager
             execution_start: None, // NEW: Initialize execution start time
-            current_caller: None, // Transaction caller address (msg.sender)
+            current_caller: None,  // Transaction caller address (msg.sender)
             current_transaction_id: None, // Active transaction ID
             pending_spawns: HashMap::new(),
             spawn_counter: 0,
@@ -146,7 +147,7 @@ impl Runtime {
             test_tests: Vec::new(),
             return_pending: None,
         };
-        
+
         // Register built-in functions
         runtime.register_builtins();
         runtime
@@ -160,14 +161,15 @@ impl Runtime {
             user_functions: HashMap::with_capacity(8), // DAL top-level functions
             call_stack: Vec::with_capacity(call_cap),
             services: HashMap::with_capacity(8), // NEW: Pre-allocate for services
-            current_service: None, // NEW: Initialize current service context
+            current_service: None,               // NEW: Initialize current service context
             reentrancy_guard: ReentrancyGuard::new(), // NEW: Re-entrancy protection
             state_manager: StateIsolationManager::new(), // NEW: State isolation manager
             cross_chain_manager: CrossChainSecurityManager::new(), // NEW: Cross-chain security manager
             advanced_security: AdvancedSecurityManager::new(), // NEW: Advanced security features
-            transaction_manager: TransactionManager::from_env().unwrap_or_else(|_| TransactionManager::new()), // NEW: Transaction manager
+            transaction_manager: TransactionManager::from_env()
+                .unwrap_or_else(|_| TransactionManager::new()), // NEW: Transaction manager
             execution_start: None, // NEW: Initialize execution start time
-            current_caller: None, // Transaction caller address (msg.sender)
+            current_caller: None,  // Transaction caller address (msg.sender)
             current_transaction_id: None, // Active transaction ID
             pending_spawns: HashMap::new(),
             spawn_counter: 0,
@@ -180,7 +182,7 @@ impl Runtime {
             test_tests: Vec::new(),
             return_pending: None,
         };
-        
+
         // Register built-in functions
         runtime.register_builtins();
         runtime
@@ -203,9 +205,9 @@ impl Runtime {
     }
 
     pub fn get_variable(&self, name: &str) -> Result<Value, RuntimeError> {
-        self.scope.get(name).ok_or_else(|| {
-            RuntimeError::VariableNotFound(name.to_string())
-        })
+        self.scope
+            .get(name)
+            .ok_or_else(|| RuntimeError::VariableNotFound(name.to_string()))
     }
 
     // Helper methods for value conversion
@@ -216,7 +218,9 @@ impl Runtime {
             Value::Float(f) => Ok(f.to_string()),
             Value::Bool(b) => Ok(b.to_string()),
             Value::Null => Ok("null".to_string()),
-            _ => Err(RuntimeError::General("Cannot convert value to string".to_string())),
+            _ => Err(RuntimeError::General(
+                "Cannot convert value to string".to_string(),
+            )),
         }
     }
 
@@ -224,11 +228,13 @@ impl Runtime {
         match value {
             Value::Int(i) => Ok(*i),
             Value::Float(f) => Ok(*f as i64),
-            Value::String(s) => s.parse::<i64>().map_err(|_| 
-                RuntimeError::General("Cannot convert string to int".to_string())
-            ),
+            Value::String(s) => s
+                .parse::<i64>()
+                .map_err(|_| RuntimeError::General("Cannot convert string to int".to_string())),
             Value::Bool(b) => Ok(if *b { 1 } else { 0 }),
-            _ => Err(RuntimeError::General("Cannot convert value to int".to_string())),
+            _ => Err(RuntimeError::General(
+                "Cannot convert value to int".to_string(),
+            )),
         }
     }
 
@@ -236,34 +242,41 @@ impl Runtime {
         match value {
             Value::Float(f) => Ok(*f),
             Value::Int(i) => Ok(*i as f64),
-            Value::String(s) => s.parse::<f64>().map_err(|_| 
-                RuntimeError::General("Cannot convert string to float".to_string())
-            ),
-            _ => Err(RuntimeError::General("Cannot convert value to float".to_string())),
+            Value::String(s) => s
+                .parse::<f64>()
+                .map_err(|_| RuntimeError::General("Cannot convert string to float".to_string())),
+            _ => Err(RuntimeError::General(
+                "Cannot convert value to float".to_string(),
+            )),
         }
     }
 
     /// Convert Value::Map to HashMap<String, String> for chain:: deploy/call/mint/update.
-    fn value_map_to_string_map(&self, value: &Value) -> Result<HashMap<String, String>, RuntimeError> {
+    fn value_map_to_string_map(
+        &self,
+        value: &Value,
+    ) -> Result<HashMap<String, String>, RuntimeError> {
         let map = match value {
             Value::Map(m) => m,
             _ => return Err(RuntimeError::General("Expected a map value".to_string())),
         };
         let mut out = HashMap::new();
         for (k, v) in map {
-            let s = self.value_to_string(v).unwrap_or_else(|_| format!("{:?}", v));
+            let s = self
+                .value_to_string(v)
+                .unwrap_or_else(|_| format!("{:?}", v));
             out.insert(k.clone(), s);
         }
         Ok(out)
     }
 
     pub fn execute_program(&mut self, program: Program) -> Result<Option<Value>, RuntimeError> {
-        use std::time::{Instant, Duration};
-        
+        use std::time::{Duration, Instant};
+
         const MAX_EXECUTION_TIME: Duration = Duration::from_secs(10);
         let start_time = Instant::now();
         self.execution_start = Some(start_time);
-        
+
         // Phase 4: Check for MEV attacks before execution (only if @advanced_security is present)
         // Check if any service has @advanced_security attribute
         let has_advanced_security = program.statements.iter().any(|stmt| {
@@ -275,15 +288,16 @@ impl Runtime {
                 false
             }
         });
-        
+
         // Only run MEV detection if @advanced_security is explicitly requested
         // This prevents false positives from legitimate monitoring code
         if has_advanced_security {
-            self.advanced_security.analyze_transaction_for_mev(&format!("{:?}", program))?;
+            self.advanced_security
+                .analyze_transaction_for_mev(&format!("{:?}", program))?;
         }
-        
+
         let mut result = None;
-        
+
         for statement in program.statements {
             // Check timeout before each statement
             if let Some(start) = self.execution_start {
@@ -292,7 +306,7 @@ impl Runtime {
                     return Err(RuntimeError::ExecutionTimeout);
                 }
             }
-            
+
             match self.execute_statement(&statement) {
                 Ok(value) => {
                     result = Some(value);
@@ -307,7 +321,7 @@ impl Runtime {
                 break;
             }
         }
-        
+
         self.execution_start = None;
         Ok(result)
     }
@@ -321,7 +335,10 @@ impl Runtime {
                 let _ = self.call_closure(before_id, &[Value::Null]);
             }
             if let Err(e) = self.call_closure(&closure_id, &[Value::Null]) {
-                return Err(RuntimeError::General(format!("Test '{}' in '{}' failed: {}", test_name, suite_name, e)));
+                return Err(RuntimeError::General(format!(
+                    "Test '{}' in '{}' failed: {}",
+                    test_name, suite_name, e
+                )));
             }
         }
         Ok(())
@@ -330,17 +347,27 @@ impl Runtime {
     pub fn register_function(&mut self, function: Function) {
         self.functions.insert(function.name.clone(), function);
     }
-    
+
     /// Check if a function is considered sensitive and requires time-lock protection
     fn is_sensitive_function(&self, name: &str) -> bool {
         // Define sensitive functions that require time-lock protection
         let sensitive_functions = [
-            "transfer", "withdraw", "mint", "burn", "approve",
-            "admin_transfer", "emergency_stop", "upgrade_contract",
-            "change_owner", "set_permissions", "bridge_transfer"
+            "transfer",
+            "withdraw",
+            "mint",
+            "burn",
+            "approve",
+            "admin_transfer",
+            "emergency_stop",
+            "upgrade_contract",
+            "change_owner",
+            "set_permissions",
+            "bridge_transfer",
         ];
-        
-        sensitive_functions.iter().any(|&sensitive| name.contains(sensitive))
+
+        sensitive_functions
+            .iter()
+            .any(|&sensitive| name.contains(sensitive))
     }
 
     pub fn call_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
@@ -352,19 +379,33 @@ impl Runtime {
         // ----- Test DSL (Layer 3) -----
         if name == "expect_throws" {
             if args.len() != 2 {
-                return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 2,
+                    got: args.len(),
+                });
             }
             let closure_id = match &args[0] {
                 Value::Closure(id) => id.clone(),
-                _ => return Err(RuntimeError::General("expect_throws: first argument must be a function".to_string())),
+                _ => {
+                    return Err(RuntimeError::General(
+                        "expect_throws: first argument must be a function".to_string(),
+                    ))
+                }
             };
             let expected_msg = self.value_to_string(&args[1])?;
             match self.call_closure(&closure_id, &[Value::Null]) {
-                Ok(_) => return Err(RuntimeError::General("Expected code to throw, but it succeeded".to_string())),
+                Ok(_) => {
+                    return Err(RuntimeError::General(
+                        "Expected code to throw, but it succeeded".to_string(),
+                    ))
+                }
                 Err(e) => {
                     let msg = e.to_string();
                     if !expected_msg.is_empty() && !msg.contains(&expected_msg) {
-                        return Err(RuntimeError::General(format!("Expected error containing '{}', but got: {}", expected_msg, msg)));
+                        return Err(RuntimeError::General(format!(
+                            "Expected error containing '{}', but got: {}",
+                            expected_msg, msg
+                        )));
                     }
                     return Ok(Value::Null);
                 }
@@ -372,12 +413,19 @@ impl Runtime {
         }
         if name == "describe" {
             if args.len() != 2 {
-                return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 2,
+                    got: args.len(),
+                });
             }
             let suite_name = self.value_to_string(&args[0])?;
             let closure_id = match &args[1] {
                 Value::Closure(id) => id.clone(),
-                _ => return Err(RuntimeError::General("describe: second argument must be a function".to_string())),
+                _ => {
+                    return Err(RuntimeError::General(
+                        "describe: second argument must be a function".to_string(),
+                    ))
+                }
             };
             crate::stdlib::test::register_suite(suite_name.clone());
             self.test_current_suite = Some(suite_name);
@@ -387,38 +435,63 @@ impl Runtime {
         }
         if name == "it" {
             if args.len() != 2 {
-                return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 2,
+                    got: args.len(),
+                });
             }
             let test_name = self.value_to_string(&args[0])?;
             let closure_id = match &args[1] {
                 Value::Closure(id) => id.clone(),
-                _ => return Err(RuntimeError::General("it: second argument must be a function".to_string())),
+                _ => {
+                    return Err(RuntimeError::General(
+                        "it: second argument must be a function".to_string(),
+                    ))
+                }
             };
-            let suite = self.test_current_suite.clone().unwrap_or_else(|| "default".to_string());
+            let suite = self
+                .test_current_suite
+                .clone()
+                .unwrap_or_else(|| "default".to_string());
             crate::stdlib::test::add_test(test_name.clone(), String::new());
             self.test_tests.push((suite, test_name, closure_id));
             return Ok(Value::Null);
         }
         if name == "beforeEach" {
             if args.len() != 1 {
-                return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 1,
+                    got: args.len(),
+                });
             }
             let closure_id = match &args[0] {
                 Value::Closure(id) => id.clone(),
-                _ => return Err(RuntimeError::General("beforeEach: argument must be a function".to_string())),
+                _ => {
+                    return Err(RuntimeError::General(
+                        "beforeEach: argument must be a function".to_string(),
+                    ))
+                }
             };
             if let Some(ref suite) = self.test_current_suite {
-                self.test_suite_before_each.insert(suite.clone(), closure_id);
+                self.test_suite_before_each
+                    .insert(suite.clone(), closure_id);
             }
             return Ok(Value::Null);
         }
         if name == "afterEach" {
             if args.len() != 1 {
-                return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 1,
+                    got: args.len(),
+                });
             }
             let closure_id = match &args[0] {
                 Value::Closure(id) => id.clone(),
-                _ => return Err(RuntimeError::General("afterEach: argument must be a function".to_string())),
+                _ => {
+                    return Err(RuntimeError::General(
+                        "afterEach: argument must be a function".to_string(),
+                    ))
+                }
             };
             if let Some(ref suite) = self.test_current_suite {
                 self.test_suite_after_each.insert(suite.clone(), closure_id);
@@ -431,22 +504,34 @@ impl Runtime {
         }
         if name == "deploy_service" {
             if args.len() != 2 {
-                return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 2,
+                    got: args.len(),
+                });
             }
             let service_name = self.value_to_string(&args[0])?;
-            let template = self.services.get(&service_name)
-                .cloned()
-                .ok_or_else(|| RuntimeError::General(format!("Service '{}' not found (define it in this file or load it first)", service_name)))?;
+            let template = self.services.get(&service_name).cloned().ok_or_else(|| {
+                RuntimeError::General(format!(
+                    "Service '{}' not found (define it in this file or load it first)",
+                    service_name
+                ))
+            })?;
             let instance_id = format!("test_{}_{}", service_name, self.services.len());
             self.services.insert(instance_id.clone(), template);
             return Ok(Value::String(instance_id));
         }
         if name == "expect_to_equal" {
             if args.len() != 2 {
-                return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 2,
+                    got: args.len(),
+                });
             }
             if args[0] != args[1] {
-                return Err(RuntimeError::General(format!("Expected {:?}, but got {:?}", args[1], args[0])));
+                return Err(RuntimeError::General(format!(
+                    "Expected {:?}, but got {:?}",
+                    args[1], args[0]
+                )));
             }
             return Ok(Value::Null);
         }
@@ -463,61 +548,93 @@ impl Runtime {
                     if let Value::String(instance_id) = instance_value {
                         if self.services.contains_key(&instance_id) {
                             let method = {
-                                let instance = self.services.get(&instance_id)
-                                    .ok_or_else(|| RuntimeError::General(format!("Instance '{}' not found", instance_id)))?;
-                                instance.methods.iter()
+                                let instance =
+                                    self.services.get(&instance_id).ok_or_else(|| {
+                                        RuntimeError::General(format!(
+                                            "Instance '{}' not found",
+                                            instance_id
+                                        ))
+                                    })?;
+                                instance
+                                    .methods
+                                    .iter()
                                     .find(|m| m.name == method_name)
                                     .cloned()
-                                    .ok_or_else(|| RuntimeError::General(format!("Method '{}' not found on instance", method_name)))?
+                                    .ok_or_else(|| {
+                                        RuntimeError::General(format!(
+                                            "Method '{}' not found on instance",
+                                            method_name
+                                        ))
+                                    })?
                             };
-                            return self.execute_service_method(&instance_id, method_name, &method, args);
+                            return self.execute_service_method(
+                                &instance_id,
+                                method_name,
+                                &method,
+                                args,
+                            );
                         }
                     }
                 }
             }
         }
-        
+
         // Handle special built-in functions for array/map access
         if name == "__index__" {
             // Array/map access: __index__(container, key)
             if args.len() != 2 {
-                return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 2,
+                    got: args.len(),
+                });
             }
             let container = &args[0];
             let key = &args[1];
-            
+
             match container {
                 Value::Map(ref map) => {
                     let key_str = match key {
                         Value::String(s) => s.clone(),
                         Value::Int(i) => i.to_string(),
-                        _ => return Err(RuntimeError::General(format!(
-                            "Map key must be string or int, got: {}", key.type_name()
-                        ))),
+                        _ => {
+                            return Err(RuntimeError::General(format!(
+                                "Map key must be string or int, got: {}",
+                                key.type_name()
+                            )))
+                        }
                     };
                     return Ok(map.get(&key_str).cloned().unwrap_or(Value::Null));
                 }
                 Value::Array(ref arr) => {
                     let index = match key {
                         Value::Int(i) => *i as usize,
-                        _ => return Err(RuntimeError::General(format!(
-                            "Array index must be int, got: {}", key.type_name()
-                        ))),
+                        _ => {
+                            return Err(RuntimeError::General(format!(
+                                "Array index must be int, got: {}",
+                                key.type_name()
+                            )))
+                        }
                     };
                     return Ok(arr.get(index).cloned().unwrap_or(Value::Null));
                 }
-                _ => return Err(RuntimeError::General(format!(
-                    "Cannot index value of type: {}", container.type_name()
-                ))),
+                _ => {
+                    return Err(RuntimeError::General(format!(
+                        "Cannot index value of type: {}",
+                        container.type_name()
+                    )))
+                }
             }
         }
-        
+
         if name == "__index_assign__" {
             // __index_assign__(container, key, value) or
             // + var_name when LHS is a variable (4 args), or
             // + empty, field_name when LHS is self.field (5 args)
             if args.len() != 3 && args.len() != 4 && args.len() != 5 {
-                return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 3,
+                    got: args.len(),
+                });
             }
             let container = &args[0];
             let key = &args[1];
@@ -547,9 +664,12 @@ impl Runtime {
                         let key_str = match key {
                             Value::String(s) => s.clone(),
                             Value::Int(i) => i.to_string(),
-                            _ => return Err(RuntimeError::General(format!(
-                                "Map key must be string or int, got: {}", key.type_name()
-                            ))),
+                            _ => {
+                                return Err(RuntimeError::General(format!(
+                                    "Map key must be string or int, got: {}",
+                                    key.type_name()
+                                )))
+                            }
                         };
                         let mut new_map = map.clone();
                         new_map.insert(key_str, value.clone());
@@ -559,9 +679,12 @@ impl Runtime {
                     Value::Array(arr) => {
                         let index = match key {
                             Value::Int(i) if *i >= 0 => *i as usize,
-                            _ => return Err(RuntimeError::General(format!(
-                                "Array index must be non-negative int, got: {}", key.type_name()
-                            ))),
+                            _ => {
+                                return Err(RuntimeError::General(format!(
+                                    "Array index must be non-negative int, got: {}",
+                                    key.type_name()
+                                )))
+                            }
                         };
                         let mut new_arr = arr.clone();
                         if index < new_arr.len() {
@@ -575,13 +698,16 @@ impl Runtime {
                         self.set_variable(var_name, Value::Array(new_arr));
                         return Ok(value);
                     }
-                    _ => return Err(RuntimeError::General(format!(
-                        "Cannot assign to index of variable '{}' (type: {})",
-                        var_name, current.type_name()
-                    ))),
+                    _ => {
+                        return Err(RuntimeError::General(format!(
+                            "Cannot assign to index of variable '{}' (type: {})",
+                            var_name,
+                            current.type_name()
+                        )))
+                    }
                 }
             }
-            
+
             // Check if we're in a service method context (self is in scope)
             if let Ok(Value::String(ref instance_id)) = self.get_variable("self") {
                 if let Value::Map(ref _map) = container {
@@ -589,9 +715,12 @@ impl Runtime {
                         let key_str = match key {
                             Value::String(s) => s.clone(),
                             Value::Int(i) => i.to_string(),
-                            _ => return Err(RuntimeError::General(format!(
-                                "Map key must be string or int, got: {}", key.type_name()
-                            ))),
+                            _ => {
+                                return Err(RuntimeError::General(format!(
+                                    "Map key must be string or int, got: {}",
+                                    key.type_name()
+                                )))
+                            }
                         };
 
                         // When field name is known (self.field[key] = value), update that field directly
@@ -612,7 +741,9 @@ impl Runtime {
                         let map = _map;
                         for (_fname, field_value) in instance.fields.iter_mut() {
                             if let Value::Map(ref field_map) = field_value {
-                                if map.keys().any(|k| field_map.contains_key(k)) || (map.is_empty() && field_map.is_empty()) {
+                                if map.keys().any(|k| field_map.contains_key(k))
+                                    || (map.is_empty() && field_map.is_empty())
+                                {
                                     if let Value::Map(ref mut fm) = field_value {
                                         fm.insert(key_str.clone(), value.clone());
                                         return Ok(value);
@@ -629,7 +760,7 @@ impl Runtime {
                     }
                 }
             }
-            
+
             // Handle direct map/array variables (not service instance fields)
             match container {
                 Value::Map(_) => {
@@ -640,12 +771,15 @@ impl Runtime {
                 }
                 Value::Array(_) => {
                     return Err(RuntimeError::General(
-                        "Array assignment not yet fully implemented".to_string()
+                        "Array assignment not yet fully implemented".to_string(),
                     ));
                 }
-                _ => return Err(RuntimeError::General(format!(
-                    "Cannot assign to index of type: {}", container.type_name()
-                ))),
+                _ => {
+                    return Err(RuntimeError::General(format!(
+                        "Cannot assign to index of type: {}",
+                        container.type_name()
+                    )))
+                }
             }
         }
 
@@ -653,51 +787,63 @@ impl Runtime {
         if let Ok(Value::Closure(ref id)) = self.get_variable(name) {
             return self.call_closure(id, args);
         }
-        
+
         // Handle namespace calls (e.g., oracle::fetch)
         if name.contains("::") {
             return self.call_namespace_function(name, args);
         }
-        
+
         // Handle instance method calls (e.g., nft.initialize)
         if name.contains(".") {
             let parts: Vec<&str> = name.split(".").collect();
             if parts.len() == 2 {
                 let instance_var = parts[0];
                 let method_name = parts[1];
-                
+
                 // Get the instance ID from the variable
                 let instance_id = match self.get_variable(instance_var) {
                     Ok(Value::String(id)) => id,
-                    Ok(other) => return Err(RuntimeError::General(format!(
-                        "Variable '{}' is not a service instance (got: {})", 
-                        instance_var, other.type_name()
-                    ))),
-                    Err(_) => return Err(RuntimeError::General(format!(
-                        "Variable '{}' not found", instance_var
-                    ))),
+                    Ok(other) => {
+                        return Err(RuntimeError::General(format!(
+                            "Variable '{}' is not a service instance (got: {})",
+                            instance_var,
+                            other.type_name()
+                        )))
+                    }
+                    Err(_) => {
+                        return Err(RuntimeError::General(format!(
+                            "Variable '{}' not found",
+                            instance_var
+                        )))
+                    }
                 };
-                
+
                 // Find and clone the method (we need to avoid multiple mutable borrows)
                 let method = {
-                    let instance = self.services.get(&instance_id)
-                        .ok_or_else(|| RuntimeError::General(format!(
-                            "Service instance '{}' not found", instance_id
-                        )))?;
-                    instance.methods.iter()
+                    let instance = self.services.get(&instance_id).ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "Service instance '{}' not found",
+                            instance_id
+                        ))
+                    })?;
+                    instance
+                        .methods
+                        .iter()
                         .find(|m| m.name == method_name)
-                        .ok_or_else(|| RuntimeError::General(format!(
-                            "Method '{}' not found on service instance '{}'", 
-                            method_name, instance_id
-                        )))?
+                        .ok_or_else(|| {
+                            RuntimeError::General(format!(
+                                "Method '{}' not found on service instance '{}'",
+                                method_name, instance_id
+                            ))
+                        })?
                         .clone()
                 };
-                
+
                 // Execute the method - we'll get mutable access inside execute_service_method
                 return self.execute_service_method(&instance_id, method_name, &method, args);
             }
         }
-        
+
         // Dispatch to user-defined (DAL) function if registered during execution
         let user_func = self.user_functions.get(name).cloned();
         if let Some(user_func) = user_func {
@@ -739,41 +885,50 @@ impl Runtime {
             }
             return Ok(result);
         }
-        
-        let function = self.functions.get(name)
+
+        let function = self
+            .functions
+            .get(name)
             .ok_or_else(|| RuntimeError::function_not_found(name.to_string()))?;
-        
+
         // Create call frame
         let call_frame = CallFrame {
             scope: self.scope.clone(),
         };
         self.call_stack.push(call_frame);
-        
+
         // Call the function (pass body so cloned functions can be invoked when engine resolves by name)
         let result = function.call(args, &mut self.scope, function.body_ref());
-        
+
         // Restore scope from call frame
         if let Some(frame) = self.call_stack.pop() {
             self.scope = frame.scope;
         }
-        
+
         result
     }
 
-    fn call_namespace_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+    fn call_namespace_function(
+        &mut self,
+        name: &str,
+        args: &[Value],
+    ) -> Result<Value, RuntimeError> {
         let parts: Vec<&str> = name.split("::").collect();
         if parts.len() != 2 {
-            return Err(RuntimeError::General(format!("Invalid namespace call: {}", name)));
+            return Err(RuntimeError::General(format!(
+                "Invalid namespace call: {}",
+                name
+            )));
         }
-        
+
         let namespace = parts[0];
         let function_name = parts[1];
-        
+
         // Check if namespace is a registered service name
         if self.services.contains_key(namespace) {
             return self.call_service_instance_method(namespace, function_name, args);
         }
-        
+
         match namespace {
             "oracle" => self.call_oracle_function(function_name, args),
             "service" => self.call_service_function(function_name, args),
@@ -802,19 +957,28 @@ impl Runtime {
                 if self.services.contains_key(namespace) {
                     self.call_service_instance_method(namespace, function_name, args)
                 } else {
-                    Err(RuntimeError::General(format!("Unknown namespace: {}", namespace)))
+                    Err(RuntimeError::General(format!(
+                        "Unknown namespace: {}",
+                        namespace
+                    )))
                 }
             }
         }
     }
 
     // Handle method calls on service instances (e.g., TestNFT::new(), TestNFT::someMethod())
-    fn call_service_instance_method(&mut self, service_name: &str, method_name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+    fn call_service_instance_method(
+        &mut self,
+        service_name: &str,
+        method_name: &str,
+        args: &[Value],
+    ) -> Result<Value, RuntimeError> {
         if method_name == "new" {
             // Create a new instance of the service
-            let service_template = self.services.get(service_name)
-                .ok_or_else(|| RuntimeError::General(format!("Service {} not found", service_name)))?;
-            
+            let service_template = self.services.get(service_name).ok_or_else(|| {
+                RuntimeError::General(format!("Service {} not found", service_name))
+            })?;
+
             // Create a new instance with copied fields
             let new_instance = ServiceInstance {
                 name: service_template.name.clone(),
@@ -823,24 +987,29 @@ impl Runtime {
                 events: service_template.events.clone(),
                 attributes: service_template.attributes.clone(),
             };
-            
+
             // Store the new instance with a unique identifier
             let instance_id = format!("{}_instance_{}", service_name, self.services.len());
             self.services.insert(instance_id.clone(), new_instance);
-            
+
             // Return the instance identifier
             Ok(Value::String(instance_id))
         } else {
             // Call a method on the service: use the registered service (template) as the instance
             let method = {
-                let instance = self.services.get(service_name)
-                    .ok_or_else(|| RuntimeError::General(format!("Service '{}' not found", service_name)))?;
-                instance.methods.iter()
+                let instance = self.services.get(service_name).ok_or_else(|| {
+                    RuntimeError::General(format!("Service '{}' not found", service_name))
+                })?;
+                instance
+                    .methods
+                    .iter()
                     .find(|m| m.name == method_name)
-                    .ok_or_else(|| RuntimeError::General(format!(
-                        "Method '{}' not found on service '{}'",
-                        method_name, service_name
-                    )))?
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "Method '{}' not found on service '{}'",
+                            method_name, service_name
+                        ))
+                    })?
                     .clone()
             };
             self.execute_service_method(service_name, method_name, &method, args)
@@ -851,24 +1020,36 @@ impl Runtime {
         match name {
             "create_query" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String(format!("query_{}", args[0])))
             }
             "fetch" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 // Simulate fetching data
                 Ok(Value::Int(42000)) // Simulated price
             }
             "stream" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String(format!("stream_{}", args[0])))
             }
-            _ => Err(RuntimeError::function_not_found(format!("oracle::{}", name))),
+            _ => Err(RuntimeError::function_not_found(format!(
+                "oracle::{}",
+                name
+            ))),
         }
     }
 
@@ -877,18 +1058,29 @@ impl Runtime {
             "new" => {
                 // service::new("ServiceName") - create a new instance of a service
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let service_name = match &args[0] {
                     Value::String(name) => name.clone(),
-                    _ => return Err(RuntimeError::General("service::new() expects a string service name".to_string())),
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "service::new() expects a string service name".to_string(),
+                        ))
+                    }
                 };
-                
+
                 // Get the service template
-                let service_template = self.services.get(&service_name)
-                    .ok_or_else(|| RuntimeError::General(format!("Service '{}' not found. Available services: {:?}", 
-                        service_name, self.services.keys().collect::<Vec<_>>())))?;
-                
+                let service_template = self.services.get(&service_name).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "Service '{}' not found. Available services: {:?}",
+                        service_name,
+                        self.services.keys().collect::<Vec<_>>()
+                    ))
+                })?;
+
                 // Create a new instance with copied fields
                 let new_instance = ServiceInstance {
                     name: service_template.name.clone(),
@@ -897,51 +1089,82 @@ impl Runtime {
                     events: service_template.events.clone(),
                     attributes: service_template.attributes.clone(),
                 };
-                
+
                 // Store the new instance with a unique identifier
                 let instance_id = format!("{}_instance_{}", service_name, self.services.len());
                 self.services.insert(instance_id.clone(), new_instance);
-                
+
                 // Return the instance identifier
                 Ok(Value::String(instance_id))
             }
             "create_ai_service" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String(format!("ai_service_{}", args[0])))
             }
             "ai" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
-                Ok(Value::String("AI response: This is a simulated AI response".to_string()))
+                Ok(Value::String(
+                    "AI response: This is a simulated AI response".to_string(),
+                ))
             }
             "create_service_call" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
-                Ok(Value::String(format!("service_call_{}_{}", args[0], args[1])))
+                Ok(Value::String(format!(
+                    "service_call_{}_{}",
+                    args[0], args[1]
+                )))
             }
             "call" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
-                Ok(Value::String("Service call completed successfully".to_string()))
+                Ok(Value::String(
+                    "Service call completed successfully".to_string(),
+                ))
             }
             "create_webhook" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
-                Ok(Value::String(format!("webhook_config_{}_{}", args[0], args[1])))
+                Ok(Value::String(format!(
+                    "webhook_config_{}_{}",
+                    args[0], args[1]
+                )))
             }
             "webhook" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("Webhook delivered successfully".to_string()))
             }
-            _ => Err(RuntimeError::function_not_found(format!("service::{}", name))),
+            _ => Err(RuntimeError::function_not_found(format!(
+                "service::{}",
+                name
+            ))),
         }
     }
 
@@ -950,38 +1173,60 @@ impl Runtime {
             "join" => {
                 // sync::join(handle) — block until spawned task completes and return its result
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let task_id = match &args[0] {
                     Value::String(s) => s.clone(),
-                    _ => return Err(RuntimeError::General("sync::join expects a string handle".to_string())),
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "sync::join expects a string handle".to_string(),
+                        ))
+                    }
                 };
-                let rx = self.pending_spawns.remove(&task_id)
-                    .ok_or_else(|| RuntimeError::General(format!("Spawn handle '{}' not found or already joined", task_id)))?;
-                rx.recv()
-                    .map_err(|_| RuntimeError::General(format!("Spawn '{}' channel closed", task_id)))?
+                let rx = self.pending_spawns.remove(&task_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "Spawn handle '{}' not found or already joined",
+                        task_id
+                    ))
+                })?;
+                rx.recv().map_err(|_| {
+                    RuntimeError::General(format!("Spawn '{}' channel closed", task_id))
+                })?
             }
             "create_sync_target" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
-                Ok(Value::String(format!("sync_target_{}_{}", args[0], args[1])))
+                Ok(Value::String(format!(
+                    "sync_target_{}_{}",
+                    args[0], args[1]
+                )))
             }
             "push" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::Bool(true))
             }
             "pull" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("Data pulled successfully".to_string()))
             }
-            "create_sync_filters" => {
-                Ok(Value::String("sync_filters".to_string()))
-            }
+            "create_sync_filters" => Ok(Value::String("sync_filters".to_string())),
             _ => Err(RuntimeError::function_not_found(format!("sync::{}", name))),
         }
     }
@@ -992,7 +1237,10 @@ impl Runtime {
         match name {
             "create_principal" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let id = self.value_to_string(&args[0])?;
                 let name_str = self.value_to_string(&args[1])?;
@@ -1001,7 +1249,10 @@ impl Runtime {
             }
             "create_capability_request" => {
                 if args.len() != 3 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
                 }
                 let resource = self.value_to_string(&args[0])?;
                 let operation = self.value_to_string(&args[1])?;
@@ -1015,27 +1266,45 @@ impl Runtime {
             }
             "create" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let resource = self.value_to_string(&args[0])?;
                 let perms: Vec<String> = match &args[1] {
-                    Value::Array(a) => a.iter().map(|v| self.value_to_string(v).unwrap_or_default()).collect(),
-                    _ => return Err(RuntimeError::General("key::create expects (resource, array of permissions)".to_string())),
+                    Value::Array(a) => a
+                        .iter()
+                        .map(|v| self.value_to_string(v).unwrap_or_default())
+                        .collect(),
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "key::create expects (resource, array of permissions)".to_string(),
+                        ))
+                    }
                 };
                 if perms.is_empty() {
-                    return Err(RuntimeError::General("key::create requires at least one permission".to_string()));
+                    return Err(RuntimeError::General(
+                        "key::create requires at least one permission".to_string(),
+                    ));
                 }
                 let perms_ref: Vec<&str> = perms.iter().map(|s| s.as_str()).collect();
                 let cap = key::create(&resource, perms_ref).map_err(RuntimeError::General)?;
                 let mut m = HashMap::new();
                 m.insert("id".to_string(), Value::String(cap.id));
                 m.insert("resource".to_string(), Value::String(cap.resource));
-                m.insert("permissions".to_string(), Value::Array(cap.permissions.into_iter().map(Value::String).collect()));
+                m.insert(
+                    "permissions".to_string(),
+                    Value::Array(cap.permissions.into_iter().map(Value::String).collect()),
+                );
                 Ok(Value::Map(m))
             }
             "check" => {
                 if args.len() != 1 && args.len() != 3 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let req = if args.len() == 3 {
                     CapabilityRequest {
@@ -1045,9 +1314,12 @@ impl Runtime {
                     }
                 } else if let Value::Map(ref m) = args[0] {
                     CapabilityRequest {
-                        resource: self.value_to_string(m.get("resource").unwrap_or(&Value::Null))?,
-                        operation: self.value_to_string(m.get("operation").unwrap_or(&Value::Null))?,
-                        principal_id: self.value_to_string(m.get("principal_id").unwrap_or(&Value::Null))?,
+                        resource: self
+                            .value_to_string(m.get("resource").unwrap_or(&Value::Null))?,
+                        operation: self
+                            .value_to_string(m.get("operation").unwrap_or(&Value::Null))?,
+                        principal_id: self
+                            .value_to_string(m.get("principal_id").unwrap_or(&Value::Null))?,
                     }
                 } else {
                     return Err(RuntimeError::General("key::check expects a map (resource, operation, principal_id) or three string args".to_string()));
@@ -1057,7 +1329,10 @@ impl Runtime {
             }
             "revoke" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let cap_id = self.value_to_string(&args[0])?;
                 let principal_id = self.value_to_string(&args[1])?;
@@ -1066,7 +1341,10 @@ impl Runtime {
             }
             "revoke_all" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let principal_id = self.value_to_string(&args[0])?;
                 let n = key::revoke_all(&principal_id).map_err(RuntimeError::General)?;
@@ -1074,17 +1352,26 @@ impl Runtime {
             }
             "list_for_principal" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let principal_id = self.value_to_string(&args[0])?;
                 let caps = key::list_for_principal(&principal_id);
-                let arr = caps.into_iter().map(|c| {
-                    let mut m = HashMap::new();
-                    m.insert("id".to_string(), Value::String(c.id));
-                    m.insert("resource".to_string(), Value::String(c.resource));
-                    m.insert("permissions".to_string(), Value::Array(c.permissions.into_iter().map(Value::String).collect()));
-                    Value::Map(m)
-                }).collect();
+                let arr = caps
+                    .into_iter()
+                    .map(|c| {
+                        let mut m = HashMap::new();
+                        m.insert("id".to_string(), Value::String(c.id));
+                        m.insert("resource".to_string(), Value::String(c.resource));
+                        m.insert(
+                            "permissions".to_string(),
+                            Value::Array(c.permissions.into_iter().map(Value::String).collect()),
+                        );
+                        Value::Map(m)
+                    })
+                    .collect();
                 Ok(Value::Array(arr))
             }
             _ => Err(RuntimeError::function_not_found(format!("key::{}", name))),
@@ -1094,137 +1381,240 @@ impl Runtime {
     fn call_chain_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         // Validate chain access based on current trust context
         if !self.validate_chain_trust() {
-            return Err(RuntimeError::PermissionDenied("Chain access denied".to_string()));
+            return Err(RuntimeError::PermissionDenied(
+                "Chain access denied".to_string(),
+            ));
         }
 
         match name {
             "caller" => {
                 // Return current transaction caller (msg.sender equivalent)
                 if !args.is_empty() {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 0, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
                 }
-                let caller = self.current_caller.clone()
+                let caller = self
+                    .current_caller
+                    .clone()
                     .unwrap_or_else(|| "0x0000000000000000000000000000000000000000".to_string());
                 Ok(Value::String(caller))
             }
             "deploy" => {
                 if args.len() != 3 && args.len() != 4 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
                 }
                 let chain_id = match &args[0] {
                     Value::Int(n) => *n,
-                    _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let contract_name = match &args[1] {
                     Value::String(s) => s.clone(),
-                    _ => return Err(RuntimeError::TypeError { expected: "string".to_string(), got: args[1].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[1].type_name().to_string(),
+                        })
+                    }
                 };
                 let constructor_args = if args.len() >= 4 {
                     self.value_map_to_string_map(&args[3])?
                 } else {
                     HashMap::new()
                 };
-                let address = crate::stdlib::chain::deploy(chain_id, contract_name, constructor_args);
+                let address =
+                    crate::stdlib::chain::deploy(chain_id, contract_name, constructor_args);
                 Ok(Value::String(address))
             }
             "estimate_gas" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let chain_id = match &args[0] {
                     Value::Int(n) => *n,
-                    _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let operation = match &args[1] {
                     Value::String(s) => s.clone(),
-                    _ => return Err(RuntimeError::TypeError { expected: "string".to_string(), got: args[1].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[1].type_name().to_string(),
+                        })
+                    }
                 };
                 let gas = crate::stdlib::chain::estimate_gas(chain_id, operation);
                 Ok(Value::Int(gas))
             }
             "get_gas_price" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let chain_id = match &args[0] {
                     Value::Int(n) => *n,
-                    _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let gas_price = crate::stdlib::chain::get_gas_price(chain_id);
                 Ok(Value::Float(gas_price))
             }
             "get_block_timestamp" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let chain_id = match &args[0] {
                     Value::Int(n) => *n,
-                    _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let timestamp = crate::stdlib::chain::get_block_timestamp(chain_id);
                 Ok(Value::Int(timestamp))
             }
             "get_transaction_status" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let chain_id = match &args[0] {
                     Value::Int(n) => *n,
-                    _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let tx_hash = match &args[1] {
                     Value::String(s) => s.clone(),
-                    _ => return Err(RuntimeError::TypeError { expected: "string".to_string(), got: args[1].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[1].type_name().to_string(),
+                        })
+                    }
                 };
                 let status = crate::stdlib::chain::get_transaction_status(chain_id, tx_hash);
                 Ok(Value::String(status))
             }
             "get_balance" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let chain_id = match &args[0] {
                     Value::Int(n) => *n,
-                    _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let address = match &args[1] {
                     Value::String(s) => s.clone(),
-                    _ => return Err(RuntimeError::TypeError { expected: "string".to_string(), got: args[1].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[1].type_name().to_string(),
+                        })
+                    }
                 };
                 let balance = crate::stdlib::chain::get_balance(chain_id, address);
                 Ok(Value::Int(balance))
             }
             "call" => {
                 if args.len() != 4 && args.len() != 5 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
                 }
                 let chain_id = match &args[0] {
                     Value::Int(n) => *n,
-                    _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let contract_address = match &args[1] {
                     Value::String(s) => s.clone(),
-                    _ => return Err(RuntimeError::TypeError { expected: "string".to_string(), got: args[1].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[1].type_name().to_string(),
+                        })
+                    }
                 };
                 let function_name = match &args[2] {
                     Value::String(s) => s.clone(),
-                    _ => return Err(RuntimeError::TypeError { expected: "string".to_string(), got: args[2].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[2].type_name().to_string(),
+                        })
+                    }
                 };
                 let args_map = if args.len() >= 5 {
                     self.value_map_to_string_map(&args[4])?
                 } else {
                     HashMap::new()
                 };
-                let result = crate::stdlib::chain::call(chain_id, contract_address, function_name, args_map);
+                let result =
+                    crate::stdlib::chain::call(chain_id, contract_address, function_name, args_map);
                 Ok(Value::String(result))
             }
             "mint" => {
                 if args.len() != 2 && args.len() != 3 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let name = match &args[0] {
                     Value::String(s) => s.clone(),
-                    _ => return Err(RuntimeError::TypeError { expected: "string".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let metadata = if args.len() >= 3 {
                     self.value_map_to_string_map(&args[2])?
@@ -1236,11 +1626,19 @@ impl Runtime {
             }
             "update" => {
                 if args.len() != 2 && args.len() != 3 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let asset_id = match &args[0] {
                     Value::Int(n) => *n,
-                    _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let updates = if args.len() >= 3 {
                     self.value_map_to_string_map(&args[2])?
@@ -1252,22 +1650,38 @@ impl Runtime {
             }
             "get" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let asset_id = match &args[0] {
                     Value::Int(n) => *n,
-                    _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let asset_info = crate::stdlib::chain::get(asset_id);
                 Ok(Value::String(format!("{:?}", asset_info)))
             }
             "exists" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let asset_id = match &args[0] {
                     Value::Int(n) => *n,
-                    _ => return Err(RuntimeError::TypeError { expected: "int".to_string(), got: args[0].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
                 };
                 let exists = crate::stdlib::chain::exists(asset_id);
                 Ok(Value::Bool(exists))
@@ -1282,9 +1696,10 @@ impl Runtime {
                 // Support both auth::session(user_id, roles) and auth::session() with no args
                 if args.is_empty() {
                     // No arguments: return current caller session
-                    let user_id = self.current_caller.clone()
-                        .unwrap_or_else(|| "0x0000000000000000000000000000000000000000".to_string());
-                    
+                    let user_id = self.current_caller.clone().unwrap_or_else(|| {
+                        "0x0000000000000000000000000000000000000000".to_string()
+                    });
+
                     // Return a struct with user_id and empty roles
                     Ok(Value::Struct("session".to_string(), {
                         let mut fields = std::collections::HashMap::new();
@@ -1304,45 +1719,75 @@ impl Runtime {
                             }
                             role_vec
                         }
-                        _ => return Err(RuntimeError::TypeError { expected: "array".to_string(), got: args[1].type_name().to_string() }),
+                        _ => {
+                            return Err(RuntimeError::TypeError {
+                                expected: "array".to_string(),
+                                got: args[1].type_name().to_string(),
+                            })
+                        }
                     };
-                    
+
                     let session = crate::stdlib::auth::session(user_id, roles);
-                    
+
                     // Store session in runtime scope for later use
                     let session_id = session.id.clone();
-                    self.scope.set(session_id.clone(), Value::Struct("session".to_string(), {
-                        let mut fields = std::collections::HashMap::new();
-                        fields.insert("id".to_string(), Value::String(session.id));
-                        fields.insert("user_id".to_string(), Value::String(session.user_id));
-                        fields.insert("roles".to_string(), Value::Array(session.roles.into_iter().map(Value::String).collect()));
-                        fields.insert("permissions".to_string(), Value::Array(session.permissions.into_iter().map(Value::String).collect()));
-                        fields.insert("created_at".to_string(), Value::Int(session.created_at));
-                        fields.insert("expires_at".to_string(), Value::Int(session.expires_at));
-                        fields
-                    }));
-                    
+                    self.scope.set(
+                        session_id.clone(),
+                        Value::Struct("session".to_string(), {
+                            let mut fields = std::collections::HashMap::new();
+                            fields.insert("id".to_string(), Value::String(session.id));
+                            fields.insert("user_id".to_string(), Value::String(session.user_id));
+                            fields.insert(
+                                "roles".to_string(),
+                                Value::Array(
+                                    session.roles.into_iter().map(Value::String).collect(),
+                                ),
+                            );
+                            fields.insert(
+                                "permissions".to_string(),
+                                Value::Array(
+                                    session.permissions.into_iter().map(Value::String).collect(),
+                                ),
+                            );
+                            fields.insert("created_at".to_string(), Value::Int(session.created_at));
+                            fields.insert("expires_at".to_string(), Value::Int(session.expires_at));
+                            fields
+                        }),
+                    );
+
                     Ok(Value::String(session_id))
                 } else {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
             }
             "has_role" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let session_id = self.value_to_string(&args[0])?;
                 let role = self.value_to_string(&args[1])?;
-                
+
                 // Get session from scope
-                let session_value = self.scope.get(&session_id)
+                let session_value = self
+                    .scope
+                    .get(&session_id)
                     .ok_or_else(|| RuntimeError::VariableNotFound(session_id.clone()))?;
-                
+
                 let session = match session_value {
                     Value::Struct(_, fields) => {
                         let user_id = match fields.get("user_id") {
                             Some(Value::String(s)) => s.clone(),
-                            _ => return Err(RuntimeError::General("Invalid session structure".to_string())),
+                            _ => {
+                                return Err(RuntimeError::General(
+                                    "Invalid session structure".to_string(),
+                                ))
+                            }
                         };
                         let roles = match fields.get("roles") {
                             Some(Value::Array(arr)) => {
@@ -1352,7 +1797,11 @@ impl Runtime {
                                 }
                                 role_vec
                             }
-                            _ => return Err(RuntimeError::General("Invalid session structure".to_string())),
+                            _ => {
+                                return Err(RuntimeError::General(
+                                    "Invalid session structure".to_string(),
+                                ))
+                            }
                         };
                         let permissions = match fields.get("permissions") {
                             Some(Value::Array(arr)) => {
@@ -1362,17 +1811,29 @@ impl Runtime {
                                 }
                                 perm_vec
                             }
-                            _ => return Err(RuntimeError::General("Invalid session structure".to_string())),
+                            _ => {
+                                return Err(RuntimeError::General(
+                                    "Invalid session structure".to_string(),
+                                ))
+                            }
                         };
                         let created_at = match fields.get("created_at") {
                             Some(Value::Int(i)) => *i,
-                            _ => return Err(RuntimeError::General("Invalid session structure".to_string())),
+                            _ => {
+                                return Err(RuntimeError::General(
+                                    "Invalid session structure".to_string(),
+                                ))
+                            }
                         };
                         let expires_at = match fields.get("expires_at") {
                             Some(Value::Int(i)) => *i,
-                            _ => return Err(RuntimeError::General("Invalid session structure".to_string())),
+                            _ => {
+                                return Err(RuntimeError::General(
+                                    "Invalid session structure".to_string(),
+                                ))
+                            }
                         };
-                        
+
                         crate::stdlib::auth::Session {
                             id: session_id,
                             user_id,
@@ -1382,28 +1843,42 @@ impl Runtime {
                             expires_at,
                         }
                     }
-                    _ => return Err(RuntimeError::TypeError { expected: "session".to_string(), got: session_value.type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "session".to_string(),
+                            got: session_value.type_name().to_string(),
+                        })
+                    }
                 };
-                
+
                 let has_role = crate::stdlib::auth::has_role(&session, &role);
                 Ok(Value::Bool(has_role))
             }
             "has_permission" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let session_id = self.value_to_string(&args[0])?;
                 let permission = self.value_to_string(&args[1])?;
-                
+
                 // Get session from scope
-                let session_value = self.scope.get(&session_id)
+                let session_value = self
+                    .scope
+                    .get(&session_id)
                     .ok_or_else(|| RuntimeError::VariableNotFound(session_id.clone()))?;
-                
+
                 let session = match session_value {
                     Value::Struct(_, fields) => {
                         let user_id = match fields.get("user_id") {
                             Some(Value::String(s)) => s.clone(),
-                            _ => return Err(RuntimeError::General("Invalid session structure".to_string())),
+                            _ => {
+                                return Err(RuntimeError::General(
+                                    "Invalid session structure".to_string(),
+                                ))
+                            }
                         };
                         let roles = match fields.get("roles") {
                             Some(Value::Array(arr)) => {
@@ -1413,7 +1888,11 @@ impl Runtime {
                                 }
                                 role_vec
                             }
-                            _ => return Err(RuntimeError::General("Invalid session structure".to_string())),
+                            _ => {
+                                return Err(RuntimeError::General(
+                                    "Invalid session structure".to_string(),
+                                ))
+                            }
                         };
                         let permissions = match fields.get("permissions") {
                             Some(Value::Array(arr)) => {
@@ -1423,17 +1902,29 @@ impl Runtime {
                                 }
                                 perm_vec
                             }
-                            _ => return Err(RuntimeError::General("Invalid session structure".to_string())),
+                            _ => {
+                                return Err(RuntimeError::General(
+                                    "Invalid session structure".to_string(),
+                                ))
+                            }
                         };
                         let created_at = match fields.get("created_at") {
                             Some(Value::Int(i)) => *i,
-                            _ => return Err(RuntimeError::General("Invalid session structure".to_string())),
+                            _ => {
+                                return Err(RuntimeError::General(
+                                    "Invalid session structure".to_string(),
+                                ))
+                            }
                         };
                         let expires_at = match fields.get("expires_at") {
                             Some(Value::Int(i)) => *i,
-                            _ => return Err(RuntimeError::General("Invalid session structure".to_string())),
+                            _ => {
+                                return Err(RuntimeError::General(
+                                    "Invalid session structure".to_string(),
+                                ))
+                            }
                         };
-                        
+
                         crate::stdlib::auth::Session {
                             id: session_id,
                             user_id,
@@ -1443,19 +1934,27 @@ impl Runtime {
                             expires_at,
                         }
                     }
-                    _ => return Err(RuntimeError::TypeError { expected: "session".to_string(), got: session_value.type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "session".to_string(),
+                            got: session_value.type_name().to_string(),
+                        })
+                    }
                 };
-                
+
                 let has_permission = crate::stdlib::auth::has_permission(&session, &permission);
                 Ok(Value::Bool(has_permission))
             }
             "validate_credentials" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let username = self.value_to_string(&args[0])?;
                 let password = self.value_to_string(&args[1])?;
-                
+
                 let user_id = crate::stdlib::auth::validate_credentials(&username, &password);
                 match user_id {
                     Some(id) => Ok(Value::String(id)),
@@ -1464,7 +1963,10 @@ impl Runtime {
             }
             "create_role" => {
                 if args.len() != 3 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
                 }
                 let name = self.value_to_string(&args[0])?;
                 let permissions = match &args[1] {
@@ -1475,42 +1977,67 @@ impl Runtime {
                         }
                         perm_vec
                     }
-                    _ => return Err(RuntimeError::TypeError { expected: "array".to_string(), got: args[1].type_name().to_string() }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "array".to_string(),
+                            got: args[1].type_name().to_string(),
+                        })
+                    }
                 };
                 let description = self.value_to_string(&args[2])?;
-                
+
                 let role = crate::stdlib::auth::create_role(name, permissions, description);
-                
+
                 // Store role in runtime scope
                 let role_name = role.name.clone();
-                self.scope.set(role_name.clone(), Value::Struct("role".to_string(), {
-                    let mut fields = std::collections::HashMap::new();
-                    fields.insert("name".to_string(), Value::String(role.name));
-                    fields.insert("permissions".to_string(), Value::Array(role.permissions.into_iter().map(Value::String).collect()));
-                    fields.insert("description".to_string(), Value::String(role.description));
-                    fields
-                }));
-                
+                self.scope.set(
+                    role_name.clone(),
+                    Value::Struct("role".to_string(), {
+                        let mut fields = std::collections::HashMap::new();
+                        fields.insert("name".to_string(), Value::String(role.name));
+                        fields.insert(
+                            "permissions".to_string(),
+                            Value::Array(role.permissions.into_iter().map(Value::String).collect()),
+                        );
+                        fields.insert("description".to_string(), Value::String(role.description));
+                        fields
+                    }),
+                );
+
                 Ok(Value::String(role_name))
             }
             "get_role" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let role_name = self.value_to_string(&args[0])?;
-                
+
                 let role = crate::stdlib::auth::get_role(&role_name);
                 match role {
                     Some(r) => {
                         let role_name = r.name.clone();
-                        self.scope.set(role_name.clone(), Value::Struct("role".to_string(), {
-                            let mut fields = std::collections::HashMap::new();
-                            fields.insert("name".to_string(), Value::String(r.name));
-                            fields.insert("permissions".to_string(), Value::Array(r.permissions.into_iter().map(Value::String).collect()));
-                            fields.insert("description".to_string(), Value::String(r.description));
-                            fields
-                        }));
-                        
+                        self.scope.set(
+                            role_name.clone(),
+                            Value::Struct("role".to_string(), {
+                                let mut fields = std::collections::HashMap::new();
+                                fields.insert("name".to_string(), Value::String(r.name));
+                                fields.insert(
+                                    "permissions".to_string(),
+                                    Value::Array(
+                                        r.permissions.into_iter().map(Value::String).collect(),
+                                    ),
+                                );
+                                fields.insert(
+                                    "description".to_string(),
+                                    Value::String(r.description),
+                                );
+                                fields
+                            }),
+                        );
+
                         Ok(Value::String(role_name))
                     }
                     None => Ok(Value::Null),
@@ -1524,14 +2051,20 @@ impl Runtime {
         match name {
             "info" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 println!("[INFO] {}: {}", args[0], args[1]);
                 Ok(Value::Null)
             }
             "audit" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 println!("[AUDIT] {}: {}", args[0], args[1]);
                 Ok(Value::Null)
@@ -1544,30 +2077,42 @@ impl Runtime {
         match name {
             "hash" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 // Simulate hash generation
                 Ok(Value::String("hash_1234567890abcdef".to_string()))
             }
             "sign" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("signature_abcdef123456".to_string()))
             }
             "verify" => {
                 if args.len() != 3 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::Bool(true))
             }
-            _ => Err(RuntimeError::function_not_found(format!("crypto::{}", name))),
+            _ => Err(RuntimeError::function_not_found(format!(
+                "crypto::{}",
+                name
+            ))),
         }
     }
 
     pub fn execute(&mut self, program: &Program) -> Result<Value, RuntimeError> {
         let mut last_result = Value::Null;
-        
+
         for statement in &program.statements {
             match self.execute_statement(statement) {
                 Ok(value) => last_result = value,
@@ -1578,47 +2123,56 @@ impl Runtime {
                 break;
             }
         }
-        
+
         Ok(last_result)
     }
 
     /// Execute a statement and return the result, handling control flow properly
-    fn execute_statement(&mut self, statement: &crate::parser::ast::Statement) -> Result<Value, RuntimeError> {
+    fn execute_statement(
+        &mut self,
+        statement: &crate::parser::ast::Statement,
+    ) -> Result<Value, RuntimeError> {
         self.execute_statement_internal(statement).map(|outcome| {
             match outcome {
                 StatementOutcome::Value(v) => v,
                 StatementOutcome::ControlFlow(ControlFlow::Break(Some(v))) => {
                     // Break with value - return the value wrapped in a marker
                     Value::String(format!("__CONTROL_FLOW_BREAK__{:?}", v))
-                },
+                }
                 StatementOutcome::ControlFlow(ControlFlow::Break(None)) => {
                     // Break without value
                     Value::String("__CONTROL_FLOW_BREAK__".to_string())
-                },
+                }
                 StatementOutcome::ControlFlow(ControlFlow::Next) => {
                     // Continue to next iteration
                     Value::String("__CONTROL_FLOW_NEXT__".to_string())
-                },
+                }
                 StatementOutcome::ControlFlow(ControlFlow::Continue) => Value::Null,
             }
         })
     }
 
     /// Internal method that properly handles control flow
-    fn execute_statement_internal(&mut self, statement: &crate::parser::ast::Statement) -> StatementResult {
+    fn execute_statement_internal(
+        &mut self,
+        statement: &crate::parser::ast::Statement,
+    ) -> StatementResult {
         // Note: Timeout checking is done in execute_program() before each statement
-        
+
         // Check timeout (using a thread-local or passed-in start time)
         // For now, we'll check in execute_program, but this could be enhanced
         match statement {
             crate::parser::ast::Statement::Let(let_stmt) => {
                 let evaluated_value = self.evaluate_expression(&let_stmt.value)?;
-                
+
                 // Phase 4: Apply formal verification to variable assignments
-                if let Err(e) = self.advanced_security.verify_assignment(&let_stmt.name, &evaluated_value) {
+                if let Err(e) = self
+                    .advanced_security
+                    .verify_assignment(&let_stmt.name, &evaluated_value)
+                {
                     return Err(e);
                 }
-                
+
                 self.set_variable(let_stmt.name.clone(), evaluated_value.clone());
                 Ok(StatementOutcome::value(evaluated_value))
             }
@@ -1641,11 +2195,11 @@ impl Runtime {
                     match self.execute_statement_internal(stmt) {
                         Ok(StatementOutcome::Value(value)) => {
                             last_result = value;
-                        },
+                        }
                         Ok(StatementOutcome::ControlFlow(cf)) => {
                             // Control flow propagates up (break/continue)
                             return Ok(StatementOutcome::ControlFlow(cf));
-                        },
+                        }
                         Err(e) => return Err(e),
                     }
                     if self.return_pending.is_some() {
@@ -1656,26 +2210,34 @@ impl Runtime {
             }
             Statement::Function(func_stmt) => {
                 // Register top-level DAL function so call_function(name, args) can dispatch to it
-                let parameters: Vec<String> = func_stmt.parameters.iter().map(|p| p.name.clone()).collect();
+                let parameters: Vec<String> = func_stmt
+                    .parameters
+                    .iter()
+                    .map(|p| p.name.clone())
+                    .collect();
                 let user_func = UserFunction {
                     name: func_stmt.name.clone(),
                     parameters: parameters.clone(),
                     body: func_stmt.body.clone(),
                     attributes: func_stmt.attributes.clone(),
                 };
-                self.user_functions.insert(func_stmt.name.clone(), user_func);
+                self.user_functions
+                    .insert(func_stmt.name.clone(), user_func);
                 Ok(StatementOutcome::value(Value::Null))
             }
-            crate::parser::ast::Statement::Service(service_stmt) => {
-                self.execute_service_statement(service_stmt)
-                    .map(|v| StatementOutcome::value(v))
-            }
+            crate::parser::ast::Statement::Service(service_stmt) => self
+                .execute_service_statement(service_stmt)
+                .map(|v| StatementOutcome::value(v)),
             crate::parser::ast::Statement::If(if_stmt) => {
                 let condition = self.evaluate_expression(&if_stmt.condition)?;
                 if self.is_truthy(&condition) {
-                    self.execute_statement_internal(&crate::parser::ast::Statement::Block(if_stmt.consequence.clone()))
+                    self.execute_statement_internal(&crate::parser::ast::Statement::Block(
+                        if_stmt.consequence.clone(),
+                    ))
                 } else if let Some(alternative) = &if_stmt.alternative {
-                    self.execute_statement_internal(&crate::parser::ast::Statement::Block(alternative.clone()))
+                    self.execute_statement_internal(&crate::parser::ast::Statement::Block(
+                        alternative.clone(),
+                    ))
                 } else {
                     Ok(StatementOutcome::value(Value::Null))
                 }
@@ -1700,20 +2262,22 @@ impl Runtime {
                         match self.execute_statement_internal(stmt) {
                             Ok(StatementOutcome::Value(value)) => {
                                 last_result = value;
-                            },
+                            }
                             Ok(StatementOutcome::ControlFlow(ControlFlow::Break(break_val))) => {
                                 // Break out of loop, return break value if present
-                                return Ok(StatementOutcome::value(break_val.unwrap_or(Value::Null)));
-                            },
+                                return Ok(StatementOutcome::value(
+                                    break_val.unwrap_or(Value::Null),
+                                ));
+                            }
                             Ok(StatementOutcome::ControlFlow(ControlFlow::Next)) => {
                                 // Continue to next iteration
                                 break;
-                            },
+                            }
                             Ok(StatementOutcome::ControlFlow(ControlFlow::Continue)) => {
                                 // Normal continue (not a control flow signal - shouldn't happen)
                                 // This is a bug if we reach here
                                 continue;
-                            },
+                            }
                             Err(e) => return Err(e),
                         }
                     }
@@ -1749,20 +2313,22 @@ impl Runtime {
                         match self.execute_statement_internal(stmt) {
                             Ok(StatementOutcome::Value(_value)) => {
                                 // Store last result but continue loop
-                            },
+                            }
                             Ok(StatementOutcome::ControlFlow(ControlFlow::Break(break_val))) => {
                                 // Break out of loop, return break value if present
-                                return Ok(StatementOutcome::value(break_val.unwrap_or(Value::Null)));
-                            },
+                                return Ok(StatementOutcome::value(
+                                    break_val.unwrap_or(Value::Null),
+                                ));
+                            }
                             Ok(StatementOutcome::ControlFlow(ControlFlow::Next)) => {
                                 // Continue to next iteration of outer loop
                                 break; // Break out of for loop, continue outer loop
-                            },
+                            }
                             Ok(StatementOutcome::ControlFlow(ControlFlow::Continue)) => {
                                 // Normal continue (not a control flow signal - shouldn't happen)
                                 // This is a bug if we reach here
                                 continue;
-                            },
+                            }
                             Err(e) => return Err(e),
                         }
                     }
@@ -1771,87 +2337,99 @@ impl Runtime {
             }
             crate::parser::ast::Statement::Match(match_stmt) => {
                 let match_value = self.evaluate_expression(&match_stmt.expression)?;
-                
+
                 // Try each case in order
                 for case in &match_stmt.cases {
                     let matches = match &case.pattern {
                         crate::parser::ast::MatchPattern::Literal(lit) => {
                             let case_value = self.literal_to_value(lit);
                             self.values_equal(&match_value, &case_value)
-                        },
+                        }
                         crate::parser::ast::MatchPattern::Identifier(_) => {
                             // Always matches, binds the value
                             true
-                        },
-                        crate::parser::ast::MatchPattern::Wildcard => {
-                            true
-                        },
+                        }
+                        crate::parser::ast::MatchPattern::Wildcard => true,
                         crate::parser::ast::MatchPattern::Range(start_expr, end_expr) => {
                             let start = self.evaluate_expression(start_expr)?;
                             let end = self.evaluate_expression(end_expr)?;
                             // Check if match_value is in range (for numeric types)
-                            if let (Value::Int(mv), Value::Int(sv), Value::Int(ev)) = (&match_value, &start, &end) {
+                            if let (Value::Int(mv), Value::Int(sv), Value::Int(ev)) =
+                                (&match_value, &start, &end)
+                            {
                                 *mv >= *sv && *mv <= *ev
                             } else {
                                 false
                             }
-                        },
+                        }
                     };
-                    
+
                     if matches {
                         // Bind identifier if present (create new scope for match case)
                         let original_scope = self.scope.clone();
-                        if let crate::parser::ast::MatchPattern::Identifier(ref name) = case.pattern {
+                        if let crate::parser::ast::MatchPattern::Identifier(ref name) = case.pattern
+                        {
                             self.scope.set(name.clone(), match_value.clone());
                         }
-                        
+
                         // Execute case body
-                        let result = self.execute_statement_internal(&crate::parser::ast::Statement::Block(case.body.clone()));
-                        
+                        let result = self.execute_statement_internal(
+                            &crate::parser::ast::Statement::Block(case.body.clone()),
+                        );
+
                         // Restore scope after match case (pattern bindings are scoped to case)
                         self.scope = original_scope;
-                        
+
                         return result;
                     }
                 }
-                
+
                 // No case matched, execute default if present
                 if let Some(ref default_body) = match_stmt.default_case {
-                    self.execute_statement_internal(&crate::parser::ast::Statement::Block(default_body.clone()))
+                    self.execute_statement_internal(&crate::parser::ast::Statement::Block(
+                        default_body.clone(),
+                    ))
                 } else {
                     Ok(StatementOutcome::value(Value::Null))
                 }
             }
             crate::parser::ast::Statement::Try(try_stmt) => {
                 // Execute try block
-                match self.execute_statement_internal(&crate::parser::ast::Statement::Block(try_stmt.try_block.clone())) {
+                match self.execute_statement_internal(&crate::parser::ast::Statement::Block(
+                    try_stmt.try_block.clone(),
+                )) {
                     Ok(StatementOutcome::Value(result)) => {
                         // If try block succeeds, execute finally block if present
                         if let Some(finally_block) = &try_stmt.finally_block {
-                            let _ = self.execute_statement_internal(&crate::parser::ast::Statement::Block(finally_block.clone()));
+                            let _ = self.execute_statement_internal(
+                                &crate::parser::ast::Statement::Block(finally_block.clone()),
+                            );
                         }
                         Ok(StatementOutcome::value(result))
-                    },
+                    }
                     Ok(StatementOutcome::ControlFlow(cf)) => {
                         // Control flow propagates through try-catch (break/continue)
                         // Execute finally block if present, then propagate
                         if let Some(finally_block) = &try_stmt.finally_block {
-                            let _ = self.execute_statement_internal(&crate::parser::ast::Statement::Block(finally_block.clone()));
+                            let _ = self.execute_statement_internal(
+                                &crate::parser::ast::Statement::Block(finally_block.clone()),
+                            );
                         }
                         Ok(StatementOutcome::ControlFlow(cf))
-                    },
+                    }
                     Err(error) => {
                         // Try to find a matching catch block
                         for catch_block in &try_stmt.catch_blocks {
                             // For now, we'll catch all errors
                             // In a more sophisticated implementation, we'd check error types
                             let mut catch_scope = self.scope.clone();
-                            
+
                             // Bind error variable if specified
                             if let Some(error_var) = &catch_block.error_variable {
-                                catch_scope.set(error_var.clone(), Value::String(format!("{:?}", error)));
+                                catch_scope
+                                    .set(error_var.clone(), Value::String(format!("{:?}", error)));
                             }
-                            
+
                             let mut catch_runtime = Runtime {
                                 services: HashMap::new(),
                                 stack: Vec::new(),
@@ -1879,52 +2457,65 @@ impl Runtime {
                                 test_tests: Vec::new(),
                                 return_pending: None,
                             };
-                            
-                            match catch_runtime.execute_statement_internal(&crate::parser::ast::Statement::Block(catch_block.body.clone())) {
+
+                            match catch_runtime.execute_statement_internal(
+                                &crate::parser::ast::Statement::Block(catch_block.body.clone()),
+                            ) {
                                 Ok(StatementOutcome::Value(result)) => {
                                     // Execute finally block if present
                                     if let Some(finally_block) = &try_stmt.finally_block {
-                                        let _ = self.execute_statement_internal(&crate::parser::ast::Statement::Block(finally_block.clone()));
+                                        let _ = self.execute_statement_internal(
+                                            &crate::parser::ast::Statement::Block(
+                                                finally_block.clone(),
+                                            ),
+                                        );
                                     }
                                     return Ok(StatementOutcome::value(result));
-                                },
+                                }
                                 Ok(StatementOutcome::ControlFlow(cf)) => {
                                     // Control flow propagates through catch blocks too
                                     if let Some(finally_block) = &try_stmt.finally_block {
-                                        let _ = self.execute_statement_internal(&crate::parser::ast::Statement::Block(finally_block.clone()));
+                                        let _ = self.execute_statement_internal(
+                                            &crate::parser::ast::Statement::Block(
+                                                finally_block.clone(),
+                                            ),
+                                        );
                                     }
                                     return Ok(StatementOutcome::ControlFlow(cf));
-                                },
+                                }
                                 Err(_) => continue, // Try next catch block
                             }
                         }
-                        
+
                         // If no catch block handled the error, execute finally and re-throw
                         if let Some(finally_block) = &try_stmt.finally_block {
-                            let _ = self.execute_statement_internal(&crate::parser::ast::Statement::Block(finally_block.clone()));
+                            let _ = self.execute_statement_internal(
+                                &crate::parser::ast::Statement::Block(finally_block.clone()),
+                            );
                         }
-                        
+
                         Err(error)
                     }
                 }
             }
-            crate::parser::ast::Statement::Spawn(spawn_stmt) => {
-                self.execute_spawn_statement(spawn_stmt)
-                    .map(|v| StatementOutcome::value(v))
-            }
-            crate::parser::ast::Statement::Agent(agent_stmt) => {
-                self.execute_agent_statement(agent_stmt)
-                    .map(|v| StatementOutcome::value(v))
-            }
+            crate::parser::ast::Statement::Spawn(spawn_stmt) => self
+                .execute_spawn_statement(spawn_stmt)
+                .map(|v| StatementOutcome::value(v)),
+            crate::parser::ast::Statement::Agent(agent_stmt) => self
+                .execute_agent_statement(agent_stmt)
+                .map(|v| StatementOutcome::value(v)),
             crate::parser::ast::Statement::Message(msg_stmt) => {
                 // Evaluate message data
                 let mut data = HashMap::new();
                 for (key, expr) in &msg_stmt.data {
                     data.insert(key.clone(), self.evaluate_expression(expr)?);
                 }
-                
+
                 // For now, just return the message data as a string
-                Ok(StatementOutcome::value(Value::String(format!("Message to {}: {:?}", msg_stmt.recipient, data))))
+                Ok(StatementOutcome::value(Value::String(format!(
+                    "Message to {}: {:?}",
+                    msg_stmt.recipient, data
+                ))))
             }
             crate::parser::ast::Statement::Event(event_stmt) => {
                 // Evaluate event data
@@ -1932,18 +2523,23 @@ impl Runtime {
                 for (key, expr) in &event_stmt.data {
                     data.insert(key.clone(), self.evaluate_expression(expr)?);
                 }
-                
+
                 // For now, just return the event data as a string
-                Ok(StatementOutcome::value(Value::String(format!("Event {}: {:?}", event_stmt.event_name, data))))
+                Ok(StatementOutcome::value(Value::String(format!(
+                    "Event {}: {:?}",
+                    event_stmt.event_name, data
+                ))))
             }
             crate::parser::ast::Statement::ForIn(for_in_stmt) => {
                 let iterable = self.evaluate_expression(&for_in_stmt.iterable)?;
                 let items: Vec<crate::runtime::values::Value> = match &iterable {
                     crate::runtime::values::Value::List(list) => list.clone(),
                     crate::runtime::values::Value::Array(arr) => arr.clone(),
-                    crate::runtime::values::Value::Map(map) => {
-                        map.keys().cloned().map(crate::runtime::values::Value::String).collect()
-                    }
+                    crate::runtime::values::Value::Map(map) => map
+                        .keys()
+                        .cloned()
+                        .map(crate::runtime::values::Value::String)
+                        .collect(),
                     other => {
                         return Err(RuntimeError::General(format!(
                             "for-in requires list, array, or map; got {}",
@@ -1960,28 +2556,30 @@ impl Runtime {
                     }
                     // Set loop variable
                     self.set_variable(for_in_stmt.variable.clone(), item.clone());
-                    
+
                     // Execute body statements
                     let mut should_continue = false;
                     for stmt in &for_in_stmt.body.statements {
                         match self.execute_statement_internal(stmt) {
                             Ok(StatementOutcome::Value(value)) => {
                                 last_result = value;
-                            },
+                            }
                             Ok(StatementOutcome::ControlFlow(ControlFlow::Break(break_val))) => {
                                 // Break out of loop, return break value if present
-                                return Ok(StatementOutcome::value(break_val.unwrap_or(Value::Null)));
-                            },
+                                return Ok(StatementOutcome::value(
+                                    break_val.unwrap_or(Value::Null),
+                                ));
+                            }
                             Ok(StatementOutcome::ControlFlow(ControlFlow::Next)) => {
                                 // Continue to next iteration
                                 should_continue = true;
                                 break;
-                            },
+                            }
                             Ok(StatementOutcome::ControlFlow(ControlFlow::Continue)) => {
                                 // Normal continue (shouldn't happen in loop context)
                                 should_continue = true;
                                 break;
-                            },
+                            }
                             Err(e) => return Err(e),
                         }
                     }
@@ -1994,13 +2592,20 @@ impl Runtime {
         }
     }
 
-    fn evaluate_expression(&mut self, expression: &crate::parser::ast::Expression) -> Result<Value, RuntimeError> {
+    fn evaluate_expression(
+        &mut self,
+        expression: &crate::parser::ast::Expression,
+    ) -> Result<Value, RuntimeError> {
         self.evaluate_expression_at_depth(expression, 0)
     }
 
     const MAX_EVAL_DEPTH: usize = 128;
 
-    fn evaluate_expression_at_depth(&mut self, expression: &crate::parser::ast::Expression, depth: usize) -> Result<Value, RuntimeError> {
+    fn evaluate_expression_at_depth(
+        &mut self,
+        expression: &crate::parser::ast::Expression,
+        depth: usize,
+    ) -> Result<Value, RuntimeError> {
         if depth >= Self::MAX_EVAL_DEPTH {
             return Err(RuntimeError::General(format!(
                 "Expression recursion depth exceeded (limit {})",
@@ -2015,15 +2620,13 @@ impl Runtime {
         }
         let depth = depth + 1;
         match expression {
-            crate::parser::ast::Expression::Literal(literal) => {
-                match literal {
-                    crate::lexer::tokens::Literal::Int(n) => Ok(Value::Int(*n)),
-                    crate::lexer::tokens::Literal::Float(f) => Ok(Value::Float(*f)),
-                    crate::lexer::tokens::Literal::String(s) => Ok(Value::String(s.clone())),
-                    crate::lexer::tokens::Literal::Bool(b) => Ok(Value::Bool(*b)),
-                    crate::lexer::tokens::Literal::Null => Ok(Value::Null),
-                }
-            }
+            crate::parser::ast::Expression::Literal(literal) => match literal {
+                crate::lexer::tokens::Literal::Int(n) => Ok(Value::Int(*n)),
+                crate::lexer::tokens::Literal::Float(f) => Ok(Value::Float(*f)),
+                crate::lexer::tokens::Literal::String(s) => Ok(Value::String(s.clone())),
+                crate::lexer::tokens::Literal::Bool(b) => Ok(Value::Bool(*b)),
+                crate::lexer::tokens::Literal::Null => Ok(Value::Null),
+            },
             crate::parser::ast::Expression::Identifier(name) => {
                 // Check if this is 'self' - if so, return the instance ID
                 if name == "self" {
@@ -2062,29 +2665,57 @@ impl Runtime {
                         let left_val = self.evaluate_expression_at_depth(left, depth)?;
                         let right_val = self.evaluate_expression_at_depth(right, depth)?;
                         match operator {
-                            crate::lexer::tokens::Operator::Plus => self.add_values(left_val, right_val),
-                            crate::lexer::tokens::Operator::Minus => self.subtract_values(left_val, right_val),
-                            crate::lexer::tokens::Operator::Star => self.multiply_values(left_val, right_val),
-                            crate::lexer::tokens::Operator::Slash => self.divide_values(left_val, right_val),
-                            crate::lexer::tokens::Operator::Percent => self.modulo_values(left_val, right_val),
-                            crate::lexer::tokens::Operator::Equal => Ok(Value::Bool(left_val == right_val)),
-                            crate::lexer::tokens::Operator::NotEqual => Ok(Value::Bool(left_val != right_val)),
-                            crate::lexer::tokens::Operator::Less => self.compare_values(left_val, right_val, "<"),
-                            crate::lexer::tokens::Operator::LessEqual => self.compare_values(left_val, right_val, "<="),
-                            crate::lexer::tokens::Operator::Greater => self.compare_values(left_val, right_val, ">"),
-                            crate::lexer::tokens::Operator::GreaterEqual => self.compare_values(left_val, right_val, ">="),
-                            _ => Err(RuntimeError::UnsupportedOperation(format!("{:?}", operator)))
+                            crate::lexer::tokens::Operator::Plus => {
+                                self.add_values(left_val, right_val)
+                            }
+                            crate::lexer::tokens::Operator::Minus => {
+                                self.subtract_values(left_val, right_val)
+                            }
+                            crate::lexer::tokens::Operator::Star => {
+                                self.multiply_values(left_val, right_val)
+                            }
+                            crate::lexer::tokens::Operator::Slash => {
+                                self.divide_values(left_val, right_val)
+                            }
+                            crate::lexer::tokens::Operator::Percent => {
+                                self.modulo_values(left_val, right_val)
+                            }
+                            crate::lexer::tokens::Operator::Equal => {
+                                Ok(Value::Bool(left_val == right_val))
+                            }
+                            crate::lexer::tokens::Operator::NotEqual => {
+                                Ok(Value::Bool(left_val != right_val))
+                            }
+                            crate::lexer::tokens::Operator::Less => {
+                                self.compare_values(left_val, right_val, "<")
+                            }
+                            crate::lexer::tokens::Operator::LessEqual => {
+                                self.compare_values(left_val, right_val, "<=")
+                            }
+                            crate::lexer::tokens::Operator::Greater => {
+                                self.compare_values(left_val, right_val, ">")
+                            }
+                            crate::lexer::tokens::Operator::GreaterEqual => {
+                                self.compare_values(left_val, right_val, ">=")
+                            }
+                            _ => Err(RuntimeError::UnsupportedOperation(format!(
+                                "{:?}",
+                                operator
+                            ))),
                         }
                     }
                 }
             }
             crate::parser::ast::Expression::UnaryOp(operator, operand) => {
                 let operand_val = self.evaluate_expression_at_depth(operand, depth)?;
-                
+
                 match operator {
                     crate::lexer::tokens::Operator::Minus => self.negate_value(operand_val),
                     crate::lexer::tokens::Operator::Not => self.logical_not(operand_val),
-                    _ => Err(RuntimeError::UnsupportedOperation(format!("{:?}", operator)))
+                    _ => Err(RuntimeError::UnsupportedOperation(format!(
+                        "{:?}",
+                        operator
+                    ))),
                 }
             }
             crate::parser::ast::Expression::Assignment(name, value) => {
@@ -2092,7 +2723,11 @@ impl Runtime {
                 self.set_variable(name.clone(), evaluated_value.clone());
                 Ok(evaluated_value)
             }
-            crate::parser::ast::Expression::FieldAssignment(object_expr, field_name, value_expr) => {
+            crate::parser::ast::Expression::FieldAssignment(
+                object_expr,
+                field_name,
+                value_expr,
+            ) => {
                 // Evaluate the value to assign
                 let value = self.evaluate_expression_at_depth(value_expr, depth)?;
 
@@ -2108,7 +2743,8 @@ impl Runtime {
                                 Ok(value)
                             } else {
                                 Err(RuntimeError::General(format!(
-                                    "Service instance '{}' not found", instance_id
+                                    "Service instance '{}' not found",
+                                    instance_id
                                 )))
                             }
                         } else {
@@ -2122,16 +2758,19 @@ impl Runtime {
                         match self.get_variable(var_name) {
                             Ok(mut current_value) => {
                                 // Update the field in the object
-                                if current_value.struct_set_field(field_name.clone(), value.clone()) {
+                                if current_value.struct_set_field(field_name.clone(), value.clone())
+                                {
                                     // Store the updated object back to the variable
                                     self.set_variable(var_name.clone(), current_value);
                                     Ok(value)
                                 } else {
                                     Err(RuntimeError::General(format!(
                                         "Cannot assign to field '{}' on variable '{}' of type '{}'",
-                                        field_name, var_name, match self.get_variable(var_name) {
+                                        field_name,
+                                        var_name,
+                                        match self.get_variable(var_name) {
                                             Ok(v) => v.type_name().to_string(),
-                                            Err(_) => "unknown".to_string()
+                                            Err(_) => "unknown".to_string(),
                                         }
                                     )))
                                 }
@@ -2182,7 +2821,10 @@ impl Runtime {
             }
             crate::parser::ast::Expression::Throw(expr) => {
                 let error_value = self.evaluate_expression_at_depth(expr, depth)?;
-                Err(RuntimeError::General(format!("Thrown error: {}", error_value)))
+                Err(RuntimeError::General(format!(
+                    "Thrown error: {}",
+                    error_value
+                )))
             }
             crate::parser::ast::Expression::IndexAccess(container, index_expr) => {
                 let container_val = self.evaluate_expression_at_depth(container, depth)?;
@@ -2197,34 +2839,32 @@ impl Runtime {
                 if let Value::String(ref instance_id) = object_value {
                     if let Some(instance) = self.services.get(instance_id) {
                         // Access field from service instance
-                        return instance.fields.get(field_name)
-                            .cloned()
-                            .ok_or_else(|| RuntimeError::General(format!(
-                                "Field '{}' not found on service instance '{}'", 
+                        return instance.fields.get(field_name).cloned().ok_or_else(|| {
+                            RuntimeError::General(format!(
+                                "Field '{}' not found on service instance '{}'",
                                 field_name, instance_id
-                            )));
+                            ))
+                        });
                     }
                 }
 
                 // Get the field value directly from the object
                 match object_value {
                     Value::Struct(_, ref fields) => {
-                        fields.get(field_name)
-                            .cloned()
-                            .ok_or_else(|| RuntimeError::General(format!(
-                                "Field '{}' not found on struct", field_name
-                            )))
+                        fields.get(field_name).cloned().ok_or_else(|| {
+                            RuntimeError::General(format!(
+                                "Field '{}' not found on struct",
+                                field_name
+                            ))
+                        })
                     }
-                    Value::Map(ref map) => {
-                        map.get(field_name)
-                            .cloned()
-                            .ok_or_else(|| RuntimeError::General(format!(
-                                "Field '{}' not found in map", field_name
-                            )))
-                    }
+                    Value::Map(ref map) => map.get(field_name).cloned().ok_or_else(|| {
+                        RuntimeError::General(format!("Field '{}' not found in map", field_name))
+                    }),
                     _ => Err(RuntimeError::General(format!(
                         "Cannot access field '{}' on value of type '{}'",
-                        field_name, object_value.type_name()
+                        field_name,
+                        object_value.type_name()
                     ))),
                 }
             }
@@ -2253,18 +2893,22 @@ impl Runtime {
 
                 let start_int = match start {
                     Value::Int(n) => n,
-                    _ => return Err(RuntimeError::TypeError {
-                        expected: "int".to_string(),
-                        got: start.type_name().to_string(),
-                    }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: start.type_name().to_string(),
+                        })
+                    }
                 };
 
                 let end_int = match end {
                     Value::Int(n) => n,
-                    _ => return Err(RuntimeError::TypeError {
-                        expected: "int".to_string(),
-                        got: end.type_name().to_string(),
-                    }),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: end.type_name().to_string(),
+                        })
+                    }
                 };
 
                 let len = end_int.saturating_sub(start_int);
@@ -2276,9 +2920,7 @@ impl Runtime {
                 }
 
                 // Create range: start..end (exclusive end, like Rust)
-                let range_vec: Vec<Value> = (start_int..end_int)
-                    .map(Value::Int)
-                    .collect();
+                let range_vec: Vec<Value> = (start_int..end_int).map(Value::Int).collect();
 
                 Ok(Value::List(range_vec))
             }
@@ -2302,7 +2944,7 @@ impl Runtime {
             (Value::String(a), Value::String(b)) => Ok(Value::String(a.clone() + b)),
             (Value::String(a), other) => Ok(Value::String(format!("{}{}", a, other))),
             (other, Value::String(b)) => Ok(Value::String(format!("{}{}", other, b))),
-            _ => SafeMath::add(&left, &right)
+            _ => SafeMath::add(&left, &right),
         }
     }
 
@@ -2324,25 +2966,38 @@ impl Runtime {
 
     fn compare_values(&self, left: Value, right: Value, op: &str) -> Result<Value, RuntimeError> {
         use std::cmp::Ordering;
-        
+
         let ordering = match (&left, &right) {
             (Value::Int(a), Value::Int(b)) => a.cmp(b),
             (Value::Float(a), Value::Float(b)) => a.partial_cmp(b).unwrap_or(Ordering::Equal),
-            (Value::Int(a), Value::Float(b)) => (*a as f64).partial_cmp(b).unwrap_or(Ordering::Equal),
-            (Value::Float(a), Value::Int(b)) => a.partial_cmp(&(*b as f64)).unwrap_or(Ordering::Equal),
+            (Value::Int(a), Value::Float(b)) => {
+                (*a as f64).partial_cmp(b).unwrap_or(Ordering::Equal)
+            }
+            (Value::Float(a), Value::Int(b)) => {
+                a.partial_cmp(&(*b as f64)).unwrap_or(Ordering::Equal)
+            }
             (Value::String(a), Value::String(b)) => a.cmp(b),
             (Value::Bool(a), Value::Bool(b)) => a.cmp(b),
-            _ => return Err(RuntimeError::General("Cannot compare these value types".to_string())),
+            _ => {
+                return Err(RuntimeError::General(
+                    "Cannot compare these value types".to_string(),
+                ))
+            }
         };
-        
+
         let result = match op {
             "<" => matches!(ordering, Ordering::Less),
             "<=" => matches!(ordering, Ordering::Less | Ordering::Equal),
             ">" => matches!(ordering, Ordering::Greater),
             ">=" => matches!(ordering, Ordering::Greater | Ordering::Equal),
-            _ => return Err(RuntimeError::General(format!("Unknown comparison operator: {}", op))),
+            _ => {
+                return Err(RuntimeError::General(format!(
+                    "Unknown comparison operator: {}",
+                    op
+                )))
+            }
         };
-        
+
         Ok(Value::Bool(result))
     }
 
@@ -2357,7 +3012,7 @@ impl Runtime {
     fn negate_value(&self, value: Value) -> Result<Value, RuntimeError> {
         match value {
             Value::Int(n) => Ok(Value::Int(-n)),
-            _ => Err(RuntimeError::TypeMismatch("negation".to_string()))
+            _ => Err(RuntimeError::TypeMismatch("negation".to_string())),
         }
     }
 
@@ -2374,12 +3029,12 @@ impl Runtime {
             Value::Null => false,
             Value::Result(ok_val, _err_val) => self.is_truthy(ok_val),
             Value::Option(opt_val) => {
-                if let Some(val) = opt_val { 
-                    self.is_truthy(val) 
-                } else { 
-                    false 
+                if let Some(val) = opt_val {
+                    self.is_truthy(val)
+                } else {
+                    false
                 }
-            },
+            }
             Value::List(list) => !list.is_empty(),
             Value::Map(map) => !map.is_empty(),
             Value::Set(set) => !set.is_empty(),
@@ -2414,18 +3069,14 @@ impl Runtime {
 
     fn register_builtins(&mut self) {
         // Built-in print function
-        let print_fn = Function::new(
-            "print".to_string(),
-            vec!["value".to_string()],
-            |args, _| {
-                if let Some(value) = args.first() {
-                    println!("{}", value);
-                    Ok(Value::Null)
-                } else {
-                    Err(RuntimeError::General("print: no arguments".to_string()))
-                }
+        let print_fn = Function::new("print".to_string(), vec!["value".to_string()], |args, _| {
+            if let Some(value) = args.first() {
+                println!("{}", value);
+                Ok(Value::Null)
+            } else {
+                Err(RuntimeError::General("print: no arguments".to_string()))
             }
-        );
+        });
         self.register_function(print_fn);
 
         // Built-in add function
@@ -2434,9 +3085,12 @@ impl Runtime {
             vec!["a".to_string(), "b".to_string()],
             |args, _| {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
-                
+
                 match (&args[0], &args[1]) {
                     (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a + b)),
                     _ => Err(RuntimeError::TypeError {
@@ -2444,42 +3098,40 @@ impl Runtime {
                         got: format!("{}, {}", args[0].type_name(), args[1].type_name()),
                     }),
                 }
-            }
+            },
         );
         self.register_function(add_fn);
 
         // Built-in len function
-        let len_fn = Function::new(
-            "len".to_string(),
-            vec!["value".to_string()],
-            |args, _| {
-                if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
-                }
-                
-                match &args[0] {
-                    Value::String(s) => Ok(Value::Int(s.len() as i64)),
-                    _ => Err(RuntimeError::TypeError {
-                        expected: "string".to_string(),
-                        got: args[0].type_name().to_string(),
-                    }),
-                }
+        let len_fn = Function::new("len".to_string(), vec!["value".to_string()], |args, _| {
+            if args.len() != 1 {
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 1,
+                    got: args.len(),
+                });
             }
-        );
+
+            match &args[0] {
+                Value::String(s) => Ok(Value::Int(s.len() as i64)),
+                _ => Err(RuntimeError::TypeError {
+                    expected: "string".to_string(),
+                    got: args[0].type_name().to_string(),
+                }),
+            }
+        });
         self.register_function(len_fn);
 
         // Built-in type function
-        let type_fn = Function::new(
-            "type".to_string(),
-            vec!["value".to_string()],
-            |args, _| {
-                if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
-                }
-                
-                Ok(Value::String(args[0].type_name().to_string()))
+        let type_fn = Function::new("type".to_string(), vec!["value".to_string()], |args, _| {
+            if args.len() != 1 {
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 1,
+                    got: args.len(),
+                });
             }
-        );
+
+            Ok(Value::String(args[0].type_name().to_string()))
+        });
         self.register_function(type_fn);
 
         // Built-in to_string function
@@ -2488,11 +3140,14 @@ impl Runtime {
             vec!["value".to_string()],
             |args, _| {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
-                
+
                 Ok(Value::String(args[0].to_string()))
-            }
+            },
         );
         self.register_function(to_string_fn);
 
@@ -2502,9 +3157,12 @@ impl Runtime {
             vec!["value".to_string()],
             |args, _| {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
-                
+
                 match &args[0] {
                     Value::Int(n) => Ok(Value::Int(*n)),
                     Value::String(s) => {
@@ -2520,7 +3178,7 @@ impl Runtime {
                         got: args[0].type_name().to_string(),
                     }),
                 }
-            }
+            },
         );
         self.register_function(to_int_fn);
 
@@ -2530,9 +3188,12 @@ impl Runtime {
             vec!["value".to_string()],
             |args, _| {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
-                
+
                 let is_truthy = match &args[0] {
                     Value::Bool(b) => *b,
                     Value::Int(n) => *n != 0,
@@ -2549,9 +3210,9 @@ impl Runtime {
                             Value::Null => false,
                             _ => true, // Default for complex types
                         }
-                    },
+                    }
                     Value::Option(opt_val) => {
-                        if let Some(val) = opt_val { 
+                        if let Some(val) = opt_val {
                             match val.as_ref() {
                                 Value::Bool(b) => *b,
                                 Value::Int(n) => *n != 0,
@@ -2560,10 +3221,10 @@ impl Runtime {
                                 Value::Null => false,
                                 _ => true, // Default for complex types
                             }
-                        } else { 
-                            false 
+                        } else {
+                            false
                         }
-                    },
+                    }
                     Value::List(list) => !list.is_empty(),
                     Value::Map(map) => !map.is_empty(),
                     Value::Set(set) => !set.is_empty(),
@@ -2571,9 +3232,9 @@ impl Runtime {
                     Value::Array(arr) => !arr.is_empty(),
                     Value::Closure(_) => true,
                 };
-                
+
                 Ok(Value::Bool(is_truthy))
-            }
+            },
         );
         self.register_function(to_bool_fn);
 
@@ -2583,7 +3244,10 @@ impl Runtime {
             vec!["condition".to_string()],
             |args, _| {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let condition = &args[0];
                 let is_true = match condition {
@@ -2598,10 +3262,13 @@ impl Runtime {
                     _ => true,
                 };
                 if !is_true {
-                    return Err(RuntimeError::General(format!("assertion failed: condition was {:?}", condition)));
+                    return Err(RuntimeError::General(format!(
+                        "assertion failed: condition was {:?}",
+                        condition
+                    )));
                 }
                 Ok(Value::Null)
-            }
+            },
         );
         self.register_function(assert_fn);
     }
@@ -2610,53 +3277,75 @@ impl Runtime {
         match name {
             "verify_identity" => {
                 if args.len() != 4 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
                 }
                 // Simulate KYC verification
                 Ok(Value::String(format!("kyc_verified_{}", args[1])))
             }
             "get_verification_status" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("verified".to_string()))
             }
             "revoke_verification" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::Bool(true))
             }
             "get_provider_info" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("SecureKYC Inc.".to_string()))
             }
-            "list_providers" => {
-                Ok(Value::String("securekyc,veriff".to_string()))
-            }
+            "list_providers" => Ok(Value::String("securekyc,veriff".to_string())),
             "get_verification_levels" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("basic,enhanced,premium".to_string()))
             }
             "validate_document" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::Bool(true))
             }
             "check_identity_match" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::Bool(true))
             }
             "get_compliance_report" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("Compliance report generated".to_string()))
             }
@@ -2668,53 +3357,77 @@ impl Runtime {
         match name {
             "perform_check" => {
                 if args.len() != 4 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
                 }
                 // Simulate AML check
                 Ok(Value::String(format!("aml_check_{}", args[1])))
             }
             "get_check_status" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("passed".to_string()))
             }
             "get_provider_info" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("Chainalysis".to_string()))
             }
-            "list_providers" => {
-                Ok(Value::String("chainalysis,elliptic".to_string()))
-            }
+            "list_providers" => Ok(Value::String("chainalysis,elliptic".to_string())),
             "get_check_types" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
-                Ok(Value::String("sanctions,pep,adverse_media,risk_assessment".to_string()))
+                Ok(Value::String(
+                    "sanctions,pep,adverse_media,risk_assessment".to_string(),
+                ))
             }
             "screen_transaction" => {
                 if args.len() != 4 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("approved".to_string()))
             }
             "monitor_address" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("monitoring_active".to_string()))
             }
             "get_risk_assessment" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("low_risk".to_string()))
             }
             "check_sanctions_list" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 Ok(Value::String("clear".to_string()))
             }
@@ -2725,231 +3438,453 @@ impl Runtime {
     fn call_web_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         // Validate web access based on current trust context
         if !self.validate_web_trust() {
-            return Err(RuntimeError::PermissionDenied("Web access denied".to_string()));
+            return Err(RuntimeError::PermissionDenied(
+                "Web access denied".to_string(),
+            ));
         }
 
         match name {
             // === HTTP SERVER FUNCTIONS ===
             "create_server" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let port = self.value_to_int(&args[0])?;
                 Ok(Value::String(format!("enhanced_server_{}", port)))
             }
             "add_route" => {
-                if args.len() != 4 { return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() }); }
+                if args.len() != 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
+                }
                 let method = self.value_to_string(&args[1])?;
                 let path = self.value_to_string(&args[2])?;
                 let handler = self.value_to_string(&args[3])?;
-                Ok(Value::String(format!("route_{}_{}_{}", method, path, handler)))
+                Ok(Value::String(format!(
+                    "route_{}_{}_{}",
+                    method, path, handler
+                )))
             }
             "add_middleware" => {
-                if args.len() != 4 { return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() }); }
+                if args.len() != 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
+                }
                 let name = self.value_to_string(&args[1])?;
                 let handler = self.value_to_string(&args[2])?;
                 let priority = self.value_to_int(&args[3])?;
-                Ok(Value::String(format!("middleware_{}_{}_{}", name, handler, priority)))
+                Ok(Value::String(format!(
+                    "middleware_{}_{}_{}",
+                    name, handler, priority
+                )))
             }
             "configure_cors" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
-                let enabled = if let Value::Bool(b) = &args[1] { *b } else { false };
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let enabled = if let Value::Bool(b) = &args[1] {
+                    *b
+                } else {
+                    false
+                };
                 Ok(Value::String(format!("cors_configured_{}", enabled)))
             }
             "serve_static_files" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let path = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("static_served_{}", path)))
             }
             "start_server" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("server_started".to_string()))
             }
-            
+
             // === HTTP CLIENT FUNCTIONS ===
             "create_client" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let base_url = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("enhanced_client_{}", base_url)))
             }
             "get_request" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let url = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("response_{}", url)))
             }
             "post_request" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let url = self.value_to_string(&args[0])?;
                 let _data = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("posted_{}", url)))
             }
-            
+
             // === FRONTEND FRAMEWORK FUNCTIONS ===
             "create_html_page" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let title = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("html_page_{}", title)))
             }
             "add_css_file" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let css_path = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("css_added_{}", css_path)))
             }
             "add_js_file" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let js_path = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("js_added_{}", js_path)))
             }
             "create_element" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let tag = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("element_{}", tag)))
             }
             "add_attribute" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let key = self.value_to_string(&args[1])?;
                 let value = self.value_to_string(&args[2])?;
                 Ok(Value::String(format!("attr_{}_{}", key, value)))
             }
             "add_event_handler" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let event = self.value_to_string(&args[1])?;
                 let handler = self.value_to_string(&args[2])?;
                 Ok(Value::String(format!("event_{}_{}", event, handler)))
             }
             "append_child" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("child_appended".to_string()))
             }
             "render_html_page" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("<!DOCTYPE html><html>...</html>".to_string()))
             }
             "render_html_element" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let element = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("<{}>", element)))
             }
             "create_form" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let action = self.value_to_string(&args[0])?;
                 let method = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("form_{}_{}", action, method)))
             }
             "create_input" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let input_type = self.value_to_string(&args[0])?;
                 let name = self.value_to_string(&args[1])?;
                 let placeholder = self.value_to_string(&args[2])?;
-                Ok(Value::String(format!("input_{}_{}_{}", input_type, name, placeholder)))
+                Ok(Value::String(format!(
+                    "input_{}_{}_{}",
+                    input_type, name, placeholder
+                )))
             }
             "create_button" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let text = self.value_to_string(&args[0])?;
                 let button_type = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("button_{}_{}", text, button_type)))
             }
-            
+
             // === API FRAMEWORK FUNCTIONS ===
             "create_api_endpoint" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let path = self.value_to_string(&args[0])?;
                 let method = self.value_to_string(&args[1])?;
                 let handler = self.value_to_string(&args[2])?;
-                Ok(Value::String(format!("api_endpoint_{}_{}_{}", path, method, handler)))
+                Ok(Value::String(format!(
+                    "api_endpoint_{}_{}_{}",
+                    path, method, handler
+                )))
             }
             "add_auth_requirement" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
-                let required = if let Value::Bool(b) = &args[1] { *b } else { false };
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let required = if let Value::Bool(b) = &args[1] {
+                    *b
+                } else {
+                    false
+                };
                 Ok(Value::String(format!("auth_required_{}", required)))
             }
             "add_rate_limit" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let rpm = self.value_to_int(&args[1])?;
                 let burst = self.value_to_int(&args[2])?;
                 Ok(Value::String(format!("rate_limit_{}_{}", rpm, burst)))
             }
             "validate_json_request" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
-            
+
             // === WEBSOCKET FUNCTIONS ===
             "create_websocket_server" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let port = self.value_to_int(&args[0])?;
                 Ok(Value::String(format!("websocket_server_{}", port)))
             }
             "add_websocket_connection" => {
-                if args.len() >= 2 { 
+                if args.len() >= 2 {
                     let connection_id = self.value_to_string(&args[1])?;
                     Ok(Value::String(format!("connection_added_{}", connection_id)))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    })
                 }
             }
             "join_room" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let connection_id = self.value_to_string(&args[1])?;
                 let room_name = self.value_to_string(&args[2])?;
-                Ok(Value::String(format!("joined_room_{}_{}", connection_id, room_name)))
+                Ok(Value::String(format!(
+                    "joined_room_{}_{}",
+                    connection_id, room_name
+                )))
             }
             "broadcast_to_room" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let _room_name = self.value_to_string(&args[1])?;
                 let _message = self.value_to_string(&args[2])?;
                 Ok(Value::Int(5)) // Simulated connection count
             }
-            
+
             // === TEMPLATE ENGINE FUNCTIONS ===
             "create_template" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let name = self.value_to_string(&args[0])?;
                 let content = self.value_to_string(&args[1])?;
-                Ok(Value::String(format!("template_{}_{}", name, content.len())))
+                Ok(Value::String(format!(
+                    "template_{}_{}",
+                    name,
+                    content.len()
+                )))
             }
             "add_template_variable" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let key = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("variable_added_{}", key)))
             }
             "render_advanced_template" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("rendered_template_content".to_string()))
             }
             "render_template" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let template = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("rendered_{}", template)))
             }
-            
+
             // === LEGACY FUNCTIONS (for backward compatibility) ===
             "create_html_element" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let tag = self.value_to_string(&args[0])?;
                 let attributes = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("element_{}_{}", tag, attributes)))
             }
             "render_html" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let element = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("<{}>", element)))
             }
             "parse_url" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let url = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("parsed_{}", url)))
             }
             "json_response" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let data = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("json_{}", data)))
             }
             "html_response" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let html = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("html_{}", html)))
             }
             "error_response" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let status = self.value_to_int(&args[0])?;
                 let message = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("error_{}_{}", status, message)))
@@ -2961,7 +3896,12 @@ impl Runtime {
     fn call_json_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         match name {
             "parse" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let s = self.value_to_string(&args[0])?;
                 let json: serde_json::Value = serde_json::from_str(&s)
                     .map_err(|e| RuntimeError::General(format!("json::parse failed: {}", e)))?;
@@ -2969,23 +3909,44 @@ impl Runtime {
                     .map_err(|e| RuntimeError::General(format!("json::parse conversion: {}", e)))
             }
             "stringify" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let json = crate::ffi::interface::value_to_json(&args[0]);
-                Ok(Value::String(serde_json::to_string(&json).unwrap_or_else(|_| "{}".to_string())))
+                Ok(Value::String(
+                    serde_json::to_string(&json).unwrap_or_else(|_| "{}".to_string()),
+                ))
             }
             _ => Err(RuntimeError::function_not_found(format!("json::{}", name))),
         }
     }
 
-    fn call_database_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+    fn call_database_function(
+        &mut self,
+        name: &str,
+        args: &[Value],
+    ) -> Result<Value, RuntimeError> {
         match name {
             "connect" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let connection_string = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("db_connected_{}", connection_string)))
             }
             "query" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let sql = self.value_to_string(&args[0])?;
                 let _params = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("query_result_{}", sql)))
@@ -2994,44 +3955,73 @@ impl Runtime {
             "begin_transaction" => {
                 // database::begin_transaction(isolation_level: String, timeout_ms: Int?) -> String (tx_id)
                 // Example: let tx = database::begin_transaction("serializable", 5000)
-                if args.is_empty() { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: 0 }); }
-                
+                if args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: 0,
+                    });
+                }
+
                 let isolation_str = self.value_to_string(&args[0])?;
                 let isolation_level = match isolation_str.to_lowercase().as_str() {
-                    "read_uncommitted" => crate::runtime::transaction::IsolationLevel::ReadUncommitted,
+                    "read_uncommitted" => {
+                        crate::runtime::transaction::IsolationLevel::ReadUncommitted
+                    }
                     "read_committed" => crate::runtime::transaction::IsolationLevel::ReadCommitted,
-                    "repeatable_read" => crate::runtime::transaction::IsolationLevel::RepeatableRead,
+                    "repeatable_read" => {
+                        crate::runtime::transaction::IsolationLevel::RepeatableRead
+                    }
                     "serializable" => crate::runtime::transaction::IsolationLevel::Serializable,
-                    _ => return Err(RuntimeError::General(format!("Invalid isolation level: {}", isolation_str))),
+                    _ => {
+                        return Err(RuntimeError::General(format!(
+                            "Invalid isolation level: {}",
+                            isolation_str
+                        )))
+                    }
                 };
-                
+
                 let timeout_ms = if args.len() > 1 {
                     Some(self.value_to_int(&args[1])? as u64)
                 } else {
                     None
                 };
-                
+
                 let tx_id = self.begin_transaction(isolation_level, timeout_ms)?;
                 Ok(Value::String(tx_id))
             }
             "commit" => {
                 // database::commit() -> Bool
                 // Commits the current active transaction
-                if !args.is_empty() { return Err(RuntimeError::ArgumentCountMismatch { expected: 0, got: args.len() }); }
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
                 self.commit_transaction()?;
                 Ok(Value::Bool(true))
             }
             "rollback" => {
                 // database::rollback() -> Bool
                 // Rolls back the current active transaction
-                if !args.is_empty() { return Err(RuntimeError::ArgumentCountMismatch { expected: 0, got: args.len() }); }
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
                 self.rollback_transaction()?;
                 Ok(Value::Bool(true))
             }
             "tx_read" => {
                 // database::tx_read(key: String) -> Value?
                 // Read a value within the current transaction
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let key = self.value_to_string(&args[0])?;
                 match self.transaction_read(&key)? {
                     Some(val) => Ok(val),
@@ -3041,7 +4031,12 @@ impl Runtime {
             "tx_write" => {
                 // database::tx_write(key: String, value: Value) -> Bool
                 // Write a value within the current transaction
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let key = self.value_to_string(&args[0])?;
                 let value = args[1].clone();
                 self.transaction_write(key, value)?;
@@ -3050,7 +4045,12 @@ impl Runtime {
             "tx_savepoint" => {
                 // database::tx_savepoint(name: String) -> Bool
                 // Create a savepoint within the current transaction
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let name = self.value_to_string(&args[0])?;
                 self.create_savepoint(name)?;
                 Ok(Value::Bool(true))
@@ -3058,71 +4058,136 @@ impl Runtime {
             "tx_rollback_to" => {
                 // database::tx_rollback_to(savepoint: String) -> Bool
                 // Rollback to a named savepoint within the current transaction
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let name = self.value_to_string(&args[0])?;
                 self.rollback_to_savepoint(&name)?;
                 Ok(Value::Bool(true))
             }
-            
+
             // Legacy transaction functions (kept for compatibility, but deprecated)
             "transaction" => {
                 // Deprecated: use begin_transaction instead
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let operations = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("txn_{}", operations)))
             }
             "commit_transaction" => {
                 // Deprecated: use commit instead
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let _transaction = self.value_to_string(&args[0])?;
                 Ok(Value::Bool(true))
             }
             "rollback_transaction" => {
                 // Deprecated: use rollback instead
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let _transaction = self.value_to_string(&args[0])?;
                 Ok(Value::Bool(true))
             }
             "create_table" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let _table_name = self.value_to_string(&args[0])?;
                 let _schema = self.value_to_string(&args[1])?;
                 Ok(Value::Bool(true))
             }
             "drop_table" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let _table_name = self.value_to_string(&args[0])?;
                 Ok(Value::Bool(true))
             }
             "get_table_schema" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let table_name = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("schema_{}", table_name)))
             }
             "list_tables" => {
-                if args.len() != 0 { return Err(RuntimeError::ArgumentCountMismatch { expected: 0, got: args.len() }); }
+                if args.len() != 0 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("users,products,orders".to_string()))
             }
             "backup_database" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let _backup_path = self.value_to_string(&args[0])?;
                 Ok(Value::Bool(true))
             }
             "restore_database" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let _backup_path = self.value_to_string(&args[0])?;
                 Ok(Value::Bool(true))
             }
             "close_connection" => {
-                if args.len() != 0 { return Err(RuntimeError::ArgumentCountMismatch { expected: 0, got: args.len() }); }
+                if args.len() != 0 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "ping_database" => {
-                if args.len() != 0 { return Err(RuntimeError::ArgumentCountMismatch { expected: 0, got: args.len() }); }
+                if args.len() != 0 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "get_query_plan" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let sql = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("plan_{}", sql)))
             }
@@ -3131,85 +4196,178 @@ impl Runtime {
 
             // Connection Pool Functions
             "create_connection_pool" => {
-                if args.len() != 4 { return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() }); }
+                if args.len() != 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
+                }
                 let pool_name = self.value_to_string(&args[0])?;
                 let _connection_string = self.value_to_string(&args[1])?;
                 let max_connections = self.value_to_int(&args[2])?;
                 let _min_connections = self.value_to_int(&args[3])?;
-                Ok(Value::String(format!("pool_created_{}_{}", pool_name, max_connections)))
+                Ok(Value::String(format!(
+                    "pool_created_{}_{}",
+                    pool_name, max_connections
+                )))
             }
             "get_connection_from_pool" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("connection_from_pool".to_string()))
             }
             "return_connection_to_pool" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("connection_returned".to_string()))
             }
 
             // Query Builder Functions
             "create_query_builder" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let table_name = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("query_builder_{}", table_name)))
             }
             "qb_select" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("qb_select_applied".to_string()))
             }
             "qb_where" => {
-                if args.len() != 4 { return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() }); }
+                if args.len() != 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("qb_where_applied".to_string()))
             }
             "qb_join" => {
-                if args.len() != 5 { return Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() }); }
+                if args.len() != 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("qb_join_applied".to_string()))
             }
             "qb_order_by" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("qb_order_by_applied".to_string()))
             }
             "qb_limit" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("qb_limit_applied".to_string()))
             }
             "qb_offset" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("qb_offset_applied".to_string()))
             }
             "qb_build_sql" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
-                Ok(Value::String("SELECT * FROM table WHERE condition".to_string()))
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                Ok(Value::String(
+                    "SELECT * FROM table WHERE condition".to_string(),
+                ))
             }
             "qb_execute" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("qb_execute_result".to_string()))
             }
 
             // Migration Functions
             "create_migration_manager" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let migrations_table = self.value_to_string(&args[0])?;
-                Ok(Value::String(format!("migration_manager_{}", migrations_table)))
+                Ok(Value::String(format!(
+                    "migration_manager_{}",
+                    migrations_table
+                )))
             }
             "create_migration" => {
-                if args.len() != 4 { return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() }); }
+                if args.len() != 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
+                }
                 let version = self.value_to_string(&args[0])?;
                 let name = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("migration_{}_{}", version, name)))
             }
             "apply_migration" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "rollback_migration" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // Caching Functions
             "create_cache" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("cache_created".to_string()))
             }
             "cache_set" => {
@@ -3217,100 +4375,191 @@ impl Runtime {
                     let key = self.value_to_string(&args[1])?;
                     Ok(Value::String(format!("cached_{}", key)))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    })
                 }
             }
             "cache_get" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let key = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("cache_hit_{}", key)))
             }
             "cache_delete" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let key = self.value_to_string(&args[1])?;
                 Ok(Value::String(format!("cache_deleted_{}", key)))
             }
             "cache_clear" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Int(42))
             }
 
             // File System Functions
             "read_file" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let path = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("file_content_{}", path)))
             }
             "write_file" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let path = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("file_written_{}", path)))
             }
             "delete_file" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let path = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("file_deleted_{}", path)))
             }
             "list_directory" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let path = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("directory_listed_{}", path)))
             }
             "create_directory" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let path = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("directory_created_{}", path)))
             }
             "file_exists" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "get_file_info" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let path = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("file_info_{}", path)))
             }
 
             // Data Validation Functions
             "create_validation_rule" => {
-                if args.len() != 4 { return Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() }); }
+                if args.len() != 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
+                }
                 let field = self.value_to_string(&args[0])?;
                 let rule_type = self.value_to_string(&args[1])?;
-                Ok(Value::String(format!("validation_rule_{}_{}", field, rule_type)))
+                Ok(Value::String(format!(
+                    "validation_rule_{}_{}",
+                    field, rule_type
+                )))
             }
             "validate_data" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // Enhanced Backup/Restore Functions
             "create_backup" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("backup_created".to_string()))
             }
             "restore_from_backup" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // Performance Monitoring Functions
             "get_database_metrics" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("database_metrics".to_string()))
             }
             "log_query_stats" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("query_stats_logged".to_string()))
             }
 
-            _ => Err(RuntimeError::function_not_found(format!("database::{}", name))),
+            _ => Err(RuntimeError::function_not_found(format!(
+                "database::{}",
+                name
+            ))),
         }
     }
 
     fn call_ai_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         // Validate AI access based on current trust context
         if !self.validate_ai_trust() {
-            return Err(RuntimeError::PermissionDenied("AI access denied".to_string()));
+            return Err(RuntimeError::PermissionDenied(
+                "AI access denied".to_string(),
+            ));
         }
 
         match name {
@@ -3319,40 +4568,67 @@ impl Runtime {
             // Aliases for agent_system_demo and similar code
             "create_agent" => {
                 // Alias for spawn_agent
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let config_value = &args[0];
                 let agent_config = self.parse_agent_config(config_value)?;
                 match crate::stdlib::agent::spawn(agent_config) {
                     Ok(agent_context) => {
                         let agent_id = agent_context.agent_id.clone();
-                        self.agent_states.insert(agent_id.clone(), AgentState {
-                            status: agent_context.status.to_string(),
-                            ..Default::default()
-                        });
+                        self.agent_states.insert(
+                            agent_id.clone(),
+                            AgentState {
+                                status: agent_context.status.to_string(),
+                                ..Default::default()
+                            },
+                        );
                         self.scope.set(
                             agent_id.clone(),
                             Value::Struct("agent_context".to_string(), {
                                 let mut fields = std::collections::HashMap::new();
-                                fields.insert("agent_id".to_string(), Value::String(agent_id.clone()));
-                                fields.insert("status".to_string(), Value::String(agent_context.status.to_string()));
-                                fields.insert("agent_type".to_string(), Value::String(agent_context.config.agent_type.to_string()));
+                                fields.insert(
+                                    "agent_id".to_string(),
+                                    Value::String(agent_id.clone()),
+                                );
+                                fields.insert(
+                                    "status".to_string(),
+                                    Value::String(agent_context.status.to_string()),
+                                );
+                                fields.insert(
+                                    "agent_type".to_string(),
+                                    Value::String(agent_context.config.agent_type.to_string()),
+                                );
                                 fields
-                            })
+                            }),
                         );
                         Ok(Value::String(agent_id))
                     }
-                    Err(e) => Err(RuntimeError::General(e))
+                    Err(e) => Err(RuntimeError::General(e)),
                 }
             }
             "create_agent_coordinator" => {
-                if args.len() != 0 { return Err(RuntimeError::ArgumentCountMismatch { expected: 0, got: args.len() }); }
+                if args.len() != 0 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
                 let coordinator_id = format!("coordinator_{}", generate_id());
                 Ok(Value::String(coordinator_id))
             }
 
             // Agent Lifecycle Management
             "spawn_agent" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
 
                 // Parse agent configuration from the argument
                 let config_value = &args[0];
@@ -3361,41 +4637,72 @@ impl Runtime {
                 match crate::stdlib::agent::spawn(agent_config) {
                     Ok(agent_context) => {
                         let agent_id = agent_context.agent_id.clone();
-                        self.agent_states.insert(agent_id.clone(), AgentState {
-                            status: agent_context.status.to_string(),
-                            ..Default::default()
-                        });
+                        self.agent_states.insert(
+                            agent_id.clone(),
+                            AgentState {
+                                status: agent_context.status.to_string(),
+                                ..Default::default()
+                            },
+                        );
                         self.scope.set(
                             agent_id.clone(),
                             Value::Struct("agent_context".to_string(), {
                                 let mut fields = std::collections::HashMap::new();
-                                fields.insert("agent_id".to_string(), Value::String(agent_id.clone()));
-                                fields.insert("status".to_string(), Value::String(agent_context.status.to_string()));
-                                fields.insert("agent_type".to_string(), Value::String(agent_context.config.agent_type.to_string()));
+                                fields.insert(
+                                    "agent_id".to_string(),
+                                    Value::String(agent_id.clone()),
+                                );
+                                fields.insert(
+                                    "status".to_string(),
+                                    Value::String(agent_context.status.to_string()),
+                                );
+                                fields.insert(
+                                    "agent_type".to_string(),
+                                    Value::String(agent_context.config.agent_type.to_string()),
+                                );
                                 fields
-                            })
+                            }),
                         );
                         Ok(Value::String(agent_id))
                     }
-                    Err(e) => Err(RuntimeError::General(e))
+                    Err(e) => Err(RuntimeError::General(e)),
                 }
             }
             "terminate_agent" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let agent_id = self.value_to_string(&args[0])?;
                 self.agent_states.entry(agent_id).or_default().status = "terminated".to_string();
                 Ok(Value::Bool(true))
             }
             "get_agent_status" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let agent_id = self.value_to_string(&args[0])?;
-                let status = self.agent_states.get(&agent_id).map(|s| s.status.clone()).unwrap_or_else(|| "idle".to_string());
+                let status = self
+                    .agent_states
+                    .get(&agent_id)
+                    .map(|s| s.status.clone())
+                    .unwrap_or_else(|| "idle".to_string());
                 Ok(Value::String(status))
             }
 
             // Message Passing System
             "send_message" => {
-                if args.len() != 5 { return Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() }); }
+                if args.len() != 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    });
+                }
                 let sender_id = self.value_to_string(&args[0])?;
                 let receiver_id = self.value_to_string(&args[1])?;
                 let message_type = self.value_to_string(&args[2])?;
@@ -3407,30 +4714,62 @@ impl Runtime {
                     sender_id.clone(),
                     receiver_id.clone(),
                     message_type,
-                    content.clone()
+                    content.clone(),
                 );
 
                 // Push message content to receiver's in-memory queue
-                self.agent_states.entry(receiver_id.clone()).or_default().message_queue.push_back(content);
+                self.agent_states
+                    .entry(receiver_id.clone())
+                    .or_default()
+                    .message_queue
+                    .push_back(content);
                 match crate::stdlib::agent::communicate(&sender_id, &receiver_id, message) {
-                    Ok(_) => Ok(Value::String(format!("message_sent_{}_{}", sender_id, receiver_id))),
-                    Err(e) => Err(RuntimeError::General(e))
+                    Ok(_) => Ok(Value::String(format!(
+                        "message_sent_{}_{}",
+                        sender_id, receiver_id
+                    ))),
+                    Err(e) => Err(RuntimeError::General(e)),
                 }
             }
             "receive_message" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let agent_id = self.value_to_string(&args[0])?;
-                let msg = self.agent_states.entry(agent_id).or_default().message_queue.pop_front();
+                let msg = self
+                    .agent_states
+                    .entry(agent_id)
+                    .or_default()
+                    .message_queue
+                    .pop_front();
                 Ok(msg.map(|v| v).unwrap_or(Value::String("none".to_string())))
             }
             "process_message_queue" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let agent_id = self.value_to_string(&args[0])?;
-                let msg = self.agent_states.entry(agent_id).or_default().message_queue.pop_front();
+                let msg = self
+                    .agent_states
+                    .entry(agent_id)
+                    .or_default()
+                    .message_queue
+                    .pop_front();
                 Ok(msg.map(|v| v).unwrap_or(Value::String("none".to_string())))
             }
             "process_message" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let _agent_id = self.value_to_string(&args[0])?;
                 let _message_id = self.value_to_string(&args[1])?;
                 Ok(Value::String("message_processed".to_string()))
@@ -3443,7 +4782,8 @@ impl Runtime {
                     let _task_type = self.value_to_string(&args[1])?;
                     let description = self.value_to_string(&args[2])?;
                     let priority = if args.len() > 3 {
-                        self.value_to_string(&args[3]).unwrap_or_else(|_| "medium".to_string())
+                        self.value_to_string(&args[3])
+                            .unwrap_or_else(|_| "medium".to_string())
                     } else {
                         "medium".to_string()
                     };
@@ -3452,24 +4792,45 @@ impl Runtime {
                     let _ = crate::stdlib::agent::create_agent_task(
                         task_id.clone(),
                         description.clone(),
-                        &priority
+                        &priority,
                     );
-                    self.agent_states.entry(agent_id.clone()).or_default().task_queue.push_back(task_id.clone());
+                    self.agent_states
+                        .entry(agent_id.clone())
+                        .or_default()
+                        .task_queue
+                        .push_back(task_id.clone());
                     Ok(Value::String(task_id))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    })
                 }
             }
             "create_task_from_message" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let agent_id = self.value_to_string(&args[0])?;
                 let _message_id = self.value_to_string(&args[1])?;
                 let task_id = format!("task_from_msg_{}", generate_id());
-                self.agent_states.entry(agent_id).or_default().task_queue.push_back(task_id.clone());
+                self.agent_states
+                    .entry(agent_id)
+                    .or_default()
+                    .task_queue
+                    .push_back(task_id.clone());
                 Ok(Value::String(task_id))
             }
             "execute_task" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let agent_id = self.value_to_string(&args[0])?;
                 let task_id = self.value_to_string(&args[1])?;
                 let state = self.agent_states.entry(agent_id).or_default();
@@ -3485,44 +4846,85 @@ impl Runtime {
 
             // AI Processing Functions
             "analyze_text" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let text = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("text_analyzed_{}", text.len())))
             }
             "analyze_image" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("image_analyzed".to_string()))
             }
             "generate_text" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let prompt = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("generated_response_for_{}", prompt)))
             }
             "train_model" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("model_trained".to_string()))
             }
             "predict" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("prediction_made".to_string()))
             }
 
             // Agent Coordination
             "create_coordinator" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let coordinator_id = self.value_to_string(&args[0])?;
-                Ok(Value::String(format!("coordinator_created_{}", coordinator_id)))
+                Ok(Value::String(format!(
+                    "coordinator_created_{}",
+                    coordinator_id
+                )))
             }
             "add_agent_to_coordinator" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 // Return agent_id (args[1]) so demo can store it; if struct, extract agent_id
                 let agent_val = &args[1];
                 let agent_id = match agent_val {
                     Value::String(s) => s.clone(),
-                    Value::Struct(_, fields) => fields.get("agent_id")
+                    Value::Struct(_, fields) => fields
+                        .get("agent_id")
                         .and_then(|v| self.value_to_string(v).ok())
                         .unwrap_or_else(|| "agent_added".to_string()),
-                    _ => self.value_to_string(agent_val).unwrap_or_else(|_| "agent_added".to_string()),
+                    _ => self
+                        .value_to_string(agent_val)
+                        .unwrap_or_else(|_| "agent_added".to_string()),
                 };
                 Ok(Value::String(agent_id))
             }
@@ -3530,31 +4932,56 @@ impl Runtime {
                 if args.len() >= 2 {
                     let coordinator_id = self.value_to_string(&args[0])?;
                     let workflow_name = match &args[1] {
-                        Value::Map(m) => m.get("name")
+                        Value::Map(m) => m
+                            .get("name")
                             .or_else(|| m.get("workflow_id"))
                             .and_then(|v| self.value_to_string(v).ok())
                             .unwrap_or_else(|| format!("workflow_{}", generate_id())),
                         _ => self.value_to_string(&args[1])?,
                     };
-                    Ok(Value::String(format!("workflow_created_{}_{}", coordinator_id, workflow_name)))
+                    Ok(Value::String(format!(
+                        "workflow_created_{}_{}",
+                        coordinator_id, workflow_name
+                    )))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    })
                 }
             }
             "execute_workflow" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let coordinator_id = self.value_to_string(&args[0])?;
                 let workflow_id = self.value_to_string(&args[1])?;
-                Ok(Value::String(format!("workflow_executed_{}_{}", coordinator_id, workflow_id)))
+                Ok(Value::String(format!(
+                    "workflow_executed_{}_{}",
+                    coordinator_id, workflow_id
+                )))
             }
 
             // Agent State Management
             "save_agent_state" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "load_agent_state" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("agent_state_loaded".to_string()))
             }
 
@@ -3564,21 +4991,39 @@ impl Runtime {
                     let name = self.value_to_string(&args[0])?;
                     Ok(Value::String(format!("protocol_created_{}", name)))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    })
                 }
             }
             "validate_message_protocol" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // Performance Monitoring
             "get_agent_metrics" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("agent_metrics".to_string()))
             }
             "get_coordinator_metrics" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("coordinator_metrics".to_string()))
             }
 
@@ -3592,7 +5037,10 @@ impl Runtime {
         match name {
             "load" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let source = self.value_to_string(&args[0])?;
                 match crate::stdlib::mold::load(&source, &base) {
@@ -3602,22 +5050,32 @@ impl Runtime {
             }
             "spawn_from" => {
                 if args.len() < 1 || args.len() > 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let source = self.value_to_string(&args[0])?;
                 let name_override_str = if args.len() >= 2 {
                     let s = self.value_to_string(&args[1])?;
-                    if s.is_empty() { None } else { Some(s) }
+                    if s.is_empty() {
+                        None
+                    } else {
+                        Some(s)
+                    }
                 } else {
                     None
                 };
                 let name_override = name_override_str.as_deref();
                 match crate::stdlib::mold::spawn_from(&source, &base, name_override) {
                     Ok(agent_id) => {
-                        self.agent_states.insert(agent_id.clone(), AgentState {
-                            status: "active".to_string(),
-                            ..Default::default()
-                        });
+                        self.agent_states.insert(
+                            agent_id.clone(),
+                            AgentState {
+                                status: "active".to_string(),
+                                ..Default::default()
+                            },
+                        );
                         Ok(Value::String(agent_id))
                     }
                     Err(e) => Err(RuntimeError::General(e)),
@@ -3625,13 +5083,19 @@ impl Runtime {
             }
             "list" => {
                 if args.len() != 0 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 0, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
                 }
                 Ok(crate::stdlib::mold::list(&base))
             }
             "get_info" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let mold_id = self.value_to_int(&args[0])? as u64;
                 match crate::stdlib::mold::get_info(mold_id) {
@@ -3641,22 +5105,32 @@ impl Runtime {
             }
             "use_mold" => {
                 if args.len() < 1 || args.len() > 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let mold_id = self.value_to_int(&args[0])? as u64;
                 let name_override_str = if args.len() >= 2 {
                     let s = self.value_to_string(&args[1])?;
-                    if s.is_empty() { None } else { Some(s) }
+                    if s.is_empty() {
+                        None
+                    } else {
+                        Some(s)
+                    }
                 } else {
                     None
                 };
                 let name_override = name_override_str.as_deref();
                 match crate::stdlib::mold::use_mold(mold_id, &base, name_override) {
                     Ok(agent_id) => {
-                        self.agent_states.insert(agent_id.clone(), AgentState {
-                            status: "active".to_string(),
-                            ..Default::default()
-                        });
+                        self.agent_states.insert(
+                            agent_id.clone(),
+                            AgentState {
+                                status: "active".to_string(),
+                                ..Default::default()
+                            },
+                        );
                         Ok(Value::String(agent_id))
                     }
                     Err(e) => Err(RuntimeError::General(e)),
@@ -3669,51 +5143,85 @@ impl Runtime {
     fn call_agent_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         match name {
             // === AGENT LIFECYCLE MANAGEMENT ===
-
             "spawn" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let config_value = &args[0];
                 let agent_config = self.parse_agent_config(config_value)?;
 
                 match crate::stdlib::agent::spawn(agent_config) {
                     Ok(agent_context) => {
                         let agent_id = agent_context.agent_id.clone();
-                        self.agent_states.insert(agent_id.clone(), AgentState {
-                            status: agent_context.status.to_string(),
-                            ..Default::default()
-                        });
+                        self.agent_states.insert(
+                            agent_id.clone(),
+                            AgentState {
+                                status: agent_context.status.to_string(),
+                                ..Default::default()
+                            },
+                        );
                         self.scope.set(
                             agent_id.clone(),
                             Value::Struct("agent_context".to_string(), {
                                 let mut fields = std::collections::HashMap::new();
-                                fields.insert("agent_id".to_string(), Value::String(agent_id.clone()));
-                                fields.insert("status".to_string(), Value::String(agent_context.status.to_string()));
-                                fields.insert("agent_type".to_string(), Value::String(agent_context.config.agent_type.to_string()));
+                                fields.insert(
+                                    "agent_id".to_string(),
+                                    Value::String(agent_id.clone()),
+                                );
+                                fields.insert(
+                                    "status".to_string(),
+                                    Value::String(agent_context.status.to_string()),
+                                );
+                                fields.insert(
+                                    "agent_type".to_string(),
+                                    Value::String(agent_context.config.agent_type.to_string()),
+                                );
                                 fields
-                            })
+                            }),
                         );
                         Ok(Value::String(agent_id))
                     }
-                    Err(e) => Err(RuntimeError::General(e))
+                    Err(e) => Err(RuntimeError::General(e)),
                 }
             }
             "terminate" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let agent_id = self.value_to_string(&args[0])?;
                 self.agent_states.entry(agent_id).or_default().status = "terminated".to_string();
                 Ok(Value::Bool(true))
             }
             "get_status" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let agent_id = self.value_to_string(&args[0])?;
-                let status = self.agent_states.get(&agent_id).map(|s| s.status.clone()).unwrap_or_else(|| "idle".to_string());
+                let status = self
+                    .agent_states
+                    .get(&agent_id)
+                    .map(|s| s.status.clone())
+                    .unwrap_or_else(|| "idle".to_string());
                 Ok(Value::String(status))
             }
 
             // === AGENT COORDINATION ===
-
             "coordinate" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let agent_id = self.value_to_string(&args[0])?;
                 let task_description = self.value_to_string(&args[1])?;
                 let coordination_type = self.value_to_string(&args[2])?;
@@ -3722,24 +5230,38 @@ impl Runtime {
                 let task = crate::stdlib::agent::create_agent_task(
                     task_id.clone(),
                     task_description.clone(),
-                    "medium"
+                    "medium",
                 );
 
                 if let Some(task_obj) = task {
-                    self.agent_states.entry(agent_id.clone()).or_default().task_queue.push_back(task_id.clone());
-                    match crate::stdlib::agent::coordinate(&agent_id, task_obj, &coordination_type) {
-                        Ok(_) => Ok(Value::String(format!("coordinated_{}_{}", agent_id, coordination_type))),
-                        Err(e) => Err(RuntimeError::General(e))
+                    self.agent_states
+                        .entry(agent_id.clone())
+                        .or_default()
+                        .task_queue
+                        .push_back(task_id.clone());
+                    match crate::stdlib::agent::coordinate(&agent_id, task_obj, &coordination_type)
+                    {
+                        Ok(_) => Ok(Value::String(format!(
+                            "coordinated_{}_{}",
+                            agent_id, coordination_type
+                        ))),
+                        Err(e) => Err(RuntimeError::General(e)),
                     }
                 } else {
-                    Err(RuntimeError::General("Failed to create coordination task".to_string()))
+                    Err(RuntimeError::General(
+                        "Failed to create coordination task".to_string(),
+                    ))
                 }
             }
 
             // === AGENT COMMUNICATION ===
-
             "communicate" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 let sender_id = self.value_to_string(&args[0])?;
                 let receiver_id = self.value_to_string(&args[1])?;
                 let message_content = args[2].clone();
@@ -3749,57 +5271,79 @@ impl Runtime {
                     sender_id.clone(),
                     receiver_id.clone(),
                     "direct_communication".to_string(),
-                    message_content
+                    message_content,
                 );
 
                 match crate::stdlib::agent::communicate(&sender_id, &receiver_id, message) {
-                    Ok(_) => Ok(Value::String(format!("message_sent_{}_{}", sender_id, receiver_id))),
-                    Err(e) => Err(RuntimeError::General(e))
+                    Ok(_) => Ok(Value::String(format!(
+                        "message_sent_{}_{}",
+                        sender_id, receiver_id
+                    ))),
+                    Err(e) => Err(RuntimeError::General(e)),
                 }
             }
 
             // === AGENT EVOLUTION ===
-
             "evolve" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let agent_id = self.value_to_string(&args[0])?;
                 // Parse evolution data from second argument
                 let evolution_data = std::collections::HashMap::new(); // Mock data
 
                 match crate::stdlib::agent::evolve(&agent_id, evolution_data) {
                     Ok(_) => Ok(Value::String(format!("agent_evolved_{}", agent_id))),
-                    Err(e) => Err(RuntimeError::General(e))
+                    Err(e) => Err(RuntimeError::General(e)),
                 }
             }
 
             // === AGENT CAPABILITY VALIDATION ===
-
             "validate_capabilities" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 let agent_type = self.value_to_string(&args[0])?;
                 // Parse required capabilities from second argument
                 let required_capabilities = vec!["basic_processing".to_string()]; // Mock
 
-                match crate::stdlib::agent::validate_capabilities(&agent_type, required_capabilities) {
+                match crate::stdlib::agent::validate_capabilities(
+                    &agent_type,
+                    required_capabilities,
+                ) {
                     Ok(_) => Ok(Value::Bool(true)),
-                    Err(e) => Err(RuntimeError::General(e))
+                    Err(e) => Err(RuntimeError::General(e)),
                 }
             }
 
             // === AGENT CONFIGURATION ===
-
             "create_config" => {
                 if args.len() >= 2 {
                     let name = self.value_to_string(&args[0])?;
                     let agent_type_str = self.value_to_string(&args[1])?;
 
-                    let config = crate::stdlib::agent::create_agent_config(name, &agent_type_str, "default".to_string());
+                    let config = crate::stdlib::agent::create_agent_config(
+                        name,
+                        &agent_type_str,
+                        "default".to_string(),
+                    );
                     match config {
                         Some(_) => Ok(Value::String("config_created".to_string())),
-                        None => Err(RuntimeError::General("Failed to create agent config".to_string()))
+                        None => Err(RuntimeError::General(
+                            "Failed to create agent config".to_string(),
+                        )),
                     }
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    })
                 }
             }
 
@@ -3816,15 +5360,18 @@ impl Runtime {
                     let task = crate::stdlib::agent::create_agent_task(
                         task_id.clone(),
                         description.clone(),
-                        &priority
+                        &priority,
                     );
 
                     match task {
                         Some(_) => Ok(Value::String(task_id)),
-                        None => Err(RuntimeError::General("Failed to create task".to_string()))
+                        None => Err(RuntimeError::General("Failed to create task".to_string())),
                     }
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    })
                 }
             }
 
@@ -3841,12 +5388,15 @@ impl Runtime {
                         sender_id,
                         receiver_id,
                         message_type,
-                        content
+                        content,
                     );
 
                     Ok(Value::String(message_id))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    })
                 }
             }
 
@@ -3860,31 +5410,66 @@ impl Runtime {
 
             // Window Management
             "create_window" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("window_created".to_string()))
             }
             "show_window" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "hide_window" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "close_window" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "maximize_window" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "minimize_window" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "restore_window" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
@@ -3894,7 +5479,10 @@ impl Runtime {
                     let text = self.value_to_string(&args[0])?;
                     Ok(Value::String(format!("button_created_{}", text)))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_label" => {
@@ -3902,166 +5490,260 @@ impl Runtime {
                     let text = self.value_to_string(&args[0])?;
                     Ok(Value::String(format!("label_created_{}", text)))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_text_field" => {
                 if args.len() >= 5 {
                     Ok(Value::String("text_field_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_text_area" => {
                 if args.len() >= 5 {
                     Ok(Value::String("text_area_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_checkbox" => {
                 if args.len() >= 5 {
                     Ok(Value::String("checkbox_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_combobox" => {
                 if args.len() >= 5 {
                     Ok(Value::String("combobox_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_listbox" => {
                 if args.len() >= 5 {
                     Ok(Value::String("listbox_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_table" => {
                 if args.len() >= 5 {
                     Ok(Value::String("table_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
-            "create_menu_bar" => {
-                Ok(Value::String("menu_bar_created".to_string()))
-            }
+            "create_menu_bar" => Ok(Value::String("menu_bar_created".to_string())),
             "create_toolbar" => {
                 if args.len() >= 5 {
                     Ok(Value::String("toolbar_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_status_bar" => {
                 if args.len() >= 5 {
                     Ok(Value::String("status_bar_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_tab_view" => {
                 if args.len() >= 5 {
                     Ok(Value::String("tab_view_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_progress_bar" => {
                 if args.len() >= 5 {
                     Ok(Value::String("progress_bar_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_image_view" => {
                 if args.len() >= 5 {
                     Ok(Value::String("image_view_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
 
             // Component Management
             "add_component_to_window" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "remove_component_from_window" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // Event Handling
             "add_event_handler" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "remove_event_handler" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "trigger_event" => {
                 if args.len() >= 3 {
                     Ok(Value::String("event_triggered".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    })
                 }
             }
 
             // Dialogs and System Integration
             "show_file_dialog" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("file_dialog_shown".to_string()))
             }
             "show_save_dialog" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("save_dialog_shown".to_string()))
             }
             "show_message_dialog" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("message_dialog_shown".to_string()))
             }
             "create_system_tray_icon" => {
                 if args.len() >= 2 {
                     Ok(Value::String("system_tray_icon_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    })
                 }
             }
             "show_notification" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // Theming and Styling
             "create_theme" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let name = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("theme_created_{}", name)))
             }
             "apply_theme_to_window" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "apply_theme_to_component" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("theme_applied".to_string()))
             }
 
             // Application Lifecycle
-            "run_event_loop" => {
-                Ok(Value::String("event_loop_started".to_string()))
-            }
-            "exit_application" => {
-                Ok(Value::String("application_exited".to_string()))
-            }
+            "run_event_loop" => Ok(Value::String("event_loop_started".to_string())),
+            "exit_application" => Ok(Value::String("application_exited".to_string())),
 
-            _ => Err(RuntimeError::function_not_found(format!("desktop::{}", name))),
+            _ => Err(RuntimeError::function_not_found(format!(
+                "desktop::{}",
+                name
+            ))),
         }
     }
 
@@ -4072,36 +5754,69 @@ impl Runtime {
             // Application Management
             "create_app" => {
                 if args.len() != 3 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
                 }
                 let name = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("app_created_{}", name)))
             }
             "add_screen_to_app" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "set_root_screen" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "push_screen" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "pop_screen" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("screen_popped".to_string()))
             }
 
             // Screen Management
             "create_screen" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let title = self.value_to_string(&args[0])?;
                 Ok(Value::String(format!("screen_created_{}", title)))
             }
             "add_component_to_screen" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
@@ -4111,7 +5826,10 @@ impl Runtime {
                     let text = self.value_to_string(&args[0])?;
                     Ok(Value::String(format!("mobile_label_created_{}", text)))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_mobile_button" => {
@@ -4119,123 +5837,177 @@ impl Runtime {
                     let title = self.value_to_string(&args[0])?;
                     Ok(Value::String(format!("mobile_button_created_{}", title)))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_mobile_text_field" => {
                 if args.len() >= 5 {
                     let placeholder = self.value_to_string(&args[0])?;
-                    Ok(Value::String(format!("mobile_text_field_created_{}", placeholder)))
+                    Ok(Value::String(format!(
+                        "mobile_text_field_created_{}",
+                        placeholder
+                    )))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_mobile_image_view" => {
                 if args.len() >= 5 {
                     Ok(Value::String("mobile_image_view_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_mobile_list_view" => {
                 if args.len() >= 5 {
                     Ok(Value::String("mobile_list_view_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_mobile_map_view" => {
                 if args.len() >= 5 {
                     Ok(Value::String("mobile_map_view_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
             "create_mobile_web_view" => {
                 if args.len() >= 5 {
                     Ok(Value::String("mobile_web_view_created".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 5, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    })
                 }
             }
 
             // Device Hardware Integration
-            "get_camera" => {
-                Ok(Value::String("camera_accessed".to_string()))
-            }
+            "get_camera" => Ok(Value::String("camera_accessed".to_string())),
             "capture_photo" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("photo_captured".to_string()))
             }
-            "get_gps_location" => {
-                Ok(Value::String("gps_location_retrieved".to_string()))
-            }
+            "get_gps_location" => Ok(Value::String("gps_location_retrieved".to_string())),
             "get_accelerometer_data" => {
                 Ok(Value::String("accelerometer_data_retrieved".to_string()))
             }
-            "get_gyroscope_data" => {
-                Ok(Value::String("gyroscope_data_retrieved".to_string()))
-            }
+            "get_gyroscope_data" => Ok(Value::String("gyroscope_data_retrieved".to_string())),
 
             // Notifications
             "send_push_notification" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "schedule_local_notification" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // App Permissions
             "request_permission" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 let permission = self.value_to_string(&args[0])?;
-                Ok(Value::String(format!("permission_requested_{}", permission)))
+                Ok(Value::String(format!(
+                    "permission_requested_{}",
+                    permission
+                )))
             }
             "check_permission_status" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("permission_granted".to_string()))
             }
 
             // Mobile Wallet Integration
-            "create_mobile_wallet" => {
-                Ok(Value::String("mobile_wallet_created".to_string()))
-            }
-            "scan_qr_code" => {
-                Ok(Value::String("qr_code_scanned".to_string()))
-            }
-            "perform_nfc_scan" => {
-                Ok(Value::String("nfc_scan_performed".to_string()))
-            }
+            "create_mobile_wallet" => Ok(Value::String("mobile_wallet_created".to_string())),
+            "scan_qr_code" => Ok(Value::String("qr_code_scanned".to_string())),
+            "perform_nfc_scan" => Ok(Value::String("nfc_scan_performed".to_string())),
 
             // App Store Integration
-            "check_for_updates" => {
-                Ok(Value::Bool(false))
-            }
+            "check_for_updates" => Ok(Value::Bool(false)),
             "rate_app" => {
                 if args.len() >= 1 {
                     Ok(Value::Bool(true))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    })
                 }
             }
 
             // App Lifecycle
             "run_mobile_app" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("mobile_app_started".to_string()))
             }
             "terminate_mobile_app" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("mobile_app_terminated".to_string()))
             }
 
-            _ => Err(RuntimeError::function_not_found(format!("mobile::{}", name))),
+            _ => Err(RuntimeError::function_not_found(format!(
+                "mobile::{}",
+                name
+            ))),
         }
     }
 
-    fn execute_spawn_statement(&mut self, spawn_stmt: &crate::parser::ast::SpawnStatement) -> Result<Value, RuntimeError> {
+    fn execute_spawn_statement(
+        &mut self,
+        spawn_stmt: &crate::parser::ast::SpawnStatement,
+    ) -> Result<Value, RuntimeError> {
         // Check if this is an AI agent spawn
         if let Some(agent_type) = &spawn_stmt.agent_type {
             if agent_type == "ai" {
@@ -4244,20 +6016,41 @@ impl Runtime {
         }
 
         // For non-AI spawns, create a new execution context
-        crate::stdlib::log::info("Executing spawn statement", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("agent_name".to_string(), Value::String(spawn_stmt.agent_name.clone()));
-            data.insert("agent_type".to_string(), Value::String(spawn_stmt.agent_type.as_ref().unwrap_or(&"generic".to_string()).clone()));
-            data.insert("message".to_string(), Value::String("Executing spawn statement".to_string()));
-            data
-        }, Some("runtime"));
+        crate::stdlib::log::info(
+            "Executing spawn statement",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert(
+                    "agent_name".to_string(),
+                    Value::String(spawn_stmt.agent_name.clone()),
+                );
+                data.insert(
+                    "agent_type".to_string(),
+                    Value::String(
+                        spawn_stmt
+                            .agent_type
+                            .as_ref()
+                            .unwrap_or(&"generic".to_string())
+                            .clone(),
+                    ),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Executing spawn statement".to_string()),
+                );
+                data
+            },
+            Some("runtime"),
+        );
 
         // Create new scope for the spawned agent
         let parent_scope = self.scope.clone();
         self.scope = Scope::new();
 
         // Execute the spawn block in new scope
-        let result = self.execute_statement(&crate::parser::ast::Statement::Block(spawn_stmt.body.clone()));
+        let result = self.execute_statement(&crate::parser::ast::Statement::Block(
+            spawn_stmt.body.clone(),
+        ));
 
         // Restore parent scope
         self.scope = parent_scope;
@@ -4265,12 +6058,13 @@ impl Runtime {
         result
     }
 
-    fn execute_agent_statement(&mut self, agent_stmt: &crate::parser::ast::AgentStatement) -> Result<Value, RuntimeError> {
+    fn execute_agent_statement(
+        &mut self,
+        agent_stmt: &crate::parser::ast::AgentStatement,
+    ) -> Result<Value, RuntimeError> {
         // Handle different agent types
         match &agent_stmt.agent_type {
-            crate::parser::ast::AgentType::AI => {
-                self.execute_ai_agent_declaration(agent_stmt)
-            }
+            crate::parser::ast::AgentType::AI => self.execute_ai_agent_declaration(agent_stmt),
             crate::parser::ast::AgentType::System => {
                 self.execute_system_agent_declaration(agent_stmt)
             }
@@ -4283,7 +6077,10 @@ impl Runtime {
         }
     }
 
-    fn execute_ai_agent_spawn(&mut self, spawn_stmt: &crate::parser::ast::SpawnStatement) -> Result<Value, RuntimeError> {
+    fn execute_ai_agent_spawn(
+        &mut self,
+        spawn_stmt: &crate::parser::ast::SpawnStatement,
+    ) -> Result<Value, RuntimeError> {
         // Create AI agent configuration from spawn parameters
         let mut agent_config = crate::stdlib::ai::AgentConfig {
             agent_id: spawn_stmt.agent_name.clone(),
@@ -4309,7 +6106,8 @@ impl Runtime {
                     }
                     "capabilities" => {
                         if let Value::List(capabilities) = value {
-                            agent_config.capabilities = capabilities.into_iter()
+                            agent_config.capabilities = capabilities
+                                .into_iter()
                                 .filter_map(|v| match v {
                                     Value::String(s) => Some(s),
                                     _ => None,
@@ -4334,7 +6132,8 @@ impl Runtime {
                     }
                     "ai_models" => {
                         if let Value::List(models) = value {
-                            agent_config.ai_models = models.into_iter()
+                            agent_config.ai_models = models
+                                .into_iter()
                                 .filter_map(|v| match v {
                                     Value::String(s) => Some(s),
                                     _ => None,
@@ -4351,35 +6150,57 @@ impl Runtime {
         match crate::stdlib::ai::spawn_agent(agent_config) {
             Ok(agent) => {
                 // Store agent in current scope
-                self.scope.set(spawn_stmt.agent_name.clone(), Value::String(format!("agent_{}", agent.id)));
+                self.scope.set(
+                    spawn_stmt.agent_name.clone(),
+                    Value::String(format!("agent_{}", agent.id)),
+                );
 
-                crate::stdlib::log::info("AI agent spawned successfully", {
-                    let mut data = std::collections::HashMap::new();
-                    data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
-                    data.insert("agent_name".to_string(), Value::String(spawn_stmt.agent_name.clone()));
-                    data.insert("message".to_string(), Value::String("AI agent spawned successfully".to_string()));
-                    data
-                }, Some("ai"));
+                crate::stdlib::log::info(
+                    "AI agent spawned successfully",
+                    {
+                        let mut data = std::collections::HashMap::new();
+                        data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
+                        data.insert(
+                            "agent_name".to_string(),
+                            Value::String(spawn_stmt.agent_name.clone()),
+                        );
+                        data.insert(
+                            "message".to_string(),
+                            Value::String("AI agent spawned successfully".to_string()),
+                        );
+                        data
+                    },
+                    Some("ai"),
+                );
 
                 // Execute agent body in new scope
                 let parent_scope = self.scope.clone();
                 self.scope = Scope::new();
-                self.scope.set("agent".to_string(), Value::String(format!("agent_{}", agent.id)));
+                self.scope.set(
+                    "agent".to_string(),
+                    Value::String(format!("agent_{}", agent.id)),
+                );
 
-                let result = self.execute_statement(&crate::parser::ast::Statement::Block(spawn_stmt.body.clone()));
+                let result = self.execute_statement(&crate::parser::ast::Statement::Block(
+                    spawn_stmt.body.clone(),
+                ));
 
                 // Restore parent scope
                 self.scope = parent_scope;
 
                 result
             }
-            Err(err) => {
-                Err(RuntimeError::General(format!("Failed to spawn AI agent: {}", err)))
-            }
+            Err(err) => Err(RuntimeError::General(format!(
+                "Failed to spawn AI agent: {}",
+                err
+            ))),
         }
     }
 
-    fn execute_ai_agent_declaration(&mut self, agent_stmt: &crate::parser::ast::AgentStatement) -> Result<Value, RuntimeError> {
+    fn execute_ai_agent_declaration(
+        &mut self,
+        agent_stmt: &crate::parser::ast::AgentStatement,
+    ) -> Result<Value, RuntimeError> {
         // Create AI agent configuration from agent declaration
         let mut agent_config = crate::stdlib::ai::AgentConfig {
             agent_id: agent_stmt.name.clone(),
@@ -4419,7 +6240,8 @@ impl Runtime {
                 }
                 "communication_protocols" => {
                     if let Value::List(protocols) = value {
-                        agent_config.communication_protocols = protocols.into_iter()
+                        agent_config.communication_protocols = protocols
+                            .into_iter()
                             .filter_map(|v| match v {
                                 Value::String(s) => Some(s),
                                 _ => None,
@@ -4429,7 +6251,8 @@ impl Runtime {
                 }
                 "ai_models" => {
                     if let Value::List(models) = value {
-                        agent_config.ai_models = models.into_iter()
+                        agent_config.ai_models = models
+                            .into_iter()
                             .filter_map(|v| match v {
                                 Value::String(s) => Some(s),
                                 _ => None,
@@ -4445,51 +6268,97 @@ impl Runtime {
         match crate::stdlib::ai::spawn_agent(agent_config) {
             Ok(agent) => {
                 // Store agent in current scope
-                self.scope.set(agent_stmt.name.clone(), Value::String(format!("agent_{}", agent.id)));
+                self.scope.set(
+                    agent_stmt.name.clone(),
+                    Value::String(format!("agent_{}", agent.id)),
+                );
 
-                crate::stdlib::log::info("AI agent declared and spawned", {
-                    let mut data = std::collections::HashMap::new();
-                    data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
-                    data.insert("agent_name".to_string(), Value::String(agent_stmt.name.clone()));
-                    data.insert("capabilities".to_string(), Value::String(agent_stmt.capabilities.join(", ")));
-                    data.insert("message".to_string(), Value::String("AI agent declared and spawned".to_string()));
-                    data
-                }, Some("ai"));
+                crate::stdlib::log::info(
+                    "AI agent declared and spawned",
+                    {
+                        let mut data = std::collections::HashMap::new();
+                        data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
+                        data.insert(
+                            "agent_name".to_string(),
+                            Value::String(agent_stmt.name.clone()),
+                        );
+                        data.insert(
+                            "capabilities".to_string(),
+                            Value::String(agent_stmt.capabilities.join(", ")),
+                        );
+                        data.insert(
+                            "message".to_string(),
+                            Value::String("AI agent declared and spawned".to_string()),
+                        );
+                        data
+                    },
+                    Some("ai"),
+                );
 
                 // Execute agent body in new scope
                 let parent_scope = self.scope.clone();
                 self.scope = Scope::new();
-                self.scope.set("agent".to_string(), Value::String(format!("agent_{}", agent.id)));
-                self.scope.set("agent_config".to_string(), Value::String(format!("config_{}", agent.id)));
+                self.scope.set(
+                    "agent".to_string(),
+                    Value::String(format!("agent_{}", agent.id)),
+                );
+                self.scope.set(
+                    "agent_config".to_string(),
+                    Value::String(format!("config_{}", agent.id)),
+                );
 
-                let result = self.execute_statement(&crate::parser::ast::Statement::Block(agent_stmt.body.clone()));
+                let result = self.execute_statement(&crate::parser::ast::Statement::Block(
+                    agent_stmt.body.clone(),
+                ));
 
                 // Restore parent scope
                 self.scope = parent_scope;
 
                 result
             }
-            Err(err) => {
-                Err(RuntimeError::General(format!("Failed to declare AI agent: {}", err)))
-            }
+            Err(err) => Err(RuntimeError::General(format!(
+                "Failed to declare AI agent: {}",
+                err
+            ))),
         }
     }
 
-    fn execute_system_agent_declaration(&mut self, agent_stmt: &crate::parser::ast::AgentStatement) -> Result<Value, RuntimeError> {
-        crate::stdlib::log::info("Executing system agent declaration", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("agent_name".to_string(), Value::String(agent_stmt.name.clone()));
-            data.insert("agent_type".to_string(), Value::String("system".to_string()));
-            data.insert("message".to_string(), Value::String("Executing system agent declaration".to_string()));
-            data
-        }, Some("runtime"));
+    fn execute_system_agent_declaration(
+        &mut self,
+        agent_stmt: &crate::parser::ast::AgentStatement,
+    ) -> Result<Value, RuntimeError> {
+        crate::stdlib::log::info(
+            "Executing system agent declaration",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert(
+                    "agent_name".to_string(),
+                    Value::String(agent_stmt.name.clone()),
+                );
+                data.insert(
+                    "agent_type".to_string(),
+                    Value::String("system".to_string()),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Executing system agent declaration".to_string()),
+                );
+                data
+            },
+            Some("runtime"),
+        );
 
         // System agents run in isolated scopes
         let parent_scope = self.scope.clone();
         self.scope = Scope::new();
-        self.scope.set("agent_type".to_string(), Value::String("system".to_string()));
+        self.scope.set(
+            "agent_type".to_string(),
+            Value::String("system".to_string()),
+        );
 
-        let result = self.execute_statement(&crate::parser::ast::Statement::Block(agent_stmt.body.clone()));
+        let result = self.execute_statement(&crate::parser::ast::Statement::Block(
+            agent_stmt.body.clone(),
+        ));
 
         // Restore parent scope
         self.scope = parent_scope;
@@ -4497,35 +6366,81 @@ impl Runtime {
         result
     }
 
-    fn execute_worker_agent_declaration(&mut self, agent_stmt: &crate::parser::ast::AgentStatement) -> Result<Value, RuntimeError> {
-        crate::stdlib::log::info("Executing worker agent declaration", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("agent_name".to_string(), Value::String(agent_stmt.name.clone()));
-            data.insert("agent_type".to_string(), Value::String("worker".to_string()));
-            data.insert("message".to_string(), Value::String("Executing worker agent declaration".to_string()));
-            data
-        }, Some("runtime"));
+    fn execute_worker_agent_declaration(
+        &mut self,
+        agent_stmt: &crate::parser::ast::AgentStatement,
+    ) -> Result<Value, RuntimeError> {
+        crate::stdlib::log::info(
+            "Executing worker agent declaration",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert(
+                    "agent_name".to_string(),
+                    Value::String(agent_stmt.name.clone()),
+                );
+                data.insert(
+                    "agent_type".to_string(),
+                    Value::String("worker".to_string()),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Executing worker agent declaration".to_string()),
+                );
+                data
+            },
+            Some("runtime"),
+        );
 
         // Worker agents have access to parent scope but run in separate context
-        self.scope.set("agent_type".to_string(), Value::String("worker".to_string()));
+        self.scope.set(
+            "agent_type".to_string(),
+            Value::String("worker".to_string()),
+        );
 
-        self.execute_statement(&crate::parser::ast::Statement::Block(agent_stmt.body.clone()))
+        self.execute_statement(&crate::parser::ast::Statement::Block(
+            agent_stmt.body.clone(),
+        ))
     }
 
-    fn execute_custom_agent_declaration(&mut self, agent_stmt: &crate::parser::ast::AgentStatement, custom_type: &str) -> Result<Value, RuntimeError> {
-        crate::stdlib::log::info("runtime", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("agent_name".to_string(), Value::String(agent_stmt.name.clone()));
-            data.insert("agent_type".to_string(), Value::String(format!("custom:{}", custom_type)));
-            data.insert("message".to_string(), Value::String("Executing custom agent declaration".to_string()));
-            data
-        }, Some("runtime"));
+    fn execute_custom_agent_declaration(
+        &mut self,
+        agent_stmt: &crate::parser::ast::AgentStatement,
+        custom_type: &str,
+    ) -> Result<Value, RuntimeError> {
+        crate::stdlib::log::info(
+            "runtime",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert(
+                    "agent_name".to_string(),
+                    Value::String(agent_stmt.name.clone()),
+                );
+                data.insert(
+                    "agent_type".to_string(),
+                    Value::String(format!("custom:{}", custom_type)),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Executing custom agent declaration".to_string()),
+                );
+                data
+            },
+            Some("runtime"),
+        );
 
         // Custom agents can define their own execution model
-        self.scope.set("agent_type".to_string(), Value::String(format!("custom:{}", custom_type)));
-        self.scope.set("custom_type".to_string(), Value::String(custom_type.to_string()));
+        self.scope.set(
+            "agent_type".to_string(),
+            Value::String(format!("custom:{}", custom_type)),
+        );
+        self.scope.set(
+            "custom_type".to_string(),
+            Value::String(custom_type.to_string()),
+        );
 
-        self.execute_statement(&crate::parser::ast::Statement::Block(agent_stmt.body.clone()))
+        self.execute_statement(&crate::parser::ast::Statement::Block(
+            agent_stmt.body.clone(),
+        ))
     }
 
     fn call_iot_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
@@ -4534,156 +6449,296 @@ impl Runtime {
 
             // Device Management
             "register_device" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("device_registered".to_string()))
             }
             "connect_device" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("device_connected".to_string()))
             }
             "disconnect_device" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "get_device_status" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("online".to_string()))
             }
             "update_device_firmware" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // Sensor Management
             "add_sensor_to_device" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("sensor_added".to_string()))
             }
             "read_sensor_data" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("sensor_data_read".to_string()))
             }
             "calibrate_sensor" => {
                 if args.len() >= 2 {
                     Ok(Value::Bool(true))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    })
                 }
             }
 
             // Actuator Control
             "add_actuator_to_device" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("actuator_added".to_string()))
             }
             "send_actuator_command" => {
                 if args.len() >= 3 {
                     Ok(Value::String("command_sent".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    })
                 }
             }
 
             // Edge Computing
             "create_edge_node" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("edge_node_created".to_string()))
             }
             "process_data_at_edge" => {
                 if args.len() >= 3 {
                     Ok(Value::String("data_processed".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    })
                 }
             }
             "cache_data_at_edge" => {
                 if args.len() >= 4 {
                     Ok(Value::Bool(true))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 4, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    })
                 }
             }
             "get_cached_data_from_edge" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("cached_data".to_string()))
             }
 
             // Data Streaming
             "create_data_stream" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("data_stream_created".to_string()))
             }
             "add_filter_to_stream" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "add_processor_to_stream" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "add_sink_to_stream" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // Protocol Support
             "configure_protocol" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "publish_message" => {
-                if args.len() != 3 { return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() }); }
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "subscribe_to_topic" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // Security Functions
             "authenticate_device" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "encrypt_device_data" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("encrypted_data".to_string()))
             }
             "verify_device_certificate" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
 
             // Cloud Integration
             "sync_device_data_to_cloud" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Bool(true))
             }
             "get_device_data_from_cloud" => {
                 if args.len() >= 1 {
                     Ok(Value::String("cloud_data".to_string()))
                 } else {
-                    Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() })
+                    Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    })
                 }
             }
 
             // Anomaly Detection
             "detect_sensor_anomalies" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("anomalies_detected".to_string()))
             }
             "predict_device_failure" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::Float(0.15))
             }
 
             // Power Management
             "monitor_power_consumption" => {
-                if args.len() != 1 { return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() }); }
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("power_status".to_string()))
             }
             "optimize_power_usage" => {
-                if args.len() != 2 { return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() }); }
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
                 Ok(Value::String("power_optimized".to_string()))
             }
 
@@ -4691,34 +6746,36 @@ impl Runtime {
         }
     }
 
-    pub fn execute_expression(&mut self, tokens: &[crate::lexer::tokens::Token]) -> Result<Value, RuntimeError> {
+    pub fn execute_expression(
+        &mut self,
+        tokens: &[crate::lexer::tokens::Token],
+    ) -> Result<Value, RuntimeError> {
         // For now, implement a simple expression evaluator
         // This will be expanded in the parser phase
-        
+
         if tokens.is_empty() {
             return Err(RuntimeError::General("Empty expression".to_string()));
         }
-        
+
         // Simple literal evaluation for now
         match &tokens[0] {
-            crate::lexer::tokens::Token::Literal(literal) => {
-                match literal {
-                    crate::lexer::tokens::Literal::Int(i) => Ok(Value::Int(*i)),
-                    crate::lexer::tokens::Literal::Float(f) => Ok(Value::Float(*f)),
-                    crate::lexer::tokens::Literal::String(s) => Ok(Value::String(s.clone())),
-                    crate::lexer::tokens::Literal::Bool(b) => Ok(Value::Bool(*b)),
-                    crate::lexer::tokens::Literal::Null => Ok(Value::Null),
-                }
-            }
-            crate::lexer::tokens::Token::Identifier(name) => {
-                self.get_variable(name)
-            }
+            crate::lexer::tokens::Token::Literal(literal) => match literal {
+                crate::lexer::tokens::Literal::Int(i) => Ok(Value::Int(*i)),
+                crate::lexer::tokens::Literal::Float(f) => Ok(Value::Float(*f)),
+                crate::lexer::tokens::Literal::String(s) => Ok(Value::String(s.clone())),
+                crate::lexer::tokens::Literal::Bool(b) => Ok(Value::Bool(*b)),
+                crate::lexer::tokens::Literal::Null => Ok(Value::Null),
+            },
+            crate::lexer::tokens::Token::Identifier(name) => self.get_variable(name),
             _ => Err(RuntimeError::General("Unsupported expression".to_string())),
         }
     }
 
     // NEW: Service execution method
-    fn execute_service_statement(&mut self, service_stmt: &ServiceStatement) -> Result<Value, RuntimeError> {
+    fn execute_service_statement(
+        &mut self,
+        service_stmt: &ServiceStatement,
+    ) -> Result<Value, RuntimeError> {
         // Build attribute strings for context
         let attr_strings: Vec<String> = service_stmt
             .attributes
@@ -4726,8 +6783,9 @@ impl Runtime {
             .map(|a| {
                 if a.parameters.is_empty() {
                     format!("@{}", a.name)
-                } else if let Some(crate::parser::ast::Expression::Literal(crate::lexer::tokens::Literal::String(s))) =
-                    a.parameters.first()
+                } else if let Some(crate::parser::ast::Expression::Literal(
+                    crate::lexer::tokens::Literal::String(s),
+                )) = a.parameters.first()
                 {
                     format!("@{}(\"{}\")", a.name, s)
                 } else {
@@ -4744,7 +6802,7 @@ impl Runtime {
             events: service_stmt.events.clone(),
             attributes: attr_strings.clone(),
         };
-        
+
         // Initialize fields
         for field in &service_stmt.fields {
             let initial_value = if let Some(ref value) = field.initial_value {
@@ -4752,22 +6810,28 @@ impl Runtime {
             } else {
                 self.get_default_value(&field.field_type)?
             };
-            
-            service_instance.fields.insert(field.name.clone(), initial_value);
+
+            service_instance
+                .fields
+                .insert(field.name.clone(), initial_value);
         }
-        
+
         // Store service in runtime
-        self.services.insert(service_stmt.name.clone(), service_instance);
-        
+        self.services
+            .insert(service_stmt.name.clone(), service_instance);
+
         // Set service reference in current scope
-        self.set_variable(format!("service_{}", service_stmt.name), Value::String(format!("service_{}", service_stmt.name)));
+        self.set_variable(
+            format!("service_{}", service_stmt.name),
+            Value::String(format!("service_{}", service_stmt.name)),
+        );
 
         // Set current service context for trust validation (chain, auth, etc.)
         self.set_current_service(service_stmt.name.clone(), attr_strings);
-        
+
         Ok(Value::String(format!("service_{}", service_stmt.name)))
     }
-    
+
     // Helper method to get default values for field types
     fn get_default_value(&self, field_type: &str) -> Result<Value, RuntimeError> {
         match field_type {
@@ -4781,14 +6845,21 @@ impl Runtime {
 
     /// Call an arrow/closure value by id (single param, body, captured scope).
     fn call_closure(&mut self, id: &str, args: &[Value]) -> Result<Value, RuntimeError> {
-        let entry = self.closure_registry.get(id)
+        let entry = self
+            .closure_registry
+            .get(id)
             .ok_or_else(|| RuntimeError::General(format!("Closure '{}' not found", id)))?
             .clone();
         if args.len() != 1 {
-            return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+            return Err(RuntimeError::ArgumentCountMismatch {
+                expected: 1,
+                got: args.len(),
+            });
         }
         let saved_scope = self.scope.clone();
-        let call_frame = CallFrame { scope: saved_scope.clone() };
+        let call_frame = CallFrame {
+            scope: saved_scope.clone(),
+        };
         self.call_stack.push(call_frame);
         self.scope = entry.captured_scope.clone();
         self.scope.set(entry.param.clone(), args[0].clone());
@@ -4836,46 +6907,47 @@ impl Runtime {
 
         // Set current service context before executing method
         // This enables chain access when service has @chain(...) attribute
-        let (has_secure_attr, _service_attrs) = if let Some(service) = self.services.get(instance_id) {
-            let service_name = service.name.clone();
-            let service_attrs = service.attributes.clone();
-            
-            // Check function-level attributes first (override service-level)
-            let func_has_secure = method.attributes.iter().any(|attr| attr.name == "secure");
-            let func_has_public = method.attributes.iter().any(|attr| attr.name == "public");
-            
-            // Check service-level attributes
-            let service_has_secure = service_attrs.iter().any(|attr| attr == "@secure");
-            let service_has_public = service_attrs.iter().any(|attr| attr == "@public");
-            
-            // Precedence rules:
-            // 1. Function-level @public overrides service-level @secure
-            // 2. Function-level @secure overrides service-level (even if service has @public, function @secure wins)
-            // 3. If function has neither attribute, it INHERITS from service-level (@secure or @public)
-            let is_secure = if func_has_public {
-                // Function-level @public overrides everything
-                false
-            } else if func_has_secure {
-                // Function-level @secure overrides service-level
-                true
+        let (has_secure_attr, _service_attrs) =
+            if let Some(service) = self.services.get(instance_id) {
+                let service_name = service.name.clone();
+                let service_attrs = service.attributes.clone();
+
+                // Check function-level attributes first (override service-level)
+                let func_has_secure = method.attributes.iter().any(|attr| attr.name == "secure");
+                let func_has_public = method.attributes.iter().any(|attr| attr.name == "public");
+
+                // Check service-level attributes
+                let service_has_secure = service_attrs.iter().any(|attr| attr == "@secure");
+                let service_has_public = service_attrs.iter().any(|attr| attr == "@public");
+
+                // Precedence rules:
+                // 1. Function-level @public overrides service-level @secure
+                // 2. Function-level @secure overrides service-level (even if service has @public, function @secure wins)
+                // 3. If function has neither attribute, it INHERITS from service-level (@secure or @public)
+                let is_secure = if func_has_public {
+                    // Function-level @public overrides everything
+                    false
+                } else if func_has_secure {
+                    // Function-level @secure overrides service-level
+                    true
+                } else {
+                    // Use service-level (but service @public and @secure are mutually exclusive, so only one can be true)
+                    service_has_secure && !service_has_public
+                };
+
+                // Set the service context so chain/auth calls work properly
+                self.set_current_service(service_name, service_attrs.clone());
+
+                (is_secure, service_attrs)
             } else {
-                // Use service-level (but service @public and @secure are mutually exclusive, so only one can be true)
-                service_has_secure && !service_has_public
+                (false, Vec::new())
             };
-            
-            // Set the service context so chain/auth calls work properly
-            self.set_current_service(service_name, service_attrs.clone());
-            
-            (is_secure, service_attrs)
-        } else {
-            (false, Vec::new())
-        };
 
         // Enforce @secure attribute: require authentication AND reentrancy protection
         // Reentrancy token must live for the entire method execution, so we use Option
         use crate::runtime::reentrancy::ReentrancyToken;
         let _reentrancy_token: Option<ReentrancyToken>;
-        
+
         if has_secure_attr {
             // 1. REENTRANCY PROTECTION: Check and enter reentrancy guard
             // Clone the guard (it uses Arc internally, so this shares the same state)
@@ -4883,24 +6955,38 @@ impl Runtime {
             let token = guard.enter(method_name, Some(instance_id)).map_err(|e| {
                 // Log reentrancy attempt for audit
                 let mut audit_data = std::collections::HashMap::new();
-                audit_data.insert("service".to_string(), Value::String(instance_id.to_string()));
+                audit_data.insert(
+                    "service".to_string(),
+                    Value::String(instance_id.to_string()),
+                );
                 audit_data.insert("method".to_string(), Value::String(method_name.to_string()));
-                audit_data.insert("caller".to_string(), Value::String(
-                    self.current_caller.clone().unwrap_or_else(|| "unauthenticated".to_string())
-                ));
-                audit_data.insert("result".to_string(), Value::String("reentrancy_detected".to_string()));
-                audit_data.insert("call_stack".to_string(), Value::String(
-                    format!("{:?}", guard.get_call_stack())
-                ));
+                audit_data.insert(
+                    "caller".to_string(),
+                    Value::String(
+                        self.current_caller
+                            .clone()
+                            .unwrap_or_else(|| "unauthenticated".to_string()),
+                    ),
+                );
+                audit_data.insert(
+                    "result".to_string(),
+                    Value::String("reentrancy_detected".to_string()),
+                );
+                audit_data.insert(
+                    "call_stack".to_string(),
+                    Value::String(format!("{:?}", guard.get_call_stack())),
+                );
                 log::audit("reentrancy_attempt", audit_data, Some("runtime"));
                 e
             })?;
-            
+
             // Store token - it will be dropped automatically when function returns, releasing the guard
             _reentrancy_token = Some(token);
 
             // 2. AUTHENTICATION: Check if caller is authenticated (current_caller must be set and not default)
-            let is_authenticated = self.current_caller.as_ref()
+            let is_authenticated = self
+                .current_caller
+                .as_ref()
                 .map(|caller| {
                     // Reject default/null addresses
                     caller != "0x0000000000000000000000000000000000000000" && !caller.is_empty()
@@ -4910,14 +6996,22 @@ impl Runtime {
             if !is_authenticated {
                 // Drop reentrancy token before returning error
                 drop(_reentrancy_token);
-                
+
                 // Log audit event for unauthorized access attempt
                 let mut audit_data = std::collections::HashMap::new();
-                audit_data.insert("service".to_string(), Value::String(instance_id.to_string()));
+                audit_data.insert(
+                    "service".to_string(),
+                    Value::String(instance_id.to_string()),
+                );
                 audit_data.insert("method".to_string(), Value::String(method_name.to_string()));
-                audit_data.insert("caller".to_string(), Value::String(
-                    self.current_caller.clone().unwrap_or_else(|| "unauthenticated".to_string())
-                ));
+                audit_data.insert(
+                    "caller".to_string(),
+                    Value::String(
+                        self.current_caller
+                            .clone()
+                            .unwrap_or_else(|| "unauthenticated".to_string()),
+                    ),
+                );
                 audit_data.insert("result".to_string(), Value::String("denied".to_string()));
                 log::audit("secure_service_access_denied", audit_data, Some("runtime"));
 
@@ -4926,17 +7020,21 @@ impl Runtime {
 
             // Log successful authenticated access
             let mut audit_data = std::collections::HashMap::new();
-            audit_data.insert("service".to_string(), Value::String(instance_id.to_string()));
+            audit_data.insert(
+                "service".to_string(),
+                Value::String(instance_id.to_string()),
+            );
             audit_data.insert("method".to_string(), Value::String(method_name.to_string()));
-            audit_data.insert("caller".to_string(), Value::String(
-                self.current_caller.as_ref().unwrap().clone()
-            ));
+            audit_data.insert(
+                "caller".to_string(),
+                Value::String(self.current_caller.as_ref().unwrap().clone()),
+            );
             audit_data.insert("result".to_string(), Value::String("allowed".to_string()));
             log::audit("secure_service_access", audit_data, Some("runtime"));
         } else {
             _reentrancy_token = None;
         }
-        
+
         // Reentrancy token (if present) will be dropped automatically when function returns
         // This ensures protection for the entire method execution
 
@@ -4956,7 +7054,8 @@ impl Runtime {
         }
 
         // Set up 'self' to reference the instance ID
-        self.scope.set("self".to_string(), Value::String(instance_id.to_string()));
+        self.scope
+            .set("self".to_string(), Value::String(instance_id.to_string()));
 
         // Execute method body
         let mut result = Value::Null;
@@ -4990,12 +7089,19 @@ impl Runtime {
     }
 
     // Helper method to parse agent configuration from Value
-    fn parse_agent_config(&self, value: &Value) -> Result<crate::stdlib::agent::AgentConfig, RuntimeError> {
+    fn parse_agent_config(
+        &self,
+        value: &Value,
+    ) -> Result<crate::stdlib::agent::AgentConfig, RuntimeError> {
         // Accept both Value::Struct and Value::Map
         let fields = match value {
             Value::Struct(_, fields) => fields,
             Value::Map(fields) => fields,
-            _ => return Err(RuntimeError::General("Agent config must be a struct or map".to_string()))
+            _ => {
+                return Err(RuntimeError::General(
+                    "Agent config must be a struct or map".to_string(),
+                ))
+            }
         };
 
         let name = if let Some(Value::String(name)) = fields.get("name") {
@@ -5010,8 +7116,10 @@ impl Runtime {
             "ai".to_string()
         };
 
-        let agent_type = crate::stdlib::agent::AgentType::from_string(&agent_type_str)
-            .ok_or_else(|| RuntimeError::General(format!("Invalid agent type: {}", agent_type_str)))?;
+        let agent_type =
+            crate::stdlib::agent::AgentType::from_string(&agent_type_str).ok_or_else(|| {
+                RuntimeError::General(format!("Invalid agent type: {}", agent_type_str))
+            })?;
 
         let mut config = crate::stdlib::agent::AgentConfig::new(name, agent_type);
 
@@ -5054,17 +7162,22 @@ impl Runtime {
     fn call_admin_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         // Validate admin access based on current trust context
         if !self.validate_admin_access() {
-            return Err(RuntimeError::PermissionDenied("Admin access denied".to_string()));
+            return Err(RuntimeError::PermissionDenied(
+                "Admin access denied".to_string(),
+            ));
         }
 
         match name {
             "kill" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let process_id = self.value_to_string(&args[0])?;
                 let reason = self.value_to_string(&args[1])?;
-                
+
                 match crate::stdlib::admin::kill(&process_id, &reason) {
                     Ok(result) => Ok(Value::Bool(result)),
                     Err(e) => Err(RuntimeError::General(e)),
@@ -5072,10 +7185,13 @@ impl Runtime {
             }
             "get_process_info" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let process_id = self.value_to_string(&args[0])?;
-                
+
                 match crate::stdlib::admin::get_process_info(&process_id) {
                     Ok(info) => {
                         let mut data = std::collections::HashMap::new();
@@ -5090,12 +7206,15 @@ impl Runtime {
             }
             "list_processes" => {
                 if args.len() != 0 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 0, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
                 }
-                
+
                 let processes = crate::stdlib::admin::list_processes();
                 let mut result = Vec::new();
-                
+
                 for process in processes {
                     let mut data = std::collections::HashMap::new();
                     data.insert("process_id".to_string(), Value::String(process.process_id));
@@ -5104,52 +7223,74 @@ impl Runtime {
                     data.insert("start_time".to_string(), Value::Int(process.start_time));
                     result.push(Value::Map(data));
                 }
-                
+
                 Ok(Value::Array(result))
             }
             _ => Err(RuntimeError::function_not_found(format!("admin::{}", name))),
         }
     }
 
-    fn call_cloudadmin_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+    fn call_cloudadmin_function(
+        &mut self,
+        name: &str,
+        args: &[Value],
+    ) -> Result<Value, RuntimeError> {
         // Validate cloudadmin access based on current trust context
         if !self.validate_cloudadmin_access() {
-            return Err(RuntimeError::PermissionDenied("CloudAdmin access denied".to_string()));
+            return Err(RuntimeError::PermissionDenied(
+                "CloudAdmin access denied".to_string(),
+            ));
         }
 
         match name {
             "authorize" => {
                 if args.len() != 3 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
                 }
                 let admin_id = self.value_to_string(&args[0])?;
                 let operation = self.value_to_string(&args[1])?;
                 let resource = self.value_to_string(&args[2])?;
-                
+
                 let result = crate::stdlib::cloudadmin::authorize(&admin_id, &operation, &resource);
                 Ok(Value::Bool(result))
             }
             "validate_hybrid_trust" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let admin_trust = self.value_to_string(&args[0])?;
                 let user_trust = self.value_to_string(&args[1])?;
-                
-                let result = crate::stdlib::cloudadmin::validate_hybrid_trust(&admin_trust, &user_trust);
+
+                let result =
+                    crate::stdlib::cloudadmin::validate_hybrid_trust(&admin_trust, &user_trust);
                 Ok(Value::Bool(result))
             }
             "bridge_trusts" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let centralized_trust = self.value_to_string(&args[0])?;
                 let decentralized_trust = self.value_to_string(&args[1])?;
-                
-                let result = crate::stdlib::cloudadmin::bridge_trusts(&centralized_trust, &decentralized_trust);
+
+                let result = crate::stdlib::cloudadmin::bridge_trusts(
+                    &centralized_trust,
+                    &decentralized_trust,
+                );
                 Ok(Value::Bool(result))
             }
-            _ => Err(RuntimeError::function_not_found(format!("cloudadmin::{}", name))),
+            _ => Err(RuntimeError::function_not_found(format!(
+                "cloudadmin::{}",
+                name
+            ))),
         }
     }
 
@@ -5159,7 +7300,10 @@ impl Runtime {
         match name {
             "expect_valid_trust_model" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let s = self.value_to_string(&args[0])?;
                 test::expect_valid_trust_model(&s).map_err(to_err)?;
@@ -5167,7 +7311,10 @@ impl Runtime {
             }
             "expect_valid_chain" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let s = self.value_to_string(&args[0])?;
                 test::expect_valid_chain(&s).map_err(to_err)?;
@@ -5175,7 +7322,10 @@ impl Runtime {
             }
             "expect_type" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let ty = self.value_to_string(&args[1])?;
                 test::expect_type(&args[0], &ty).map_err(to_err)?;
@@ -5183,7 +7333,10 @@ impl Runtime {
             }
             "expect_in_range" => {
                 if args.len() != 3 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 3, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
                 }
                 let min = self.value_to_float(&args[1])?;
                 let max = self.value_to_float(&args[2])?;
@@ -5192,7 +7345,10 @@ impl Runtime {
             }
             "expect_contains" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let haystack = self.value_to_string(&args[0])?;
                 let needle = self.value_to_string(&args[1])?;
@@ -5201,7 +7357,10 @@ impl Runtime {
             }
             "expect_starts_with" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let s = self.value_to_string(&args[0])?;
                 let prefix = self.value_to_string(&args[1])?;
@@ -5210,7 +7369,10 @@ impl Runtime {
             }
             "expect_length" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let len = self.value_to_int(&args[1])? as usize;
                 test::expect_length(args[0].clone(), len).map_err(to_err)?;
@@ -5218,14 +7380,20 @@ impl Runtime {
             }
             "expect_not_empty" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 test::expect_not_empty(args[0].clone()).map_err(to_err)?;
                 Ok(Value::Null)
             }
             "expect_has_key" => {
                 if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 2, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
                 }
                 let key = self.value_to_string(&args[1])?;
                 test::expect_has_key(args[0].clone(), &key).map_err(to_err)?;
@@ -5233,12 +7401,22 @@ impl Runtime {
             }
             "expect_compatible_attributes" => {
                 if args.len() != 1 {
-                    return Err(RuntimeError::ArgumentCountMismatch { expected: 1, got: args.len() });
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
                 }
                 let attrs: Vec<String> = match &args[0] {
-                    Value::Array(a) => a.iter().filter_map(|v| self.value_to_string(v).ok()).collect(),
+                    Value::Array(a) => a
+                        .iter()
+                        .filter_map(|v| self.value_to_string(v).ok())
+                        .collect(),
                     Value::Map(m) => m.keys().cloned().collect(),
-                    _ => return Err(RuntimeError::General("expect_compatible_attributes expects array or map".to_string())),
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "expect_compatible_attributes expects array or map".to_string(),
+                        ))
+                    }
                 };
                 let attrs_ref: Vec<&str> = attrs.iter().map(String::as_str).collect();
                 test::expect_compatible_attributes(attrs_ref).map_err(to_err)?;
@@ -5261,19 +7439,19 @@ impl Runtime {
             if current_service.trust_model == "centralized" {
                 return true;
             }
-            
+
             // For hybrid trust, check if admin operations are permitted
             if current_service.trust_model == "hybrid" {
                 // In hybrid mode, admin operations require special validation
                 return current_service.has_admin_privileges;
             }
-            
+
             // For decentralized trust, admin operations are restricted
             if current_service.trust_model == "decentralized" {
                 return false;
             }
         }
-        
+
         // Default: no admin access
         false
     }
@@ -5286,18 +7464,18 @@ impl Runtime {
             if current_service.trust_model == "centralized" {
                 return true;
             }
-            
+
             // For hybrid trust, cloudadmin operations require special validation
             if current_service.trust_model == "hybrid" {
                 return current_service.has_cloudadmin_privileges;
             }
-            
+
             // For decentralized trust, cloudadmin operations are restricted
             if current_service.trust_model == "decentralized" {
                 return false;
             }
         }
-        
+
         // Default: no cloudadmin access
         false
     }
@@ -5307,9 +7485,9 @@ impl Runtime {
         if let Some(current_service) = &self.current_service {
             // Web operations require appropriate trust model
             match current_service.trust_model.as_str() {
-                "centralized" => true,  // Centralized allows all web operations
-                "hybrid" => current_service.has_web_privileges,  // Hybrid requires web privileges
-                "decentralized" => current_service.has_web_privileges,  // Decentralized requires explicit web privileges
+                "centralized" => true, // Centralized allows all web operations
+                "hybrid" => current_service.has_web_privileges, // Hybrid requires web privileges
+                "decentralized" => current_service.has_web_privileges, // Decentralized requires explicit web privileges
                 _ => false,
             }
         } else {
@@ -5322,9 +7500,9 @@ impl Runtime {
         if let Some(current_service) = &self.current_service {
             // AI operations require appropriate trust model
             match current_service.trust_model.as_str() {
-                "centralized" => true,  // Centralized allows all AI operations
-                "hybrid" => current_service.has_ai_privileges,  // Hybrid requires AI privileges
-                "decentralized" => current_service.has_ai_privileges,  // Decentralized requires explicit AI privileges
+                "centralized" => true, // Centralized allows all AI operations
+                "hybrid" => current_service.has_ai_privileges, // Hybrid requires AI privileges
+                "decentralized" => current_service.has_ai_privileges, // Decentralized requires explicit AI privileges
                 _ => false,
             }
         } else {
@@ -5337,9 +7515,9 @@ impl Runtime {
         if let Some(current_service) = &self.current_service {
             // Blockchain operations require appropriate trust model
             match current_service.trust_model.as_str() {
-                "centralized" => true,  // Centralized allows all chain operations
-                "hybrid" => current_service.has_chain_privileges,  // Hybrid requires chain privileges
-                "decentralized" => current_service.has_chain_privileges,  // Decentralized requires explicit chain privileges
+                "centralized" => true, // Centralized allows all chain operations
+                "hybrid" => current_service.has_chain_privileges, // Hybrid requires chain privileges
+                "decentralized" => current_service.has_chain_privileges, // Decentralized requires explicit chain privileges
                 _ => false,
             }
         } else {
@@ -5361,34 +7539,49 @@ impl Runtime {
     // ============== Transaction Management ==============
 
     /// Begin a new transaction with specified isolation level and optional timeout
-    pub fn begin_transaction(&mut self, isolation_level: crate::runtime::transaction::IsolationLevel, timeout_ms: Option<u64>) -> Result<String, RuntimeError> {
-        let tx_id = self.transaction_manager.begin_transaction(isolation_level)
+    pub fn begin_transaction(
+        &mut self,
+        isolation_level: crate::runtime::transaction::IsolationLevel,
+        timeout_ms: Option<u64>,
+    ) -> Result<String, RuntimeError> {
+        let tx_id = self
+            .transaction_manager
+            .begin_transaction(isolation_level)
             .map_err(|e| RuntimeError::General(format!("Failed to begin transaction: {}", e)))?;
-        
+
         // Set custom timeout if provided
         if let Some(timeout) = timeout_ms {
-            self.transaction_manager.set_transaction_timeout(&tx_id, Some(timeout))
-                .map_err(|e| RuntimeError::General(format!("Failed to set transaction timeout: {}", e)))?;
+            self.transaction_manager
+                .set_transaction_timeout(&tx_id, Some(timeout))
+                .map_err(|e| {
+                    RuntimeError::General(format!("Failed to set transaction timeout: {}", e))
+                })?;
         }
-        
+
         self.current_transaction_id = Some(tx_id.clone());
         Ok(tx_id)
     }
 
     /// Commit the current transaction
     pub fn commit_transaction(&mut self) -> Result<(), RuntimeError> {
-        let tx_id = self.current_transaction_id.take()
+        let tx_id = self
+            .current_transaction_id
+            .take()
             .ok_or_else(|| RuntimeError::General("No active transaction".to_string()))?;
-        self.transaction_manager.commit(&tx_id)
+        self.transaction_manager
+            .commit(&tx_id)
             .map_err(|e| RuntimeError::General(format!("Transaction commit failed: {}", e)))?;
         Ok(())
     }
 
     /// Rollback the current transaction
     pub fn rollback_transaction(&mut self) -> Result<(), RuntimeError> {
-        let tx_id = self.current_transaction_id.take()
+        let tx_id = self
+            .current_transaction_id
+            .take()
             .ok_or_else(|| RuntimeError::General("No active transaction".to_string()))?;
-        self.transaction_manager.rollback(&tx_id)
+        self.transaction_manager
+            .rollback(&tx_id)
             .map_err(|e| RuntimeError::General(format!("Transaction rollback failed: {}", e)))?;
         Ok(())
     }
@@ -5400,37 +7593,51 @@ impl Runtime {
 
     /// Read value from transaction (within active transaction)
     pub fn transaction_read(&mut self, key: &str) -> Result<Option<Value>, RuntimeError> {
-        let tx_id = self.current_transaction_id.as_ref()
+        let tx_id = self
+            .current_transaction_id
+            .as_ref()
             .ok_or_else(|| RuntimeError::General("No active transaction".to_string()))?;
-        self.transaction_manager.read(tx_id, key)
+        self.transaction_manager
+            .read(tx_id, key)
             .map_err(|e| RuntimeError::General(format!("Transaction read failed: {}", e)))
     }
 
     /// Write value to transaction (within active transaction)
     pub fn transaction_write(&mut self, key: String, value: Value) -> Result<(), RuntimeError> {
-        let tx_id = self.current_transaction_id.as_ref()
+        let tx_id = self
+            .current_transaction_id
+            .as_ref()
             .ok_or_else(|| RuntimeError::General("No active transaction".to_string()))?
             .to_string();
-        self.transaction_manager.write(&tx_id, key, value)
+        self.transaction_manager
+            .write(&tx_id, key, value)
             .map_err(|e| RuntimeError::General(format!("Transaction write failed: {}", e)))?;
         Ok(())
     }
 
     /// Create a savepoint within the current transaction
     pub fn create_savepoint(&mut self, name: String) -> Result<(), RuntimeError> {
-        let tx_id = self.current_transaction_id.as_ref()
+        let tx_id = self
+            .current_transaction_id
+            .as_ref()
             .ok_or_else(|| RuntimeError::General("No active transaction".to_string()))?;
-        self.transaction_manager.create_savepoint(tx_id, name)
+        self.transaction_manager
+            .create_savepoint(tx_id, name)
             .map_err(|e| RuntimeError::General(format!("Failed to create savepoint: {}", e)))?;
         Ok(())
     }
 
     /// Rollback to a savepoint within the current transaction
     pub fn rollback_to_savepoint(&mut self, name: &str) -> Result<(), RuntimeError> {
-        let tx_id = self.current_transaction_id.as_ref()
+        let tx_id = self
+            .current_transaction_id
+            .as_ref()
             .ok_or_else(|| RuntimeError::General("No active transaction".to_string()))?;
-        self.transaction_manager.rollback_to_savepoint(tx_id, name)
-            .map_err(|e| RuntimeError::General(format!("Failed to rollback to savepoint: {}", e)))?;
+        self.transaction_manager
+            .rollback_to_savepoint(tx_id, name)
+            .map_err(|e| {
+                RuntimeError::General(format!("Failed to rollback to savepoint: {}", e))
+            })?;
         Ok(())
     }
 
@@ -5448,7 +7655,10 @@ impl Runtime {
         for attr in &attributes {
             if attr.starts_with("@trust(") {
                 // Extract trust model from @trust("model")
-                if let Some(model) = attr.strip_prefix("@trust(\"").and_then(|s| s.strip_suffix("\")")) {
+                if let Some(model) = attr
+                    .strip_prefix("@trust(\"")
+                    .and_then(|s| s.strip_suffix("\")"))
+                {
                     trust_model = model.to_string();
                 }
             } else if attr == "@web" {
@@ -5513,6 +7723,4 @@ impl Default for Runtime {
 }
 
 // Use the proper RuntimeError variants
-impl RuntimeError {
-
-}
+impl RuntimeError {}

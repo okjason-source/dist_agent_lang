@@ -23,11 +23,11 @@ impl Lexer {
             position: 0,
         }
     }
-    
+
     pub fn tokenize(&mut self) -> Result<Vec<Token>, String> {
         let mut tokens = Vec::new();
         let words: Vec<&str> = self.input.split_whitespace().collect();
-        
+
         for word in words {
             match word {
                 "service" => tokens.push(Token::Keyword("service".to_string())),
@@ -55,7 +55,7 @@ impl Lexer {
                 _ => tokens.push(Token::Identifier(word.to_string())),
             }
         }
-        
+
         tokens.push(Token::EOF);
         Ok(tokens)
     }
@@ -96,10 +96,10 @@ impl Parser {
             position: 0,
         }
     }
-    
+
     pub fn parse(&mut self) -> Result<Vec<ServiceStatement>, String> {
         let mut services = Vec::new();
-        
+
         while self.position < self.tokens.len() {
             if let Some(Token::Keyword(keyword)) = self.tokens.get(self.position) {
                 if keyword == "service" {
@@ -112,14 +112,14 @@ impl Parser {
                 self.position += 1;
             }
         }
-        
+
         Ok(services)
     }
-    
+
     fn parse_service(&mut self) -> Result<ServiceStatement, String> {
         // Skip 'service' keyword
         self.position += 1;
-        
+
         // Parse service name
         let name = if let Some(Token::Identifier(name)) = self.tokens.get(self.position) {
             self.position += 1;
@@ -127,7 +127,7 @@ impl Parser {
         } else {
             return Err("Expected service name".to_string());
         };
-        
+
         // Parse attributes (simplified)
         let mut attributes = Vec::new();
         while self.position < self.tokens.len() {
@@ -142,7 +142,7 @@ impl Parser {
                 break;
             }
         }
-        
+
         // Expect opening brace
         if let Some(Token::Punctuation(punct)) = self.tokens.get(self.position) {
             if punct == "{" {
@@ -153,10 +153,10 @@ impl Parser {
         } else {
             return Err("Expected '{' after service name".to_string());
         }
-        
+
         let mut fields = Vec::new();
         let mut methods = Vec::new();
-        
+
         // Parse service body
         while self.position < self.tokens.len() {
             if let Some(Token::Punctuation(punct)) = self.tokens.get(self.position) {
@@ -165,7 +165,7 @@ impl Parser {
                     break;
                 }
             }
-            
+
             // Try to parse field or method
             if let Some(Token::Keyword(keyword)) = self.tokens.get(self.position) {
                 if keyword == "fn" {
@@ -179,7 +179,7 @@ impl Parser {
                 self.position += 1;
             }
         }
-        
+
         Ok(ServiceStatement {
             name,
             attributes,
@@ -187,7 +187,7 @@ impl Parser {
             methods,
         })
     }
-    
+
     fn parse_field(&mut self) -> Result<ServiceField, String> {
         // Parse field name
         let name = if let Some(Token::Identifier(name)) = self.tokens.get(self.position) {
@@ -196,7 +196,7 @@ impl Parser {
         } else {
             return Err("Expected field name".to_string());
         };
-        
+
         // Expect colon
         if let Some(Token::Punctuation(punct)) = self.tokens.get(self.position) {
             if punct == ":" {
@@ -207,7 +207,7 @@ impl Parser {
         } else {
             return Err("Expected ':' after field name".to_string());
         }
-        
+
         // Parse field type
         let field_type = if let Some(Token::Keyword(typ)) = self.tokens.get(self.position) {
             self.position += 1;
@@ -215,9 +215,10 @@ impl Parser {
         } else {
             return Err("Expected field type".to_string());
         };
-        
+
         // Parse initial value if present
-        let initial_value = if let Some(Token::Punctuation(punct)) = self.tokens.get(self.position) {
+        let initial_value = if let Some(Token::Punctuation(punct)) = self.tokens.get(self.position)
+        {
             if punct == "=" {
                 self.position += 1;
                 if let Some(Token::Literal(value)) = self.tokens.get(self.position) {
@@ -232,7 +233,7 @@ impl Parser {
         } else {
             None
         };
-        
+
         // Expect semicolon
         if let Some(Token::Punctuation(punct)) = self.tokens.get(self.position) {
             if punct == ";" {
@@ -243,18 +244,18 @@ impl Parser {
         } else {
             return Err("Expected ';' after field".to_string());
         }
-        
+
         Ok(ServiceField {
             name,
             field_type,
             initial_value,
         })
     }
-    
+
     fn parse_method(&mut self) -> Result<ServiceMethod, String> {
         // Skip 'fn' keyword
         self.position += 1;
-        
+
         // Parse method name
         let name = if let Some(Token::Identifier(name)) = self.tokens.get(self.position) {
             self.position += 1;
@@ -262,7 +263,7 @@ impl Parser {
         } else {
             return Err("Expected method name".to_string());
         };
-        
+
         // Expect opening parenthesis
         if let Some(Token::Punctuation(punct)) = self.tokens.get(self.position) {
             if punct == "(" {
@@ -273,7 +274,7 @@ impl Parser {
         } else {
             return Err("Expected '(' after method name".to_string());
         }
-        
+
         // Skip parameters for now (simplified)
         while self.position < self.tokens.len() {
             if let Some(Token::Punctuation(punct)) = self.tokens.get(self.position) {
@@ -284,7 +285,7 @@ impl Parser {
             }
             self.position += 1;
         }
-        
+
         // Parse return type if present
         let return_type = if let Some(Token::Punctuation(punct)) = self.tokens.get(self.position) {
             if punct == "->" {
@@ -301,7 +302,7 @@ impl Parser {
         } else {
             None
         };
-        
+
         // Skip method body for now (simplified)
         while self.position < self.tokens.len() {
             if let Some(Token::Punctuation(punct)) = self.tokens.get(self.position) {
@@ -312,7 +313,7 @@ impl Parser {
             }
             self.position += 1;
         }
-        
+
         Ok(ServiceMethod {
             name,
             return_type,
@@ -324,7 +325,7 @@ impl Parser {
 fn main() {
     println!("Simple Service Parsing Test");
     println!("===========================");
-    
+
     let test_code = r#"
         @trust("hybrid")
         service MyService {
@@ -336,17 +337,20 @@ fn main() {
             }
         }
     "#;
-    
+
     println!("Test Code:");
     println!("{}", test_code);
     println!();
-    
+
     // Tokenize
     println!("1. Tokenizing...");
     let mut lexer = Lexer::new(test_code);
     let tokens = match lexer.tokenize() {
         Ok(tokens) => {
-            println!("✅ Tokenization successful! Generated {} tokens", tokens.len());
+            println!(
+                "✅ Tokenization successful! Generated {} tokens",
+                tokens.len()
+            );
             println!("   Tokens: {:?}", tokens);
             tokens
         }
@@ -355,7 +359,7 @@ fn main() {
             return;
         }
     };
-    
+
     // Parse
     println!("\n2. Parsing...");
     let mut parser = Parser::new(tokens);
@@ -369,7 +373,7 @@ fn main() {
             return;
         }
     };
-    
+
     // Print service details
     println!("\n3. Service Details:");
     for service in &services {
@@ -393,6 +397,6 @@ fn main() {
             }
         }
     }
-    
+
     println!("\n🎉 Service parsing test completed successfully!");
 }

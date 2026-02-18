@@ -2,11 +2,11 @@
 // Provides high-performance direct function calls from Python
 
 #[cfg(feature = "python-ffi")]
-use pyo3::prelude::*;
+use crate::runtime::engine::Runtime;
 #[cfg(feature = "python-ffi")]
 use crate::runtime::values::Value;
 #[cfg(feature = "python-ffi")]
-use crate::runtime::engine::Runtime;
+use pyo3::prelude::*;
 
 /// Python FFI module for dist_agent_lang
 #[cfg(feature = "python-ffi")]
@@ -140,27 +140,25 @@ fn python_to_dal_value(py_value: PyValue) -> Result<Value, String> {
 
 #[cfg(feature = "python-ffi")]
 fn dal_to_python_value(value: Value) -> PyValue {
-    Python::with_gil(|py| {
-        match value {
-            Value::Int(i) => i.into_py(py),
-            Value::Float(f) => f.into_py(py),
-            Value::String(s) => s.into_py(py),
-            Value::Bool(b) => b.into_py(py),
-            Value::Null => py.None(),
-            Value::Array(arr) => {
-                let py_list = pyo3::types::PyList::empty(py);
-                for v in arr {
-                    py_list.append(dal_to_python_value(v)).unwrap();
-                }
-                py_list.into()
+    Python::with_gil(|py| match value {
+        Value::Int(i) => i.into_py(py),
+        Value::Float(f) => f.into_py(py),
+        Value::String(s) => s.into_py(py),
+        Value::Bool(b) => b.into_py(py),
+        Value::Null => py.None(),
+        Value::Array(arr) => {
+            let py_list = pyo3::types::PyList::empty(py);
+            for v in arr {
+                py_list.append(dal_to_python_value(v)).unwrap();
             }
-            Value::Map(map) => {
-                let py_dict = pyo3::types::PyDict::new(py);
-                for (k, v) in map {
-                    py_dict.set_item(k, dal_to_python_value(v)).unwrap();
-                }
-                py_dict.into()
+            py_list.into()
+        }
+        Value::Map(map) => {
+            let py_dict = pyo3::types::PyDict::new(py);
+            for (k, v) in map {
+                py_dict.set_item(k, dal_to_python_value(v)).unwrap();
             }
+            py_dict.into()
         }
     })
 }

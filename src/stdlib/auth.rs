@@ -1,14 +1,13 @@
+use crate::stdlib::cross_chain_security::CrossChainSecurityManager;
 /// Auth namespace for authentication and authorization
 /// Provides session management and role-based access control
 ///
 /// This module delegates to secure_auth (SecureUserStore) for production:
 /// - session(), validate_credentials(), validate_token() use the store when initialized.
 /// - Roles can be loaded from env (AUTH_ROLES_JSON or AUTH_ROLE_*); bridge validators from AUTH_BRIDGE_VALIDATORS.
-
-use crate::stdlib::secure_auth::{SecureUserStore, SecureSession, RateLimiter};
-use crate::stdlib::cross_chain_security::CrossChainSecurityManager;
-use std::sync::{Mutex, OnceLock};
+use crate::stdlib::secure_auth::{RateLimiter, SecureSession, SecureUserStore};
 use std::env;
+use std::sync::{Mutex, OnceLock};
 
 // Global secure user store
 static USER_STORE: Mutex<Option<SecureUserStore>> = Mutex::new(None);
@@ -18,8 +17,14 @@ static USER_STORE: Mutex<Option<SecureUserStore>> = Mutex::new(None);
 fn login_rate_limiter() -> std::sync::MutexGuard<'static, RateLimiter> {
     static REG: OnceLock<Mutex<RateLimiter>> = OnceLock::new();
     REG.get_or_init(|| {
-        let max = env::var("AUTH_RATE_LIMIT_REQUESTS").ok().and_then(|s| s.parse().ok()).unwrap_or(10);
-        let window = env::var("AUTH_RATE_LIMIT_WINDOW_SEC").ok().and_then(|s| s.parse().ok()).unwrap_or(60);
+        let max = env::var("AUTH_RATE_LIMIT_REQUESTS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(10);
+        let window = env::var("AUTH_RATE_LIMIT_WINDOW_SEC")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(60);
         Mutex::new(RateLimiter::new(max, window))
     });
     REG.get().unwrap().lock().unwrap()
@@ -53,7 +58,7 @@ pub fn init_auth_system() {
     if store.is_none() {
         *store = Some(SecureUserStore::new());
     }
-    
+
     // Initialize cross-chain security manager
     let mut cc_manager = CROSS_CHAIN_MANAGER.lock().unwrap();
     if cc_manager.is_none() {
@@ -62,7 +67,12 @@ pub fn init_auth_system() {
 }
 
 /// Create a new user account with secure password hashing
-pub fn create_user(username: String, password: String, email: String, roles: Vec<String>) -> Result<String, String> {
+pub fn create_user(
+    username: String,
+    password: String,
+    email: String,
+    roles: Vec<String>,
+) -> Result<String, String> {
     init_auth_system();
     let mut store = USER_STORE.lock().unwrap();
     if let Some(ref mut user_store) = *store {
@@ -81,15 +91,37 @@ pub fn authenticate(username: String, password: String) -> Result<Session, Strin
         match user_store.authenticate(username.clone(), password, None, None) {
             Ok(secure_session) => {
                 // Phase 2: Audit log successful authentication
-                crate::stdlib::log::audit("authentication_success", {
-                    let mut data = std::collections::HashMap::new();
-                    data.insert("username".to_string(), crate::runtime::values::Value::String(username.clone()));
-                    data.insert("user_id".to_string(), crate::runtime::values::Value::String(secure_session.user_id.clone()));
-                    data.insert("session_id".to_string(), crate::runtime::values::Value::String(secure_session.id.clone()));
-                    data.insert("roles".to_string(), crate::runtime::values::Value::List(secure_session.roles.iter().map(|r| crate::runtime::values::Value::String(r.clone())).collect()));
-                    data
-                }, Some("auth"));
-                
+                crate::stdlib::log::audit(
+                    "authentication_success",
+                    {
+                        let mut data = std::collections::HashMap::new();
+                        data.insert(
+                            "username".to_string(),
+                            crate::runtime::values::Value::String(username.clone()),
+                        );
+                        data.insert(
+                            "user_id".to_string(),
+                            crate::runtime::values::Value::String(secure_session.user_id.clone()),
+                        );
+                        data.insert(
+                            "session_id".to_string(),
+                            crate::runtime::values::Value::String(secure_session.id.clone()),
+                        );
+                        data.insert(
+                            "roles".to_string(),
+                            crate::runtime::values::Value::List(
+                                secure_session
+                                    .roles
+                                    .iter()
+                                    .map(|r| crate::runtime::values::Value::String(r.clone()))
+                                    .collect(),
+                            ),
+                        );
+                        data
+                    },
+                    Some("auth"),
+                );
+
                 // Convert SecureSession to legacy Session format for compatibility
                 Ok(Session {
                     id: secure_session.id,
@@ -102,24 +134,44 @@ pub fn authenticate(username: String, password: String) -> Result<Session, Strin
             }
             Err(e) => {
                 // Phase 2: Audit log failed authentication
-                crate::stdlib::log::audit("authentication_failure", {
-                    let mut data = std::collections::HashMap::new();
-                    data.insert("username".to_string(), crate::runtime::values::Value::String(username.clone()));
-                    data.insert("reason".to_string(), crate::runtime::values::Value::String(e.clone()));
-                    data
-                }, Some("auth"));
+                crate::stdlib::log::audit(
+                    "authentication_failure",
+                    {
+                        let mut data = std::collections::HashMap::new();
+                        data.insert(
+                            "username".to_string(),
+                            crate::runtime::values::Value::String(username.clone()),
+                        );
+                        data.insert(
+                            "reason".to_string(),
+                            crate::runtime::values::Value::String(e.clone()),
+                        );
+                        data
+                    },
+                    Some("auth"),
+                );
                 Err(e)
             }
         }
     } else {
         let err = "Authentication system not initialized".to_string();
         // Phase 2: Audit log initialization failure
-        crate::stdlib::log::audit("authentication_error", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("username".to_string(), crate::runtime::values::Value::String(username));
-            data.insert("reason".to_string(), crate::runtime::values::Value::String(err.clone()));
-            data
-        }, Some("auth"));
+        crate::stdlib::log::audit(
+            "authentication_error",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert(
+                    "username".to_string(),
+                    crate::runtime::values::Value::String(username),
+                );
+                data.insert(
+                    "reason".to_string(),
+                    crate::runtime::values::Value::String(err.clone()),
+                );
+                data
+            },
+            Some("auth"),
+        );
         Err(err)
     }
 }
@@ -137,7 +189,9 @@ pub fn session(user_id: String, roles: Vec<String>) -> Session {
         }
     }
     // Fallback: build session locally (e.g. store not populated or user not in store)
-    let session_id = format!("sess_{}_{}", user_id,
+    let session_id = format!(
+        "sess_{}_{}",
+        user_id,
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
@@ -221,7 +275,7 @@ struct AuthJwtClaims {
 }
 
 fn validate_jwt_token(token: &str, secret: &str) -> Option<Session> {
-    use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
+    use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
     let key = DecodingKey::from_secret(secret.as_bytes());
     let mut validation = Validation::new(Algorithm::HS256);
     validation.validate_exp = true;
@@ -258,13 +312,13 @@ fn validate_jwt_token(token: &str, secret: &str) -> Option<Session> {
 }
 
 /// Check if a session is valid
-/// 
+///
 /// # Arguments
 /// * `session` - The session to validate
-/// 
+///
 /// # Returns
 /// * `bool` - True if session is valid, false otherwise
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::auth;
@@ -276,19 +330,19 @@ pub fn is_valid_session(session: &Session) -> bool {
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs() as i64;
-    
+
     now < session.expires_at
 }
 
 /// Check if a session has a specific permission
-/// 
+///
 /// # Arguments
 /// * `session` - The session to check
 /// * `permission` - The permission to check for
-/// 
+///
 /// # Returns
 /// * `bool` - True if session has permission, false otherwise
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::auth;
@@ -299,19 +353,19 @@ pub fn has_permission(session: &Session, permission: &str) -> bool {
     if !is_valid_session(session) {
         return false;
     }
-    
+
     session.permissions.contains(&permission.to_string())
 }
 
 /// Check if a session has a specific role
-/// 
+///
 /// # Arguments
 /// * `session` - The session to check
 /// * `role` - The role to check for
-/// 
+///
 /// # Returns
 /// * `bool` - True if session has role, false otherwise
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::auth;
@@ -322,20 +376,20 @@ pub fn has_role(session: &Session, role: &str) -> bool {
     if !is_valid_session(session) {
         return false;
     }
-    
+
     session.roles.contains(&role.to_string())
 }
 
 /// Create a new role
-/// 
+///
 /// # Arguments
 /// * `name` - The name of the role
 /// * `permissions` - List of permissions for the role
 /// * `description` - Description of the role
-/// 
+///
 /// # Returns
 /// * `Role` - The created role object
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::auth;
@@ -357,11 +411,20 @@ pub fn get_role(role_name: &str) -> Option<Role> {
     // Env: single role AUTH_ROLE_<name>_PERMISSIONS and AUTH_ROLE_<name>_DESCRIPTION
     let env_key = role_name.to_uppercase().replace('-', "_");
     if let Ok(perms) = env::var(format!("AUTH_ROLE_{}_PERMISSIONS", env_key)) {
-        let permissions: Vec<String> = perms.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
-        let description = env::var(format!("AUTH_ROLE_{}_DESCRIPTION", env_key)).unwrap_or_else(|_| format!("Role {}", role_name));
+        let permissions: Vec<String> = perms
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+        let description = env::var(format!("AUTH_ROLE_{}_DESCRIPTION", env_key))
+            .unwrap_or_else(|_| format!("Role {}", role_name));
         return Some(Role {
             name: role_name.to_string(),
-            permissions: if permissions.is_empty() { vec!["read".to_string()] } else { permissions },
+            permissions: if permissions.is_empty() {
+                vec!["read".to_string()]
+            } else {
+                permissions
+            },
             description,
         });
     }
@@ -369,13 +432,28 @@ pub fn get_role(role_name: &str) -> Option<Role> {
     if let Ok(json) = env::var("AUTH_ROLES_JSON") {
         if let Ok(arr) = serde_json::from_str::<Vec<serde_json::Value>>(&json) {
             for r in arr {
-                if let (Some(n), Some(p)) = (r.get("name").and_then(|v| v.as_str()), r.get("permissions")) {
+                if let (Some(n), Some(p)) =
+                    (r.get("name").and_then(|v| v.as_str()), r.get("permissions"))
+                {
                     if n == role_name {
-                        let permissions: Vec<String> = p.as_array()
-                            .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                        let permissions: Vec<String> = p
+                            .as_array()
+                            .map(|a| {
+                                a.iter()
+                                    .filter_map(|v| v.as_str().map(String::from))
+                                    .collect()
+                            })
                             .unwrap_or_default();
-                        let description = r.get("description").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                        return Some(Role { name: role_name.to_string(), permissions, description });
+                        let description = r
+                            .get("description")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string();
+                        return Some(Role {
+                            name: role_name.to_string(),
+                            permissions,
+                            description,
+                        });
                     }
                 }
             }
@@ -385,12 +463,21 @@ pub fn get_role(role_name: &str) -> Option<Role> {
     match role_name {
         "admin" => Some(Role {
             name: "admin".to_string(),
-            permissions: vec!["read".to_string(), "write".to_string(), "delete".to_string(), "admin".to_string()],
+            permissions: vec![
+                "read".to_string(),
+                "write".to_string(),
+                "delete".to_string(),
+                "admin".to_string(),
+            ],
             description: "Full system access".to_string(),
         }),
         "moderator" => Some(Role {
             name: "moderator".to_string(),
-            permissions: vec!["read".to_string(), "write".to_string(), "moderate".to_string()],
+            permissions: vec![
+                "read".to_string(),
+                "write".to_string(),
+                "moderate".to_string(),
+            ],
             description: "Can moderate content".to_string(),
         }),
         "user" => Some(Role {
@@ -430,19 +517,22 @@ pub fn validate_bridge_operation(
     source_chain: String,
     target_chain: String,
     amount: u64,
-    user_session: &Session
+    user_session: &Session,
 ) -> Result<String, String> {
     use crate::stdlib::cross_chain_security::{CrossChainOperation, CrossChainOperationType};
-    
+
     init_auth_system();
     let mut cc_manager = CROSS_CHAIN_MANAGER.lock().unwrap();
-    
+
     if let Some(ref mut manager) = *cc_manager {
         // Check if user has cross-chain permissions
-        if !user_session.permissions.contains(&"cross_chain_transfer".to_string()) {
+        if !user_session
+            .permissions
+            .contains(&"cross_chain_transfer".to_string())
+        {
             return Err("User lacks cross-chain transfer permissions".to_string());
         }
-        
+
         // Parse chain IDs (simple parsing for demo)
         let source_chain_id = source_chain.parse::<i64>().unwrap_or(1);
         let target_chain_id = target_chain.parse::<i64>().unwrap_or(2);
@@ -450,7 +540,7 @@ pub fn validate_bridge_operation(
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        
+
         // Create a cross-chain operation
         let operation = CrossChainOperation {
             operation_id: format!("bridge_{}_{}", source_chain, target_chain),
@@ -467,11 +557,11 @@ pub fn validate_bridge_operation(
             created_at: now,
             timeout: now + 3600, // 1 hour timeout
         };
-        
+
         // Validate the cross-chain operation
         match manager.validate_cross_chain_operation(operation) {
             Ok(operation_id) => Ok(operation_id),
-            Err(e) => Err(format!("Bridge validation failed: {:?}", e))
+            Err(e) => Err(format!("Bridge validation failed: {:?}", e)),
         }
     } else {
         Err("Cross-chain manager not initialized".to_string())
@@ -483,31 +573,36 @@ pub fn register_bridge(
     source_chain_id: i64,
     target_chain_id: i64,
     bridge_contract: String,
-    admin_session: &Session
+    admin_session: &Session,
 ) -> Result<String, String> {
     init_auth_system();
     let mut cc_manager = CROSS_CHAIN_MANAGER.lock().unwrap();
-    
+
     if let Some(ref mut manager) = *cc_manager {
         // Check admin permissions
         if !admin_session.permissions.contains(&"admin".to_string()) {
             return Err("Admin permissions required for bridge registration".to_string());
         }
-        
+
         let validators: Vec<String> = env::var("AUTH_BRIDGE_VALIDATORS")
-            .map(|s| s.split(',').map(|x| x.trim().to_string()).filter(|x| !x.is_empty()).collect())
+            .map(|s| {
+                s.split(',')
+                    .map(|x| x.trim().to_string())
+                    .filter(|x| !x.is_empty())
+                    .collect()
+            })
             .unwrap_or_default();
         match manager.create_bridge(
             source_chain_id,
             target_chain_id,
             bridge_contract,
             validators,
-            2,      // min_signatures
+            2,       // min_signatures
             1000000, // max_amount
             10000,   // security_deposit
         ) {
             Ok(bridge_id) => Ok(bridge_id),
-            Err(e) => Err(format!("Bridge registration failed: {:?}", e))
+            Err(e) => Err(format!("Bridge registration failed: {:?}", e)),
         }
     } else {
         Err("Cross-chain manager not initialized".to_string())

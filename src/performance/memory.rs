@@ -1,7 +1,7 @@
+use std::any::Any;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use std::any::Any;
 
 #[derive(Debug, Clone)]
 pub struct MemoryStats {
@@ -120,33 +120,42 @@ impl MemoryManager {
     pub fn get_memory_report(&self) -> String {
         let stats = self.get_stats();
         let mut report = String::new();
-        
+
         report.push_str("Memory Management Report\n");
         report.push_str("======================\n\n");
-        report.push_str(&format!("Total Allocated: {} bytes\n", stats.total_allocated));
+        report.push_str(&format!(
+            "Total Allocated: {} bytes\n",
+            stats.total_allocated
+        ));
         report.push_str(&format!("Total Freed: {} bytes\n", stats.total_freed));
         report.push_str(&format!("Current Usage: {} bytes\n", stats.current_usage));
         report.push_str(&format!("Peak Usage: {} bytes\n", stats.peak_usage));
         report.push_str(&format!("Allocation Count: {}\n", stats.allocation_count));
-        report.push_str(&format!("Deallocation Count: {}\n", stats.deallocation_count));
+        report.push_str(&format!(
+            "Deallocation Count: {}\n",
+            stats.deallocation_count
+        ));
         report.push_str(&format!("Fragmentation: {:.2}%\n", stats.fragmentation));
-        
+
         // Type breakdown
         if let Ok(blocks) = self.blocks.lock() {
             let mut type_stats: HashMap<String, (usize, usize)> = HashMap::new();
-            
+
             for block in blocks.values() {
                 let entry = type_stats.entry(block.type_name.clone()).or_insert((0, 0));
                 entry.0 += block.size;
                 entry.1 += 1;
             }
-            
+
             report.push_str("\nType Breakdown:\n");
             for (type_name, (total_size, count)) in type_stats {
-                report.push_str(&format!("  {}: {} bytes ({} instances)\n", type_name, total_size, count));
+                report.push_str(&format!(
+                    "  {}: {} bytes ({} instances)\n",
+                    type_name, total_size, count
+                ));
             }
         }
-        
+
         report
     }
 
@@ -155,11 +164,11 @@ impl MemoryManager {
         T: Clone + Default + Send + Sync + 'static,
     {
         let pool = ObjectPool::new::<T>(name, initial_capacity);
-        
+
         if let Ok(mut pools) = self.object_pools.lock() {
             pools.insert(name.to_string(), pool.clone());
         }
-        
+
         pool
     }
 
@@ -281,7 +290,7 @@ pub struct PoolStats {
     pub reuse_rate: f64,
 }
 
-pub struct PooledObject<T> 
+pub struct PooledObject<T>
 where
     T: Clone + Send + Sync + 'static,
 {
@@ -298,7 +307,7 @@ impl<T: Clone + Send + Sync + 'static> PooledObject<T> {
         &mut self.value
     }
 
-    pub fn into_inner(self) -> T 
+    pub fn into_inner(self) -> T
     where
         T: Clone,
     {
@@ -364,14 +373,14 @@ impl GarbageCollector {
     pub fn collect(&self) -> CollectionResult {
         let start_time = Instant::now();
         let stats_before = self.memory_manager.get_stats();
-        
+
         // Simple mark-and-sweep implementation
         let mut collected_blocks = 0;
         let mut freed_memory = 0;
 
         if let Ok(mut blocks) = self.memory_manager.blocks.lock() {
             let mut to_remove = Vec::new();
-            
+
             for (id, block) in blocks.iter() {
                 if block.freed_at.is_some() {
                     to_remove.push(*id);
@@ -437,8 +446,8 @@ impl MemoryOptimizer {
         optimized
     }
 
-    pub fn estimate_memory_usage<T>(objects: &[T]) -> usize 
-    where 
+    pub fn estimate_memory_usage<T>(objects: &[T]) -> usize
+    where
         T: Sized,
     {
         std::mem::size_of_val(objects)
@@ -451,7 +460,7 @@ impl MemoryOptimizer {
 
         let avg_usage = usage_pattern.iter().sum::<usize>() / usage_pattern.len();
         let max_usage = usage_pattern.iter().max().unwrap_or(&avg_usage);
-        
+
         // Suggest pool size based on usage pattern
         if *max_usage > avg_usage * 2 {
             avg_usage * 2 // Conservative for spiky usage

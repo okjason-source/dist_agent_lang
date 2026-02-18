@@ -4,11 +4,11 @@
 //
 // SEMANTIC VALIDATION to catch:
 // - Invalid trust models
-// - Invalid blockchain identifiers  
+// - Invalid blockchain identifiers
 // - Attribute compatibility issues
 // - Type mismatches
 
-use dist_agent_lang::{parse_source, execute_source};
+use dist_agent_lang::{execute_source, parse_source};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -58,12 +58,12 @@ fn should_skip(path: &Path) -> bool {
 fn get_example_files() -> Vec<PathBuf> {
     let examples_dir = Path::new("examples");
     let mut files = Vec::new();
-    
+
     if !examples_dir.exists() {
         eprintln!("Warning: examples directory not found");
         return files;
     }
-    
+
     if let Ok(entries) = fs::read_dir(examples_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
@@ -72,7 +72,7 @@ fn get_example_files() -> Vec<PathBuf> {
             }
         }
     }
-    
+
     files.sort();
     files
 }
@@ -105,32 +105,33 @@ fn test_example_parses_with_semantics(path: &Path) {
     let ast = parse_source(&source).unwrap_or_else(|e| {
         panic!("Failed to parse {:?}: {}", path, e);
     });
-    
+
     // Validate semantic correctness
     validate_ast_semantics(&ast, path);
 }
 
 // Validate the AST for semantic correctness
 fn validate_ast_semantics(ast: &dist_agent_lang::parser::ast::Program, path: &Path) {
-    use dist_agent_lang::parser::ast::{Statement, Expression};
     use dist_agent_lang::lexer::tokens::Literal;
-    
+    use dist_agent_lang::parser::ast::{Expression, Statement};
+
     for statement in &ast.statements {
         match statement {
             Statement::Service(service) => {
                 // Collect attribute names
-                let attr_names: Vec<&str> = service.attributes.iter()
-                    .map(|a| a.name.as_str())
-                    .collect();
-                
+                let attr_names: Vec<&str> =
+                    service.attributes.iter().map(|a| a.name.as_str()).collect();
+
                 // Validate attribute compatibility rules
                 validate_attribute_compatibility(&attr_names, path);
-                
+
                 // Validate individual attribute values
                 for attr in &service.attributes {
                     match attr.name.as_str() {
                         "trust" => {
-                            if let Some(Expression::Literal(Literal::String(model))) = attr.parameters.first() {
+                            if let Some(Expression::Literal(Literal::String(model))) =
+                                attr.parameters.first()
+                            {
                                 validate_trust_model(model, path);
                             }
                         }
@@ -150,7 +151,9 @@ fn validate_ast_semantics(ast: &dist_agent_lang::parser::ast::Program, path: &Pa
                 for attr in &func.attributes {
                     match attr.name.as_str() {
                         "trust" => {
-                            if let Some(Expression::Literal(Literal::String(model))) = attr.parameters.first() {
+                            if let Some(Expression::Literal(Literal::String(model))) =
+                                attr.parameters.first()
+                            {
                                 validate_trust_model(model, path);
                             }
                         }
@@ -184,8 +187,16 @@ fn validate_trust_model(model: &str, path: &Path) {
 // Validate blockchain identifiers
 fn validate_chain(chain: &str, path: &Path) {
     let valid_chains = [
-        "ethereum", "polygon", "bsc", "solana", "bitcoin",
-        "avalanche", "arbitrum", "optimism", "base", "near",
+        "ethereum",
+        "polygon",
+        "bsc",
+        "solana",
+        "bitcoin",
+        "avalanche",
+        "arbitrum",
+        "optimism",
+        "base",
+        "near",
         "eth", // Common shorthand
     ];
     if !valid_chains.contains(&chain.to_lowercase().as_str()) {
@@ -202,7 +213,7 @@ fn validate_attribute_compatibility(attrs: &[&str], path: &Path) {
     let has_chain = attrs.contains(&"chain");
     let has_secure = attrs.contains(&"secure");
     let has_public = attrs.contains(&"public");
-    
+
     // Rule: @trust requires @chain
     if has_trust && !has_chain {
         panic!(
@@ -210,7 +221,7 @@ fn validate_attribute_compatibility(attrs: &[&str], path: &Path) {
             path
         );
     }
-    
+
     // Rule: @secure and @public are mutually exclusive
     if has_secure && has_public {
         panic!(
@@ -224,12 +235,12 @@ fn validate_attribute_compatibility(attrs: &[&str], path: &Path) {
 #[allow(dead_code)]
 fn test_example_executes(path: &Path) -> Result<(), String> {
     let source = read_file(path);
-    
+
     // Skip execution if file requires external dependencies
     if requires_external_dependencies(&source) {
         return Err("Requires external dependencies".to_string());
     }
-    
+
     // Try to execute with timeout protection
     execute_source(&source).map_err(|e| format!("Execution failed: {}", e))?;
     Ok(())
@@ -241,27 +252,27 @@ fn requires_external_dependencies(source: &str) -> bool {
     if source.contains("chain::") && !source.contains("// MOCK") {
         return true;
     }
-    
+
     // Check for AI operations
     if source.contains("ai::") && !source.contains("// MOCK") {
         return true;
     }
-    
+
     // Check for oracle operations
     if source.contains("oracle::") && !source.contains("// MOCK") {
         return true;
     }
-    
+
     // Check for HTTP server operations
     if source.contains("web::create_server") || source.contains("web::listen") {
         return true;
     }
-    
+
     // Check for database operations
     if source.contains("db::") && !source.contains("// MOCK") {
         return true;
     }
-    
+
     false
 }
 
@@ -424,18 +435,18 @@ fn test_all_examples_parse() {
         .into_iter()
         .filter(|p| !should_skip(p))
         .collect();
-    
+
     assert!(!example_files.is_empty(), "No example files found");
-    
+
     let mut failed = Vec::new();
-    
+
     for path in &example_files {
         let source = read_file(path);
         if let Err(e) = parse_source(&source) {
             failed.push((path.clone(), format!("{}", e)));
         }
     }
-    
+
     if !failed.is_empty() {
         eprintln!("\n❌ Failed to parse {} example(s):", failed.len());
         for (path, error) in &failed {
@@ -443,8 +454,11 @@ fn test_all_examples_parse() {
         }
         panic!("Some examples failed to parse");
     }
-    
-    println!("\n✅ All {} examples parsed successfully!", example_files.len());
+
+    println!(
+        "\n✅ All {} examples parsed successfully!",
+        example_files.len()
+    );
 }
 
 /// Test that all example files can be parsed AND semantically validated (skipped examples excluded)
@@ -459,13 +473,13 @@ fn test_all_examples_with_semantic_validation() {
         .filter(|p| !should_skip(p))
         .collect();
     assert!(!example_files.is_empty(), "No example files found");
-    
+
     let mut failed_parse = Vec::new();
     let mut failed_semantic = Vec::new();
-    
+
     for path in &example_files {
         let source = read_file(path);
-        
+
         // Parse test
         match parse_source(&source) {
             Ok(ast) => {
@@ -488,9 +502,9 @@ fn test_all_examples_with_semantic_validation() {
             }
         }
     }
-    
+
     let mut had_errors = false;
-    
+
     if !failed_parse.is_empty() {
         eprintln!("\n❌ Failed to parse {} example(s):", failed_parse.len());
         for (path, error) in &failed_parse {
@@ -498,44 +512,50 @@ fn test_all_examples_with_semantic_validation() {
         }
         had_errors = true;
     }
-    
+
     if !failed_semantic.is_empty() {
-        eprintln!("\n❌ Semantic validation failed for {} example(s):", failed_semantic.len());
+        eprintln!(
+            "\n❌ Semantic validation failed for {} example(s):",
+            failed_semantic.len()
+        );
         for (path, error) in &failed_semantic {
             eprintln!("  - {:?}: {}", path, error);
         }
         had_errors = true;
     }
-    
+
     if had_errors {
         panic!("Some examples failed parse or semantic validation");
     }
-    
-    println!("\n✅ All {} examples passed syntax AND semantic validation!", example_files.len());
+
+    println!(
+        "\n✅ All {} examples passed syntax AND semantic validation!",
+        example_files.len()
+    );
 }
 
 /// Test that examples without external dependencies can execute
 #[test]
 fn test_simple_examples_execute() {
     let example_files = get_example_files();
-    
+
     let mut executed = 0;
     let mut skipped = 0;
     let mut failed = Vec::new();
-    
+
     for path in &example_files {
         if should_skip(path) {
             skipped += 1;
             continue;
         }
         let source = read_file(path);
-        
+
         // Skip files that require external dependencies
         if requires_external_dependencies(&source) {
             skipped += 1;
             continue;
         }
-        
+
         // Try to execute
         match execute_source(&source) {
             Ok(_) => {
@@ -546,12 +566,12 @@ fn test_simple_examples_execute() {
             }
         }
     }
-    
+
     eprintln!("\n📊 Execution Summary:");
     eprintln!("  ✅ Executed: {}", executed);
     eprintln!("  ⏭️  Skipped (external deps): {}", skipped);
     eprintln!("  ❌ Failed: {}", failed.len());
-    
+
     if !failed.is_empty() {
         eprintln!("\n❌ Failed to execute {} example(s):", failed.len());
         for (path, error) in &failed {
@@ -560,7 +580,7 @@ fn test_simple_examples_execute() {
         // Don't panic - some failures might be expected
         // Just report them for investigation
     }
-    
+
     // At least some examples should execute
     assert!(executed > 0, "No examples executed successfully");
 }
@@ -569,19 +589,19 @@ fn test_simple_examples_execute() {
 #[test]
 fn test_examples_have_valid_syntax() {
     let example_files = get_example_files();
-    
+
     for path in &example_files {
         if should_skip(path) {
             continue;
         }
         let source = read_file(path);
-        
+
         // Basic syntax checks
         assert!(!source.is_empty(), "Example file {:?} is empty", path);
-        
+
         // Check for common syntax issues
         // (Add more checks as needed)
-        
+
         // Ensure file ends with newline (optional but good practice)
         // This is just a warning, not a failure
     }
@@ -597,7 +617,7 @@ fn test_basic_examples_parse() {
         "examples/hello_world_demo.dal",
         "examples/general_purpose_demo.dal",
     ];
-    
+
     for example in basic_examples {
         let path = Path::new(example);
         if path.exists() {
@@ -613,7 +633,7 @@ fn test_blockchain_examples_parse() {
         "examples/smart_contract.dal",
         "examples/cross_chain_patterns.dal",
     ];
-    
+
     for example in blockchain_examples {
         let path = Path::new(example);
         if path.exists() {
@@ -629,7 +649,7 @@ fn test_ai_examples_parse() {
         "examples/llm_integration_examples.dal",
         "examples/llm_motivations_demo.dal",
     ];
-    
+
     for example in ai_examples {
         let path = Path::new(example);
         if path.exists() {
@@ -646,7 +666,7 @@ fn test_web_examples_parse() {
         "examples/real_time_backend_example.dal",
         "examples/practical_backend_example.dal",
     ];
-    
+
     for example in web_examples {
         let path = Path::new(example);
         if path.exists() {

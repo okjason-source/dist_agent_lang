@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::runtime::values::Value;
+use std::collections::HashMap;
 
 // Enhanced Database & Storage Framework - Phase 3
 // Comprehensive data persistence and storage capabilities including:
@@ -220,13 +220,23 @@ pub struct DatabaseMetrics {
 
 // Public database functions
 pub fn connect(connection_string: String) -> Result<Database, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("connection_string".to_string(), Value::String(connection_string.clone()));
-        data.insert("message".to_string(), Value::String(format!("Connecting to database: {}", connection_string)));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "connection_string".to_string(),
+                Value::String(connection_string.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String(format!("Connecting to database: {}", connection_string)),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     // Determine connection type from connection string
     let connection_type = if connection_string.starts_with("postgresql://") {
         "postgresql".to_string()
@@ -237,7 +247,7 @@ pub fn connect(connection_string: String) -> Result<Database, String> {
     } else {
         "unknown".to_string()
     };
-    
+
     Ok(Database {
         connection_string,
         connection_type,
@@ -246,20 +256,27 @@ pub fn connect(connection_string: String) -> Result<Database, String> {
 }
 
 pub fn query(db: &Database, sql: String, _params: Vec<Value>) -> Result<QueryResult, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("sql".to_string(), Value::String(sql.clone()));
-        data.insert("message".to_string(), Value::String(format!("Executing query: {}", sql)));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("sql".to_string(), Value::String(sql.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String(format!("Executing query: {}", sql)),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
-    
+
     // Simulated query execution
     let mut rows = Vec::new();
-    
+
     // Simulate some basic query results
     if sql.to_lowercase().contains("select") {
         if sql.to_lowercase().contains("users") {
@@ -267,7 +284,10 @@ pub fn query(db: &Database, sql: String, _params: Vec<Value>) -> Result<QueryRes
                 let mut row = HashMap::new();
                 row.insert("id".to_string(), Value::Int(1));
                 row.insert("name".to_string(), Value::String("John Doe".to_string()));
-                row.insert("email".to_string(), Value::String("john@example.com".to_string()));
+                row.insert(
+                    "email".to_string(),
+                    Value::String("john@example.com".to_string()),
+                );
                 row
             });
         } else if sql.to_lowercase().contains("products") {
@@ -280,12 +300,15 @@ pub fn query(db: &Database, sql: String, _params: Vec<Value>) -> Result<QueryRes
             });
         }
     }
-    
+
     let row_count = rows.len() as i64;
     Ok(QueryResult {
         rows,
         row_count,
-        affected_rows: if sql.to_lowercase().contains("insert") || sql.to_lowercase().contains("update") || sql.to_lowercase().contains("delete") {
+        affected_rows: if sql.to_lowercase().contains("insert")
+            || sql.to_lowercase().contains("update")
+            || sql.to_lowercase().contains("delete")
+        {
             1
         } else {
             0
@@ -294,17 +317,30 @@ pub fn query(db: &Database, sql: String, _params: Vec<Value>) -> Result<QueryRes
 }
 
 pub fn transaction(db: &Database, operations: Vec<String>) -> Result<Transaction, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("operations_count".to_string(), Value::Int(operations.len() as i64));
-        data.insert("message".to_string(), Value::String(format!("Starting transaction with {} operations", operations.len())));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "operations_count".to_string(),
+                Value::Int(operations.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String(format!(
+                    "Starting transaction with {} operations",
+                    operations.len()
+                )),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
-    
+
     Ok(Transaction {
         id: format!("txn_{}", rand::random::<u64>()),
         operations,
@@ -313,81 +349,126 @@ pub fn transaction(db: &Database, operations: Vec<String>) -> Result<Transaction
 }
 
 pub fn commit_transaction(transaction: &mut Transaction) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("transaction_id".to_string(), Value::String(transaction.id.clone()));
-        data.insert("message".to_string(), Value::String(format!("Committing transaction: {}", transaction.id)));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "transaction_id".to_string(),
+                Value::String(transaction.id.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String(format!("Committing transaction: {}", transaction.id)),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !transaction.is_active {
         return Err("Transaction is not active".to_string());
     }
-    
+
     transaction.is_active = false;
     Ok(true)
 }
 
 pub fn rollback_transaction(transaction: &mut Transaction) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("transaction_id".to_string(), Value::String(transaction.id.clone()));
-        data.insert("message".to_string(), Value::String(format!("Rolling back transaction: {}", transaction.id)));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "transaction_id".to_string(),
+                Value::String(transaction.id.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String(format!("Rolling back transaction: {}", transaction.id)),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !transaction.is_active {
         return Err("Transaction is not active".to_string());
     }
-    
+
     transaction.is_active = false;
     Ok(true)
 }
 
-pub fn create_table(db: &Database, table_name: String, _schema: TableSchema) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("table_name".to_string(), Value::String(table_name.clone()));
-        data.insert("message".to_string(), Value::String(format!("Creating table: {}", table_name)));
-        data
-    }, Some("database"));
-    
+pub fn create_table(
+    db: &Database,
+    table_name: String,
+    _schema: TableSchema,
+) -> Result<bool, String> {
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("table_name".to_string(), Value::String(table_name.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String(format!("Creating table: {}", table_name)),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
-    
+
     // Simulated table creation
     Ok(true)
 }
 
 pub fn drop_table(db: &Database, table_name: String) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("table_name".to_string(), Value::String(table_name.clone()));
-        data.insert("message".to_string(), Value::String(format!("Dropping table: {}", table_name)));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("table_name".to_string(), Value::String(table_name.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String(format!("Dropping table: {}", table_name)),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
-    
+
     // Simulated table deletion
     Ok(true)
 }
 
 pub fn get_table_schema(db: &Database, table_name: String) -> Result<TableSchema, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("table_name".to_string(), Value::String(table_name.clone()));
-        data.insert("message".to_string(), Value::String(format!("Getting schema for table: {}", table_name)));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("table_name".to_string(), Value::String(table_name.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String(format!("Getting schema for table: {}", table_name)),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
-    
+
     // Simulated schema retrieval
     Ok(TableSchema {
         name: table_name,
@@ -418,16 +499,23 @@ pub fn get_table_schema(db: &Database, table_name: String) -> Result<TableSchema
 }
 
 pub fn list_tables(db: &Database) -> Result<Vec<String>, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Listing tables".to_string()));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Listing tables".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
-    
+
     // Simulated table listing
     Ok(vec![
         "users".to_string(),
@@ -438,52 +526,85 @@ pub fn list_tables(db: &Database) -> Result<Vec<String>, String> {
 }
 
 pub fn backup_database(db: &Database, backup_path: String) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("backup_path".to_string(), Value::String(backup_path.clone()));
-        data.insert("message".to_string(), Value::String(format!("Creating backup at: {}", backup_path)));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "backup_path".to_string(),
+                Value::String(backup_path.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String(format!("Creating backup at: {}", backup_path)),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
-    
+
     // Simulated backup
     Ok(true)
 }
 
 pub fn restore_database(db: &Database, backup_path: String) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("backup_path".to_string(), Value::String(backup_path.clone()));
-        data.insert("message".to_string(), Value::String(format!("Restoring from backup: {}", backup_path)));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "backup_path".to_string(),
+                Value::String(backup_path.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String(format!("Restoring from backup: {}", backup_path)),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
-    
+
     // Simulated restore
     Ok(true)
 }
 
 pub fn get_connection_info(db: &Database) -> HashMap<String, Value> {
     let mut info = HashMap::new();
-    info.insert("connection_string".to_string(), Value::String(db.connection_string.clone()));
-    info.insert("connection_type".to_string(), Value::String(db.connection_type.clone()));
+    info.insert(
+        "connection_string".to_string(),
+        Value::String(db.connection_string.clone()),
+    );
+    info.insert(
+        "connection_type".to_string(),
+        Value::String(db.connection_type.clone()),
+    );
     info.insert("is_connected".to_string(), Value::Bool(db.is_connected));
     info
 }
 
 pub fn close_connection(db: &mut Database) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Closing database connection".to_string()));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Closing database connection".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     db.is_connected = false;
     Ok(true)
 }
@@ -492,43 +613,65 @@ pub fn ping_database(db: &Database) -> Result<bool, String> {
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
-    
+
     // Simulated ping
     Ok(true)
 }
 
 pub fn get_query_plan(db: &Database, sql: String) -> Result<HashMap<String, Value>, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("sql".to_string(), Value::String(sql.clone()));
-        data.insert("message".to_string(), Value::String(format!("Getting query plan for: {}", sql)));
-        data
-    }, Some("database"));
-    
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("sql".to_string(), Value::String(sql.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String(format!("Getting query plan for: {}", sql)),
+            );
+            data
+        },
+        Some("database"),
+    );
+
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
-    
+
     // Simulated query plan
     let mut plan = HashMap::new();
     plan.insert("estimated_cost".to_string(), Value::Float(1.5));
     plan.insert("estimated_rows".to_string(), Value::Int(100));
-    plan.insert("scan_type".to_string(), Value::String("sequential".to_string()));
-    
+    plan.insert(
+        "scan_type".to_string(),
+        Value::String("sequential".to_string()),
+    );
+
     Ok(plan)
 }
 
 // === PHASE 3: ADVANCED DATABASE FUNCTIONS ===
 
 // Connection Pool Management
-pub fn create_connection_pool(pool_name: String, connection_string: String, max_connections: i64, min_connections: i64) -> ConnectionPool {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("pool_name".to_string(), Value::String(pool_name.clone()));
-        data.insert("max_connections".to_string(), Value::Int(max_connections));
-        data.insert("message".to_string(), Value::String("Creating connection pool".to_string()));
-        data
-    }, Some("database"));
+pub fn create_connection_pool(
+    pool_name: String,
+    connection_string: String,
+    max_connections: i64,
+    min_connections: i64,
+) -> ConnectionPool {
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("pool_name".to_string(), Value::String(pool_name.clone()));
+            data.insert("max_connections".to_string(), Value::Int(max_connections));
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating connection pool".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     ConnectionPool {
         pool_name,
@@ -548,12 +691,19 @@ pub fn get_connection_from_pool(pool: &mut ConnectionPool) -> Result<Database, S
         pool.active_connections += 1;
         pool.busy_connections.push(db.clone());
 
-        crate::stdlib::log::info("database", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("pool".to_string(), Value::String(pool.pool_name.clone()));
-            data.insert("message".to_string(), Value::String("Connection acquired from pool".to_string()));
-            data
-        }, Some("database"));
+        crate::stdlib::log::info(
+            "database",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert("pool".to_string(), Value::String(pool.pool_name.clone()));
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Connection acquired from pool".to_string()),
+                );
+                data
+            },
+            Some("database"),
+        );
 
         return Ok(db);
     }
@@ -564,12 +714,19 @@ pub fn get_connection_from_pool(pool: &mut ConnectionPool) -> Result<Database, S
         pool.active_connections += 1;
         pool.busy_connections.push(db.clone());
 
-        crate::stdlib::log::info("database", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("pool".to_string(), Value::String(pool.pool_name.clone()));
-            data.insert("message".to_string(), Value::String("New connection created in pool".to_string()));
-            data
-        }, Some("database"));
+        crate::stdlib::log::info(
+            "database",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert("pool".to_string(), Value::String(pool.pool_name.clone()));
+                data.insert(
+                    "message".to_string(),
+                    Value::String("New connection created in pool".to_string()),
+                );
+                data
+            },
+            Some("database"),
+        );
 
         return Ok(db);
     }
@@ -578,19 +735,30 @@ pub fn get_connection_from_pool(pool: &mut ConnectionPool) -> Result<Database, S
 }
 
 pub fn return_connection_to_pool(pool: &mut ConnectionPool, db: Database) {
-    if let Some(index) = pool.busy_connections.iter().position(|conn| conn.connection_string == db.connection_string) {
+    if let Some(index) = pool
+        .busy_connections
+        .iter()
+        .position(|conn| conn.connection_string == db.connection_string)
+    {
         pool.busy_connections.remove(index);
     }
 
     pool.active_connections -= 1;
     pool.idle_connections.push(db);
 
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("pool".to_string(), Value::String(pool.pool_name.clone()));
-        data.insert("message".to_string(), Value::String("Connection returned to pool".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("pool".to_string(), Value::String(pool.pool_name.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Connection returned to pool".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 }
 
 // Query Builder Functions
@@ -613,7 +781,12 @@ pub fn qb_select(builder: &mut QueryBuilder, columns: Vec<String>) -> &mut Query
     builder
 }
 
-pub fn qb_where(builder: &mut QueryBuilder, column: String, operator: String, value: Value) -> &mut QueryBuilder {
+pub fn qb_where(
+    builder: &mut QueryBuilder,
+    column: String,
+    operator: String,
+    value: Value,
+) -> &mut QueryBuilder {
     builder.where_conditions.push(WhereClause {
         column,
         operator,
@@ -623,7 +796,14 @@ pub fn qb_where(builder: &mut QueryBuilder, column: String, operator: String, va
     builder
 }
 
-pub fn qb_join(builder: &mut QueryBuilder, join_type: String, table_name: String, on_column: String, operator: String, value: Value) -> &mut QueryBuilder {
+pub fn qb_join(
+    builder: &mut QueryBuilder,
+    join_type: String,
+    table_name: String,
+    on_column: String,
+    operator: String,
+    value: Value,
+) -> &mut QueryBuilder {
     builder.join_clauses.push(JoinClause {
         join_type,
         table_name,
@@ -637,7 +817,11 @@ pub fn qb_join(builder: &mut QueryBuilder, join_type: String, table_name: String
     builder
 }
 
-pub fn qb_order_by(builder: &mut QueryBuilder, column: String, direction: String) -> &mut QueryBuilder {
+pub fn qb_order_by(
+    builder: &mut QueryBuilder,
+    column: String,
+    direction: String,
+) -> &mut QueryBuilder {
     builder.order_by.push(OrderClause { column, direction });
     builder
 }
@@ -668,11 +852,9 @@ pub fn qb_build_sql(builder: &QueryBuilder) -> String {
 
     // JOIN clauses
     for join in &builder.join_clauses {
-        sql.push_str(&format!(" {} JOIN {} ON {} {} ",
-            join.join_type,
-            join.table_name,
-            join.on_condition.column,
-            join.on_condition.operator
+        sql.push_str(&format!(
+            " {} JOIN {} ON {} {} ",
+            join.join_type, join.table_name, join.on_condition.column, join.on_condition.operator
         ));
 
         match &join.on_condition.value {
@@ -722,7 +904,9 @@ pub fn qb_build_sql(builder: &QueryBuilder) -> String {
     // ORDER BY clause
     if !builder.order_by.is_empty() {
         sql.push_str(" ORDER BY ");
-        let order_parts: Vec<String> = builder.order_by.iter()
+        let order_parts: Vec<String> = builder
+            .order_by
+            .iter()
             .map(|o| format!("{} {}", o.column, o.direction))
             .collect();
         sql.push_str(&order_parts.join(", "));
@@ -746,12 +930,22 @@ pub fn qb_execute(builder: &QueryBuilder, db: &Database) -> Result<QueryResult, 
 
 // Migration System Functions
 pub fn create_migration_manager(migrations_table: String) -> MigrationManager {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("migrations_table".to_string(), Value::String(migrations_table.clone()));
-        data.insert("message".to_string(), Value::String("Creating migration manager".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "migrations_table".to_string(),
+                Value::String(migrations_table.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating migration manager".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     MigrationManager {
         migrations_table,
@@ -760,7 +954,12 @@ pub fn create_migration_manager(migrations_table: String) -> MigrationManager {
     }
 }
 
-pub fn create_migration(version: String, name: String, up_sql: String, down_sql: String) -> Migration {
+pub fn create_migration(
+    version: String,
+    name: String,
+    up_sql: String,
+    down_sql: String,
+) -> Migration {
     Migration {
         version,
         name,
@@ -770,7 +969,11 @@ pub fn create_migration(version: String, name: String, up_sql: String, down_sql:
     }
 }
 
-pub fn apply_migration(manager: &mut MigrationManager, db: &Database, migration: &Migration) -> Result<bool, String> {
+pub fn apply_migration(
+    manager: &mut MigrationManager,
+    db: &Database,
+    migration: &Migration,
+) -> Result<bool, String> {
     // Execute up migration
     let result = query(db, migration.up_sql.clone(), Vec::new())?;
 
@@ -781,13 +984,26 @@ pub fn apply_migration(manager: &mut MigrationManager, db: &Database, migration:
 
         manager.applied_migrations.push(applied_migration);
 
-        crate::stdlib::log::info("database", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("migration".to_string(), Value::String(migration.name.clone()));
-            data.insert("version".to_string(), Value::String(migration.version.clone()));
-            data.insert("message".to_string(), Value::String("Migration applied".to_string()));
-            data
-        }, Some("database"));
+        crate::stdlib::log::info(
+            "database",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert(
+                    "migration".to_string(),
+                    Value::String(migration.name.clone()),
+                );
+                data.insert(
+                    "version".to_string(),
+                    Value::String(migration.version.clone()),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Migration applied".to_string()),
+                );
+                data
+            },
+            Some("database"),
+        );
 
         Ok(true)
     } else {
@@ -795,23 +1011,44 @@ pub fn apply_migration(manager: &mut MigrationManager, db: &Database, migration:
     }
 }
 
-pub fn rollback_migration(manager: &mut MigrationManager, db: &Database, migration: &Migration) -> Result<bool, String> {
+pub fn rollback_migration(
+    manager: &mut MigrationManager,
+    db: &Database,
+    migration: &Migration,
+) -> Result<bool, String> {
     // Execute down migration
     let result = query(db, migration.down_sql.clone(), Vec::new())?;
 
     if result.affected_rows > 0 {
         // Remove from applied migrations
-        if let Some(index) = manager.applied_migrations.iter().position(|m| m.version == migration.version) {
+        if let Some(index) = manager
+            .applied_migrations
+            .iter()
+            .position(|m| m.version == migration.version)
+        {
             manager.applied_migrations.remove(index);
         }
 
-        crate::stdlib::log::info("database", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("migration".to_string(), Value::String(migration.name.clone()));
-            data.insert("version".to_string(), Value::String(migration.version.clone()));
-            data.insert("message".to_string(), Value::String("Migration rolled back".to_string()));
-            data
-        }, Some("database"));
+        crate::stdlib::log::info(
+            "database",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert(
+                    "migration".to_string(),
+                    Value::String(migration.name.clone()),
+                );
+                data.insert(
+                    "version".to_string(),
+                    Value::String(migration.version.clone()),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Migration rolled back".to_string()),
+                );
+                data
+            },
+            Some("database"),
+        );
 
         Ok(true)
     } else {
@@ -821,63 +1058,106 @@ pub fn rollback_migration(manager: &mut MigrationManager, db: &Database, migrati
 
 // Caching System Functions
 pub fn create_cache(config: CacheConfig) -> Result<String, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("cache_type".to_string(), Value::String(config.cache_type.clone()));
-        data.insert("max_size".to_string(), Value::Int(config.max_size));
-        data.insert("message".to_string(), Value::String("Creating cache".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "cache_type".to_string(),
+                Value::String(config.cache_type.clone()),
+            );
+            data.insert("max_size".to_string(), Value::Int(config.max_size));
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating cache".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     // Return cache identifier
     Ok(format!("cache_{}", config.cache_type))
 }
 
-pub fn cache_set(cache_id: String, key: String, _value: Value, _ttl_seconds: Option<i64>) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("cache_id".to_string(), Value::String(cache_id));
-        data.insert("key".to_string(), Value::String(key.clone()));
-        data.insert("message".to_string(), Value::String("Setting cache entry".to_string()));
-        data
-    }, Some("database"));
+pub fn cache_set(
+    cache_id: String,
+    key: String,
+    _value: Value,
+    _ttl_seconds: Option<i64>,
+) -> Result<bool, String> {
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("cache_id".to_string(), Value::String(cache_id));
+            data.insert("key".to_string(), Value::String(key.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Setting cache entry".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     // Simulated cache set
     Ok(true)
 }
 
 pub fn cache_get(cache_id: String, key: String) -> Result<Option<Value>, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("cache_id".to_string(), Value::String(cache_id));
-        data.insert("key".to_string(), Value::String(key));
-        data.insert("message".to_string(), Value::String("Getting cache entry".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("cache_id".to_string(), Value::String(cache_id));
+            data.insert("key".to_string(), Value::String(key));
+            data.insert(
+                "message".to_string(),
+                Value::String("Getting cache entry".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     // Simulated cache miss
     Ok(None)
 }
 
 pub fn cache_delete(cache_id: String, key: String) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("cache_id".to_string(), Value::String(cache_id));
-        data.insert("key".to_string(), Value::String(key));
-        data.insert("message".to_string(), Value::String("Deleting cache entry".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("cache_id".to_string(), Value::String(cache_id));
+            data.insert("key".to_string(), Value::String(key));
+            data.insert(
+                "message".to_string(),
+                Value::String("Deleting cache entry".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     Ok(true)
 }
 
 pub fn cache_clear(cache_id: String) -> Result<i64, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("cache_id".to_string(), Value::String(cache_id));
-        data.insert("message".to_string(), Value::String("Clearing cache".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("cache_id".to_string(), Value::String(cache_id));
+            data.insert(
+                "message".to_string(),
+                Value::String("Clearing cache".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     // Return number of entries cleared
     Ok(42)
@@ -885,47 +1165,78 @@ pub fn cache_clear(cache_id: String) -> Result<i64, String> {
 
 // File System Operations
 pub fn read_file(path: String) -> Result<String, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("path".to_string(), Value::String(path.clone()));
-        data.insert("message".to_string(), Value::String("Reading file".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("path".to_string(), Value::String(path.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Reading file".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     // Simulated file read
     Ok("file contents here".to_string())
 }
 
 pub fn write_file(path: String, content: String) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("path".to_string(), Value::String(path));
-        data.insert("content_length".to_string(), Value::Int(content.len() as i64));
-        data.insert("message".to_string(), Value::String("Writing file".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("path".to_string(), Value::String(path));
+            data.insert(
+                "content_length".to_string(),
+                Value::Int(content.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Writing file".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     Ok(true)
 }
 
 pub fn delete_file(path: String) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("path".to_string(), Value::String(path));
-        data.insert("message".to_string(), Value::String("Deleting file".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("path".to_string(), Value::String(path));
+            data.insert(
+                "message".to_string(),
+                Value::String("Deleting file".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     Ok(true)
 }
 
 pub fn list_directory(path: String) -> Result<Vec<String>, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("path".to_string(), Value::String(path));
-        data.insert("message".to_string(), Value::String("Listing directory".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("path".to_string(), Value::String(path));
+            data.insert(
+                "message".to_string(),
+                Value::String("Listing directory".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     // Simulated directory listing
     Ok(vec![
@@ -936,12 +1247,19 @@ pub fn list_directory(path: String) -> Result<Vec<String>, String> {
 }
 
 pub fn create_directory(path: String) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("path".to_string(), Value::String(path));
-        data.insert("message".to_string(), Value::String("Creating directory".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("path".to_string(), Value::String(path));
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating directory".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     Ok(true)
 }
@@ -952,12 +1270,19 @@ pub fn file_exists(path: String) -> bool {
 }
 
 pub fn get_file_info(path: String) -> Result<FileInfo, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("path".to_string(), Value::String(path.clone()));
-        data.insert("message".to_string(), Value::String("Getting file info".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("path".to_string(), Value::String(path.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Getting file info".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     Ok(FileInfo {
         name: "example.txt".to_string(),
@@ -970,7 +1295,12 @@ pub fn get_file_info(path: String) -> Result<FileInfo, String> {
 }
 
 // Data Validation Functions
-pub fn create_validation_rule(field: String, rule_type: String, value: Value, error_message: String) -> ValidationRule {
+pub fn create_validation_rule(
+    field: String,
+    rule_type: String,
+    value: Value,
+    error_message: String,
+) -> ValidationRule {
     ValidationRule {
         field,
         rule_type,
@@ -986,13 +1316,11 @@ pub fn validate_data(data: HashMap<String, Value>, rules: Vec<ValidationRule>) -
     for rule in &rules {
         if let Some(field_value) = data.get(&rule.field) {
             match rule.rule_type.as_str() {
-                "required" => {
-                    match field_value {
-                        Value::String(s) if s.is_empty() => errors.push(rule.error_message.clone()),
-                        Value::Null => errors.push(rule.error_message.clone()),
-                        _ => {}
-                    }
-                }
+                "required" => match field_value {
+                    Value::String(s) if s.is_empty() => errors.push(rule.error_message.clone()),
+                    Value::Null => errors.push(rule.error_message.clone()),
+                    _ => {}
+                },
                 "min_length" => {
                     if let (Value::String(s), Value::Int(min_len)) = (field_value, &rule.value) {
                         if s.len() < *min_len as usize {
@@ -1030,14 +1358,27 @@ pub fn validate_data(data: HashMap<String, Value>, rules: Vec<ValidationRule>) -
 
 // Enhanced Backup and Restore Functions
 pub fn create_backup(_db: &Database, options: BackupOptions) -> Result<BackupInfo, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("include_data".to_string(), Value::Bool(options.include_data));
-        data.insert("include_schema".to_string(), Value::Bool(options.include_schema));
-        data.insert("compression".to_string(), Value::Bool(options.compression));
-        data.insert("message".to_string(), Value::String("Creating backup".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "include_data".to_string(),
+                Value::Bool(options.include_data),
+            );
+            data.insert(
+                "include_schema".to_string(),
+                Value::Bool(options.include_schema),
+            );
+            data.insert("compression".to_string(), Value::Bool(options.compression));
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating backup".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     Ok(BackupInfo {
         backup_path: format!("backup_{}.sql", "2024-01-01T00:00:00Z"),
@@ -1050,12 +1391,19 @@ pub fn create_backup(_db: &Database, options: BackupOptions) -> Result<BackupInf
 }
 
 pub fn restore_from_backup(_db: &Database, backup_path: String) -> Result<bool, String> {
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("backup_path".to_string(), Value::String(backup_path));
-        data.insert("message".to_string(), Value::String("Restoring from backup".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("backup_path".to_string(), Value::String(backup_path));
+            data.insert(
+                "message".to_string(),
+                Value::String("Restoring from backup".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 
     Ok(true)
 }
@@ -1082,13 +1430,23 @@ pub fn log_query_stats(query: String, execution_time: i64, rows_affected: i64) {
         slow_query: execution_time > 1000, // More than 1 second
     };
 
-    crate::stdlib::log::info("database", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("query".to_string(), Value::String(stats.query));
-        data.insert("execution_time".to_string(), Value::Int(stats.execution_time));
-        data.insert("rows_affected".to_string(), Value::Int(stats.rows_affected));
-        data.insert("slow_query".to_string(), Value::Bool(stats.slow_query));
-        data.insert("message".to_string(), Value::String("Query executed".to_string()));
-        data
-    }, Some("database"));
+    crate::stdlib::log::info(
+        "database",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("query".to_string(), Value::String(stats.query));
+            data.insert(
+                "execution_time".to_string(),
+                Value::Int(stats.execution_time),
+            );
+            data.insert("rows_affected".to_string(), Value::Int(stats.rows_affected));
+            data.insert("slow_query".to_string(), Value::Bool(stats.slow_query));
+            data.insert(
+                "message".to_string(),
+                Value::String("Query executed".to_string()),
+            );
+            data
+        },
+        Some("database"),
+    );
 }

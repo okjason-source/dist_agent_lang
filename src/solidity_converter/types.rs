@@ -10,7 +10,7 @@ pub struct TypeMapper {
 impl TypeMapper {
     pub fn new() -> Self {
         let mut mappings = HashMap::new();
-        
+
         // Basic types
         mappings.insert("uint256".to_string(), "int".to_string());
         mappings.insert("uint128".to_string(), "int".to_string());
@@ -19,7 +19,7 @@ impl TypeMapper {
         mappings.insert("uint16".to_string(), "int".to_string());
         mappings.insert("uint8".to_string(), "int".to_string());
         mappings.insert("uint".to_string(), "int".to_string());
-        
+
         mappings.insert("int256".to_string(), "int".to_string());
         mappings.insert("int128".to_string(), "int".to_string());
         mappings.insert("int64".to_string(), "int".to_string());
@@ -27,20 +27,20 @@ impl TypeMapper {
         mappings.insert("int16".to_string(), "int".to_string());
         mappings.insert("int8".to_string(), "int".to_string());
         mappings.insert("int".to_string(), "int".to_string());
-        
+
         mappings.insert("address".to_string(), "string".to_string());
         mappings.insert("bool".to_string(), "bool".to_string());
         mappings.insert("string".to_string(), "string".to_string());
-        
+
         // Bytes types
         mappings.insert("bytes".to_string(), "vector<u8>".to_string());
         mappings.insert("bytes32".to_string(), "vector<u8>".to_string());
         mappings.insert("bytes16".to_string(), "vector<u8>".to_string());
         mappings.insert("bytes8".to_string(), "vector<u8>".to_string());
-        
+
         Self { mappings }
     }
-    
+
     /// Convert Solidity type to DAL type
     pub fn convert_type(&self, solidity_type: &str) -> String {
         // Handle arrays
@@ -49,21 +49,22 @@ impl TypeMapper {
             let dal_base = self.convert_type(base_type);
             return format!("vector<{}>", dal_base);
         }
-        
+
         // Handle fixed-size arrays
         if let Some(start) = solidity_type.find('[') {
             let base_type = &solidity_type[..start];
             let dal_base = self.convert_type(base_type);
             return format!("vector<{}>", dal_base);
         }
-        
+
         // Handle mappings
         if solidity_type.starts_with("mapping(") {
             return self.convert_mapping(solidity_type);
         }
-        
+
         // Direct mapping
-        self.mappings.get(solidity_type)
+        self.mappings
+            .get(solidity_type)
             .cloned()
             .unwrap_or_else(|| {
                 // Unknown type - try to convert as-is or use string
@@ -74,7 +75,7 @@ impl TypeMapper {
                 }
             })
     }
-    
+
     /// Convert Solidity mapping to DAL map
     fn convert_mapping(&self, mapping_type: &str) -> String {
         // Parse mapping(keyType => valueType)
@@ -92,7 +93,7 @@ impl TypeMapper {
         }
         format!("map<string, any>") // Fallback
     }
-    
+
     /// Check if type is supported
     pub fn is_supported(&self, solidity_type: &str) -> bool {
         // Remove array brackets for checking
@@ -101,11 +102,11 @@ impl TypeMapper {
             .split('[')
             .next()
             .unwrap_or(solidity_type);
-        
-        self.mappings.contains_key(base_type) || 
-        base_type.starts_with("mapping(") ||
-        base_type.contains("struct") ||
-        base_type.contains("enum")
+
+        self.mappings.contains_key(base_type)
+            || base_type.starts_with("mapping(")
+            || base_type.contains("struct")
+            || base_type.contains("enum")
     }
 }
 
@@ -118,7 +119,7 @@ impl Default for TypeMapper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_basic_type_conversion() {
         let mapper = TypeMapper::new();
@@ -127,14 +128,14 @@ mod tests {
         assert_eq!(mapper.convert_type("bool"), "bool");
         assert_eq!(mapper.convert_type("string"), "string");
     }
-    
+
     #[test]
     fn test_array_conversion() {
         let mapper = TypeMapper::new();
         assert_eq!(mapper.convert_type("uint256[]"), "vector<int>");
         assert_eq!(mapper.convert_type("address[]"), "vector<string>");
     }
-    
+
     #[test]
     fn test_mapping_conversion() {
         let mapper = TypeMapper::new();
@@ -144,4 +145,3 @@ mod tests {
         assert!(result.contains("int")); // uint256 -> int
     }
 }
-

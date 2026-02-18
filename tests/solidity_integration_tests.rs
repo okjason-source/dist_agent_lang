@@ -2,7 +2,7 @@
 // Tests for Solidity contract integration using actual language code
 // Aligned with PRODUCTION_ROADMAP.md goals for production readiness
 
-use dist_agent_lang::{parse_source};
+use dist_agent_lang::parse_source;
 use dist_agent_lang::stdlib::add_sol;
 
 #[test]
@@ -22,7 +22,7 @@ fn test_abi_parsing() {
 
     let result = add_sol::parse_abi(abi_json.to_string());
     assert!(result.is_ok());
-    
+
     let functions = result.unwrap();
     assert_eq!(functions.len(), 1);
     assert_eq!(functions[0].name, "transfer");
@@ -46,7 +46,7 @@ fn test_event_parsing() {
 
     let result = add_sol::parse_events(abi_json.to_string());
     assert!(result.is_ok());
-    
+
     let events = result.unwrap();
     assert_eq!(events.len(), 1);
     assert_eq!(events[0].name, "Transfer");
@@ -63,12 +63,8 @@ fn test_type_conversion() {
 
 #[test]
 fn test_contract_registration() {
-    let contract = add_sol::register_contract(
-        "TestContract".to_string(),
-        "0x1234".to_string(),
-        1,
-        None
-    );
+    let contract =
+        add_sol::register_contract("TestContract".to_string(), "0x1234".to_string(), 1, None);
 
     assert_eq!(contract.name, "TestContract");
     assert_eq!(contract.address, "0x1234");
@@ -100,7 +96,7 @@ fn test_solidity_contract_orchestration() {
         event SolidityCallExecuted(contract: string, function: string, result: string);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -133,7 +129,7 @@ fn test_solidity_event_listening() {
         event EventReceived(event_name: string, data: map<string, any>);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }
@@ -162,7 +158,7 @@ fn test_solidity_abi_integration() {
         event ABIFunctionCalled(function_name: string, args: map<string, any>);
     }
     "#;
-    
+
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
 }

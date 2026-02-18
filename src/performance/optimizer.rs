@@ -1,5 +1,5 @@
-use crate::parser::ast::*;
 use crate::lexer::tokens::{Literal, Operator};
+use crate::parser::ast::*;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
@@ -164,7 +164,12 @@ impl Optimizer {
             }
         }
 
-        (Program { statements: optimized_statements }, optimizations)
+        (
+            Program {
+                statements: optimized_statements,
+            },
+            optimizations,
+        )
     }
 
     fn fold_constant_expression(&self, expr: &Expression) -> Option<Expression> {
@@ -172,8 +177,10 @@ impl Optimizer {
             Expression::BinaryOp(left, op, right) => {
                 let left_folded = self.fold_constant_expression(left)?;
                 let right_folded = self.fold_constant_expression(right)?;
-                
-                if let (Expression::Literal(lit1), Expression::Literal(lit2)) = (&left_folded, &right_folded) {
+
+                if let (Expression::Literal(lit1), Expression::Literal(lit2)) =
+                    (&left_folded, &right_folded)
+                {
                     match (lit1, lit2, op) {
                         (Literal::Int(a), Literal::Int(b), Operator::Plus) => {
                             Some(Expression::Literal(Literal::Int(a + b)))
@@ -223,9 +230,12 @@ impl Optimizer {
             match statement {
                 Statement::If(if_stmt) => {
                     // Check if condition is always true/false
-                    if let Some(constant_condition) = self.evaluate_boolean_expression(&if_stmt.condition) {
+                    if let Some(constant_condition) =
+                        self.evaluate_boolean_expression(&if_stmt.condition)
+                    {
                         if constant_condition {
-                            optimized_statements.push(Statement::Block(if_stmt.consequence.clone()));
+                            optimized_statements
+                                .push(Statement::Block(if_stmt.consequence.clone()));
                             optimizations.push("Removed unreachable else branch".to_string());
                         } else {
                             if let Some(alternative) = &if_stmt.alternative {
@@ -245,7 +255,12 @@ impl Optimizer {
             }
         }
 
-        (Program { statements: optimized_statements }, optimizations)
+        (
+            Program {
+                statements: optimized_statements,
+            },
+            optimizations,
+        )
     }
 
     fn evaluate_boolean_expression(&self, expr: &Expression) -> Option<bool> {
@@ -254,7 +269,7 @@ impl Optimizer {
             Expression::BinaryOp(left, op, right) => {
                 let left_val = self.evaluate_boolean_expression(left)?;
                 let right_val = self.evaluate_boolean_expression(right)?;
-                
+
                 match op {
                     Operator::And => Some(left_val && right_val),
                     Operator::Or => Some(left_val || right_val),
@@ -296,7 +311,12 @@ impl Optimizer {
             }
         }
 
-        (Program { statements: optimized_statements }, optimizations)
+        (
+            Program {
+                statements: optimized_statements,
+            },
+            optimizations,
+        )
     }
 
     fn should_inline_function(&self, func_stmt: &FunctionStatement) -> bool {
@@ -304,7 +324,11 @@ impl Optimizer {
         func_stmt.parameters.is_empty() && func_stmt.body.statements.len() <= 3
     }
 
-    fn inline_function_calls(&self, expr: &Expression, function_map: &HashMap<String, FunctionStatement>) -> Expression {
+    fn inline_function_calls(
+        &self,
+        expr: &Expression,
+        function_map: &HashMap<String, FunctionStatement>,
+    ) -> Expression {
         match expr {
             Expression::FunctionCall(call) => {
                 if let Some(func) = function_map.get(&call.name) {
@@ -350,7 +374,12 @@ impl Optimizer {
             }
         }
 
-        (Program { statements: optimized_statements }, optimizations)
+        (
+            Program {
+                statements: optimized_statements,
+            },
+            optimizations,
+        )
     }
 
     fn expression_to_string(&self, expr: &Expression) -> String {
@@ -367,7 +396,10 @@ impl Optimizer {
     fn loop_optimization(&self, _ast: &Program) -> (Program, Vec<String>) {
         // Placeholder for loop optimizations
         // Would include loop unrolling, loop-invariant code motion, etc.
-        (_ast.clone(), vec!["Loop optimization (placeholder)".to_string()])
+        (
+            _ast.clone(),
+            vec!["Loop optimization (placeholder)".to_string()],
+        )
     }
 
     fn strength_reduction(&self, ast: &Program) -> (Program, Vec<String>) {
@@ -384,7 +416,12 @@ impl Optimizer {
             }
         }
 
-        (Program { statements: optimized_statements }, optimizations)
+        (
+            Program {
+                statements: optimized_statements,
+            },
+            optimizations,
+        )
     }
 
     fn reduce_expression_strength(&self, expr: &Expression) -> Expression {
@@ -397,13 +434,13 @@ impl Optimizer {
                             Expression::BinaryOp(
                                 left.clone(),
                                 Operator::Star,
-                                Box::new(Expression::Literal(Literal::Int(2)))
+                                Box::new(Expression::Literal(Literal::Int(2))),
                             )
                         } else if let Expression::Literal(Literal::Int(2)) = **left {
                             Expression::BinaryOp(
                                 right.clone(),
                                 Operator::Star,
-                                Box::new(Expression::Literal(Literal::Int(2)))
+                                Box::new(Expression::Literal(Literal::Int(2))),
                             )
                         } else {
                             expr.clone()
@@ -418,7 +455,7 @@ impl Optimizer {
 
     fn optimize_block(&self, block: &BlockStatement) -> BlockStatement {
         let mut optimized_statements = Vec::new();
-        
+
         for statement in &block.statements {
             match statement {
                 Statement::Let(let_stmt) => {
@@ -435,12 +472,14 @@ impl Optimizer {
             }
         }
 
-        BlockStatement { statements: optimized_statements }
+        BlockStatement {
+            statements: optimized_statements,
+        }
     }
 
     fn estimate_improvement(&self, optimizations: &[String]) -> f64 {
         let mut improvement: f64 = 0.0;
-        
+
         for opt in optimizations {
             if opt.contains("Constant folded") {
                 improvement += 5.0; // 5% improvement for constant folding
@@ -452,7 +491,7 @@ impl Optimizer {
                 improvement += 8.0; // 8% improvement for function inlining
             }
         }
-        
+
         improvement.min(50.0_f64) // Cap at 50% improvement
     }
 }
@@ -463,22 +502,23 @@ pub struct OptimizationUtils;
 impl OptimizationUtils {
     pub fn analyze_complexity(ast: &Program) -> usize {
         let mut complexity = 0;
-        
+
         for statement in &ast.statements {
             complexity += Self::statement_complexity(statement);
         }
-        
+
         complexity
     }
 
     fn statement_complexity(statement: &Statement) -> usize {
         match statement {
-            Statement::Function(func_stmt) => {
-                1 + Self::block_complexity(&func_stmt.body)
-            }
+            Statement::Function(func_stmt) => 1 + Self::block_complexity(&func_stmt.body),
             Statement::If(if_stmt) => {
-                2 + Self::block_complexity(&if_stmt.consequence) +
-                if_stmt.alternative.as_ref().map_or(0, Self::block_complexity)
+                2 + Self::block_complexity(&if_stmt.consequence)
+                    + if_stmt
+                        .alternative
+                        .as_ref()
+                        .map_or(0, Self::block_complexity)
             }
             Statement::Let(_) => 1,
             Statement::Return(_) => 1,
@@ -489,35 +529,39 @@ impl OptimizationUtils {
     }
 
     fn block_complexity(block: &BlockStatement) -> usize {
-        block.statements.iter().map(Self::statement_complexity).sum()
+        block
+            .statements
+            .iter()
+            .map(Self::statement_complexity)
+            .sum()
     }
 
     pub fn estimate_optimization_potential(ast: &Program) -> f64 {
         let complexity = Self::analyze_complexity(ast);
         let constant_expressions = Self::count_constant_expressions(ast);
         let function_calls = Self::count_function_calls(ast);
-        
+
         let mut potential = 0.0;
-        
+
         // More complex code has more optimization potential
         potential += (complexity as f64 * 0.5).min(20.0);
-        
+
         // Constant expressions can be folded
         potential += constant_expressions as f64 * 3.0;
-        
+
         // Function calls can be inlined
         potential += function_calls as f64 * 2.0;
-        
+
         potential.min(50.0) // Cap at 50%
     }
 
     fn count_constant_expressions(ast: &Program) -> usize {
         let mut count = 0;
-        
+
         for statement in &ast.statements {
             count += Self::count_constants_in_statement(statement);
         }
-        
+
         count
     }
 
@@ -534,7 +578,8 @@ impl OptimizationUtils {
         match expr {
             Expression::Literal(_) => 1,
             Expression::BinaryOp(left, _, right) => {
-                Self::count_constants_in_expression(left) + Self::count_constants_in_expression(right)
+                Self::count_constants_in_expression(left)
+                    + Self::count_constants_in_expression(right)
             }
             Expression::UnaryOp(_, expr) => Self::count_constants_in_expression(expr),
             _ => 0,
@@ -543,11 +588,11 @@ impl OptimizationUtils {
 
     fn count_function_calls(ast: &Program) -> usize {
         let mut count = 0;
-        
+
         for statement in &ast.statements {
             count += Self::count_calls_in_statement(statement);
         }
-        
+
         count
     }
 
@@ -570,6 +615,10 @@ impl OptimizationUtils {
     }
 
     fn count_calls_in_block(block: &BlockStatement) -> usize {
-        block.statements.iter().map(Self::count_calls_in_statement).sum()
+        block
+            .statements
+            .iter()
+            .map(Self::count_calls_in_statement)
+            .sum()
     }
 }

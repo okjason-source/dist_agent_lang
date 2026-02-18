@@ -1,25 +1,28 @@
 // FFI Security Tests
 // Tests for security vulnerabilities and proper security controls in FFI
 
-use dist_agent_lang::runtime::values::Value;
 use dist_agent_lang::ffi::rust::RustFFIRuntime;
-use dist_agent_lang::ffi::{FFIInterface, FFIConfig};
+use dist_agent_lang::ffi::{FFIConfig, FFIInterface};
+use dist_agent_lang::runtime::values::Value;
 
 /// Test: FFI should reject invalid input types
 #[test]
 fn test_ffi_invalid_input_rejection() {
     let mut runtime = RustFFIRuntime::new();
-    
+
     // Test with malicious input
     let malicious_input = "'; DROP TABLE users; --";
     let result = runtime.execute(malicious_input);
-    
+
     // Should either parse/execute successfully (if valid syntax) or fail gracefully
     // The important thing is it doesn't crash or expose internal errors
     assert!(result.is_ok() || result.is_err());
     if let Err(e) = result {
         // Error should not expose internal details
-        assert!(!e.contains("internal"), "Error should not expose internal details");
+        assert!(
+            !e.contains("internal"),
+            "Error should not expose internal details"
+        );
     }
 }
 
@@ -27,10 +30,10 @@ fn test_ffi_invalid_input_rejection() {
 #[test]
 fn test_ffi_large_input_handling() {
     let mut runtime = RustFFIRuntime::new();
-    
+
     // Create a very large string (10MB)
     let large_input = format!("let x = \"{}\";", "x".repeat(10_000_000));
-    
+
     // Should handle gracefully (either succeed or fail with resource limit)
     let result = runtime.execute(&large_input);
     // Should not panic or crash
@@ -41,7 +44,7 @@ fn test_ffi_large_input_handling() {
 #[test]
 fn test_ffi_resource_limits() {
     let mut runtime = RustFFIRuntime::new();
-    
+
     // Test with deeply nested code (potential stack overflow)
     let mut deep_code = String::new();
     for i in 0..1000 {
@@ -51,7 +54,7 @@ fn test_ffi_resource_limits() {
     for _ in 0..1000 {
         deep_code.push_str("\n}");
     }
-    
+
     // Should handle gracefully
     let result = runtime.execute(&deep_code);
     assert!(result.is_ok() || result.is_err());
@@ -61,7 +64,7 @@ fn test_ffi_resource_limits() {
 #[test]
 fn test_ffi_type_safety() {
     use dist_agent_lang::ffi::interface::value_to_json;
-    
+
     // Test all value types convert safely
     let values = vec![
         Value::Int(42),
@@ -76,7 +79,7 @@ fn test_ffi_type_safety() {
             map
         }),
     ];
-    
+
     for value in values {
         let json = value_to_json(&value);
         // Should not panic
@@ -88,11 +91,11 @@ fn test_ffi_type_safety() {
 #[test]
 fn test_ffi_null_empty_inputs() {
     let mut runtime = RustFFIRuntime::new();
-    
+
     // Test empty input
     let result1 = runtime.execute("");
     assert!(result1.is_ok() || result1.is_err());
-    
+
     // Test null-like input
     let result2 = runtime.execute("let x = null;");
     assert!(result2.is_ok() || result2.is_err());
@@ -102,7 +105,7 @@ fn test_ffi_null_empty_inputs() {
 #[test]
 fn test_ffi_injection_prevention() {
     let mut runtime = RustFFIRuntime::new();
-    
+
     // Test various injection patterns
     let injection_patterns = vec![
         "'; DROP TABLE users; --",
@@ -111,7 +114,7 @@ fn test_ffi_injection_prevention() {
         "<script>alert('xss')</script>",
         "../../etc/passwd",
     ];
-    
+
     for pattern in injection_patterns {
         let code = format!("let x = \"{}\";", pattern);
         let result = runtime.execute(&code);
@@ -125,7 +128,7 @@ fn test_ffi_injection_prevention() {
 fn test_ffi_config_validation() {
     // Test with valid config for FFI-only mode
     let valid_config = FFIConfig::ffi_only();
-    
+
     let _interface = FFIInterface::new(valid_config);
     // Interface should be created successfully
     // Note: is_available() is on ServiceInterface trait, not FFIInterface directly
@@ -145,9 +148,9 @@ fn test_ffi_config_validation() {
 #[test]
 fn test_ffi_concurrent_safety() {
     use std::thread;
-    
+
     let mut handles = vec![];
-    
+
     for i in 0..10 {
         let handle = thread::spawn(move || {
             let mut runtime = RustFFIRuntime::new();
@@ -156,7 +159,7 @@ fn test_ffi_concurrent_safety() {
         });
         handles.push(handle);
     }
-    
+
     for handle in handles {
         let result = handle.join().unwrap();
         assert!(result.is_ok() || result.is_err());
@@ -168,12 +171,12 @@ fn test_ffi_concurrent_safety() {
 fn test_ffi_memory_safety() {
     // Run many operations and check for memory leaks
     let mut runtime = RustFFIRuntime::new();
-    
+
     for i in 0..1000 {
         let code = format!("let x{} = {};", i, i);
         let _ = runtime.execute(&code);
     }
-    
+
     // If we get here without OOM, memory is being managed
     assert!(true);
 }
@@ -183,7 +186,7 @@ fn test_ffi_memory_safety() {
 fn test_ffi_array_bounds() {
     // Test with out-of-bounds array access attempts
     let mut runtime = RustFFIRuntime::new();
-    
+
     // This would need to be tested with actual array access syntax
     // For now, just test that invalid syntax is handled
     let invalid_code = "let arr = [1, 2, 3]; let x = arr[100];";
@@ -196,7 +199,7 @@ fn test_ffi_array_bounds() {
 #[test]
 fn test_ffi_special_characters() {
     let mut runtime = RustFFIRuntime::new();
-    
+
     let special_chars = vec![
         "\0", // Null byte
         "\n", // Newline
@@ -206,7 +209,7 @@ fn test_ffi_special_characters() {
         "\"", // Quote
         "'",  // Single quote
     ];
-    
+
     for ch in special_chars {
         let code = format!("let x = \"{}\";", ch);
         let result = runtime.execute(&code);
@@ -219,7 +222,7 @@ fn test_ffi_special_characters() {
 #[test]
 fn test_ffi_infinite_loop_prevention() {
     let mut runtime = RustFFIRuntime::new();
-    
+
     // Note: This would require timeout mechanism
     // For now, test that code with potential loops is handled
     let loop_code = "let i = 0; while i < 10 { i = i + 1; }";
@@ -227,4 +230,3 @@ fn test_ffi_infinite_loop_prevention() {
     // Should either execute or fail with timeout
     assert!(result.is_ok() || result.is_err());
 }
-

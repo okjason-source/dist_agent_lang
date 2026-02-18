@@ -61,4 +61,3 @@ impl MoldConfig {
         (n * unit).min(usize::MAX) / 4096 // rough page count for max_memory
     }
 }
-

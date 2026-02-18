@@ -24,307 +24,514 @@ impl Lexer {
     }
 
     pub fn tokenize_immutable(&self) -> Result<Vec<Token>, LexerError> {
-        self.tokenize_with_positions_immutable().map(|tokens_with_pos| {
-            tokens_with_pos.into_iter().map(|twp| twp.token).collect()
-        })
+        self.tokenize_with_positions_immutable()
+            .map(|tokens_with_pos| tokens_with_pos.into_iter().map(|twp| twp.token).collect())
     }
 
-    pub fn tokenize_with_positions_immutable(&self) -> Result<Vec<crate::lexer::tokens::TokenWithPosition>, LexerError> {
+    pub fn tokenize_with_positions_immutable(
+        &self,
+    ) -> Result<Vec<crate::lexer::tokens::TokenWithPosition>, LexerError> {
         let mut tokens = Vec::new();
         let mut position = self.position;
         let mut line = self.line;
         let mut column = self.column;
-        
+
         // Phase 2: Token count limit - prevent DoS via excessive tokens
         const MAX_TOKENS: usize = 1_000_000; // 1M tokens
-        
+
         // Safety: Prevent infinite loops from mutations that cause position to not advance
         let max_iterations = self.input.len() * 2; // Allow up to 2x input length iterations
         let mut iterations = 0;
-        
+
         while position < self.input.len() {
             // Safety check: prevent infinite loops
             iterations += 1;
             if iterations > max_iterations {
                 return Err(LexerError::UnexpectedCharacter('\0', line, column));
             }
-            
+
             // Phase 2: Check token count limit
             if tokens.len() >= MAX_TOKENS {
-                return Err(LexerError::TooManyTokens(line, column, tokens.len(), MAX_TOKENS));
+                return Err(LexerError::TooManyTokens(
+                    line,
+                    column,
+                    tokens.len(),
+                    MAX_TOKENS,
+                ));
             }
-            
+
             // Skip whitespace first
-            let (new_pos, new_line, new_col) = self.skip_whitespace_immutable(position, line, column);
+            let (new_pos, new_line, new_col) =
+                self.skip_whitespace_immutable(position, line, column);
             position = new_pos;
             line = new_line;
             column = new_col;
-            
+
             // Check if we've reached the end
             if position >= self.input.len() {
                 break;
             }
-            
+
             // Get the next token
-            let (new_pos, new_line, new_col, token) = self.next_token_immutable(position, line, column)?;
-            
+            let (new_pos, new_line, new_col, token) =
+                self.next_token_immutable(position, line, column)?;
+
             // Safety check: ensure position advances (prevents infinite loops from mutations)
             if new_pos <= position {
                 return Err(LexerError::UnexpectedCharacter('\0', line, column));
             }
-            
+
             // Store the token with its position (before advancing)
-            tokens.push(crate::lexer::tokens::TokenWithPosition::new(token, line, column));
+            tokens.push(crate::lexer::tokens::TokenWithPosition::new(
+                token, line, column,
+            ));
             position = new_pos;
             line = new_line;
             column = new_col.max(1); // Ensure column is always >= 1
         }
-        
-        tokens.push(crate::lexer::tokens::TokenWithPosition::new(Token::EOF, line, column));
+
+        tokens.push(crate::lexer::tokens::TokenWithPosition::new(
+            Token::EOF,
+            line,
+            column,
+        ));
         Ok(tokens)
     }
 
     fn next_token(&mut self) -> Result<Token, LexerError> {
-        let (new_pos, new_line, new_col, token) = self.next_token_immutable(self.position, self.line, self.column)?;
+        let (new_pos, new_line, new_col, token) =
+            self.next_token_immutable(self.position, self.line, self.column)?;
         self.position = new_pos;
         self.line = new_line;
         self.column = new_col;
         Ok(token)
     }
 
-    fn next_token_immutable(&self, position: usize, line: usize, column: usize) -> Result<(usize, usize, usize, Token), LexerError> {
+    fn next_token_immutable(
+        &self,
+        position: usize,
+        line: usize,
+        column: usize,
+    ) -> Result<(usize, usize, usize, Token), LexerError> {
         if position >= self.input.len() {
             return Err(LexerError::UnexpectedCharacter('\0', line, column));
         }
-        
+
         let ch = self.input[position];
         let mut new_position = position;
         let new_line = line;
         let mut new_column = column.max(1); // Ensure column is always >= 1
-        
+
         match ch {
             // Identifiers and keywords (include $ for SQL placeholders in strings, identifiers)
             'a'..='z' | 'A'..='Z' | '_' | '$' => {
                 let (pos, identifier) = self.read_identifier_immutable(position);
                 new_position = pos;
-                
+
                 // Handle boolean and null literals
                 match identifier.as_str() {
-                    "true" => Ok((new_position, new_line, new_column, Token::Literal(Literal::Bool(true)))),
-                    "false" => Ok((new_position, new_line, new_column, Token::Literal(Literal::Bool(false)))),
-                    "null" => Ok((new_position, new_line, new_column, Token::Literal(Literal::Null))),
+                    "true" => Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Literal(Literal::Bool(true)),
+                    )),
+                    "false" => Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Literal(Literal::Bool(false)),
+                    )),
+                    "null" => Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Literal(Literal::Null),
+                    )),
                     _ => {
                         // Check if this might be a namespace call (identifier::)
-                        if new_position < self.input.len() && 
-                           self.input[new_position] == ':' && 
-                           new_position + 1 < self.input.len() && 
-                           self.input[new_position + 1] == ':' {
+                        if new_position < self.input.len()
+                            && self.input[new_position] == ':'
+                            && new_position + 1 < self.input.len()
+                            && self.input[new_position + 1] == ':'
+                        {
                             // Treat as identifier for namespace calls
-                            Ok((new_position, new_line, new_column, Token::Identifier(identifier)))
+                            Ok((
+                                new_position,
+                                new_line,
+                                new_column,
+                                Token::Identifier(identifier),
+                            ))
                         } else if let Some(keyword) = self.is_keyword(&identifier) {
                             Ok((new_position, new_line, new_column, Token::Keyword(keyword)))
                         } else {
-                            Ok((new_position, new_line, new_column, Token::Identifier(identifier)))
+                            Ok((
+                                new_position,
+                                new_line,
+                                new_column,
+                                Token::Identifier(identifier),
+                            ))
                         }
                     }
                 }
             }
-            
+
             // Numbers
             '0'..='9' => {
                 let (pos, literal) = self.read_number_immutable(position)?;
                 new_position = pos;
                 Ok((new_position, new_line, new_column, Token::Literal(literal)))
             }
-            
+
             // Strings
             '"' => {
-                let (pos, final_line, final_col, string) = self.read_string_immutable_with_positions(position, new_line, new_column)?;
+                let (pos, final_line, final_col, string) =
+                    self.read_string_immutable_with_positions(position, new_line, new_column)?;
                 new_position = pos;
-                Ok((new_position, final_line, final_col, Token::Literal(Literal::String(string))))
+                Ok((
+                    new_position,
+                    final_line,
+                    final_col,
+                    Token::Literal(Literal::String(string)),
+                ))
             }
-            
+
             // Operators and punctuation
             '+' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Operator(Operator::Plus)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Operator(Operator::Plus),
+                ))
             }
             '-' => {
                 if position + 1 < self.input.len() && self.input[position + 1] == '>' {
                     new_position += 2;
                     new_column += 2;
-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Arrow)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Punctuation(Punctuation::Arrow),
+                    ))
                 } else {
                     new_position += 1;
                     new_column += 1;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Minus)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::Minus),
+                    ))
                 }
             }
             '*' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Operator(Operator::Star)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Operator(Operator::Star),
+                ))
             }
             '/' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Operator(Operator::Slash)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Operator(Operator::Slash),
+                ))
             }
             '%' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Operator(Operator::Percent)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Operator(Operator::Percent),
+                ))
             }
-            
+
             '@' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::At)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Punctuation(Punctuation::At),
+                ))
             }
-            
+
             '=' => {
                 if position + 1 < self.input.len() && self.input[position + 1] == '>' {
                     new_position += 2;
                     new_column += 2;
-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::FatArrow)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Punctuation(Punctuation::FatArrow),
+                    ))
                 } else if position + 1 < self.input.len() && self.input[position + 1] == '=' {
                     new_position += 2;
                     new_column += 2;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Equal)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::Equal),
+                    ))
                 } else {
                     new_position += 1;
                     new_column += 1;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Assign)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::Assign),
+                    ))
                 }
             }
-            
+
             '!' => {
                 if position + 1 < self.input.len() && self.input[position + 1] == '=' {
                     new_position += 2;
                     new_column += 2;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::NotEqual)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::NotEqual),
+                    ))
                 } else {
                     new_position += 1;
                     new_column += 1;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Not)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::Not),
+                    ))
                 }
             }
-            
+
             '<' => {
                 if position + 1 < self.input.len() && self.input[position + 1] == '=' {
                     new_position += 2;
                     new_column += 2;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::LessEqual)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::LessEqual),
+                    ))
                 } else {
                     new_position += 1;
                     new_column += 1;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Less)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::Less),
+                    ))
                 }
             }
-            
+
             '>' => {
                 if position + 1 < self.input.len() && self.input[position + 1] == '=' {
                     new_position += 2;
                     new_column += 2;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::GreaterEqual)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::GreaterEqual),
+                    ))
                 } else {
                     new_position += 1;
                     new_column += 1;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Greater)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::Greater),
+                    ))
                 }
             }
-            
+
             '&' => {
                 if position + 1 < self.input.len() && self.input[position + 1] == '&' {
                     new_position += 2;
                     new_column += 2;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::And)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::And),
+                    ))
                 } else {
                     Err(LexerError::UnexpectedCharacter(ch, line, column))
                 }
             }
-            
+
             '|' => {
                 if position + 1 < self.input.len() && self.input[position + 1] == '|' {
                     new_position += 2;
                     new_column += 2;
-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Or)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Operator(Operator::Or),
+                    ))
                 } else {
                     Err(LexerError::UnexpectedCharacter(ch, line, column))
                 }
             }
-            
+
             ':' => {
                 if position + 1 < self.input.len() && self.input[position + 1] == ':' {
                     new_position += 2;
                     new_column += 2;
-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::DoubleColon)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Punctuation(Punctuation::DoubleColon),
+                    ))
                 } else {
                     new_position += 1;
                     new_column += 1;
-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Colon)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Punctuation(Punctuation::Colon),
+                    ))
                 }
             }
-            
+
             '.' => {
                 // Check for range operator (..)
                 if position + 1 < self.input.len() && self.input[position + 1] == '.' {
                     new_position += 2;
                     new_column += 2;
-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::DotDot)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Punctuation(Punctuation::DotDot),
+                    ))
                 } else {
                     new_position += 1;
                     new_column += 1;
-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Dot)))
+                    Ok((
+                        new_position,
+                        new_line,
+                        new_column,
+                        Token::Punctuation(Punctuation::Dot),
+                    ))
                 }
             }
             '?' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Question)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Punctuation(Punctuation::Question),
+                ))
             }
             ',' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Comma)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Punctuation(Punctuation::Comma),
+                ))
             }
             ';' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Semicolon)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Punctuation(Punctuation::Semicolon),
+                ))
             }
             '[' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::LeftBracket)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Punctuation(Punctuation::LeftBracket),
+                ))
             }
             ']' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::RightBracket)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Punctuation(Punctuation::RightBracket),
+                ))
             }
             '{' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::LeftBrace)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Punctuation(Punctuation::LeftBrace),
+                ))
             }
             '}' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::RightBrace)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Punctuation(Punctuation::RightBrace),
+                ))
             }
             '(' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::LeftParen)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Punctuation(Punctuation::LeftParen),
+                ))
             }
             ')' => {
                 new_position += 1;
                 new_column += 1;
-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::RightParen)))
+                Ok((
+                    new_position,
+                    new_line,
+                    new_column,
+                    Token::Punctuation(Punctuation::RightParen),
+                ))
             }
-            
+
             _ => Err(LexerError::UnexpectedCharacter(ch, line, column)),
         }
         .map(|(pos, ln, col, token)| {
@@ -341,7 +548,7 @@ impl Lexer {
 
     fn read_identifier(&mut self) -> String {
         let start = self.position;
-        
+
         while self.position < self.input.len() {
             let ch = self.current_char();
             if ch.is_alphanumeric() || ch == '_' {
@@ -350,13 +557,13 @@ impl Lexer {
                 break;
             }
         }
-        
+
         self.input[start..self.position].iter().collect()
     }
 
     fn read_number(&mut self) -> Result<i64, LexerError> {
         let start = self.position;
-        
+
         while self.position < self.input.len() {
             let ch = self.current_char();
             if ch.is_ascii_digit() {
@@ -365,11 +572,11 @@ impl Lexer {
                 break;
             }
         }
-        
+
         let number_str: String = self.input[start..self.position].iter().collect();
-        number_str.parse().map_err(|_| {
-            LexerError::InvalidNumber(number_str, self.line, self.column)
-        })
+        number_str
+            .parse()
+            .map_err(|_| LexerError::InvalidNumber(number_str, self.line, self.column))
     }
 
     fn read_string(&mut self) -> Result<String, LexerError> {
@@ -398,13 +605,19 @@ impl Lexer {
     }
 
     fn skip_whitespace(&mut self) {
-        let (new_pos, new_line, new_col) = self.skip_whitespace_immutable(self.position, self.line, self.column);
+        let (new_pos, new_line, new_col) =
+            self.skip_whitespace_immutable(self.position, self.line, self.column);
         self.position = new_pos;
         self.line = new_line;
         self.column = new_col;
     }
 
-    fn skip_whitespace_immutable(&self, mut position: usize, mut line: usize, mut column: usize) -> (usize, usize, usize) {
+    fn skip_whitespace_immutable(
+        &self,
+        mut position: usize,
+        mut line: usize,
+        mut column: usize,
+    ) -> (usize, usize, usize) {
         while position < self.input.len() {
             let ch = self.input[position];
             match ch {
@@ -440,7 +653,9 @@ impl Lexer {
                                     position += 1;
                                     break;
                                 } else if comment_ch == '\r' {
-                                    if position + 1 < self.input.len() && self.input[position + 1] == '\n' {
+                                    if position + 1 < self.input.len()
+                                        && self.input[position + 1] == '\n'
+                                    {
                                         position += 1;
                                     }
                                     line += 1;
@@ -463,7 +678,9 @@ impl Lexer {
                                     column = 1;
                                     position += 1;
                                 } else if self.input[position] == '\r' {
-                                    if position + 1 < self.input.len() && self.input[position + 1] == '\n' {
+                                    if position + 1 < self.input.len()
+                                        && self.input[position + 1] == '\n'
+                                    {
                                         position += 1;
                                     }
                                     line += 1;
@@ -539,10 +756,13 @@ impl Lexer {
             ("versioned", Keyword::Versioned),
             ("deprecated", Keyword::Deprecated),
             ("compile_target", Keyword::CompileTarget), // NEW: Compilation target
-            ("chain", Keyword::Chain), // NEW: Chain keyword
-            ("interface", Keyword::Interface), // NEW: Interface keyword
-        ].iter().cloned().collect();
-        
+            ("chain", Keyword::Chain),                  // NEW: Chain keyword
+            ("interface", Keyword::Interface),          // NEW: Interface keyword
+        ]
+        .iter()
+        .cloned()
+        .collect();
+
         keywords.get(identifier).cloned()
     }
 
@@ -583,7 +803,7 @@ impl Lexer {
     fn read_number_immutable(&self, mut position: usize) -> Result<(usize, Literal), LexerError> {
         let start = position;
         let mut has_decimal = false;
-        
+
         // Read integer part
         while position < self.input.len() {
             let ch = self.input[position];
@@ -593,14 +813,14 @@ impl Lexer {
                 break;
             }
         }
-        
+
         // Check for decimal point
         if position < self.input.len() && self.input[position] == '.' {
             // Look ahead to ensure there's a digit after the dot (not a method call like `0.toString()`)
             if position + 1 < self.input.len() && self.input[position + 1].is_ascii_digit() {
                 has_decimal = true;
                 position += 1; // consume '.'
-                
+
                 // Read fractional part
                 while position < self.input.len() {
                     let ch = self.input[position];
@@ -612,18 +832,18 @@ impl Lexer {
                 }
             }
         }
-        
+
         let number_str: String = self.input[start..position].iter().collect();
-        
+
         if has_decimal {
             match number_str.parse::<f64>() {
                 Ok(num) => Ok((position, Literal::Float(num))),
-                Err(_) => Err(LexerError::InvalidNumber(number_str, 0, 0))
+                Err(_) => Err(LexerError::InvalidNumber(number_str, 0, 0)),
             }
         } else {
             match number_str.parse::<i64>() {
                 Ok(num) => Ok((position, Literal::Int(num))),
-                Err(_) => Err(LexerError::InvalidNumber(number_str, 0, 0))
+                Err(_) => Err(LexerError::InvalidNumber(number_str, 0, 0)),
             }
         }
     }
@@ -651,7 +871,12 @@ impl Lexer {
         Err(LexerError::UnterminatedString(0, 0))
     }
 
-    fn read_string_immutable_with_positions(&self, mut position: usize, mut line: usize, mut column: usize) -> Result<(usize, usize, usize, String), LexerError> {
+    fn read_string_immutable_with_positions(
+        &self,
+        mut position: usize,
+        mut line: usize,
+        mut column: usize,
+    ) -> Result<(usize, usize, usize, String), LexerError> {
         position += 1; // Skip opening quote
         column += 1;
         let mut string = String::new();
@@ -714,13 +939,13 @@ fn decode_escape(ch: char) -> char {
 pub enum LexerError {
     #[error("Unexpected character '{0}' at line {1}, column {2}")]
     UnexpectedCharacter(char, usize, usize),
-    
+
     #[error("Invalid number '{0}' at line {1}, column {2}")]
     InvalidNumber(String, usize, usize),
-    
+
     #[error("Unterminated string at line {0}, column {1}")]
     UnterminatedString(usize, usize),
-    
+
     #[error("Too many tokens: {2} (max: {3}) at line {0}, column {1}")]
     TooManyTokens(usize, usize, usize, usize),
 }

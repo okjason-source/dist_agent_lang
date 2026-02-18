@@ -1,8 +1,8 @@
 // Unified interface abstraction for HTTP and FFI
 use crate::runtime::values::Value;
-use std::collections::HashMap;
 #[cfg(feature = "http-interface")]
 use log;
+use std::collections::HashMap;
 
 /// Interface type selection
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,7 +50,8 @@ impl FFIInterface {
 
         if config.enable_ffi {
             if config.rust_enabled {
-                ffi_interface = Some(Box::new(RustFFIInterface::new()) as Box<dyn ServiceInterface>);
+                ffi_interface =
+                    Some(Box::new(RustFFIInterface::new()) as Box<dyn ServiceInterface>);
             }
         }
 
@@ -71,9 +72,8 @@ impl FFIInterface {
         prefer_ffi: Option<bool>,
     ) -> Result<Value, String> {
         // Auto-detect if no preference specified
-        let should_use_ffi = prefer_ffi.unwrap_or_else(|| {
-            self.auto_detect_interface(service_name, function_name, args)
-        });
+        let should_use_ffi = prefer_ffi
+            .unwrap_or_else(|| self.auto_detect_interface(service_name, function_name, args));
 
         match self.config.interface_type {
             InterfaceType::HTTP => {
@@ -133,11 +133,20 @@ impl FFIInterface {
         if self.ffi_interface.is_some() {
             // Heuristic 2: Function name patterns that suggest high-frequency operations
             let ffi_preferred_patterns = [
-                "hash", "sign", "verify", "encrypt", "decrypt",
-                "compute", "calculate", "process", "transform",
-                "batch_", "parallel_", "fast_",
+                "hash",
+                "sign",
+                "verify",
+                "encrypt",
+                "decrypt",
+                "compute",
+                "calculate",
+                "process",
+                "transform",
+                "batch_",
+                "parallel_",
+                "fast_",
             ];
-            
+
             for pattern in &ffi_preferred_patterns {
                 if function_name.contains(pattern) {
                     return true; // Prefer FFI for compute-intensive operations
@@ -146,10 +155,8 @@ impl FFIInterface {
 
             // Heuristic 3: Small argument size suggests local operation
             // Large arguments might benefit from HTTP's serialization
-            let total_arg_size: usize = args.iter()
-                .map(|v| self.estimate_value_size(v))
-                .sum();
-            
+            let total_arg_size: usize = args.iter().map(|v| self.estimate_value_size(v)).sum();
+
             if total_arg_size < 1024 {
                 // Small data - prefer FFI (low serialization overhead)
                 return true;
@@ -158,10 +165,16 @@ impl FFIInterface {
 
         // Heuristic 4: Network-bound operations prefer HTTP
         let http_preferred_patterns = [
-            "chain::", "database::", "network_", "remote_",
-            "fetch", "request", "api_", "http_",
+            "chain::",
+            "database::",
+            "network_",
+            "remote_",
+            "fetch",
+            "request",
+            "api_",
+            "http_",
         ];
-        
+
         for pattern in &http_preferred_patterns {
             if function_name.contains(pattern) || service_name.contains(pattern) {
                 return false; // Prefer HTTP for network operations
@@ -183,21 +196,22 @@ impl FFIInterface {
             Value::String(s) => s.len(),
             Value::List(arr) => arr.iter().map(|v| self.estimate_value_size(v)).sum(),
             Value::Array(arr) => arr.iter().map(|v| self.estimate_value_size(v)).sum(),
-            Value::Map(map) => {
-                map.iter()
-                    .map(|(k, v)| k.len() + self.estimate_value_size(v))
-                    .sum()
-            }
+            Value::Map(map) => map
+                .iter()
+                .map(|(k, v)| k.len() + self.estimate_value_size(v))
+                .sum(),
             Value::Result(ok_val, err_val) => {
                 self.estimate_value_size(ok_val) + self.estimate_value_size(err_val)
             }
-            Value::Option(opt) => {
-                opt.as_ref().map(|v| self.estimate_value_size(v)).unwrap_or(0)
-            }
+            Value::Option(opt) => opt
+                .as_ref()
+                .map(|v| self.estimate_value_size(v))
+                .unwrap_or(0),
             Value::Set(set) => set.len() * 8, // Rough estimate
-            Value::Struct(_, fields) => {
-                fields.iter().map(|(k, v)| k.len() + self.estimate_value_size(v)).sum()
-            }
+            Value::Struct(_, fields) => fields
+                .iter()
+                .map(|(k, v)| k.len() + self.estimate_value_size(v))
+                .sum(),
             Value::Closure(id) => id.len() + 8,
         }
     }
@@ -227,10 +241,7 @@ impl ServiceInterface for HttpInterface {
         args: &[Value],
     ) -> Result<Value, String> {
         // Serialize arguments to JSON
-        let json_args: Vec<serde_json::Value> = args
-            .iter()
-            .map(|v| value_to_json(v))
-            .collect();
+        let json_args: Vec<serde_json::Value> = args.iter().map(|v| value_to_json(v)).collect();
 
         // Make HTTP request
         let url = format!("{}/api/{}/{}", self.base_url, service_name, function_name);
@@ -310,7 +321,10 @@ impl ServiceInterface for RustFFIInterface {
         // Note: This is a simplified implementation
         // In a real implementation, you'd maintain a runtime instance
         // For now, return an error indicating FFI needs runtime integration
-        Err("FFI interface requires runtime integration - use execute_source or execute_program".to_string())
+        Err(
+            "FFI interface requires runtime integration - use execute_source or execute_program"
+                .to_string(),
+        )
     }
 
     fn interface_type(&self) -> InterfaceType {
@@ -332,9 +346,7 @@ pub fn value_to_json(value: &Value) -> serde_json::Value {
         Value::String(s) => serde_json::Value::String(s.clone()),
         Value::Bool(b) => serde_json::Value::Bool(*b),
         Value::Null => serde_json::Value::Null,
-        Value::List(arr) => {
-            serde_json::Value::Array(arr.iter().map(value_to_json).collect())
-        }
+        Value::List(arr) => serde_json::Value::Array(arr.iter().map(value_to_json).collect()),
         Value::Map(map) => {
             let mut json_map = serde_json::Map::new();
             for (k, v) in map {
@@ -349,15 +361,15 @@ pub fn value_to_json(value: &Value) -> serde_json::Value {
             json_map.insert("err".to_string(), value_to_json(err_val));
             serde_json::Value::Object(json_map)
         }
-        Value::Option(opt) => {
-            match opt {
-                Some(v) => value_to_json(v),
-                None => serde_json::Value::Null,
-            }
-        }
-        Value::Set(set) => {
-            serde_json::Value::Array(set.iter().map(|s| serde_json::Value::String(s.clone())).collect())
-        }
+        Value::Option(opt) => match opt {
+            Some(v) => value_to_json(v),
+            None => serde_json::Value::Null,
+        },
+        Value::Set(set) => serde_json::Value::Array(
+            set.iter()
+                .map(|s| serde_json::Value::String(s.clone()))
+                .collect(),
+        ),
         Value::Struct(name, fields) => {
             let mut json_map = serde_json::Map::new();
             json_map.insert("_type".to_string(), serde_json::Value::String(name.clone()));
@@ -366,9 +378,7 @@ pub fn value_to_json(value: &Value) -> serde_json::Value {
             }
             serde_json::Value::Object(json_map)
         }
-        Value::Array(arr) => {
-            serde_json::Value::Array(arr.iter().map(value_to_json).collect())
-        }
+        Value::Array(arr) => serde_json::Value::Array(arr.iter().map(value_to_json).collect()),
         Value::Closure(id) => serde_json::Value::String(format!("<closure {}>", id)),
     }
 }
@@ -389,8 +399,7 @@ pub fn json_to_value(json: &serde_json::Value) -> Result<Value, String> {
         serde_json::Value::Bool(b) => Ok(Value::Bool(*b)),
         serde_json::Value::Null => Ok(Value::Null),
         serde_json::Value::Array(arr) => {
-            let values: Result<Vec<Value>, String> =
-                arr.iter().map(json_to_value).collect();
+            let values: Result<Vec<Value>, String> = arr.iter().map(json_to_value).collect();
             Ok(Value::List(values?))
         }
         serde_json::Value::Object(map) => {
@@ -406,7 +415,7 @@ pub fn json_to_value(json: &serde_json::Value) -> Result<Value, String> {
                     return Ok(Value::Struct(type_str.to_string(), fields));
                 }
             }
-            
+
             // Regular map
             let mut value_map = HashMap::new();
             for (k, v) in map {

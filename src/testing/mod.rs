@@ -1,10 +1,9 @@
+pub mod coverage;
 pub mod framework;
 pub mod mock;
-pub mod coverage;
 pub mod runner;
 
 // Re-export commonly used items
-pub use framework::{TestCase, TestSuite, TestResult, TestStatus, TestConfig};
-pub use mock::{MockFunction, MockRegistry, MockBuilder};
+pub use framework::{TestCase, TestConfig, TestResult, TestStatus, TestSuite};
+pub use mock::{MockBuilder, MockFunction, MockRegistry};
 pub use runner::TestRunner;
-

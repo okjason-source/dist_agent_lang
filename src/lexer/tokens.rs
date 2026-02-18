@@ -1,5 +1,5 @@
-use std::fmt;
 use std::collections::HashMap;
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
@@ -8,7 +8,7 @@ pub enum TokenType {
     String(String),
     Boolean(bool),
     Identifier(String),
-    
+
     // Keywords
     Let,
     Fn,
@@ -44,7 +44,7 @@ pub enum TokenType {
     Loop,
     Await,
     Async,
-    
+
     // New keywords for enhanced features
     Result,
     Option,
@@ -66,7 +66,7 @@ pub enum TokenType {
     Super,
     Self_,
     SelfType,
-    
+
     // Operators
     Plus,
     Minus,
@@ -89,7 +89,7 @@ pub enum TokenType {
     Tilde,
     LeftShift,
     RightShift,
-    
+
     // Assignment operators
     PlusEqual,
     MinusEqual,
@@ -101,7 +101,7 @@ pub enum TokenType {
     CaretEqual,
     LeftShiftEqual,
     RightShiftEqual,
-    
+
     // Punctuation
     LeftParen,
     RightParen,
@@ -120,7 +120,7 @@ pub enum TokenType {
     Dollar,
     Question,
     Exclamation,
-    
+
     // Attributes
     Trust,
     Secure,
@@ -135,9 +135,9 @@ pub enum TokenType {
     Versioned,
     Deprecated,
     CompileTarget, // NEW: Compilation target attribute
-    Chain, // NEW: Chain attribute
-    Interface, // NEW: Interface attribute
-    
+    Chain,         // NEW: Chain attribute
+    Interface,     // NEW: Interface attribute
+
     // Special
     EOF,
     Error(String),
@@ -184,7 +184,7 @@ impl fmt::Display for TokenType {
             TokenType::Loop => write!(f, "loop"),
             TokenType::Await => write!(f, "await"),
             TokenType::Async => write!(f, "async"),
-            
+
             // New keywords
             TokenType::Result => write!(f, "Result"),
             TokenType::Option => write!(f, "Option"),
@@ -206,7 +206,7 @@ impl fmt::Display for TokenType {
             TokenType::Super => write!(f, "super"),
             TokenType::Self_ => write!(f, "self"),
             TokenType::SelfType => write!(f, "Self"),
-            
+
             // Operators
             TokenType::Plus => write!(f, "+"),
             TokenType::Minus => write!(f, "-"),
@@ -229,7 +229,7 @@ impl fmt::Display for TokenType {
             TokenType::Tilde => write!(f, "~"),
             TokenType::LeftShift => write!(f, "<<"),
             TokenType::RightShift => write!(f, ">>"),
-            
+
             // Assignment operators
             TokenType::PlusEqual => write!(f, "+="),
             TokenType::MinusEqual => write!(f, "-="),
@@ -241,7 +241,7 @@ impl fmt::Display for TokenType {
             TokenType::CaretEqual => write!(f, "^="),
             TokenType::LeftShiftEqual => write!(f, "<<="),
             TokenType::RightShiftEqual => write!(f, ">>="),
-            
+
             // Punctuation
             TokenType::LeftParen => write!(f, "("),
             TokenType::RightParen => write!(f, ")"),
@@ -260,7 +260,7 @@ impl fmt::Display for TokenType {
             TokenType::Dollar => write!(f, "$"),
             TokenType::Question => write!(f, "?"),
             TokenType::Exclamation => write!(f, "!"),
-            
+
             // Attributes
             TokenType::Trust => write!(f, "@trust"),
             TokenType::Secure => write!(f, "@secure"),
@@ -277,7 +277,7 @@ impl fmt::Display for TokenType {
             TokenType::CompileTarget => write!(f, "@compile_target"),
             TokenType::Chain => write!(f, "@chain"),
             TokenType::Interface => write!(f, "@interface"),
-            
+
             // Special
             TokenType::EOF => write!(f, "EOF"),
             TokenType::Error(msg) => write!(f, "Error({})", msg),
@@ -354,8 +354,8 @@ pub enum Keyword {
     Private,
     Audit,
     CompileTarget, // NEW: Compilation target keyword
-    Chain, // NEW: Chain keyword
-    Interface, // NEW: Interface keyword
+    Chain,         // NEW: Chain keyword
+    Interface,     // NEW: Interface keyword
     // Web, // Treat as identifier for namespace calls
     Mobile,
     Desktop,
@@ -403,8 +403,8 @@ pub enum Operator {
     Assign,
     Not,
     Colon,
-    NotEqual,  // != operator
-    Dot,       // . operator
+    NotEqual, // != operator
+    Dot,      // . operator
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -419,7 +419,7 @@ pub enum Punctuation {
     Colon,
     Comma,
     Dot,
-    DotDot,  // Range operator (..)
+    DotDot, // Range operator (..)
     Arrow,
     FatArrow,
     At,
@@ -444,19 +444,19 @@ pub enum Literal {
 pub enum Token {
     // Keyword variants
     Keyword(Keyword),
-    
-    // Operator variants  
+
+    // Operator variants
     Operator(Operator),
-    
+
     // Punctuation variants
     Punctuation(Punctuation),
-    
+
     // Literal variants
     Literal(Literal),
-    
+
     // Identifier variant
     Identifier(String),
-    
+
     // Special token
     EOF,
 }
@@ -471,7 +471,11 @@ pub struct TokenWithPosition {
 
 impl TokenWithPosition {
     pub fn new(token: Token, line: usize, column: usize) -> Self {
-        Self { token, line, column }
+        Self {
+            token,
+            line,
+            column,
+        }
     }
 }
 
@@ -497,7 +501,11 @@ impl TokenStruct {
 
 impl fmt::Display for TokenStruct {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} at line {}, column {}", self.token_type, self.line, self.column)
+        write!(
+            f,
+            "{} at line {}, column {}",
+            self.token_type, self.line, self.column
+        )
     }
 }
 
@@ -535,7 +543,7 @@ impl CompilationTarget {
             _ => None,
         }
     }
-    
+
     pub fn to_string(&self) -> String {
         match self {
             CompilationTarget::Blockchain => "blockchain".to_string(),
@@ -566,22 +574,22 @@ impl TargetConstraint {
             trust_profiles: HashMap::new(),
         }
     }
-    
+
     pub fn with_allowed_operations(mut self, operations: Vec<String>) -> Self {
         self.allowed_operations = operations;
         self
     }
-    
+
     pub fn with_forbidden_operations(mut self, operations: Vec<String>) -> Self {
         self.forbidden_operations = operations;
         self
     }
-    
+
     pub fn with_required_attributes(mut self, attributes: Vec<String>) -> Self {
         self.required_attributes = attributes;
         self
     }
-    
+
     pub fn with_trust_profiles(mut self, profiles: HashMap<TrustLevel, SecurityProfile>) -> Self {
         self.trust_profiles = profiles;
         self
@@ -591,9 +599,9 @@ impl TargetConstraint {
 // NEW: Trust Model System
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TrustLevel {
-    Decentralized,  // Pure blockchain, no external deps
-    Hybrid,         // Mixed blockchain + external services
-    Centralized,    // Traditional centralized services
+    Decentralized, // Pure blockchain, no external deps
+    Hybrid,        // Mixed blockchain + external services
+    Centralized,   // Traditional centralized services
 }
 
 impl TrustLevel {
@@ -605,7 +613,7 @@ impl TrustLevel {
             _ => None,
         }
     }
-    
+
     pub fn to_string(&self) -> String {
         match self {
             TrustLevel::Decentralized => "decentralized".to_string(),
@@ -634,22 +642,22 @@ impl SecurityProfile {
             audit_requirements: Vec::new(),
         }
     }
-    
+
     pub fn with_allowed_apis(mut self, apis: Vec<String>) -> Self {
         self.allowed_external_apis = apis;
         self
     }
-    
+
     pub fn with_forbidden_apis(mut self, apis: Vec<String>) -> Self {
         self.forbidden_external_apis = apis;
         self
     }
-    
+
     pub fn with_required_checks(mut self, checks: Vec<String>) -> Self {
         self.required_security_checks = checks;
         self
     }
-    
+
     pub fn with_audit_requirements(mut self, requirements: Vec<String>) -> Self {
         self.audit_requirements = requirements;
         self
@@ -673,7 +681,7 @@ impl Permission {
             conditions: Vec::new(),
         }
     }
-    
+
     pub fn with_conditions(mut self, conditions: Vec<String>) -> Self {
         self.conditions = conditions;
         self
@@ -683,76 +691,82 @@ impl Permission {
 // Predefined trust profiles
 pub fn get_trust_profiles() -> HashMap<TrustLevel, SecurityProfile> {
     let mut profiles = HashMap::new();
-    
+
     // Decentralized profile
-    profiles.insert(TrustLevel::Decentralized, SecurityProfile::new(TrustLevel::Decentralized)
-        .with_allowed_apis(vec![
-            "oracle::fetch".to_string(),
-            "chain::cross_chain".to_string(),
-        ])
-        .with_forbidden_apis(vec![
-            "web::http_request".to_string(),
-            "service::external_api".to_string(),
-            "database::external".to_string(),
-        ])
-        .with_required_checks(vec![
-            "crypto::verify_signature".to_string(),
-            "auth::verify_identity".to_string(),
-            "audit::log_operation".to_string(),
-        ])
-        .with_audit_requirements(vec![
-            "all_operations_logged".to_string(),
-            "signature_verification".to_string(),
-            "immutable_audit_trail".to_string(),
-        ])
+    profiles.insert(
+        TrustLevel::Decentralized,
+        SecurityProfile::new(TrustLevel::Decentralized)
+            .with_allowed_apis(vec![
+                "oracle::fetch".to_string(),
+                "chain::cross_chain".to_string(),
+            ])
+            .with_forbidden_apis(vec![
+                "web::http_request".to_string(),
+                "service::external_api".to_string(),
+                "database::external".to_string(),
+            ])
+            .with_required_checks(vec![
+                "crypto::verify_signature".to_string(),
+                "auth::verify_identity".to_string(),
+                "audit::log_operation".to_string(),
+            ])
+            .with_audit_requirements(vec![
+                "all_operations_logged".to_string(),
+                "signature_verification".to_string(),
+                "immutable_audit_trail".to_string(),
+            ]),
     );
-    
+
     // Hybrid profile
-    profiles.insert(TrustLevel::Hybrid, SecurityProfile::new(TrustLevel::Hybrid)
-        .with_allowed_apis(vec![
-            "oracle::fetch".to_string(),
-            "service::external_api".to_string(),
-            "web::http_request".to_string(),
-        ])
-        .with_forbidden_apis(vec![
-            "database::external".to_string(),
-            "system::file_access".to_string(),
-        ])
-        .with_required_checks(vec![
-            "auth::verify_identity".to_string(),
-            "crypto::encrypt_data".to_string(),
-            "audit::log_operation".to_string(),
-        ])
-        .with_audit_requirements(vec![
-            "external_calls_logged".to_string(),
-            "data_encryption".to_string(),
-            "identity_verification".to_string(),
-        ])
+    profiles.insert(
+        TrustLevel::Hybrid,
+        SecurityProfile::new(TrustLevel::Hybrid)
+            .with_allowed_apis(vec![
+                "oracle::fetch".to_string(),
+                "service::external_api".to_string(),
+                "web::http_request".to_string(),
+            ])
+            .with_forbidden_apis(vec![
+                "database::external".to_string(),
+                "system::file_access".to_string(),
+            ])
+            .with_required_checks(vec![
+                "auth::verify_identity".to_string(),
+                "crypto::encrypt_data".to_string(),
+                "audit::log_operation".to_string(),
+            ])
+            .with_audit_requirements(vec![
+                "external_calls_logged".to_string(),
+                "data_encryption".to_string(),
+                "identity_verification".to_string(),
+            ]),
     );
-    
+
     // Centralized profile
-    profiles.insert(TrustLevel::Centralized, SecurityProfile::new(TrustLevel::Centralized)
-        .with_allowed_apis(vec![
-            "service::external_api".to_string(),
-            "web::http_request".to_string(),
-            "database::external".to_string(),
-            "system::file_access".to_string(),
-        ])
-        .with_forbidden_apis(vec![
-            "chain::transaction".to_string(),
-            "oracle::fetch".to_string(),
-        ])
-        .with_required_checks(vec![
-            "auth::verify_identity".to_string(),
-            "audit::log_operation".to_string(),
-        ])
-        .with_audit_requirements(vec![
-            "all_operations_logged".to_string(),
-            "identity_verification".to_string(),
-            "access_control".to_string(),
-        ])
+    profiles.insert(
+        TrustLevel::Centralized,
+        SecurityProfile::new(TrustLevel::Centralized)
+            .with_allowed_apis(vec![
+                "service::external_api".to_string(),
+                "web::http_request".to_string(),
+                "database::external".to_string(),
+                "system::file_access".to_string(),
+            ])
+            .with_forbidden_apis(vec![
+                "chain::transaction".to_string(),
+                "oracle::fetch".to_string(),
+            ])
+            .with_required_checks(vec![
+                "auth::verify_identity".to_string(),
+                "audit::log_operation".to_string(),
+            ])
+            .with_audit_requirements(vec![
+                "all_operations_logged".to_string(),
+                "identity_verification".to_string(),
+                "access_control".to_string(),
+            ]),
     );
-    
+
     profiles
 }
 
@@ -782,7 +796,7 @@ impl BlockchainNetwork {
             _ => Some(BlockchainNetwork::Custom(s.to_string())),
         }
     }
-    
+
     pub fn to_string(&self) -> String {
         match self {
             BlockchainNetwork::Ethereum => "ethereum".to_string(),
@@ -795,18 +809,19 @@ impl BlockchainNetwork {
             BlockchainNetwork::Custom(name) => name.clone(),
         }
     }
-    
+
     pub fn is_evm_compatible(&self) -> bool {
-        matches!(self, 
-            BlockchainNetwork::Ethereum |
-            BlockchainNetwork::Polygon |
-            BlockchainNetwork::Binance |
-            BlockchainNetwork::Avalanche |
-            BlockchainNetwork::Arbitrum |
-            BlockchainNetwork::Optimism
+        matches!(
+            self,
+            BlockchainNetwork::Ethereum
+                | BlockchainNetwork::Polygon
+                | BlockchainNetwork::Binance
+                | BlockchainNetwork::Avalanche
+                | BlockchainNetwork::Arbitrum
+                | BlockchainNetwork::Optimism
         )
     }
-    
+
     pub fn is_solana_compatible(&self) -> bool {
         matches!(self, BlockchainNetwork::Solana)
     }
@@ -841,33 +856,33 @@ impl ChainConfig {
             forbidden_operations: Vec::new(),
         }
     }
-    
+
     pub fn with_chain_id(mut self, chain_id: u64) -> Self {
         self.chain_id = chain_id;
         self
     }
-    
+
     pub fn with_rpc_url(mut self, rpc_url: String) -> Self {
         self.rpc_url = rpc_url;
         self
     }
-    
+
     pub fn with_gas_config(mut self, gas_limit: u64, gas_price: u64) -> Self {
         self.gas_limit = gas_limit;
         self.gas_price = gas_price;
         self
     }
-    
+
     pub fn with_native_token(mut self, token: String) -> Self {
         self.native_token = token;
         self
     }
-    
+
     pub fn with_supported_operations(mut self, operations: Vec<String>) -> Self {
         self.supported_operations = operations;
         self
     }
-    
+
     pub fn with_forbidden_operations(mut self, operations: Vec<String>) -> Self {
         self.forbidden_operations = operations;
         self
@@ -903,135 +918,149 @@ pub struct BridgeConfig {
 // Predefined chain configurations
 pub fn get_chain_configs() -> HashMap<BlockchainNetwork, ChainConfig> {
     let mut configs = HashMap::new();
-    
+
     // Ethereum configuration
-    configs.insert(BlockchainNetwork::Ethereum, ChainConfig::new(BlockchainNetwork::Ethereum)
-        .with_chain_id(1)
-        .with_rpc_url("https://mainnet.infura.io/v3/".to_string())
-        .with_gas_config(21000, 20)
-        .with_native_token("ETH".to_string())
-        .with_supported_operations(vec![
-            "chain::deploy".to_string(),
-            "chain::transaction".to_string(),
-            "chain::call".to_string(),
-            "oracle::fetch".to_string(),
-            "bridge::transfer".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "solana::instruction".to_string(),
-            "avalanche::subnet".to_string(),
-        ])
+    configs.insert(
+        BlockchainNetwork::Ethereum,
+        ChainConfig::new(BlockchainNetwork::Ethereum)
+            .with_chain_id(1)
+            .with_rpc_url("https://mainnet.infura.io/v3/".to_string())
+            .with_gas_config(21000, 20)
+            .with_native_token("ETH".to_string())
+            .with_supported_operations(vec![
+                "chain::deploy".to_string(),
+                "chain::transaction".to_string(),
+                "chain::call".to_string(),
+                "oracle::fetch".to_string(),
+                "bridge::transfer".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "solana::instruction".to_string(),
+                "avalanche::subnet".to_string(),
+            ]),
     );
-    
+
     // Polygon configuration
-    configs.insert(BlockchainNetwork::Polygon, ChainConfig::new(BlockchainNetwork::Polygon)
-        .with_chain_id(137)
-        .with_rpc_url("https://polygon-rpc.com/".to_string())
-        .with_gas_config(21000, 30)
-        .with_native_token("MATIC".to_string())
-        .with_supported_operations(vec![
-            "chain::deploy".to_string(),
-            "chain::transaction".to_string(),
-            "chain::call".to_string(),
-            "bridge::transfer".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "solana::instruction".to_string(),
-            "ethereum::layer1".to_string(),
-        ])
+    configs.insert(
+        BlockchainNetwork::Polygon,
+        ChainConfig::new(BlockchainNetwork::Polygon)
+            .with_chain_id(137)
+            .with_rpc_url("https://polygon-rpc.com/".to_string())
+            .with_gas_config(21000, 30)
+            .with_native_token("MATIC".to_string())
+            .with_supported_operations(vec![
+                "chain::deploy".to_string(),
+                "chain::transaction".to_string(),
+                "chain::call".to_string(),
+                "bridge::transfer".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "solana::instruction".to_string(),
+                "ethereum::layer1".to_string(),
+            ]),
     );
-    
+
     // Solana configuration
-    configs.insert(BlockchainNetwork::Solana, ChainConfig::new(BlockchainNetwork::Solana)
-        .with_chain_id(101)
-        .with_rpc_url("https://api.mainnet-beta.solana.com".to_string())
-        .with_gas_config(5000, 5000)
-        .with_native_token("SOL".to_string())
-        .with_supported_operations(vec![
-            "solana::deploy".to_string(),
-            "solana::transaction".to_string(),
-            "solana::instruction".to_string(),
-            "oracle::fetch".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "chain::deploy".to_string(),
-            "chain::transaction".to_string(),
-            "ethereum::layer1".to_string(),
-        ])
+    configs.insert(
+        BlockchainNetwork::Solana,
+        ChainConfig::new(BlockchainNetwork::Solana)
+            .with_chain_id(101)
+            .with_rpc_url("https://api.mainnet-beta.solana.com".to_string())
+            .with_gas_config(5000, 5000)
+            .with_native_token("SOL".to_string())
+            .with_supported_operations(vec![
+                "solana::deploy".to_string(),
+                "solana::transaction".to_string(),
+                "solana::instruction".to_string(),
+                "oracle::fetch".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "chain::deploy".to_string(),
+                "chain::transaction".to_string(),
+                "ethereum::layer1".to_string(),
+            ]),
     );
-    
+
     // Binance Smart Chain configuration
-    configs.insert(BlockchainNetwork::Binance, ChainConfig::new(BlockchainNetwork::Binance)
-        .with_chain_id(56)
-        .with_rpc_url("https://bsc-dataseed.binance.org/".to_string())
-        .with_gas_config(21000, 5)
-        .with_native_token("BNB".to_string())
-        .with_supported_operations(vec![
-            "chain::deploy".to_string(),
-            "chain::transaction".to_string(),
-            "chain::call".to_string(),
-            "bridge::transfer".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "solana::instruction".to_string(),
-            "avalanche::subnet".to_string(),
-        ])
+    configs.insert(
+        BlockchainNetwork::Binance,
+        ChainConfig::new(BlockchainNetwork::Binance)
+            .with_chain_id(56)
+            .with_rpc_url("https://bsc-dataseed.binance.org/".to_string())
+            .with_gas_config(21000, 5)
+            .with_native_token("BNB".to_string())
+            .with_supported_operations(vec![
+                "chain::deploy".to_string(),
+                "chain::transaction".to_string(),
+                "chain::call".to_string(),
+                "bridge::transfer".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "solana::instruction".to_string(),
+                "avalanche::subnet".to_string(),
+            ]),
     );
-    
+
     // Avalanche configuration
-    configs.insert(BlockchainNetwork::Avalanche, ChainConfig::new(BlockchainNetwork::Avalanche)
-        .with_chain_id(43114)
-        .with_rpc_url("https://api.avax.network/ext/bc/C/rpc".to_string())
-        .with_gas_config(21000, 25)
-        .with_native_token("AVAX".to_string())
-        .with_supported_operations(vec![
-            "chain::deploy".to_string(),
-            "chain::transaction".to_string(),
-            "chain::call".to_string(),
-            "bridge::transfer".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "solana::instruction".to_string(),
-            "ethereum::layer1".to_string(),
-        ])
+    configs.insert(
+        BlockchainNetwork::Avalanche,
+        ChainConfig::new(BlockchainNetwork::Avalanche)
+            .with_chain_id(43114)
+            .with_rpc_url("https://api.avax.network/ext/bc/C/rpc".to_string())
+            .with_gas_config(21000, 25)
+            .with_native_token("AVAX".to_string())
+            .with_supported_operations(vec![
+                "chain::deploy".to_string(),
+                "chain::transaction".to_string(),
+                "chain::call".to_string(),
+                "bridge::transfer".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "solana::instruction".to_string(),
+                "ethereum::layer1".to_string(),
+            ]),
     );
-    
+
     // Arbitrum configuration
-    configs.insert(BlockchainNetwork::Arbitrum, ChainConfig::new(BlockchainNetwork::Arbitrum)
-        .with_chain_id(42161)
-        .with_rpc_url("https://arb1.arbitrum.io/rpc".to_string())
-        .with_gas_config(21000, 0) // L2 gas pricing
-        .with_native_token("ETH".to_string())
-        .with_supported_operations(vec![
-            "chain::deploy".to_string(),
-            "chain::transaction".to_string(),
-            "chain::call".to_string(),
-            "bridge::transfer".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "solana::instruction".to_string(),
-            "avalanche::subnet".to_string(),
-        ])
+    configs.insert(
+        BlockchainNetwork::Arbitrum,
+        ChainConfig::new(BlockchainNetwork::Arbitrum)
+            .with_chain_id(42161)
+            .with_rpc_url("https://arb1.arbitrum.io/rpc".to_string())
+            .with_gas_config(21000, 0) // L2 gas pricing
+            .with_native_token("ETH".to_string())
+            .with_supported_operations(vec![
+                "chain::deploy".to_string(),
+                "chain::transaction".to_string(),
+                "chain::call".to_string(),
+                "bridge::transfer".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "solana::instruction".to_string(),
+                "avalanche::subnet".to_string(),
+            ]),
     );
-    
+
     // Optimism configuration
-    configs.insert(BlockchainNetwork::Optimism, ChainConfig::new(BlockchainNetwork::Optimism)
-        .with_chain_id(10)
-        .with_rpc_url("https://mainnet.optimism.io".to_string())
-        .with_gas_config(21000, 0) // L2 gas pricing
-        .with_native_token("ETH".to_string())
-        .with_supported_operations(vec![
-            "chain::deploy".to_string(),
-            "chain::transaction".to_string(),
-            "chain::call".to_string(),
-            "bridge::transfer".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "solana::instruction".to_string(),
-            "avalanche::subnet".to_string(),
-        ])
+    configs.insert(
+        BlockchainNetwork::Optimism,
+        ChainConfig::new(BlockchainNetwork::Optimism)
+            .with_chain_id(10)
+            .with_rpc_url("https://mainnet.optimism.io".to_string())
+            .with_gas_config(21000, 0) // L2 gas pricing
+            .with_native_token("ETH".to_string())
+            .with_supported_operations(vec![
+                "chain::deploy".to_string(),
+                "chain::transaction".to_string(),
+                "chain::call".to_string(),
+                "bridge::transfer".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "solana::instruction".to_string(),
+                "avalanche::subnet".to_string(),
+            ]),
     );
-    
+
     configs
 }
 
@@ -1059,7 +1088,7 @@ impl InterfaceLanguage {
             _ => Some(InterfaceLanguage::Custom(s.to_string())),
         }
     }
-    
+
     pub fn to_string(&self) -> String {
         match self {
             InterfaceLanguage::TypeScript => "typescript".to_string(),
@@ -1071,7 +1100,7 @@ impl InterfaceLanguage {
             InterfaceLanguage::Custom(name) => name.clone(),
         }
     }
-    
+
     pub fn file_extension(&self) -> &str {
         match self {
             InterfaceLanguage::TypeScript => ".ts",
@@ -1143,113 +1172,112 @@ pub struct DeploymentInterface {
 // Predefined target constraints
 pub fn get_target_constraints() -> HashMap<CompilationTarget, TargetConstraint> {
     let mut constraints = HashMap::new();
-    
+
     // Blockchain constraints
-    constraints.insert(CompilationTarget::Blockchain, TargetConstraint::new(CompilationTarget::Blockchain)
-        .with_allowed_operations(vec![
-            "chain::transaction".to_string(),
-            "chain::deploy".to_string(),
-            "chain::call".to_string(),
-            "oracle::fetch".to_string(),
-            "crypto::sign".to_string(),
-            "crypto::verify".to_string(),
-            "auth::verify".to_string(),
-            "log::info".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "web::http_request".to_string(),
-            "web::websocket".to_string(),
-            "desktop::window".to_string(),
-            "mobile::notification".to_string(),
-            "iot::sensor_read".to_string(),
-        ])
-        .with_required_attributes(vec![
-            "@secure".to_string(),
-            "@trust".to_string(),
-        ])
+    constraints.insert(
+        CompilationTarget::Blockchain,
+        TargetConstraint::new(CompilationTarget::Blockchain)
+            .with_allowed_operations(vec![
+                "chain::transaction".to_string(),
+                "chain::deploy".to_string(),
+                "chain::call".to_string(),
+                "oracle::fetch".to_string(),
+                "crypto::sign".to_string(),
+                "crypto::verify".to_string(),
+                "auth::verify".to_string(),
+                "log::info".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "web::http_request".to_string(),
+                "web::websocket".to_string(),
+                "desktop::window".to_string(),
+                "mobile::notification".to_string(),
+                "iot::sensor_read".to_string(),
+            ])
+            .with_required_attributes(vec!["@secure".to_string(), "@trust".to_string()]),
     );
-    
+
     // WebAssembly constraints
-    constraints.insert(CompilationTarget::WebAssembly, TargetConstraint::new(CompilationTarget::WebAssembly)
-        .with_allowed_operations(vec![
-            "web::dom_manipulation".to_string(),
-            "web::local_storage".to_string(),
-            "web::fetch".to_string(),
-            "web::websocket".to_string(),
-            "web::event_listener".to_string(),
-            "web::element_create".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "chain::transaction".to_string(),
-            "chain::deploy".to_string(),
-            "desktop::file_system".to_string(),
-            "mobile::camera".to_string(),
-            "iot::device_control".to_string(),
-        ])
-        .with_required_attributes(vec![
-            "@web".to_string(),
-        ])
+    constraints.insert(
+        CompilationTarget::WebAssembly,
+        TargetConstraint::new(CompilationTarget::WebAssembly)
+            .with_allowed_operations(vec![
+                "web::dom_manipulation".to_string(),
+                "web::local_storage".to_string(),
+                "web::fetch".to_string(),
+                "web::websocket".to_string(),
+                "web::event_listener".to_string(),
+                "web::element_create".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "chain::transaction".to_string(),
+                "chain::deploy".to_string(),
+                "desktop::file_system".to_string(),
+                "mobile::camera".to_string(),
+                "iot::device_control".to_string(),
+            ])
+            .with_required_attributes(vec!["@web".to_string()]),
     );
-    
+
     // Native constraints
-    constraints.insert(CompilationTarget::Native, TargetConstraint::new(CompilationTarget::Native)
-        .with_allowed_operations(vec![
-            "system::file_io".to_string(),
-            "system::process".to_string(),
-            "system::network".to_string(),
-            "desktop::window".to_string(),
-            "desktop::menu".to_string(),
-            "database::query".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "chain::transaction".to_string(),
-            "mobile::touch_event".to_string(),
-            "iot::sensor_read".to_string(),
-        ])
-        .with_required_attributes(vec![
-            "@native".to_string(),
-        ])
+    constraints.insert(
+        CompilationTarget::Native,
+        TargetConstraint::new(CompilationTarget::Native)
+            .with_allowed_operations(vec![
+                "system::file_io".to_string(),
+                "system::process".to_string(),
+                "system::network".to_string(),
+                "desktop::window".to_string(),
+                "desktop::menu".to_string(),
+                "database::query".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "chain::transaction".to_string(),
+                "mobile::touch_event".to_string(),
+                "iot::sensor_read".to_string(),
+            ])
+            .with_required_attributes(vec!["@native".to_string()]),
     );
-    
+
     // Mobile constraints
-    constraints.insert(CompilationTarget::Mobile, TargetConstraint::new(CompilationTarget::Mobile)
-        .with_allowed_operations(vec![
-            "mobile::notification".to_string(),
-            "mobile::camera".to_string(),
-            "mobile::location".to_string(),
-            "mobile::touch_event".to_string(),
-            "mobile::vibration".to_string(),
-            "mobile::storage".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "chain::transaction".to_string(),
-            "desktop::window".to_string(),
-            "iot::device_control".to_string(),
-        ])
-        .with_required_attributes(vec![
-            "@mobile".to_string(),
-        ])
+    constraints.insert(
+        CompilationTarget::Mobile,
+        TargetConstraint::new(CompilationTarget::Mobile)
+            .with_allowed_operations(vec![
+                "mobile::notification".to_string(),
+                "mobile::camera".to_string(),
+                "mobile::location".to_string(),
+                "mobile::touch_event".to_string(),
+                "mobile::vibration".to_string(),
+                "mobile::storage".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "chain::transaction".to_string(),
+                "desktop::window".to_string(),
+                "iot::device_control".to_string(),
+            ])
+            .with_required_attributes(vec!["@mobile".to_string()]),
     );
-    
+
     // Edge constraints
-    constraints.insert(CompilationTarget::Edge, TargetConstraint::new(CompilationTarget::Edge)
-        .with_allowed_operations(vec![
-            "iot::sensor_read".to_string(),
-            "iot::device_control".to_string(),
-            "iot::data_process".to_string(),
-            "iot::network_send".to_string(),
-            "iot::local_storage".to_string(),
-        ])
-        .with_forbidden_operations(vec![
-            "chain::transaction".to_string(),
-            "web::dom_manipulation".to_string(),
-            "desktop::window".to_string(),
-            "mobile::camera".to_string(),
-        ])
-        .with_required_attributes(vec![
-            "@edge".to_string(),
-        ])
+    constraints.insert(
+        CompilationTarget::Edge,
+        TargetConstraint::new(CompilationTarget::Edge)
+            .with_allowed_operations(vec![
+                "iot::sensor_read".to_string(),
+                "iot::device_control".to_string(),
+                "iot::data_process".to_string(),
+                "iot::network_send".to_string(),
+                "iot::local_storage".to_string(),
+            ])
+            .with_forbidden_operations(vec![
+                "chain::transaction".to_string(),
+                "web::dom_manipulation".to_string(),
+                "desktop::window".to_string(),
+                "mobile::camera".to_string(),
+            ])
+            .with_required_attributes(vec!["@edge".to_string()]),
     );
-    
+
     constraints
 }

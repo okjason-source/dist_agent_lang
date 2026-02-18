@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
 /// Crypto namespace for cryptographic operations
@@ -10,7 +10,7 @@ use std::hash::{Hash, Hasher};
 pub enum HashAlgorithm {
     SHA256,
     SHA512,
-    Simple,  // Replaced MD5 with simple hash
+    Simple, // Replaced MD5 with simple hash
     Custom(String),
 }
 
@@ -24,14 +24,14 @@ pub enum SignatureAlgorithm {
 }
 
 /// Hash a string using the specified algorithm
-/// 
+///
 /// # Arguments
 /// * `data` - The data to hash
 /// * `algorithm` - The hashing algorithm to use
-/// 
+///
 /// # Returns
 /// * `String` - The hexadecimal hash string
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::crypto;
@@ -51,7 +51,7 @@ pub fn hash(data: &str, algorithm: HashAlgorithm) -> String {
 pub fn hash_bytes(data: &[u8], algorithm: &str) -> Result<String, String> {
     match algorithm.to_uppercase().as_str() {
         "SHA256" => {
-            use sha2::{Sha256, Digest};
+            use sha2::{Digest, Sha256};
             let mut hasher = Sha256::new();
             hasher.update(data);
             Ok(format!("{:x}", hasher.finalize()))
@@ -65,29 +65,29 @@ pub fn hash_bytes(data: &[u8], algorithm: &str) -> Result<String, String> {
             data.hash(&mut hasher);
             Ok(format!("{:x}", hasher.finish()))
         }
-        _ => Err(format!("Unsupported hash algorithm: {}", algorithm))
+        _ => Err(format!("Unsupported hash algorithm: {}", algorithm)),
     }
 }
 
 /// Hash data using SHA-256
 fn hash_sha256(data: &str) -> String {
-    use sha2::{Sha256, Digest};
-    
+    use sha2::{Digest, Sha256};
+
     let mut hasher = Sha256::new();
     hasher.update(data.as_bytes());
     let result = hasher.finalize();
-    
+
     format!("{:x}", result)
 }
 
 /// Hash data using SHA-512
 fn hash_sha512(data: &str) -> String {
-    use sha2::{Sha512, Digest};
-    
+    use sha2::{Digest, Sha512};
+
     let mut hasher = Sha512::new();
     hasher.update(data.as_bytes());
     let result = hasher.finalize();
-    
+
     format!("{:x}", result)
 }
 
@@ -104,18 +104,18 @@ fn hash_custom(data: &str, algorithm_name: &str) -> String {
     let mut hasher = DefaultHasher::new();
     data.hash(&mut hasher);
     algorithm_name.hash(&mut hasher);
-    
+
     format!("custom_{:x}", hasher.finish())
 }
 
 /// Generate a random hash
-/// 
+///
 /// # Arguments
 /// * `algorithm` - The hashing algorithm to use
-/// 
+///
 /// # Returns
 /// * `String` - A random hash string
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::crypto;
@@ -124,25 +124,25 @@ fn hash_custom(data: &str, algorithm_name: &str) -> String {
 /// ```
 pub fn random_hash(algorithm: HashAlgorithm) -> String {
     use rand::Rng;
-    
+
     let mut rng = rand::thread_rng();
     let random_data: String = (0..32)
         .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
         .collect();
-    
+
     hash(&random_data, algorithm)
 }
 
 /// Sign data with a private key
-/// 
+///
 /// # Arguments
 /// * `data` - The data to sign
 /// * `private_key` - The private key for signing
 /// * `algorithm` - The signature algorithm to use
-/// 
+///
 /// # Returns
 /// * `String` - The signature string
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::crypto;
@@ -169,7 +169,7 @@ fn sign_rsa(data: &str, private_key: &str) -> String {
     use rsa::pkcs1::DecodeRsaPrivateKey;
     use rsa::pkcs1v15::SigningKey;
     use rsa::sha2::Sha256;
-    use rsa::signature::{Signer, SignatureEncoding};
+    use rsa::signature::{SignatureEncoding, Signer};
     use rsa::RsaPrivateKey;
     let key = match RsaPrivateKey::from_pkcs1_pem(private_key) {
         Ok(k) => k,
@@ -188,7 +188,10 @@ fn sign_rsa(data: &str, private_key: &str) -> String {
 
 /// Sign data using ECDSA (delegate to crypto_signatures; fallback mock on invalid key)
 fn sign_ecdsa(data: &str, private_key: &str) -> String {
-    match crate::stdlib::crypto_signatures::ECDSASignatureVerifier::sign(data.as_bytes(), private_key) {
+    match crate::stdlib::crypto_signatures::ECDSASignatureVerifier::sign(
+        data.as_bytes(),
+        private_key,
+    ) {
         Ok(sig) => sig,
         Err(_) => {
             let mut hasher = DefaultHasher::new();
@@ -201,7 +204,10 @@ fn sign_ecdsa(data: &str, private_key: &str) -> String {
 
 /// Sign data using Ed25519 (delegate to crypto_signatures; fallback mock on invalid key)
 fn sign_ed25519(data: &str, private_key: &str) -> String {
-    match crate::stdlib::crypto_signatures::EdDSASignatureVerifier::sign(data.as_bytes(), private_key) {
+    match crate::stdlib::crypto_signatures::EdDSASignatureVerifier::sign(
+        data.as_bytes(),
+        private_key,
+    ) {
         Ok(sig) => sig,
         Err(_) => {
             let mut hasher = DefaultHasher::new();
@@ -222,16 +228,16 @@ fn sign_custom(data: &str, private_key: &str, algorithm_name: &str) -> String {
 }
 
 /// Verify a signature
-/// 
+///
 /// # Arguments
 /// * `_data` - The original data (unused in mock implementation)
 /// * `signature` - The signature to verify
 /// * `_public_key` - The public key for verification (unused in mock implementation)
 /// * `algorithm` - The signature algorithm used
-/// 
+///
 /// # Returns
 /// * `bool` - True if signature is valid, false otherwise
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::crypto;
@@ -239,7 +245,12 @@ fn sign_custom(data: &str, private_key: &str, algorithm_name: &str) -> String {
 /// let signature = crypto::sign("Hello, World!", "private_key_123", SignatureAlgorithm::RSA);
 /// let is_valid = crypto::verify("Hello, World!", &signature, "public_key_123", SignatureAlgorithm::RSA);
 /// ```
-pub fn verify(data: &str, signature: &str, public_key: &str, algorithm: SignatureAlgorithm) -> bool {
+pub fn verify(
+    data: &str,
+    signature: &str,
+    public_key: &str,
+    algorithm: SignatureAlgorithm,
+) -> bool {
     match algorithm {
         SignatureAlgorithm::RSA => verify_rsa(data, signature, public_key),
         SignatureAlgorithm::ECDSA => verify_ecdsa(data, signature, public_key),
@@ -254,11 +265,11 @@ fn verify_rsa(data: &str, signature: &str, public_key: &str) -> bool {
         return signature.starts_with("rsa_sign_");
     }
     use rsa::pkcs1v15::{Signature, VerifyingKey};
-    use sha2::Digest;
     use rsa::pkcs8::DecodePublicKey;
     use rsa::sha2::Sha256;
     use rsa::signature::Verifier;
     use rsa::RsaPublicKey;
+    use sha2::Digest;
     let key: RsaPublicKey = match RsaPublicKey::from_public_key_pem(public_key) {
         Ok(k) => k,
         Err(_) => return signature.starts_with("rsa_sign_"),
@@ -306,13 +317,13 @@ fn verify_custom(signature: &str) -> bool {
 }
 
 /// Generate a key pair
-/// 
+///
 /// # Arguments
 /// * `algorithm` - The signature algorithm to use
-/// 
+///
 /// # Returns
 /// * `HashMap<String, String>` - Map containing public and private keys
-/// 
+///
 /// # Example
 /// ```rust
 /// use dist_agent_lang::stdlib::crypto;
@@ -355,11 +366,13 @@ pub fn generate_keypair(algorithm: SignatureAlgorithm) -> HashMap<String, String
             use rsa::RsaPrivateKey;
             match RsaPrivateKey::new(&mut OsRng, 2048) {
                 Ok(key) => {
-                    let priv_pem = key.to_pkcs1_pem(rsa::pkcs8::LineEnding::LF)
+                    let priv_pem = key
+                        .to_pkcs1_pem(rsa::pkcs8::LineEnding::LF)
                         .map(|z| z.to_string())
                         .unwrap_or_else(|_| String::new());
                     let pub_key = key.to_public_key();
-                    let pub_pem = pub_key.to_public_key_pem(rsa::pkcs8::LineEnding::LF)
+                    let pub_pem = pub_key
+                        .to_public_key_pem(rsa::pkcs8::LineEnding::LF)
                         .unwrap_or_else(|_| String::new());
                     keypair.insert("private_key".to_string(), priv_pem);
                     keypair.insert("public_key".to_string(), pub_pem);
@@ -408,10 +421,9 @@ pub fn encrypt(data: &str, public_key: &str) -> String {
     let mut rng = rand::thread_rng();
     let padding = Oaep::new::<Sha256>();
     match key.encrypt(&mut rng, padding, data.as_bytes()) {
-        Ok(ciphertext) => base64::Engine::encode(
-            &base64::engine::general_purpose::STANDARD,
-            ciphertext,
-        ),
+        Ok(ciphertext) => {
+            base64::Engine::encode(&base64::engine::general_purpose::STANDARD, ciphertext)
+        }
         Err(_) => {
             let mut hasher = DefaultHasher::new();
             data.hash(&mut hasher);
@@ -434,10 +446,8 @@ pub fn decrypt(encrypted_data: &str, private_key: &str) -> Option<String> {
     use rsa::sha2::Sha256;
     use rsa::RsaPrivateKey;
     let key = RsaPrivateKey::from_pkcs8_pem(private_key).ok()?;
-    let ciphertext = base64::Engine::decode(
-        &base64::engine::general_purpose::STANDARD,
-        encrypted_data,
-    ).ok()?;
+    let ciphertext =
+        base64::Engine::decode(&base64::engine::general_purpose::STANDARD, encrypted_data).ok()?;
     let padding = Oaep::new::<Sha256>();
     let plaintext = key.decrypt(padding, &ciphertext).ok()?;
     String::from_utf8(plaintext).ok()
@@ -450,12 +460,11 @@ pub fn encrypt_aes256(data: &str, key: &str) -> Result<String, String> {
         aead::{Aead, KeyInit},
         Aes256Gcm,
     };
-    use sha2::{Sha256, Digest};
+    use sha2::{Digest, Sha256};
     let mut hasher = Sha256::new();
     hasher.update(key.as_bytes());
     let key_bytes: [u8; 32] = hasher.finalize().into();
-    let cipher = Aes256Gcm::new_from_slice(&key_bytes)
-        .map_err(|e| e.to_string())?;
+    let cipher = Aes256Gcm::new_from_slice(&key_bytes).map_err(|e| e.to_string())?;
     let mut nonce = [0u8; 12];
     rand::RngCore::fill_bytes(&mut rand::rngs::OsRng, &mut nonce);
     let nonce_arr = aes_gcm::aead::generic_array::GenericArray::clone_from_slice(&nonce);
@@ -477,19 +486,16 @@ pub fn decrypt_aes256(encrypted_data: &str, key: &str) -> Result<String, String>
         aead::{Aead, KeyInit},
         Aes256Gcm,
     };
-    use sha2::{Sha256, Digest};
-    let raw = base64::Engine::decode(
-        &base64::engine::general_purpose::STANDARD,
-        encrypted_data,
-    ).map_err(|_| "Invalid base64".to_string())?;
+    use sha2::{Digest, Sha256};
+    let raw = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, encrypted_data)
+        .map_err(|_| "Invalid base64".to_string())?;
     if raw.len() < 12 {
         return Err("Invalid encrypted data format".to_string());
     }
     let mut hasher = Sha256::new();
     hasher.update(key.as_bytes());
     let key_bytes: [u8; 32] = hasher.finalize().into();
-    let cipher = Aes256Gcm::new_from_slice(&key_bytes)
-        .map_err(|e| e.to_string())?;
+    let cipher = Aes256Gcm::new_from_slice(&key_bytes).map_err(|e| e.to_string())?;
     let (nonce, ct) = raw.split_at(12);
     let nonce_arr = aes_gcm::aead::generic_array::GenericArray::clone_from_slice(nonce);
     let plaintext = cipher

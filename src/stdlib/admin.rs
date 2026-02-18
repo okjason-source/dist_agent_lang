@@ -51,12 +51,12 @@ impl ProcessInfo {
             resource_usage: HashMap::new(),
         }
     }
-    
+
     pub fn with_status(mut self, status: String) -> Self {
         self.status = status;
         self
     }
-    
+
     pub fn with_resource_usage(mut self, resource: String, usage: Value) -> Self {
         self.resource_usage.insert(resource, usage);
         self
@@ -81,10 +81,8 @@ pub fn kill(process_id: &str, reason: &str) -> Result<bool, String> {
                 Err("Invalid kill reason".to_string())
             }
         }
-        "system_process" => {
-            Err("Cannot kill system processes".to_string())
-        }
-        _ => Err(format!("Process not found: {}", process_id))
+        "system_process" => Err("Cannot kill system processes".to_string()),
+        _ => Err(format!("Process not found: {}", process_id)),
     }
 }
 
@@ -93,7 +91,8 @@ pub fn get_process_info(process_id: &str) -> Result<ProcessInfo, String> {
     // MOCK: in a real system this would query process status
     match process_id {
         "agent_123" => {
-            let mut process = ProcessInfo::new("agent_123".to_string(), "data_processor".to_string());
+            let mut process =
+                ProcessInfo::new("agent_123".to_string(), "data_processor".to_string());
             process = process.with_resource_usage("cpu".to_string(), Value::Int(45));
             process = process.with_resource_usage("memory".to_string(), Value::Int(1024));
             Ok(process)
@@ -104,7 +103,7 @@ pub fn get_process_info(process_id: &str) -> Result<ProcessInfo, String> {
             process = process.with_resource_usage("memory".to_string(), Value::Int(2048));
             Ok(process)
         }
-        _ => Err(format!("Process not found: {}", process_id))
+        _ => Err(format!("Process not found: {}", process_id)),
     }
 }
 

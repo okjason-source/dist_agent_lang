@@ -36,7 +36,9 @@ pub fn upload_file(api_base: &str, path: &Path) -> Result<String, String> {
         let body = resp.text().unwrap_or_default();
         return Err(format!("IPFS add failed {}: {}", status, body));
     }
-    let json: serde_json::Value = resp.json().map_err(|e| format!("IPFS add response: {}", e))?;
+    let json: serde_json::Value = resp
+        .json()
+        .map_err(|e| format!("IPFS add response: {}", e))?;
     let hash = json
         .get("Hash")
         .and_then(|v: &serde_json::Value| v.as_str())
@@ -46,11 +48,7 @@ pub fn upload_file(api_base: &str, path: &Path) -> Result<String, String> {
 
 /// Download content from IPFS by CID (POST /api/v0/cat?arg=<cid>).
 pub fn cat(api_base: &str, cid: &str) -> Result<String, String> {
-    let url = format!(
-        "{}/api/v0/cat?arg={}",
-        api_base.trim_end_matches('/'),
-        cid
-    );
+    let url = format!("{}/api/v0/cat?arg={}", api_base.trim_end_matches('/'), cid);
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(60))
         .build()

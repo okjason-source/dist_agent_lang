@@ -29,20 +29,27 @@ fn private_key() -> Result<String, String> {
 }
 
 fn contract_address() -> Result<Address, String> {
-    let s = std::env::var("DAL_MOLD_REGISTRY_ADDRESS")
-        .map_err(|_| "DAL_MOLD_REGISTRY_ADDRESS not set (deployed MoldRegistry contract).".to_string())?;
+    let s = std::env::var("DAL_MOLD_REGISTRY_ADDRESS").map_err(|_| {
+        "DAL_MOLD_REGISTRY_ADDRESS not set (deployed MoldRegistry contract).".to_string()
+    })?;
     Address::from_str(s.trim().trim_start_matches("0x"))
         .map_err(|e| format!("Invalid DAL_MOLD_REGISTRY_ADDRESS: {}", e))
 }
 
 /// Build client (provider + signer) and contract instance. Returns (client, contract) for reuse.
-fn client_and_contract() -> Result<(Arc<SignerMiddleware<Provider<Http>, LocalWallet>>, MoldRegistry<SignerMiddleware<Provider<Http>, LocalWallet>>), String> {
+fn client_and_contract() -> Result<
+    (
+        Arc<SignerMiddleware<Provider<Http>, LocalWallet>>,
+        MoldRegistry<SignerMiddleware<Provider<Http>, LocalWallet>>,
+    ),
+    String,
+> {
     let rpc = rpc_url();
     let pk = private_key()?;
     let addr = contract_address()?;
 
-    let provider = Provider::<Http>::try_from(rpc.as_str())
-        .map_err(|e| format!("RPC connection: {}", e))?;
+    let provider =
+        Provider::<Http>::try_from(rpc.as_str()).map_err(|e| format!("RPC connection: {}", e))?;
     let chain_id = tokio::runtime::Runtime::new()
         .map_err(|e| format!("runtime: {}", e))?
         .block_on(provider.get_chainid())
@@ -67,9 +74,11 @@ pub fn mint_mold(ipfs_hash: &str, mint_fee_wei: u128, max_use_count: u64) -> Res
     }
     let tx = contract.mint_mold(hash, U256::from(mint_fee_wei), U256::from(max_use_count));
     let rt = tokio::runtime::Runtime::new().map_err(|e| format!("runtime: {}", e))?;
-    let pending = rt.block_on(tx.send())
+    let pending = rt
+        .block_on(tx.send())
         .map_err(|e| format!("mintMold send: {}", e))?;
-    let receipt = rt.block_on(pending)
+    let receipt = rt
+        .block_on(pending)
         .map_err(|e| format!("mintMold receipt: {}", e))?;
     let receipt = receipt.ok_or("no receipt")?;
     // Parse moldId from logs (MoldMinted event) or from tx; MoldMinted(moldId, ...) is first topic? No - event has indexed moldId. Simpler: get return value via call instead of send? Actually mintMold returns uint256. We need to get the return value. In ethers, .send() gives PendingTx; .await gives Option<TransactionReceipt>. The receipt doesn't contain return data. So we'd need to use .call() to simulate and get return value, or parse logs. The event MoldMinted has moldId as indexed, so it's in topics[1]. Let me parse it.
@@ -87,9 +96,11 @@ pub fn use_mold(mold_id: u64, value_wei: u128) -> Result<u128, String> {
         .use_mold(U256::from(mold_id))
         .value(U256::from(value_wei));
     let rt = tokio::runtime::Runtime::new().map_err(|e| format!("runtime: {}", e))?;
-    let pending = rt.block_on(tx.send())
+    let pending = rt
+        .block_on(tx.send())
         .map_err(|e| format!("useMold send: {}", e))?;
-    let receipt = rt.block_on(pending)
+    let receipt = rt
+        .block_on(pending)
         .map_err(|e| format!("useMold receipt: {}", e))?;
     let _receipt = receipt.ok_or("no receipt")?;
     // instanceId is in MoldUsed event: (moldId, user, instanceId). instanceId is non-indexed so in data. For simplicity return 0 or parse log. The contract returns instanceId; we don't get it from receipt easily. Return 0 for now; we can parse MoldUsed data later.
@@ -113,7 +124,8 @@ pub struct MoldInfo {
 pub fn get_mold_info(mold_id: u64) -> Result<MoldInfo, String> {
     let (_client, contract) = client_and_contract()?;
     let rt = tokio::runtime::Runtime::new().map_err(|e| format!("runtime: {}", e))?;
-    let ret = rt.block_on(contract.get_mold_info(U256::from(mold_id)).call())
+    let ret = rt
+        .block_on(contract.get_mold_info(U256::from(mold_id)).call())
         .map_err(|e| format!("getMoldInfo: {}", e))?;
     // abigen returns tuple (creator, ipfsHash, mintFee, mintCount, maxUseCount, active, createdAt, updatedAt)
     Ok(MoldInfo {
@@ -133,7 +145,8 @@ pub fn mold_id_by_ipfs_hash(ipfs_hash: &str) -> Result<u64, String> {
     let (_client, contract) = client_and_contract()?;
     let hash = ipfs_hash.trim().trim_start_matches("ipfs://").to_string();
     let rt = tokio::runtime::Runtime::new().map_err(|e| format!("runtime: {}", e))?;
-    let id = rt.block_on(contract.get_mold_by_ipfs_hash(hash).call())
+    let id = rt
+        .block_on(contract.get_mold_by_ipfs_hash(hash).call())
         .map_err(|e| format!("getMoldByIpfsHash: {}", e))?;
     Ok(id.as_u64())
 }

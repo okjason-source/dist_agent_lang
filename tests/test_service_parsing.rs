@@ -5,7 +5,7 @@ use dist_agent_lang::runtime::Runtime;
 fn main() {
     println!("Testing Service Statement Parsing");
     println!("==================================");
-    
+
     // Test 1: Basic service with fields and methods
     let test_code = r#"
         @trust("hybrid")
@@ -23,16 +23,19 @@ fn main() {
             }
         }
     "#;
-    
+
     println!("Test Code:");
     println!("{}", test_code);
     println!();
-    
+
     // Tokenize
     println!("1. Tokenizing...");
     let tokens = match Lexer::new(test_code).tokenize() {
         Ok(tokens) => {
-            println!("✅ Tokenization successful! Generated {} tokens", tokens.len());
+            println!(
+                "✅ Tokenization successful! Generated {} tokens",
+                tokens.len()
+            );
             tokens
         }
         Err(e) => {
@@ -40,13 +43,16 @@ fn main() {
             return;
         }
     };
-    
+
     // Parse
     println!("\n2. Parsing...");
     let mut parser = Parser::new(tokens);
     let program = match parser.parse() {
         Ok(program) => {
-            println!("✅ Parsing successful! Parsed {} statements", program.statements.len());
+            println!(
+                "✅ Parsing successful! Parsed {} statements",
+                program.statements.len()
+            );
             program
         }
         Err(e) => {
@@ -54,16 +60,17 @@ fn main() {
             return;
         }
     };
-    
+
     // Check for service statement
     println!("\n3. Checking for service statement...");
-    let has_service = program.statements.iter().any(|stmt| {
-        matches!(stmt, dist_agent_lang::parser::ast::Statement::Service(_))
-    });
-    
+    let has_service = program
+        .statements
+        .iter()
+        .any(|stmt| matches!(stmt, dist_agent_lang::parser::ast::Statement::Service(_)));
+
     if has_service {
         println!("✅ Service statement found!");
-        
+
         // Print service details
         for stmt in &program.statements {
             if let dist_agent_lang::parser::ast::Statement::Service(service) = stmt {
@@ -83,7 +90,7 @@ fn main() {
     } else {
         println!("❌ No service statement found!");
     }
-    
+
     // Execute (if parsing was successful)
     println!("\n4. Executing...");
     let mut runtime = Runtime::new();
@@ -96,6 +103,6 @@ fn main() {
             println!("❌ Execution failed: {}", e);
         }
     }
-    
+
     println!("\n🎉 Service parsing test completed!");
 }

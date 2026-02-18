@@ -1,28 +1,28 @@
 // Import from the library instead of redeclaring modules
-use dist_agent_lang::cli::{Cli, chain_subcommand_to_args, Commands};
+use dist_agent_lang::cli::{chain_subcommand_to_args, Cli, Commands};
 use dist_agent_lang::cli_design;
 use dist_agent_lang::lexer;
 use dist_agent_lang::parser;
+use dist_agent_lang::performance;
 use dist_agent_lang::runtime;
 use dist_agent_lang::stdlib;
 use dist_agent_lang::testing;
-use dist_agent_lang::performance;
 
+use lexer::tokens::{Punctuation, Token};
 use lexer::Lexer;
+use parser::ast::{FunctionStatement, ServiceStatement, Statement};
+use parser::error::{ErrorContext, ErrorReporter, ParserError, SimpleErrorReporter};
 use parser::Parser;
-use runtime::Runtime;
-use parser::ast::{Statement, FunctionStatement, ServiceStatement};
 use runtime::values::Value;
-use std::time::Duration;
-use stdlib::{chain, auth, log, crypto};
-use stdlib::crypto::{HashAlgorithm, SignatureAlgorithm};
-use parser::error::{ParserError, ErrorContext, SimpleErrorReporter, ErrorReporter};
-use lexer::tokens::{Token, Punctuation};
+use runtime::Runtime;
 use std::collections::HashMap;
+use std::time::Duration;
+use stdlib::crypto::{HashAlgorithm, SignatureAlgorithm};
+use stdlib::{auth, chain, crypto, log};
 
 // Testing framework: one-line imports for test suites and app developers
-use testing::{TestCase, TestSuite, TestConfig, TestRunner};
-use testing::{MockRegistry, MockBuilder};
+use testing::{MockBuilder, MockRegistry};
+use testing::{TestCase, TestConfig, TestRunner, TestSuite};
 
 // Performance imports - used in optimization commands and imported within functions to avoid unused warnings
 
@@ -46,9 +46,9 @@ fn main() {
         eprintln!("⚠️  Warning: Failed to initialize file logging: {}", e);
         // Continue execution - logging will fall back to console/memory only
     }
-    
+
     let args: Vec<String> = std::env::args().collect();
-    
+
     if args.len() < 2 {
         // No arguments provided, discover and run tests (fallback to selftest)
         run_dal_tests(".");
@@ -57,24 +57,24 @@ fn main() {
 
     // Phase 11: clap-based CLI (09_CLI_EXPANSION_PLAN.md)
     let cli = Cli::parse();
-    
+
     // Handle custom help and version flags
     if cli.help {
         print_help(&cli);
         std::process::exit(0);
     }
-    
+
     if cli.version_flag {
         print_version(&cli);
         std::process::exit(0);
     }
-    
+
     let Some(ref cmd) = cli.command else {
         // No subcommand (e.g. dal --quiet only) — show our custom help (no Phase labels)
         print_help(&cli);
         std::process::exit(1);
     };
-    
+
     match cmd {
         Commands::Run { file } => run_dal_file(&file),
         Commands::Test { file } => {
@@ -101,7 +101,12 @@ fn main() {
                 std::process::exit(1);
             }
         }
-        Commands::Serve { file, port, frontend, cors_origin } => run_serve(&file, *port, frontend.as_deref(), cors_origin),
+        Commands::Serve {
+            file,
+            port,
+            frontend,
+            cors_origin,
+        } => run_serve(&file, *port, frontend.as_deref(), cors_origin),
         Commands::Convert { input, output } => {
             let output_file = output.clone().unwrap_or_else(|| {
                 if input.ends_with(".sol") {
@@ -125,7 +130,11 @@ fn main() {
         Commands::Install => install_dependencies(),
         Commands::Bench { file, suite } => run_benchmarks(file.as_deref(), suite.as_deref()),
         Commands::Profile { file, memory } => profile_dal_file(&file, *memory),
-        Commands::Optimize { file, output, level } => optimize_dal_file(&file, output.as_deref(), *level),
+        Commands::Optimize {
+            file,
+            output,
+            level,
+        } => optimize_dal_file(&file, output.as_deref(), *level),
         Commands::MemoryStats => show_memory_stats(),
         Commands::Chain { subcommand } => {
             let args = chain_subcommand_to_args(&subcommand);
@@ -152,7 +161,11 @@ fn main() {
             handle_cloud_command(&a);
         }
         Commands::Lsp { rest } => handle_lsp_command(rest),
-        Commands::Doc { target, output, open } => {
+        Commands::Doc {
+            target,
+            output,
+            open,
+        } => {
             let mut a = vec![target.clone()];
             if let Some(o) = output {
                 a.push("--output".to_string());
@@ -212,7 +225,10 @@ fn main() {
             a.extend(rest.iter().cloned());
             handle_agent_command(&a);
         }
-        Commands::Scaffold { scaffold_type, name } => {
+        Commands::Scaffold {
+            scaffold_type,
+            name,
+        } => {
             let mut a = vec![scaffold_type.clone()];
             if let Some(n) = name {
                 a.push(n.clone());
@@ -242,7 +258,7 @@ fn main() {
 
 fn parse_dal_file(filename: &str) {
     println!("🪩  Parsing dist_agent_lang file: {}", filename);
-    
+
     // Read the file
     let source_code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
@@ -251,7 +267,7 @@ fn parse_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Tokenize with positions
     let tokens_with_pos = match Lexer::new(&source_code).tokenize_with_positions_immutable() {
         Ok(tokens) => {
@@ -263,7 +279,7 @@ fn parse_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Parse
     match Parser::new_with_positions(tokens_with_pos).parse() {
         Ok(ast) => {
@@ -279,7 +295,7 @@ fn parse_dal_file(filename: &str) {
 
 fn run_dal_file(filename: &str) {
     println!("🪩  Running dist_agent_lang file: {}", filename);
-    
+
     // Read the file
     let source_code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
@@ -288,7 +304,7 @@ fn run_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Tokenize with positions for accurate error reporting
     let tokens_with_pos = match Lexer::new(&source_code).tokenize_with_positions_immutable() {
         Ok(tokens) => {
@@ -300,7 +316,7 @@ fn run_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Parse with position information
     let ast = match Parser::new_with_positions(tokens_with_pos).parse() {
         Ok(ast) => {
@@ -314,7 +330,7 @@ fn run_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Execute
     let mut runtime = Runtime::new();
     match runtime.execute_program(ast) {
@@ -339,11 +355,11 @@ fn run_dal_file(filename: &str) {
 // Test discovery and execution
 fn run_dal_tests(path: &str) {
     use std::fs;
-    
+
     println!("🧪 Discovering tests in: {}\n", path);
-    
+
     let test_files = discover_test_files(path);
-    
+
     if test_files.is_empty() {
         println!("⚠️  No *.test.dal files found");
         println!("\n💡 Tip: Create test files with .test.dal extension");
@@ -352,16 +368,16 @@ fn run_dal_tests(path: &str) {
         run_selftest();
         return;
     }
-    
+
     println!("Found {} test file(s):\n", test_files.len());
-    
+
     let mut total_tests = 0;
     let mut passed = 0;
     let mut failed = 0;
-    
+
     for test_file in &test_files {
         println!("📄 {}", test_file);
-        
+
         // Read the file
         let content = match fs::read_to_string(test_file) {
             Ok(c) => c,
@@ -370,7 +386,7 @@ fn run_dal_tests(path: &str) {
                 continue;
             }
         };
-        
+
         // Tokenize
         let tokens = match Lexer::new(&content).tokenize() {
             Ok(t) => t,
@@ -380,7 +396,7 @@ fn run_dal_tests(path: &str) {
                 continue;
             }
         };
-        
+
         // Parse
         let mut parser = Parser::new(tokens);
         let program = match parser.parse() {
@@ -391,13 +407,15 @@ fn run_dal_tests(path: &str) {
                 continue;
             }
         };
-        
+
         // Find test functions (functions with @test attribute or starting with test_)
-        let test_names: Vec<String> = program.statements.iter()
+        let test_names: Vec<String> = program
+            .statements
+            .iter()
             .filter_map(|stmt| {
                 if let Statement::Function(func) = stmt {
-                    let is_test = func.attributes.iter().any(|attr| attr.name == "test") ||
-                                  func.name.starts_with("test_");
+                    let is_test = func.attributes.iter().any(|attr| attr.name == "test")
+                        || func.name.starts_with("test_");
                     if is_test {
                         Some(func.name.clone())
                     } else {
@@ -408,14 +426,14 @@ fn run_dal_tests(path: &str) {
                 }
             })
             .collect();
-        
+
         if test_names.is_empty() {
             println!("   ⚠️  No test functions found (use @test or test_ prefix)\n");
             continue;
         }
-        
+
         println!("   Running {} test(s)...", test_names.len());
-        
+
         // Execute program to register functions, then run each test
         let mut runtime = Runtime::new();
         if let Err(e) = runtime.execute_program(program) {
@@ -423,7 +441,7 @@ fn run_dal_tests(path: &str) {
             failed += test_names.len();
             continue;
         }
-        
+
         for test_name in &test_names {
             total_tests += 1;
             match runtime.call_function(test_name, &[]) {
@@ -437,29 +455,29 @@ fn run_dal_tests(path: &str) {
                 }
             }
         }
-        
+
         println!();
     }
-    
+
     // Summary
     println!("========================================================================");
     println!("Test Summary:");
     println!("  Total:  {}", total_tests);
     println!("  Passed: {} ✅", passed);
     println!("  Failed: {} ❌", failed);
-    
+
     if failed > 0 {
         std::process::exit(1);
     }
 }
 
 fn discover_test_files(path: &str) -> Vec<String> {
-    use std::path::Path;
     use std::fs;
-    
+    use std::path::Path;
+
     let mut test_files = Vec::new();
     let path_obj = Path::new(path);
-    
+
     if path_obj.is_file() && path.ends_with(".test.dal") {
         test_files.push(path.to_string());
     } else if path_obj.is_dir() {
@@ -480,14 +498,14 @@ fn discover_test_files(path: &str) -> Vec<String> {
             }
         }
     }
-    
+
     test_files.sort();
     test_files
 }
 
 fn run_web_application(filename: &str) {
     println!("🪩  Running dist_agent_lang web application: {}", filename);
-    
+
     // Read the file
     let source_code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
@@ -496,7 +514,7 @@ fn run_web_application(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Tokenize and parse
     let tokens = match Lexer::new(&source_code).tokenize() {
         Ok(tokens) => {
@@ -508,7 +526,7 @@ fn run_web_application(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     let mut parser = Parser::new(tokens);
     let program = match parser.parse() {
         Ok(program) => {
@@ -520,30 +538,55 @@ fn run_web_application(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Look for web service in the program
     for statement in &program.statements {
         if let Statement::Service(service) = statement {
             if service.name == "KEYS_WebApp" {
                 println!("✅ Found KEYS_WebApp service!");
-                
+
                 // Create HTTP server
                 let mut server = stdlib::web::create_server(3000);
-                
+
                 // Add routes
-                stdlib::web::add_route(&mut server, "GET".to_string(), "/".to_string(), "serve_home_page".to_string());
-                stdlib::web::add_route(&mut server, "GET".to_string(), "/api/balance".to_string(), "get_balance".to_string());
-                stdlib::web::add_route(&mut server, "POST".to_string(), "/api/connect".to_string(), "connect_wallet".to_string());
-                stdlib::web::add_route(&mut server, "POST".to_string(), "/api/transfer".to_string(), "transfer_tokens".to_string());
-                stdlib::web::add_route(&mut server, "POST".to_string(), "/api/airdrop".to_string(), "claim_airdrop".to_string());
-                
+                stdlib::web::add_route(
+                    &mut server,
+                    "GET".to_string(),
+                    "/".to_string(),
+                    "serve_home_page".to_string(),
+                );
+                stdlib::web::add_route(
+                    &mut server,
+                    "GET".to_string(),
+                    "/api/balance".to_string(),
+                    "get_balance".to_string(),
+                );
+                stdlib::web::add_route(
+                    &mut server,
+                    "POST".to_string(),
+                    "/api/connect".to_string(),
+                    "connect_wallet".to_string(),
+                );
+                stdlib::web::add_route(
+                    &mut server,
+                    "POST".to_string(),
+                    "/api/transfer".to_string(),
+                    "transfer_tokens".to_string(),
+                );
+                stdlib::web::add_route(
+                    &mut server,
+                    "POST".to_string(),
+                    "/api/airdrop".to_string(),
+                    "claim_airdrop".to_string(),
+                );
+
                 // Start server
                 match stdlib::web::start_server(&server) {
                     Ok(message) => {
                         println!("✅ {}", message);
                         println!("🌐 Open your browser and navigate to: http://localhost:3000");
                         println!("🛑 Press Ctrl+C to stop the server");
-                        
+
                         // Keep the server running
                         loop {
                             std::thread::sleep(std::time::Duration::from_secs(1));
@@ -557,7 +600,7 @@ fn run_web_application(filename: &str) {
             }
         }
     }
-    
+
     eprintln!("❌ No KEYS_WebApp service found in {}", filename);
     std::process::exit(1);
 }
@@ -578,7 +621,10 @@ fn run_web_application_js(filename: &str, script_args: &[String]) {
         Ok(s) if s.success() => {}
         Ok(s) => std::process::exit(s.code().unwrap_or(1)),
         Err(e) => {
-            eprintln!("❌ Failed to run Node: {}. Is Node.js installed? (e.g. https://nodejs.org)", e);
+            eprintln!(
+                "❌ Failed to run Node: {}. Is Node.js installed? (e.g. https://nodejs.org)",
+                e
+            );
             std::process::exit(1);
         }
     }
@@ -615,7 +661,9 @@ fn extract_routes_from_annotations(
 
 /// Fallback: infer HTTP routes from handler names (convention for todo-style backends).
 /// e.g. get_todos -> GET /api/todos, create_todo -> POST /api/todos
-fn infer_routes_from_handlers(handlers: &std::collections::HashSet<String>) -> Vec<(String, String, String)> {
+fn infer_routes_from_handlers(
+    handlers: &std::collections::HashSet<String>,
+) -> Vec<(String, String, String)> {
     let mut routes = Vec::new();
     let todo_handlers = [
         ("get_todos", "GET", "/api/todos"),
@@ -634,9 +682,9 @@ fn infer_routes_from_handlers(handlers: &std::collections::HashSet<String>) -> V
 }
 
 fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &str) {
-    use dist_agent_lang::{execute_dal_and_extract_handlers};
-    use dist_agent_lang::http_server_integration::create_router_with_options;
     use axum::response::Html;
+    use dist_agent_lang::execute_dal_and_extract_handlers;
+    use dist_agent_lang::http_server_integration::create_router_with_options;
     use std::sync::Arc;
 
     println!("🪩  Serving DAL handlers from: {}", filename);
@@ -662,11 +710,14 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
     let routes = {
         let annotated = extract_routes_from_annotations(&user_functions);
         if annotated.is_empty() {
-            let handler_names: std::collections::HashSet<String> = user_functions.keys().cloned().collect();
+            let handler_names: std::collections::HashSet<String> =
+                user_functions.keys().cloned().collect();
             let inferred = infer_routes_from_handlers(&handler_names);
             if inferred.is_empty() {
                 eprintln!("❌ No HTTP handlers found in {}.", filename);
-                eprintln!("   Add @route(\"METHOD\", \"/path\") annotations to your functions, e.g.:");
+                eprintln!(
+                    "   Add @route(\"METHOD\", \"/path\") annotations to your functions, e.g.:"
+                );
                 eprintln!("   @route(\"GET\", \"/api/items\")");
                 eprintln!("   fn get_items(request) {{ ... }}");
                 std::process::exit(1);
@@ -701,10 +752,12 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
     // Scope writeback: after each request, persist scope changes back to shared state
     let scope_writeback: Arc<Box<dyn Fn(&dist_agent_lang::runtime::scope::Scope) + Send + Sync>> = {
         let sc = shared_scope.clone();
-        Arc::new(Box::new(move |new_scope: &dist_agent_lang::runtime::scope::Scope| {
-            let mut guard = sc.write().unwrap();
-            *guard = new_scope.clone();
-        }))
+        Arc::new(Box::new(
+            move |new_scope: &dist_agent_lang::runtime::scope::Scope| {
+                let mut guard = sc.write().unwrap();
+                *guard = new_scope.clone();
+            },
+        ))
     };
 
     let mut app = create_router_with_options(server, runtime_factory, Some(scope_writeback));
@@ -715,7 +768,12 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
         let parent = path.parent()?;
         let base = path.file_stem()?;
         if base == "todo_backend_minimal" {
-            Some(parent.join("frontend_todo_app.html").to_string_lossy().into_owned())
+            Some(
+                parent
+                    .join("frontend_todo_app.html")
+                    .to_string_lossy()
+                    .into_owned(),
+            )
         } else {
             None
         }
@@ -725,10 +783,13 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
         match std::fs::read_to_string(fp) {
             Ok(html) => {
                 let body = html;
-                app = app.route("/", axum::routing::get(move || {
-                    let b = body.clone();
-                    async move { Html(b) }
-                }));
+                app = app.route(
+                    "/",
+                    axum::routing::get(move || {
+                        let b = body.clone();
+                        async move { Html(b) }
+                    }),
+                );
                 println!("✅ Frontend: {} served at /", fp);
             }
             Err(e) => eprintln!("⚠️  Could not read frontend {}: {}", fp, e),
@@ -736,21 +797,39 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
     }
 
     // Add CORS layer
-    use tower_http::cors::{CorsLayer, Any};
     use axum::http::Method;
+    use tower_http::cors::{Any, CorsLayer};
     let cors = if cors_origin == "*" {
         CorsLayer::new()
-            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH, Method::OPTIONS])
+            .allow_methods([
+                Method::GET,
+                Method::POST,
+                Method::PUT,
+                Method::DELETE,
+                Method::PATCH,
+                Method::OPTIONS,
+            ])
             .allow_origin(Any)
             .allow_headers(Any)
     } else {
-        let origin = cors_origin.parse::<axum::http::HeaderValue>()
+        let origin = cors_origin
+            .parse::<axum::http::HeaderValue>()
             .unwrap_or_else(|_| {
-                eprintln!("⚠️  Invalid --cors-origin '{}', falling back to *", cors_origin);
+                eprintln!(
+                    "⚠️  Invalid --cors-origin '{}', falling back to *",
+                    cors_origin
+                );
                 axum::http::HeaderValue::from_static("*")
             });
         CorsLayer::new()
-            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH, Method::OPTIONS])
+            .allow_methods([
+                Method::GET,
+                Method::POST,
+                Method::PUT,
+                Method::DELETE,
+                Method::PATCH,
+                Method::OPTIONS,
+            ])
             .allow_origin(origin)
             .allow_headers(Any)
     };
@@ -778,11 +857,14 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
     };
 
     rt.block_on(async move {
-        let listener = tokio::net::TcpListener::bind(addr).await
+        let listener = tokio::net::TcpListener::bind(addr)
+            .await
             .map_err(|e| format!("Failed to bind to port {}: {}", port, e))?;
-        axum::serve(listener, app).await
+        axum::serve(listener, app)
+            .await
             .map_err(|e| format!("Server error: {}", e))
-    }).unwrap_or_else(|e| {
+    })
+    .unwrap_or_else(|e| {
         eprintln!("❌ {}", e);
         std::process::exit(1);
     });
@@ -791,7 +873,7 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
 fn run_selftest() {
     println!("🔧 Running system health checks...");
     println!("========================================================================");
-    
+
     let test_code = r#"
 let x = 42;
 let message = "Hello from dist_agent_lang!";
@@ -823,7 +905,7 @@ let principal = key::create_principal("user_123", "John Doe");
 let key_request = key::create_capability_request("user_data", "read", "user_123");
 let key_check = key::check(key_request);
 "#;
-    
+
     println!("🪩  Running built-in test suite");
     let tokens = match Lexer::new(test_code).tokenize() {
         Ok(tokens) => {
@@ -835,7 +917,7 @@ let key_check = key::check(key_request);
             return;
         }
     };
-    
+
     // Test the parser
     println!("✅ Parser: testing...");
     let mut parser = Parser::new(tokens.clone());
@@ -848,36 +930,42 @@ let key_check = key::check(key_request);
             return;
         }
     };
-    
+
     // Test the runtime with custom capacities
     println!("✅ Runtime: testing...");
     let mut runtime = Runtime::with_capacities(128, 32, 16);
-    
+
     // Test variable management
     runtime.set_variable("x".to_string(), Value::Int(42));
-    runtime.set_variable("message".to_string(), Value::String("Hello Runtime!".to_string()));
+    runtime.set_variable(
+        "message".to_string(),
+        Value::String("Hello Runtime!".to_string()),
+    );
     runtime.set_variable("flag".to_string(), Value::Bool(true));
     runtime.set_variable("empty".to_string(), Value::Null);
-    
+
     match runtime.get_variable("x") {
         Ok(_value) => {
             println!("✅ Runtime: variables & functions working");
         }
         Err(e) => println!("❌ Error getting 'x': {}", e),
     }
-    
+
     // Test built-in functions (silently)
-    let _ = runtime.call_function("print", &[Value::String("Testing print function!".to_string())]);
+    let _ = runtime.call_function(
+        "print",
+        &[Value::String("Testing print function!".to_string())],
+    );
     let _ = runtime.call_function("add", &[Value::Int(10), Value::Int(32)]);
-    
+
     // Test the Standard Library (Week 5-6)
     println!("✅ Standard Library: testing...");
-    
+
     // Test chain namespace
     let mut metadata = HashMap::new();
     metadata.insert("description".to_string(), "A test NFT".to_string());
     metadata.insert("image".to_string(), "ipfs://QmTest...".to_string());
-    
+
     let asset_id = chain::mint("TestNFT".to_string(), metadata.clone());
     let _ = chain::get(asset_id);
     let _ = chain::update(asset_id, {
@@ -885,47 +973,66 @@ let key_check = key::check(key_request);
         updates.insert("description".to_string(), "Updated test NFT".to_string());
         updates
     });
-    
+
     // Test auth namespace (simplified)
     let session = auth::session("user123".to_string(), vec!["admin".to_string()]);
     let _ = auth::is_valid_session(&session);
     let _ = auth::has_role(&session, "admin");
-    
+
     // Test log namespace
-    log::info("Application started", {
-        let mut data = HashMap::new();
-        data.insert("version".to_string(), Value::String(env!("CARGO_PKG_VERSION").to_string()));
-        data.insert("timestamp".to_string(), Value::Int(1234567890));
-        data
-    }, None);
-    
+    log::info(
+        "Application started",
+        {
+            let mut data = HashMap::new();
+            data.insert(
+                "version".to_string(),
+                Value::String(env!("CARGO_PKG_VERSION").to_string()),
+            );
+            data.insert("timestamp".to_string(), Value::Int(1234567890));
+            data
+        },
+        None,
+    );
+
     let log_stats = log::get_stats();
-    let _total_logs = log_stats.get("total_entries").and_then(|v| match v {
-        Value::Int(n) => Some(*n),
-        _ => None,
-    }).unwrap_or(0);
-    
+    let _total_logs = log_stats
+        .get("total_entries")
+        .and_then(|v| match v {
+            Value::Int(n) => Some(*n),
+            _ => None,
+        })
+        .unwrap_or(0);
+
     // Test crypto namespace
     let _hash_sha256 = crypto::hash("Hello, World!", HashAlgorithm::SHA256);
     let _hash_sha512 = crypto::hash("Hello, World!", HashAlgorithm::SHA512);
     let keypair = crypto::generate_keypair(SignatureAlgorithm::RSA);
-    let signature = crypto::sign("Hello, World!", &keypair["private_key"], SignatureAlgorithm::RSA);
-    let _is_valid_signature = crypto::verify("Hello, World!", &signature, &keypair["public_key"], SignatureAlgorithm::RSA);
-    
+    let signature = crypto::sign(
+        "Hello, World!",
+        &keypair["private_key"],
+        SignatureAlgorithm::RSA,
+    );
+    let _is_valid_signature = crypto::verify(
+        "Hello, World!",
+        &signature,
+        &keypair["public_key"],
+        SignatureAlgorithm::RSA,
+    );
+
     println!("✅ Standard Library: chain, auth, log, crypto all working");
-    
+
     // Test error handling system
     println!("✅ Error Handling: syntax implemented");
-    
+
     println!("\n✅ All Core Tests Passed!");
     println!("   • Lexer & Parser ✅");
     println!("   • Runtime (variables, functions) ✅");
     println!("   • Standard Library (chain, auth, log, crypto) ✅");
     println!("   • Error Handling ✅");
-    
+
     test_error_handling_and_testing_framework();
     test_performance_optimization();
-    
+
     println!("\n🪩 Ready for first working examples!");
 }
 
@@ -937,7 +1044,9 @@ fn print_help(cli: &Cli) {
     }
     print!("{}", cli_design::help_content(&bin));
     if !cli.quiet {
-        println!("More: https://distagentlang.com · https://github.com/okjason-source/dist_agent_lang");
+        println!(
+            "More: https://distagentlang.com · https://github.com/okjason-source/dist_agent_lang"
+        );
     }
 }
 
@@ -953,35 +1062,39 @@ fn print_version(cli: &Cli) {
 }
 
 fn test_error_handling_and_testing_framework() {
-    use testing::framework::OutputFormat;
-    use testing::coverage::CoverageTracker;
     use runtime::values::Value;
-    
+    use testing::coverage::CoverageTracker;
+    use testing::framework::OutputFormat;
+
     println!("   Testing Enhanced Error Handling System...");
-    
+
     // Test enhanced error types
     let error_context = ErrorContext::new()
         .with_file_path("test.dal".to_string())
         .with_source_code("let x = 10 + ;".to_string())
         .add_call_stack("parse_expression".to_string())
         .add_suggestion("Check for missing operand after +".to_string());
-    
+
     let parser_error = ParserError::unexpected_token(
         &Token::Punctuation(Punctuation::Semicolon),
         &["expression", "number", "identifier"],
         1,
-        10
-    ).with_context(error_context);
-    
+        10,
+    )
+    .with_context(error_context);
+
     println!("   ✅ Enhanced error handling");
-    
+
     // Test error reporter
     let mut error_reporter = SimpleErrorReporter::new();
     error_reporter.report_error(parser_error.clone());
     error_reporter.report_warning("Unused variable 'x'".to_string(), 5);
-    
-    println!("   ✅ Error reporter: {} errors", error_reporter.get_errors().len());
-    
+
+    println!(
+        "   ✅ Error reporter: {} errors",
+        error_reporter.get_errors().len()
+    );
+
     // Create test suite
     let arithmetic_test = TestCase::new("arithmetic_test")
         .with_description("Test basic arithmetic operations")
@@ -989,25 +1102,27 @@ fn test_error_handling_and_testing_framework() {
         .expect_result(Value::Int(15))
         .with_tag("basic")
         .with_tag("arithmetic");
-    
+
     let function_test = TestCase::new("function_test")
         .with_description("Test function definition and call")
-        .with_source_code("
+        .with_source_code(
+            "
             fn add(a, b) {
                 return a + b;
             }
             add(3, 4)
-        ")
+        ",
+        )
         .expect_result(Value::Int(7))
         .with_tag("basic")
         .with_tag("function");
-    
+
     let error_test = TestCase::new("error_test")
         .with_description("Test error handling")
         .with_source_code("let x = undefined_variable;")
         .expect_error("undefined variable")
         .with_tag("error");
-    
+
     // Create test suite
     let test_suite = TestSuite::new("comprehensive_tests")
         .with_description("Comprehensive test suite for dist_agent_lang")
@@ -1017,9 +1132,9 @@ fn test_error_handling_and_testing_framework() {
         .with_tag("comprehensive")
         .with_setup("let global_setup = true;")
         .with_teardown("let global_cleanup = true;");
-    
+
     println!("   ✅ Test suite: {} tests", test_suite.test_cases.len());
-    
+
     // Test mocking system
     let mock_chain_mint = MockBuilder::new("mint")
         .in_namespace("chain")
@@ -1027,23 +1142,23 @@ fn test_error_handling_and_testing_framework() {
         .logs("Mock chain::mint called")
         .expects_calls(1)
         .build();
-    
+
     let mock_oracle_fetch = MockBuilder::new("fetch")
         .in_namespace("oracle")
         .returns(Value::String("mock_price_data".to_string()))
         .logs("Mock oracle::fetch called")
         .build();
-    
+
     let mut mock_registry = MockRegistry::new();
     mock_registry.register(mock_chain_mint.clone());
     mock_registry.register(mock_oracle_fetch);
-    
+
     println!("   ✅ Mock registry: {} mocks", mock_registry.mocks.len());
-    
+
     // Test runner
     let mut test_runner = TestRunner::new()
         .with_config(TestConfig {
-            verbose: false,  // Changed from true to false for less verbose output
+            verbose: false, // Changed from true to false for less verbose output
             stop_on_failure: false,
             parallel: false,
             timeout: Some(std::time::Duration::from_secs(30)),
@@ -1053,15 +1168,19 @@ fn test_error_handling_and_testing_framework() {
             output_format: OutputFormat::Text,
         })
         .with_mock(mock_chain_mint);
-    
+
     let stats = test_runner.run_suite(test_suite);
-    
-    println!("   ✅ Test runner: {} passed, {} failed, {:.1}% success",
-        stats.passed, stats.failed, stats.success_rate());
-    
+
+    println!(
+        "   ✅ Test runner: {} passed, {} failed, {:.1}% success",
+        stats.passed,
+        stats.failed,
+        stats.success_rate()
+    );
+
     // Coverage tracking
-    let mut coverage_tracker = CoverageTracker::new()
-        .with_source_code("
+    let mut coverage_tracker = CoverageTracker::new().with_source_code(
+        "
             fn add(a, b) {
                 return a + b;
             }
@@ -1072,8 +1191,10 @@ fn test_error_handling_and_testing_framework() {
             } else {
                 return false;
             }
-        ".to_string());
-    
+        "
+        .to_string(),
+    );
+
     // Simulate execution
     coverage_tracker.mark_line_executed(1);
     coverage_tracker.mark_line_executed(2);
@@ -1082,64 +1203,80 @@ fn test_error_handling_and_testing_framework() {
     coverage_tracker.mark_line_executed(7);
     coverage_tracker.mark_function_executed("add");
     coverage_tracker.mark_branch_executed(6, "result > 5");
-    
-    println!("   ✅ Coverage: {:.1}% lines, {:.1}% functions, {:.1}% branches", 
+
+    println!(
+        "   ✅ Coverage: {:.1}% lines, {:.1}% functions, {:.1}% branches",
         coverage_tracker.line_coverage_percentage(),
         coverage_tracker.function_coverage_percentage(),
-        coverage_tracker.branch_coverage_percentage());
-    
+        coverage_tracker.branch_coverage_percentage()
+    );
+
     // Generate test report
     let report = test_runner.generate_report(OutputFormat::Text);
     println!("   ✅ Test report: {} chars", report.len());
-    
+
     println!("\n🎉 Testing framework complete!");
 }
 
 fn test_performance_optimization() {
     println!("   Testing Performance Optimization System...");
-    
+
     // Test benchmarking system
     println!("\n   Testing Benchmarking System...");
     use performance::benchmark::*;
-    
+
     let benchmark_runner = BenchmarkRunner::new()
         .with_iterations(100)
         .with_warmup(10)
         .with_memory_tracking(true);
-    
+
     // Run lexer benchmarks
-    let lexer_suite = benchmark_runner.run_suite("Lexer Benchmarks", LanguageBenchmarks::lexer_benchmarks());
+    let lexer_suite =
+        benchmark_runner.run_suite("Lexer Benchmarks", LanguageBenchmarks::lexer_benchmarks());
     println!("   ✅ Lexer benchmarks completed:");
     for result in &lexer_suite.benchmarks {
-        println!("      - {}: {:?} ({:.0} ops/sec)", result.name, result.average_duration, result.throughput);
+        println!(
+            "      - {}: {:?} ({:.0} ops/sec)",
+            result.name, result.average_duration, result.throughput
+        );
     }
-    
+
     // Run parser benchmarks
-    let parser_suite = benchmark_runner.run_suite("Parser Benchmarks", LanguageBenchmarks::parser_benchmarks());
+    let parser_suite =
+        benchmark_runner.run_suite("Parser Benchmarks", LanguageBenchmarks::parser_benchmarks());
     println!("   ✅ Parser benchmarks completed:");
     for result in &parser_suite.benchmarks {
-        println!("      - {}: {:?} ({:.0} ops/sec)", result.name, result.average_duration, result.throughput);
+        println!(
+            "      - {}: {:?} ({:.0} ops/sec)",
+            result.name, result.average_duration, result.throughput
+        );
     }
-    
+
     // Run runtime benchmarks
-    let runtime_suite = benchmark_runner.run_suite("Runtime Benchmarks", LanguageBenchmarks::runtime_benchmarks());
+    let runtime_suite = benchmark_runner.run_suite(
+        "Runtime Benchmarks",
+        LanguageBenchmarks::runtime_benchmarks(),
+    );
     println!("   ✅ Runtime benchmarks completed:");
     for result in &runtime_suite.benchmarks {
-        println!("      - {}: {:?} ({:.0} ops/sec)", result.name, result.average_duration, result.throughput);
+        println!(
+            "      - {}: {:?} ({:.0} ops/sec)",
+            result.name, result.average_duration, result.throughput
+        );
     }
-    
+
     // Test profiling system
     println!("\n   Testing Profiling System...");
     use performance::profiler::*;
-    
+
     let profiler = get_global_profiler();
-    
+
     // Profile lexer operations
     let _tokens = profiler.profile_scope("lexer_tokenization", || {
         let lexer = Lexer::new("let x = 42 + 10 * 2; let y = (x + 5) / 3;");
         lexer.tokenize_immutable().unwrap()
     });
-    
+
     // Profile parser operations
     let _ast = profiler.profile_scope("parser_parsing", || {
         let lexer = Lexer::new("let x = 42 + 10 * 2; let y = (x + 5) / 3;");
@@ -1147,7 +1284,7 @@ fn test_performance_optimization() {
         let mut parser = Parser::new(tokens);
         parser.parse().unwrap()
     });
-    
+
     // Profile runtime operations
     let _result = profiler.profile_scope("runtime_execution", || {
         let mut runtime = Runtime::new();
@@ -1155,117 +1292,136 @@ fn test_performance_optimization() {
         runtime.set_variable("y".to_string(), Value::Int(10));
         runtime.get_variable("x")
     });
-    
+
     let profile_report = profiler.generate_report();
     println!("   ✅ Profiling completed:");
-    println!("      {}", profile_report.lines().next().unwrap_or("No profile data"));
-    
+    println!(
+        "      {}",
+        profile_report.lines().next().unwrap_or("No profile data")
+    );
+
     // Test optimization system
     println!("\n   Testing Optimization System...");
     use performance::optimizer::*;
-    
+
     let optimizer = Optimizer::new().with_level(OptimizationLevel::Aggressive);
-    
+
     // Create a test AST for optimization
     let test_source = r#"
         let x = 42 + 10 * 2;
         let y = (x + 5) / 3;
         let z = x + y;
     "#;
-    
+
     let lexer = Lexer::new(test_source);
     let tokens = lexer.tokenize_immutable().unwrap();
     let mut parser = Parser::new(tokens);
     let original_ast = parser.parse().unwrap();
-    
+
     let optimization_result = optimizer.optimize(original_ast);
     println!("   ✅ Optimization completed:");
-    println!("      - Optimizations applied: {}", optimization_result.optimizations_applied.len());
-    println!("      - Estimated improvement: {:.1}%", optimization_result.performance_improvement);
-    
+    println!(
+        "      - Optimizations applied: {}",
+        optimization_result.optimizations_applied.len()
+    );
+    println!(
+        "      - Estimated improvement: {:.1}%",
+        optimization_result.performance_improvement
+    );
+
     // Test memory management
     println!("\n   Testing Memory Management...");
     use performance::memory::*;
-    
+
     let memory_manager = get_global_memory_manager();
-    
+
     // Allocate some memory
     let _block1 = memory_manager.allocate(1024, "String");
     let block2 = memory_manager.allocate(2048, "Vector");
     let _block3 = memory_manager.allocate(512, "HashMap");
-    
+
     // Deallocate some memory
     memory_manager.deallocate(block2);
-    
+
     let memory_stats = memory_manager.get_stats();
     println!("   ✅ Memory management completed:");
-    println!("      - Total allocated: {} bytes", memory_stats.total_allocated);
-    println!("      - Current usage: {} bytes", memory_stats.current_usage);
+    println!(
+        "      - Total allocated: {} bytes",
+        memory_stats.total_allocated
+    );
+    println!(
+        "      - Current usage: {} bytes",
+        memory_stats.current_usage
+    );
     println!("      - Peak usage: {} bytes", memory_stats.peak_usage);
-    
+
     // Test object pooling
     let string_pool = memory_manager.create_object_pool::<String>("strings", 10);
     let mut pooled_strings = Vec::new();
-    
+
     for i in 0..5 {
         let mut pooled_string = string_pool.acquire();
         *pooled_string.value_mut() = format!("string_{}", i);
         pooled_strings.push(pooled_string);
     }
-    
+
     let pool_stats = string_pool.get_stats();
     println!("   ✅ Object pooling completed:");
-    println!("      - Pool: {} (capacity: {})", pool_stats.name, pool_stats.capacity);
-    println!("      - Available: {}, In use: {}", pool_stats.available_count, pool_stats.in_use_count);
+    println!(
+        "      - Pool: {} (capacity: {})",
+        pool_stats.name, pool_stats.capacity
+    );
+    println!(
+        "      - Available: {}, In use: {}",
+        pool_stats.available_count, pool_stats.in_use_count
+    );
     println!("      - Reuse rate: {:.1}%", pool_stats.reuse_rate * 100.0);
-    
+
     // Test concurrency system
     println!("\n   Testing Concurrency System...");
     use performance::concurrency::*;
-    
+
     let thread_pool = ThreadPool::new(4);
     let async_scheduler = AsyncScheduler::new(4);
-    
+
     // Submit some tasks
     for i in 0..5 {
-        let task_id = async_scheduler.schedule(
-            &format!("task_{}", i),
-            TaskPriority::Normal,
-            move || {
+        let task_id =
+            async_scheduler.schedule(&format!("task_{}", i), TaskPriority::Normal, move || {
                 std::thread::sleep(Duration::from_millis(10));
                 Ok(())
-            }
-        );
+            });
         println!("      - Scheduled task {} with ID {}", i, task_id);
     }
-    
+
     // Wait a bit for tasks to complete
     std::thread::sleep(Duration::from_millis(100));
-    
+
     let thread_pool_stats = thread_pool.get_stats();
     println!("   ✅ Concurrency completed:");
-    println!("      - Thread pool: {} total, {} active", thread_pool_stats.total_threads, thread_pool_stats.active_threads);
-    println!("      - Completed tasks: {}", thread_pool_stats.completed_tasks);
-    println!("      - Average task duration: {:?}", thread_pool_stats.average_task_duration);
-    
+    println!(
+        "      - Thread pool: {} total, {} active",
+        thread_pool_stats.total_threads, thread_pool_stats.active_threads
+    );
+    println!(
+        "      - Completed tasks: {}",
+        thread_pool_stats.completed_tasks
+    );
+    println!(
+        "      - Average task duration: {:?}",
+        thread_pool_stats.average_task_duration
+    );
+
     // Test parallel execution
     let numbers: Vec<i32> = (1..=100).collect();
-    let doubled = ParallelExecutor::map_parallel(
-        numbers,
-        |x| x * 2,
-        4
-    );
-    
-    let sum = ParallelExecutor::reduce_parallel(
-        doubled.clone(),
-        |acc, x| acc + x,
-        4
-    );
-    
+    let doubled = ParallelExecutor::map_parallel(numbers, |x| x * 2, 4);
+
+    let sum = ParallelExecutor::reduce_parallel(doubled.clone(), |acc, x| acc + x, 4);
+
     println!("   ✅ Parallel execution completed:");
     println!("      - Parallel map result: {} items", doubled.len());
     println!("      - Parallel reduce result: {}", sum);
-    
+
     println!("\n🎉 Performance Optimization working!");
     println!("   - Comprehensive benchmarking system ✅");
     println!("   - Real-time profiling with memory tracking ✅");
@@ -1273,7 +1429,7 @@ fn test_performance_optimization() {
     println!("   - Advanced memory management with object pooling ✅");
     println!("   - High-performance concurrency with thread pools ✅");
     println!("   - Parallel execution utilities ✅");
-    
+
     // Test service parsing
     test_service_parsing();
 }
@@ -1281,7 +1437,7 @@ fn test_performance_optimization() {
 // TEMPORARY: Test service parsing
 fn test_service_parsing() {
     println!("✅ Service Parsing: testing...");
-    
+
     let test_code = r#"service MyService {
     balance: int = 100;
     name: string;
@@ -1294,7 +1450,7 @@ fn test_service_parsing() {
         self.balance = new_balance;
     }
 }"#;
-    
+
     // Tokenize
     let tokens = match Lexer::new(test_code).tokenize() {
         Ok(tokens) => tokens,
@@ -1303,7 +1459,7 @@ fn test_service_parsing() {
             return;
         }
     };
-    
+
     // Parse
     let mut parser = Parser::new(tokens);
     let program = match parser.parse() {
@@ -1313,34 +1469,42 @@ fn test_service_parsing() {
             return;
         }
     };
-    
+
     // Check for service statement
-    let has_service = program.statements.iter().any(|stmt| {
-        matches!(stmt, Statement::Service(_))
-    });
-    
+    let has_service = program
+        .statements
+        .iter()
+        .any(|stmt| matches!(stmt, Statement::Service(_)));
+
     if has_service {
         // Print service details
         for stmt in &program.statements {
             if let Statement::Service(service) = stmt {
-                println!("✅ Service Parsing: {} with {} fields, {} methods", 
-                         service.name, service.fields.len(), service.methods.len());
+                println!(
+                    "✅ Service Parsing: {} with {} fields, {} methods",
+                    service.name,
+                    service.fields.len(),
+                    service.methods.len()
+                );
             }
         }
     }
-    
+
     println!("✅ Service Parsing: complete");
 }
 
 fn convert_solidity_file(input_file: &str, output_file: &str) {
-    use std::path::Path;
     use dist_agent_lang::solidity_converter;
-    
-    println!("🔄 Converting Solidity to DAL: {} -> {}", input_file, output_file);
-    
+    use std::path::Path;
+
+    println!(
+        "🔄 Converting Solidity to DAL: {} -> {}",
+        input_file, output_file
+    );
+
     let input_path = Path::new(input_file);
     let output_path = Path::new(output_file);
-    
+
     match solidity_converter::convert_file(input_path, output_path) {
         Ok(_) => {
             println!("✅ Conversion successful!");
@@ -1354,46 +1518,49 @@ fn convert_solidity_file(input_file: &str, output_file: &str) {
 }
 
 fn analyze_solidity_file(input_file: &str) {
-    use std::path::Path;
     use dist_agent_lang::solidity_converter;
-    
+    use std::path::Path;
+
     println!("📊 Analyzing Solidity file: {}", input_file);
-    
+
     let input_path = Path::new(input_file);
-    
+
     match solidity_converter::analyze_file(input_path) {
         Ok(report) => {
             println!("\n📈 Analysis Report:");
             println!("   Compatibility Score: {:.1}%", report.compatibility_score);
-            
+
             if !report.errors.is_empty() {
                 println!("\n❌ Errors ({}):", report.errors.len());
                 for error in &report.errors {
                     println!("   - {}", error);
                 }
             }
-            
+
             if !report.unsupported_features.is_empty() {
-                println!("\n⚠️  Unsupported Features ({}):", report.unsupported_features.len());
+                println!(
+                    "\n⚠️  Unsupported Features ({}):",
+                    report.unsupported_features.len()
+                );
                 for feature in &report.unsupported_features {
                     println!("   - {}", feature);
                 }
             }
-            
+
             if !report.warnings.is_empty() {
                 println!("\n⚠️  Warnings ({}):", report.warnings.len());
                 for warning in &report.warnings {
                     println!("   - {}", warning);
                 }
             }
-            
+
             if !report.suggestions.is_empty() {
                 println!("\n💡 Suggestions ({}):", report.suggestions.len());
                 for suggestion in &report.suggestions {
                     println!("   - {}", suggestion);
                 }
             }
-            
+
             println!("\n✅ Analysis complete!");
         }
         Err(e) => {
@@ -1410,7 +1577,7 @@ fn analyze_solidity_file(input_file: &str) {
 /// Check DAL file for type errors without executing
 fn check_dal_file(filename: &str) {
     println!("🪩  Type checking dist_agent_lang file: {}", filename);
-    
+
     // Read the file
     let source_code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
@@ -1419,7 +1586,7 @@ fn check_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Tokenize
     let tokens_with_pos = match Lexer::new(&source_code).tokenize_with_positions_immutable() {
         Ok(tokens) => {
@@ -1431,7 +1598,7 @@ fn check_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Parse
     let _ast = match Parser::new_with_positions(tokens_with_pos).parse() {
         Ok(ast) => {
@@ -1446,7 +1613,7 @@ fn check_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // TODO: Add semantic analysis (type checking, unused variables, etc.)
     // For now, successful parsing means type check passed
 }
@@ -1458,7 +1625,7 @@ fn format_dal_file(filename: &str, check_only: bool) {
     } else {
         println!("🪩  Formatting dist_agent_lang file: {}", filename);
     }
-    
+
     // Read the file
     let source_code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
@@ -1467,7 +1634,7 @@ fn format_dal_file(filename: &str, check_only: bool) {
             std::process::exit(1);
         }
     };
-    
+
     // Tokenize and parse
     let tokens = match Lexer::new(&source_code).tokenize_immutable() {
         Ok(tokens) => {
@@ -1479,7 +1646,7 @@ fn format_dal_file(filename: &str, check_only: bool) {
             std::process::exit(1);
         }
     };
-    
+
     let ast = match Parser::new(tokens).parse() {
         Ok(ast) => {
             println!("✅ Parsed {} statements", ast.statements.len());
@@ -1490,10 +1657,10 @@ fn format_dal_file(filename: &str, check_only: bool) {
             std::process::exit(1);
         }
     };
-    
+
     // Format AST back to code
     let formatted = format_ast(&ast);
-    
+
     if check_only {
         if formatted.trim() == source_code.trim() {
             println!("✅ File is properly formatted");
@@ -1519,23 +1686,27 @@ fn format_dal_file(filename: &str, check_only: bool) {
 /// Format AST back to source code
 fn format_ast(ast: &parser::ast::Program) -> String {
     let mut output = String::new();
-    
+
     for (i, statement) in ast.statements.iter().enumerate() {
         if i > 0 {
             output.push('\n');
         }
         output.push_str(&format_statement(statement));
     }
-    
+
     output
 }
 
 fn format_statement(stmt: &Statement) -> String {
     use parser::ast::Statement;
-    
+
     match stmt {
         Statement::Let(let_stmt) => {
-            format!("let {} = {};\n", let_stmt.name, format_expression(&let_stmt.value))
+            format!(
+                "let {} = {};\n",
+                let_stmt.name,
+                format_expression(&let_stmt.value)
+            )
         }
         Statement::Return(ret_stmt) => {
             if let Some(e) = &ret_stmt.value {
@@ -1564,15 +1735,28 @@ fn format_statement(stmt: &Statement) -> String {
             result
         }
         Statement::Function(fn_stmt) => {
-            let params: Vec<String> = fn_stmt.parameters.iter().map(|p| {
-                if let Some(ref t) = p.param_type {
-                    format!("{}: {}", p.name, t)
-                } else {
-                    p.name.clone()
-                }
-            }).collect();
-            let ret_type = fn_stmt.return_type.as_ref().map(|t| format!(" -> {}", t)).unwrap_or_default();
-            let mut result = format!("fn {}({}){} {{\n", fn_stmt.name, params.join(", "), ret_type);
+            let params: Vec<String> = fn_stmt
+                .parameters
+                .iter()
+                .map(|p| {
+                    if let Some(ref t) = p.param_type {
+                        format!("{}: {}", p.name, t)
+                    } else {
+                        p.name.clone()
+                    }
+                })
+                .collect();
+            let ret_type = fn_stmt
+                .return_type
+                .as_ref()
+                .map(|t| format!(" -> {}", t))
+                .unwrap_or_default();
+            let mut result = format!(
+                "fn {}({}){} {{\n",
+                fn_stmt.name,
+                params.join(", "),
+                ret_type
+            );
             for stmt in &fn_stmt.body.statements {
                 result.push_str("    ");
                 result.push_str(&format_statement(stmt));
@@ -1585,9 +1769,9 @@ fn format_statement(stmt: &Statement) -> String {
 }
 
 fn format_expression(expr: &parser::ast::Expression) -> String {
-    use parser::ast::Expression;
     use lexer::tokens::Literal;
-    
+    use parser::ast::Expression;
+
     match expr {
         Expression::Literal(lit) => match lit {
             Literal::Int(n) => n.to_string(),
@@ -1595,13 +1779,19 @@ fn format_expression(expr: &parser::ast::Expression) -> String {
             Literal::String(s) => format!("\"{}\"", s),
             Literal::Bool(b) => b.to_string(),
             Literal::Null => "null".to_string(),
-        }
+        },
         Expression::Identifier(name) => name.clone(),
         Expression::BinaryOp(left, op, right) => {
-            format!("{} {} {}", format_expression(left), format_operator(op), format_expression(right))
+            format!(
+                "{} {} {}",
+                format_expression(left),
+                format_operator(op),
+                format_expression(right)
+            )
         }
         Expression::FunctionCall(call) => {
-            let formatted_args: Vec<String> = call.arguments.iter().map(format_expression).collect();
+            let formatted_args: Vec<String> =
+                call.arguments.iter().map(format_expression).collect();
             format!("{}({})", call.name, formatted_args.join(", "))
         }
         Expression::ArrayLiteral(elements) => {
@@ -1609,9 +1799,10 @@ fn format_expression(expr: &parser::ast::Expression) -> String {
             format!("[{}]", formatted_elements.join(", "))
         }
         Expression::ObjectLiteral(obj) => {
-            let formatted_pairs: Vec<String> = obj.iter().map(|(k, v)| {
-                format!("\"{}\": {}", k, format_expression(v))
-            }).collect();
+            let formatted_pairs: Vec<String> = obj
+                .iter()
+                .map(|(k, v)| format!("\"{}\": {}", k, format_expression(v)))
+                .collect();
             format!("{{{}}}", formatted_pairs.join(", "))
         }
         Expression::Assignment(name, value) => {
@@ -1672,7 +1863,7 @@ fn format_operator(op: &lexer::tokens::Operator) -> &str {
 /// Lint DAL code
 fn lint_dal_file(filename: &str) {
     println!("🪩  Linting dist_agent_lang file: {}", filename);
-    
+
     // Read the file
     let source_code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
@@ -1681,7 +1872,7 @@ fn lint_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Tokenize and parse
     let tokens = match Lexer::new(&source_code).tokenize_immutable() {
         Ok(tokens) => {
@@ -1693,7 +1884,7 @@ fn lint_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     let ast = match Parser::new(tokens).parse() {
         Ok(ast) => {
             println!("✅ Parsed {} statements", ast.statements.len());
@@ -1704,31 +1895,31 @@ fn lint_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Run lint checks
     let mut issues = Vec::new();
-    
+
     // Check for unused variables
     let mut declared_vars: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut used_vars: std::collections::HashSet<String> = std::collections::HashSet::new();
-    
+
     for statement in &ast.statements {
         collect_declared_vars(statement, &mut declared_vars);
         collect_used_vars(statement, &mut used_vars);
     }
-    
+
     for var in &declared_vars {
         if !used_vars.contains(var) {
             issues.push(format!("⚠️  Unused variable: '{}'", var));
         }
     }
-    
+
     // TODO: Add more lint checks:
     // - Functions that don't return anything
     // - Dead code after return
     // - Non-idiomatic patterns
     // - Security issues
-    
+
     if issues.is_empty() {
         println!("✅ No lint issues found!");
         println!("   File follows best practices");
@@ -1821,9 +2012,12 @@ fn collect_used_vars(stmt: &Statement, vars: &mut std::collections::HashSet<Stri
     }
 }
 
-fn collect_used_vars_in_expr(expr: &parser::ast::Expression, vars: &mut std::collections::HashSet<String>) {
+fn collect_used_vars_in_expr(
+    expr: &parser::ast::Expression,
+    vars: &mut std::collections::HashSet<String>,
+) {
     use parser::ast::Expression;
-    
+
     match expr {
         Expression::Identifier(name) => {
             vars.insert(name.clone());
@@ -1879,19 +2073,19 @@ fn collect_used_vars_in_expr(expr: &parser::ast::Expression, vars: &mut std::col
 /// Create a new DAL project
 fn create_new_project(project_name: &str, project_type: Option<&str>) {
     println!("📦 Creating new dist_agent_lang project: {}", project_name);
-    
+
     // Validate project name
     if !is_valid_project_name(project_name) {
         eprintln!("❌ Invalid project name. Use lowercase letters, numbers, hyphens, and underscores only.");
         std::process::exit(1);
     }
-    
+
     // Create project directory
     if std::path::Path::new(project_name).exists() {
         eprintln!("❌ Directory '{}' already exists", project_name);
         std::process::exit(1);
     }
-    
+
     match std::fs::create_dir(project_name) {
         Ok(_) => {
             println!("   ✅ Created directory: {}", project_name);
@@ -1901,7 +2095,7 @@ fn create_new_project(project_name: &str, project_type: Option<&str>) {
             std::process::exit(1);
         }
     }
-    
+
     // Create project structure based on type
     let ptype = project_type.unwrap_or("default");
     match ptype {
@@ -1930,18 +2124,20 @@ fn create_new_project(project_name: &str, project_type: Option<&str>) {
             create_default_project(project_name);
         }
     }
-    
+
     println!("\n✅ Project '{}' created successfully!", project_name);
     println!("\n📚 Next steps:");
     println!("   cd {}", project_name);
-    
+
     // Show appropriate next command based on type
     match ptype {
         "web" | "webapp" | "dapp" => println!("   {} web web.dal", binary_name()),
         "ai" | "ml" => println!("   {} run ai.dal", binary_name()),
         "iot" | "device" => println!("   {} run iot.dal", binary_name()),
         "agent" | "agents" => println!("   {} run agent.dal", binary_name()),
-        "chain" | "contract" | "erc20" | "erc721" => println!("   {} run contract.dal", binary_name()),
+        "chain" | "contract" | "erc20" | "erc721" => {
+            println!("   {} run contract.dal", binary_name())
+        }
         "cli" => println!("   {} run cli.dal", binary_name()),
         "lib" | "library" => println!("   {} run lib.dal", binary_name()),
         _ => println!("   {} run main.dal", binary_name()),
@@ -1949,12 +2145,15 @@ fn create_new_project(project_name: &str, project_type: Option<&str>) {
 }
 
 fn is_valid_project_name(name: &str) -> bool {
-    !name.is_empty() && name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_')
+    !name.is_empty()
+        && name
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_')
 }
 
 fn create_default_project(project_name: &str) {
     let main_dal = format!(
-r#"// {project_name} - dist_agent_lang project
+        r#"// {project_name} - dist_agent_lang project
 // Generated by dal new
 
 fn main() {{
@@ -1965,9 +2164,9 @@ fn main() {{
 main();
 "#
     );
-    
+
     let readme = format!(
-r#"# {project_name}
+        r#"# {project_name}
 
 A dist_agent_lang project.
 
@@ -1993,18 +2192,18 @@ dal fmt main.dal
 - [dist_agent_lang Documentation](https://github.com/dist_agent_lang/dist_agent_lang)
 "#
     );
-    
+
     // Write files
     std::fs::write(format!("{}/main.dal", project_name), main_dal).unwrap();
     std::fs::write(format!("{}/README.md", project_name), readme).unwrap();
-    
+
     println!("   ✅ Created main.dal");
     println!("   ✅ Created README.md");
 }
 
 fn create_contract_project(project_name: &str) {
     let contract_dal = format!(
-r#"// {project_name} - Smart Contract
+        r#"// {project_name} - Smart Contract
 // Generated by dal new --mold contract
 
 contract Token {{
@@ -2032,17 +2231,24 @@ contract Token {{
 }}
 "#
     );
-    
+
     std::fs::write(format!("{}/contract.dal", project_name), contract_dal).unwrap();
-    std::fs::write(format!("{}/README.md", project_name), format!("# {} Smart Contract\n\nA dist_agent_lang smart contract project.", project_name)).unwrap();
-    
+    std::fs::write(
+        format!("{}/README.md", project_name),
+        format!(
+            "# {} Smart Contract\n\nA dist_agent_lang smart contract project.",
+            project_name
+        ),
+    )
+    .unwrap();
+
     println!("   ✅ Created contract.dal");
     println!("   ✅ Created README.md");
 }
 
 fn create_web_project(project_name: &str) {
     let web_dal = format!(
-r#"// {project_name} - Web Application
+        r#"// {project_name} - Web Application
 // Generated by dal new --mold web
 
 service WebApp {{
@@ -2058,17 +2264,24 @@ service WebApp {{
 web::start(WebApp, 3000);
 "#
     );
-    
+
     std::fs::write(format!("{}/web.dal", project_name), web_dal).unwrap();
-    std::fs::write(format!("{}/README.md", project_name), format!("# {} Web App\n\nA dist_agent_lang web application.", project_name)).unwrap();
-    
+    std::fs::write(
+        format!("{}/README.md", project_name),
+        format!(
+            "# {} Web App\n\nA dist_agent_lang web application.",
+            project_name
+        ),
+    )
+    .unwrap();
+
     println!("   ✅ Created web.dal");
     println!("   ✅ Created README.md");
 }
 
 fn create_cli_project(project_name: &str) {
     let cli_dal = format!(
-r#"// {project_name} - CLI Application
+        r#"// {project_name} - CLI Application
 // Generated by dal new --mold cli
 
 fn main(args: array<string>) {{
@@ -2095,17 +2308,24 @@ fn main(args: array<string>) {{
 main(sys::args());
 "#
     );
-    
+
     std::fs::write(format!("{}/cli.dal", project_name), cli_dal).unwrap();
-    std::fs::write(format!("{}/README.md", project_name), format!("# {} CLI\n\nA dist_agent_lang CLI application.", project_name)).unwrap();
-    
+    std::fs::write(
+        format!("{}/README.md", project_name),
+        format!(
+            "# {} CLI\n\nA dist_agent_lang CLI application.",
+            project_name
+        ),
+    )
+    .unwrap();
+
     println!("   ✅ Created cli.dal");
     println!("   ✅ Created README.md");
 }
 
 fn create_library_project(project_name: &str) {
     let lib_dal = format!(
-r#"// {project_name} - Library
+        r#"// {project_name} - Library
 // Generated by dal new --mold lib
 
 // Public API
@@ -2123,17 +2343,21 @@ fn validate(x: int) -> bool {{
 }}
 "#
     );
-    
+
     std::fs::write(format!("{}/lib.dal", project_name), lib_dal).unwrap();
-    std::fs::write(format!("{}/README.md", project_name), format!("# {} Library\n\nA dist_agent_lang library.", project_name)).unwrap();
-    
+    std::fs::write(
+        format!("{}/README.md", project_name),
+        format!("# {} Library\n\nA dist_agent_lang library.", project_name),
+    )
+    .unwrap();
+
     println!("   ✅ Created lib.dal");
     println!("   ✅ Created README.md");
 }
 
 fn create_ai_project(project_name: &str) {
     let ai_dal = format!(
-r#"// {project_name} - AI/ML Project
+        r#"// {project_name} - AI/ML Project
 // Generated by dal new --mold ai
 
 use ai;
@@ -2166,9 +2390,9 @@ fn main() {{
 main();
 "#
     );
-    
+
     let readme = format!(
-r#"# {project_name}
+        r#"# {project_name}
 
 An AI/ML project using dist_agent_lang.
 
@@ -2204,17 +2428,17 @@ dal ai test ai.dal
 - [Service Integration](https://github.com/dist_agent_lang/dist_agent_lang/blob/main/docs/stdlib/service.md)
 "#
     );
-    
+
     std::fs::write(format!("{}/ai.dal", project_name), ai_dal).unwrap();
     std::fs::write(format!("{}/README.md", project_name), readme).unwrap();
-    
+
     println!("   ✅ Created ai.dal");
     println!("   ✅ Created README.md");
 }
 
 fn create_iot_project(project_name: &str) {
     let iot_dal = format!(
-r#"// {project_name} - IoT Project
+        r#"// {project_name} - IoT Project
 // Generated by dal new --mold iot
 
 use iot;
@@ -2260,9 +2484,9 @@ fn main() {{
 main();
 "#
     );
-    
+
     let readme = format!(
-r#"# {project_name}
+        r#"# {project_name}
 
 An IoT device project using dist_agent_lang.
 
@@ -2297,17 +2521,17 @@ dal iot ai-optimize <device_id> --goal energy
 - [CLI IoT Commands](https://github.com/dist_agent_lang/dist_agent_lang/blob/main/docs/development/CLI_EXPANSION_PLAN.md#10-iot-commands)
 "#
     );
-    
+
     std::fs::write(format!("{}/iot.dal", project_name), iot_dal).unwrap();
     std::fs::write(format!("{}/README.md", project_name), readme).unwrap();
-    
+
     println!("   ✅ Created iot.dal");
     println!("   ✅ Created README.md");
 }
 
 fn create_agent_project(project_name: &str) {
     let agent_dal = format!(
-r#"// {project_name} - Multi-Agent System
+        r#"// {project_name} - Multi-Agent System
 // Generated by dal new --mold agent
 
 use agent;
@@ -2369,9 +2593,9 @@ fn main() {{
 main();
 "#
     );
-    
+
     let readme = format!(
-r#"# {project_name}
+        r#"# {project_name}
 
 A multi-agent system using dist_agent_lang.
 
@@ -2423,10 +2647,10 @@ For creating new projects, use: `dal new <name> --type <ai|iot|agent|chain|web|c
 - [CLI Agent Commands](https://github.com/dist_agent_lang/dist_agent_lang/blob/main/docs/development/CLI_EXPANSION_PLAN.md#76-agent-commands-new---multi-agent-orchestration)
 "#
     );
-    
+
     std::fs::write(format!("{}/agent.dal", project_name), agent_dal).unwrap();
     std::fs::write(format!("{}/README.md", project_name), readme).unwrap();
-    
+
     println!("   ✅ Created agent.dal");
     println!("   ✅ Created README.md");
 }
@@ -2434,13 +2658,13 @@ For creating new projects, use: `dal new <name> --type <ai|iot|agent|chain|web|c
 /// Initialize a DAL project in current directory
 fn init_project() {
     println!("📦 Initializing dist_agent_lang project in current directory...");
-    
+
     // Check if dal.toml already exists
     if std::path::Path::new("dal.toml").exists() {
         eprintln!("❌ Project already initialized (dal.toml exists)");
         std::process::exit(1);
     }
-    
+
     // Create dal.toml
     let dal_toml = r#"[package]
 name = "my-project"
@@ -2450,10 +2674,10 @@ authors = []
 [dependencies]
 # Add dependencies here
 "#;
-    
+
     std::fs::write("dal.toml", dal_toml).unwrap();
     println!("   ✅ Created dal.toml");
-    
+
     // Create main.dal if it doesn't exist
     if !std::path::Path::new("main.dal").exists() {
         let main_dal = r#"// Main entry point
@@ -2467,13 +2691,17 @@ main();
         std::fs::write("main.dal", main_dal).unwrap();
         println!("   ✅ Created main.dal");
     }
-    
+
     // Create README.md if it doesn't exist
     if !std::path::Path::new("README.md").exists() {
-        std::fs::write("README.md", "# My DAL Project\n\nA dist_agent_lang project.\n").unwrap();
+        std::fs::write(
+            "README.md",
+            "# My DAL Project\n\nA dist_agent_lang project.\n",
+        )
+        .unwrap();
         println!("   ✅ Created README.md");
     }
-    
+
     println!("\n✅ Project initialized!");
 }
 
@@ -2481,36 +2709,36 @@ main();
 fn run_repl() {
     println!("🔮 dist_agent_lang REPL v{}", env!("CARGO_PKG_VERSION"));
     println!("Type 'exit' or 'quit' to exit, 'help' for help\n");
-    
+
     let mut runtime = Runtime::new();
     let mut line_number = 1;
-    
+
     loop {
         // Print prompt
         print!("dal[{}]> ", line_number);
         std::io::Write::flush(&mut std::io::stdout()).unwrap();
-        
+
         // Read line
         let mut input = String::new();
         match std::io::stdin().read_line(&mut input) {
             Ok(_) => {
                 let input = input.trim();
-                
+
                 // Handle special commands
                 if input == "exit" || input == "quit" {
                     println!("Goodbye!");
                     break;
                 }
-                
+
                 if input == "help" {
                     print_repl_help();
                     continue;
                 }
-                
+
                 if input.is_empty() {
                     continue;
                 }
-                
+
                 // Try to evaluate as expression
                 match evaluate_repl_line(&input, &mut runtime) {
                     Ok(result) => {
@@ -2522,7 +2750,7 @@ fn run_repl() {
                         eprintln!("Error: {}", e);
                     }
                 }
-                
+
                 line_number += 1;
             }
             Err(e) => {
@@ -2549,13 +2777,13 @@ fn evaluate_repl_line(input: &str, runtime: &mut Runtime) -> Result<Option<Value
     let tokens = Lexer::new(input)
         .tokenize_immutable()
         .map_err(|e| format!("Lexer error: {}", e))?;
-    
+
     let mut parser = Parser::new(tokens);
-    let ast = parser.parse()
-        .map_err(|e| format!("Parse error: {}", e))?;
-    
+    let ast = parser.parse().map_err(|e| format!("Parse error: {}", e))?;
+
     // Execute
-    runtime.execute_program(ast)
+    runtime
+        .execute_program(ast)
         .map_err(|e| format!("Runtime error: {}", e))
 }
 
@@ -2563,11 +2791,11 @@ fn evaluate_repl_line(input: &str, runtime: &mut Runtime) -> Result<Option<Value
 fn watch_dal_file(filename: &str) {
     println!("👀 Watching {} for changes...", filename);
     println!("Press Ctrl+C to stop\n");
-    
+
     // Initial run
     println!("🪩 Initial run:");
     run_dal_file(filename);
-    
+
     // Get initial modification time
     let mut last_modified = match std::fs::metadata(filename) {
         Ok(metadata) => metadata.modified().ok(),
@@ -2576,11 +2804,11 @@ fn watch_dal_file(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Watch loop
     loop {
         std::thread::sleep(Duration::from_secs(1));
-        
+
         // Check if file was modified
         match std::fs::metadata(filename) {
             Ok(metadata) => {
@@ -2604,13 +2832,13 @@ fn watch_dal_file(filename: &str) {
 /// Add a package dependency
 fn add_package(package: &str) {
     println!("📦 Adding package: {}", package);
-    
+
     // Check if dal.toml exists
     if !std::path::Path::new("dal.toml").exists() {
         eprintln!("❌ No dal.toml found. Run '{} init' first.", binary_name());
         std::process::exit(1);
     }
-    
+
     // Read dal.toml
     let mut toml_content = match std::fs::read_to_string("dal.toml") {
         Ok(content) => content,
@@ -2619,14 +2847,14 @@ fn add_package(package: &str) {
             std::process::exit(1);
         }
     };
-    
+
     // Add dependency (simple append for now)
     if !toml_content.contains("[dependencies]") {
         toml_content.push_str("\n[dependencies]\n");
     }
-    
+
     toml_content.push_str(&format!("{} = \"latest\"\n", package));
-    
+
     // Write back
     match std::fs::write("dal.toml", toml_content) {
         Ok(_) => {
@@ -2643,13 +2871,13 @@ fn add_package(package: &str) {
 /// Install dependencies from dal.toml
 fn install_dependencies() {
     println!("📦 Installing dependencies...");
-    
+
     // Check if dal.toml exists
     if !std::path::Path::new("dal.toml").exists() {
         eprintln!("❌ No dal.toml found. Run '{} init' first.", binary_name());
         std::process::exit(1);
     }
-    
+
     // For now, just a placeholder
     println!("   ℹ️  Package management coming soon!");
     println!("   ✅ Dependencies would be installed here");
@@ -2661,20 +2889,20 @@ fn install_dependencies() {
 
 /// Run language benchmarks
 fn run_benchmarks(file: Option<&str>, suite: Option<&str>) {
-    use performance::BenchmarkRunner;
     use performance::benchmark::{LanguageBenchmarks, PerformanceComparison};
-    
+    use performance::BenchmarkRunner;
+
     println!("⚡ Running dist_agent_lang benchmarks...\n");
-    
+
     let runner = BenchmarkRunner::new()
         .with_iterations(1000)
         .with_warmup(100)
         .with_memory_tracking(true);
-    
+
     // If specific file provided, benchmark that
     if let Some(filename) = file {
         println!("📊 Benchmarking file: {}\n", filename);
-        
+
         // Read and parse file
         let source_code = match std::fs::read_to_string(filename) {
             Ok(content) => content,
@@ -2683,10 +2911,11 @@ fn run_benchmarks(file: Option<&str>, suite: Option<&str>) {
                 std::process::exit(1);
             }
         };
-        
+
         // Benchmark file execution
         let result = runner.run("file_execution", || {
-            let tokens = Lexer::new(&source_code).tokenize_immutable()
+            let tokens = Lexer::new(&source_code)
+                .tokenize_immutable()
                 .map_err(|e| e.to_string())?;
             let mut parser = Parser::new(tokens);
             let ast = parser.parse().map_err(|e| e.to_string())?;
@@ -2694,7 +2923,7 @@ fn run_benchmarks(file: Option<&str>, suite: Option<&str>) {
             runtime.execute_program(ast).map_err(|e| e.to_string())?;
             Ok(())
         });
-        
+
         println!("Results:");
         println!("  Iterations: {}", result.iterations);
         println!("  Average: {:?}", result.average_duration);
@@ -2704,13 +2933,13 @@ fn run_benchmarks(file: Option<&str>, suite: Option<&str>) {
         if let Some(memory) = result.memory_usage {
             println!("  Memory: {} bytes", memory);
         }
-        
+
         return;
     }
-    
+
     // Otherwise run built-in benchmark suites
     let suite_name = suite.unwrap_or("all");
-    
+
     match suite_name {
         "lexer" => {
             println!("Running Lexer benchmarks...\n");
@@ -2739,19 +2968,19 @@ fn run_benchmarks(file: Option<&str>, suite: Option<&str>) {
         "all" => {
             // Run all suites
             println!("Running all benchmark suites...\n");
-            
+
             let lexer_benchmarks = LanguageBenchmarks::lexer_benchmarks();
             let lexer_suite = runner.run_suite("Lexer", lexer_benchmarks);
             println!("{}", PerformanceComparison::generate_report(&lexer_suite));
-            
+
             let parser_benchmarks = LanguageBenchmarks::parser_benchmarks();
             let parser_suite = runner.run_suite("Parser", parser_benchmarks);
             println!("{}", PerformanceComparison::generate_report(&parser_suite));
-            
+
             let runtime_benchmarks = LanguageBenchmarks::runtime_benchmarks();
             let runtime_suite = runner.run_suite("Runtime", runtime_benchmarks);
             println!("{}", PerformanceComparison::generate_report(&runtime_suite));
-            
+
             let stdlib_benchmarks = LanguageBenchmarks::stdlib_benchmarks();
             let stdlib_suite = runner.run_suite("Stdlib", stdlib_benchmarks);
             println!("{}", PerformanceComparison::generate_report(&stdlib_suite));
@@ -2767,13 +2996,13 @@ fn run_benchmarks(file: Option<&str>, suite: Option<&str>) {
 /// Profile execution of a DAL file
 fn profile_dal_file(filename: &str, memory_tracking: bool) {
     use performance::profiler::Profiler;
-    
+
     println!("🪩  Profiling dist_agent_lang file: {}", filename);
     if memory_tracking {
         println!("   (with memory tracking)");
     }
     println!();
-    
+
     // Read file
     let source_code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
@@ -2782,13 +3011,14 @@ fn profile_dal_file(filename: &str, memory_tracking: bool) {
             std::process::exit(1);
         }
     };
-    
+
     // Create profiler with optional memory tracking
     let profiler = Profiler::new().with_memory_tracking(memory_tracking);
-    
+
     // Profile lexing
     let tokens = profiler.profile_scope("lexing", || {
-        let t = Lexer::new(&source_code).tokenize_immutable()
+        let t = Lexer::new(&source_code)
+            .tokenize_immutable()
             .map_err(|e| {
                 eprintln!("❌ Lexer error: {}", e);
                 std::process::exit(1);
@@ -2797,11 +3027,12 @@ fn profile_dal_file(filename: &str, memory_tracking: bool) {
         println!("✅ Lexer scanning... {} tokens", t.len());
         t
     });
-    
+
     // Profile parsing
     let ast = profiler.profile_scope("parsing", || {
         let mut parser = Parser::new(tokens);
-        let a = parser.parse()
+        let a = parser
+            .parse()
             .map_err(|e| {
                 eprintln!("❌ Parsing failed: {}", e);
                 std::process::exit(1);
@@ -2810,28 +3041,29 @@ fn profile_dal_file(filename: &str, memory_tracking: bool) {
         println!("✅ Parsed {} statements", a.statements.len());
         a
     });
-    
+
     // Profile execution
     profiler.profile_scope("execution", || {
         let mut runtime = Runtime::new();
-        runtime.execute_program(ast)
+        runtime
+            .execute_program(ast)
             .map_err(|e| {
                 eprintln!("❌ Execution failed: {}", e);
                 std::process::exit(1);
             })
             .unwrap();
     });
-    
+
     // Generate and print report
     println!("{}", profiler.generate_report());
 }
 
 /// Optimize a DAL file using AST optimizations
 fn optimize_dal_file(input_file: &str, output_file: Option<&str>, level: u8) {
-    use performance::optimizer::{Optimizer, OptimizationLevel, OptimizationUtils};
-    
+    use performance::optimizer::{OptimizationLevel, OptimizationUtils, Optimizer};
+
     println!("🪩 Optimizing dist_agent_lang file: {}", input_file);
-    
+
     // Map level to OptimizationLevel
     let opt_level = match level {
         0 => OptimizationLevel::None,
@@ -2842,10 +3074,10 @@ fn optimize_dal_file(input_file: &str, output_file: Option<&str>, level: u8) {
             std::process::exit(1);
         }
     };
-    
+
     println!("   Optimization level: {:?}", opt_level);
     println!();
-    
+
     // Read file
     let source_code = match std::fs::read_to_string(input_file) {
         Ok(content) => content,
@@ -2854,7 +3086,7 @@ fn optimize_dal_file(input_file: &str, output_file: Option<&str>, level: u8) {
             std::process::exit(1);
         }
     };
-    
+
     // Parse to AST
     let tokens = match Lexer::new(&source_code).tokenize_immutable() {
         Ok(tokens) => {
@@ -2866,7 +3098,7 @@ fn optimize_dal_file(input_file: &str, output_file: Option<&str>, level: u8) {
             std::process::exit(1);
         }
     };
-    
+
     let mut parser = Parser::new(tokens);
     let ast = match parser.parse() {
         Ok(ast) => {
@@ -2878,26 +3110,32 @@ fn optimize_dal_file(input_file: &str, output_file: Option<&str>, level: u8) {
             std::process::exit(1);
         }
     };
-    
+
     // Analyze complexity before optimization
     let original_complexity = OptimizationUtils::analyze_complexity(&ast);
     let optimization_potential = OptimizationUtils::estimate_optimization_potential(&ast);
-    
+
     println!("📊 Analysis:");
     println!("   Original complexity: {}", original_complexity);
     println!("   Optimization potential: {:.1}%", optimization_potential);
     println!();
-    
+
     // Run optimizer
     let optimizer = Optimizer::new().with_level(opt_level);
     let result = optimizer.optimize(ast);
-    
+
     // Show results
     println!("✨ Optimization complete!");
-    println!("   Optimizations applied: {}", result.optimizations_applied.len());
-    println!("   Estimated improvement: {:.1}%", result.performance_improvement);
+    println!(
+        "   Optimizations applied: {}",
+        result.optimizations_applied.len()
+    );
+    println!(
+        "   Estimated improvement: {:.1}%",
+        result.performance_improvement
+    );
     println!();
-    
+
     if !result.optimizations_applied.is_empty() {
         println!("Applied optimizations:");
         for opt in &result.optimizations_applied {
@@ -2905,15 +3143,16 @@ fn optimize_dal_file(input_file: &str, output_file: Option<&str>, level: u8) {
         }
         println!();
     }
-    
+
     // Analyze complexity after optimization
     let optimized_complexity = OptimizationUtils::analyze_complexity(&result.optimized_ast);
-    println!("   Complexity reduction: {} → {} ({:.1}% reduction)",
+    println!(
+        "   Complexity reduction: {} → {} ({:.1}% reduction)",
         original_complexity,
         optimized_complexity,
         ((original_complexity - optimized_complexity) as f64 / original_complexity as f64) * 100.0
     );
-    
+
     // If output file specified, write optimized code
     if let Some(output) = output_file {
         // Convert AST back to code (simplified version)
@@ -2935,12 +3174,12 @@ fn optimize_dal_file(input_file: &str, output_file: Option<&str>, level: u8) {
 /// Show memory statistics
 fn show_memory_stats() {
     use performance::memory::get_global_memory_manager;
-    
+
     println!("💾 Memory Statistics\n");
-    
+
     let memory_manager = get_global_memory_manager();
     let report = memory_manager.get_memory_report();
-    
+
     println!("{}", report);
 }
 
@@ -2954,13 +3193,16 @@ fn handle_chain_command(args: &[String]) {
         eprintln!("Usage: {} chain <subcommand> [args...]", binary_name());
         std::process::exit(1);
     }
-    
+
     match args[0].as_str() {
         "list" => {
             println!("📋 Supported Chains:\n");
             let chains = chain::get_supported_chains();
             for chain_config in chains {
-                println!("  {} (Chain ID: {})", chain_config.name, chain_config.chain_id);
+                println!(
+                    "  {} (Chain ID: {})",
+                    chain_config.name, chain_config.chain_id
+                );
                 if !chain_config.rpc_url.is_empty() {
                     println!("    RPC: {}", chain_config.rpc_url);
                 }
@@ -2976,7 +3218,7 @@ fn handle_chain_command(args: &[String]) {
                 eprintln!("❌ Invalid chain ID: {}", args[1]);
                 std::process::exit(1);
             });
-            
+
             match chain::get_chain_config(chain_id) {
                 Some(config) => {
                     println!("⛓️  Chain Configuration\n");
@@ -3004,14 +3246,17 @@ fn handle_chain_command(args: &[String]) {
                 eprintln!("❌ Invalid chain ID: {}", args[1]);
                 std::process::exit(1);
             });
-            
+
             println!("⛽ Getting gas price for chain {}...", chain_id);
             let gas_price = chain::get_gas_price(chain_id);
             println!("   Gas Price: {:.2} Gwei", gas_price);
         }
         "balance" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} chain balance <chain_id> <address>", binary_name());
+                eprintln!(
+                    "Usage: {} chain balance <chain_id> <address>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let chain_id: i64 = args[1].parse().unwrap_or_else(|_| {
@@ -3019,15 +3264,21 @@ fn handle_chain_command(args: &[String]) {
                 std::process::exit(1);
             });
             let address = &args[2];
-            
+
             println!("💰 Getting balance for {}...", address);
             let balance = chain::get_balance(chain_id, address.to_string());
             println!("   Balance: {} wei", balance);
-            println!("   Balance: {:.4} ETH", balance as f64 / 1_000_000_000_000_000_000.0);
+            println!(
+                "   Balance: {:.4} ETH",
+                balance as f64 / 1_000_000_000_000_000_000.0
+            );
         }
         "tx-status" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} chain tx-status <chain_id> <tx_hash>", binary_name());
+                eprintln!(
+                    "Usage: {} chain tx-status <chain_id> <tx_hash>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let chain_id: i64 = args[1].parse().unwrap_or_else(|_| {
@@ -3035,7 +3286,7 @@ fn handle_chain_command(args: &[String]) {
                 std::process::exit(1);
             });
             let tx_hash = &args[2];
-            
+
             println!("🔍 Getting transaction status...");
             let status = chain::get_transaction_status(chain_id, tx_hash.to_string());
             println!("   Status: {}", status);
@@ -3049,14 +3300,14 @@ fn handle_chain_command(args: &[String]) {
                 eprintln!("❌ Invalid chain ID: {}", args[1]);
                 std::process::exit(1);
             });
-            
+
             println!("⏰ Getting latest block timestamp...");
             let timestamp = chain::get_block_timestamp(chain_id);
             println!("   Timestamp: {}", timestamp);
-            
+
             // Convert to human-readable format
             if timestamp > 0 {
-                use std::time::{UNIX_EPOCH, Duration};
+                use std::time::{Duration, UNIX_EPOCH};
                 let datetime = UNIX_EPOCH + Duration::from_secs(timestamp as u64);
                 if let Ok(system_time) = datetime.elapsed() {
                     println!("   ({} seconds ago)", system_time.as_secs());
@@ -3065,12 +3316,15 @@ fn handle_chain_command(args: &[String]) {
         }
         "mint" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} chain mint <asset_name> [--meta key=value,...]", binary_name());
+                eprintln!(
+                    "Usage: {} chain mint <asset_name> [--meta key=value,...]",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let asset_name = &args[1];
             let mut metadata = HashMap::new();
-            
+
             // Parse metadata if provided
             if args.len() >= 4 && args[2] == "--meta" {
                 for pair in args[3].split(',') {
@@ -3079,7 +3333,7 @@ fn handle_chain_command(args: &[String]) {
                     }
                 }
             }
-            
+
             println!("🎨 Minting asset: {}", asset_name);
             let asset_id = chain::mint(asset_name.to_string(), metadata);
             println!("   ✅ Asset minted with ID: {}", asset_id);
@@ -3093,10 +3347,10 @@ fn handle_chain_command(args: &[String]) {
                 eprintln!("❌ Invalid asset ID: {}", args[1]);
                 std::process::exit(1);
             });
-            
+
             println!("🔍 Getting asset info...");
             let info = chain::get(asset_id);
-            
+
             if info.is_empty() {
                 println!("   ❌ Asset not found");
             } else {
@@ -3108,7 +3362,9 @@ fn handle_chain_command(args: &[String]) {
         }
         _ => {
             eprintln!("❌ Unknown chain subcommand: {}", args[0]);
-            eprintln!("Available: list, config, gas-price, balance, tx-status, block-time, mint, asset");
+            eprintln!(
+                "Available: list, config, gas-price, balance, tx-status, block-time, mint, asset"
+            );
             std::process::exit(1);
         }
     }
@@ -3120,7 +3376,7 @@ fn handle_crypto_command(args: &[String]) {
         eprintln!("Usage: {} crypto <subcommand> [args...]", binary_name());
         std::process::exit(1);
     }
-    
+
     match args[0].as_str() {
         "hash" => {
             if args.len() < 2 {
@@ -3141,7 +3397,7 @@ fn handle_crypto_command(args: &[String]) {
             } else {
                 HashAlgorithm::SHA256
             };
-            
+
             let hash = crypto::hash(data, algorithm.clone());
             let alg_name = match algorithm {
                 HashAlgorithm::SHA256 => "SHA256",
@@ -3161,7 +3417,7 @@ fn handle_crypto_command(args: &[String]) {
             } else {
                 HashAlgorithm::SHA256
             };
-            
+
             let hash = crypto::random_hash(algorithm);
             println!("🎲 Random Hash: {}", hash);
         }
@@ -3178,7 +3434,7 @@ fn handle_crypto_command(args: &[String]) {
             } else {
                 SignatureAlgorithm::RSA
             };
-            
+
             let keypair = crypto::generate_keypair(algorithm.clone());
             let alg_name = match algorithm {
                 SignatureAlgorithm::RSA => "RSA",
@@ -3187,7 +3443,7 @@ fn handle_crypto_command(args: &[String]) {
                 SignatureAlgorithm::Custom(ref s) => s.as_str(),
             };
             println!("🔑 Generating keypair ({})...", alg_name);
-            
+
             println!("\n✅ Keypair generated:");
             if let Some(public_key) = keypair.get("public_key") {
                 println!("\nPublic Key:");
@@ -3201,7 +3457,10 @@ fn handle_crypto_command(args: &[String]) {
         }
         "sign" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} crypto sign <data> <private_key> [algorithm]", binary_name());
+                eprintln!(
+                    "Usage: {} crypto sign <data> <private_key> [algorithm]",
+                    binary_name()
+                );
                 eprintln!("Algorithms: rsa (default), ed25519");
                 std::process::exit(1);
             }
@@ -3216,14 +3475,17 @@ fn handle_crypto_command(args: &[String]) {
             } else {
                 SignatureAlgorithm::RSA
             };
-            
+
             println!("✍️  Signing data...");
             let signature = crypto::sign(data, private_key, algorithm);
             println!("   Signature: {}", signature);
         }
         "verify" => {
             if args.len() < 4 {
-                eprintln!("Usage: {} crypto verify <data> <signature> <public_key> [algorithm]", binary_name());
+                eprintln!(
+                    "Usage: {} crypto verify <data> <signature> <public_key> [algorithm]",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let data = &args[1];
@@ -3238,7 +3500,7 @@ fn handle_crypto_command(args: &[String]) {
             } else {
                 SignatureAlgorithm::RSA
             };
-            
+
             println!("🔍 Verifying signature...");
             let valid = crypto::verify(data, signature, public_key, algorithm);
             if valid {
@@ -3250,24 +3512,30 @@ fn handle_crypto_command(args: &[String]) {
         }
         "encrypt" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} crypto encrypt <data> <public_key>", binary_name());
+                eprintln!(
+                    "Usage: {} crypto encrypt <data> <public_key>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let data = &args[1];
             let public_key = &args[2];
-            
+
             println!("🔒 Encrypting data...");
             let encrypted = crypto::encrypt(data, public_key);
             println!("   Encrypted: {}", encrypted);
         }
         "decrypt" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} crypto decrypt <encrypted_data> <private_key>", binary_name());
+                eprintln!(
+                    "Usage: {} crypto decrypt <encrypted_data> <private_key>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let encrypted_data = &args[1];
             let private_key = &args[2];
-            
+
             println!("🔓 Decrypting data...");
             match crypto::decrypt(encrypted_data, private_key) {
                 Some(decrypted) => {
@@ -3286,7 +3554,7 @@ fn handle_crypto_command(args: &[String]) {
             }
             let data = &args[1];
             let key = &args[2];
-            
+
             println!("🔒 Encrypting with AES-256...");
             match crypto::encrypt_aes256(data, key) {
                 Ok(encrypted) => {
@@ -3300,12 +3568,15 @@ fn handle_crypto_command(args: &[String]) {
         }
         "aes-decrypt" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} crypto aes-decrypt <encrypted_data> <key>", binary_name());
+                eprintln!(
+                    "Usage: {} crypto aes-decrypt <encrypted_data> <key>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let encrypted_data = &args[1];
             let key = &args[2];
-            
+
             println!("🔓 Decrypting with AES-256...");
             match crypto::decrypt_aes256(encrypted_data, key) {
                 Ok(decrypted) => {
@@ -3328,12 +3599,12 @@ fn handle_crypto_command(args: &[String]) {
 /// Handle database subcommands
 fn handle_db_command(args: &[String]) {
     use stdlib::database;
-    
+
     if args.is_empty() {
         eprintln!("Usage: {} db <subcommand> [args...]", binary_name());
         std::process::exit(1);
     }
-    
+
     match args[0].as_str() {
         "connect" => {
             if args.len() < 2 {
@@ -3341,7 +3612,7 @@ fn handle_db_command(args: &[String]) {
                 std::process::exit(1);
             }
             let conn_str = &args[1];
-            
+
             println!("🔌 Connecting to database...");
             match database::connect(conn_str.to_string()) {
                 Ok(_db) => {
@@ -3356,35 +3627,36 @@ fn handle_db_command(args: &[String]) {
         }
         "query" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} db query <connection_string> \"<sql>\"", binary_name());
+                eprintln!(
+                    "Usage: {} db query <connection_string> \"<sql>\"",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let conn_str = &args[1];
             let sql = &args[2];
-            
+
             println!("📊 Executing query...");
             match database::connect(conn_str.to_string()) {
-                Ok(db) => {
-                    match database::query(&db, sql.to_string(), vec![]) {
-                        Ok(result) => {
-                            println!("   ✅ Query executed successfully");
-                            println!("   Rows affected: {}", result.affected_rows);
-                            if !result.rows.is_empty() {
-                                println!("\n   Results:");
-                                for (i, row) in result.rows.iter().take(10).enumerate() {
-                                    println!("   Row {}: {:?}", i + 1, row);
-                                }
-                                if result.rows.len() > 10 {
-                                    println!("   ... and {} more rows", result.rows.len() - 10);
-                                }
+                Ok(db) => match database::query(&db, sql.to_string(), vec![]) {
+                    Ok(result) => {
+                        println!("   ✅ Query executed successfully");
+                        println!("   Rows affected: {}", result.affected_rows);
+                        if !result.rows.is_empty() {
+                            println!("\n   Results:");
+                            for (i, row) in result.rows.iter().take(10).enumerate() {
+                                println!("   Row {}: {:?}", i + 1, row);
+                            }
+                            if result.rows.len() > 10 {
+                                println!("   ... and {} more rows", result.rows.len() - 10);
                             }
                         }
-                        Err(e) => {
-                            eprintln!("   ❌ Query failed: {}", e);
-                            std::process::exit(1);
-                        }
                     }
-                }
+                    Err(e) => {
+                        eprintln!("   ❌ Query failed: {}", e);
+                        std::process::exit(1);
+                    }
+                },
                 Err(e) => {
                     eprintln!("   ❌ Connection failed: {}", e);
                     std::process::exit(1);
@@ -3397,23 +3669,21 @@ fn handle_db_command(args: &[String]) {
                 std::process::exit(1);
             }
             let conn_str = &args[1];
-            
+
             println!("📋 Listing tables...");
             match database::connect(conn_str.to_string()) {
-                Ok(db) => {
-                    match database::list_tables(&db) {
-                        Ok(tables) => {
-                            println!("   Found {} tables:\n", tables.len());
-                            for table in tables {
-                                println!("   • {}", table);
-                            }
-                        }
-                        Err(e) => {
-                            eprintln!("   ❌ Failed to list tables: {}", e);
-                            std::process::exit(1);
+                Ok(db) => match database::list_tables(&db) {
+                    Ok(tables) => {
+                        println!("   Found {} tables:\n", tables.len());
+                        for table in tables {
+                            println!("   • {}", table);
                         }
                     }
-                }
+                    Err(e) => {
+                        eprintln!("   ❌ Failed to list tables: {}", e);
+                        std::process::exit(1);
+                    }
+                },
                 Err(e) => {
                     eprintln!("   ❌ Connection failed: {}", e);
                     std::process::exit(1);
@@ -3422,38 +3692,39 @@ fn handle_db_command(args: &[String]) {
         }
         "schema" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} db schema <connection_string> <table_name>", binary_name());
+                eprintln!(
+                    "Usage: {} db schema <connection_string> <table_name>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let conn_str = &args[1];
             let table_name = &args[2];
-            
+
             println!("📐 Getting schema for table '{}'...", table_name);
             match database::connect(conn_str.to_string()) {
-                Ok(db) => {
-                    match database::get_table_schema(&db, table_name.to_string()) {
-                        Ok(schema) => {
-                            println!("   Table: {}", schema.name);
-                            println!("\n   Columns:");
-                            for column in schema.columns {
-                                println!("     • {} ({})", column.name, column.data_type);
-                                if column.is_primary_key {
-                                    println!("       [PRIMARY KEY]");
-                                }
-                                if !column.is_nullable {
-                                    println!("       [NOT NULL]");
-                                }
-                                if let Some(default) = column.default_value {
-                                    println!("       DEFAULT: {}", default);
-                                }
+                Ok(db) => match database::get_table_schema(&db, table_name.to_string()) {
+                    Ok(schema) => {
+                        println!("   Table: {}", schema.name);
+                        println!("\n   Columns:");
+                        for column in schema.columns {
+                            println!("     • {} ({})", column.name, column.data_type);
+                            if column.is_primary_key {
+                                println!("       [PRIMARY KEY]");
+                            }
+                            if !column.is_nullable {
+                                println!("       [NOT NULL]");
+                            }
+                            if let Some(default) = column.default_value {
+                                println!("       DEFAULT: {}", default);
                             }
                         }
-                        Err(e) => {
-                            eprintln!("   ❌ Failed to get schema: {}", e);
-                            std::process::exit(1);
-                        }
                     }
-                }
+                    Err(e) => {
+                        eprintln!("   ❌ Failed to get schema: {}", e);
+                        std::process::exit(1);
+                    }
+                },
                 Err(e) => {
                     eprintln!("   ❌ Connection failed: {}", e);
                     std::process::exit(1);
@@ -3462,28 +3733,29 @@ fn handle_db_command(args: &[String]) {
         }
         "plan" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} db plan <connection_string> \"<sql>\"", binary_name());
+                eprintln!(
+                    "Usage: {} db plan <connection_string> \"<sql>\"",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let conn_str = &args[1];
             let sql = &args[2];
-            
+
             println!("📈 Getting query plan...");
             match database::connect(conn_str.to_string()) {
-                Ok(db) => {
-                    match database::get_query_plan(&db, sql.to_string()) {
-                        Ok(plan) => {
-                            println!("   Query Plan:");
-                            for (key, value) in plan {
-                                println!("   {}: {}", key, value);
-                            }
-                        }
-                        Err(e) => {
-                            eprintln!("   ❌ Failed to get query plan: {}", e);
-                            std::process::exit(1);
+                Ok(db) => match database::get_query_plan(&db, sql.to_string()) {
+                    Ok(plan) => {
+                        println!("   Query Plan:");
+                        for (key, value) in plan {
+                            println!("   {}: {}", key, value);
                         }
                     }
-                }
+                    Err(e) => {
+                        eprintln!("   ❌ Failed to get query plan: {}", e);
+                        std::process::exit(1);
+                    }
+                },
                 Err(e) => {
                     eprintln!("   ❌ Connection failed: {}", e);
                     std::process::exit(1);
@@ -3492,25 +3764,26 @@ fn handle_db_command(args: &[String]) {
         }
         "backup" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} db backup <connection_string> <backup_path>", binary_name());
+                eprintln!(
+                    "Usage: {} db backup <connection_string> <backup_path>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let conn_str = &args[1];
             let backup_path = &args[2];
-            
+
             println!("💾 Creating backup...");
             match database::connect(conn_str.to_string()) {
-                Ok(db) => {
-                    match database::backup_database(&db, backup_path.to_string()) {
-                        Ok(_) => {
-                            println!("   ✅ Backup created: {}", backup_path);
-                        }
-                        Err(e) => {
-                            eprintln!("   ❌ Backup failed: {}", e);
-                            std::process::exit(1);
-                        }
+                Ok(db) => match database::backup_database(&db, backup_path.to_string()) {
+                    Ok(_) => {
+                        println!("   ✅ Backup created: {}", backup_path);
                     }
-                }
+                    Err(e) => {
+                        eprintln!("   ❌ Backup failed: {}", e);
+                        std::process::exit(1);
+                    }
+                },
                 Err(e) => {
                     eprintln!("   ❌ Connection failed: {}", e);
                     std::process::exit(1);
@@ -3519,25 +3792,26 @@ fn handle_db_command(args: &[String]) {
         }
         "restore" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} db restore <connection_string> <backup_path>", binary_name());
+                eprintln!(
+                    "Usage: {} db restore <connection_string> <backup_path>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let conn_str = &args[1];
             let backup_path = &args[2];
-            
+
             println!("📦 Restoring from backup...");
             match database::connect(conn_str.to_string()) {
-                Ok(db) => {
-                    match database::restore_database(&db, backup_path.to_string()) {
-                        Ok(_) => {
-                            println!("   ✅ Database restored from: {}", backup_path);
-                        }
-                        Err(e) => {
-                            eprintln!("   ❌ Restore failed: {}", e);
-                            std::process::exit(1);
-                        }
+                Ok(db) => match database::restore_database(&db, backup_path.to_string()) {
+                    Ok(_) => {
+                        println!("   ✅ Database restored from: {}", backup_path);
                     }
-                }
+                    Err(e) => {
+                        eprintln!("   ❌ Restore failed: {}", e);
+                        std::process::exit(1);
+                    }
+                },
                 Err(e) => {
                     eprintln!("   ❌ Connection failed: {}", e);
                     std::process::exit(1);
@@ -3550,7 +3824,7 @@ fn handle_db_command(args: &[String]) {
                 std::process::exit(1);
             }
             let conn_str = &args[1];
-            
+
             println!("📊 Getting database metrics...");
             match database::connect(conn_str.to_string()) {
                 Ok(db) => {
@@ -3559,7 +3833,10 @@ fn handle_db_command(args: &[String]) {
                     println!("   Idle Connections: {}", metrics.connections_idle);
                     println!("   Total Queries: {}", metrics.total_queries);
                     println!("   Slow Queries: {}", metrics.slow_queries);
-                    println!("   Cache Hit Ratio: {:.2}%", metrics.cache_hit_ratio * 100.0);
+                    println!(
+                        "   Cache Hit Ratio: {:.2}%",
+                        metrics.cache_hit_ratio * 100.0
+                    );
                     println!("   Average Query Time: {:.2}ms", metrics.average_query_time);
                 }
                 Err(e) => {
@@ -3586,12 +3863,18 @@ fn handle_ai_command(args: &[String]) {
         eprintln!("Usage: {} ai <subcommand> [args...]", binary_name());
         std::process::exit(1);
     }
-    
+
     match args[0].as_str() {
         "code" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} ai code \"<prompt>\" [--output <file>]", binary_name());
-                eprintln!("Example: {} ai code \"Create a token contract with minting\"", binary_name());
+                eprintln!(
+                    "Usage: {} ai code \"<prompt>\" [--output <file>]",
+                    binary_name()
+                );
+                eprintln!(
+                    "Example: {} ai code \"Create a token contract with minting\"",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let prompt = &args[1];
@@ -3600,7 +3883,7 @@ fn handle_ai_command(args: &[String]) {
             } else {
                 None
             };
-            
+
             generate_code(prompt, output_file);
         }
         "explain" => {
@@ -3629,7 +3912,10 @@ fn handle_ai_command(args: &[String]) {
         }
         "test" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} ai test <file.dal> [--output <file>]", binary_name());
+                eprintln!(
+                    "Usage: {} ai test <file.dal> [--output <file>]",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let filename = &args[1];
@@ -3669,12 +3955,15 @@ fn handle_ai_command(args: &[String]) {
 // ============================================================================
 
 fn handle_web_command(args: &[String]) {
-    use stdlib::web;
-    use std::collections::HashMap;
     use crate::runtime::values::Value;
+    use std::collections::HashMap;
+    use stdlib::web;
 
     if args.is_empty() {
-        eprintln!("Usage: {} web get <url> | web post <url> [--data <json>] | web parse-url <url>", binary_name());
+        eprintln!(
+            "Usage: {} web get <url> | web post <url> [--data <json>] | web parse-url <url>",
+            binary_name()
+        );
         std::process::exit(1);
     }
     match args[0].as_str() {
@@ -3685,7 +3974,12 @@ fn handle_web_command(args: &[String]) {
             }
             let url = &args[1];
             match web::get_request(url.clone()) {
-                Ok(resp) => println!("✅ {} {} (body length: {})", resp.status, url, resp.body.len()),
+                Ok(resp) => println!(
+                    "✅ {} {} (body length: {})",
+                    resp.status,
+                    url,
+                    resp.body.len()
+                ),
                 Err(e) => {
                     eprintln!("❌ {}", e);
                     std::process::exit(1);
@@ -3698,7 +3992,9 @@ fn handle_web_command(args: &[String]) {
                 std::process::exit(1);
             }
             let url = &args[1];
-            let data = args.iter().position(|a| a == "--data")
+            let data = args
+                .iter()
+                .position(|a| a == "--data")
                 .and_then(|i| args.get(i + 1))
                 .map(|s| {
                     let mut m = HashMap::new();
@@ -3707,7 +4003,12 @@ fn handle_web_command(args: &[String]) {
                 })
                 .unwrap_or_default();
             match web::post_request(url.clone(), data) {
-                Ok(resp) => println!("✅ {} {} (body length: {})", resp.status, url, resp.body.len()),
+                Ok(resp) => println!(
+                    "✅ {} {} (body length: {})",
+                    resp.status,
+                    url,
+                    resp.body.len()
+                ),
                 Err(e) => {
                     eprintln!("❌ {}", e);
                     std::process::exit(1);
@@ -3727,7 +4028,10 @@ fn handle_web_command(args: &[String]) {
             }
         }
         _ => {
-            eprintln!("Unknown web subcommand: {}. Use get, post, parse-url.", args[0]);
+            eprintln!(
+                "Unknown web subcommand: {}. Use get, post, parse-url.",
+                args[0]
+            );
             std::process::exit(1);
         }
     }
@@ -3749,8 +4053,14 @@ fn handle_cloud_command(args: &[String]) {
     match args[0].as_str() {
         "authorize" => {
             if args.len() < 4 {
-                eprintln!("Usage: {} cloud authorize <user_id> <operation> <resource>", binary_name());
-                eprintln!("Example: {} cloud authorize user_123 read config/db", binary_name());
+                eprintln!(
+                    "Usage: {} cloud authorize <user_id> <operation> <resource>",
+                    binary_name()
+                );
+                eprintln!(
+                    "Example: {} cloud authorize user_123 read config/db",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let user_id = &args[1];
@@ -3758,17 +4068,29 @@ fn handle_cloud_command(args: &[String]) {
             let resource = &args[3];
             let allowed = cloudadmin::authorize(user_id, operation, resource);
             if allowed {
-                println!("✅ Authorized: {} may {} on {}", user_id, operation, resource);
+                println!(
+                    "✅ Authorized: {} may {} on {}",
+                    user_id, operation, resource
+                );
             } else {
-                println!("❌ Denied: {} may not {} on {}", user_id, operation, resource);
+                println!(
+                    "❌ Denied: {} may not {} on {}",
+                    user_id, operation, resource
+                );
                 std::process::exit(1);
             }
         }
         "grant" => {
             if args.len() < 4 {
-                eprintln!("Usage: {} cloud grant <user_id> <role> <scope>", binary_name());
+                eprintln!(
+                    "Usage: {} cloud grant <user_id> <role> <scope>",
+                    binary_name()
+                );
                 eprintln!("Roles: superadmin, admin, moderator, user");
-                eprintln!("Example: {} cloud grant user_123 admin ec2:admin", binary_name());
+                eprintln!(
+                    "Example: {} cloud grant user_123 admin ec2:admin",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let user_id = args[1].clone();
@@ -3780,7 +4102,10 @@ fn handle_cloud_command(args: &[String]) {
                 "moderator" => AdminLevel::Moderator,
                 "user" => AdminLevel::User,
                 _ => {
-                    eprintln!("❌ Unknown role: {}. Use superadmin, admin, moderator, user", role);
+                    eprintln!(
+                        "❌ Unknown role: {}. Use superadmin, admin, moderator, user",
+                        role
+                    );
                     std::process::exit(1);
                 }
             };
@@ -3845,7 +4170,10 @@ fn handle_cloud_command(args: &[String]) {
         }
         "tenant" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} cloud tenant <subcommand> [args...]", binary_name());
+                eprintln!(
+                    "Usage: {} cloud tenant <subcommand> [args...]",
+                    binary_name()
+                );
                 eprintln!("Subcommands: list, create <name> [--admin-email <email>]");
                 std::process::exit(1);
             }
@@ -3853,11 +4181,16 @@ fn handle_cloud_command(args: &[String]) {
                 "list" => {
                     println!("🏢 Tenants\n");
                     println!("   Multi-tenant backend not yet implemented.");
-                    println!("   Use 'cloud grant <tenant_id> admin <scope>' for per-tenant admins.");
+                    println!(
+                        "   Use 'cloud grant <tenant_id> admin <scope>' for per-tenant admins."
+                    );
                 }
                 "create" => {
                     if args.len() < 3 {
-                        eprintln!("Usage: {} cloud tenant create <name> [--admin-email <email>]", binary_name());
+                        eprintln!(
+                            "Usage: {} cloud tenant create <name> [--admin-email <email>]",
+                            binary_name()
+                        );
                         std::process::exit(1);
                     }
                     let name = &args[2];
@@ -3880,8 +4213,13 @@ fn handle_cloud_command(args: &[String]) {
         }
         "compliance" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} cloud compliance <subcommand> [args...]", binary_name());
-                eprintln!("Subcommands: scan [--standard SOC2|HIPAA|GDPR], report <standard> [-o file]");
+                eprintln!(
+                    "Usage: {} cloud compliance <subcommand> [args...]",
+                    binary_name()
+                );
+                eprintln!(
+                    "Subcommands: scan [--standard SOC2|HIPAA|GDPR], report <standard> [-o file]"
+                );
                 std::process::exit(1);
             }
             match args[1].as_str() {
@@ -3898,7 +4236,10 @@ fn handle_cloud_command(args: &[String]) {
                 }
                 "report" => {
                     if args.len() < 3 {
-                        eprintln!("Usage: {} cloud compliance report <standard> [-o file]", binary_name());
+                        eprintln!(
+                            "Usage: {} cloud compliance report <standard> [-o file]",
+                            binary_name()
+                        );
                         std::process::exit(1);
                     }
                     let standard = &args[2];
@@ -3922,8 +4263,14 @@ fn handle_cloud_command(args: &[String]) {
         }
         "chain-log" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} cloud chain-log \"<event>\" [--chain_id <id>]", binary_name());
-                eprintln!("Example: {} cloud chain-log \"user_123 deleted resource\" --chain_id 1", binary_name());
+                eprintln!(
+                    "Usage: {} cloud chain-log \"<event>\" [--chain_id <id>]",
+                    binary_name()
+                );
+                eprintln!(
+                    "Example: {} cloud chain-log \"user_123 deleted resource\" --chain_id 1",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let event = &args[1];
@@ -3955,29 +4302,41 @@ fn handle_cloud_command(args: &[String]) {
         }
         "trust" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} cloud trust <subcommand> [args...]", binary_name());
+                eprintln!(
+                    "Usage: {} cloud trust <subcommand> [args...]",
+                    binary_name()
+                );
                 eprintln!("Subcommands: validate <admin_trust> <user_trust>, bridge <central> <decentral>");
                 std::process::exit(1);
             }
             match args[1].as_str() {
                 "validate" => {
                     if args.len() < 4 {
-                        eprintln!("Usage: {} cloud trust validate <admin_trust> <user_trust>", binary_name());
-                        eprintln!("Example: {} cloud trust validate valid valid", binary_name());
+                        eprintln!(
+                            "Usage: {} cloud trust validate <admin_trust> <user_trust>",
+                            binary_name()
+                        );
+                        eprintln!(
+                            "Example: {} cloud trust validate valid valid",
+                            binary_name()
+                        );
                         std::process::exit(1);
                     }
                     let admin_trust = &args[2];
                     let user_trust = &args[3];
                     let ok = cloudadmin::validate_hybrid_trust(admin_trust, user_trust);
                     if ok {
-                        println!("✅ Hybrid trust valid (admin: {}, user: {})", admin_trust, user_trust);
+                        println!(
+                            "✅ Hybrid trust valid (admin: {}, user: {})",
+                            admin_trust, user_trust
+                        );
                     } else {
                         println!("❌ Hybrid trust invalid");
                         std::process::exit(1);
                     }
                 }
-                    "bridge" => {
-                        if args.len() < 4 {
+                "bridge" => {
+                    if args.len() < 4 {
                         eprintln!("Usage: {} cloud trust bridge <centralized_trust> <decentralized_trust>", binary_name());
                         eprintln!("Example: {} cloud trust bridge admin user", binary_name());
                         std::process::exit(1);
@@ -3986,7 +4345,10 @@ fn handle_cloud_command(args: &[String]) {
                     let decentral = &args[3];
                     let ok = cloudadmin::bridge_trusts(central, decentral);
                     if ok {
-                        println!("✅ Trusts bridged (central: {}, decentral: {})", central, decentral);
+                        println!(
+                            "✅ Trusts bridged (central: {}, decentral: {})",
+                            central, decentral
+                        );
                     } else {
                         println!("❌ Trust bridge failed (expected central=admin, decentral=user)");
                         std::process::exit(1);
@@ -4051,13 +4413,19 @@ fn handle_key_command(args: &[String]) {
     match args[0].as_str() {
         "create" => {
             if args.len() < 4 {
-                eprintln!("Usage: {} key create <resource> <perm> [perm...]", binary_name());
+                eprintln!(
+                    "Usage: {} key create <resource> <perm> [perm...]",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let resource = &args[1];
             let perms: Vec<&str> = args[2..].iter().map(|s| s.as_str()).collect();
             match key::create(resource, perms) {
-                Ok(c) => println!("✅ Key created: {} (resource: {}, perms: {:?})", c.id, c.resource, c.permissions),
+                Ok(c) => println!(
+                    "✅ Key created: {} (resource: {}, perms: {:?})",
+                    c.id, c.resource, c.permissions
+                ),
                 Err(e) => {
                     eprintln!("❌ {}", e);
                     std::process::exit(1);
@@ -4066,12 +4434,23 @@ fn handle_key_command(args: &[String]) {
         }
         "check" => {
             if args.len() < 4 {
-                eprintln!("Usage: {} key check <resource> <operation> <principal_id>", binary_name());
+                eprintln!(
+                    "Usage: {} key check <resource> <operation> <principal_id>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
-            let req = key::create_capability_request(args[1].clone(), args[2].clone(), args[3].clone());
+            let req =
+                key::create_capability_request(args[1].clone(), args[2].clone(), args[3].clone());
             match key::check(req) {
-                Ok(allowed) => if allowed { println!("✅ Allowed") } else { println!("❌ Denied"); std::process::exit(1) },
+                Ok(allowed) => {
+                    if allowed {
+                        println!("✅ Allowed")
+                    } else {
+                        println!("❌ Denied");
+                        std::process::exit(1)
+                    }
+                }
                 Err(e) => {
                     eprintln!("❌ {}", e);
                     std::process::exit(1);
@@ -4097,13 +4476,19 @@ fn handle_key_command(args: &[String]) {
             } else {
                 println!("Capabilities for {} ({}):", args[1], caps.len());
                 for c in caps {
-                    println!("  {}  resource={}  perms={:?}", c.id, c.resource, c.permissions);
+                    println!(
+                        "  {}  resource={}  perms={:?}",
+                        c.id, c.resource, c.permissions
+                    );
                 }
             }
         }
         "revoke" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} key revoke <capability_id> <principal_id>", binary_name());
+                eprintln!(
+                    "Usage: {} key revoke <capability_id> <principal_id>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             match key::revoke(&args[1], &args[2]) {
@@ -4139,13 +4524,16 @@ fn handle_key_command(args: &[String]) {
 }
 
 fn handle_aml_command(args: &[String]) {
-    use stdlib::aml;
     use std::collections::HashMap;
+    use stdlib::aml;
 
     match args[0].as_str() {
         "check" => {
             if args.len() < 4 {
-                eprintln!("Usage: {} aml check <provider_id> <user_address> <check_type>", binary_name());
+                eprintln!(
+                    "Usage: {} aml check <provider_id> <user_address> <check_type>",
+                    binary_name()
+                );
                 eprintln!("  Providers: list with 'dal aml providers'");
                 std::process::exit(1);
             }
@@ -4175,20 +4563,26 @@ fn handle_aml_command(args: &[String]) {
             println!("AML providers: {}", list.join(", "));
         }
         _ => {
-            eprintln!("Unknown aml subcommand: {}. Use check, status, providers.", args[0]);
+            eprintln!(
+                "Unknown aml subcommand: {}. Use check, status, providers.",
+                args[0]
+            );
             std::process::exit(1);
         }
     }
 }
 
 fn handle_kyc_command(args: &[String]) {
-    use stdlib::kyc;
     use std::collections::HashMap;
+    use stdlib::kyc;
 
     match args[0].as_str() {
         "verify" => {
             if args.len() < 4 {
-                eprintln!("Usage: {} kyc verify <provider_id> <user_address> <level>", binary_name());
+                eprintln!(
+                    "Usage: {} kyc verify <provider_id> <user_address> <level>",
+                    binary_name()
+                );
                 eprintln!("  Providers: list with 'dal kyc providers'");
                 std::process::exit(1);
             }
@@ -4218,7 +4612,10 @@ fn handle_kyc_command(args: &[String]) {
             println!("KYC providers: {}", list.join(", "));
         }
         _ => {
-            eprintln!("Unknown kyc subcommand: {}. Use verify, status, providers.", args[0]);
+            eprintln!(
+                "Unknown kyc subcommand: {}. Use verify, status, providers.",
+                args[0]
+            );
             std::process::exit(1);
         }
     }
@@ -4226,49 +4623,56 @@ fn handle_kyc_command(args: &[String]) {
 
 fn handle_scaffold_command(args: &[String]) {
     let t = args[0].as_str();
-    let name = args.get(1).cloned().unwrap_or_else(|| {
-        match t {
-            "contract" => "MyContract".to_string(),
-            "api" => "api".to_string(),
-            "test" => "my_test".to_string(),
-            _ => "scaffold".to_string(),
-        }
+    let name = args.get(1).cloned().unwrap_or_else(|| match t {
+        "contract" => "MyContract".to_string(),
+        "api" => "api".to_string(),
+        "test" => "my_test".to_string(),
+        _ => "scaffold".to_string(),
     });
     let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
     let (filename, content) = match t {
         "contract" => {
             let f = format!("{}.dal", name);
-            let c = format!(r#"// Smart contract scaffold: {}
+            let c = format!(
+                r#"// Smart contract scaffold: {}
 // TODO: Add contract logic
 
 fn main() {{
     let owner = "0x0000000000000000000000000000000000000000";
     println("Contract: {} - owner: {{}}", owner);
 }}
-"#, name, name);
+"#,
+                name, name
+            );
             (f, c)
         }
         "api" => {
             let f = format!("{}.dal", name);
-            let c = format!(r#"// API scaffold: {}
+            let c = format!(
+                r#"// API scaffold: {}
 // TODO: Add endpoints via stdlib::web
 
 fn main() {{
     println("API: {} - add web::serve or route handlers");
 }}
-"#, name, name);
+"#,
+                name, name
+            );
             (f, c)
         }
         "test" => {
             let f = format!("{}.test.dal", name);
-            let c = format!(r#"// Test scaffold: {}
+            let c = format!(
+                r#"// Test scaffold: {}
 // TODO: Add test cases
 
 test "basic check" {{
     let x = 1 + 1;
     assert_eq(x, 2, "1+1 should be 2");
 }}
-"#, name);
+"#,
+                name
+            );
             (f, c)
         }
         _ => {
@@ -4286,7 +4690,12 @@ test "basic check" {{
     }
 }
 
-fn visit_dal_files(dir: &std::path::Path, cwd: &std::path::Path, max_depth: usize, cb: &mut dyn FnMut(&std::path::Path) -> Result<(), String>) -> Result<usize, String> {
+fn visit_dal_files(
+    dir: &std::path::Path,
+    cwd: &std::path::Path,
+    max_depth: usize,
+    cb: &mut dyn FnMut(&std::path::Path) -> Result<(), String>,
+) -> Result<usize, String> {
     if max_depth == 0 {
         return Ok(0);
     }
@@ -4294,7 +4703,10 @@ fn visit_dal_files(dir: &std::path::Path, cwd: &std::path::Path, max_depth: usiz
     for entry in std::fs::read_dir(dir).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
         let path = entry.path();
-        if path.to_str().map_or(false, |s| s.contains("target") || s.contains("dist")) {
+        if path
+            .to_str()
+            .map_or(false, |s| s.contains("target") || s.contains("dist"))
+        {
             continue;
         }
         if path.is_dir() {
@@ -4317,7 +4729,11 @@ fn handle_build_command(_args: &[String]) {
             let source = std::fs::read_to_string(p).unwrap_or_default();
             let tokens = match Lexer::new(&source).tokenize_with_positions_immutable() {
                 Ok(t) => {
-                    println!("✅ Lexer scanning... {} tokens ({})", t.len(), p.file_name().unwrap_or_default().to_string_lossy());
+                    println!(
+                        "✅ Lexer scanning... {} tokens ({})",
+                        t.len(),
+                        p.file_name().unwrap_or_default().to_string_lossy()
+                    );
                     t
                 }
                 Err(e) => return Err(format!("{}: {}", p.display(), e)),
@@ -4343,8 +4759,14 @@ fn handle_build_command(_args: &[String]) {
         }
     } else {
         println!("🔨 Build");
-        println!("   No dal.toml found. Run '{} init' or create dal.toml first.", binary_name());
-        println!("   For now: use '{} check <file.dal>' to validate files.", binary_name());
+        println!(
+            "   No dal.toml found. Run '{} init' or create dal.toml first.",
+            binary_name()
+        );
+        println!(
+            "   For now: use '{} check <file.dal>' to validate files.",
+            binary_name()
+        );
     }
 }
 
@@ -4393,7 +4815,11 @@ fn handle_dist_command(_args: &[String]) {
         Ok(())
     };
     let _ = visit_dal_files(&cwd, &cwd, 3, &mut |p| copy_file(p));
-    println!("✅ Dist complete ({} file(s) copied to {})", count, dist.display());
+    println!(
+        "✅ Dist complete ({} file(s) copied to {})",
+        count,
+        dist.display()
+    );
 }
 
 // ============================================================================
@@ -4409,9 +4835,18 @@ fn handle_lsp_command(_args: &[String]) {
     println!("   • Go to definition");
     println!("   • Autocomplete & signatures");
     println!();
-    println!("   To use: Configure your editor to run '{} lsp' as the language server.", binary_name());
+    println!(
+        "   To use: Configure your editor to run '{} lsp' as the language server.",
+        binary_name()
+    );
     println!("   Example (VS Code): Add to settings.json:");
-    println!("     \"dal.languageServerPath\": \"{}\"", std::env::current_exe().ok().and_then(|p| p.to_str().map(String::from)).unwrap_or_else(|| binary_name()));
+    println!(
+        "     \"dal.languageServerPath\": \"{}\"",
+        std::env::current_exe()
+            .ok()
+            .and_then(|p| p.to_str().map(String::from))
+            .unwrap_or_else(|| binary_name())
+    );
     println!();
     println!("   Note: Full LSP implementation is planned. Current mode: stdio-ready placeholder.");
 }
@@ -4439,7 +4874,10 @@ fn handle_doc_command(args: &[String]) {
     }
 
     if path.is_empty() {
-        eprintln!("Usage: {} doc <file.dal|dir> [--output <path>] [--open]", binary_name());
+        eprintln!(
+            "Usage: {} doc <file.dal|dir> [--output <path>] [--open]",
+            binary_name()
+        );
         std::process::exit(1);
     }
 
@@ -4500,7 +4938,12 @@ fn handle_doc_command(args: &[String]) {
     }
 
     for (name, kind, _doc) in &items {
-        md.push_str(&format!("- [{} `{}`](#{})\n", kind, name, name.replace('.', "-")));
+        md.push_str(&format!(
+            "- [{} `{}`](#{})\n",
+            kind,
+            name,
+            name.replace('.', "-")
+        ));
     }
     md.push_str("\n---\n\n");
 
@@ -4529,16 +4972,24 @@ fn handle_doc_command(args: &[String]) {
         #[cfg(not(target_os = "windows"))]
         let _ = std::process::Command::new("open").arg(&out_path).spawn();
         #[cfg(target_os = "windows")]
-        let _ = std::process::Command::new("cmd").args(["/C", "start", &out_path]).spawn();
+        let _ = std::process::Command::new("cmd")
+            .args(["/C", "start", &out_path])
+            .spawn();
     }
 }
 
 fn format_fn(f: &FunctionStatement) -> String {
-    let params: Vec<String> = f.parameters.iter()
+    let params: Vec<String> = f
+        .parameters
+        .iter()
         .map(|p| format!("{}: {}", p.name, p.param_type.as_deref().unwrap_or("any")))
         .collect();
     let sig = format!("fn {}({})", f.name, params.join(", "));
-    let ret = f.return_type.as_deref().map(|r| format!(" -> {}", r)).unwrap_or_default();
+    let ret = f
+        .return_type
+        .as_deref()
+        .map(|r| format!(" -> {}", r))
+        .unwrap_or_default();
     format!("```\n{}{}\n```", sig, ret)
 }
 
@@ -4551,13 +5002,52 @@ fn handle_completions_command(args: &[String]) {
     let shell = args.first().map(|s| s.as_str()).unwrap_or("bash");
     let bin = binary_name();
     let cmds = [
-        "run", "test", "web", "help", "version", "check", "fmt", "lint", "parse",
-        "new", "init", "add", "install", "repl", "watch",
-        "bench", "profile", "optimize", "memory-stats",
-        "chain", "crypto", "db", "ai", "cloud", "lsp", "doc", "completions", "debug", "agent",
-        "iot", "log", "config", "admin", "key", "aml", "kyc", "bond", "pipe", "invoke",
-        "mold", "scaffold", "build", "clean", "dist",
-        "convert", "analyze",
+        "run",
+        "test",
+        "web",
+        "help",
+        "version",
+        "check",
+        "fmt",
+        "lint",
+        "parse",
+        "new",
+        "init",
+        "add",
+        "install",
+        "repl",
+        "watch",
+        "bench",
+        "profile",
+        "optimize",
+        "memory-stats",
+        "chain",
+        "crypto",
+        "db",
+        "ai",
+        "cloud",
+        "lsp",
+        "doc",
+        "completions",
+        "debug",
+        "agent",
+        "iot",
+        "log",
+        "config",
+        "admin",
+        "key",
+        "aml",
+        "kyc",
+        "bond",
+        "pipe",
+        "invoke",
+        "mold",
+        "scaffold",
+        "build",
+        "clean",
+        "dist",
+        "convert",
+        "analyze",
     ];
 
     match shell {
@@ -4565,7 +5055,10 @@ fn handle_completions_command(args: &[String]) {
             println!("# Bash completion for {}", bin);
             println!("_{}_completions() {{", bin.replace('-', "_"));
             println!("  local cur=\"${{COMP_WORDS[COMP_CWORD]}}\"");
-            println!("  COMPREPLY=($(compgen -W \"{}\" -- \"$cur\"))", cmds.join(" "));
+            println!(
+                "  COMPREPLY=($(compgen -W \"{}\" -- \"$cur\"))",
+                cmds.join(" ")
+            );
             println!("}}");
             println!("complete -F _{}_completions {}", bin.replace('-', "_"), bin);
         }
@@ -4596,7 +5089,9 @@ fn handle_completions_command(args: &[String]) {
 
 fn handle_debug_command(args: &[String]) {
     let file = &args[0];
-    let breakpoint = args.iter().position(|a| a == "--breakpoint")
+    let breakpoint = args
+        .iter()
+        .position(|a| a == "--breakpoint")
         .and_then(|i| args.get(i + 1))
         .and_then(|s| s.parse::<u32>().ok());
 
@@ -4680,7 +5175,10 @@ fn handle_log_command(args: &[String]) {
         "level" => {
             let level = args.get(1).map(|s| s.as_str()).unwrap_or("info");
             let _ = level;
-            println!("ℹ️  Filter by level: {} log show (levels: info, warning, error, audit, debug)", binary_name());
+            println!(
+                "ℹ️  Filter by level: {} log show (levels: info, warning, error, audit, debug)",
+                binary_name()
+            );
         }
         _ => {
             eprintln!("Usage: {} log [show|stats|clear]", binary_name());
@@ -4694,7 +5192,10 @@ fn handle_config_command(args: &[String]) {
     match sub {
         "show" => {
             println!("ℹ️  Config");
-            println!("   Environment: {}", std::env::var("DIST_AGENT_ENV").unwrap_or_else(|_| "development".to_string()));
+            println!(
+                "   Environment: {}",
+                std::env::var("DIST_AGENT_ENV").unwrap_or_else(|_| "development".to_string())
+            );
             println!("   Key config vars: AI_API_KEY, ADMIN_IDS, CHAIN_RPC_URL_*, DB_*, etc.");
         }
         "get" => {
@@ -4722,16 +5223,18 @@ fn handle_config_command(args: &[String]) {
 // ============================================================================
 
 fn handle_iot_command(args: &[String]) {
-    use stdlib::iot::{self, SensorReading, ReadingQuality};
-    use std::collections::HashMap;
     use crate::runtime::values::Value;
+    use std::collections::HashMap;
+    use stdlib::iot::{self, ReadingQuality, SensorReading};
 
     if args.is_empty() {
         eprintln!("Usage: {} iot <subcommand> [args...]", binary_name());
         eprintln!("  Device: register, connect, disconnect, status, firmware");
         eprintln!("  Sensor/actuator: read-sensor, actuator");
         eprintln!("  Power: power, ai-optimize");
-        eprintln!("  AI: ai-predict, ai-anomaly (ai-control, ai-diagnose, ai-security need AI provider)");
+        eprintln!(
+            "  AI: ai-predict, ai-anomaly (ai-control, ai-diagnose, ai-security need AI provider)"
+        );
         eprintln!("  Edge/cloud: edge-create, cloud-sync");
         std::process::exit(1);
     }
@@ -4739,19 +5242,30 @@ fn handle_iot_command(args: &[String]) {
     match args[0].as_str() {
         "register" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} iot register <name> [--type sensor|actuator|gateway|edge|drone|...]", binary_name());
+                eprintln!(
+                    "Usage: {} iot register <name> [--type sensor|actuator|gateway|edge|drone|...]",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let name = args[1].clone();
-            let device_type = args.iter().position(|a| a == "--type")
+            let device_type = args
+                .iter()
+                .position(|a| a == "--type")
                 .and_then(|i| args.get(i + 1))
                 .map(|s| s.as_str())
                 .unwrap_or("sensor");
             let mut config = HashMap::new();
             config.insert("name".to_string(), Value::String(name.clone()));
-            config.insert("device_type".to_string(), Value::String(device_type.to_string()));
+            config.insert(
+                "device_type".to_string(),
+                Value::String(device_type.to_string()),
+            );
             match iot::register_device(config) {
-                Ok(d) => println!("✅ Registered device: {} (id: {}, type: {:?})", d.name, d.device_id, d.device_type),
+                Ok(d) => println!(
+                    "✅ Registered device: {} (id: {}, type: {:?})",
+                    d.name, d.device_id, d.device_type
+                ),
                 Err(e) => {
                     eprintln!("❌ {}", e);
                     std::process::exit(1);
@@ -4786,7 +5300,10 @@ fn handle_iot_command(args: &[String]) {
         }
         "actuator" => {
             if args.len() < 4 {
-                eprintln!("Usage: {} iot actuator <actuator_id> <command> [--param k=v ...]", binary_name());
+                eprintln!(
+                    "Usage: {} iot actuator <actuator_id> <command> [--param k=v ...]",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let actuator_id = &args[1];
@@ -4806,7 +5323,10 @@ fn handle_iot_command(args: &[String]) {
                 }
             }
             match iot::send_actuator_command(actuator_id, command, params) {
-                Ok(cmd) => println!("✅ Command sent: {} (id: {})", cmd.command_type, cmd.command_id),
+                Ok(cmd) => println!(
+                    "✅ Command sent: {} (id: {})",
+                    cmd.command_type, cmd.command_id
+                ),
                 Err(e) => {
                     eprintln!("❌ {}", e);
                     std::process::exit(1);
@@ -4821,7 +5341,10 @@ fn handle_iot_command(args: &[String]) {
             match iot::monitor_power_consumption(&args[1]) {
                 Ok(p) => {
                     println!("✅ Power for {}:", args[1]);
-                    println!("   source: {:?}, consumption: {:.2} W", p.source, p.power_consumption);
+                    println!(
+                        "   source: {:?}, consumption: {:.2} W",
+                        p.source, p.power_consumption
+                    );
                     if let Some(b) = p.battery_level {
                         println!("   battery: {:.0}%", b * 100.0);
                     }
@@ -4837,15 +5360,24 @@ fn handle_iot_command(args: &[String]) {
         }
         "firmware" => {
             if args.len() < 4 {
-                eprintln!("Usage: {} iot firmware update <device_id> <version>", binary_name());
+                eprintln!(
+                    "Usage: {} iot firmware update <device_id> <version>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             if args[1] != "update" {
-                eprintln!("Usage: {} iot firmware update <device_id> <version>", binary_name());
+                eprintln!(
+                    "Usage: {} iot firmware update <device_id> <version>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             match iot::update_device_firmware(&args[2], &args[3]) {
-                Ok(_) => println!("✅ Firmware update requested for {} -> {}", args[2], args[3]),
+                Ok(_) => println!(
+                    "✅ Firmware update requested for {} -> {}",
+                    args[2], args[3]
+                ),
                 Err(e) => {
                     eprintln!("❌ {}", e);
                     std::process::exit(1);
@@ -4854,11 +5386,16 @@ fn handle_iot_command(args: &[String]) {
         }
         "edge-create" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} iot edge-create <name> [--node-id <id>]", binary_name());
+                eprintln!(
+                    "Usage: {} iot edge-create <name> [--node-id <id>]",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let name = args[1].clone();
-            let node_id = args.iter().position(|a| a == "--node-id")
+            let node_id = args
+                .iter()
+                .position(|a| a == "--node-id")
                 .and_then(|i| args.get(i + 1))
                 .cloned()
                 .unwrap_or_else(|| format!("edge_{}", stdlib::iot::generate_id()));
@@ -4875,14 +5412,27 @@ fn handle_iot_command(args: &[String]) {
         }
         "cloud-sync" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} iot cloud-sync <device_id> <data_json>  (sync device data to cloud)", binary_name());
+                eprintln!(
+                    "Usage: {} iot cloud-sync <device_id> <data_json>  (sync device data to cloud)",
+                    binary_name()
+                );
                 eprintln!("       {} iot cloud-sync get <device_id> [--from <ts>] [--to <ts>]  (fetch from cloud)", binary_name());
                 std::process::exit(1);
             }
             if args[1] == "get" {
                 let device_id = args.get(2).map(|s| s.as_str()).unwrap_or("");
-                let from_ts = args.iter().position(|a| a == "--from").and_then(|i| args.get(i + 1)).map(|s| s.as_str()).unwrap_or("");
-                let to_ts = args.iter().position(|a| a == "--to").and_then(|i| args.get(i + 1)).map(|s| s.as_str()).unwrap_or("");
+                let from_ts = args
+                    .iter()
+                    .position(|a| a == "--from")
+                    .and_then(|i| args.get(i + 1))
+                    .map(|s| s.as_str())
+                    .unwrap_or("");
+                let to_ts = args
+                    .iter()
+                    .position(|a| a == "--to")
+                    .and_then(|i| args.get(i + 1))
+                    .map(|s| s.as_str())
+                    .unwrap_or("");
                 let range = if !from_ts.is_empty() && !to_ts.is_empty() {
                     Some((from_ts.to_string(), to_ts.to_string()))
                 } else {
@@ -4916,7 +5466,11 @@ fn handle_iot_command(args: &[String]) {
             let device_id = &args[1];
             let history: Vec<SensorReading> = vec![];
             match iot::predict_device_failure(device_id, history) {
-                Ok(p) => println!("✅ Failure probability for {}: {:.2}%", device_id, p * 100.0),
+                Ok(p) => println!(
+                    "✅ Failure probability for {}: {:.2}%",
+                    device_id,
+                    p * 100.0
+                ),
                 Err(e) => {
                     eprintln!("❌ {}", e);
                     std::process::exit(1);
@@ -4953,17 +5507,25 @@ fn handle_iot_command(args: &[String]) {
         }
         "ai-optimize" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} iot ai-optimize <device_id> [--target-hours <n>]", binary_name());
+                eprintln!(
+                    "Usage: {} iot ai-optimize <device_id> [--target-hours <n>]",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let device_id = &args[1];
-            let target_hours = args.iter().position(|a| a == "--target-hours")
+            let target_hours = args
+                .iter()
+                .position(|a| a == "--target-hours")
                 .and_then(|i| args.get(i + 1).and_then(|s| s.parse::<i64>().ok()))
                 .unwrap_or(8);
             let target_runtime = target_hours * 60;
             match iot::optimize_power_usage(device_id, target_runtime) {
                 Ok(recs) => {
-                    println!("✅ Power optimization for {} (target: {}h):", device_id, target_hours);
+                    println!(
+                        "✅ Power optimization for {} (target: {}h):",
+                        device_id, target_hours
+                    );
                     for (k, v) in &recs {
                         println!("   {}: {}", k, v);
                     }
@@ -4985,7 +5547,12 @@ fn handle_iot_command(args: &[String]) {
                 std::process::exit(1);
             }
             match iot::read_sensor_data(&args[1]) {
-                Ok(r) => println!("✅ {}: {} ({})", r.timestamp, r.value, format!("{:?}", r.quality)),
+                Ok(r) => println!(
+                    "✅ {}: {} ({})",
+                    r.timestamp,
+                    r.value,
+                    format!("{:?}", r.quality)
+                ),
                 Err(e) => {
                     eprintln!("❌ {}", e);
                     std::process::exit(1);
@@ -5028,10 +5595,18 @@ fn handle_cross_component_command(cmd: &str, args: &[String]) {
             let flow = &args[0];
             match flow.as_str() {
                 "oracle-to-chain" | "chain-to-sync" | "iot-to-db" | "iot-to-web" | "db-to-sync"
-                | "sync-to-db" | "ai-to-service" | "service-to-chain" | "auth-to-web" | "log-to-sync" => {
+                | "sync-to-db" | "ai-to-service" | "service-to-chain" | "auth-to-web"
+                | "log-to-sync" => {
                     println!("ℹ️  bond {}", flow);
-                    println!("   Connects components. Use: {} bond {} <args...>", binary_name(), flow);
-                    println!("   Example: {} bond iot-to-db <device_id> <conn_str> [--table]", binary_name());
+                    println!(
+                        "   Connects components. Use: {} bond {} <args...>",
+                        binary_name(),
+                        flow
+                    );
+                    println!(
+                        "   Example: {} bond iot-to-db <device_id> <conn_str> [--table]",
+                        binary_name()
+                    );
                 }
                 _ => {
                     eprintln!("Unknown bond flow: {}", flow);
@@ -5042,8 +5617,14 @@ fn handle_cross_component_command(cmd: &str, args: &[String]) {
         }
         "pipe" => {
             println!("ℹ️  pipe");
-            println!("   Unix-style pipeline: {} pipe <source> -> <sink>", binary_name());
-            println!("   Example: {} pipe oracle fetch coingecko btc -> chain estimate 1 deploy", binary_name());
+            println!(
+                "   Unix-style pipeline: {} pipe <source> -> <sink>",
+                binary_name()
+            );
+            println!(
+                "   Example: {} pipe oracle fetch coingecko btc -> chain estimate 1 deploy",
+                binary_name()
+            );
         }
         "invoke" => {
             let workflow = args.get(0).map(|s| s.as_str()).unwrap_or("");
@@ -5068,9 +5649,9 @@ fn handle_cross_component_command(cmd: &str, args: &[String]) {
 // ============================================================================
 
 fn handle_agent_command(args: &[String]) {
-    use stdlib::agent::{self, AgentConfig, AgentType};
     use crate::runtime::values::Value;
     use dist_agent_lang::mold;
+    use stdlib::agent::{self, AgentConfig, AgentType};
 
     if args.is_empty() {
         eprintln!("Usage: {} agent <subcommand> [args...]", binary_name());
@@ -5099,7 +5680,10 @@ fn handle_agent_command(args: &[String]) {
                                             eprintln!("❌ Mold {} is not active.", mold_id);
                                             std::process::exit(1);
                                         }
-                                        println!("Mold {}: fee {} wei, ipfs {}", mold_id, info.mint_fee, info.ipfs_hash);
+                                        println!(
+                                            "Mold {}: fee {} wei, ipfs {}",
+                                            mold_id, info.mint_fee, info.ipfs_hash
+                                        );
                                         match mold::use_mold(mold_id, info.mint_fee) {
                                             Ok(_) => {}
                                             Err(e) => {
@@ -5108,16 +5692,26 @@ fn handle_agent_command(args: &[String]) {
                                             }
                                         }
                                         let ipfs_source = format!("ipfs://{}", info.ipfs_hash);
-                                        match mold::create_from_mold_source(&ipfs_source, &cwd, name_override) {
+                                        match mold::create_from_mold_source(
+                                            &ipfs_source,
+                                            &cwd,
+                                            name_override,
+                                        ) {
                                             Ok(ctx) => {
-                                                println!("✅ Agent created from on-chain mold {}: {}", mold_id, ctx.agent_id);
+                                                println!(
+                                                    "✅ Agent created from on-chain mold {}: {}",
+                                                    mold_id, ctx.agent_id
+                                                );
                                                 println!("   Name: {}", ctx.config.name);
                                                 if !ctx.config.role.is_empty() {
                                                     println!("   Role: {}", ctx.config.role);
                                                 }
                                             }
                                             Err(e) => {
-                                                eprintln!("❌ Failed to load mold from IPFS: {}", e);
+                                                eprintln!(
+                                                    "❌ Failed to load mold from IPFS: {}",
+                                                    e
+                                                );
                                                 std::process::exit(1);
                                             }
                                         }
@@ -5144,7 +5738,9 @@ fn handle_agent_command(args: &[String]) {
                         }
                         println!("   Status: {}", ctx.status.to_string());
                         println!();
-                        println!("   Use this agent_id for send, messages, task (same process only)");
+                        println!(
+                            "   Use this agent_id for send, messages, task (same process only)"
+                        );
                     }
                     Err(e) => {
                         eprintln!("❌ Failed to create agent from mold: {}", e);
@@ -5155,8 +5751,14 @@ fn handle_agent_command(args: &[String]) {
             }
             // dal agent create <type> <name> [--role "role"]
             if args.len() < 3 {
-                eprintln!("Usage: {} agent create <type> <name> [--role \"role\"]", binary_name());
-                eprintln!("       {} agent create --mold <path|ipfs://cid> <name>", binary_name());
+                eprintln!(
+                    "Usage: {} agent create <type> <name> [--role \"role\"]",
+                    binary_name()
+                );
+                eprintln!(
+                    "       {} agent create --mold <path|ipfs://cid> <name>",
+                    binary_name()
+                );
                 eprintln!("Types: ai, system, worker, custom:<name>");
                 std::process::exit(1);
             }
@@ -5170,7 +5772,10 @@ fn handle_agent_command(args: &[String]) {
             let agent_type = match AgentType::from_string(agent_type_str) {
                 Some(t) => t,
                 None => {
-                    eprintln!("❌ Unknown agent type: {}. Use ai, system, worker, or custom:<name>", agent_type_str);
+                    eprintln!(
+                        "❌ Unknown agent type: {}. Use ai, system, worker, or custom:<name>",
+                        agent_type_str
+                    );
                     std::process::exit(1);
                 }
             };
@@ -5198,13 +5803,22 @@ fn handle_agent_command(args: &[String]) {
         }
         "send" => {
             if args.len() < 4 {
-                eprintln!("Usage: {} agent send <sender_id> <receiver_id> \"<message>\"", binary_name());
+                eprintln!(
+                    "Usage: {} agent send <sender_id> <receiver_id> \"<message>\"",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let sender_id = &args[1];
             let receiver_id = &args[2];
             let content = args[3].clone();
-            let msg_id = format!("msg_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
+            let msg_id = format!(
+                "msg_{}",
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis()
+            );
             let msg = agent::create_agent_message(
                 msg_id,
                 sender_id.to_string(),
@@ -5236,7 +5850,13 @@ fn handle_agent_command(args: &[String]) {
                         Value::String(s) => s.clone(),
                         _ => format!("{:?}", m.content),
                     };
-                    println!("   {}. From: {} | Type: {} | {}", i + 1, m.sender_id, m.message_type, content);
+                    println!(
+                        "   {}. From: {} | Type: {} | {}",
+                        i + 1,
+                        m.sender_id,
+                        m.message_type,
+                        content
+                    );
                 }
             }
         }
@@ -5259,11 +5879,20 @@ fn handle_agent_command(args: &[String]) {
                     } else {
                         "medium"
                     };
-                    let task_id = format!("task_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
+                    let task_id = format!(
+                        "task_{}",
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_millis()
+                    );
                     let task = match agent::create_agent_task(task_id, description, priority) {
                         Some(t) => t,
                         None => {
-                            eprintln!("❌ Invalid priority: {}. Use low, medium, high, critical", priority);
+                            eprintln!(
+                                "❌ Invalid priority: {}. Use low, medium, high, critical",
+                                priority
+                            );
                             std::process::exit(1);
                         }
                     };
@@ -5287,7 +5916,13 @@ fn handle_agent_command(args: &[String]) {
                     } else {
                         println!("📋 Pending tasks for {} ({}):\n", agent_id, tasks.len());
                         for (i, t) in tasks.iter().enumerate() {
-                            println!("   {}. {} | {} | {}", i + 1, t.task_id, t.priority.to_string(), t.description);
+                            println!(
+                                "   {}. {} | {} | {}",
+                                i + 1,
+                                t.task_id,
+                                t.priority.to_string(),
+                                t.description
+                            );
                         }
                     }
                 }
@@ -5310,8 +5945,13 @@ fn handle_agent_command(args: &[String]) {
         }
         "fleet" => {
             if args.len() < 2 {
-                eprintln!("Usage: {} agent fleet <subcommand> [args...]", binary_name());
-                eprintln!("Subcommands: create <name> [--type X] [--agents N], scale, deploy, health");
+                eprintln!(
+                    "Usage: {} agent fleet <subcommand> [args...]",
+                    binary_name()
+                );
+                eprintln!(
+                    "Subcommands: create <name> [--type X] [--agents N], scale, deploy, health"
+                );
                 std::process::exit(1);
             }
             match args[1].as_str() {
@@ -5323,7 +5963,9 @@ fn handle_agent_command(args: &[String]) {
                 }
                 _ => {
                     println!("🤖 Fleet\n");
-                    println!("   Fleet subcommands (scale, deploy, health) coming in a future release.");
+                    println!(
+                        "   Fleet subcommands (scale, deploy, health) coming in a future release."
+                    );
                 }
             }
         }
@@ -5374,8 +6016,10 @@ fn handle_agent_command(args: &[String]) {
                     println!("  Capabilities: {}", mold.agent.capabilities.join(", "));
                     println!("  Trust level: {}", mold.agent.trust_level);
                     println!("  Memory limit: {}", mold.agent.memory_limit);
-                    println!("  Learning: {}  Communication: {}  Coordination: {}",
-                        mold.agent.learning, mold.agent.communication, mold.agent.coordination);
+                    println!(
+                        "  Learning: {}  Communication: {}  Coordination: {}",
+                        mold.agent.learning, mold.agent.communication, mold.agent.coordination
+                    );
                 }
                 "create" => {
                     if args.len() < 3 {
@@ -5394,7 +6038,10 @@ fn handle_agent_command(args: &[String]) {
                 }
                 "publish" => {
                     if args.len() < 3 {
-                        eprintln!("Usage: {} agent mold publish <file> [--fee <ether>] [--max-use <n>]", binary_name());
+                        eprintln!(
+                            "Usage: {} agent mold publish <file> [--fee <ether>] [--max-use <n>]",
+                            binary_name()
+                        );
                         eprintln!("  Upload to IPFS; with --fee/--max-use and Web3 env, mints on-chain (mintMold).");
                         std::process::exit(1);
                     }
@@ -5431,12 +6078,20 @@ fn handle_agent_command(args: &[String]) {
                                 #[cfg(feature = "web3")]
                                 {
                                     if fee_ether.is_some() || max_use.is_some() {
-                                        let fee_wei = fee_ether.map(|f| (f * 1e18) as u128).unwrap_or(0);
+                                        let fee_wei =
+                                            fee_ether.map(|f| (f * 1e18) as u128).unwrap_or(0);
                                         let max = max_use.unwrap_or(0);
-                                        if std::env::var("DAL_PRIVATE_KEY").is_ok() && std::env::var("DAL_MOLD_REGISTRY_ADDRESS").is_ok() {
-                                            match dist_agent_lang::mold::mint_mold(&cid, fee_wei, max) {
+                                        if std::env::var("DAL_PRIVATE_KEY").is_ok()
+                                            && std::env::var("DAL_MOLD_REGISTRY_ADDRESS").is_ok()
+                                        {
+                                            match dist_agent_lang::mold::mint_mold(
+                                                &cid, fee_wei, max,
+                                            ) {
                                                 Ok(mold_id) => {
-                                                    println!("✅ Minted on-chain: mold ID {}", mold_id);
+                                                    println!(
+                                                        "✅ Minted on-chain: mold ID {}",
+                                                        mold_id
+                                                    );
                                                 }
                                                 Err(e) => {
                                                     eprintln!("❌ mintMold failed: {}", e);
@@ -5467,7 +6122,10 @@ fn handle_agent_command(args: &[String]) {
                     }
                 }
                 _ => {
-                    eprintln!("Unknown subcommand: {}. Use list, show, create, or publish.", args[1]);
+                    eprintln!(
+                        "Unknown subcommand: {}. Use list, show, create, or publish.",
+                        args[1]
+                    );
                     std::process::exit(1);
                 }
             }
@@ -5483,7 +6141,7 @@ fn handle_agent_command(args: &[String]) {
 /// Generate DAL code from natural language prompt
 fn generate_code(prompt: &str, output_file: Option<&str>) {
     println!("🤖 Generating DAL code from prompt...\n");
-    
+
     // Check for API key
     let api_key = std::env::var("OPENAI_API_KEY")
         .or_else(|_| std::env::var("ANTHROPIC_API_KEY"))
@@ -5492,14 +6150,14 @@ fn generate_code(prompt: &str, output_file: Option<&str>) {
             eprintln!("   For now, generating example code structure...\n");
             String::new()
         });
-    
+
     let system_prompt = "You are an expert dist_agent_lang (DAL) programmer. Generate clean, idiomatic DAL code based on the user's request. Include comments explaining key parts.";
-    
+
     let full_prompt = format!(
         "{}\n\nUser request: {}\n\nGenerate DAL code:",
         system_prompt, prompt
     );
-    
+
     // For now, use the ai module's generate_text function
     // In production, this would call OpenAI/Anthropic API
     let generated_code = if !api_key.is_empty() {
@@ -5514,12 +6172,12 @@ fn generate_code(prompt: &str, output_file: Option<&str>) {
         // Generate example structure when no API key
         generate_code_template(prompt)
     };
-    
+
     println!("📝 Generated Code:\n");
     println!("```dal");
     println!("{}", generated_code);
     println!("```\n");
-    
+
     if let Some(file) = output_file {
         match std::fs::write(file, &generated_code) {
             Ok(_) => println!("✅ Code saved to: {}", file),
@@ -5533,7 +6191,7 @@ fn generate_code(prompt: &str, output_file: Option<&str>) {
 /// Generate a code template when no API key is available
 fn generate_code_template(prompt: &str) -> String {
     let prompt_lower = prompt.to_lowercase();
-    
+
     if prompt_lower.contains("token") || prompt_lower.contains("erc20") {
         r#"// Token Contract
 // Generated from prompt: Create a token contract
@@ -5562,7 +6220,8 @@ chain contract TokenContract {
     fn balanceOf(account: string) -> int {
         return balances[account]
     }
-}"#.to_string()
+}"#
+        .to_string()
     } else if prompt_lower.contains("api") || prompt_lower.contains("server") {
         r#"// Web API Server
 // Generated from prompt: Create an API server
@@ -5594,9 +6253,11 @@ web.route("POST", "/api/data", fn(req, res) {
 })
 
 web.listen(3000)
-print("Server running on http://localhost:3000")"#.to_string()
+print("Server running on http://localhost:3000")"#
+            .to_string()
     } else {
-        format!(r#"// Generated DAL Code
+        format!(
+            r#"// Generated DAL Code
 // Prompt: {}
 
 fn main() {{
@@ -5607,14 +6268,16 @@ fn main() {{
     // for AI-powered code generation.
 }}
 
-main()"#, prompt)
+main()"#,
+            prompt
+        )
     }
 }
 
 /// Explain what the code does
 fn explain_code(filename: &str) {
     println!("🔍 Analyzing code: {}\n", filename);
-    
+
     let code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
         Err(e) => {
@@ -5622,17 +6285,17 @@ fn explain_code(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     let api_key = std::env::var("OPENAI_API_KEY")
         .or_else(|_| std::env::var("ANTHROPIC_API_KEY"))
         .ok();
-    
+
     if api_key.is_none() {
         eprintln!("⚠️  No AI API key found. Performing basic analysis...\n");
         explain_code_basic(&code);
         return;
     }
-    
+
     let prompt = format!(
         "Analyze this dist_agent_lang (DAL) code and explain:\n\
         1. What it does (high-level purpose)\n\
@@ -5642,7 +6305,7 @@ fn explain_code(filename: &str) {
         Code:\n```\n{}\n```",
         code
     );
-    
+
     match stdlib::ai::generate_text(prompt) {
         Ok(explanation) => {
             println!("📖 Explanation:\n");
@@ -5660,14 +6323,14 @@ fn explain_code(filename: &str) {
 fn explain_code_basic(code: &str) {
     let lines: Vec<&str> = code.lines().collect();
     let line_count = lines.len();
-    
+
     println!("📊 Code Statistics:");
     println!("   Lines of code: {}", line_count);
     println!("   Functions: {}", code.matches("fn ").count());
     println!("   Contracts: {}", code.matches("contract ").count());
     println!("   Variables: {}", code.matches("let ").count());
     println!();
-    
+
     println!("🔍 Detected Features:");
     if code.contains("contract ") {
         println!("   • Smart contract");
@@ -5687,7 +6350,7 @@ fn explain_code_basic(code: &str) {
     if code.contains("chain.") {
         println!("   • Blockchain operations");
     }
-    
+
     println!();
     println!("💡 For detailed AI-powered explanations, set OPENAI_API_KEY or ANTHROPIC_API_KEY");
 }
@@ -5695,7 +6358,7 @@ fn explain_code_basic(code: &str) {
 /// Review code and provide suggestions
 fn review_code(filename: &str) {
     println!("👀 Reviewing code: {}\n", filename);
-    
+
     let code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
         Err(e) => {
@@ -5703,17 +6366,17 @@ fn review_code(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     let api_key = std::env::var("OPENAI_API_KEY")
         .or_else(|_| std::env::var("ANTHROPIC_API_KEY"))
         .ok();
-    
+
     if api_key.is_none() {
         eprintln!("⚠️  No AI API key found. Performing basic review...\n");
         review_code_basic(&code);
         return;
     }
-    
+
     let prompt = format!(
         "Review this dist_agent_lang (DAL) code and provide:\n\
         1. Code quality assessment\n\
@@ -5724,7 +6387,7 @@ fn review_code(filename: &str) {
         Code:\n```\n{}\n```",
         code
     );
-    
+
     match stdlib::ai::generate_text(prompt) {
         Ok(review) => {
             println!("📋 Code Review:\n");
@@ -5747,31 +6410,31 @@ fn review_code_basic(code: &str) {
     if code.lines().any(|l| l.trim().starts_with("//")) {
         println!("   • Includes comments");
     }
-    
+
     println!();
     println!("⚠️  Potential Issues:");
-    
+
     let mut issues_found = false;
-    
+
     if code.contains("let password") || code.contains("let apiKey") {
         println!("   • Hard-coded credentials detected");
         issues_found = true;
     }
-    
+
     if code.matches("fn ").count() > 20 {
         println!("   • Large file - consider splitting into modules");
         issues_found = true;
     }
-    
+
     if !code.contains("//") && !code.contains("/*") {
         println!("   • No comments found - add documentation");
         issues_found = true;
     }
-    
+
     if !issues_found {
         println!("   • No obvious issues detected");
     }
-    
+
     println!();
     println!("💡 For comprehensive AI-powered reviews, set OPENAI_API_KEY or ANTHROPIC_API_KEY");
 }
@@ -5779,7 +6442,7 @@ fn review_code_basic(code: &str) {
 /// Security audit for smart contracts
 fn audit_code(filename: &str) {
     println!("🔒 Security Audit: {}\n", filename);
-    
+
     let code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
         Err(e) => {
@@ -5787,17 +6450,17 @@ fn audit_code(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     let api_key = std::env::var("OPENAI_API_KEY")
         .or_else(|_| std::env::var("ANTHROPIC_API_KEY"))
         .ok();
-    
+
     if api_key.is_none() {
         eprintln!("⚠️  No AI API key found. Performing basic security checks...\n");
         audit_code_basic(&code);
         return;
     }
-    
+
     let prompt = format!(
         "Perform a security audit of this dist_agent_lang (DAL) smart contract code:\n\
         1. Identify security vulnerabilities\n\
@@ -5808,7 +6471,7 @@ fn audit_code(filename: &str) {
         Code:\n```\n{}\n```",
         code
     );
-    
+
     match stdlib::ai::generate_text(prompt) {
         Ok(audit) => {
             println!("🛡️  Security Audit Report:\n");
@@ -5825,41 +6488,44 @@ fn audit_code(filename: &str) {
 /// Basic security audit without AI
 fn audit_code_basic(code: &str) {
     println!("🔍 Security Checks:\n");
-    
+
     let mut critical = vec![];
     let mut warnings = vec![];
     let mut info = vec![];
-    
+
     // Critical issues
     if code.contains("msg.sender") && !code.contains("require") && !code.contains("if msg.sender") {
         critical.push("Missing sender verification in contract");
     }
-    
+
     if code.contains("transfer") && !code.contains("balance") {
         warnings.push("Transfer without balance check");
     }
-    
+
     // Warnings
-    if code.contains("let password") || code.contains("let apiKey") || code.contains("let privateKey") {
+    if code.contains("let password")
+        || code.contains("let apiKey")
+        || code.contains("let privateKey")
+    {
         critical.push("Hard-coded credentials detected - SECURITY RISK!");
     }
-    
+
     if code.contains("db.query") && code.contains(&format!("\"SELECT * FROM")) {
         warnings.push("Potential SQL injection risk - use parameterized queries");
     }
-    
+
     if code.contains("eval(") {
         critical.push("Use of eval() detected - major security risk!");
     }
-    
+
     // Info
     if !code.contains("try") && !code.contains("catch") {
         info.push("No error handling detected - consider adding try/catch");
     }
-    
+
     let has_critical = !critical.is_empty();
     let has_warnings = !warnings.is_empty();
-    
+
     if has_critical {
         println!("🚨 CRITICAL Issues:");
         for issue in critical {
@@ -5867,7 +6533,7 @@ fn audit_code_basic(code: &str) {
         }
         println!();
     }
-    
+
     if has_warnings {
         println!("⚠️  Warnings:");
         for warning in warnings {
@@ -5875,7 +6541,7 @@ fn audit_code_basic(code: &str) {
         }
         println!();
     }
-    
+
     if !info.is_empty() {
         println!("ℹ️  Recommendations:");
         for i in info {
@@ -5883,18 +6549,20 @@ fn audit_code_basic(code: &str) {
         }
         println!();
     }
-    
+
     if !has_critical && !has_warnings {
         println!("✅ No obvious security issues detected\n");
     }
-    
-    println!("💡 For comprehensive AI-powered security audits, set OPENAI_API_KEY or ANTHROPIC_API_KEY");
+
+    println!(
+        "💡 For comprehensive AI-powered security audits, set OPENAI_API_KEY or ANTHROPIC_API_KEY"
+    );
 }
 
 /// Generate test cases
 fn generate_tests(filename: &str, output_file: Option<&str>) {
     println!("🧪 Generating tests for: {}\n", filename);
-    
+
     let code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
         Err(e) => {
@@ -5902,11 +6570,11 @@ fn generate_tests(filename: &str, output_file: Option<&str>) {
             std::process::exit(1);
         }
     };
-    
+
     let api_key = std::env::var("OPENAI_API_KEY")
         .or_else(|_| std::env::var("ANTHROPIC_API_KEY"))
         .ok();
-    
+
     let tests = if api_key.is_some() {
         let prompt = format!(
             "Generate comprehensive test cases for this dist_agent_lang (DAL) code:\n\
@@ -5917,7 +6585,7 @@ fn generate_tests(filename: &str, output_file: Option<&str>) {
             Code:\n```\n{}\n```",
             code
         );
-        
+
         match stdlib::ai::generate_text(prompt) {
             Ok(generated_tests) => generated_tests,
             Err(e) => {
@@ -5930,12 +6598,12 @@ fn generate_tests(filename: &str, output_file: Option<&str>) {
         eprintln!("⚠️  No AI API key found. Generating test template...\n");
         generate_test_template(&code)
     };
-    
+
     println!("📝 Generated Tests:\n");
     println!("```dal");
     println!("{}", tests);
     println!("```\n");
-    
+
     if let Some(file) = output_file {
         match std::fs::write(file, &tests) {
             Ok(_) => println!("✅ Tests saved to: {}", file),
@@ -5948,13 +6616,10 @@ fn generate_tests(filename: &str, output_file: Option<&str>) {
 
 /// Generate a test template
 fn generate_test_template(code: &str) -> String {
-    let functions: Vec<&str> = code
-        .lines()
-        .filter(|line| line.contains("fn "))
-        .collect();
-    
+    let functions: Vec<&str> = code.lines().filter(|line| line.contains("fn ")).collect();
+
     let mut tests = String::from("// Generated Test Suite\nimport test from \"@dal/test\"\n\n");
-    
+
     if functions.is_empty() {
         tests.push_str(
             r#"describe("Main Tests", fn() {
@@ -5972,7 +6637,7 @@ fn generate_test_template(code: &str) -> String {
                 .and_then(|s| s.split('(').next())
                 .unwrap_or("function")
                 .trim();
-            
+
             tests.push_str(&format!(
                 r#"describe("{} tests", fn() {{
     it("should work with valid input", fn() {{
@@ -5996,14 +6661,14 @@ fn generate_test_template(code: &str) -> String {
             ));
         }
     }
-    
+
     tests
 }
 
 /// Suggest fixes for code issues
 fn suggest_fixes(filename: &str) {
     println!("🔧 Analyzing issues in: {}\n", filename);
-    
+
     let code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
         Err(e) => {
@@ -6011,17 +6676,17 @@ fn suggest_fixes(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     let api_key = std::env::var("OPENAI_API_KEY")
         .or_else(|_| std::env::var("ANTHROPIC_API_KEY"))
         .ok();
-    
+
     if api_key.is_none() {
         eprintln!("⚠️  No AI API key found. Providing basic suggestions...\n");
         suggest_fixes_basic(&code);
         return;
     }
-    
+
     let prompt = format!(
         "Analyze this dist_agent_lang (DAL) code and suggest fixes:\n\
         1. Identify syntax errors\n\
@@ -6031,7 +6696,7 @@ fn suggest_fixes(filename: &str) {
         Code:\n```\n{}\n```",
         code
     );
-    
+
     match stdlib::ai::generate_text(prompt) {
         Ok(fixes) => {
             println!("🔧 Suggested Fixes:\n");
@@ -6048,25 +6713,25 @@ fn suggest_fixes(filename: &str) {
 /// Basic fix suggestions without AI
 fn suggest_fixes_basic(code: &str) {
     println!("💡 Suggestions:\n");
-    
+
     let mut suggestions = vec![];
-    
+
     if !code.contains("fn main") {
         suggestions.push("Consider adding a main() function as entry point");
     }
-    
+
     if code.contains("let ") && !code.contains("const ") {
         suggestions.push("Use 'const' for values that don't change");
     }
-    
+
     if code.matches("fn ").count() > 0 && !code.lines().any(|l| l.trim().starts_with("//")) {
         suggestions.push("Add comments to document function behavior");
     }
-    
+
     if code.contains("print(") && !code.contains("log.") {
         suggestions.push("Consider using log.info() instead of print() for production code");
     }
-    
+
     if suggestions.is_empty() {
         println!("   ✅ Code looks good! No obvious improvements needed.\n");
     } else {
@@ -6075,14 +6740,14 @@ fn suggest_fixes_basic(code: &str) {
         }
         println!();
     }
-    
+
     println!("💡 For AI-powered detailed fix suggestions, set OPENAI_API_KEY or ANTHROPIC_API_KEY");
 }
 
 /// Gas optimization suggestions for smart contracts
 fn optimize_gas(filename: &str) {
     println!("⛽ Analyzing gas usage: {}\n", filename);
-    
+
     let code = match std::fs::read_to_string(filename) {
         Ok(content) => content,
         Err(e) => {
@@ -6090,22 +6755,22 @@ fn optimize_gas(filename: &str) {
             std::process::exit(1);
         }
     };
-    
+
     if !code.contains("contract ") && !code.contains("chain.") {
         eprintln!("⚠️  This doesn't appear to be a smart contract or blockchain code.");
         eprintln!("   Gas optimization is most relevant for on-chain code.\n");
     }
-    
+
     let api_key = std::env::var("OPENAI_API_KEY")
         .or_else(|_| std::env::var("ANTHROPIC_API_KEY"))
         .ok();
-    
+
     if api_key.is_none() {
         eprintln!("⚠️  No AI API key found. Providing basic gas optimization tips...\n");
         optimize_gas_basic(&code);
         return;
     }
-    
+
     let prompt = format!(
         "Analyze this dist_agent_lang (DAL) smart contract for gas optimization:\n\
         1. Identify gas-expensive operations\n\
@@ -6116,7 +6781,7 @@ fn optimize_gas(filename: &str) {
         Code:\n```\n{}\n```",
         code
     );
-    
+
     match stdlib::ai::generate_text(prompt) {
         Ok(optimizations) => {
             println!("⚡ Gas Optimization Report:\n");
@@ -6133,29 +6798,29 @@ fn optimize_gas(filename: &str) {
 /// Basic gas optimization without AI
 fn optimize_gas_basic(code: &str) {
     println!("💡 Gas Optimization Tips:\n");
-    
+
     let mut tips = vec![];
-    
+
     if code.contains("string") && code.contains("storage") {
         tips.push("🔸 Use bytes32 instead of string when possible (saves gas)");
     }
-    
+
     if code.contains("for ") || code.contains("while ") {
         tips.push("🔸 Cache array length in loops to avoid repeated SLOAD operations");
     }
-    
+
     if code.matches("let ").count() > 5 {
         tips.push("🔸 Pack variables into single storage slots when possible");
     }
-    
+
     if code.contains("public ") {
         tips.push("🔸 Use 'private' or 'internal' visibility when external access isn't needed");
     }
-    
+
     if code.contains("emit ") {
         tips.push("🔸 Minimize data in events - only emit what's necessary");
     }
-    
+
     if tips.is_empty() {
         println!("   ✅ No obvious gas optimization opportunities detected\n");
     } else {
@@ -6164,9 +6829,11 @@ fn optimize_gas_basic(code: &str) {
         }
         println!();
     }
-    
+
     println!("⛽ Common Gas Optimizations:");
-    println!("   • Use 'uint256' instead of smaller types (Solidity packs, but DAL doesn't always)");
+    println!(
+        "   • Use 'uint256' instead of smaller types (Solidity packs, but DAL doesn't always)"
+    );
     println!("   • Batch operations when possible");
     println!("   • Use events instead of storing data when data doesn't need to be read on-chain");
     println!("   • Minimize storage writes (most expensive operation)");

@@ -160,12 +160,12 @@ impl Runtime {
             logs: Vec::new(),
         }
     }
-    
+
     pub fn log(&mut self, message: &str) {
         self.logs.push(message.to_string());
         println!("LOG: {}", message);
     }
-    
+
     pub fn execute(&mut self, code: &str) -> Result<(), String> {
         // Simulate execution
         self.log(&format!("Executing: {}", code));
@@ -193,20 +193,20 @@ impl TestResult {
             details: HashMap::new(),
         }
     }
-    
+
     pub fn success(mut self, duration: std::time::Duration) -> Self {
         self.passed = true;
         self.duration = duration;
         self
     }
-    
+
     pub fn failure(mut self, duration: std::time::Duration, error: String) -> Self {
         self.passed = false;
         self.duration = duration;
         self.error_message = Some(error);
         self
     }
-    
+
     pub fn add_detail(&mut self, key: String, value: String) {
         self.details.insert(key, value);
     }
@@ -231,17 +231,19 @@ impl ComprehensiveTestSuite {
             failed_tests: 0,
         }
     }
-    
-    pub fn run_test<F>(&mut self, test_name: &str, test_fn: F) 
-    where F: FnOnce() -> Result<HashMap<String, String>, String> {
+
+    pub fn run_test<F>(&mut self, test_name: &str, test_fn: F)
+    where
+        F: FnOnce() -> Result<HashMap<String, String>, String>,
+    {
         self.total_tests += 1;
         let start = Instant::now();
-        
+
         let result = test_fn();
         let duration = start.elapsed();
-        
+
         let mut test_result = TestResult::new(test_name.to_string());
-        
+
         match result {
             Ok(details) => {
                 test_result = test_result.success(duration);
@@ -257,10 +259,10 @@ impl ComprehensiveTestSuite {
                 println!("❌ {} - FAILED ({:?})", test_name, duration);
             }
         }
-        
+
         self.results.push(test_result);
     }
-    
+
     pub fn print_summary(&self) {
         let total_duration = self.start_time.elapsed();
         let pass_rate = if self.total_tests > 0 {
@@ -268,7 +270,7 @@ impl ComprehensiveTestSuite {
         } else {
             0.0
         };
-        
+
         println!("\n\n\n");
         println!("🎯 COMPREHENSIVE SYSTEM TEST SUMMARY");
         println!("===================================");
@@ -276,17 +278,27 @@ impl ComprehensiveTestSuite {
         println!("Passed: {} ({}%)", self.passed_tests, pass_rate);
         println!("Failed: {}", self.failed_tests);
         println!("Total Duration: {:?}", total_duration);
-        println!("Average Test Duration: {:?}", total_duration / self.total_tests.max(1) as u32);
-        
+        println!(
+            "Average Test Duration: {:?}",
+            total_duration / self.total_tests.max(1) as u32
+        );
+
         if self.failed_tests > 0 {
             println!("\n❌ FAILED TESTS:");
             for result in &self.results {
                 if !result.passed {
-                    println!("  - {}: {}", result.test_name, result.error_message.as_ref().unwrap_or(&"Unknown error".to_string()));
+                    println!(
+                        "  - {}: {}",
+                        result.test_name,
+                        result
+                            .error_message
+                            .as_ref()
+                            .unwrap_or(&"Unknown error".to_string())
+                    );
                 }
             }
         }
-        
+
         println!("\n📊 DETAILED RESULTS:");
         for result in &self.results {
             let status = if result.passed { "✅" } else { "❌" };
@@ -301,26 +313,26 @@ impl ComprehensiveTestSuite {
 // Test Functions
 fn test_core_language_features() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
-    
+
     // Test 1: Basic syntax parsing
     let _test_code = r#"
         let x = 10;
         let y = "hello";
         let z = true;
     "#;
-    
+
     // Simulate parsing
     details.insert("basic_syntax".to_string(), "PASSED".to_string());
-    
+
     // Test 2: Function definition
     let _function_code = r#"
         fn add(a: int, b: int) -> int {
             return a + b;
         }
     "#;
-    
+
     details.insert("function_definition".to_string(), "PASSED".to_string());
-    
+
     // Test 3: Control structures
     let _control_code = r#"
         if x > 5 {
@@ -329,9 +341,9 @@ fn test_core_language_features() -> Result<HashMap<String, String>, String> {
             return "less";
         }
     "#;
-    
+
     details.insert("control_structures".to_string(), "PASSED".to_string());
-    
+
     // Test 4: Error handling
     let _error_code = r#"
         try {
@@ -342,13 +354,13 @@ fn test_core_language_features() -> Result<HashMap<String, String>, String> {
     "#;
 
     details.insert("error_handling".to_string(), "PASSED".to_string());
-    
+
     Ok(details)
 }
 
 fn test_phase1_service_statements() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
-    
+
     // Test service statement parsing
     let service_code = r#"
         service TestService {
@@ -366,28 +378,28 @@ fn test_phase1_service_statements() -> Result<HashMap<String, String>, String> {
             event Transfer(from: address, to: address, amount: int);
         }
     "#;
-    
+
     details.insert("service_parsing".to_string(), "PASSED".to_string());
     details.insert("field_definition".to_string(), "PASSED".to_string());
     details.insert("method_definition".to_string(), "PASSED".to_string());
     details.insert("event_definition".to_string(), "PASSED".to_string());
-    
+
     // Test service execution
     let mut runtime = Runtime::new();
     let result = runtime.execute(service_code);
-    
+
     if result.is_ok() {
         details.insert("service_execution".to_string(), "PASSED".to_string());
     } else {
         return Err("Service execution failed".to_string());
     }
-    
+
     Ok(details)
 }
 
 fn test_phase2_compilation_targets() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
-    
+
     // Test compilation target validation
     let blockchain_service = r#"
         @compile_target("blockchain")
@@ -397,9 +409,9 @@ fn test_phase2_compilation_targets() -> Result<HashMap<String, String>, String> 
             }
         }
     "#;
-    
+
     details.insert("blockchain_target".to_string(), "PASSED".to_string());
-    
+
     let _wasm_service = r#"
         @compile_target("wasm")
         service WasmService {
@@ -408,7 +420,7 @@ fn test_phase2_compilation_targets() -> Result<HashMap<String, String>, String> 
             }
         }
     "#;
-    
+
     details.insert("wasm_target".to_string(), "PASSED".to_string());
 
     let _native_service = r#"
@@ -419,9 +431,9 @@ fn test_phase2_compilation_targets() -> Result<HashMap<String, String>, String> 
             }
         }
     "#;
-    
+
     details.insert("native_target".to_string(), "PASSED".to_string());
-    
+
     // Test target constraints
     let constraint_test = validate_target_constraints(&blockchain_service);
     if constraint_test.is_ok() {
@@ -429,13 +441,13 @@ fn test_phase2_compilation_targets() -> Result<HashMap<String, String>, String> 
     } else {
         return Err("Target constraint validation failed".to_string());
     }
-    
+
     Ok(details)
 }
 
 fn test_phase3_trust_models() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
-    
+
     // Test decentralized trust model
     let decentralized_service = r#"
         @trust("decentralized")
@@ -445,9 +457,9 @@ fn test_phase3_trust_models() -> Result<HashMap<String, String>, String> {
             }
         }
     "#;
-    
+
     details.insert("decentralized_trust".to_string(), "PASSED".to_string());
-    
+
     // Test hybrid trust model
     let _hybrid_service = r#"
         @trust("hybrid")
@@ -457,9 +469,9 @@ fn test_phase3_trust_models() -> Result<HashMap<String, String>, String> {
             }
         }
     "#;
-    
+
     details.insert("hybrid_trust".to_string(), "PASSED".to_string());
-    
+
     // Test centralized trust model
     let _centralized_service = r#"
         @trust("centralized")
@@ -469,7 +481,7 @@ fn test_phase3_trust_models() -> Result<HashMap<String, String>, String> {
             }
         }
     "#;
-    
+
     details.insert("centralized_trust".to_string(), "PASSED".to_string());
 
     // Test trust validation
@@ -479,13 +491,13 @@ fn test_phase3_trust_models() -> Result<HashMap<String, String>, String> {
     } else {
         return Err("Trust model validation failed".to_string());
     }
-    
+
     Ok(details)
 }
 
 fn test_phase4_cross_chain_support() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
-    
+
     // Test multi-chain service
     let _multi_chain_service = r#"
         @chain("ethereum")
@@ -500,9 +512,9 @@ fn test_phase4_cross_chain_support() -> Result<HashMap<String, String>, String> 
             }
         }
     "#;
-    
+
     details.insert("multi_chain_parsing".to_string(), "PASSED".to_string());
-    
+
     // Test chain compatibility
     let compatibility_test = validate_chain_compatibility("ethereum", "polygon");
     if compatibility_test {
@@ -510,7 +522,7 @@ fn test_phase4_cross_chain_support() -> Result<HashMap<String, String>, String> 
     } else {
         return Err("Chain compatibility test failed".to_string());
     }
-    
+
     // Test cross-chain operations
     let bridge_operation = validate_bridge_operation("ethereum", "polygon", 100);
     if bridge_operation.is_ok() {
@@ -518,7 +530,7 @@ fn test_phase4_cross_chain_support() -> Result<HashMap<String, String>, String> 
     } else {
         return Err("Bridge operation validation failed".to_string());
     }
-    
+
     // Test deployment management
     let deployment_test = test_multi_chain_deployment();
     if deployment_test.is_ok() {
@@ -526,150 +538,174 @@ fn test_phase4_cross_chain_support() -> Result<HashMap<String, String>, String> 
     } else {
         return Err("Deployment management test failed".to_string());
     }
-    
+
     Ok(details)
 }
 
 fn test_phase5_interface_generation() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
-    
+
     // Test TypeScript interface generation
     let ts_interface = generate_typescript_interface("TestService");
     if ts_interface.is_ok() {
         details.insert("typescript_generation".to_string(), "PASSED".to_string());
-        details.insert("ts_interface_size".to_string(), format!("{} bytes", ts_interface.unwrap().len()));
+        details.insert(
+            "ts_interface_size".to_string(),
+            format!("{} bytes", ts_interface.unwrap().len()),
+        );
     } else {
         return Err("TypeScript interface generation failed".to_string());
     }
-    
+
     // Test Python interface generation
     let py_interface = generate_python_interface("TestService");
     if py_interface.is_ok() {
         details.insert("python_generation".to_string(), "PASSED".to_string());
-        details.insert("py_interface_size".to_string(), format!("{} bytes", py_interface.unwrap().len()));
+        details.insert(
+            "py_interface_size".to_string(),
+            format!("{} bytes", py_interface.unwrap().len()),
+        );
     } else {
         return Err("Python interface generation failed".to_string());
     }
-    
+
     // Test Rust interface generation
     let rust_interface = generate_rust_interface("TestService");
     if rust_interface.is_ok() {
         details.insert("rust_generation".to_string(), "PASSED".to_string());
-        details.insert("rust_interface_size".to_string(), format!("{} bytes", rust_interface.unwrap().len()));
+        details.insert(
+            "rust_interface_size".to_string(),
+            format!("{} bytes", rust_interface.unwrap().len()),
+        );
     } else {
         return Err("Rust interface generation failed".to_string());
     }
-    
+
     // Test client library generation
     let client_library = generate_client_library("TestService");
     if client_library.is_ok() {
-        details.insert("client_library_generation".to_string(), "PASSED".to_string());
-        details.insert("library_size".to_string(), format!("{} bytes", client_library.unwrap().len()));
+        details.insert(
+            "client_library_generation".to_string(),
+            "PASSED".to_string(),
+        );
+        details.insert(
+            "library_size".to_string(),
+            format!("{} bytes", client_library.unwrap().len()),
+        );
     } else {
         return Err("Client library generation failed".to_string());
     }
-    
+
     Ok(details)
 }
 
 fn test_standard_library() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
     let mut runtime = Runtime::new();
-    
+
     // Test chain module
     let chain_code = r#"
         let address = chain::deploy("TestContract", "bytecode");
         let tx_hash = chain::transaction("transfer", {"to": "0x123", "amount": 100});
     "#;
-    
+
     let chain_result = runtime.execute(chain_code);
     if chain_result.is_ok() {
         details.insert("chain_module".to_string(), "PASSED".to_string());
     } else {
         return Err("Chain module test failed".to_string());
     }
-    
+
     // Test crypto module
     let crypto_code = r#"
         let hash = crypto::sha256("Hello, World!");
         let signature = crypto::sign("message", "private_key");
         let is_valid = crypto::verify("message", signature, "public_key");
     "#;
-    
+
     let crypto_result = runtime.execute(crypto_code);
     if crypto_result.is_ok() {
         details.insert("crypto_module".to_string(), "PASSED".to_string());
     } else {
         return Err("Crypto module test failed".to_string());
     }
-    
+
     // Test auth module
     let auth_code = r#"
         let token = auth::generate_token("user_id");
         let is_valid = auth::verify_token(token);
     "#;
-    
+
     let auth_result = runtime.execute(auth_code);
     if auth_result.is_ok() {
         details.insert("auth_module".to_string(), "PASSED".to_string());
     } else {
         return Err("Auth module test failed".to_string());
     }
-    
+
     // Test log module
     let log_code = r#"
         log::info("Test message");
         log::error("Error message");
         log::debug("Debug message");
     "#;
-    
+
     let log_result = runtime.execute(log_code);
     if log_result.is_ok() {
         details.insert("log_module".to_string(), "PASSED".to_string());
     } else {
         return Err("Log module test failed".to_string());
     }
-    
+
     Ok(details)
 }
 
 fn test_performance() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
-    
+
     // Test lexer performance
     let start = Instant::now();
     for _ in 0..1000 {
         let _tokens = simulate_lexer_operation();
     }
     let lexer_time = start.elapsed();
-    details.insert("lexer_performance".to_string(), format!("{:?} for 1000 operations", lexer_time));
-    
+    details.insert(
+        "lexer_performance".to_string(),
+        format!("{:?} for 1000 operations", lexer_time),
+    );
+
     // Test parser performance
     let start = Instant::now();
     for _ in 0..1000 {
         let _ast = simulate_parser_operation();
     }
     let parser_time = start.elapsed();
-    details.insert("parser_performance".to_string(), format!("{:?} for 1000 operations", parser_time));
-    
+    details.insert(
+        "parser_performance".to_string(),
+        format!("{:?} for 1000 operations", parser_time),
+    );
+
     // Test runtime performance
     let start = Instant::now();
     for _ in 0..1000 {
         let _result = simulate_runtime_operation();
     }
     let runtime_time = start.elapsed();
-    details.insert("runtime_performance".to_string(), format!("{:?} for 1000 operations", runtime_time));
-    
+    details.insert(
+        "runtime_performance".to_string(),
+        format!("{:?} for 1000 operations", runtime_time),
+    );
+
     // Test memory usage
     let memory_usage = simulate_memory_measurement();
     details.insert("memory_usage".to_string(), format!("{} MB", memory_usage));
-    
+
     Ok(details)
 }
 
 fn test_security() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
-    
+
     // Test injection attack prevention
     let malicious_code = r#"
         service MaliciousService {
@@ -678,27 +714,27 @@ fn test_security() -> Result<HashMap<String, String>, String> {
             }
         }
     "#;
-    
+
     let injection_result = simulate_security_check(malicious_code);
     if injection_result.is_err() {
         details.insert("injection_prevention".to_string(), "PASSED".to_string());
     } else {
         return Err("Injection attack prevention failed".to_string());
     }
-    
+
     // Test overflow protection
     let overflow_code = r#"
         let max_int = 9223372036854775807;
         let overflow = max_int + 1;
     "#;
-    
+
     let overflow_result = simulate_overflow_check(overflow_code);
     if overflow_result.is_ok() {
         details.insert("overflow_protection".to_string(), "PASSED".to_string());
     } else {
         return Err("Overflow protection failed".to_string());
     }
-    
+
     // Test access control
     let access_code = r#"
         service AccessTest {
@@ -709,20 +745,20 @@ fn test_security() -> Result<HashMap<String, String>, String> {
             }
         }
     "#;
-    
+
     let access_result = simulate_access_control_check(access_code);
     if access_result.is_err() {
         details.insert("access_control".to_string(), "PASSED".to_string());
     } else {
         return Err("Access control test failed".to_string());
     }
-    
+
     Ok(details)
 }
 
 fn test_integration() -> Result<HashMap<String, String>, String> {
     let mut details = HashMap::new();
-    
+
     // Test complete multi-phase workflow
     let complete_service = r#"
         @compile_target("blockchain")
@@ -750,7 +786,7 @@ fn test_integration() -> Result<HashMap<String, String>, String> {
             event BridgeTransfer(from: string, to: string, amount: int);
         }
     "#;
-    
+
     // Test parsing
     let parse_result = simulate_parsing(complete_service);
     if parse_result.is_ok() {
@@ -758,39 +794,51 @@ fn test_integration() -> Result<HashMap<String, String>, String> {
     } else {
         return Err("Integration parsing failed".to_string());
     }
-    
+
     // Test compilation target validation
     let target_result = simulate_target_validation(complete_service);
     if target_result.is_ok() {
-        details.insert("integration_target_validation".to_string(), "PASSED".to_string());
+        details.insert(
+            "integration_target_validation".to_string(),
+            "PASSED".to_string(),
+        );
     } else {
         return Err("Integration target validation failed".to_string());
     }
-    
+
     // Test trust model validation
     let trust_result = simulate_trust_validation(complete_service);
     if trust_result.is_ok() {
-        details.insert("integration_trust_validation".to_string(), "PASSED".to_string());
+        details.insert(
+            "integration_trust_validation".to_string(),
+            "PASSED".to_string(),
+        );
     } else {
         return Err("Integration trust validation failed".to_string());
     }
-    
+
     // Test cross-chain validation
     let chain_result = simulate_chain_validation(complete_service);
     if chain_result.is_ok() {
-        details.insert("integration_chain_validation".to_string(), "PASSED".to_string());
+        details.insert(
+            "integration_chain_validation".to_string(),
+            "PASSED".to_string(),
+        );
     } else {
         return Err("Integration chain validation failed".to_string());
     }
-    
+
     // Test interface generation
     let interface_result = simulate_interface_generation(complete_service);
     if interface_result.is_ok() {
-        details.insert("integration_interface_generation".to_string(), "PASSED".to_string());
+        details.insert(
+            "integration_interface_generation".to_string(),
+            "PASSED".to_string(),
+        );
     } else {
         return Err("Integration interface generation failed".to_string());
     }
-    
+
     Ok(details)
 }
 
@@ -826,7 +874,8 @@ export interface TestServiceClient {
     mint(to: string, amount: number): Promise<string>;
     bridgeTokens(fromChain: string, toChain: string, amount: number): Promise<string>;
 }
-"#.to_string())
+"#
+    .to_string())
 }
 
 fn generate_python_interface(_service_name: &str) -> Result<String, String> {
@@ -848,7 +897,8 @@ class TestServiceClient:
     
     async def bridge_tokens(self, from_chain: str, to_chain: str, amount: int) -> str:
         pass
-"#.to_string())
+"#
+    .to_string())
 }
 
 fn generate_rust_interface(_service_name: &str) -> Result<String, String> {
@@ -896,7 +946,8 @@ export class TestServiceClientImpl {
         return "success";
     }
 }
-"#.to_string())
+"#
+    .to_string())
 }
 
 fn simulate_lexer_operation() -> Result<(), String> {
@@ -952,44 +1003,56 @@ fn main() {
     println!("================================================");
     println!("Testing all aspects of the language system...");
     println!();
-    
+
     let mut test_suite = ComprehensiveTestSuite::new();
-    
+
     // Core Language Tests
     test_suite.run_test("Core Language Features", test_core_language_features);
-    
+
     // Phase Tests
-    test_suite.run_test("Phase 1: Service Statements", test_phase1_service_statements);
-    test_suite.run_test("Phase 2: Compilation Targets", test_phase2_compilation_targets);
+    test_suite.run_test(
+        "Phase 1: Service Statements",
+        test_phase1_service_statements,
+    );
+    test_suite.run_test(
+        "Phase 2: Compilation Targets",
+        test_phase2_compilation_targets,
+    );
     test_suite.run_test("Phase 3: Trust Models", test_phase3_trust_models);
-    test_suite.run_test("Phase 4: Cross-Chain Support", test_phase4_cross_chain_support);
-    test_suite.run_test("Phase 5: Interface Generation", test_phase5_interface_generation);
-    
+    test_suite.run_test(
+        "Phase 4: Cross-Chain Support",
+        test_phase4_cross_chain_support,
+    );
+    test_suite.run_test(
+        "Phase 5: Interface Generation",
+        test_phase5_interface_generation,
+    );
+
     // Standard Library Tests
     test_suite.run_test("Standard Library", test_standard_library);
-    
+
     // Performance Tests
     test_suite.run_test("Performance Benchmarking", test_performance);
-    
+
     // Security Tests
     test_suite.run_test("Security Assessment", test_security);
-    
+
     // Integration Tests
     test_suite.run_test("Integration Testing", test_integration);
-    
+
     // Print comprehensive summary
     test_suite.print_summary();
-    
+
     // Production readiness assessment
     let pass_rate = if test_suite.total_tests > 0 {
         (test_suite.passed_tests as f64 / test_suite.total_tests as f64) * 100.0
     } else {
         0.0
     };
-    
+
     println!("\n🎯 PRODUCTION READINESS ASSESSMENT");
     println!("===================================");
-    
+
     if pass_rate >= 90.0 {
         println!("🟢 EXCELLENT - {}% - Ready for production", pass_rate);
     } else if pass_rate >= 80.0 {
@@ -999,7 +1062,7 @@ fn main() {
     } else {
         println!("🔴 POOR - {}% - Major work required", pass_rate);
     }
-    
+
     println!("\n📋 RECOMMENDATIONS:");
     if test_suite.failed_tests > 0 {
         println!("  - Fix {} failed tests", test_suite.failed_tests);
@@ -1011,7 +1074,7 @@ fn main() {
     println!("  - Implement performance optimizations");
     println!("  - Add security hardening measures");
     println!("  - Complete documentation");
-    
+
     println!("\n🚀 NEXT STEPS:");
     println!("  - Address failed tests");
     println!("  - Implement missing features");
@@ -1020,6 +1083,6 @@ fn main() {
     println!("  - Complete documentation");
     println!("  - Deploy to staging environment");
     println!("  - Conduct user acceptance testing");
-    
+
     println!("\n🎉 Comprehensive system test completed!");
 }

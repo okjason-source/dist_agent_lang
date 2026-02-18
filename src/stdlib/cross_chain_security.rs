@@ -1,11 +1,10 @@
+use crate::runtime::functions::RuntimeError;
+use crate::runtime::values::Value;
+use crate::stdlib::crypto_signatures::SecureSignatureVerifier;
+use sha2::{Digest, Sha256};
 /// Cross-Chain Security System for DAL
 /// Provides secure cross-chain operations with signature verification
-
 use std::collections::HashMap;
-use sha2::{Sha256, Digest};
-use crate::runtime::values::Value;
-use crate::runtime::functions::RuntimeError;
-use crate::stdlib::crypto_signatures::SecureSignatureVerifier;
 
 #[derive(Debug, Clone)]
 pub struct CrossChainSecurityManager {
@@ -36,9 +35,9 @@ pub enum SignatureScheme {
 
 #[derive(Debug, Clone)]
 pub enum SecurityLevel {
-    High,    // Requires multiple validator signatures
-    Medium,  // Requires single validator signature
-    Low,     // Basic validation only
+    High,   // Requires multiple validator signatures
+    Medium, // Requires single validator signature
+    Low,    // Basic validation only
 }
 
 #[derive(Debug, Clone)]
@@ -69,10 +68,23 @@ pub struct CrossChainOperation {
 
 #[derive(Debug, Clone)]
 pub enum CrossChainOperationType {
-    Transfer { from: String, to: String, amount: u64 },
-    ContractCall { contract: String, function: String, args: Vec<u8> },
-    StateSync { state_hash: String, proof: Vec<u8> },
-    ValidatorUpdate { new_validators: Vec<String> },
+    Transfer {
+        from: String,
+        to: String,
+        amount: u64,
+    },
+    ContractCall {
+        contract: String,
+        function: String,
+        args: Vec<u8>,
+    },
+    StateSync {
+        state_hash: String,
+        proof: Vec<u8>,
+    },
+    ValidatorUpdate {
+        new_validators: Vec<String>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -109,46 +121,55 @@ impl CrossChainSecurityManager {
     /// Initialize default chain security configurations
     fn init_default_chains(&mut self) {
         // Ethereum Mainnet
-        self.chain_configs.insert(1, ChainSecurityConfig {
-            chain_id: 1,
-            name: "Ethereum Mainnet".to_string(),
-            signature_scheme: SignatureScheme::ECDSA,
-            min_confirmations: 12,
-            max_gas_price: 500_000_000_000, // 500 Gwei
-            trusted_validators: vec![
-                "0x1234567890123456789012345678901234567890".to_string(),
-                "0x2345678901234567890123456789012345678901".to_string(),
-            ],
-            security_level: SecurityLevel::High,
-        });
+        self.chain_configs.insert(
+            1,
+            ChainSecurityConfig {
+                chain_id: 1,
+                name: "Ethereum Mainnet".to_string(),
+                signature_scheme: SignatureScheme::ECDSA,
+                min_confirmations: 12,
+                max_gas_price: 500_000_000_000, // 500 Gwei
+                trusted_validators: vec![
+                    "0x1234567890123456789012345678901234567890".to_string(),
+                    "0x2345678901234567890123456789012345678901".to_string(),
+                ],
+                security_level: SecurityLevel::High,
+            },
+        );
 
         // Polygon
-        self.chain_configs.insert(137, ChainSecurityConfig {
-            chain_id: 137,
-            name: "Polygon".to_string(),
-            signature_scheme: SignatureScheme::ECDSA,
-            min_confirmations: 256,
-            max_gas_price: 1000_000_000_000, // 1000 Gwei
-            trusted_validators: vec![
-                "0x3456789012345678901234567890123456789012".to_string(),
-                "0x4567890123456789012345678901234567890123".to_string(),
-            ],
-            security_level: SecurityLevel::Medium,
-        });
+        self.chain_configs.insert(
+            137,
+            ChainSecurityConfig {
+                chain_id: 137,
+                name: "Polygon".to_string(),
+                signature_scheme: SignatureScheme::ECDSA,
+                min_confirmations: 256,
+                max_gas_price: 1000_000_000_000, // 1000 Gwei
+                trusted_validators: vec![
+                    "0x3456789012345678901234567890123456789012".to_string(),
+                    "0x4567890123456789012345678901234567890123".to_string(),
+                ],
+                security_level: SecurityLevel::Medium,
+            },
+        );
 
         // Solana
-        self.chain_configs.insert(101, ChainSecurityConfig {
-            chain_id: 101,
-            name: "Solana".to_string(),
-            signature_scheme: SignatureScheme::EdDSA,
-            min_confirmations: 32,
-            max_gas_price: 5000, // Lamports
-            trusted_validators: vec![
-                "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU".to_string(),
-                "9QU2QSxhb24FUX3Tu2FpczXjpK3VYrvRudywSZaM29mF".to_string(),
-            ],
-            security_level: SecurityLevel::High,
-        });
+        self.chain_configs.insert(
+            101,
+            ChainSecurityConfig {
+                chain_id: 101,
+                name: "Solana".to_string(),
+                signature_scheme: SignatureScheme::EdDSA,
+                min_confirmations: 32,
+                max_gas_price: 5000, // Lamports
+                trusted_validators: vec![
+                    "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU".to_string(),
+                    "9QU2QSxhb24FUX3Tu2FpczXjpK3VYrvRudywSZaM29mF".to_string(),
+                ],
+                security_level: SecurityLevel::High,
+            },
+        );
     }
 
     /// Validate a cross-chain operation
@@ -159,16 +180,28 @@ impl CrossChainSecurityManager {
         // Validate source and target chains
         let source_chain_id = operation.source_chain;
         let _target_chain_id = operation.target_chain;
-        let source_config = self.chain_configs.get(&source_chain_id)
-            .ok_or_else(|| RuntimeError::General(format!("Unsupported source chain: {}", operation.source_chain)))?;
+        let source_config = self.chain_configs.get(&source_chain_id).ok_or_else(|| {
+            RuntimeError::General(format!(
+                "Unsupported source chain: {}",
+                operation.source_chain
+            ))
+        })?;
 
-        let target_config = self.chain_configs.get(&operation.target_chain)
-            .ok_or_else(|| RuntimeError::General(format!("Unsupported target chain: {}", operation.target_chain)))?;
+        let target_config = self
+            .chain_configs
+            .get(&operation.target_chain)
+            .ok_or_else(|| {
+                RuntimeError::General(format!(
+                    "Unsupported target chain: {}",
+                    operation.target_chain
+                ))
+            })?;
 
         // Check if bridge exists and is active
         let bridge_id = format!("{}_{}", operation.source_chain, operation.target_chain);
-        let bridge_config = self.trusted_bridges.get(&bridge_id)
-            .ok_or_else(|| RuntimeError::General(format!("No active bridge found: {}", bridge_id)))?;
+        let bridge_config = self.trusted_bridges.get(&bridge_id).ok_or_else(|| {
+            RuntimeError::General(format!("No active bridge found: {}", bridge_id))
+        })?;
 
         if !bridge_config.is_active {
             return Err(RuntimeError::General("Bridge is not active".to_string()));
@@ -178,18 +211,24 @@ impl CrossChainSecurityManager {
         let source_config_clone = source_config.clone();
         let target_config_clone = target_config.clone();
         let bridge_config_clone = bridge_config.clone();
-        
+
         self.validate_operation_data(&operation, &source_config_clone, &target_config_clone)?;
 
         // Validate signatures (needs mutable access for nonce checking)
         self.validate_signatures(&operation, &bridge_config_clone)?;
 
         // Check security requirements
-        self.check_security_requirements(&operation, &source_config_clone, &target_config_clone, &bridge_config_clone)?;
+        self.check_security_requirements(
+            &operation,
+            &source_config_clone,
+            &target_config_clone,
+            &bridge_config_clone,
+        )?;
 
         // Store operation for tracking
         let operation_id = operation.operation_id.clone();
-        self.pending_operations.insert(operation_id.clone(), operation);
+        self.pending_operations
+            .insert(operation_id.clone(), operation);
 
         Ok(operation_id)
     }
@@ -204,30 +243,42 @@ impl CrossChainSecurityManager {
         match &operation.operation_type {
             CrossChainOperationType::Transfer { amount, .. } => {
                 if *amount == 0 {
-                    return Err(RuntimeError::General("Transfer amount cannot be zero".to_string()));
+                    return Err(RuntimeError::General(
+                        "Transfer amount cannot be zero".to_string(),
+                    ));
                 }
 
                 // Check against bridge limits
                 let bridge_id = format!("{}_{}", operation.source_chain, operation.target_chain);
                 if let Some(bridge) = self.trusted_bridges.get(&bridge_id) {
                     if *amount > bridge.max_transaction_amount {
-                        return Err(RuntimeError::General("Amount exceeds bridge limit".to_string()));
+                        return Err(RuntimeError::General(
+                            "Amount exceeds bridge limit".to_string(),
+                        ));
                     }
                 }
             }
-            CrossChainOperationType::ContractCall { contract, function, .. } => {
+            CrossChainOperationType::ContractCall {
+                contract, function, ..
+            } => {
                 if contract.is_empty() || function.is_empty() {
-                    return Err(RuntimeError::General("Invalid contract call parameters".to_string()));
+                    return Err(RuntimeError::General(
+                        "Invalid contract call parameters".to_string(),
+                    ));
                 }
             }
             CrossChainOperationType::StateSync { state_hash, proof } => {
                 if state_hash.is_empty() || proof.is_empty() {
-                    return Err(RuntimeError::General("Invalid state sync parameters".to_string()));
+                    return Err(RuntimeError::General(
+                        "Invalid state sync parameters".to_string(),
+                    ));
                 }
             }
             CrossChainOperationType::ValidatorUpdate { new_validators } => {
                 if new_validators.is_empty() {
-                    return Err(RuntimeError::General("Validator update cannot be empty".to_string()));
+                    return Err(RuntimeError::General(
+                        "Validator update cannot be empty".to_string(),
+                    ));
                 }
             }
         }
@@ -252,7 +303,10 @@ impl CrossChainSecurityManager {
         // Verify each signature
         for signature in &operation.signatures {
             // Check if validator is in trusted set
-            if !bridge_config.validator_set.contains(&signature.validator_address) {
+            if !bridge_config
+                .validator_set
+                .contains(&signature.validator_address)
+            {
                 return Err(RuntimeError::General(format!(
                     "Untrusted validator: {}",
                     signature.validator_address
@@ -302,13 +356,18 @@ impl CrossChainSecurityManager {
             (SecurityLevel::High, SecurityLevel::High) => {
                 // Require maximum security
                 if operation.signatures.len() < bridge_config.validator_set.len() / 2 + 1 {
-                    return Err(RuntimeError::General("High security operations require majority validator signatures".to_string()));
+                    return Err(RuntimeError::General(
+                        "High security operations require majority validator signatures"
+                            .to_string(),
+                    ));
                 }
             }
             (SecurityLevel::High, _) | (_, SecurityLevel::High) => {
                 // Require elevated security
                 if operation.signatures.len() < 3 {
-                    return Err(RuntimeError::General("High security chains require at least 3 validator signatures".to_string()));
+                    return Err(RuntimeError::General(
+                        "High security chains require at least 3 validator signatures".to_string(),
+                    ));
                 }
             }
             _ => {
@@ -317,15 +376,18 @@ impl CrossChainSecurityManager {
         }
 
         // Check bridge security deposit
-        if bridge_config.security_deposit < 1000000 { // Minimum deposit requirement
-            return Err(RuntimeError::General("Bridge security deposit too low".to_string()));
+        if bridge_config.security_deposit < 1000000 {
+            // Minimum deposit requirement
+            return Err(RuntimeError::General(
+                "Bridge security deposit too low".to_string(),
+            ));
         }
 
         Ok(())
     }
 
     /// Verify a cryptographic signature with replay protection
-    /// 
+    ///
     /// This now uses production-grade signature verification with nonce-based
     /// replay attack protection. Supports both ECDSA (Ethereum) and EdDSA (Solana) schemes.
     fn verify_signature(
@@ -337,20 +399,22 @@ impl CrossChainSecurityManager {
         chain_id: i64,
     ) -> Result<bool, RuntimeError> {
         // Get signature scheme from chain config
-        let chain_config = self.chain_configs.get(&chain_id)
+        let chain_config = self
+            .chain_configs
+            .get(&chain_id)
             .ok_or_else(|| RuntimeError::General(format!("Chain not found: {}", chain_id)))?;
-        
+
         let scheme = match chain_config.signature_scheme {
             SignatureScheme::ECDSA => "ecdsa",
             SignatureScheme::EdDSA => "eddsa",
             SignatureScheme::Custom(ref s) => s.as_str(),
         };
-        
+
         // Use nonce if provided; otherwise legacy path (no replay check). Avoid inline literal for CodeQL.
         const LEGACY_NO_NONCE: u64 = 0;
         let nonce_value = nonce.unwrap_or(LEGACY_NO_NONCE);
         let signer_key = format!("{}:{}", validator_address, chain_id);
-        
+
         // Use production-grade signature verifier with replay protection
         if nonce_value > 0 {
             // With nonce: use secure verifier with replay protection
@@ -365,16 +429,26 @@ impl CrossChainSecurityManager {
         } else {
             // Without nonce: basic verification (backward compatibility)
             // Log warning about missing nonce
-            crate::stdlib::log::info("cross_chain_security", {
-                let mut data = std::collections::HashMap::new();
-                data.insert("warning".to_string(), Value::String(
-                    "Signature verification without nonce - replay attack risk".to_string()
-                ));
-                data.insert("validator".to_string(), Value::String(validator_address.to_string()));
-                data.insert("chain_id".to_string(), Value::Int(chain_id));
-                data
-            }, Some("cross_chain_security"));
-            
+            crate::stdlib::log::info(
+                "cross_chain_security",
+                {
+                    let mut data = std::collections::HashMap::new();
+                    data.insert(
+                        "warning".to_string(),
+                        Value::String(
+                            "Signature verification without nonce - replay attack risk".to_string(),
+                        ),
+                    );
+                    data.insert(
+                        "validator".to_string(),
+                        Value::String(validator_address.to_string()),
+                    );
+                    data.insert("chain_id".to_string(), Value::Int(chain_id));
+                    data
+                },
+                Some("cross_chain_security"),
+            );
+
             // Fallback to basic verification
             let mut hasher = Sha256::new();
             hasher.update(data);
@@ -397,18 +471,28 @@ impl CrossChainSecurityManager {
     ) -> Result<String, RuntimeError> {
         // Validate chains exist
         if !self.chain_configs.contains_key(&source_chain) {
-            return Err(RuntimeError::General(format!("Source chain not supported: {}", source_chain)));
+            return Err(RuntimeError::General(format!(
+                "Source chain not supported: {}",
+                source_chain
+            )));
         }
         if !self.chain_configs.contains_key(&target_chain) {
-            return Err(RuntimeError::General(format!("Target chain not supported: {}", target_chain)));
+            return Err(RuntimeError::General(format!(
+                "Target chain not supported: {}",
+                target_chain
+            )));
         }
 
         // Validate parameters
         if validator_set.is_empty() {
-            return Err(RuntimeError::General("Validator set cannot be empty".to_string()));
+            return Err(RuntimeError::General(
+                "Validator set cannot be empty".to_string(),
+            ));
         }
         if min_validator_signatures == 0 || min_validator_signatures > validator_set.len() as u32 {
-            return Err(RuntimeError::General("Invalid minimum validator signatures".to_string()));
+            return Err(RuntimeError::General(
+                "Invalid minimum validator signatures".to_string(),
+            ));
         }
 
         let bridge_id = format!("{}_{}", source_chain, target_chain);
@@ -424,7 +508,8 @@ impl CrossChainSecurityManager {
             is_active: true,
         };
 
-        self.trusted_bridges.insert(bridge_id.clone(), bridge_config);
+        self.trusted_bridges
+            .insert(bridge_id.clone(), bridge_config);
         Ok(bridge_id)
     }
 
@@ -435,11 +520,13 @@ impl CrossChainSecurityManager {
         source_chain: i64,
         target_chain: i64,
     ) -> Result<CrossChainProof, RuntimeError> {
-        let _source_config = self.chain_configs.get(&source_chain)
-            .ok_or_else(|| RuntimeError::General(format!("Source chain not found: {}", source_chain)))?;
+        let _source_config = self.chain_configs.get(&source_chain).ok_or_else(|| {
+            RuntimeError::General(format!("Source chain not found: {}", source_chain))
+        })?;
 
-        let _target_config = self.chain_configs.get(&target_chain)
-            .ok_or_else(|| RuntimeError::General(format!("Target chain not found: {}", target_chain)))?;
+        let _target_config = self.chain_configs.get(&target_chain).ok_or_else(|| {
+            RuntimeError::General(format!("Target chain not found: {}", target_chain))
+        })?;
 
         // Real Merkle proof: root from leaves, inclusion path for leaf at index
         let leaves = vec![operation_data.to_vec()];
@@ -495,7 +582,10 @@ impl CrossChainSecurityManager {
             }
             layer = next;
         }
-        layer.into_iter().next().unwrap_or_else(|| Self::hash_leaf(&[]))
+        layer
+            .into_iter()
+            .next()
+            .unwrap_or_else(|| Self::hash_leaf(&[]))
     }
 
     /// Get Merkle inclusion path (sibling hashes from leaf to root) for leaf at index.
@@ -570,11 +660,17 @@ impl CrossChainSecurityManager {
 
     /// Get operation status
     pub fn get_operation_status(&self, operation_id: &str) -> Option<OperationStatus> {
-        self.pending_operations.get(operation_id).map(|op| op.status.clone())
+        self.pending_operations
+            .get(operation_id)
+            .map(|op| op.status.clone())
     }
 
     /// Update operation status
-    pub fn update_operation_status(&mut self, operation_id: &str, status: OperationStatus) -> Result<(), RuntimeError> {
+    pub fn update_operation_status(
+        &mut self,
+        operation_id: &str,
+        status: OperationStatus,
+    ) -> Result<(), RuntimeError> {
         if let Some(operation) = self.pending_operations.get_mut(operation_id) {
             operation.status = status;
             Ok(())
@@ -591,7 +687,11 @@ impl CrossChainSecurityManager {
             .as_secs();
 
         self.pending_operations.retain(|_, operation| {
-            now <= operation.timeout && !matches!(operation.status, OperationStatus::Confirmed | OperationStatus::Failed)
+            now <= operation.timeout
+                && !matches!(
+                    operation.status,
+                    OperationStatus::Confirmed | OperationStatus::Failed
+                )
         });
     }
 }
@@ -622,7 +722,9 @@ pub mod secure_chain {
 
     /// Initialize the security manager
     pub fn init_security_manager() {
-        *get_manager().lock().expect("SECURITY_MANAGER lock poisoned") = Some(CrossChainSecurityManager::new());
+        *get_manager()
+            .lock()
+            .expect("SECURITY_MANAGER lock poisoned") = Some(CrossChainSecurityManager::new());
     }
 
     /// Secure cross-chain deployment with validation
@@ -633,43 +735,49 @@ pub mod secure_chain {
         constructor_args: HashMap<String, String>,
         validator_signatures: Vec<ValidatorSignature>,
     ) -> Result<String, String> {
-        let mut guard = get_manager().lock().expect("SECURITY_MANAGER lock poisoned");
+        let mut guard = get_manager()
+            .lock()
+            .expect("SECURITY_MANAGER lock poisoned");
         if let Some(ref mut manager) = *guard {
-                let operation_data = format!("deploy:{}:{:?}", contract_name, constructor_args).into_bytes();
-                
-                let operation = CrossChainOperation {
-                    operation_id: format!("deploy_{}_{}", source_chain, target_chain),
-                    source_chain,
-                    target_chain,
-                    operation_type: CrossChainOperationType::ContractCall {
-                        contract: "DeploymentContract".to_string(),
-                        function: "deploy".to_string(),
-                        args: operation_data.clone(),
-                    },
-                    data: operation_data,
-                    signatures: validator_signatures,
-                    status: OperationStatus::Pending,
-                    created_at: std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_secs(),
-                    timeout: std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_secs() + 3600, // 1 hour timeout
-                };
+            let operation_data =
+                format!("deploy:{}:{:?}", contract_name, constructor_args).into_bytes();
 
-                let operation_id = manager.validate_cross_chain_operation(operation)
-                    .map_err(|e| format!("Cross-chain validation failed: {}", e))?;
+            let operation = CrossChainOperation {
+                operation_id: format!("deploy_{}_{}", source_chain, target_chain),
+                source_chain,
+                target_chain,
+                operation_type: CrossChainOperationType::ContractCall {
+                    contract: "DeploymentContract".to_string(),
+                    function: "deploy".to_string(),
+                    args: operation_data.clone(),
+                },
+                data: operation_data,
+                signatures: validator_signatures,
+                status: OperationStatus::Pending,
+                created_at: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs(),
+                timeout: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs()
+                    + 3600, // 1 hour timeout
+            };
 
-                // If validation passes, perform the actual deployment
-                let address = chain::deploy(target_chain, contract_name, constructor_args);
-                
-                // Update operation status
-                manager.update_operation_status(&operation_id, OperationStatus::Confirmed)
-                    .map_err(|e| format!("Failed to update operation status: {}", e))?;
+            let operation_id = manager
+                .validate_cross_chain_operation(operation)
+                .map_err(|e| format!("Cross-chain validation failed: {}", e))?;
 
-                Ok(address)
+            // If validation passes, perform the actual deployment
+            let address = chain::deploy(target_chain, contract_name, constructor_args);
+
+            // Update operation status
+            manager
+                .update_operation_status(&operation_id, OperationStatus::Confirmed)
+                .map_err(|e| format!("Failed to update operation status: {}", e))?;
+
+            Ok(address)
         } else {
             Err("Security manager not initialized".to_string())
         }
@@ -684,7 +792,9 @@ pub mod secure_chain {
         amount: u64,
         validator_signatures: Vec<ValidatorSignature>,
     ) -> Result<String, String> {
-        let mut guard = get_manager().lock().expect("SECURITY_MANAGER lock poisoned");
+        let mut guard = get_manager()
+            .lock()
+            .expect("SECURITY_MANAGER lock poisoned");
         if let Some(ref mut manager) = *guard {
             let operation_data = format!("transfer:{}:{}:{}", from, to, amount).into_bytes();
 
@@ -707,18 +817,22 @@ pub mod secure_chain {
                 timeout: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap_or_default()
-                    .as_secs() + 1800, // 30 minute timeout
+                    .as_secs()
+                    + 1800, // 30 minute timeout
             };
 
-            let operation_id = manager.validate_cross_chain_operation(operation)
+            let operation_id = manager
+                .validate_cross_chain_operation(operation)
                 .map_err(|e| format!("Cross-chain validation failed: {}", e))?;
 
             // Generate cross-chain proof
-            let proof = manager.generate_cross_chain_proof(&operation_data, source_chain, target_chain)
+            let proof = manager
+                .generate_cross_chain_proof(&operation_data, source_chain, target_chain)
                 .map_err(|e| format!("Failed to generate proof: {}", e))?;
 
             // Update operation status
-            manager.update_operation_status(&operation_id, OperationStatus::Confirmed)
+            manager
+                .update_operation_status(&operation_id, OperationStatus::Confirmed)
                 .map_err(|e| format!("Failed to update operation status: {}", e))?;
 
             Ok(format!("Transfer completed with proof: {:?}", proof))
@@ -743,17 +857,19 @@ mod tests {
     #[test]
     fn test_bridge_creation() {
         let mut manager = CrossChainSecurityManager::new();
-        
-        let bridge_id = manager.create_bridge(
-            1,    // Ethereum
-            137,  // Polygon
-            "0xbridge123".to_string(),
-            vec!["validator1".to_string(), "validator2".to_string()],
-            2,    // Require 2 signatures
-            1000000, // Max amount
-            500000,  // Security deposit
-        ).unwrap();
-        
+
+        let bridge_id = manager
+            .create_bridge(
+                1,   // Ethereum
+                137, // Polygon
+                "0xbridge123".to_string(),
+                vec!["validator1".to_string(), "validator2".to_string()],
+                2,       // Require 2 signatures
+                1000000, // Max amount
+                500000,  // Security deposit
+            )
+            .unwrap();
+
         assert_eq!(bridge_id, "1_137");
         assert!(manager.trusted_bridges.contains_key(&bridge_id));
     }
@@ -761,21 +877,24 @@ mod tests {
     #[test]
     fn test_operation_validation() {
         let mut manager = CrossChainSecurityManager::new();
-        
+
         // Generate a real ECDSA keypair for the validator
         use crate::stdlib::crypto_signatures::ECDSASignatureVerifier;
-        let (validator_privkey, validator_pubkey) = ECDSASignatureVerifier::generate_keypair().unwrap();
-        
+        let (validator_privkey, validator_pubkey) =
+            ECDSASignatureVerifier::generate_keypair().unwrap();
+
         // Create a bridge with real validator public key (Polygon to Polygon for testing)
-        manager.create_bridge(
-            137, // Polygon
-            137, // Polygon  
-            "0xbridge123".to_string(),
-            vec![validator_pubkey.clone()],
-            1,  // min_signatures
-            1000000, // max_amount
-            1000000, // security_deposit (must match max_amount for security)
-        ).unwrap();
+        manager
+            .create_bridge(
+                137, // Polygon
+                137, // Polygon
+                "0xbridge123".to_string(),
+                vec![validator_pubkey.clone()],
+                1,       // min_signatures
+                1000000, // max_amount
+                1000000, // security_deposit (must match max_amount for security)
+            )
+            .unwrap();
 
         // Get current timestamp first
         let now = std::time::SystemTime::now()
@@ -783,17 +902,18 @@ mod tests {
             .unwrap_or_default()
             .as_secs();
         let future_timeout = now + 3600; // 1 hour from now
-        
+
         // Create message to sign (operation data + nonce/timestamp)
-        use sha2::{Sha256, Digest};
+        use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
         hasher.update(b"test_data");
         hasher.update(&now.to_be_bytes());
         let message_with_nonce = hasher.finalize();
-        
+
         // Sign with real ECDSA
-        let valid_signature = ECDSASignatureVerifier::sign(&message_with_nonce, &validator_privkey).unwrap();
-        
+        let valid_signature =
+            ECDSASignatureVerifier::sign(&message_with_nonce, &validator_privkey).unwrap();
+
         let operation = CrossChainOperation {
             operation_id: "test_op".to_string(),
             source_chain: 137, // Polygon (Medium security)
@@ -807,8 +927,8 @@ mod tests {
             signatures: vec![ValidatorSignature {
                 validator_address: validator_pubkey,
                 signature: valid_signature, // Real ECDSA signature
-                timestamp: now, // Use timestamp as nonce for replay protection
-                chain_id: 137, // Match source_chain for proper validation
+                timestamp: now,             // Use timestamp as nonce for replay protection
+                chain_id: 137,              // Match source_chain for proper validation
             }],
             status: OperationStatus::Pending,
             created_at: now,

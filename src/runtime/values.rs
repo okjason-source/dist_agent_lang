@@ -1,6 +1,6 @@
-use std::fmt;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::fmt;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -26,8 +26,8 @@ impl ObjectId {
 pub struct ObjectMetadata {
     pub id: ObjectId,
     pub size_bytes: usize,
-    pub reference_count: AtomicUsize,  // Thread-safe reference counting
-    pub last_accessed: Mutex<std::time::Instant>,  // Mutable field needs Mutex for Arc safety
+    pub reference_count: AtomicUsize, // Thread-safe reference counting
+    pub last_accessed: Mutex<std::time::Instant>, // Mutable field needs Mutex for Arc safety
     pub is_immutable: bool,
     pub creation_time: std::time::Instant,
 }
@@ -80,12 +80,12 @@ impl ObjectRef {
     pub fn decrement_ref(&self) -> usize {
         self.metadata.reference_count.fetch_sub(1, Ordering::AcqRel)
     }
-    
+
     /// Get the current reference count.
     pub fn ref_count(&self) -> usize {
         self.metadata.reference_count.load(Ordering::Acquire)
     }
-    
+
     /// Update last accessed time (for GC heuristics).
     pub fn touch(&self) {
         if let Ok(mut last_accessed) = self.metadata.last_accessed.lock() {
@@ -109,7 +109,7 @@ pub struct ObjectRegistry {
 
 #[derive(Debug, Clone)]
 pub enum ObjectData {
-    Struct(String, HashMap<String, Value>),  // struct_name, fields
+    Struct(String, HashMap<String, Value>), // struct_name, fields
     Map(HashMap<String, Value>),
     Array(Vec<Value>),
     List(Vec<Value>),
@@ -167,8 +167,15 @@ impl ObjectRegistry {
         self.objects.get(id).map(|s| s.1)
     }
 
-    pub fn update_struct_field(&mut self, object_id: &ObjectId, field_name: &str, value: Value) -> Result<(), String> {
-        if let Some(StoredObject(ObjectData::Struct(_, fields), _)) = self.objects.get_mut(object_id) {
+    pub fn update_struct_field(
+        &mut self,
+        object_id: &ObjectId,
+        field_name: &str,
+        value: Value,
+    ) -> Result<(), String> {
+        if let Some(StoredObject(ObjectData::Struct(_, fields), _)) =
+            self.objects.get_mut(object_id)
+        {
             fields.insert(field_name.to_string(), value);
             Ok(())
         } else {
@@ -176,7 +183,12 @@ impl ObjectRegistry {
         }
     }
 
-    pub fn update_map_field(&mut self, object_id: &ObjectId, key: &str, value: Value) -> Result<(), String> {
+    pub fn update_map_field(
+        &mut self,
+        object_id: &ObjectId,
+        key: &str,
+        value: Value,
+    ) -> Result<(), String> {
         if let Some(StoredObject(ObjectData::Map(map), _)) = self.objects.get_mut(object_id) {
             map.insert(key.to_string(), value);
             Ok(())
@@ -185,7 +197,12 @@ impl ObjectRegistry {
         }
     }
 
-    pub fn update_array_element(&mut self, object_id: &ObjectId, index: usize, value: Value) -> Result<(), String> {
+    pub fn update_array_element(
+        &mut self,
+        object_id: &ObjectId,
+        index: usize,
+        value: Value,
+    ) -> Result<(), String> {
         match self.objects.get_mut(object_id) {
             Some(StoredObject(ObjectData::Array(arr), _)) if index < arr.len() => {
                 arr[index] = value;
@@ -195,7 +212,11 @@ impl ObjectRegistry {
                 list[index] = value;
                 Ok(())
             }
-            _ => Err(format!("Cannot update element at index {} in object {}", index, object_id.as_u64()))
+            _ => Err(format!(
+                "Cannot update element at index {} in object {}",
+                index,
+                object_id.as_u64()
+            )),
         }
     }
 
@@ -211,7 +232,8 @@ impl ObjectRegistry {
 
     /// Remove only objects with reference count 0 (reachability: no live references).
     pub fn garbage_collect(&mut self) -> usize {
-        let to_remove: Vec<ObjectId> = self.objects
+        let to_remove: Vec<ObjectId> = self
+            .objects
             .iter()
             .filter(|(_, StoredObject(_, ref_count))| *ref_count == 0)
             .map(|(id, _)| *id)
@@ -243,9 +265,7 @@ impl ObjectRegistry {
             ObjectData::Array(arr) | ObjectData::List(arr) => {
                 64 + arr.len() * 16 + arr.iter().map(|v| self.value_size(v)).sum::<usize>()
             }
-            ObjectData::Set(set) => {
-                64 + set.len() * 24
-            }
+            ObjectData::Set(set) => 64 + set.len() * 24,
         }
     }
 
@@ -259,11 +279,14 @@ impl ObjectRegistry {
             // For complex types, estimate their memory usage
             Value::Struct(_, fields) => {
                 std::mem::size_of::<String>() + // struct name
-                fields.len() * (std::mem::size_of::<String>() + std::mem::size_of::<Value>()) // fields
+                fields.len() * (std::mem::size_of::<String>() + std::mem::size_of::<Value>())
+                // fields
             }
             Value::Array(items) => items.len() * std::mem::size_of::<Value>(),
             Value::List(items) => items.len() * std::mem::size_of::<Value>(),
-            Value::Map(entries) => entries.len() * (std::mem::size_of::<String>() + std::mem::size_of::<Value>()),
+            Value::Map(entries) => {
+                entries.len() * (std::mem::size_of::<String>() + std::mem::size_of::<Value>())
+            }
             Value::Set(items) => items.len() * std::mem::size_of::<String>(),
             Value::Result(_, _) | Value::Option(_) => 2 * std::mem::size_of::<Value>(),
             Value::Closure(id) => 24 + id.len(),
@@ -308,8 +331,6 @@ pub fn create_array_object(array: Vec<Value>) -> ObjectRef {
     registry.create_object(data, false) // Arrays are mutable by default
 }
 
-
-
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Value {
     Int(i64),
@@ -327,7 +348,7 @@ pub enum Value {
 
     // Structured types
     Struct(String, HashMap<String, Value>), // struct_name, fields
-    Array(Vec<Value>),                       // Array type
+    Array(Vec<Value>),                      // Array type
 
     /// Arrow/closure value; id refers to engine's closure_registry (param, body, captured_scope).
     Closure(String),
@@ -355,43 +376,43 @@ impl Value {
     pub fn is_numeric(&self) -> bool {
         matches!(self, Value::Int(_) | Value::Float(_))
     }
-    
+
     pub fn is_boolean(&self) -> bool {
         matches!(self, Value::Bool(_))
     }
-    
+
     pub fn is_string(&self) -> bool {
         matches!(self, Value::String(_))
     }
-    
+
     pub fn is_null(&self) -> bool {
         matches!(self, Value::Null)
     }
-    
+
     pub fn is_result(&self) -> bool {
         matches!(self, Value::Result(_, _))
     }
-    
+
     pub fn is_option(&self) -> bool {
         matches!(self, Value::Option(_))
     }
-    
+
     pub fn is_list(&self) -> bool {
         matches!(self, Value::List(_))
     }
-    
+
     pub fn is_map(&self) -> bool {
         matches!(self, Value::Map(_))
     }
-    
+
     pub fn is_set(&self) -> bool {
         matches!(self, Value::Set(_))
     }
-    
+
     pub fn is_struct(&self) -> bool {
         matches!(self, Value::Struct(_, _))
     }
-    
+
     pub fn is_array(&self) -> bool {
         matches!(self, Value::Array(_))
     }
@@ -407,28 +428,28 @@ impl Value {
             _ => false,
         }
     }
-    
+
     pub fn is_err(&self) -> bool {
         match self {
             Value::Result(_, _) => true,
             _ => false,
         }
     }
-    
+
     pub fn unwrap_ok(&self) -> Option<&Value> {
         match self {
             Value::Result(ok_val, _) => Some(ok_val),
             _ => None,
         }
     }
-    
+
     pub fn unwrap_err(&self) -> Option<&Value> {
         match self {
             Value::Result(_, err_val) => Some(err_val),
             _ => None,
         }
     }
-    
+
     // Option methods
     pub fn is_some(&self) -> bool {
         match self {
@@ -436,21 +457,21 @@ impl Value {
             _ => false,
         }
     }
-    
+
     pub fn is_none(&self) -> bool {
         match self {
             Value::Option(None) => true,
             _ => false,
         }
     }
-    
+
     pub fn unwrap_option(&self) -> Option<&Value> {
         match self {
             Value::Option(Some(val)) => Some(val),
             _ => None,
         }
     }
-    
+
     // List methods
     pub fn list_length(&self) -> Option<usize> {
         match self {
@@ -458,24 +479,24 @@ impl Value {
             _ => None,
         }
     }
-    
+
     pub fn list_get(&self, index: usize) -> Option<&Value> {
         match self {
             Value::List(list) => list.get(index),
             _ => None,
         }
     }
-    
+
     pub fn list_push(&mut self, value: Value) -> bool {
         match self {
             Value::List(list) => {
                 list.push(value);
                 true
-            },
+            }
             _ => false,
         }
     }
-    
+
     // Map methods
     pub fn map_get(&self, key: &str) -> Option<&Value> {
         match self {
@@ -483,42 +504,42 @@ impl Value {
             _ => None,
         }
     }
-    
+
     pub fn map_set(&mut self, key: String, value: Value) -> bool {
         match self {
             Value::Map(map) => {
                 map.insert(key, value);
                 true
-            },
+            }
             _ => false,
         }
     }
-    
+
     pub fn map_keys(&self) -> Option<Vec<&String>> {
         match self {
             Value::Map(map) => Some(map.keys().collect()),
             _ => None,
         }
     }
-    
+
     // Set methods
     pub fn set_add(&mut self, value: String) -> bool {
         match self {
             Value::Set(set) => {
                 set.insert(value);
                 true
-            },
+            }
             _ => false,
         }
     }
-    
+
     pub fn set_contains(&self, value: &str) -> bool {
         match self {
             Value::Set(set) => set.contains(value),
             _ => false,
         }
     }
-    
+
     // Struct methods
     pub fn struct_get_field(&self, field_name: &str) -> Option<&Value> {
         match self {
@@ -526,13 +547,13 @@ impl Value {
             _ => None,
         }
     }
-    
+
     pub fn struct_set_field(&mut self, field_name: String, value: Value) -> bool {
         match self {
             Value::Struct(_, fields) => {
                 fields.insert(field_name, value);
                 true
-            },
+            }
             _ => false,
         }
     }
@@ -552,53 +573,61 @@ impl fmt::Display for Value {
                 } else {
                     write!(f, "Err({})", err_val)
                 }
-            },
-            Value::Option(opt_val) => {
-                match opt_val {
-                    Some(val) => write!(f, "Some({})", val),
-                    None => write!(f, "None"),
-                }
+            }
+            Value::Option(opt_val) => match opt_val {
+                Some(val) => write!(f, "Some({})", val),
+                None => write!(f, "None"),
             },
             Value::List(list) => {
                 write!(f, "[")?;
                 for (i, item) in list.iter().enumerate() {
-                    if i > 0 { write!(f, ", ")?; }
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
                     write!(f, "{}", item)?;
                 }
                 write!(f, "]")
-            },
+            }
             Value::Map(map) => {
                 write!(f, "{{")?;
                 for (i, (key, value)) in map.iter().enumerate() {
-                    if i > 0 { write!(f, ", ")?; }
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
                     write!(f, "\"{}\": {}", key, value)?;
                 }
                 write!(f, "}}")
-            },
+            }
             Value::Set(set) => {
                 write!(f, "{{")?;
                 for (i, item) in set.iter().enumerate() {
-                    if i > 0 { write!(f, ", ")?; }
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
                     write!(f, "\"{}\"", item)?;
                 }
                 write!(f, "}}")
-            },
+            }
             Value::Struct(name, fields) => {
                 write!(f, "{} {{", name)?;
                 for (i, (field_name, field_value)) in fields.iter().enumerate() {
-                    if i > 0 { write!(f, ", ")?; }
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
                     write!(f, "{}: {}", field_name, field_value)?;
                 }
                 write!(f, "}}")
-            },
+            }
             Value::Array(arr) => {
                 write!(f, "[")?;
                 for (i, item) in arr.iter().enumerate() {
-                    if i > 0 { write!(f, ", ")?; }
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
                     write!(f, "{}", item)?;
                 }
                 write!(f, "]")
-            },
+            }
             Value::Closure(id) => write!(f, "<closure {}>", id),
         }
     }
@@ -658,35 +687,35 @@ impl Value {
     pub fn ok(value: Value) -> Value {
         Value::Result(Box::new(value), Box::new(Value::Null))
     }
-    
+
     pub fn err(error: Value) -> Value {
         Value::Result(Box::new(Value::Null), Box::new(error))
     }
-    
+
     pub fn some(value: Value) -> Value {
         Value::Option(Some(Box::new(value)))
     }
-    
+
     pub fn none() -> Value {
         Value::Option(None)
     }
-    
+
     pub fn list(values: Vec<Value>) -> Value {
         Value::List(values)
     }
-    
+
     pub fn map(entries: HashMap<String, Value>) -> Value {
         Value::Map(entries)
     }
-    
+
     pub fn set(values: Vec<String>) -> Value {
         Value::Set(values.into_iter().collect())
     }
-    
+
     pub fn struct_value(name: &str, fields: HashMap<String, Value>) -> Value {
         Value::Struct(name.to_string(), fields)
     }
-    
+
     pub fn array(values: Vec<Value>) -> Value {
         Value::Array(values)
     }
@@ -695,37 +724,37 @@ impl Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_object_ref_atomic_reference_counting() {
         let obj_ref = ObjectRef::new(1024, false);
-        
+
         // Initial ref count should be 1
         assert_eq!(obj_ref.ref_count(), 1);
-        
+
         // Increment ref count
         obj_ref.increment_ref();
         assert_eq!(obj_ref.ref_count(), 2);
-        
+
         obj_ref.increment_ref();
         assert_eq!(obj_ref.ref_count(), 3);
-        
+
         // Decrement ref count
         let prev = obj_ref.decrement_ref();
-        assert_eq!(prev, 3);  // Previous value before decrement
+        assert_eq!(prev, 3); // Previous value before decrement
         assert_eq!(obj_ref.ref_count(), 2);
-        
+
         obj_ref.decrement_ref();
         assert_eq!(obj_ref.ref_count(), 1);
     }
-    
+
     #[test]
     fn test_object_ref_concurrent_access() {
         use std::thread;
-        
+
         let obj_ref = Arc::new(ObjectRef::new(512, true));
         let mut handles = vec![];
-        
+
         // Spawn 10 threads, each incrementing the ref count 100 times
         for _ in 0..10 {
             let obj_ref_clone = Arc::clone(&obj_ref);
@@ -736,34 +765,34 @@ mod tests {
             });
             handles.push(handle);
         }
-        
+
         // Wait for all threads to complete
         for handle in handles {
             handle.join().unwrap();
         }
-        
+
         // Should have: 1 (initial) + 10 * 100 = 1001
         assert_eq!(obj_ref.ref_count(), 1001);
     }
-    
+
     #[test]
     fn test_object_ref_touch_updates_last_accessed() {
         let obj_ref = ObjectRef::new(256, false);
-        
+
         // Get initial time
         let initial_time = *obj_ref.metadata.last_accessed.lock().unwrap();
-        
+
         // Sleep briefly
         std::thread::sleep(std::time::Duration::from_millis(10));
-        
+
         // Touch the object
         obj_ref.touch();
-        
+
         // Last accessed should be updated
         let updated_time = *obj_ref.metadata.last_accessed.lock().unwrap();
         assert!(updated_time > initial_time);
     }
-    
+
     #[test]
     fn test_object_metadata_clone() {
         let metadata = ObjectMetadata {
@@ -774,9 +803,9 @@ mod tests {
             is_immutable: true,
             creation_time: std::time::Instant::now(),
         };
-        
+
         let cloned = metadata.clone();
-        
+
         // Verify all fields are cloned correctly
         assert_eq!(cloned.id, metadata.id);
         assert_eq!(cloned.size_bytes, metadata.size_bytes);

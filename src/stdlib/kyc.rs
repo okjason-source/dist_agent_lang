@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use crate::runtime::values::Value;
 use crate::stdlib::chain;
+use std::collections::HashMap;
 
 // KYC (Know Your Customer) namespace
 // Provides identity verification and compliance functions
@@ -43,7 +43,7 @@ pub struct KYCLevel {
 lazy_static::lazy_static! {
     static ref KYC_PROVIDERS: HashMap<String, KYCProvider> = {
         let mut m = HashMap::new();
-        
+
         // Default KYC providers
         m.insert("securekyc".to_string(), KYCProvider {
             id: "securekyc".to_string(),
@@ -104,7 +104,7 @@ lazy_static::lazy_static! {
             response_time: 5000, // 5 seconds
             is_active: true,
         });
-        
+
         m.insert("veriff".to_string(), KYCProvider {
             id: "veriff".to_string(),
             name: "Veriff".to_string(),
@@ -150,7 +150,7 @@ lazy_static::lazy_static! {
             response_time: 3000, // 3 seconds
             is_active: true,
         });
-        
+
         m
     };
 }
@@ -161,87 +161,140 @@ pub fn verify_identity(
     provider_id: String,
     user_address: String,
     level: String,
-    _user_data: HashMap<String, String>
+    _user_data: HashMap<String, String>,
 ) -> HashMap<String, Value> {
-    crate::stdlib::log::audit("kyc_verify", {
-        let mut data = HashMap::new();
-        data.insert("provider_id".to_string(), Value::String(provider_id.clone()));
-        data.insert("user_address".to_string(), Value::String(user_address.clone()));
-        data.insert("level".to_string(), Value::String(level.clone()));
-        data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
-        data
-    }, Some("kyc"));
-    
+    crate::stdlib::log::audit(
+        "kyc_verify",
+        {
+            let mut data = HashMap::new();
+            data.insert(
+                "provider_id".to_string(),
+                Value::String(provider_id.clone()),
+            );
+            data.insert(
+                "user_address".to_string(),
+                Value::String(user_address.clone()),
+            );
+            data.insert("level".to_string(), Value::String(level.clone()));
+            data.insert(
+                "timestamp".to_string(),
+                Value::Int(chain::get_block_timestamp(1)),
+            );
+            data
+        },
+        Some("kyc"),
+    );
+
     if !KYC_PROVIDERS.contains_key(&provider_id) {
         return {
             let mut result = HashMap::new();
             result.insert("status".to_string(), Value::String("failed".to_string()));
-            result.insert("error".to_string(), Value::String("Provider not found".to_string()));
+            result.insert(
+                "error".to_string(),
+                Value::String("Provider not found".to_string()),
+            );
             result
         };
     }
-    
+
     let provider = KYC_PROVIDERS.get(&provider_id).unwrap();
     if !provider.verification_levels.contains_key(&level) {
         return {
             let mut result = HashMap::new();
             result.insert("status".to_string(), Value::String("failed".to_string()));
-            result.insert("error".to_string(), Value::String("Level not supported".to_string()));
+            result.insert(
+                "error".to_string(),
+                Value::String("Level not supported".to_string()),
+            );
             result
         };
     }
-    
+
     let kyc_level = provider.verification_levels.get(&level).unwrap();
-    
+
     // Simulate verification process
     let verification_id = format!("kyc_{}_{}", user_address, chain::get_block_timestamp(1));
     let confidence = kyc_level.compliance_score;
     let timestamp = chain::get_block_timestamp(1);
     let expires_at = timestamp + 365 * 24 * 60 * 60; // 1 year
-    
+
     // Simulate API call delay
-    std::thread::sleep(std::time::Duration::from_millis(provider.response_time as u64));
-    
+    std::thread::sleep(std::time::Duration::from_millis(
+        provider.response_time as u64,
+    ));
+
     let mut result = HashMap::new();
     result.insert("status".to_string(), Value::String("verified".to_string()));
-    result.insert("verification_id".to_string(), Value::String(verification_id));
+    result.insert(
+        "verification_id".to_string(),
+        Value::String(verification_id),
+    );
     result.insert("confidence".to_string(), Value::Float(confidence));
     result.insert("provider".to_string(), Value::String(provider_id));
     result.insert("level".to_string(), Value::String(level));
     result.insert("timestamp".to_string(), Value::Int(timestamp));
     result.insert("expires_at".to_string(), Value::Int(expires_at));
-    result.insert("compliance_score".to_string(), Value::Float(kyc_level.compliance_score));
-    
+    result.insert(
+        "compliance_score".to_string(),
+        Value::Float(kyc_level.compliance_score),
+    );
+
     result
 }
 
 pub fn get_verification_status(verification_id: String) -> HashMap<String, Value> {
-    crate::stdlib::log::audit("kyc_status_check", {
-        let mut data = HashMap::new();
-        data.insert("verification_id".to_string(), Value::String(verification_id.clone()));
-        data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
-        data
-    }, Some("kyc"));
-    
+    crate::stdlib::log::audit(
+        "kyc_status_check",
+        {
+            let mut data = HashMap::new();
+            data.insert(
+                "verification_id".to_string(),
+                Value::String(verification_id.clone()),
+            );
+            data.insert(
+                "timestamp".to_string(),
+                Value::Int(chain::get_block_timestamp(1)),
+            );
+            data
+        },
+        Some("kyc"),
+    );
+
     // Simulate status check
     let mut result = HashMap::new();
-    result.insert("verification_id".to_string(), Value::String(verification_id));
+    result.insert(
+        "verification_id".to_string(),
+        Value::String(verification_id),
+    );
     result.insert("status".to_string(), Value::String("verified".to_string()));
     result.insert("is_valid".to_string(), Value::Bool(true));
-    result.insert("expires_at".to_string(), Value::Int(chain::get_block_timestamp(1) + 365 * 24 * 60 * 60));
-    
+    result.insert(
+        "expires_at".to_string(),
+        Value::Int(chain::get_block_timestamp(1) + 365 * 24 * 60 * 60),
+    );
+
     result
 }
 
 pub fn revoke_verification(verification_id: String, reason: String) -> bool {
-    crate::stdlib::log::audit("kyc_revoke", {
-        let mut data = HashMap::new();
-        data.insert("verification_id".to_string(), Value::String(verification_id.clone()));
-        data.insert("reason".to_string(), Value::String(reason.clone()));
-        data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
-        data
-    }, Some("kyc"));
-    
+    crate::stdlib::log::audit(
+        "kyc_revoke",
+        {
+            let mut data = HashMap::new();
+            data.insert(
+                "verification_id".to_string(),
+                Value::String(verification_id.clone()),
+            );
+            data.insert("reason".to_string(), Value::String(reason.clone()));
+            data.insert(
+                "timestamp".to_string(),
+                Value::Int(chain::get_block_timestamp(1)),
+            );
+            data
+        },
+        Some("kyc"),
+    );
+
     // Simulate revocation
     true
 }
@@ -250,26 +303,38 @@ pub fn get_provider_info(provider_id: String) -> HashMap<String, Value> {
     if !KYC_PROVIDERS.contains_key(&provider_id) {
         return {
             let mut result = HashMap::new();
-            result.insert("error".to_string(), Value::String("Provider not found".to_string()));
+            result.insert(
+                "error".to_string(),
+                Value::String("Provider not found".to_string()),
+            );
             result
         };
     }
-    
+
     let provider = KYC_PROVIDERS.get(&provider_id).unwrap();
     let mut result = HashMap::new();
     result.insert("id".to_string(), Value::String(provider.id.clone()));
     result.insert("name".to_string(), Value::String(provider.name.clone()));
-    result.insert("success_rate".to_string(), Value::Float(provider.success_rate));
-    result.insert("response_time".to_string(), Value::Int(provider.response_time));
+    result.insert(
+        "success_rate".to_string(),
+        Value::Float(provider.success_rate),
+    );
+    result.insert(
+        "response_time".to_string(),
+        Value::Int(provider.response_time),
+    );
     result.insert("is_active".to_string(), Value::Bool(provider.is_active));
-    
+
     // Add compliance standards
     let mut standards = HashMap::new();
     for (standard, compliant) in &provider.compliance_standards {
         standards.insert(standard.clone(), Value::Bool(*compliant));
     }
-    result.insert("compliance_standards".to_string(), Value::String(format!("{:?}", standards)));
-    
+    result.insert(
+        "compliance_standards".to_string(),
+        Value::String(format!("{:?}", standards)),
+    );
+
     result
 }
 
@@ -281,79 +346,136 @@ pub fn get_verification_levels(provider_id: String) -> HashMap<String, Value> {
     if !KYC_PROVIDERS.contains_key(&provider_id) {
         return {
             let mut result = HashMap::new();
-            result.insert("error".to_string(), Value::String("Provider not found".to_string()));
+            result.insert(
+                "error".to_string(),
+                Value::String("Provider not found".to_string()),
+            );
             result
         };
     }
-    
+
     let provider = KYC_PROVIDERS.get(&provider_id).unwrap();
     let mut result = HashMap::new();
-    
+
     for (level_name, level) in &provider.verification_levels {
         let mut level_info = HashMap::new();
         level_info.insert("cost".to_string(), Value::Int(level.cost));
-        level_info.insert("verification_time".to_string(), Value::Int(level.verification_time));
-        level_info.insert("compliance_score".to_string(), Value::Float(level.compliance_score));
-        
-        result.insert(level_name.clone(), Value::String(format!("{:?}", level_info)));
+        level_info.insert(
+            "verification_time".to_string(),
+            Value::Int(level.verification_time),
+        );
+        level_info.insert(
+            "compliance_score".to_string(),
+            Value::Float(level.compliance_score),
+        );
+
+        result.insert(
+            level_name.clone(),
+            Value::String(format!("{:?}", level_info)),
+        );
     }
-    
+
     result
 }
 
-pub fn validate_document(document_type: String, _document_data: HashMap<String, String>) -> HashMap<String, Value> {
-    crate::stdlib::log::audit("kyc_document_validation", {
-        let mut data = HashMap::new();
-        data.insert("document_type".to_string(), Value::String(document_type.clone()));
-        data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
-        data
-    }, Some("kyc"));
-    
+pub fn validate_document(
+    document_type: String,
+    _document_data: HashMap<String, String>,
+) -> HashMap<String, Value> {
+    crate::stdlib::log::audit(
+        "kyc_document_validation",
+        {
+            let mut data = HashMap::new();
+            data.insert(
+                "document_type".to_string(),
+                Value::String(document_type.clone()),
+            );
+            data.insert(
+                "timestamp".to_string(),
+                Value::Int(chain::get_block_timestamp(1)),
+            );
+            data
+        },
+        Some("kyc"),
+    );
+
     // Simulate document validation
     let mut result = HashMap::new();
     result.insert("document_type".to_string(), Value::String(document_type));
     result.insert("is_valid".to_string(), Value::Bool(true));
     result.insert("confidence".to_string(), Value::Float(0.95));
-    result.insert("validation_id".to_string(), Value::String(format!("doc_{}", chain::get_block_timestamp(1))));
-    
+    result.insert(
+        "validation_id".to_string(),
+        Value::String(format!("doc_{}", chain::get_block_timestamp(1))),
+    );
+
     result
 }
 
 pub fn check_identity_match(
     _identity_data: HashMap<String, String>,
-    _verification_data: HashMap<String, String>
+    _verification_data: HashMap<String, String>,
 ) -> HashMap<String, Value> {
-    crate::stdlib::log::audit("kyc_identity_match", {
-        let mut data = HashMap::new();
-        data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
-        data
-    }, Some("kyc"));
-    
+    crate::stdlib::log::audit(
+        "kyc_identity_match",
+        {
+            let mut data = HashMap::new();
+            data.insert(
+                "timestamp".to_string(),
+                Value::Int(chain::get_block_timestamp(1)),
+            );
+            data
+        },
+        Some("kyc"),
+    );
+
     // Simulate identity matching
     let mut result = HashMap::new();
     result.insert("match_score".to_string(), Value::Float(0.92));
     result.insert("is_match".to_string(), Value::Bool(true));
     result.insert("confidence".to_string(), Value::Float(0.88));
-    
+
     result
 }
 
 pub fn get_compliance_report(user_address: String) -> HashMap<String, Value> {
-    crate::stdlib::log::audit("kyc_compliance_report", {
-        let mut data = HashMap::new();
-        data.insert("user_address".to_string(), Value::String(user_address.clone()));
-        data.insert("timestamp".to_string(), Value::Int(chain::get_block_timestamp(1)));
-        data
-    }, Some("kyc"));
-    
+    crate::stdlib::log::audit(
+        "kyc_compliance_report",
+        {
+            let mut data = HashMap::new();
+            data.insert(
+                "user_address".to_string(),
+                Value::String(user_address.clone()),
+            );
+            data.insert(
+                "timestamp".to_string(),
+                Value::Int(chain::get_block_timestamp(1)),
+            );
+            data
+        },
+        Some("kyc"),
+    );
+
     // Simulate compliance report
     let mut result = HashMap::new();
     result.insert("user_address".to_string(), Value::String(user_address));
-    result.insert("kyc_status".to_string(), Value::String("verified".to_string()));
-    result.insert("verification_level".to_string(), Value::String("enhanced".to_string()));
+    result.insert(
+        "kyc_status".to_string(),
+        Value::String("verified".to_string()),
+    );
+    result.insert(
+        "verification_level".to_string(),
+        Value::String("enhanced".to_string()),
+    );
     result.insert("compliance_score".to_string(), Value::Float(0.92));
-    result.insert("last_verified".to_string(), Value::Int(chain::get_block_timestamp(1)));
-    result.insert("expires_at".to_string(), Value::Int(chain::get_block_timestamp(1) + 365 * 24 * 60 * 60));
-    
+    result.insert(
+        "last_verified".to_string(),
+        Value::Int(chain::get_block_timestamp(1)),
+    );
+    result.insert(
+        "expires_at".to_string(),
+        Value::Int(chain::get_block_timestamp(1) + 365 * 24 * 60 * 60),
+    );
+
     result
 }

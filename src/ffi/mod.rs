@@ -2,15 +2,15 @@
 // Provides both HTTP/REST and native FFI bindings for dist_agent_lang
 // Users can choose the interface based on their performance and deployment needs
 
+pub mod auto_detect;
+pub mod c;
 pub mod interface;
 pub mod python;
 pub mod rust;
-pub mod c;
-pub mod auto_detect;
 pub mod security;
 
+pub use auto_detect::{CallFrequency, InterfaceSelector, ServiceMetadata};
 pub use interface::{FFIInterface, InterfaceType, ServiceInterface};
-pub use auto_detect::{InterfaceSelector, ServiceMetadata, CallFrequency};
 
 /// FFI Configuration
 #[derive(Debug, Clone)]

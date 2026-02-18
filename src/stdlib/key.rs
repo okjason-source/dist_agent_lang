@@ -163,20 +163,28 @@ mod sqlite_store {
                 );",
             )
             .map_err(|e| e.to_string())?;
-            let mut stmt = conn.prepare("SELECT id, resource, permissions, expires_at, created_at FROM capabilities").map_err(|e| e.to_string())?;
-            let rows = stmt.query_map([], |r| {
-                Ok((
-                    r.get::<_, String>(0)?,
-                    r.get::<_, String>(1)?,
-                    r.get::<_, String>(2)?,
-                    r.get::<_, Option<i64>>(3)?,
-                    r.get::<_, i64>(4)?,
-                ))
-            }).map_err(|e| e.to_string())?;
+            let mut stmt = conn
+                .prepare(
+                    "SELECT id, resource, permissions, expires_at, created_at FROM capabilities",
+                )
+                .map_err(|e| e.to_string())?;
+            let rows = stmt
+                .query_map([], |r| {
+                    Ok((
+                        r.get::<_, String>(0)?,
+                        r.get::<_, String>(1)?,
+                        r.get::<_, String>(2)?,
+                        r.get::<_, Option<i64>>(3)?,
+                        r.get::<_, i64>(4)?,
+                    ))
+                })
+                .map_err(|e| e.to_string())?;
             let mut capabilities = HashMap::new();
             for row in rows {
-                let (id, resource, perms_json, expires_at, created_at) = row.map_err(|e| e.to_string())?;
-                let permissions: Vec<String> = serde_json::from_str(&perms_json).unwrap_or_default();
+                let (id, resource, perms_json, expires_at, created_at) =
+                    row.map_err(|e| e.to_string())?;
+                let permissions: Vec<String> =
+                    serde_json::from_str(&perms_json).unwrap_or_default();
                 let cap = Capability {
                     id: id.clone(),
                     resource,
@@ -186,14 +194,24 @@ mod sqlite_store {
                 };
                 capabilities.insert(id, cap);
             }
-            let mut stmt = conn.prepare("SELECT principal_id, capability_id FROM principal_grants").map_err(|e| e.to_string())?;
-            let rows = stmt.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))).map_err(|e| e.to_string())?;
+            let mut stmt = conn
+                .prepare("SELECT principal_id, capability_id FROM principal_grants")
+                .map_err(|e| e.to_string())?;
+            let rows = stmt
+                .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))
+                .map_err(|e| e.to_string())?;
             let mut principal_grants: HashMap<String, Vec<String>> = HashMap::new();
             for row in rows {
                 let (principal_id, capability_id) = row.map_err(|e| e.to_string())?;
-                principal_grants.entry(principal_id).or_default().push(capability_id);
+                principal_grants
+                    .entry(principal_id)
+                    .or_default()
+                    .push(capability_id);
             }
-            Ok(KeyRegistry { capabilities, principal_grants })
+            Ok(KeyRegistry {
+                capabilities,
+                principal_grants,
+            })
         }
         fn save(&self, reg: &KeyRegistry) -> Result<(), String> {
             let conn = rusqlite::Connection::open(&self.path).map_err(|e| e.to_string())?;
@@ -214,9 +232,14 @@ mod sqlite_store {
                 );",
             )
             .map_err(|e| e.to_string())?;
-            conn.execute("DELETE FROM principal_grants", []).map_err(|e| e.to_string())?;
-            conn.execute("DELETE FROM capabilities", []).map_err(|e| e.to_string())?;
-            let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0);
+            conn.execute("DELETE FROM principal_grants", [])
+                .map_err(|e| e.to_string())?;
+            conn.execute("DELETE FROM capabilities", [])
+                .map_err(|e| e.to_string())?;
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs() as i64)
+                .unwrap_or(0);
             for cap in reg.capabilities.values() {
                 let perms = serde_json::to_string(&cap.permissions).map_err(|e| e.to_string())?;
                 let created = cap.created_at.unwrap_or(now);
@@ -248,28 +271,30 @@ fn from_env() -> Box<dyn KeyStore> {
     let path = std::env::var("DAL_KEY_STORE_PATH").ok();
     match store.to_lowercase().as_str() {
         "file" => {
-            let p = path
-                .map(std::path::PathBuf::from)
-                .unwrap_or_else(|| {
-                    let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-                    std::path::PathBuf::from(home).join(".dal").join("key_registry.json")
-                });
+            let p = path.map(std::path::PathBuf::from).unwrap_or_else(|| {
+                let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+                std::path::PathBuf::from(home)
+                    .join(".dal")
+                    .join("key_registry.json")
+            });
             Box::new(FileStore::new(p))
         }
         "sqlite" => {
             #[cfg(feature = "sqlite-storage")]
             {
-                let p = path
-                    .map(std::path::PathBuf::from)
-                    .unwrap_or_else(|| {
-                        let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-                        std::path::PathBuf::from(home).join(".dal").join("key_registry.db")
-                    });
+                let p = path.map(std::path::PathBuf::from).unwrap_or_else(|| {
+                    let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+                    std::path::PathBuf::from(home)
+                        .join(".dal")
+                        .join("key_registry.db")
+                });
                 Box::new(SqliteStore::new(p))
             }
             #[cfg(not(feature = "sqlite-storage"))]
             {
-                eprintln!("warning: DAL_KEY_STORE=sqlite requires 'sqlite-storage' feature, using memory");
+                eprintln!(
+                    "warning: DAL_KEY_STORE=sqlite requires 'sqlite-storage' feature, using memory"
+                );
                 Box::new(MemoryStore)
             }
         }
@@ -368,7 +393,8 @@ pub fn grant(capability: &Capability, principal: &mut Principal) -> Result<bool,
     }
 
     let mut reg = get_registry();
-    reg.capabilities.insert(capability.id.clone(), capability.clone());
+    reg.capabilities
+        .insert(capability.id.clone(), capability.clone());
     reg.principal_grants
         .entry(principal.id.clone())
         .or_default()
@@ -424,7 +450,7 @@ pub fn check(request: CapabilityRequest) -> Result<bool, String> {
     let reg = get_registry();
     let mut allowed = false;
     let mut reason = "no_matching_capability".to_string();
-    
+
     let cap_ids = reg.principal_grants.get(&request.principal_id);
     if let Some(cap_ids) = cap_ids {
         for cap_id in cap_ids {
@@ -440,22 +466,44 @@ pub fn check(request: CapabilityRequest) -> Result<bool, String> {
             }
         }
     }
-    
+
     if !allowed && strict_mode() {
         // Phase 2: Audit log access denial
-        crate::stdlib::log::audit("access_control_check", {
-            let mut data = HashMap::new();
-            data.insert("principal_id".to_string(), crate::runtime::values::Value::String(request.principal_id.clone()));
-            data.insert("resource".to_string(), crate::runtime::values::Value::String(request.resource.clone()));
-            data.insert("operation".to_string(), crate::runtime::values::Value::String(request.operation.clone()));
-            data.insert("result".to_string(), crate::runtime::values::Value::String("denied".to_string()));
-            data.insert("reason".to_string(), crate::runtime::values::Value::String(reason.clone()));
-            data.insert("strict_mode".to_string(), crate::runtime::values::Value::Bool(true));
-            data
-        }, Some("key"));
+        crate::stdlib::log::audit(
+            "access_control_check",
+            {
+                let mut data = HashMap::new();
+                data.insert(
+                    "principal_id".to_string(),
+                    crate::runtime::values::Value::String(request.principal_id.clone()),
+                );
+                data.insert(
+                    "resource".to_string(),
+                    crate::runtime::values::Value::String(request.resource.clone()),
+                );
+                data.insert(
+                    "operation".to_string(),
+                    crate::runtime::values::Value::String(request.operation.clone()),
+                );
+                data.insert(
+                    "result".to_string(),
+                    crate::runtime::values::Value::String("denied".to_string()),
+                );
+                data.insert(
+                    "reason".to_string(),
+                    crate::runtime::values::Value::String(reason.clone()),
+                );
+                data.insert(
+                    "strict_mode".to_string(),
+                    crate::runtime::values::Value::Bool(true),
+                );
+                data
+            },
+            Some("key"),
+        );
         return Ok(false);
     }
-    
+
     if !allowed {
         // Fallback: built-in rules when no matching key in registry
         let (result, reason_str) = match request.resource.as_str() {
@@ -475,38 +523,84 @@ pub fn check(request: CapabilityRequest) -> Result<bool, String> {
                     (false, "builtin_rule:system_config_write_denied".to_string())
                 }
             }
-            _ => {
-                (false, "builtin_rule:default_deny".to_string())
-            }
+            _ => (false, "builtin_rule:default_deny".to_string()),
         };
-        
+
         // Phase 2: Audit log access decision
-        crate::stdlib::log::audit("access_control_check", {
-            let mut data = HashMap::new();
-            data.insert("principal_id".to_string(), crate::runtime::values::Value::String(request.principal_id.clone()));
-            data.insert("resource".to_string(), crate::runtime::values::Value::String(request.resource.clone()));
-            data.insert("operation".to_string(), crate::runtime::values::Value::String(request.operation.clone()));
-            data.insert("result".to_string(), crate::runtime::values::Value::String(if result { "allowed".to_string() } else { "denied".to_string() }));
-            data.insert("reason".to_string(), crate::runtime::values::Value::String(reason_str.clone()));
-            data.insert("strict_mode".to_string(), crate::runtime::values::Value::Bool(false));
-            data
-        }, Some("key"));
-        
+        crate::stdlib::log::audit(
+            "access_control_check",
+            {
+                let mut data = HashMap::new();
+                data.insert(
+                    "principal_id".to_string(),
+                    crate::runtime::values::Value::String(request.principal_id.clone()),
+                );
+                data.insert(
+                    "resource".to_string(),
+                    crate::runtime::values::Value::String(request.resource.clone()),
+                );
+                data.insert(
+                    "operation".to_string(),
+                    crate::runtime::values::Value::String(request.operation.clone()),
+                );
+                data.insert(
+                    "result".to_string(),
+                    crate::runtime::values::Value::String(if result {
+                        "allowed".to_string()
+                    } else {
+                        "denied".to_string()
+                    }),
+                );
+                data.insert(
+                    "reason".to_string(),
+                    crate::runtime::values::Value::String(reason_str.clone()),
+                );
+                data.insert(
+                    "strict_mode".to_string(),
+                    crate::runtime::values::Value::Bool(false),
+                );
+                data
+            },
+            Some("key"),
+        );
+
         return Ok(result);
     }
-    
+
     // Phase 2: Audit log access grant
-    crate::stdlib::log::audit("access_control_check", {
-        let mut data = HashMap::new();
-        data.insert("principal_id".to_string(), crate::runtime::values::Value::String(request.principal_id.clone()));
-        data.insert("resource".to_string(), crate::runtime::values::Value::String(request.resource.clone()));
-        data.insert("operation".to_string(), crate::runtime::values::Value::String(request.operation.clone()));
-        data.insert("result".to_string(), crate::runtime::values::Value::String("allowed".to_string()));
-        data.insert("reason".to_string(), crate::runtime::values::Value::String(reason.clone()));
-        data.insert("strict_mode".to_string(), crate::runtime::values::Value::Bool(strict_mode()));
-        data
-    }, Some("key"));
-    
+    crate::stdlib::log::audit(
+        "access_control_check",
+        {
+            let mut data = HashMap::new();
+            data.insert(
+                "principal_id".to_string(),
+                crate::runtime::values::Value::String(request.principal_id.clone()),
+            );
+            data.insert(
+                "resource".to_string(),
+                crate::runtime::values::Value::String(request.resource.clone()),
+            );
+            data.insert(
+                "operation".to_string(),
+                crate::runtime::values::Value::String(request.operation.clone()),
+            );
+            data.insert(
+                "result".to_string(),
+                crate::runtime::values::Value::String("allowed".to_string()),
+            );
+            data.insert(
+                "reason".to_string(),
+                crate::runtime::values::Value::String(reason.clone()),
+            );
+            data.insert(
+                "strict_mode".to_string(),
+                crate::runtime::values::Value::Bool(strict_mode()),
+            );
+            data
+        },
+        Some("key"),
+    );
+
     Ok(true)
 }
 
@@ -522,7 +616,11 @@ pub fn create_principal(id: String, name: String) -> Principal {
 }
 
 /// Create a capability request
-pub fn create_capability_request(resource: String, operation: String, principal_id: String) -> CapabilityRequest {
+pub fn create_capability_request(
+    resource: String,
+    operation: String,
+    principal_id: String,
+) -> CapabilityRequest {
     CapabilityRequest {
         resource,
         operation,

@@ -2,8 +2,8 @@
 // These tests are designed to catch mutations identified by mutation testing
 // Tests use only public APIs to verify lexer behavior
 
+use dist_agent_lang::lexer::tokens::{Keyword, Literal, Operator, Punctuation, Token};
 use dist_agent_lang::lexer::Lexer;
-use dist_agent_lang::lexer::tokens::{Token, Operator, Punctuation, Keyword, Literal};
 
 // ============================================================================
 // OPERATOR TOKEN TESTS
@@ -146,14 +146,14 @@ fn test_operator_comparison_boundary_less_vs_less_equal() {
     // Test that < and <= are distinct - catches comparison operator mutations
     let code1 = "x < 10";
     let code2 = "x <= 10";
-    
+
     let tokens1 = Lexer::new(code1).tokenize_immutable().unwrap();
     let tokens2 = Lexer::new(code2).tokenize_immutable().unwrap();
-    
+
     // Find the comparison operator in each
     let op1 = tokens1.iter().find(|t| matches!(t, Token::Operator(_)));
     let op2 = tokens2.iter().find(|t| matches!(t, Token::Operator(_)));
-    
+
     assert!(op1.is_some() && op2.is_some());
     assert!(matches!(op1.unwrap(), Token::Operator(Operator::Less)));
     assert!(matches!(op2.unwrap(), Token::Operator(Operator::LessEqual)));
@@ -164,16 +164,19 @@ fn test_operator_comparison_boundary_greater_vs_greater_equal() {
     // Test that > and >= are distinct - catches comparison operator mutations
     let code1 = "x > 10";
     let code2 = "x >= 10";
-    
+
     let tokens1 = Lexer::new(code1).tokenize_immutable().unwrap();
     let tokens2 = Lexer::new(code2).tokenize_immutable().unwrap();
-    
+
     let op1 = tokens1.iter().find(|t| matches!(t, Token::Operator(_)));
     let op2 = tokens2.iter().find(|t| matches!(t, Token::Operator(_)));
-    
+
     assert!(op1.is_some() && op2.is_some());
     assert!(matches!(op1.unwrap(), Token::Operator(Operator::Greater)));
-    assert!(matches!(op2.unwrap(), Token::Operator(Operator::GreaterEqual)));
+    assert!(matches!(
+        op2.unwrap(),
+        Token::Operator(Operator::GreaterEqual)
+    ));
 }
 
 // ============================================================================
@@ -187,7 +190,10 @@ fn test_punctuation_left_paren() {
     let code = "(";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    assert!(matches!(tokens[0], Token::Punctuation(Punctuation::LeftParen)));
+    assert!(matches!(
+        tokens[0],
+        Token::Punctuation(Punctuation::LeftParen)
+    ));
 }
 
 #[test]
@@ -195,7 +201,10 @@ fn test_punctuation_right_paren() {
     let code = ")";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    assert!(matches!(tokens[0], Token::Punctuation(Punctuation::RightParen)));
+    assert!(matches!(
+        tokens[0],
+        Token::Punctuation(Punctuation::RightParen)
+    ));
 }
 
 #[test]
@@ -203,7 +212,10 @@ fn test_punctuation_left_brace() {
     let code = "{";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    assert!(matches!(tokens[0], Token::Punctuation(Punctuation::LeftBrace)));
+    assert!(matches!(
+        tokens[0],
+        Token::Punctuation(Punctuation::LeftBrace)
+    ));
 }
 
 #[test]
@@ -211,7 +223,10 @@ fn test_punctuation_right_brace() {
     let code = "}";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    assert!(matches!(tokens[0], Token::Punctuation(Punctuation::RightBrace)));
+    assert!(matches!(
+        tokens[0],
+        Token::Punctuation(Punctuation::RightBrace)
+    ));
 }
 
 #[test]
@@ -219,7 +234,10 @@ fn test_punctuation_left_bracket() {
     let code = "[";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    assert!(matches!(tokens[0], Token::Punctuation(Punctuation::LeftBracket)));
+    assert!(matches!(
+        tokens[0],
+        Token::Punctuation(Punctuation::LeftBracket)
+    ));
 }
 
 #[test]
@@ -227,7 +245,10 @@ fn test_punctuation_right_bracket() {
     let code = "]";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    assert!(matches!(tokens[0], Token::Punctuation(Punctuation::RightBracket)));
+    assert!(matches!(
+        tokens[0],
+        Token::Punctuation(Punctuation::RightBracket)
+    ));
 }
 
 #[test]
@@ -235,7 +256,10 @@ fn test_punctuation_semicolon() {
     let code = ";";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    assert!(matches!(tokens[0], Token::Punctuation(Punctuation::Semicolon)));
+    assert!(matches!(
+        tokens[0],
+        Token::Punctuation(Punctuation::Semicolon)
+    ));
 }
 
 #[test]
@@ -253,7 +277,10 @@ fn test_punctuation_double_colon() {
     let code = "::";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    assert!(matches!(tokens[0], Token::Punctuation(Punctuation::DoubleColon)));
+    assert!(matches!(
+        tokens[0],
+        Token::Punctuation(Punctuation::DoubleColon)
+    ));
 }
 
 #[test]
@@ -277,7 +304,10 @@ fn test_punctuation_question() {
     let code = "?";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    assert!(matches!(tokens[0], Token::Punctuation(Punctuation::Question)));
+    assert!(matches!(
+        tokens[0],
+        Token::Punctuation(Punctuation::Question)
+    ));
 }
 
 #[test]
@@ -302,12 +332,15 @@ fn test_punctuation_colon_vs_double_colon_boundary() {
     // Test boundary between : and :: - catches comparison operator mutations
     let code1 = ":";
     let code2 = "::";
-    
+
     let tokens1 = Lexer::new(code1).tokenize_immutable().unwrap();
     let tokens2 = Lexer::new(code2).tokenize_immutable().unwrap();
-    
+
     assert!(matches!(tokens1[0], Token::Punctuation(Punctuation::Colon)));
-    assert!(matches!(tokens2[0], Token::Punctuation(Punctuation::DoubleColon)));
+    assert!(matches!(
+        tokens2[0],
+        Token::Punctuation(Punctuation::DoubleColon)
+    ));
 }
 
 // ============================================================================
@@ -321,8 +354,10 @@ fn test_position_tracking_single_char_token() {
     // Test that single character tokens advance position by 1
     // Catches arithmetic operator mutations (position += 1)
     let code = "+";
-    let tokens_with_pos = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
-    
+    let tokens_with_pos = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
+
     assert_eq!(tokens_with_pos.len(), 2); // Plus + EOF
     assert_eq!(tokens_with_pos[0].line, 1);
     assert_eq!(tokens_with_pos[0].column, 1); // Starts at column 1
@@ -333,12 +368,14 @@ fn test_position_tracking_two_char_token() {
     // Test that two character tokens advance position by 2
     // Catches arithmetic operator mutations (position += 2)
     let code = "==";
-    let tokens_with_pos = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
-    
+    let tokens_with_pos = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
+
     assert_eq!(tokens_with_pos.len(), 2);
     assert_eq!(tokens_with_pos[0].line, 1);
     assert_eq!(tokens_with_pos[0].column, 1); // Starts at column 1
-    // The next token (EOF) should be at column 3
+                                              // The next token (EOF) should be at column 3
     assert_eq!(tokens_with_pos[1].column, 3);
 }
 
@@ -347,8 +384,10 @@ fn test_position_tracking_newline() {
     // Test line/column tracking across newlines
     // Catches comparison operator mutations in skip_whitespace
     let code = "+\n-";
-    let tokens_with_pos = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
-    
+    let tokens_with_pos = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
+
     assert_eq!(tokens_with_pos.len(), 3); // Plus, Minus, EOF
     assert_eq!(tokens_with_pos[0].line, 1);
     assert_eq!(tokens_with_pos[0].column, 1);
@@ -361,8 +400,10 @@ fn test_position_tracking_whitespace() {
     // Test that whitespace advances column correctly
     // Catches arithmetic operator mutations in skip_whitespace
     let code = "  +";
-    let tokens_with_pos = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
-    
+    let tokens_with_pos = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
+
     assert_eq!(tokens_with_pos.len(), 2);
     assert_eq!(tokens_with_pos[0].line, 1);
     assert_eq!(tokens_with_pos[0].column, 3); // Plus is at column 3 (after 2 spaces)
@@ -373,8 +414,10 @@ fn test_position_tracking_boundary_end_of_input() {
     // Test position tracking at end of input
     // Catches comparison operator mutations (position >= input.len())
     let code = "x";
-    let tokens_with_pos = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
-    
+    let tokens_with_pos = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
+
     assert_eq!(tokens_with_pos.len(), 2); // Identifier + EOF
     assert_eq!(tokens_with_pos[0].line, 1);
     assert_eq!(tokens_with_pos[0].column, 1);
@@ -388,17 +431,23 @@ fn test_position_tracking_multi_char_operator() {
     // Test that <= advances position correctly
     // Catches arithmetic operator mutations
     let code = "x <= 10";
-    let tokens_with_pos = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
-    
+    let tokens_with_pos = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
+
     // Find the <= operator
-    let less_equal_token = tokens_with_pos.iter().find(|t| {
-        matches!(t.token, Token::Operator(Operator::LessEqual))
-    });
-    
+    let less_equal_token = tokens_with_pos
+        .iter()
+        .find(|t| matches!(t.token, Token::Operator(Operator::LessEqual)));
+
     assert!(less_equal_token.is_some());
     let token = less_equal_token.unwrap();
     // <= starts after "x " - verify it's at a valid position (column 2 or 3 depending on spacing)
-    assert!(token.column >= 2 && token.column <= 3, "<= should be at column 2 or 3, got {}", token.column);
+    assert!(
+        token.column >= 2 && token.column <= 3,
+        "<= should be at column 2 or 3, got {}",
+        token.column
+    );
     assert_eq!(token.line, 1);
 }
 
@@ -445,10 +494,10 @@ fn test_keyword_vs_identifier() {
     // Catches delete match arm mutations in is_keyword
     let code1 = "let";
     let code2 = "let_var";
-    
+
     let tokens1 = Lexer::new(code1).tokenize_immutable().unwrap();
     let tokens2 = Lexer::new(code2).tokenize_immutable().unwrap();
-    
+
     assert!(matches!(tokens1[0], Token::Keyword(Keyword::Let)));
     assert!(matches!(tokens2[0], Token::Identifier(_)));
 }
@@ -488,7 +537,7 @@ fn test_literal_int() {
     let code = "42";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    
+
     if let Token::Literal(Literal::Int(value)) = &tokens[0] {
         assert_eq!(*value, 42);
     } else {
@@ -502,7 +551,7 @@ fn test_literal_string() {
     let code = r#""hello""#;
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    
+
     if let Token::Literal(Literal::String(value)) = &tokens[0] {
         assert_eq!(value, "hello");
     } else {
@@ -576,7 +625,7 @@ fn test_number_parsing() {
     let code = "123";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     assert_eq!(tokens.len(), 2);
-    
+
     if let Token::Literal(Literal::Int(value)) = &tokens[0] {
         assert_eq!(*value, 123);
     } else {
@@ -590,16 +639,24 @@ fn test_complex_expression_tokenization() {
     // Catches multiple delete match arm mutations
     let code = "x + y < z && a == b";
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
-    
+
     // Should have: x, +, y, <, z, &&, a, ==, b, EOF
     assert!(tokens.len() >= 9);
-    
+
     // Verify specific operators are present
-    let has_plus = tokens.iter().any(|t| matches!(t, Token::Operator(Operator::Plus)));
-    let has_less = tokens.iter().any(|t| matches!(t, Token::Operator(Operator::Less)));
-    let has_and = tokens.iter().any(|t| matches!(t, Token::Operator(Operator::And)));
-    let has_equal = tokens.iter().any(|t| matches!(t, Token::Operator(Operator::Equal)));
-    
+    let has_plus = tokens
+        .iter()
+        .any(|t| matches!(t, Token::Operator(Operator::Plus)));
+    let has_less = tokens
+        .iter()
+        .any(|t| matches!(t, Token::Operator(Operator::Less)));
+    let has_and = tokens
+        .iter()
+        .any(|t| matches!(t, Token::Operator(Operator::And)));
+    let has_equal = tokens
+        .iter()
+        .any(|t| matches!(t, Token::Operator(Operator::Equal)));
+
     assert!(has_plus, "Should have Plus operator");
     assert!(has_less, "Should have Less operator");
     assert!(has_and, "Should have And operator");
@@ -618,7 +675,10 @@ fn test_escape_sequence_double_quote() {
     let code = r#""hello\"world""#;
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     if let Token::Literal(Literal::String(value)) = &tokens[0] {
-        assert_eq!(value, "hello\"world", "Escaped double quote should produce literal quote");
+        assert_eq!(
+            value, "hello\"world",
+            "Escaped double quote should produce literal quote"
+        );
     } else {
         panic!("Expected string literal, got {:?}", tokens[0]);
     }
@@ -630,7 +690,10 @@ fn test_escape_sequence_backslash() {
     let code = r#""path\\to\\file""#;
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     if let Token::Literal(Literal::String(value)) = &tokens[0] {
-        assert_eq!(value, "path\\to\\file", "Escaped backslash should produce literal backslash");
+        assert_eq!(
+            value, "path\\to\\file",
+            "Escaped backslash should produce literal backslash"
+        );
     } else {
         panic!("Expected string literal, got {:?}", tokens[0]);
     }
@@ -642,8 +705,14 @@ fn test_escape_sequence_newline() {
     let code = r#""line1\nline2""#;
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     if let Token::Literal(Literal::String(value)) = &tokens[0] {
-        assert_eq!(value, "line1\nline2", "\\n should produce newline character");
-        assert!(value.contains('\n'), "String must contain actual newline char");
+        assert_eq!(
+            value, "line1\nline2",
+            "\\n should produce newline character"
+        );
+        assert!(
+            value.contains('\n'),
+            "String must contain actual newline char"
+        );
     } else {
         panic!("Expected string literal, got {:?}", tokens[0]);
     }
@@ -655,8 +724,14 @@ fn test_escape_sequence_carriage_return() {
     let code = r#""before\rafter""#;
     let tokens = Lexer::new(code).tokenize_immutable().unwrap();
     if let Token::Literal(Literal::String(value)) = &tokens[0] {
-        assert_eq!(value, "before\rafter", "\\r should produce carriage return character");
-        assert!(value.contains('\r'), "String must contain actual carriage return char");
+        assert_eq!(
+            value, "before\rafter",
+            "\\r should produce carriage return character"
+        );
+        assert!(
+            value.contains('\r'),
+            "String must contain actual carriage return char"
+        );
     } else {
         panic!("Expected string literal, got {:?}", tokens[0]);
     }
@@ -689,7 +764,10 @@ fn test_mutable_tokenize_string_exact_value() {
     let mut lexer = Lexer::new(code);
     let tokens = lexer.tokenize().unwrap();
     if let Token::Literal(Literal::String(value)) = &tokens[0] {
-        assert_eq!(value, "hello world", "read_string must return exact string content");
+        assert_eq!(
+            value, "hello world",
+            "read_string must return exact string content"
+        );
         assert_ne!(value, "", "read_string must not return empty string");
         assert_ne!(value, "xyzzy", "read_string must not return garbage");
     } else {
@@ -832,7 +910,10 @@ fn test_mutable_tokenize_unterminated_string() {
     let code = r#""unterminated"#;
     let mut lexer = Lexer::new(code);
     let result = lexer.tokenize();
-    assert!(result.is_err(), "Unterminated string should fail in mutable tokenize");
+    assert!(
+        result.is_err(),
+        "Unterminated string should fail in mutable tokenize"
+    );
 }
 
 #[test]

@@ -1,8 +1,7 @@
+use crate::runtime::functions::RuntimeError;
 /// Safe Mathematics Operations for DAL Runtime
 /// Provides overflow/underflow protection for all arithmetic operations
-
 use crate::runtime::values::Value;
-use crate::runtime::functions::RuntimeError;
 
 /// Safe arithmetic operations with overflow/underflow protection
 pub struct SafeMath;
@@ -11,11 +10,10 @@ impl SafeMath {
     /// Safe addition with overflow checking
     pub fn add(left: &Value, right: &Value) -> Result<Value, RuntimeError> {
         match (left, right) {
-            (Value::Int(a), Value::Int(b)) => {
-                a.checked_add(*b)
-                    .map(Value::Int)
-                    .ok_or(RuntimeError::IntegerOverflow)
-            }
+            (Value::Int(a), Value::Int(b)) => a
+                .checked_add(*b)
+                .map(Value::Int)
+                .ok_or(RuntimeError::IntegerOverflow),
             (Value::Float(a), Value::Float(b)) => {
                 let result = a + b;
                 if result.is_infinite() || result.is_nan() {
@@ -40,18 +38,17 @@ impl SafeMath {
                     Ok(Value::Float(result))
                 }
             }
-            _ => Err(RuntimeError::TypeMismatch("addition".to_string()))
+            _ => Err(RuntimeError::TypeMismatch("addition".to_string())),
         }
     }
 
     /// Safe subtraction with underflow checking
     pub fn subtract(left: &Value, right: &Value) -> Result<Value, RuntimeError> {
         match (left, right) {
-            (Value::Int(a), Value::Int(b)) => {
-                a.checked_sub(*b)
-                    .map(Value::Int)
-                    .ok_or(RuntimeError::IntegerUnderflow)
-            }
+            (Value::Int(a), Value::Int(b)) => a
+                .checked_sub(*b)
+                .map(Value::Int)
+                .ok_or(RuntimeError::IntegerUnderflow),
             (Value::Float(a), Value::Float(b)) => {
                 let result = a - b;
                 if result.is_infinite() || result.is_nan() {
@@ -76,18 +73,17 @@ impl SafeMath {
                     Ok(Value::Float(result))
                 }
             }
-            _ => Err(RuntimeError::TypeMismatch("subtraction".to_string()))
+            _ => Err(RuntimeError::TypeMismatch("subtraction".to_string())),
         }
     }
 
     /// Safe multiplication with overflow checking
     pub fn multiply(left: &Value, right: &Value) -> Result<Value, RuntimeError> {
         match (left, right) {
-            (Value::Int(a), Value::Int(b)) => {
-                a.checked_mul(*b)
-                    .map(Value::Int)
-                    .ok_or(RuntimeError::IntegerOverflow)
-            }
+            (Value::Int(a), Value::Int(b)) => a
+                .checked_mul(*b)
+                .map(Value::Int)
+                .ok_or(RuntimeError::IntegerOverflow),
             (Value::Float(a), Value::Float(b)) => {
                 let result = a * b;
                 if result.is_infinite() || result.is_nan() {
@@ -112,7 +108,7 @@ impl SafeMath {
                     Ok(Value::Float(result))
                 }
             }
-            _ => Err(RuntimeError::TypeMismatch("multiplication".to_string()))
+            _ => Err(RuntimeError::TypeMismatch("multiplication".to_string())),
         }
     }
 
@@ -160,7 +156,7 @@ impl SafeMath {
                     Ok(Value::Float(result))
                 }
             }
-            _ => Err(RuntimeError::TypeMismatch("division".to_string()))
+            _ => Err(RuntimeError::TypeMismatch("division".to_string())),
         }
     }
 
@@ -186,7 +182,7 @@ impl SafeMath {
                     Ok(Value::Float(result))
                 }
             }
-            _ => Err(RuntimeError::TypeMismatch("modulo".to_string()))
+            _ => Err(RuntimeError::TypeMismatch("modulo".to_string())),
         }
     }
 
@@ -195,7 +191,9 @@ impl SafeMath {
         match (base, exp) {
             (Value::Int(a), Value::Int(b)) => {
                 if *b < 0 {
-                    return Err(RuntimeError::General("Negative exponent not supported for integers".to_string()));
+                    return Err(RuntimeError::General(
+                        "Negative exponent not supported for integers".to_string(),
+                    ));
                 }
                 if *b > 32 {
                     return Err(RuntimeError::IntegerOverflow);
@@ -228,7 +226,7 @@ impl SafeMath {
                     Ok(Value::Float(result))
                 }
             }
-            _ => Err(RuntimeError::TypeMismatch("exponentiation".to_string()))
+            _ => Err(RuntimeError::TypeMismatch("exponentiation".to_string())),
         }
     }
 
@@ -237,7 +235,7 @@ impl SafeMath {
         match value {
             Value::Int(n) => *n >= i64::MIN / 2 && *n <= i64::MAX / 2,
             Value::Float(f) => *f >= (i64::MIN / 2) as f64 && *f <= (i64::MAX / 2) as f64,
-            _ => false
+            _ => false,
         }
     }
 
@@ -258,7 +256,7 @@ impl SafeMath {
                     Err(RuntimeError::IntegerOverflow)
                 }
             }
-            _ => Err(RuntimeError::TypeMismatch("integer conversion".to_string()))
+            _ => Err(RuntimeError::TypeMismatch("integer conversion".to_string())),
         }
     }
 }
@@ -312,7 +310,7 @@ mod tests {
     fn test_mixed_type_arithmetic() {
         let int_val = Value::Int(10);
         let float_val = Value::Float(5.5);
-        
+
         let result = SafeMath::add(&int_val, &float_val).unwrap();
         assert_eq!(result, Value::Float(15.5));
     }

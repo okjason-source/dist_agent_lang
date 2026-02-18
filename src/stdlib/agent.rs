@@ -27,7 +27,7 @@ impl AgentType {
             "worker" => Some(AgentType::Worker),
             custom if custom.starts_with("custom:") => {
                 Some(AgentType::Custom(custom[7..].to_string()))
-            },
+            }
             _ => None,
         }
     }
@@ -229,7 +229,9 @@ impl AgentContext {
         self.memory.insert(key, value);
         if self.memory.len() > self.config.max_memory {
             // Remove oldest entries if memory limit exceeded
-            let keys_to_remove: Vec<String> = self.memory.keys()
+            let keys_to_remove: Vec<String> = self
+                .memory
+                .keys()
                 .take(self.memory.len() - self.config.max_memory)
                 .cloned()
                 .collect();
@@ -463,7 +465,11 @@ pub fn spawn(config: AgentConfig) -> Result<AgentContext, String> {
             let mut vars = HashMap::new();
             vars.insert("agent_id".to_string(), Value::String(agent_id.clone()));
             if let Err(e) = crate::execute_dal_with_scope(&vars, on_create) {
-                log::warn!("Mold on_create lifecycle hook failed for {}: {}", agent_id, e);
+                log::warn!(
+                    "Mold on_create lifecycle hook failed for {}: {}",
+                    agent_id,
+                    e
+                );
                 // Don't fail spawn; hook errors are non-fatal
             }
         }
@@ -473,10 +479,22 @@ pub fn spawn(config: AgentConfig) -> Result<AgentContext, String> {
     log::info!("agent: {:?}", {
         let mut data = HashMap::new();
         data.insert("agent_id".to_string(), Value::String(agent_id.clone()));
-        data.insert("agent_type".to_string(), Value::String(agent_context.config.agent_type.to_string()));
-        data.insert("agent_name".to_string(), Value::String(agent_context.config.name.clone()));
-        data.insert("status".to_string(), Value::String(agent_context.status.to_string()));
-        data.insert("message".to_string(), Value::String("Agent spawned successfully".to_string()));
+        data.insert(
+            "agent_type".to_string(),
+            Value::String(agent_context.config.agent_type.to_string()),
+        );
+        data.insert(
+            "agent_name".to_string(),
+            Value::String(agent_context.config.name.clone()),
+        );
+        data.insert(
+            "status".to_string(),
+            Value::String(agent_context.status.to_string()),
+        );
+        data.insert(
+            "message".to_string(),
+            Value::String("Agent spawned successfully".to_string()),
+        );
         data
     });
 
@@ -493,55 +511,85 @@ struct AgentRuntime {
 fn get_runtime() -> std::sync::MutexGuard<'static, AgentRuntime> {
     static RUNTIME: OnceLock<Mutex<AgentRuntime>> = OnceLock::new();
     RUNTIME
-        .get_or_init(|| Mutex::new(AgentRuntime {
-            task_queue: Vec::new(),
-            message_bus: Vec::new(),
-            evolution_store: HashMap::new(),
-        }))
+        .get_or_init(|| {
+            Mutex::new(AgentRuntime {
+                task_queue: Vec::new(),
+                message_bus: Vec::new(),
+                evolution_store: HashMap::new(),
+            })
+        })
         .lock()
         .unwrap()
 }
 
 /// Coordinate agent activities. Uses in-memory task queue; tasks are routed to agent_id.
-pub fn coordinate(agent_id: &str, task: AgentTask, coordination_type: &str) -> Result<bool, String> {
+pub fn coordinate(
+    agent_id: &str,
+    task: AgentTask,
+    coordination_type: &str,
+) -> Result<bool, String> {
     match coordination_type {
         "task_distribution" => {
-            get_runtime().task_queue.push((agent_id.to_string(), task.clone()));
+            get_runtime()
+                .task_queue
+                .push((agent_id.to_string(), task.clone()));
             log::info!("agent_coordination: {:?}", {
                 let mut data = HashMap::new();
                 data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
                 data.insert("task_id".to_string(), Value::String(task.task_id.clone()));
-                data.insert("coordination_type".to_string(), Value::String(coordination_type.to_string()));
-                data.insert("message".to_string(), Value::String("Task distributed successfully".to_string()));
+                data.insert(
+                    "coordination_type".to_string(),
+                    Value::String(coordination_type.to_string()),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Task distributed successfully".to_string()),
+                );
                 data
             });
             Ok(true)
-        },
+        }
         "resource_sharing" => {
-            get_runtime().task_queue.push((agent_id.to_string(), task.clone()));
+            get_runtime()
+                .task_queue
+                .push((agent_id.to_string(), task.clone()));
             log::info!("agent_coordination: {:?}", {
                 let mut data = HashMap::new();
                 data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
                 data.insert("task_id".to_string(), Value::String(task.task_id.clone()));
-                data.insert("coordination_type".to_string(), Value::String(coordination_type.to_string()));
-                data.insert("message".to_string(), Value::String("Resources shared successfully".to_string()));
+                data.insert(
+                    "coordination_type".to_string(),
+                    Value::String(coordination_type.to_string()),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Resources shared successfully".to_string()),
+                );
                 data
             });
             Ok(true)
-        },
+        }
         "conflict_resolution" => {
-            get_runtime().task_queue.push((agent_id.to_string(), task.clone()));
+            get_runtime()
+                .task_queue
+                .push((agent_id.to_string(), task.clone()));
             log::info!("agent_coordination: {:?}", {
                 let mut data = HashMap::new();
                 data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
                 data.insert("task_id".to_string(), Value::String(task.task_id.clone()));
-                data.insert("coordination_type".to_string(), Value::String(coordination_type.to_string()));
-                data.insert("message".to_string(), Value::String("Conflict resolved successfully".to_string()));
+                data.insert(
+                    "coordination_type".to_string(),
+                    Value::String(coordination_type.to_string()),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Conflict resolved successfully".to_string()),
+                );
                 data
             });
             Ok(true)
-        },
-        _ => Err(format!("Unknown coordination type: {}", coordination_type))
+        }
+        _ => Err(format!("Unknown coordination type: {}", coordination_type)),
     }
 }
 
@@ -556,15 +604,36 @@ pub fn receive_pending_tasks(agent_id: &str) -> Vec<AgentTask> {
 }
 
 /// Send message between agents. Routes via in-memory message bus; receiver can call receive_messages().
-pub fn communicate(sender_id: &str, receiver_id: &str, message: AgentMessage) -> Result<bool, String> {
-    get_runtime().message_bus.push((receiver_id.to_string(), message.clone()));
+pub fn communicate(
+    sender_id: &str,
+    receiver_id: &str,
+    message: AgentMessage,
+) -> Result<bool, String> {
+    get_runtime()
+        .message_bus
+        .push((receiver_id.to_string(), message.clone()));
     log::info!("agent_communication: {:?}", {
         let mut data = HashMap::new();
-        data.insert("sender_id".to_string(), Value::String(sender_id.to_string()));
-        data.insert("receiver_id".to_string(), Value::String(receiver_id.to_string()));
-        data.insert("message_id".to_string(), Value::String(message.message_id.clone()));
-        data.insert("message_type".to_string(), Value::String(message.message_type.clone()));
-        data.insert("message".to_string(), Value::String("Message sent successfully".to_string()));
+        data.insert(
+            "sender_id".to_string(),
+            Value::String(sender_id.to_string()),
+        );
+        data.insert(
+            "receiver_id".to_string(),
+            Value::String(receiver_id.to_string()),
+        );
+        data.insert(
+            "message_id".to_string(),
+            Value::String(message.message_id.clone()),
+        );
+        data.insert(
+            "message_type".to_string(),
+            Value::String(message.message_type.clone()),
+        );
+        data.insert(
+            "message".to_string(),
+            Value::String("Message sent successfully".to_string()),
+        );
         data
     });
 
@@ -589,8 +658,14 @@ pub fn evolve(agent_id: &str, evolution_data: HashMap<String, Value>) -> Result<
     log::info!("agent_evolution: {:?}", {
         let mut data = HashMap::new();
         data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
-        data.insert("evolution_data_keys".to_string(), Value::Int(evolution_data.len() as i64));
-        data.insert("message".to_string(), Value::String("Agent evolved successfully".to_string()));
+        data.insert(
+            "evolution_data_keys".to_string(),
+            Value::Int(evolution_data.len() as i64),
+        );
+        data.insert(
+            "message".to_string(),
+            Value::String("Agent evolved successfully".to_string()),
+        );
         data
     });
 
@@ -617,7 +692,10 @@ pub fn register_capabilities(agent_type: String, capabilities: Vec<String>) {
 }
 
 /// Validate agent capabilities. Uses registry if set (e.g. from config); otherwise built-in per agent type.
-pub fn validate_capabilities(agent_type: &str, required_capabilities: Vec<String>) -> Result<bool, String> {
+pub fn validate_capabilities(
+    agent_type: &str,
+    required_capabilities: Vec<String>,
+) -> Result<bool, String> {
     let agent_type_enum = AgentType::from_string(agent_type)
         .ok_or_else(|| format!("Invalid agent type: {}", agent_type))?;
 
@@ -627,10 +705,16 @@ pub fn validate_capabilities(agent_type: &str, required_capabilities: Vec<String
             if let Some(caps) = m.get(agent_type) {
                 caps.clone()
             } else {
-                builtin_capabilities(&agent_type_enum).into_iter().map(String::from).collect()
+                builtin_capabilities(&agent_type_enum)
+                    .into_iter()
+                    .map(String::from)
+                    .collect()
             }
         } else {
-            builtin_capabilities(&agent_type_enum).into_iter().map(String::from).collect()
+            builtin_capabilities(&agent_type_enum)
+                .into_iter()
+                .map(String::from)
+                .collect()
         }
     };
 
@@ -644,9 +728,18 @@ pub fn validate_capabilities(agent_type: &str, required_capabilities: Vec<String
     if missing_capabilities.is_empty() {
         log::info!("capability_validation: {:?}", {
             let mut data = HashMap::new();
-            data.insert("agent_type".to_string(), Value::String(agent_type.to_string()));
-            data.insert("required_capabilities".to_string(), Value::Int(required_capabilities.len() as i64));
-            data.insert("message".to_string(), Value::String("All capabilities validated".to_string()));
+            data.insert(
+                "agent_type".to_string(),
+                Value::String(agent_type.to_string()),
+            );
+            data.insert(
+                "required_capabilities".to_string(),
+                Value::Int(required_capabilities.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("All capabilities validated".to_string()),
+            );
             data
         });
         Ok(true)
@@ -662,7 +755,11 @@ pub fn create_agent_config(name: String, agent_type: &str, role: String) -> Opti
 }
 
 /// Create agent task
-pub fn create_agent_task(task_id: String, description: String, priority: &str) -> Option<AgentTask> {
+pub fn create_agent_task(
+    task_id: String,
+    description: String,
+    priority: &str,
+) -> Option<AgentTask> {
     let priority_enum = TaskPriority::from_string(priority)?;
     Some(AgentTask {
         task_id,
@@ -677,7 +774,13 @@ pub fn create_agent_task(task_id: String, description: String, priority: &str) -
 }
 
 /// Create agent message
-pub fn create_agent_message(message_id: String, sender_id: String, receiver_id: String, message_type: String, content: Value) -> AgentMessage {
+pub fn create_agent_message(
+    message_id: String,
+    sender_id: String,
+    receiver_id: String,
+    message_type: String,
+    content: Value,
+) -> AgentMessage {
     AgentMessage {
         message_id,
         sender_id,
@@ -712,8 +815,14 @@ fn generate_id() -> u64 {
 fn initialize_ai_agent(agent_context: &mut AgentContext) {
     // Initialize AI-specific capabilities
     agent_context.store_memory("ai_model".to_string(), Value::String("gpt-4".to_string()));
-    agent_context.store_memory("learning_algorithm".to_string(), Value::String("reinforcement".to_string()));
-    agent_context.store_memory("communication_protocol".to_string(), Value::String("natural_language".to_string()));
+    agent_context.store_memory(
+        "learning_algorithm".to_string(),
+        Value::String("reinforcement".to_string()),
+    );
+    agent_context.store_memory(
+        "communication_protocol".to_string(),
+        Value::String("natural_language".to_string()),
+    );
 
     // Set initial capabilities
     agent_context.config.capabilities = vec![
@@ -727,7 +836,10 @@ fn initialize_ai_agent(agent_context: &mut AgentContext) {
 
 fn initialize_system_agent(agent_context: &mut AgentContext) {
     // Initialize system-specific capabilities
-    agent_context.store_memory("system_role".to_string(), Value::String("coordinator".to_string()));
+    agent_context.store_memory(
+        "system_role".to_string(),
+        Value::String("coordinator".to_string()),
+    );
     agent_context.store_memory("monitoring_enabled".to_string(), Value::Bool(true));
     agent_context.store_memory("resource_tracking".to_string(), Value::Bool(true));
 
@@ -742,8 +854,14 @@ fn initialize_system_agent(agent_context: &mut AgentContext) {
 
 fn initialize_worker_agent(agent_context: &mut AgentContext) {
     // Initialize worker-specific capabilities
-    agent_context.store_memory("worker_type".to_string(), Value::String("general".to_string()));
-    agent_context.store_memory("automation_level".to_string(), Value::String("high".to_string()));
+    agent_context.store_memory(
+        "worker_type".to_string(),
+        Value::String("general".to_string()),
+    );
+    agent_context.store_memory(
+        "automation_level".to_string(),
+        Value::String("high".to_string()),
+    );
     agent_context.store_memory("task_queue_size".to_string(), Value::Int(100));
 
     // Set initial capabilities
@@ -757,7 +875,10 @@ fn initialize_worker_agent(agent_context: &mut AgentContext) {
 
 fn initialize_custom_agent(agent_context: &mut AgentContext) {
     // Initialize custom agent with basic capabilities
-    agent_context.store_memory("custom_type".to_string(), Value::String(agent_context.config.agent_type.to_string()));
+    agent_context.store_memory(
+        "custom_type".to_string(),
+        Value::String(agent_context.config.agent_type.to_string()),
+    );
     agent_context.store_memory("flexibility".to_string(), Value::String("high".to_string()));
 
     // Set initial capabilities

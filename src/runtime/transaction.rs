@@ -119,26 +119,55 @@
 // - **Phase 7**: Transaction metrics & monitoring (Prometheus), transaction debugger/profiler, adaptive isolation levels
 // - **Phase 8**: Optimistic concurrency control (OCC), multi-version concurrency control (MVCC)
 
+use crate::runtime::values::Value;
 use std::collections::HashMap;
 use std::fs::{self, File, OpenOptions};
-use std::io::{self, Write, BufWriter, BufReader};
+use std::io::{self, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
-use crate::runtime::values::Value;
 
 /// Transaction lifecycle event for observability and debugging
 #[derive(Debug, Clone)]
 pub enum TransactionEvent {
-    Begin { tx_id: String, isolation_level: IsolationLevel },
-    Read { tx_id: String, key: String },
-    Write { tx_id: String, key: String },
-    SavepointCreated { tx_id: String, savepoint_name: String },
-    SavepointRolledBack { tx_id: String, savepoint_name: String },
-    Commit { tx_id: String, keys_modified: usize },
-    Rollback { tx_id: String },
-    Timeout { tx_id: String, elapsed_ms: u64 },
-    Conflict { tx_id: String, key: String, reason: String },
-    Deadlock { tx_id: String },
+    Begin {
+        tx_id: String,
+        isolation_level: IsolationLevel,
+    },
+    Read {
+        tx_id: String,
+        key: String,
+    },
+    Write {
+        tx_id: String,
+        key: String,
+    },
+    SavepointCreated {
+        tx_id: String,
+        savepoint_name: String,
+    },
+    SavepointRolledBack {
+        tx_id: String,
+        savepoint_name: String,
+    },
+    Commit {
+        tx_id: String,
+        keys_modified: usize,
+    },
+    Rollback {
+        tx_id: String,
+    },
+    Timeout {
+        tx_id: String,
+        elapsed_ms: u64,
+    },
+    Conflict {
+        tx_id: String,
+        key: String,
+        reason: String,
+    },
+    Deadlock {
+        tx_id: String,
+    },
 }
 
 /// Optional callback for transaction events (for logging, metrics, debugging)
@@ -167,28 +196,28 @@ impl TransactionLog {
     /// Create or open a transaction log at the given path.
     pub fn new<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         let path = path.as_ref().to_path_buf();
-        
+
         // Create parent directories if needed
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }
-        
+
         // Open file in append mode
-        let file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&path)?;
-        
+        let file = OpenOptions::new().create(true).append(true).open(&path)?;
+
         Ok(Self {
             file: Some(BufWriter::new(file)),
             path,
         })
     }
-    
+
     /// Append a transaction event to the log
     pub fn log_event(&mut self, event: &TransactionEvent) -> io::Result<()> {
         let entry = match event {
-            TransactionEvent::Begin { tx_id, isolation_level } => TransactionLogEntry {
+            TransactionEvent::Begin {
+                tx_id,
+                isolation_level,
+            } => TransactionLogEntry {
                 timestamp: get_current_timestamp(),
                 tx_id: tx_id.clone(),
                 event_type: "begin".to_string(),
@@ -209,7 +238,10 @@ impl TransactionLog {
                 keys: vec![key.clone()],
                 isolation_level: None,
             },
-            TransactionEvent::Commit { tx_id, keys_modified } => TransactionLogEntry {
+            TransactionEvent::Commit {
+                tx_id,
+                keys_modified,
+            } => TransactionLogEntry {
                 timestamp: get_current_timestamp(),
                 tx_id: tx_id.clone(),
                 event_type: "commit".to_string(),
@@ -223,14 +255,20 @@ impl TransactionLog {
                 keys: vec![],
                 isolation_level: None,
             },
-            TransactionEvent::SavepointCreated { tx_id, savepoint_name } => TransactionLogEntry {
+            TransactionEvent::SavepointCreated {
+                tx_id,
+                savepoint_name,
+            } => TransactionLogEntry {
                 timestamp: get_current_timestamp(),
                 tx_id: tx_id.clone(),
                 event_type: "savepoint_created".to_string(),
                 keys: vec![savepoint_name.clone()],
                 isolation_level: None,
             },
-            TransactionEvent::SavepointRolledBack { tx_id, savepoint_name } => TransactionLogEntry {
+            TransactionEvent::SavepointRolledBack {
+                tx_id,
+                savepoint_name,
+            } => TransactionLogEntry {
                 timestamp: get_current_timestamp(),
                 tx_id: tx_id.clone(),
                 event_type: "savepoint_rollback".to_string(),
@@ -259,7 +297,7 @@ impl TransactionLog {
                 isolation_level: None,
             },
         };
-        
+
         if let Some(ref mut file) = self.file {
             // Write as line-delimited JSON
             serde_json::to_writer(&mut *file, &entry)
@@ -267,10 +305,10 @@ impl TransactionLog {
             file.write_all(b"\n")?;
             file.flush()?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Close the log file (called automatically on drop)
     pub fn close(&mut self) -> io::Result<()> {
         if let Some(mut file) = self.file.take() {
@@ -290,10 +328,10 @@ impl Drop for TransactionLog {
 pub trait StateStorage {
     fn get(&self, key: &str) -> Option<Value>;
     fn set(&mut self, key: &str, value: Value);
-    
+
     /// Check if a key exists in storage
     fn contains_key(&self, key: &str) -> bool;
-    
+
     /// Remove a key from storage, returning the previous value if it existed
     fn remove(&mut self, key: &str) -> Option<Value>;
 }
@@ -330,14 +368,14 @@ impl StateStorage for InMemoryStorage {
 }
 
 /// File-backed storage for persistent state across process restarts.
-/// 
+///
 /// **Durability contract**: Each `set()` and `remove()` operation flushes to disk immediately.
 /// Data survives process crashes and restarts. Storage is a JSON file containing the full state.
-/// 
+///
 /// **Performance**: Slower than in-memory due to disk I/O on every write. Suitable for
 /// single-node deployments with moderate write loads. For high-throughput, use batched writes
 /// or consider a database-backed implementation.
-/// 
+///
 /// **Format**: JSON file with structure: `{"key1": value1, "key2": value2, ...}`
 pub struct FileBackedStorage {
     state: HashMap<String, Value>,
@@ -351,36 +389,36 @@ impl FileBackedStorage {
     pub fn new<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         Self::with_auto_flush(path, true)
     }
-    
+
     /// Create file-backed storage with configurable auto-flush.
     /// If `auto_flush` is false, caller must manually call `flush()` to persist changes.
     pub fn with_auto_flush<P: AsRef<Path>>(path: P, auto_flush: bool) -> io::Result<Self> {
         let file_path = path.as_ref().to_path_buf();
-        
+
         // Create parent directories if needed
         if let Some(parent) = file_path.parent() {
             fs::create_dir_all(parent)?;
         }
-        
+
         // Load existing state or create empty
         let state = if file_path.exists() {
             Self::load_from_file(&file_path)?
         } else {
             HashMap::new()
         };
-        
+
         Ok(Self {
             state,
             file_path,
             auto_flush,
         })
     }
-    
+
     /// Load state from JSON file
     fn load_from_file(path: &Path) -> io::Result<HashMap<String, Value>> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
-        
+
         // Parse JSON
         match serde_json::from_reader(reader) {
             Ok(state) => Ok(state),
@@ -391,25 +429,25 @@ impl FileBackedStorage {
             }
         }
     }
-    
+
     /// Flush current state to disk
     pub fn flush(&self) -> io::Result<()> {
         // Write to temp file first, then atomic rename (safer)
         let temp_path = self.file_path.with_extension("tmp");
-        
+
         let file = OpenOptions::new()
             .write(true)
             .create(true)
             .truncate(true)
             .open(&temp_path)?;
-        
+
         let writer = BufWriter::new(file);
         serde_json::to_writer_pretty(writer, &self.state)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-        
+
         // Atomic rename (on Unix; on Windows this may fail if file is open)
         fs::rename(&temp_path, &self.file_path)?;
-        
+
         Ok(())
     }
 }
@@ -418,30 +456,30 @@ impl StateStorage for FileBackedStorage {
     fn get(&self, key: &str) -> Option<Value> {
         self.state.get(key).cloned()
     }
-    
+
     fn set(&mut self, key: &str, value: Value) {
         self.state.insert(key.to_string(), value);
-        
+
         if self.auto_flush {
             if let Err(e) = self.flush() {
                 eprintln!("Warning: Failed to flush transaction state to disk: {}", e);
             }
         }
     }
-    
+
     fn contains_key(&self, key: &str) -> bool {
         self.state.contains_key(key)
     }
-    
+
     fn remove(&mut self, key: &str) -> Option<Value> {
         let result = self.state.remove(key);
-        
+
         if self.auto_flush && result.is_some() {
             if let Err(e) = self.flush() {
                 eprintln!("Warning: Failed to flush transaction state to disk: {}", e);
             }
         }
-        
+
         result
     }
 }
@@ -456,13 +494,13 @@ impl Drop for FileBackedStorage {
 }
 
 /// SQLite-backed storage for persistent state with database reliability.
-/// 
+///
 /// **Durability contract**: Each `set()` and `remove()` operation commits immediately.
 /// Provides ACID guarantees from SQLite. Data survives crashes and supports concurrent access.
-/// 
+///
 /// **Performance**: Good; SQLite is optimized for single-writer workloads. Better than file
 /// for high write loads. Supports WAL mode for improved concurrency.
-/// 
+///
 /// **Format**: SQLite database with single table `kv_store(key TEXT PRIMARY KEY, value TEXT)`.
 /// Values are JSON-encoded.
 #[cfg(feature = "sqlite-storage")]
@@ -475,14 +513,14 @@ impl SqliteStorage {
     /// Create or open a SQLite database at the given path.
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
         let path = path.as_ref();
-        
+
         // Create parent directories if needed
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }
-        
+
         let conn = rusqlite::Connection::open(path)?;
-        
+
         // Create table if not exists
         conn.execute(
             "CREATE TABLE IF NOT EXISTS kv_store (
@@ -491,17 +529,17 @@ impl SqliteStorage {
             )",
             [],
         )?;
-        
+
         // Enable WAL mode for better concurrency (PRAGMA returns a result, use pragma_update)
         conn.pragma_update(None, "journal_mode", "WAL")?;
-        
+
         Ok(Self { conn })
     }
-    
+
     /// Create in-memory SQLite database (for testing)
     pub fn new_in_memory() -> Result<Self, Box<dyn std::error::Error>> {
         let conn = rusqlite::Connection::open_in_memory()?;
-        
+
         conn.execute(
             "CREATE TABLE IF NOT EXISTS kv_store (
                 key TEXT PRIMARY KEY,
@@ -509,7 +547,7 @@ impl SqliteStorage {
             )",
             [],
         )?;
-        
+
         Ok(Self { conn })
     }
 }
@@ -517,12 +555,12 @@ impl SqliteStorage {
 #[cfg(feature = "sqlite-storage")]
 impl StateStorage for SqliteStorage {
     fn get(&self, key: &str) -> Option<Value> {
-        let result: Result<String, rusqlite::Error> = self.conn.query_row(
-            "SELECT value FROM kv_store WHERE key = ?1",
-            [key],
-            |row| row.get(0),
-        );
-        
+        let result: Result<String, rusqlite::Error> =
+            self.conn
+                .query_row("SELECT value FROM kv_store WHERE key = ?1", [key], |row| {
+                    row.get(0)
+                });
+
         match result {
             Ok(json_str) => {
                 // Deserialize JSON value
@@ -535,17 +573,20 @@ impl StateStorage for SqliteStorage {
             }
         }
     }
-    
+
     fn set(&mut self, key: &str, value: Value) {
         // Serialize value to JSON
         let json_str = match serde_json::to_string(&value) {
             Ok(s) => s,
             Err(e) => {
-                eprintln!("Warning: Failed to serialize value for key '{}': {}", key, e);
+                eprintln!(
+                    "Warning: Failed to serialize value for key '{}': {}",
+                    key, e
+                );
                 return;
             }
         };
-        
+
         // Insert or replace
         if let Err(e) = self.conn.execute(
             "INSERT OR REPLACE INTO kv_store (key, value) VALUES (?1, ?2)",
@@ -554,31 +595,31 @@ impl StateStorage for SqliteStorage {
             eprintln!("Warning: SQLite set error for key '{}': {}", key, e);
         }
     }
-    
+
     fn contains_key(&self, key: &str) -> bool {
         let result: Result<i64, rusqlite::Error> = self.conn.query_row(
             "SELECT COUNT(*) FROM kv_store WHERE key = ?1",
             [key],
             |row| row.get(0),
         );
-        
+
         matches!(result, Ok(count) if count > 0)
     }
-    
+
     fn remove(&mut self, key: &str) -> Option<Value> {
         // Get current value first
         let current = self.get(key);
-        
+
         if current.is_some() {
-            if let Err(e) = self.conn.execute(
-                "DELETE FROM kv_store WHERE key = ?1",
-                [key],
-            ) {
+            if let Err(e) = self
+                .conn
+                .execute("DELETE FROM kv_store WHERE key = ?1", [key])
+            {
                 eprintln!("Warning: SQLite remove error for key '{}': {}", key, e);
                 return None;
             }
         }
-        
+
         current
     }
 }
@@ -588,25 +629,25 @@ impl StateStorage for SqliteStorage {
 pub enum TransactionError {
     #[error("Transaction not found: {0}")]
     NotFound(String),
-    
+
     #[error("Transaction already active")]
     AlreadyActive,
-    
+
     #[error("No active transaction")]
     NoActiveTransaction,
-    
+
     #[error("Transaction conflict detected")]
     Conflict,
-    
+
     #[error("Deadlock detected")]
     Deadlock,
-    
+
     #[error("Transaction timeout")]
     Timeout,
-    
+
     #[error("Resource limit exceeded: {0}")]
     LimitExceeded(String),
-    
+
     #[error("Rollback failed: {0}")]
     RollbackFailed(String),
 }
@@ -614,17 +655,17 @@ pub enum TransactionError {
 /// Transaction isolation levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IsolationLevel {
-    ReadUncommitted,  // Lowest isolation, highest performance
-    ReadCommitted,    // Default for most databases
-    RepeatableRead,   // Prevents non-repeatable reads
-    Serializable,     // Highest isolation, lowest performance
+    ReadUncommitted, // Lowest isolation, highest performance
+    ReadCommitted,   // Default for most databases
+    RepeatableRead,  // Prevents non-repeatable reads
+    Serializable,    // Highest isolation, lowest performance
 }
 
 /// Transaction state
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TransactionState {
     Active,
-    Preparing,    // Two-phase commit
+    Preparing, // Two-phase commit
     Committed,
     RolledBack,
     Failed,
@@ -646,12 +687,12 @@ pub struct Transaction {
     pub isolation_level: IsolationLevel,
     pub start_time: u64,
     pub timeout_ms: Option<u64>,
-    
+
     // State management
     pub original_state: HashMap<String, Value>,
     pub modified_state: HashMap<String, Value>,
     pub savepoints: Vec<Savepoint>,
-    
+
     // Distributed transaction support
     pub participants: Vec<String>, // Participant IDs for 2PC
     pub is_distributed: bool,
@@ -667,10 +708,10 @@ pub struct TransactionManager {
     default_timeout_ms: Option<u64>,          // Default timeout for new transactions
     event_callback: Option<TransactionEventCallback>, // Optional lifecycle event observer
     transaction_log: Option<TransactionLog>,  // Optional persistent audit log
-    
+
     // Resource limits (Phase 4: Production Hardening)
-    max_active_transactions: usize,           // Max concurrent transactions (0 = unlimited)
-    max_keys_per_transaction: usize,          // Max keys modified per transaction (0 = unlimited)
+    max_active_transactions: usize, // Max concurrent transactions (0 = unlimited)
+    max_keys_per_transaction: usize, // Max keys modified per transaction (0 = unlimited)
 }
 
 impl Transaction {
@@ -688,7 +729,7 @@ impl Transaction {
             is_distributed: false,
         }
     }
-    
+
     /// Check if transaction has timed out
     pub fn is_timed_out(&self) -> bool {
         if let Some(timeout) = self.timeout_ms {
@@ -698,7 +739,7 @@ impl Transaction {
             false
         }
     }
-    
+
     /// Create a savepoint
     pub fn create_savepoint(&mut self, name: String) {
         let savepoint = Savepoint {
@@ -708,16 +749,16 @@ impl Transaction {
         };
         self.savepoints.push(savepoint);
     }
-    
+
     /// Rollback to a savepoint
     pub fn rollback_to_savepoint(&mut self, name: &str) -> Result<(), TransactionError> {
         if let Some(pos) = self.savepoints.iter().position(|sp| sp.name == name) {
             let savepoint = &self.savepoints[pos];
             self.modified_state = savepoint.state_snapshot.clone();
-            
+
             // Remove savepoints created after this one
             self.savepoints.truncate(pos + 1);
-            
+
             Ok(())
         } else {
             Err(TransactionError::NotFound(format!(
@@ -732,9 +773,9 @@ impl TransactionManager {
     pub fn new() -> Self {
         Self::with_storage(Box::new(InMemoryStorage::new()))
     }
-    
+
     /// Create TransactionManager from environment configuration.
-    /// 
+    ///
     /// **Environment variables**:
     /// - `DAL_TX_STORAGE`: Storage backend type (`memory`, `file`, `sqlite`) - default: `memory`
     /// - `DAL_TX_STORAGE_PATH`: File path for file/sqlite backend - default: `./dal_tx_state.json` or `./dal_tx_state.db`
@@ -742,7 +783,7 @@ impl TransactionManager {
     /// - `DAL_TX_TIMEOUT_MS`: Default transaction timeout in milliseconds - default: `30000`
     /// - `DAL_TX_MAX_ACTIVE`: Maximum concurrent active transactions - default: `1000`
     /// - `DAL_TX_MAX_KEYS`: Maximum keys modified per transaction - default: `10000`
-    /// 
+    ///
     /// **Example**:
     /// ```bash
     /// export DAL_TX_STORAGE=sqlite
@@ -758,56 +799,57 @@ impl TransactionManager {
         let timeout_ms = std::env::var("DAL_TX_TIMEOUT_MS")
             .ok()
             .and_then(|s| s.parse::<u64>().ok());
-        
+
         // Select storage backend
         let storage: Box<dyn StateStorage> = match storage_type.as_str() {
             "file" => {
                 let storage_path = std::env::var("DAL_TX_STORAGE_PATH")
                     .unwrap_or_else(|_| "./dal_tx_state.json".to_string());
                 Box::new(FileBackedStorage::new(storage_path)?)
-            },
+            }
             #[cfg(feature = "sqlite-storage")]
             "sqlite" => {
                 let storage_path = std::env::var("DAL_TX_STORAGE_PATH")
                     .unwrap_or_else(|_| "./dal_tx_state.db".to_string());
-                Box::new(SqliteStorage::new(storage_path)
-                    .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("SQLite error: {}", e)))?)
-            },
+                Box::new(SqliteStorage::new(storage_path).map_err(|e| {
+                    io::Error::new(io::ErrorKind::Other, format!("SQLite error: {}", e))
+                })?)
+            }
             #[cfg(not(feature = "sqlite-storage"))]
             "sqlite" => {
                 return Err(io::Error::new(
                     io::ErrorKind::Unsupported,
                     "SQLite backend requires 'sqlite-storage' feature. Compile with: cargo build --features sqlite-storage"
                 ));
-            },
+            }
             "memory" | _ => Box::new(InMemoryStorage::new()),
         };
-        
+
         let mut manager = Self::with_storage(storage);
-        
+
         // Set timeout if provided
         if let Some(timeout) = timeout_ms {
             manager = manager.with_default_timeout(Some(timeout));
         }
-        
+
         // Enable transaction log if path provided
         if let Some(log) = log_path {
             manager = manager.with_transaction_log(log)?;
         }
-        
+
         // Phase 4: Set resource limits from environment
         if let Ok(max_active) = std::env::var("DAL_TX_MAX_ACTIVE") {
             if let Ok(limit) = max_active.parse::<usize>() {
                 manager = manager.with_max_active_transactions(limit);
             }
         }
-        
+
         if let Ok(max_keys) = std::env::var("DAL_TX_MAX_KEYS") {
             if let Ok(limit) = max_keys.parse::<usize>() {
                 manager = manager.with_max_keys_per_transaction(limit);
             }
         }
-        
+
         Ok(manager)
     }
 
@@ -822,49 +864,49 @@ impl TransactionManager {
             default_timeout_ms: Some(30000), // Default: 30 seconds
             event_callback: None,
             transaction_log: None,
-            max_active_transactions: 1000,    // Default: 1000 concurrent transactions
-            max_keys_per_transaction: 10000,  // Default: 10,000 keys per transaction
+            max_active_transactions: 1000, // Default: 1000 concurrent transactions
+            max_keys_per_transaction: 10000, // Default: 10,000 keys per transaction
         }
     }
-    
+
     /// Set default timeout for new transactions (in milliseconds). None = no timeout.
     pub fn with_default_timeout(mut self, timeout_ms: Option<u64>) -> Self {
         self.default_timeout_ms = timeout_ms;
         self
     }
-    
+
     /// Set maximum number of active transactions (0 = unlimited, not recommended).
     pub fn with_max_active_transactions(mut self, max: usize) -> Self {
         self.max_active_transactions = max;
         self
     }
-    
+
     /// Set maximum number of keys per transaction (0 = unlimited, not recommended).
     pub fn with_max_keys_per_transaction(mut self, max: usize) -> Self {
         self.max_keys_per_transaction = max;
         self
     }
-    
+
     /// Set an event callback for transaction lifecycle observability.
     pub fn with_event_callback(mut self, callback: TransactionEventCallback) -> Self {
         self.event_callback = Some(callback);
         self
     }
-    
+
     /// Enable persistent transaction logging to the given file path.
     /// The log is an append-only, line-delimited JSON file for audit and recovery.
     pub fn with_transaction_log<P: AsRef<Path>>(mut self, path: P) -> io::Result<Self> {
         self.transaction_log = Some(TransactionLog::new(path)?);
         Ok(self)
     }
-    
+
     /// Emit a transaction event if a callback is registered and/or log to persistent log.
     fn emit_event(&mut self, event: TransactionEvent) {
         // Call event callback if registered
         if let Some(ref callback) = self.event_callback {
             callback(&event);
         }
-        
+
         // Write to transaction log if enabled
         if let Some(ref mut log) = self.transaction_log {
             if let Err(e) = log.log_event(&event) {
@@ -884,58 +926,71 @@ impl TransactionManager {
     }
 
     /// Set timeout for an active transaction (for tests or tuning).
-    pub fn set_transaction_timeout(&mut self, tx_id: &str, timeout_ms: Option<u64>) -> Result<(), TransactionError> {
-        let tx = self.active_transactions.get_mut(tx_id)
+    pub fn set_transaction_timeout(
+        &mut self,
+        tx_id: &str,
+        timeout_ms: Option<u64>,
+    ) -> Result<(), TransactionError> {
+        let tx = self
+            .active_transactions
+            .get_mut(tx_id)
             .ok_or_else(|| TransactionError::NotFound(tx_id.to_string()))?;
         tx.timeout_ms = timeout_ms;
         Ok(())
     }
-    
+
     /// Begin a new transaction
-    pub fn begin_transaction(&mut self, isolation_level: IsolationLevel) -> Result<String, TransactionError> {
+    pub fn begin_transaction(
+        &mut self,
+        isolation_level: IsolationLevel,
+    ) -> Result<String, TransactionError> {
         // Phase 4: Enforce max active transactions limit
-        if self.max_active_transactions > 0 && self.active_transactions.len() >= self.max_active_transactions {
+        if self.max_active_transactions > 0
+            && self.active_transactions.len() >= self.max_active_transactions
+        {
             return Err(TransactionError::LimitExceeded(format!(
                 "Maximum active transactions limit reached ({}/{})",
                 self.active_transactions.len(),
                 self.max_active_transactions
             )));
         }
-        
+
         self.transaction_counter += 1;
         let tx_id = format!("tx_{}", self.transaction_counter);
-        
+
         let mut transaction = Transaction::new(tx_id.clone(), isolation_level);
         transaction.timeout_ms = self.default_timeout_ms; // Use manager's default
-        
+
         self.emit_event(TransactionEvent::Begin {
             tx_id: tx_id.clone(),
             isolation_level,
         });
-        
+
         self.active_transactions.insert(tx_id.clone(), transaction);
-        
+
         Ok(tx_id)
     }
-    
+
     /// Read a value within a transaction
     pub fn read(&mut self, tx_id: &str, key: &str) -> Result<Option<Value>, TransactionError> {
         // First, check transaction state and isolation level
         let (should_lock, is_timed_out, modified_value) = {
-            let tx = self.active_transactions.get(tx_id)
+            let tx = self
+                .active_transactions
+                .get(tx_id)
                 .ok_or_else(|| TransactionError::NotFound(tx_id.to_string()))?;
-            
+
             if tx.state != TransactionState::Active {
                 return Err(TransactionError::NoActiveTransaction);
             }
-            
+
             let should_lock = tx.isolation_level != IsolationLevel::ReadUncommitted;
             let is_timed_out = tx.is_timed_out();
             let modified_value = tx.modified_state.get(key).cloned();
-            
+
             (should_lock, is_timed_out, modified_value)
         };
-        
+
         // Check timeout
         if is_timed_out {
             self.emit_event(TransactionEvent::Timeout {
@@ -944,77 +999,87 @@ impl TransactionManager {
             });
             return Err(TransactionError::Timeout);
         }
-        
+
         // Acquire read lock based on isolation level
         if should_lock {
             self.acquire_read_lock(tx_id, key)?;
         }
-        
+
         self.emit_event(TransactionEvent::Read {
             tx_id: tx_id.to_string(),
             key: key.to_string(),
         });
-        
+
         // Check modified state first, then storage
         if let Some(value) = modified_value {
             return Ok(Some(value));
         }
-        
+
         Ok(self.storage.get(key))
     }
-    
+
     /// Write a value within a transaction
-    pub fn write(&mut self, tx_id: &str, key: String, value: Value) -> Result<(), TransactionError> {
+    pub fn write(
+        &mut self,
+        tx_id: &str,
+        key: String,
+        value: Value,
+    ) -> Result<(), TransactionError> {
         // Acquire write lock
         self.acquire_write_lock(tx_id, &key)?;
-        
+
         // Emit event before mutable borrow
         self.emit_event(TransactionEvent::Write {
             tx_id: tx_id.to_string(),
             key: key.clone(),
         });
-        
-        let tx = self.active_transactions.get_mut(tx_id)
+
+        let tx = self
+            .active_transactions
+            .get_mut(tx_id)
             .ok_or_else(|| TransactionError::NotFound(tx_id.to_string()))?;
-        
+
         if tx.state != TransactionState::Active {
             return Err(TransactionError::NoActiveTransaction);
         }
-        
+
         // Phase 4: Enforce max keys per transaction limit
-        if self.max_keys_per_transaction > 0 
-            && !tx.modified_state.contains_key(&key) 
-            && tx.modified_state.len() >= self.max_keys_per_transaction {
+        if self.max_keys_per_transaction > 0
+            && !tx.modified_state.contains_key(&key)
+            && tx.modified_state.len() >= self.max_keys_per_transaction
+        {
             return Err(TransactionError::LimitExceeded(format!(
                 "Maximum keys per transaction limit reached ({}/{})",
                 tx.modified_state.len(),
                 self.max_keys_per_transaction
             )));
         }
-        
+
         // Save original value if not already saved
         if !tx.original_state.contains_key(&key) {
             if let Some(original) = self.storage.get(&key) {
                 tx.original_state.insert(key.clone(), original);
             }
         }
-        
+
         // Write to transaction's modified state
         tx.modified_state.insert(key, value);
-        
+
         Ok(())
     }
-    
+
     /// Commit a transaction
     pub fn commit(&mut self, tx_id: &str) -> Result<(), TransactionError> {
         let keys_modified = {
-            let tx = self.active_transactions.get(tx_id)
+            let tx = self
+                .active_transactions
+                .get(tx_id)
                 .ok_or_else(|| TransactionError::NotFound(tx_id.to_string()))?;
-            
+
             if tx.state != TransactionState::Active {
                 return Err(TransactionError::NoActiveTransaction);
             }
-            
+
             // Check timeout
             if tx.is_timed_out() {
                 let elapsed_ms = get_current_timestamp() - tx.start_time;
@@ -1025,90 +1090,94 @@ impl TransactionManager {
                 self.rollback(tx_id)?;
                 return Err(TransactionError::Timeout);
             }
-            
+
             // For distributed transactions, use two-phase commit
             if tx.is_distributed {
                 return self.two_phase_commit(tx_id);
             }
-            
+
             tx.modified_state.len()
         };
-        
+
         let tx = self.active_transactions.get_mut(tx_id).unwrap();
-        
+
         // Apply all modifications to storage
         for (key, value) in &tx.modified_state {
             self.storage.set(key, value.clone());
         }
-        
+
         // Update state
         tx.state = TransactionState::Committed;
-        
+
         self.emit_event(TransactionEvent::Commit {
             tx_id: tx_id.to_string(),
             keys_modified,
         });
-        
+
         // Release locks
         self.release_locks(tx_id);
-        
+
         // Remove transaction
         self.active_transactions.remove(tx_id);
-        
+
         Ok(())
     }
-    
+
     /// Rollback a transaction
     pub fn rollback(&mut self, tx_id: &str) -> Result<(), TransactionError> {
-        let tx = self.active_transactions.get_mut(tx_id)
+        let tx = self
+            .active_transactions
+            .get_mut(tx_id)
             .ok_or_else(|| TransactionError::NotFound(tx_id.to_string()))?;
-        
+
         // Restore original state (if any changes were made to global state)
         // In this implementation, changes are buffered, so no restoration needed
-        
+
         // Update state
         tx.state = TransactionState::RolledBack;
-        
+
         self.emit_event(TransactionEvent::Rollback {
             tx_id: tx_id.to_string(),
         });
-        
+
         // Release locks
         self.release_locks(tx_id);
-        
+
         // Remove transaction
         self.active_transactions.remove(tx_id);
-        
+
         Ok(())
     }
-    
+
     /// Two-phase commit for distributed transactions
     fn two_phase_commit(&mut self, tx_id: &str) -> Result<(), TransactionError> {
-        let tx = self.active_transactions.get_mut(tx_id)
+        let tx = self
+            .active_transactions
+            .get_mut(tx_id)
             .ok_or_else(|| TransactionError::NotFound(tx_id.to_string()))?;
-        
+
         // Phase 1: Prepare
         tx.state = TransactionState::Preparing;
-        
+
         // In production, would send prepare messages to all participants
         // For now, simulate immediate success
-        
+
         // Phase 2: Commit
         for (key, value) in &tx.modified_state {
             self.storage.set(key, value.clone());
         }
-        
+
         tx.state = TransactionState::Committed;
-        
+
         // Release locks
         self.release_locks(tx_id);
-        
+
         // Remove transaction
         self.active_transactions.remove(tx_id);
-        
+
         Ok(())
     }
-    
+
     /// Acquire read lock
     fn acquire_read_lock(&mut self, tx_id: &str, key: &str) -> Result<(), TransactionError> {
         // Deadlock detection: check if transaction has timed out (timeout-based deadlock detection)
@@ -1120,7 +1189,7 @@ impl TransactionManager {
                 return Err(TransactionError::Deadlock);
             }
         }
-        
+
         // Check for write lock by another transaction
         if let Some(write_owner) = self.write_locks.get(key) {
             if write_owner != tx_id {
@@ -1132,16 +1201,16 @@ impl TransactionManager {
                 return Err(TransactionError::Conflict);
             }
         }
-        
+
         // Add read lock
         self.read_locks
             .entry(key.to_string())
             .or_insert_with(Vec::new)
             .push(tx_id.to_string());
-        
+
         Ok(())
     }
-    
+
     /// Acquire write lock
     fn acquire_write_lock(&mut self, tx_id: &str, key: &str) -> Result<(), TransactionError> {
         // Deadlock detection: check if transaction has timed out (timeout-based deadlock detection)
@@ -1153,7 +1222,7 @@ impl TransactionManager {
                 return Err(TransactionError::Deadlock);
             }
         }
-        
+
         // Check for existing write lock by another transaction
         if let Some(write_owner) = self.write_locks.get(key) {
             if write_owner != tx_id {
@@ -1165,7 +1234,7 @@ impl TransactionManager {
                 return Err(TransactionError::Conflict);
             }
         }
-        
+
         // Check for read locks by other transactions
         if let Some(readers) = self.read_locks.get(key) {
             if readers.iter().any(|r| r != tx_id) {
@@ -1177,13 +1246,13 @@ impl TransactionManager {
                 return Err(TransactionError::Conflict);
             }
         }
-        
+
         // Acquire write lock
         self.write_locks.insert(key.to_string(), tx_id.to_string());
-        
+
         Ok(())
     }
-    
+
     /// Release all locks held by a transaction
     fn release_locks(&mut self, tx_id: &str) {
         // Release read locks
@@ -1191,40 +1260,48 @@ impl TransactionManager {
             readers.retain(|r| r != tx_id);
             !readers.is_empty()
         });
-        
+
         // Release write locks
         self.write_locks.retain(|_, owner| owner != tx_id);
     }
-    
+
     /// Create a savepoint within a transaction
     pub fn create_savepoint(&mut self, tx_id: &str, name: String) -> Result<(), TransactionError> {
-        let tx = self.active_transactions.get_mut(tx_id)
+        let tx = self
+            .active_transactions
+            .get_mut(tx_id)
             .ok_or_else(|| TransactionError::NotFound(tx_id.to_string()))?;
-        
+
         tx.create_savepoint(name.clone());
-        
+
         self.emit_event(TransactionEvent::SavepointCreated {
             tx_id: tx_id.to_string(),
             savepoint_name: name,
         });
-        
+
         Ok(())
     }
-    
+
     /// Rollback to a savepoint
-    pub fn rollback_to_savepoint(&mut self, tx_id: &str, name: &str) -> Result<(), TransactionError> {
-        let tx = self.active_transactions.get_mut(tx_id)
+    pub fn rollback_to_savepoint(
+        &mut self,
+        tx_id: &str,
+        name: &str,
+    ) -> Result<(), TransactionError> {
+        let tx = self
+            .active_transactions
+            .get_mut(tx_id)
             .ok_or_else(|| TransactionError::NotFound(tx_id.to_string()))?;
-        
+
         let result = tx.rollback_to_savepoint(name);
-        
+
         if result.is_ok() {
             self.emit_event(TransactionEvent::SavepointRolledBack {
                 tx_id: tx_id.to_string(),
                 savepoint_name: name.to_string(),
             });
         }
-        
+
         result
     }
 }
@@ -1249,99 +1326,129 @@ fn get_current_timestamp() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_transaction_begin_commit() {
         let mut manager = TransactionManager::new();
-        
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
+
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
         assert!(manager.active_transactions.contains_key(&tx_id));
-        
-        manager.write(&tx_id, "key1".to_string(), Value::Int(42)).unwrap();
+
+        manager
+            .write(&tx_id, "key1".to_string(), Value::Int(42))
+            .unwrap();
         manager.commit(&tx_id).unwrap();
-        
+
         assert!(!manager.get_transaction(&tx_id).is_some());
         assert_eq!(manager.get_committed("key1"), Some(Value::Int(42)));
     }
-    
+
     #[test]
     fn test_transaction_rollback() {
-        let mut manager = TransactionManager::with_storage(Box::new(
-            InMemoryStorage::from_map(HashMap::from([("key1".to_string(), Value::Int(10))])),
-        ));
-        
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        manager.write(&tx_id, "key1".to_string(), Value::Int(42)).unwrap();
+        let mut manager =
+            TransactionManager::with_storage(Box::new(InMemoryStorage::from_map(HashMap::from([
+                ("key1".to_string(), Value::Int(10)),
+            ]))));
+
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        manager
+            .write(&tx_id, "key1".to_string(), Value::Int(42))
+            .unwrap();
         manager.rollback(&tx_id).unwrap();
-        
+
         assert_eq!(manager.get_committed("key1"), Some(Value::Int(10)));
     }
-    
+
     #[test]
     fn test_savepoint_rollback() {
         let mut manager = TransactionManager::new();
-        
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        
-        manager.write(&tx_id, "key1".to_string(), Value::Int(1)).unwrap();
+
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+
+        manager
+            .write(&tx_id, "key1".to_string(), Value::Int(1))
+            .unwrap();
         manager.create_savepoint(&tx_id, "sp1".to_string()).unwrap();
-        
-        manager.write(&tx_id, "key1".to_string(), Value::Int(2)).unwrap();
+
+        manager
+            .write(&tx_id, "key1".to_string(), Value::Int(2))
+            .unwrap();
         manager.rollback_to_savepoint(&tx_id, "sp1").unwrap();
-        
+
         let tx = manager.get_transaction(&tx_id).unwrap();
         assert_eq!(tx.modified_state.get("key1"), Some(&Value::Int(1)));
     }
-    
+
     #[test]
     fn test_isolation_read_committed() {
-        let mut manager = TransactionManager::with_storage(Box::new(
-            InMemoryStorage::from_map(HashMap::from([("counter".to_string(), Value::Int(0))])),
-        ));
-        
-        let tx1 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        
+        let mut manager =
+            TransactionManager::with_storage(Box::new(InMemoryStorage::from_map(HashMap::from([
+                ("counter".to_string(), Value::Int(0)),
+            ]))));
+
+        let tx1 = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+
         // tx1 writes
-        manager.write(&tx1, "counter".to_string(), Value::Int(1)).unwrap();
-        
+        manager
+            .write(&tx1, "counter".to_string(), Value::Int(1))
+            .unwrap();
+
         // Start tx2 after tx1 has acquired write lock
-        let tx2 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        
+        let tx2 = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+
         // tx2 trying to read a key with active write lock from tx1 will conflict
         // This is correct behavior for isolation - we can't read while another tx has write lock
         let _read_result = manager.read(&tx2, "counter");
         // For now, this will error due to conflict - which is safe behavior
-        
+
         // Commit tx1
         manager.commit(&tx1).unwrap();
-        
+
         // Now tx2 should be able to read the committed value
         let value = manager.read(&tx2, "counter").unwrap();
         assert_eq!(value, Some(Value::Int(1)));
-        
+
         manager.commit(&tx2).unwrap();
     }
-    
+
     #[test]
     fn test_write_conflict() {
         let mut manager = TransactionManager::new();
-        
-        let tx1 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        let tx2 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        
+
+        let tx1 = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        let tx2 = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+
         // tx1 acquires write lock
-        manager.write(&tx1, "key1".to_string(), Value::Int(1)).unwrap();
-        
+        manager
+            .write(&tx1, "key1".to_string(), Value::Int(1))
+            .unwrap();
+
         // tx2 should fail to acquire write lock on same key
         let result = manager.write(&tx2, "key1".to_string(), Value::Int(2));
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), TransactionError::Conflict));
     }
-    
+
     #[test]
     fn test_transaction_timeout() {
         let mut manager = TransactionManager::new();
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
         manager.set_transaction_timeout(&tx_id, Some(1)).unwrap();
 
         std::thread::sleep(std::time::Duration::from_millis(10));
@@ -1350,74 +1457,79 @@ mod tests {
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), TransactionError::Timeout));
     }
-    
+
     // ===== Phase 1 Feature Tests =====
-    
+
     #[test]
     fn test_state_storage_contains_key() {
         let mut storage = InMemoryStorage::new();
         assert!(!storage.contains_key("key1"));
-        
+
         storage.set("key1", Value::Int(42));
         assert!(storage.contains_key("key1"));
         assert!(!storage.contains_key("key2"));
     }
-    
+
     #[test]
     fn test_state_storage_remove() {
         let mut storage = InMemoryStorage::new();
         storage.set("key1", Value::Int(42));
         storage.set("key2", Value::String("hello".to_string()));
-        
+
         let removed = storage.remove("key1");
         assert_eq!(removed, Some(Value::Int(42)));
         assert!(!storage.contains_key("key1"));
         assert!(storage.contains_key("key2"));
-        
+
         let not_found = storage.remove("key3");
         assert_eq!(not_found, None);
     }
-    
+
     #[test]
     fn test_configurable_default_timeout() {
-        let mut manager = TransactionManager::new()
-            .with_default_timeout(Some(5000)); // 5 seconds
-        
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
+        let mut manager = TransactionManager::new().with_default_timeout(Some(5000)); // 5 seconds
+
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
         let tx = manager.get_transaction(&tx_id).unwrap();
         assert_eq!(tx.timeout_ms, Some(5000));
     }
-    
+
     #[test]
     fn test_no_default_timeout() {
-        let mut manager = TransactionManager::new()
-            .with_default_timeout(None); // No timeout
-        
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
+        let mut manager = TransactionManager::new().with_default_timeout(None); // No timeout
+
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
         let tx = manager.get_transaction(&tx_id).unwrap();
         assert_eq!(tx.timeout_ms, None);
         assert!(!tx.is_timed_out());
     }
-    
+
     #[test]
     fn test_transaction_event_callback() {
         use std::sync::{Arc, Mutex};
-        
+
         let events = Arc::new(Mutex::new(Vec::new()));
         let events_clone = events.clone();
-        
-        let mut manager = TransactionManager::new()
-            .with_event_callback(Box::new(move |event| {
-                events_clone.lock().unwrap().push(format!("{:?}", event));
-            }));
-        
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        manager.write(&tx_id, "key1".to_string(), Value::Int(42)).unwrap();
+
+        let mut manager = TransactionManager::new().with_event_callback(Box::new(move |event| {
+            events_clone.lock().unwrap().push(format!("{:?}", event));
+        }));
+
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        manager
+            .write(&tx_id, "key1".to_string(), Value::Int(42))
+            .unwrap();
         manager.commit(&tx_id).unwrap();
-        
+
         let captured_events = events.lock().unwrap();
         assert!(captured_events.len() >= 3); // At least: Begin, Write, Commit
-        
+
         // Check that Begin event was captured
         assert!(captured_events.iter().any(|e| e.contains("Begin")));
         // Check that Write event was captured
@@ -1425,113 +1537,132 @@ mod tests {
         // Check that Commit event was captured
         assert!(captured_events.iter().any(|e| e.contains("Commit")));
     }
-    
+
     #[test]
     fn test_savepoint_events() {
         use std::sync::{Arc, Mutex};
-        
+
         let events = Arc::new(Mutex::new(Vec::new()));
         let events_clone = events.clone();
-        
-        let mut manager = TransactionManager::new()
-            .with_event_callback(Box::new(move |event| {
-                events_clone.lock().unwrap().push(format!("{:?}", event));
-            }));
-        
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        manager.write(&tx_id, "key1".to_string(), Value::Int(1)).unwrap();
+
+        let mut manager = TransactionManager::new().with_event_callback(Box::new(move |event| {
+            events_clone.lock().unwrap().push(format!("{:?}", event));
+        }));
+
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        manager
+            .write(&tx_id, "key1".to_string(), Value::Int(1))
+            .unwrap();
         manager.create_savepoint(&tx_id, "sp1".to_string()).unwrap();
-        manager.write(&tx_id, "key1".to_string(), Value::Int(2)).unwrap();
+        manager
+            .write(&tx_id, "key1".to_string(), Value::Int(2))
+            .unwrap();
         manager.rollback_to_savepoint(&tx_id, "sp1").unwrap();
         manager.commit(&tx_id).unwrap();
-        
+
         let captured_events = events.lock().unwrap();
-        assert!(captured_events.iter().any(|e| e.contains("SavepointCreated")));
-        assert!(captured_events.iter().any(|e| e.contains("SavepointRolledBack")));
+        assert!(captured_events
+            .iter()
+            .any(|e| e.contains("SavepointCreated")));
+        assert!(captured_events
+            .iter()
+            .any(|e| e.contains("SavepointRolledBack")));
     }
-    
+
     #[test]
     fn test_conflict_event() {
         use std::sync::{Arc, Mutex};
-        
+
         let events = Arc::new(Mutex::new(Vec::new()));
         let events_clone = events.clone();
-        
-        let mut manager = TransactionManager::new()
-            .with_event_callback(Box::new(move |event| {
-                events_clone.lock().unwrap().push(format!("{:?}", event));
-            }));
-        
-        let tx1 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        let tx2 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        
+
+        let mut manager = TransactionManager::new().with_event_callback(Box::new(move |event| {
+            events_clone.lock().unwrap().push(format!("{:?}", event));
+        }));
+
+        let tx1 = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        let tx2 = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+
         // tx1 acquires write lock
-        manager.write(&tx1, "key1".to_string(), Value::Int(1)).unwrap();
-        
+        manager
+            .write(&tx1, "key1".to_string(), Value::Int(1))
+            .unwrap();
+
         // tx2 tries to acquire write lock on same key - should conflict
         let result = manager.write(&tx2, "key1".to_string(), Value::Int(2));
         assert!(result.is_err());
-        
+
         let captured_events = events.lock().unwrap();
         assert!(captured_events.iter().any(|e| e.contains("Conflict")));
     }
-    
+
     #[test]
     fn test_deadlock_detection_timeout() {
         use std::sync::{Arc, Mutex};
-        
+
         let events = Arc::new(Mutex::new(Vec::new()));
         let events_clone = events.clone();
-        
+
         let mut manager = TransactionManager::new()
             .with_default_timeout(Some(1)) // 1ms timeout
             .with_event_callback(Box::new(move |event| {
                 events_clone.lock().unwrap().push(format!("{:?}", event));
             }));
-        
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        
+
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+
         // Sleep to exceed timeout
         std::thread::sleep(std::time::Duration::from_millis(10));
-        
+
         // Try to acquire lock - should detect deadlock (timeout)
         let result = manager.write(&tx_id, "key1".to_string(), Value::Int(1));
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), TransactionError::Deadlock));
-        
+
         let captured_events = events.lock().unwrap();
         assert!(captured_events.iter().any(|e| e.contains("Deadlock")));
     }
-    
+
     #[test]
     fn test_rollback_event() {
         use std::sync::{Arc, Mutex};
-        
+
         let events = Arc::new(Mutex::new(Vec::new()));
         let events_clone = events.clone();
-        
-        let mut manager = TransactionManager::new()
-            .with_event_callback(Box::new(move |event| {
-                events_clone.lock().unwrap().push(format!("{:?}", event));
-            }));
-        
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        manager.write(&tx_id, "key1".to_string(), Value::Int(42)).unwrap();
+
+        let mut manager = TransactionManager::new().with_event_callback(Box::new(move |event| {
+            events_clone.lock().unwrap().push(format!("{:?}", event));
+        }));
+
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        manager
+            .write(&tx_id, "key1".to_string(), Value::Int(42))
+            .unwrap();
         manager.rollback(&tx_id).unwrap();
-        
+
         let captured_events = events.lock().unwrap();
         assert!(captured_events.iter().any(|e| e.contains("Rollback")));
     }
-    
+
     // ===== Phase 2 Feature Tests =====
-    
+
     #[test]
     fn test_file_backed_storage_persistence() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let storage_path = temp_dir.path().join("test_state.json");
-        
+
         // Create storage, write data, drop
         {
             let mut storage = FileBackedStorage::new(&storage_path).unwrap();
@@ -1539,91 +1670,102 @@ mod tests {
             storage.set("key2", Value::String("hello".to_string()));
             assert_eq!(storage.get("key1"), Some(Value::Int(42)));
         } // storage dropped, should flush
-        
+
         // Reload storage from same file - data should persist
         {
             let storage = FileBackedStorage::new(&storage_path).unwrap();
             assert_eq!(storage.get("key1"), Some(Value::Int(42)));
-            assert_eq!(storage.get("key2"), Some(Value::String("hello".to_string())));
+            assert_eq!(
+                storage.get("key2"),
+                Some(Value::String("hello".to_string()))
+            );
         }
     }
-    
+
     #[test]
     fn test_file_backed_storage_remove_persists() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let storage_path = temp_dir.path().join("test_remove.json");
-        
+
         {
             let mut storage = FileBackedStorage::new(&storage_path).unwrap();
             storage.set("key1", Value::Int(1));
             storage.set("key2", Value::Int(2));
             storage.remove("key1");
         }
-        
+
         {
             let storage = FileBackedStorage::new(&storage_path).unwrap();
             assert_eq!(storage.get("key1"), None);
             assert_eq!(storage.get("key2"), Some(Value::Int(2)));
         }
     }
-    
+
     #[test]
     fn test_transaction_manager_with_file_storage() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let storage_path = temp_dir.path().join("tx_state.json");
-        
+
         // Create manager with file storage, commit transaction, drop
         {
-            let mut manager = TransactionManager::with_storage(
-                Box::new(FileBackedStorage::new(&storage_path).unwrap())
-            );
-            
-            let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-            manager.write(&tx_id, "balance".to_string(), Value::Int(1000)).unwrap();
+            let mut manager = TransactionManager::with_storage(Box::new(
+                FileBackedStorage::new(&storage_path).unwrap(),
+            ));
+
+            let tx_id = manager
+                .begin_transaction(IsolationLevel::ReadCommitted)
+                .unwrap();
+            manager
+                .write(&tx_id, "balance".to_string(), Value::Int(1000))
+                .unwrap();
             manager.commit(&tx_id).unwrap();
         }
-        
+
         // Reload manager with same file - committed data should persist
         {
-            let manager = TransactionManager::with_storage(
-                Box::new(FileBackedStorage::new(&storage_path).unwrap())
-            );
-            
+            let manager = TransactionManager::with_storage(Box::new(
+                FileBackedStorage::new(&storage_path).unwrap(),
+            ));
+
             assert_eq!(manager.get_committed("balance"), Some(Value::Int(1000)));
         }
     }
-    
+
     #[test]
     fn test_transaction_log_writes_events() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let log_path = temp_dir.path().join("tx.log");
-        
+
         {
             let mut manager = TransactionManager::new()
                 .with_transaction_log(&log_path)
                 .unwrap();
-            
-            let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-            manager.write(&tx_id, "key1".to_string(), Value::Int(42)).unwrap();
+
+            let tx_id = manager
+                .begin_transaction(IsolationLevel::ReadCommitted)
+                .unwrap();
+            manager
+                .write(&tx_id, "key1".to_string(), Value::Int(42))
+                .unwrap();
             manager.commit(&tx_id).unwrap();
         }
-        
+
         // Read log file and verify events were written
         let log_contents = fs::read_to_string(&log_path).unwrap();
         assert!(log_contents.contains("begin"));
         assert!(log_contents.contains("write"));
         assert!(log_contents.contains("commit"));
-        
+
         // Verify it's line-delimited JSON
         let lines: Vec<&str> = log_contents.lines().collect();
         assert!(lines.len() >= 3); // At least begin, write, commit
-        
+
         // Verify each line is valid JSON
         for line in lines {
             if !line.trim().is_empty() {
@@ -1632,155 +1774,187 @@ mod tests {
             }
         }
     }
-    
+
     #[test]
     #[serial_test::serial]
     fn test_from_env_memory_backend() {
         // Test default (memory) backend when no env vars set
         std::env::remove_var("DAL_TX_STORAGE");
-        
+
         let manager = TransactionManager::from_env().unwrap();
         // Should work - verify with a simple transaction
         let mut manager = manager;
-        let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        manager.write(&tx_id, "test".to_string(), Value::Int(1)).unwrap();
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        manager
+            .write(&tx_id, "test".to_string(), Value::Int(1))
+            .unwrap();
         manager.commit(&tx_id).unwrap();
         assert_eq!(manager.get_committed("test"), Some(Value::Int(1)));
-        
+
         // Cleanup
         std::env::remove_var("DAL_TX_STORAGE");
         std::env::remove_var("DAL_TX_STORAGE_PATH");
         std::env::remove_var("DAL_TX_LOG_PATH");
         std::env::remove_var("DAL_TX_TIMEOUT_MS");
     }
-    
+
     #[test]
     #[serial_test::serial]
     fn test_from_env_file_backend() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let storage_path = temp_dir.path().join("env_test.json");
-        
+
         std::env::set_var("DAL_TX_STORAGE", "file");
         std::env::set_var("DAL_TX_STORAGE_PATH", storage_path.to_str().unwrap());
-        
+
         {
             let mut manager = TransactionManager::from_env().unwrap();
-            let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-            manager.write(&tx_id, "persisted".to_string(), Value::Int(999)).unwrap();
+            let tx_id = manager
+                .begin_transaction(IsolationLevel::ReadCommitted)
+                .unwrap();
+            manager
+                .write(&tx_id, "persisted".to_string(), Value::Int(999))
+                .unwrap();
             manager.commit(&tx_id).unwrap();
         }
-        
+
         // Reload with same env - should persist
         {
             let manager = TransactionManager::from_env().unwrap();
             assert_eq!(manager.get_committed("persisted"), Some(Value::Int(999)));
         }
-        
+
         // Cleanup
         std::env::remove_var("DAL_TX_STORAGE");
         std::env::remove_var("DAL_TX_STORAGE_PATH");
         std::env::remove_var("DAL_TX_LOG_PATH");
         std::env::remove_var("DAL_TX_TIMEOUT_MS");
     }
-    
+
     #[test]
     fn test_file_backed_storage_concurrent_transactions() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let storage_path = temp_dir.path().join("concurrent.json");
-        
-        let mut manager = TransactionManager::with_storage(
-            Box::new(FileBackedStorage::new(&storage_path).unwrap())
-        );
-        
+
+        let mut manager = TransactionManager::with_storage(Box::new(
+            FileBackedStorage::new(&storage_path).unwrap(),
+        ));
+
         // Multiple transactions should work with file backend
-        let tx1 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        manager.write(&tx1, "account1".to_string(), Value::Int(100)).unwrap();
+        let tx1 = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        manager
+            .write(&tx1, "account1".to_string(), Value::Int(100))
+            .unwrap();
         manager.commit(&tx1).unwrap();
-        
-        let tx2 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-        manager.write(&tx2, "account2".to_string(), Value::Int(200)).unwrap();
+
+        let tx2 = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        manager
+            .write(&tx2, "account2".to_string(), Value::Int(200))
+            .unwrap();
         manager.commit(&tx2).unwrap();
-        
+
         assert_eq!(manager.get_committed("account1"), Some(Value::Int(100)));
         assert_eq!(manager.get_committed("account2"), Some(Value::Int(200)));
     }
-    
+
     // ===== Phase 4: Resource Limits Tests =====
-    
+
     #[test]
     fn test_max_active_transactions_limit() {
-        let mut manager = TransactionManager::new()
-            .with_max_active_transactions(3); // Only allow 3 concurrent transactions
-        
+        let mut manager = TransactionManager::new().with_max_active_transactions(3); // Only allow 3 concurrent transactions
+
         // Create 3 transactions (should succeed)
-        let tx1 = manager.begin_transaction(IsolationLevel::Serializable).unwrap();
-        let tx2 = manager.begin_transaction(IsolationLevel::Serializable).unwrap();
-        let tx3 = manager.begin_transaction(IsolationLevel::Serializable).unwrap();
-        
+        let tx1 = manager
+            .begin_transaction(IsolationLevel::Serializable)
+            .unwrap();
+        let tx2 = manager
+            .begin_transaction(IsolationLevel::Serializable)
+            .unwrap();
+        let tx3 = manager
+            .begin_transaction(IsolationLevel::Serializable)
+            .unwrap();
+
         // Attempt 4th transaction (should fail)
         let result = manager.begin_transaction(IsolationLevel::Serializable);
         assert!(result.is_err(), "Should reject 4th transaction");
         assert!(result.unwrap_err().to_string().contains("limit"));
-        
+
         // Commit one transaction
         manager.commit(&tx1).unwrap();
-        
+
         // Now we should be able to start another
-        let tx4 = manager.begin_transaction(IsolationLevel::Serializable).unwrap();
+        let tx4 = manager
+            .begin_transaction(IsolationLevel::Serializable)
+            .unwrap();
         assert!(tx4.starts_with("tx_"));
-        
+
         // Clean up
         manager.rollback(&tx2).unwrap();
         manager.rollback(&tx3).unwrap();
         manager.rollback(&tx4).unwrap();
     }
-    
+
     #[test]
     fn test_max_keys_per_transaction_limit() {
-        let mut manager = TransactionManager::new()
-            .with_max_keys_per_transaction(5); // Only allow 5 keys per transaction
-        
-        let tx_id = manager.begin_transaction(IsolationLevel::Serializable).unwrap();
-        
+        let mut manager = TransactionManager::new().with_max_keys_per_transaction(5); // Only allow 5 keys per transaction
+
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::Serializable)
+            .unwrap();
+
         // Write 5 keys (should succeed)
         for i in 0..5 {
-            manager.write(&tx_id, format!("key_{}", i), Value::Int(i)).unwrap();
+            manager
+                .write(&tx_id, format!("key_{}", i), Value::Int(i))
+                .unwrap();
         }
-        
+
         // Attempt 6th key (should fail)
         let result = manager.write(&tx_id, "key_6".to_string(), Value::Int(6));
         assert!(result.is_err(), "Should reject 6th key");
         assert!(result.unwrap_err().to_string().contains("limit"));
-        
+
         // Updating an existing key should still work (doesn't count toward limit)
-        manager.write(&tx_id, "key_0".to_string(), Value::Int(100)).unwrap();
-        
+        manager
+            .write(&tx_id, "key_0".to_string(), Value::Int(100))
+            .unwrap();
+
         manager.commit(&tx_id).unwrap();
     }
-    
+
     #[test]
     #[serial_test::serial]
     fn test_resource_limits_from_env() {
         std::env::set_var("DAL_TX_STORAGE", "memory");
         std::env::set_var("DAL_TX_MAX_ACTIVE", "10");
         std::env::set_var("DAL_TX_MAX_KEYS", "100");
-        
+
         let mut manager = TransactionManager::from_env().unwrap();
-        
+
         // Create 10 transactions
         let mut txs = vec![];
         for _ in 0..10 {
-            txs.push(manager.begin_transaction(IsolationLevel::Serializable).unwrap());
+            txs.push(
+                manager
+                    .begin_transaction(IsolationLevel::Serializable)
+                    .unwrap(),
+            );
         }
-        
+
         // 11th should fail
         let result = manager.begin_transaction(IsolationLevel::Serializable);
         assert!(result.is_err(), "Should respect DAL_TX_MAX_ACTIVE limit");
-        
+
         // Clean up
         for tx in txs {
             let _ = manager.rollback(&tx);
@@ -1789,167 +1963,199 @@ mod tests {
         std::env::remove_var("DAL_TX_MAX_ACTIVE");
         std::env::remove_var("DAL_TX_MAX_KEYS");
     }
-    
+
     #[test]
     fn test_unlimited_resources() {
         // Set limits to 0 (unlimited)
         let mut manager = TransactionManager::new()
             .with_max_active_transactions(0)
             .with_max_keys_per_transaction(0);
-        
+
         // Should be able to create many transactions
         let mut txs = vec![];
         for _ in 0..100 {
-            txs.push(manager.begin_transaction(IsolationLevel::Serializable).unwrap());
+            txs.push(
+                manager
+                    .begin_transaction(IsolationLevel::Serializable)
+                    .unwrap(),
+            );
         }
-        
+
         // And write many keys in one transaction
-        let tx_id = manager.begin_transaction(IsolationLevel::Serializable).unwrap();
+        let tx_id = manager
+            .begin_transaction(IsolationLevel::Serializable)
+            .unwrap();
         for i in 0..100 {
-            manager.write(&tx_id, format!("key_{}", i), Value::Int(i)).unwrap();
+            manager
+                .write(&tx_id, format!("key_{}", i), Value::Int(i))
+                .unwrap();
         }
-        
+
         manager.commit(&tx_id).unwrap();
-        
+
         // Clean up
         for tx in txs {
             let _ = manager.rollback(&tx);
         }
     }
-    
+
     // ===== SQLite Backend Tests =====
-    
+
     #[cfg(feature = "sqlite-storage")]
     #[test]
     fn test_sqlite_storage_basic_operations() {
         let mut storage = SqliteStorage::new_in_memory().unwrap();
-        
+
         // Set and get
         storage.set("key1", Value::Int(42));
         assert_eq!(storage.get("key1"), Some(Value::Int(42)));
-        
+
         // Contains
         assert!(storage.contains_key("key1"));
         assert!(!storage.contains_key("key2"));
-        
+
         // Remove
         let removed = storage.remove("key1");
         assert_eq!(removed, Some(Value::Int(42)));
         assert!(!storage.contains_key("key1"));
     }
-    
+
     #[cfg(feature = "sqlite-storage")]
     #[test]
     fn test_sqlite_storage_persistence() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let db_path = temp_dir.path().join("test.db");
-        
+
         // Create storage, write data, drop
         {
             let mut storage = SqliteStorage::new(&db_path).unwrap();
             storage.set("key1", Value::Int(42));
             storage.set("key2", Value::String("hello".to_string()));
         }
-        
+
         // Reload storage from same DB - data should persist
         {
             let storage = SqliteStorage::new(&db_path).unwrap();
             assert_eq!(storage.get("key1"), Some(Value::Int(42)));
-            assert_eq!(storage.get("key2"), Some(Value::String("hello".to_string())));
+            assert_eq!(
+                storage.get("key2"),
+                Some(Value::String("hello".to_string()))
+            );
         }
     }
-    
+
     #[cfg(feature = "sqlite-storage")]
     #[test]
     fn test_transaction_manager_with_sqlite_storage() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let db_path = temp_dir.path().join("tx.db");
-        
+
         // Create manager with SQLite storage, commit transaction, drop
         {
-            let mut manager = TransactionManager::with_storage(
-                Box::new(SqliteStorage::new(&db_path).unwrap())
-            );
-            
-            let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-            manager.write(&tx_id, "balance".to_string(), Value::Int(5000)).unwrap();
-            manager.write(&tx_id, "user".to_string(), Value::String("alice".to_string())).unwrap();
+            let mut manager =
+                TransactionManager::with_storage(Box::new(SqliteStorage::new(&db_path).unwrap()));
+
+            let tx_id = manager
+                .begin_transaction(IsolationLevel::ReadCommitted)
+                .unwrap();
+            manager
+                .write(&tx_id, "balance".to_string(), Value::Int(5000))
+                .unwrap();
+            manager
+                .write(
+                    &tx_id,
+                    "user".to_string(),
+                    Value::String("alice".to_string()),
+                )
+                .unwrap();
             manager.commit(&tx_id).unwrap();
         }
-        
+
         // Reload manager with same DB - committed data should persist
         {
-            let manager = TransactionManager::with_storage(
-                Box::new(SqliteStorage::new(&db_path).unwrap())
-            );
-            
+            let manager =
+                TransactionManager::with_storage(Box::new(SqliteStorage::new(&db_path).unwrap()));
+
             assert_eq!(manager.get_committed("balance"), Some(Value::Int(5000)));
-            assert_eq!(manager.get_committed("user"), Some(Value::String("alice".to_string())));
+            assert_eq!(
+                manager.get_committed("user"),
+                Some(Value::String("alice".to_string()))
+            );
         }
     }
-    
+
     #[cfg(feature = "sqlite-storage")]
     #[test]
     fn test_sqlite_rollback_doesnt_persist() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let db_path = temp_dir.path().join("rollback.db");
-        
+
         {
-            let mut manager = TransactionManager::with_storage(
-                Box::new(SqliteStorage::new(&db_path).unwrap())
-            );
-            
+            let mut manager =
+                TransactionManager::with_storage(Box::new(SqliteStorage::new(&db_path).unwrap()));
+
             // Commit first value
-            let tx1 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-            manager.write(&tx1, "count".to_string(), Value::Int(10)).unwrap();
+            let tx1 = manager
+                .begin_transaction(IsolationLevel::ReadCommitted)
+                .unwrap();
+            manager
+                .write(&tx1, "count".to_string(), Value::Int(10))
+                .unwrap();
             manager.commit(&tx1).unwrap();
-            
+
             // Rollback second transaction
-            let tx2 = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-            manager.write(&tx2, "count".to_string(), Value::Int(999)).unwrap();
+            let tx2 = manager
+                .begin_transaction(IsolationLevel::ReadCommitted)
+                .unwrap();
+            manager
+                .write(&tx2, "count".to_string(), Value::Int(999))
+                .unwrap();
             manager.rollback(&tx2).unwrap();
         }
-        
+
         // Reload - only committed value should persist
         {
-            let manager = TransactionManager::with_storage(
-                Box::new(SqliteStorage::new(&db_path).unwrap())
-            );
+            let manager =
+                TransactionManager::with_storage(Box::new(SqliteStorage::new(&db_path).unwrap()));
             assert_eq!(manager.get_committed("count"), Some(Value::Int(10)));
         }
     }
-    
+
     #[cfg(feature = "sqlite-storage")]
     #[test]
     #[serial_test::serial]
     fn test_from_env_sqlite_backend() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let db_path = temp_dir.path().join("env_sqlite.db");
-        
+
         std::env::set_var("DAL_TX_STORAGE", "sqlite");
         std::env::set_var("DAL_TX_STORAGE_PATH", db_path.to_str().unwrap());
-        
+
         {
             let mut manager = TransactionManager::from_env().unwrap();
-            let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-            manager.write(&tx_id, "sqlite_test".to_string(), Value::Int(777)).unwrap();
+            let tx_id = manager
+                .begin_transaction(IsolationLevel::ReadCommitted)
+                .unwrap();
+            manager
+                .write(&tx_id, "sqlite_test".to_string(), Value::Int(777))
+                .unwrap();
             manager.commit(&tx_id).unwrap();
         }
-        
+
         // Reload with same env - should persist
         {
             let manager = TransactionManager::from_env().unwrap();
             assert_eq!(manager.get_committed("sqlite_test"), Some(Value::Int(777)));
         }
-        
+
         // Cleanup
         std::env::remove_var("DAL_TX_STORAGE");
         std::env::remove_var("DAL_TX_STORAGE_PATH");
@@ -1957,4 +2163,3 @@ mod tests {
         std::env::remove_var("DAL_TX_TIMEOUT_MS");
     }
 }
-

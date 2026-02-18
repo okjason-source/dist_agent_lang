@@ -48,7 +48,7 @@ fn safe_math_properties() {
         let sum1 = a.saturating_add(b);
         let sum2 = b.saturating_add(a);
         prop_assert_eq!(sum1, sum2);
-        
+
         // Subtraction inverse (when no overflow)
         if a <= i64::MAX - b {
             let sum = a + b;
@@ -71,7 +71,7 @@ fn parser_nested_structures_consistent() {
         for _ in 0..depth {
             code.push_str("\n}");
         }
-        
+
         let mut lexer = Lexer::new(&code);
         if let Ok(tokens) = lexer.tokenize() {
             let mut parser = Parser::new(tokens);
@@ -85,13 +85,13 @@ fn parser_nested_structures_consistent() {
 fn runtime_scope_invariants() {
     proptest!(|(var_count in 1usize..10)| {
         let _runtime = Runtime::new();
-        
+
         // Test that runtime can be created with different configurations
         for i in 0..var_count {
             let _var_name = format!("var{}", i);
             // Runtime exists and is valid
         }
-        
+
         // Runtime should be stable
         prop_assert!(true);
     });
@@ -112,10 +112,10 @@ fn string_operations_preserve_invariants() {
 #[test]
 fn type_conversions_consistent() {
     use dist_agent_lang::runtime::values::Value;
-    
+
     proptest!(|(n in -1000i64..1000i64)| {
         let value = Value::Int(n);
-        
+
         // Converting to float and back should preserve sign
         if let Value::Int(original) = value {
             let float_val = original as f64;
@@ -146,7 +146,7 @@ fn parser_service_declarations() {
                 field counter: int = 0;
             }}
         "#, service_name);
-        
+
         let mut lexer = Lexer::new(&input);
         if let Ok(tokens) = lexer.tokenize() {
             let mut parser = Parser::new(tokens);
@@ -161,21 +161,21 @@ fn parser_service_declarations() {
 #[test]
 fn reentrancy_guard_prevents_reentry() {
     use dist_agent_lang::runtime::ReentrancyGuard;
-    
+
     proptest!(|(func_name in "[a-z]{1,20}")| {
         let guard = ReentrancyGuard::new();
-        
+
         // First entry should succeed
         let first_entry = guard.enter(&func_name, Some("contract"));
         prop_assert!(first_entry.is_ok());
-        
+
         // Re-entry should fail while first is active
         let second_entry = guard.enter(&func_name, Some("contract"));
         prop_assert!(second_entry.is_err());
-        
+
         // Drop the first token to release
         drop(first_entry);
-        
+
         // Should be able to enter again after release
         let third_entry = guard.enter(&func_name, Some("contract"));
         prop_assert!(third_entry.is_ok());
@@ -188,7 +188,7 @@ fn reentrancy_guard_prevents_reentry() {
 #[test]
 fn chain_operations_validate_chain_ids() {
     use dist_agent_lang::stdlib::chain;
-    
+
     proptest!(|(chain_id in 1i64..1000i64)| {
         // Getting chain config should not panic
         let _ = chain::get_chain_config(chain_id);
@@ -198,18 +198,18 @@ fn chain_operations_validate_chain_ids() {
 /// Property: Crypto operations should be deterministic  
 #[test]
 fn crypto_operations_deterministic() {
-    use sha2::{Sha256, Digest};
-    
+    use sha2::{Digest, Sha256};
+
     proptest!(|(input in "\\PC{0,100}")| {
         // Same input should produce same hash
         let mut hasher1 = Sha256::new();
         hasher1.update(input.as_bytes());
         let hash1 = format!("{:x}", hasher1.finalize());
-        
+
         let mut hasher2 = Sha256::new();
         hasher2.update(input.as_bytes());
         let hash2 = format!("{:x}", hasher2.finalize());
-        
+
         prop_assert_eq!(hash1, hash2);
     });
 }
@@ -218,7 +218,7 @@ fn crypto_operations_deterministic() {
 #[test]
 fn array_operations_maintain_length() {
     use dist_agent_lang::runtime::values::Value;
-    
+
     proptest!(|(count in 1usize..100)| {
         let mut array = Vec::new();
         for i in 0..count {
@@ -233,23 +233,22 @@ fn array_operations_maintain_length() {
 fn map_operations_maintain_pairs() {
     use dist_agent_lang::runtime::values::Value;
     use std::collections::HashMap;
-    
+
     proptest!(|(key_count in 1usize..20)| {
         let mut map = HashMap::new();
-        
+
         // Insert key-value pairs
         for i in 0..key_count {
             let key = format!("key{}", i);
             map.insert(key.clone(), Value::Int(i as i64));
         }
-        
+
         // All keys should be retrievable
         prop_assert_eq!(map.len(), key_count);
-        
+
         for i in 0..key_count {
             let key = format!("key{}", i);
             prop_assert!(map.contains_key(&key));
         }
     });
 }
-

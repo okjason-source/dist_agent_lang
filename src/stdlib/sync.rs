@@ -11,12 +11,18 @@ fn value_to_serde_json(v: &Value) -> serde_json::Value {
         Value::Null => serde_json::Value::Null,
         Value::List(arr) => serde_json::Value::Array(arr.iter().map(value_to_serde_json).collect()),
         Value::Map(m) => serde_json::Value::Object(
-            m.iter().map(|(k, v)| (k.clone(), value_to_serde_json(v))).collect(),
+            m.iter()
+                .map(|(k, v)| (k.clone(), value_to_serde_json(v)))
+                .collect(),
         ),
         Value::Struct(_, m) => serde_json::Value::Object(
-            m.iter().map(|(k, v)| (k.clone(), value_to_serde_json(v))).collect(),
+            m.iter()
+                .map(|(k, v)| (k.clone(), value_to_serde_json(v)))
+                .collect(),
         ),
-        Value::Array(arr) => serde_json::Value::Array(arr.iter().map(value_to_serde_json).collect()),
+        Value::Array(arr) => {
+            serde_json::Value::Array(arr.iter().map(value_to_serde_json).collect())
+        }
         _ => serde_json::Value::String(v.to_string()),
     }
 }
@@ -36,9 +42,7 @@ fn serde_json_to_value(j: &serde_json::Value) -> Value {
             }
         }
         serde_json::Value::String(s) => Value::String(s.clone()),
-        serde_json::Value::Array(arr) => {
-            Value::List(arr.iter().map(serde_json_to_value).collect())
-        }
+        serde_json::Value::Array(arr) => Value::List(arr.iter().map(serde_json_to_value).collect()),
         serde_json::Value::Object(obj) => {
             let m: HashMap<String, Value> = obj
                 .iter()
@@ -50,7 +54,7 @@ fn serde_json_to_value(j: &serde_json::Value) -> Value {
 }
 
 /// Sync ABI - Interface for data synchronization
-/// 
+///
 /// This provides a namespace-based approach to sync operations:
 /// - sync::push(data, target) - Push data to target location
 /// - sync::pull(source, filters) - Pull data from source
@@ -80,12 +84,12 @@ impl SyncTarget {
             compression: false,
         }
     }
-    
+
     pub fn with_credentials(mut self, credentials: HashMap<String, String>) -> Self {
         self.credentials = Some(credentials);
         self
     }
-    
+
     pub fn with_compression(mut self, compression: bool) -> Self {
         self.compression = compression;
         self
@@ -101,22 +105,22 @@ impl SyncFilters {
             max_size: None,
         }
     }
-    
+
     pub fn with_data_type(mut self, data_type: String) -> Self {
         self.data_type = Some(data_type);
         self
     }
-    
+
     pub fn with_date_range(mut self, start: i64, end: i64) -> Self {
         self.date_range = Some((start, end));
         self
     }
-    
+
     pub fn with_tag(mut self, tag: String) -> Self {
         self.tags.push(tag);
         self
     }
-    
+
     pub fn with_max_size(mut self, max_size: i64) -> Self {
         self.max_size = Some(max_size);
         self
@@ -207,8 +211,14 @@ pub fn pull(source: &str, filters: SyncFilters) -> Result<(HashMap<String, Value
     match source {
         "database" => {
             let mut data = HashMap::new();
-            data.insert("user_123".to_string(), Value::String("John Doe".to_string()));
-            data.insert("user_456".to_string(), Value::String("Jane Smith".to_string()));
+            data.insert(
+                "user_123".to_string(),
+                Value::String("John Doe".to_string()),
+            );
+            data.insert(
+                "user_456".to_string(),
+                Value::String("Jane Smith".to_string()),
+            );
 
             if let Some(data_type) = &filters.data_type {
                 if data_type == "users" {

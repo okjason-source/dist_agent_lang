@@ -34,7 +34,8 @@ pub fn print_banner(bin: &str, no_banner: bool, quiet: bool) {
 
 /// Help content organized by use case (project-type agnostic, AI-forward)
 pub fn help_content(bin: &str) -> String {
-    format!(r#"
+    format!(
+        r#"
 GET STARTED
   new <name> [--type <type>]  Create a new project
                               Types: ai, iot, agent, chain, web, cli, lib
@@ -105,5 +106,7 @@ QUICK EXAMPLES
   {0} run app.dal
 
 For subcommand help: {0} <command> --help
-"#, bin)
+"#,
+        bin
+    )
 }

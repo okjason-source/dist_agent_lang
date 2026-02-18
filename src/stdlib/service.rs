@@ -2,7 +2,7 @@ use crate::runtime::values::Value;
 use std::collections::HashMap;
 
 /// Service ABI - Interface for external service integration
-/// 
+///
 /// This provides a namespace-based approach to service operations:
 /// - service::ai(prompt, model) - AI service integration
 /// - service::call(service, method, params) - External service calls
@@ -99,8 +99,18 @@ impl ServiceCall {
 pub fn ai(prompt: &str, service: AIService) -> Result<String, String> {
     #[cfg(feature = "http-interface")]
     if let Some(api_key) = service.api_key.as_ref() {
-        let base = service.base_url.as_deref().unwrap_or("https://api.openai.com/v1");
-        if let Ok(text) = call_llm_api(base, api_key, &service.model, prompt, service.temperature, service.max_tokens) {
+        let base = service
+            .base_url
+            .as_deref()
+            .unwrap_or("https://api.openai.com/v1");
+        if let Ok(text) = call_llm_api(
+            base,
+            api_key,
+            &service.model,
+            prompt,
+            service.temperature,
+            service.max_tokens,
+        ) {
             return Ok(text);
         }
     }
@@ -174,7 +184,10 @@ fn call_llm_api(
 #[cfg(feature = "http-interface")]
 pub fn embeddings(text: &str, service: AIService) -> Result<Vec<f64>, String> {
     if let Some(api_key) = service.api_key.as_ref() {
-        let base = service.base_url.as_deref().unwrap_or("https://api.openai.com/v1");
+        let base = service
+            .base_url
+            .as_deref()
+            .unwrap_or("https://api.openai.com/v1");
         if let Ok(vec) = call_embeddings_api(base, api_key, &service.model, text) {
             return Ok(vec);
         }
@@ -183,7 +196,12 @@ pub fn embeddings(text: &str, service: AIService) -> Result<Vec<f64>, String> {
 }
 
 #[cfg(feature = "http-interface")]
-fn call_embeddings_api(base_url: &str, api_key: &str, model: &str, input: &str) -> Result<Vec<f64>, String> {
+fn call_embeddings_api(
+    base_url: &str,
+    api_key: &str,
+    model: &str,
+    input: &str,
+) -> Result<Vec<f64>, String> {
     let url = format!("{}/embeddings", base_url.trim_end_matches('/'));
     let body = serde_json::json!({
         "model": model,
@@ -221,10 +239,23 @@ pub fn vision_analyze(
     image_url: Option<&str>,
     image_base64: Option<&str>,
 ) -> Result<String, String> {
-    let api_key = service.api_key.as_deref().ok_or("Vision requires api_key".to_string())?;
-    let base = service.base_url.as_deref().unwrap_or("https://api.openai.com/v1");
+    let api_key = service
+        .api_key
+        .as_deref()
+        .ok_or("Vision requires api_key".to_string())?;
+    let base = service
+        .base_url
+        .as_deref()
+        .unwrap_or("https://api.openai.com/v1");
     let prompt = "Describe this image in detail: list main objects, any text visible, and dominant colors. Be concise.";
-    call_vision_api(base, api_key, &service.model, prompt, image_url, image_base64)
+    call_vision_api(
+        base,
+        api_key,
+        &service.model,
+        prompt,
+        image_url,
+        image_base64,
+    )
 }
 
 #[cfg(feature = "http-interface")]
@@ -288,13 +319,24 @@ fn call_vision_api(
 /// Image generation API. When api_key and base_url set and http-interface enabled, calls /images/generations. Works with providers that expose this endpoint (OpenAI DALL·E, compatible APIs, etc.).
 #[cfg(feature = "http-interface")]
 pub fn image_generate(service: AIService, prompt: &str) -> Result<String, String> {
-    let api_key = service.api_key.as_deref().ok_or("Image generation requires api_key".to_string())?;
-    let base = service.base_url.as_deref().unwrap_or("https://api.openai.com/v1");
+    let api_key = service
+        .api_key
+        .as_deref()
+        .ok_or("Image generation requires api_key".to_string())?;
+    let base = service
+        .base_url
+        .as_deref()
+        .unwrap_or("https://api.openai.com/v1");
     call_image_generations_api(base, api_key, &service.model, prompt)
 }
 
 #[cfg(feature = "http-interface")]
-fn call_image_generations_api(base_url: &str, api_key: &str, model: &str, prompt: &str) -> Result<String, String> {
+fn call_image_generations_api(
+    base_url: &str,
+    api_key: &str,
+    model: &str,
+    prompt: &str,
+) -> Result<String, String> {
     let url = format!("{}/images/generations", base_url.trim_end_matches('/'));
     let body = serde_json::json!({
         "model": model,
@@ -317,7 +359,10 @@ fn call_image_generations_api(base_url: &str, api_key: &str, model: &str, prompt
         return Err(format!("Image generation API error: {}", resp.status()));
     }
     let json: serde_json::Value = resp.json().map_err(|e| e.to_string())?;
-    let data = json.get("data").and_then(|d| d.get(0)).ok_or_else(|| "Invalid image response".to_string())?;
+    let data = json
+        .get("data")
+        .and_then(|d| d.get(0))
+        .ok_or_else(|| "Invalid image response".to_string())?;
     if let Some(u) = data.get("url").and_then(|u| u.as_str()) {
         return Ok(u.to_string());
     }
@@ -331,37 +376,36 @@ fn call_image_generations_api(base_url: &str, api_key: &str, model: &str, prompt
 pub fn call(service: ServiceCall) -> Result<Value, String> {
     #[cfg(feature = "http-interface")]
     if let Some(ref base_url) = service.base_url {
-        if let Ok(v) = call_http_service(base_url, &service.method, &service.parameters, service.timeout) {
+        if let Ok(v) = call_http_service(
+            base_url,
+            &service.method,
+            &service.parameters,
+            service.timeout,
+        ) {
             return Ok(v);
         }
     }
 
     // Fallback: mock when no base_url or HTTP unavailable
     match service.service_name.as_str() {
-        "payment" => {
-            match service.method.as_str() {
-                "process" => Ok(Value::String("payment_processed_12345".to_string())),
-                "refund" => Ok(Value::String("refund_issued_67890".to_string())),
-                "status" => Ok(Value::String("completed".to_string())),
-                _ => Err(format!("Unknown payment method: {}", service.method))
-            }
-        }
-        "email" => {
-            match service.method.as_str() {
-                "send" => Ok(Value::String("email_sent_abc123".to_string())),
-                "template" => Ok(Value::String("welcome_email".to_string())),
-                "verify" => Ok(Value::Bool(true)),
-                _ => Err(format!("Unknown email method: {}", service.method))
-            }
-        }
-        "sms" => {
-            match service.method.as_str() {
-                "send" => Ok(Value::String("sms_sent_def456".to_string())),
-                "verify" => Ok(Value::Bool(true)),
-                _ => Err(format!("Unknown SMS method: {}", service.method))
-            }
-        }
-        _ => Err(format!("Unknown service: {}", service.service_name))
+        "payment" => match service.method.as_str() {
+            "process" => Ok(Value::String("payment_processed_12345".to_string())),
+            "refund" => Ok(Value::String("refund_issued_67890".to_string())),
+            "status" => Ok(Value::String("completed".to_string())),
+            _ => Err(format!("Unknown payment method: {}", service.method)),
+        },
+        "email" => match service.method.as_str() {
+            "send" => Ok(Value::String("email_sent_abc123".to_string())),
+            "template" => Ok(Value::String("welcome_email".to_string())),
+            "verify" => Ok(Value::Bool(true)),
+            _ => Err(format!("Unknown email method: {}", service.method)),
+        },
+        "sms" => match service.method.as_str() {
+            "send" => Ok(Value::String("sms_sent_def456".to_string())),
+            "verify" => Ok(Value::Bool(true)),
+            _ => Err(format!("Unknown SMS method: {}", service.method)),
+        },
+        _ => Err(format!("Unknown service: {}", service.service_name)),
     }
 }
 
@@ -391,10 +435,14 @@ fn value_to_json(v: &Value) -> serde_json::Value {
         Value::Null => serde_json::Value::Null,
         Value::List(arr) => serde_json::Value::Array(arr.iter().map(value_to_json).collect()),
         Value::Map(m) => serde_json::Value::Object(
-            m.iter().map(|(k, v)| (k.clone(), value_to_json(v))).collect(),
+            m.iter()
+                .map(|(k, v)| (k.clone(), value_to_json(v)))
+                .collect(),
         ),
         Value::Struct(_, m) => serde_json::Value::Object(
-            m.iter().map(|(k, v)| (k.clone(), value_to_json(v))).collect(),
+            m.iter()
+                .map(|(k, v)| (k.clone(), value_to_json(v)))
+                .collect(),
         ),
         Value::Array(arr) => serde_json::Value::Array(arr.iter().map(value_to_json).collect()),
         _ => serde_json::Value::String(v.to_string()),
@@ -408,9 +456,16 @@ fn call_http_service(
     parameters: &HashMap<String, Value>,
     timeout_secs: Option<i64>,
 ) -> Result<Value, String> {
-    let url = format!("{}/{}", base_url.trim_end_matches('/'), method.trim_start_matches('/'));
+    let url = format!(
+        "{}/{}",
+        base_url.trim_end_matches('/'),
+        method.trim_start_matches('/')
+    );
     let body: serde_json::Value = serde_json::Value::Object(
-        parameters.iter().map(|(k, v)| (k.clone(), value_to_json(v))).collect(),
+        parameters
+            .iter()
+            .map(|(k, v)| (k.clone(), value_to_json(v)))
+            .collect(),
     );
     let mut client_builder = reqwest::blocking::Client::builder();
     if let Some(secs) = timeout_secs {
@@ -423,7 +478,11 @@ fn call_http_service(
         .send()
         .map_err(|e| e.to_string())?;
     if !resp.status().is_success() {
-        return Err(format!("HTTP {}: {}", resp.status(), resp.text().unwrap_or_default()));
+        return Err(format!(
+            "HTTP {}: {}",
+            resp.status(),
+            resp.text().unwrap_or_default()
+        ));
     }
     let json: serde_json::Value = resp.json().map_err(|e| e.to_string())?;
     Ok(Value::String(json.to_string()))
@@ -437,7 +496,9 @@ fn webhook_http_post(
     data: &HashMap<String, Value>,
 ) -> Result<String, String> {
     let body: serde_json::Value = serde_json::Value::Object(
-        data.iter().map(|(k, v)| (k.clone(), value_to_json(v))).collect(),
+        data.iter()
+            .map(|(k, v)| (k.clone(), value_to_json(v)))
+            .collect(),
     );
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(30))

@@ -14,7 +14,7 @@ pub enum Statement {
     Return(ReturnStatement),
     Block(BlockStatement),
     Function(FunctionStatement),
-    Service(ServiceStatement),  
+    Service(ServiceStatement),
     Spawn(SpawnStatement),
     Agent(AgentStatement),
     Message(MessageStatement),
@@ -78,9 +78,9 @@ pub struct MatchCase {
 /// Pattern for matching in match statements
 #[derive(Debug, Clone)]
 pub enum MatchPattern {
-    Literal(Literal),           // Match literal value (42, "hello", true, null)
-    Identifier(String),         // Match and bind to variable
-    Wildcard,                   // _ matches anything
+    Literal(Literal),   // Match literal value (42, "hello", true, null)
+    Identifier(String), // Match and bind to variable
+    Wildcard,           // _ matches anything
     Range(Box<Expression>, Box<Expression>), // start..end (inclusive range)
 }
 
@@ -111,7 +111,12 @@ pub struct FunctionStatement {
 }
 
 impl FunctionStatement {
-    pub fn new(name: String, parameters: Vec<Parameter>, return_type: Option<String>, body: BlockStatement) -> Self {
+    pub fn new(
+        name: String,
+        parameters: Vec<Parameter>,
+        return_type: Option<String>,
+        body: BlockStatement,
+    ) -> Self {
         Self {
             name,
             parameters,
@@ -232,10 +237,8 @@ pub struct ServiceStatement {
     pub fields: Vec<ServiceField>,
     pub methods: Vec<FunctionStatement>,
     pub events: Vec<EventDeclaration>,
-    pub compilation_target: Option<CompilationTargetInfo>, 
+    pub compilation_target: Option<CompilationTargetInfo>,
 }
-
-
 
 #[derive(Debug, Clone)]
 pub struct Attribute {
@@ -260,17 +263,20 @@ pub enum Expression {
     UnaryOp(Operator, Box<Expression>),
     Assignment(String, Box<Expression>),
     FunctionCall(FunctionCall),
-    FieldAccess(Box<Expression>, String),  // NEW: self.field syntax
-    FieldAssignment(Box<Expression>, String, Box<Expression>),  // NEW: self.field = value
+    FieldAccess(Box<Expression>, String), // NEW: self.field syntax
+    FieldAssignment(Box<Expression>, String, Box<Expression>), // NEW: self.field = value
     Await(Box<Expression>),
-    Spawn(Box<Expression>),  // spawn <expr> e.g. spawn worker_process(i)
+    Spawn(Box<Expression>), // spawn <expr> e.g. spawn worker_process(i)
     Throw(Box<Expression>),
-    ObjectLiteral(HashMap<String, Expression>),  // NEW: object literal syntax
-    ArrayLiteral(Vec<Expression>),  // NEW: array literal syntax [expr1, expr2, ...]
+    ObjectLiteral(HashMap<String, Expression>), // NEW: object literal syntax
+    ArrayLiteral(Vec<Expression>),              // NEW: array literal syntax [expr1, expr2, ...]
     /// Index access: expr[index] — array or map key access
     IndexAccess(Box<Expression>, Box<Expression>),
     /// Arrow function: (param => { body }) — single param, block body
-    ArrowFunction { param: String, body: BlockStatement },
+    ArrowFunction {
+        param: String,
+        body: BlockStatement,
+    },
     /// Range expression: start..end for for-loops
     Range(Box<Expression>, Box<Expression>),
 }

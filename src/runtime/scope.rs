@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::runtime::values::Value;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Scope {
@@ -31,16 +31,14 @@ impl Scope {
         if let Some(value) = self.variables.get(name) {
             return Some(value.clone());
         }
-        
+
         // Then check parent scope
         if let Some(parent) = &self.parent {
             return parent.get(name);
         }
-        
+
         None
     }
-
-
 }
 
 impl Default for Scope {

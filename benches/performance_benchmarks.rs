@@ -1,11 +1,11 @@
 // Phase 5: Performance Benchmarks
 // Comprehensive performance testing for lexer, parser, and runtime
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use dist_agent_lang::{Lexer, Parser, Runtime};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use dist_agent_lang::stdlib::ai;
 use dist_agent_lang::stdlib::chain;
 use dist_agent_lang::stdlib::crypto::{self, HashAlgorithm, SignatureAlgorithm};
-use dist_agent_lang::stdlib::ai;
+use dist_agent_lang::{Lexer, Parser, Runtime};
 use std::collections::HashMap;
 
 // ============================================
@@ -20,7 +20,7 @@ fn bench_lexer_small_file(c: &mut Criterion) {
         print(x + y);
     }
     "#;
-    
+
     c.bench_function("lexer_small_file", |b| {
         b.iter(|| {
             let mut lexer = Lexer::new(black_box(code));
@@ -30,8 +30,11 @@ fn bench_lexer_small_file(c: &mut Criterion) {
 }
 
 fn bench_lexer_medium_file(c: &mut Criterion) {
-    let code = (0..100).map(|i| format!("let var{} = {};", i, i)).collect::<Vec<_>>().join("\n");
-    
+    let code = (0..100)
+        .map(|i| format!("let var{} = {};", i, i))
+        .collect::<Vec<_>>()
+        .join("\n");
+
     c.bench_function("lexer_medium_file", |b| {
         b.iter(|| {
             let mut lexer = Lexer::new(black_box(&code));
@@ -41,8 +44,11 @@ fn bench_lexer_medium_file(c: &mut Criterion) {
 }
 
 fn bench_lexer_large_file(c: &mut Criterion) {
-    let code = (0..1000).map(|i| format!("let var{} = {};", i, i)).collect::<Vec<_>>().join("\n");
-    
+    let code = (0..1000)
+        .map(|i| format!("let var{} = {};", i, i))
+        .collect::<Vec<_>>()
+        .join("\n");
+
     c.bench_function("lexer_large_file", |b| {
         b.iter(|| {
             let mut lexer = Lexer::new(black_box(&code));
@@ -73,7 +79,7 @@ fn bench_lexer_complex_syntax(c: &mut Criterion) {
         }
     }
     "#;
-    
+
     c.bench_function("lexer_complex_syntax", |b| {
         b.iter(|| {
             let mut lexer = Lexer::new(black_box(code));
@@ -93,10 +99,10 @@ fn bench_parser_simple_program(c: &mut Criterion) {
     }
     let result = add(10, 20);
     "#;
-    
+
     let mut lexer = Lexer::new(code);
     let tokens = lexer.tokenize().unwrap();
-    
+
     c.bench_function("parser_simple_program", |b| {
         b.iter(|| {
             let mut parser = Parser::new(black_box(tokens.clone()));
@@ -125,10 +131,10 @@ fn bench_parser_complex_program(c: &mut Criterion) {
         }
     }
     "#;
-    
+
     let mut lexer = Lexer::new(code);
     let tokens = lexer.tokenize().unwrap();
-    
+
     c.bench_function("parser_complex_program", |b| {
         b.iter(|| {
             let mut parser = Parser::new(black_box(tokens.clone()));
@@ -150,10 +156,10 @@ fn bench_parser_nested_structures(c: &mut Criterion) {
         return inner1();
     }
     "#;
-    
+
     let mut lexer = Lexer::new(code);
     let tokens = lexer.tokenize().unwrap();
-    
+
     c.bench_function("parser_nested_structures", |b| {
         b.iter(|| {
             let mut parser = Parser::new(black_box(tokens.clone()));
@@ -173,12 +179,12 @@ fn bench_runtime_variable_operations(c: &mut Criterion) {
     let z = x + y;
     let result = z * 2;
     "#;
-    
+
     let mut lexer = Lexer::new(code);
     let tokens = lexer.tokenize().unwrap();
     let mut parser = Parser::new(tokens);
     let program = parser.parse().unwrap();
-    
+
     c.bench_function("runtime_variable_operations", |b| {
         b.iter(|| {
             let mut runtime = Runtime::new();
@@ -196,12 +202,12 @@ fn bench_runtime_function_calls(c: &mut Criterion) {
     let result2 = add(30, 40);
     let result3 = add(50, 60);
     "#;
-    
+
     let mut lexer = Lexer::new(code);
     let tokens = lexer.tokenize().unwrap();
     let mut parser = Parser::new(tokens);
     let program = parser.parse().unwrap();
-    
+
     c.bench_function("runtime_function_calls", |b| {
         b.iter(|| {
             let mut runtime = Runtime::new();
@@ -217,11 +223,11 @@ fn bench_runtime_control_flow(c: &mut Criterion) {
     let y = 20;
     let z = x + y;
     "#;
-    
+
     let mut lexer = Lexer::new(code);
     let tokens = lexer.tokenize().unwrap();
     let mut parser = Parser::new(tokens);
-    
+
     // Parse may fail, but benchmark the attempt
     match parser.parse() {
         Ok(program) => {
@@ -246,58 +252,75 @@ fn bench_runtime_control_flow(c: &mut Criterion) {
 fn bench_chain_operations(c: &mut Criterion) {
     let mut args = HashMap::new();
     args.insert("name".to_string(), "TestToken".to_string());
-    
+
     c.bench_function("chain_deploy", |b| {
         b.iter(|| {
-            black_box(chain::deploy(black_box(1), black_box("Token".to_string()), black_box(args.clone())))
+            black_box(chain::deploy(
+                black_box(1),
+                black_box("Token".to_string()),
+                black_box(args.clone()),
+            ))
         })
     });
-    
+
     c.bench_function("chain_call", |b| {
         let mut call_args = HashMap::new();
         call_args.insert("amount".to_string(), "1000".to_string());
         b.iter(|| {
-            black_box(chain::call(black_box(1), black_box("0x1234".to_string()), black_box("transfer".to_string()), black_box(call_args.clone())))
+            black_box(chain::call(
+                black_box(1),
+                black_box("0x1234".to_string()),
+                black_box("transfer".to_string()),
+                black_box(call_args.clone()),
+            ))
         })
     });
-    
+
     c.bench_function("chain_estimate_gas", |b| {
         b.iter(|| {
-            black_box(chain::estimate_gas(black_box(1), black_box("transfer".to_string())))
+            black_box(chain::estimate_gas(
+                black_box(1),
+                black_box("transfer".to_string()),
+            ))
         })
     });
 }
 
 fn bench_crypto_operations(c: &mut Criterion) {
     let data = "test data for hashing and signing";
-    
+
     c.bench_function("crypto_hash_sha256", |b| {
-        b.iter(|| {
-            black_box(crypto::hash(black_box(data), HashAlgorithm::SHA256))
-        })
+        b.iter(|| black_box(crypto::hash(black_box(data), HashAlgorithm::SHA256)))
     });
-    
+
     c.bench_function("crypto_generate_keypair", |b| {
-        b.iter(|| {
-            black_box(crypto::generate_keypair(SignatureAlgorithm::RSA))
-        })
+        b.iter(|| black_box(crypto::generate_keypair(SignatureAlgorithm::RSA)))
     });
-    
+
     let keypair = crypto::generate_keypair(SignatureAlgorithm::RSA);
     let private_key = keypair.get("private_key").unwrap();
     let public_key = keypair.get("public_key").unwrap();
-    
+
     c.bench_function("crypto_sign", |b| {
         b.iter(|| {
-            black_box(crypto::sign(black_box(data), black_box(private_key), SignatureAlgorithm::RSA))
+            black_box(crypto::sign(
+                black_box(data),
+                black_box(private_key),
+                SignatureAlgorithm::RSA,
+            ))
         })
     });
-    
+
     let signature = crypto::sign(data, private_key, SignatureAlgorithm::RSA);
-    
+
     c.bench_function("crypto_verify", |b| {
         b.iter(|| {
-            black_box(crypto::verify(black_box(data), black_box(&signature), black_box(public_key), SignatureAlgorithm::RSA))
+            black_box(crypto::verify(
+                black_box(data),
+                black_box(&signature),
+                black_box(public_key),
+                SignatureAlgorithm::RSA,
+            ))
         })
     });
 }
@@ -314,19 +337,15 @@ fn bench_ai_operations(c: &mut Criterion) {
         communication_protocols: vec![],
         ai_models: vec![],
     };
-    
+
     c.bench_function("ai_spawn_agent", |b| {
-        b.iter(|| {
-            black_box(ai::spawn_agent(black_box(config.clone())).unwrap())
-        })
+        b.iter(|| black_box(ai::spawn_agent(black_box(config.clone())).unwrap()))
     });
-    
+
     let agent = ai::spawn_agent(config).unwrap();
-    
+
     c.bench_function("ai_get_status", |b| {
-        b.iter(|| {
-            black_box(ai::get_agent_status(black_box(&agent)))
-        })
+        b.iter(|| black_box(ai::get_agent_status(black_box(&agent))))
     });
 }
 
@@ -336,9 +355,12 @@ fn bench_ai_operations(c: &mut Criterion) {
 
 fn bench_lexer_scalability(c: &mut Criterion) {
     let mut group = c.benchmark_group("lexer_scalability");
-    
+
     for size in [10, 100, 1000, 5000].iter() {
-        let code = (0..*size).map(|i| format!("let var{} = {};", i, i)).collect::<Vec<_>>().join("\n");
+        let code = (0..*size)
+            .map(|i| format!("let var{} = {};", i, i))
+            .collect::<Vec<_>>()
+            .join("\n");
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
                 let mut lexer = Lexer::new(black_box(&code));
@@ -351,12 +373,15 @@ fn bench_lexer_scalability(c: &mut Criterion) {
 
 fn bench_parser_scalability(c: &mut Criterion) {
     let mut group = c.benchmark_group("parser_scalability");
-    
+
     for size in [10, 50, 100, 500].iter() {
-        let code = (0..*size).map(|i| format!("fn func{}() {{ return {}; }}", i, i)).collect::<Vec<_>>().join("\n");
+        let code = (0..*size)
+            .map(|i| format!("fn func{}() {{ return {}; }}", i, i))
+            .collect::<Vec<_>>()
+            .join("\n");
         let mut lexer = Lexer::new(&code);
         let tokens = lexer.tokenize().unwrap();
-        
+
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
                 let mut parser = Parser::new(black_box(tokens.clone()));
@@ -378,7 +403,7 @@ fn bench_memory_usage(c: &mut Criterion) {
             black_box(runtime)
         })
     });
-    
+
     c.bench_function("memory_agent_creation", |b| {
         let config = ai::AgentConfig {
             agent_id: "mem_agent".to_string(),
@@ -391,10 +416,8 @@ fn bench_memory_usage(c: &mut Criterion) {
             communication_protocols: vec![],
             ai_models: vec![],
         };
-        
-        b.iter(|| {
-            black_box(ai::spawn_agent(black_box(config.clone())).unwrap())
-        })
+
+        b.iter(|| black_box(ai::spawn_agent(black_box(config.clone())).unwrap()))
     });
 }
 
@@ -419,4 +442,3 @@ criterion_group!(
 );
 
 criterion_main!(benches);
-

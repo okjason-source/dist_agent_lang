@@ -1,10 +1,9 @@
+use crate::runtime::functions::RuntimeError;
+use crate::runtime::values::Value;
 /// State Isolation System for DAL Runtime
 /// Provides secure contract state isolation and access control
-
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use crate::runtime::values::Value;
-use crate::runtime::functions::RuntimeError;
 
 /// Isolated contract state container
 #[derive(Debug, Clone)]
@@ -75,7 +74,12 @@ impl IsolatedContractState {
     }
 
     /// Read a value from the isolated state
-    pub fn read_value(&self, key: &str, caller: &str, permissions: &[String]) -> Result<Value, RuntimeError> {
+    pub fn read_value(
+        &self,
+        key: &str,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<Value, RuntimeError> {
         // Validate access
         self.validate_access(caller, "read", permissions)?;
 
@@ -87,7 +91,13 @@ impl IsolatedContractState {
     }
 
     /// Write a value to the isolated state
-    pub fn write_value(&mut self, key: &str, value: Value, caller: &str, permissions: &[String]) -> Result<(), RuntimeError> {
+    pub fn write_value(
+        &mut self,
+        key: &str,
+        value: Value,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<(), RuntimeError> {
         // Validate access
         self.validate_access(caller, "write", permissions)?;
 
@@ -98,7 +108,9 @@ impl IsolatedContractState {
 
         // Check gas limit (simplified)
         if key.len() + self.estimate_value_size(&value) > self.metadata.gas_limit as usize {
-            return Err(RuntimeError::General("Gas limit exceeded for state operation".to_string()));
+            return Err(RuntimeError::General(
+                "Gas limit exceeded for state operation".to_string(),
+            ));
         }
 
         let mut state = self.state.write().map_err(|_| {
@@ -113,7 +125,7 @@ impl IsolatedContractState {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        
+
         self.metadata.last_modified = now;
         self.metadata.state_version += 1;
         self.metadata.checksum = self.calculate_state_checksum(&state);
@@ -122,7 +134,12 @@ impl IsolatedContractState {
     }
 
     /// Delete a value from the isolated state
-    pub fn delete_value(&mut self, key: &str, caller: &str, permissions: &[String]) -> Result<bool, RuntimeError> {
+    pub fn delete_value(
+        &mut self,
+        key: &str,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<bool, RuntimeError> {
         // Validate access
         self.validate_access(caller, "delete", permissions)?;
 
@@ -143,7 +160,7 @@ impl IsolatedContractState {
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_secs();
-            
+
             self.metadata.last_modified = now;
             self.metadata.state_version += 1;
             self.metadata.checksum = self.calculate_state_checksum(&state);
@@ -153,7 +170,11 @@ impl IsolatedContractState {
     }
 
     /// Get all keys in the state (admin only)
-    pub fn get_all_keys(&self, caller: &str, permissions: &[String]) -> Result<Vec<String>, RuntimeError> {
+    pub fn get_all_keys(
+        &self,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<Vec<String>, RuntimeError> {
         // Validate admin access
         self.validate_admin_access(caller, permissions)?;
 
@@ -165,7 +186,12 @@ impl IsolatedContractState {
     }
 
     /// Set contract to read-only mode (admin only)
-    pub fn set_read_only(&mut self, read_only: bool, caller: &str, permissions: &[String]) -> Result<(), RuntimeError> {
+    pub fn set_read_only(
+        &mut self,
+        read_only: bool,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<(), RuntimeError> {
         // Validate admin access
         self.validate_admin_access(caller, permissions)?;
 
@@ -181,7 +207,12 @@ impl IsolatedContractState {
     }
 
     /// Transfer ownership (admin only)
-    pub fn transfer_ownership(&mut self, new_owner: String, caller: &str, permissions: &[String]) -> Result<(), RuntimeError> {
+    pub fn transfer_ownership(
+        &mut self,
+        new_owner: String,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<(), RuntimeError> {
         // Validate admin access
         self.validate_admin_access(caller, permissions)?;
 
@@ -197,11 +228,20 @@ impl IsolatedContractState {
     }
 
     /// Add allowed caller
-    pub fn add_allowed_caller(&mut self, caller_address: String, caller: &str, permissions: &[String]) -> Result<(), RuntimeError> {
+    pub fn add_allowed_caller(
+        &mut self,
+        caller_address: String,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<(), RuntimeError> {
         // Validate admin access
         self.validate_admin_access(caller, permissions)?;
 
-        if !self.access_control.allowed_callers.contains(&caller_address) {
+        if !self
+            .access_control
+            .allowed_callers
+            .contains(&caller_address)
+        {
             self.access_control.allowed_callers.push(caller_address);
         }
 
@@ -209,30 +249,62 @@ impl IsolatedContractState {
     }
 
     /// Remove allowed caller
-    pub fn remove_allowed_caller(&mut self, caller_address: &str, caller: &str, permissions: &[String]) -> Result<(), RuntimeError> {
+    pub fn remove_allowed_caller(
+        &mut self,
+        caller_address: &str,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<(), RuntimeError> {
         // Validate admin access
         self.validate_admin_access(caller, permissions)?;
 
-        self.access_control.allowed_callers.retain(|addr| addr != caller_address);
+        self.access_control
+            .allowed_callers
+            .retain(|addr| addr != caller_address);
 
         Ok(())
     }
 
     /// Validate access for basic operations
     /// Phase 2: All state isolation access control decisions are logged for audit purposes.
-    fn validate_access(&self, caller: &str, operation: &str, permissions: &[String]) -> Result<(), RuntimeError> {
+    fn validate_access(
+        &self,
+        caller: &str,
+        operation: &str,
+        permissions: &[String],
+    ) -> Result<(), RuntimeError> {
         // Check if caller is in allowed list
-        if !self.access_control.allowed_callers.contains(&caller.to_string()) {
+        if !self
+            .access_control
+            .allowed_callers
+            .contains(&caller.to_string())
+        {
             // Phase 2: Audit log access denial
-            crate::stdlib::log::audit("state_isolation_access_denied", {
-                let mut data = std::collections::HashMap::new();
-                data.insert("contract_address".to_string(), Value::String(self.contract_address.clone()));
-                data.insert("contract_name".to_string(), Value::String(self.metadata.contract_name.clone()));
-                data.insert("caller".to_string(), Value::String(caller.to_string()));
-                data.insert("operation".to_string(), Value::String(operation.to_string()));
-                data.insert("reason".to_string(), Value::String("caller_not_in_allowed_list".to_string()));
-                data
-            }, Some("state_isolation"));
+            crate::stdlib::log::audit(
+                "state_isolation_access_denied",
+                {
+                    let mut data = std::collections::HashMap::new();
+                    data.insert(
+                        "contract_address".to_string(),
+                        Value::String(self.contract_address.clone()),
+                    );
+                    data.insert(
+                        "contract_name".to_string(),
+                        Value::String(self.metadata.contract_name.clone()),
+                    );
+                    data.insert("caller".to_string(), Value::String(caller.to_string()));
+                    data.insert(
+                        "operation".to_string(),
+                        Value::String(operation.to_string()),
+                    );
+                    data.insert(
+                        "reason".to_string(),
+                        Value::String("caller_not_in_allowed_list".to_string()),
+                    );
+                    data
+                },
+                Some("state_isolation"),
+            );
             return Err(RuntimeError::AccessDenied);
         }
 
@@ -244,99 +316,228 @@ impl IsolatedContractState {
             }
             "write" | "delete" => {
                 // Write/delete requires write permission
-                if !permissions.contains(&"write".to_string()) && !permissions.contains(&"admin".to_string()) {
+                if !permissions.contains(&"write".to_string())
+                    && !permissions.contains(&"admin".to_string())
+                {
                     // Phase 2: Audit log permission denial
-                    crate::stdlib::log::audit("state_isolation_access_denied", {
-                        let mut data = std::collections::HashMap::new();
-                        data.insert("contract_address".to_string(), Value::String(self.contract_address.clone()));
-                        data.insert("contract_name".to_string(), Value::String(self.metadata.contract_name.clone()));
-                        data.insert("caller".to_string(), Value::String(caller.to_string()));
-                        data.insert("operation".to_string(), Value::String(operation.to_string()));
-                        data.insert("reason".to_string(), Value::String("insufficient_permissions".to_string()));
-                        data.insert("required_permissions".to_string(), Value::String("write or admin".to_string()));
-                        data.insert("caller_permissions".to_string(), Value::List(permissions.iter().map(|p| Value::String(p.clone())).collect()));
-                        data
-                    }, Some("state_isolation"));
-                    return Err(RuntimeError::PermissionDenied("Write permission required".to_string()));
+                    crate::stdlib::log::audit(
+                        "state_isolation_access_denied",
+                        {
+                            let mut data = std::collections::HashMap::new();
+                            data.insert(
+                                "contract_address".to_string(),
+                                Value::String(self.contract_address.clone()),
+                            );
+                            data.insert(
+                                "contract_name".to_string(),
+                                Value::String(self.metadata.contract_name.clone()),
+                            );
+                            data.insert("caller".to_string(), Value::String(caller.to_string()));
+                            data.insert(
+                                "operation".to_string(),
+                                Value::String(operation.to_string()),
+                            );
+                            data.insert(
+                                "reason".to_string(),
+                                Value::String("insufficient_permissions".to_string()),
+                            );
+                            data.insert(
+                                "required_permissions".to_string(),
+                                Value::String("write or admin".to_string()),
+                            );
+                            data.insert(
+                                "caller_permissions".to_string(),
+                                Value::List(
+                                    permissions
+                                        .iter()
+                                        .map(|p| Value::String(p.clone()))
+                                        .collect(),
+                                ),
+                            );
+                            data
+                        },
+                        Some("state_isolation"),
+                    );
+                    return Err(RuntimeError::PermissionDenied(
+                        "Write permission required".to_string(),
+                    ));
                 }
                 Ok(())
             }
             _ => {
-                let err = Err(RuntimeError::UnsupportedOperation(format!("Unknown operation: {}", operation)));
+                let err = Err(RuntimeError::UnsupportedOperation(format!(
+                    "Unknown operation: {}",
+                    operation
+                )));
                 // Phase 2: Audit log unsupported operation
-                crate::stdlib::log::audit("state_isolation_access_denied", {
-                    let mut data = std::collections::HashMap::new();
-                    data.insert("contract_address".to_string(), Value::String(self.contract_address.clone()));
-                    data.insert("contract_name".to_string(), Value::String(self.metadata.contract_name.clone()));
-                    data.insert("caller".to_string(), Value::String(caller.to_string()));
-                    data.insert("operation".to_string(), Value::String(operation.to_string()));
-                    data.insert("reason".to_string(), Value::String("unsupported_operation".to_string()));
-                    data
-                }, Some("state_isolation"));
+                crate::stdlib::log::audit(
+                    "state_isolation_access_denied",
+                    {
+                        let mut data = std::collections::HashMap::new();
+                        data.insert(
+                            "contract_address".to_string(),
+                            Value::String(self.contract_address.clone()),
+                        );
+                        data.insert(
+                            "contract_name".to_string(),
+                            Value::String(self.metadata.contract_name.clone()),
+                        );
+                        data.insert("caller".to_string(), Value::String(caller.to_string()));
+                        data.insert(
+                            "operation".to_string(),
+                            Value::String(operation.to_string()),
+                        );
+                        data.insert(
+                            "reason".to_string(),
+                            Value::String("unsupported_operation".to_string()),
+                        );
+                        data
+                    },
+                    Some("state_isolation"),
+                );
                 return err;
             }
         };
-        
+
         // Phase 2: Audit log successful access
         if result.is_ok() {
-            crate::stdlib::log::audit("state_isolation_access_allowed", {
-                let mut data = std::collections::HashMap::new();
-                data.insert("contract_address".to_string(), Value::String(self.contract_address.clone()));
-                data.insert("contract_name".to_string(), Value::String(self.metadata.contract_name.clone()));
-                data.insert("caller".to_string(), Value::String(caller.to_string()));
-                data.insert("operation".to_string(), Value::String(operation.to_string()));
-                data
-            }, Some("state_isolation"));
+            crate::stdlib::log::audit(
+                "state_isolation_access_allowed",
+                {
+                    let mut data = std::collections::HashMap::new();
+                    data.insert(
+                        "contract_address".to_string(),
+                        Value::String(self.contract_address.clone()),
+                    );
+                    data.insert(
+                        "contract_name".to_string(),
+                        Value::String(self.metadata.contract_name.clone()),
+                    );
+                    data.insert("caller".to_string(), Value::String(caller.to_string()));
+                    data.insert(
+                        "operation".to_string(),
+                        Value::String(operation.to_string()),
+                    );
+                    data
+                },
+                Some("state_isolation"),
+            );
         }
-        
+
         result
     }
 
     /// Validate admin access for privileged operations
     /// Phase 2: All admin access control decisions are logged for audit purposes.
-    fn validate_admin_access(&self, caller: &str, permissions: &[String]) -> Result<(), RuntimeError> {
+    fn validate_admin_access(
+        &self,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<(), RuntimeError> {
         // Check if caller is owner
         if caller == self.metadata.owner {
             // Phase 2: Audit log owner access
-            crate::stdlib::log::audit("state_isolation_admin_access_allowed", {
-                let mut data = std::collections::HashMap::new();
-                data.insert("contract_address".to_string(), Value::String(self.contract_address.clone()));
-                data.insert("contract_name".to_string(), Value::String(self.metadata.contract_name.clone()));
-                data.insert("caller".to_string(), Value::String(caller.to_string()));
-                data.insert("reason".to_string(), Value::String("owner_access".to_string()));
-                data
-            }, Some("state_isolation"));
+            crate::stdlib::log::audit(
+                "state_isolation_admin_access_allowed",
+                {
+                    let mut data = std::collections::HashMap::new();
+                    data.insert(
+                        "contract_address".to_string(),
+                        Value::String(self.contract_address.clone()),
+                    );
+                    data.insert(
+                        "contract_name".to_string(),
+                        Value::String(self.metadata.contract_name.clone()),
+                    );
+                    data.insert("caller".to_string(), Value::String(caller.to_string()));
+                    data.insert(
+                        "reason".to_string(),
+                        Value::String("owner_access".to_string()),
+                    );
+                    data
+                },
+                Some("state_isolation"),
+            );
             return Ok(());
         }
 
         // Check if caller has admin permission
-        if permissions.contains(&"admin".to_string()) || permissions.contains(&"contract_admin".to_string()) {
+        if permissions.contains(&"admin".to_string())
+            || permissions.contains(&"contract_admin".to_string())
+        {
             // Phase 2: Audit log admin permission access
-            crate::stdlib::log::audit("state_isolation_admin_access_allowed", {
-                let mut data = std::collections::HashMap::new();
-                data.insert("contract_address".to_string(), Value::String(self.contract_address.clone()));
-                data.insert("contract_name".to_string(), Value::String(self.metadata.contract_name.clone()));
-                data.insert("caller".to_string(), Value::String(caller.to_string()));
-                data.insert("reason".to_string(), Value::String("admin_permission".to_string()));
-                data.insert("caller_permissions".to_string(), Value::List(permissions.iter().map(|p| Value::String(p.clone())).collect()));
-                data
-            }, Some("state_isolation"));
+            crate::stdlib::log::audit(
+                "state_isolation_admin_access_allowed",
+                {
+                    let mut data = std::collections::HashMap::new();
+                    data.insert(
+                        "contract_address".to_string(),
+                        Value::String(self.contract_address.clone()),
+                    );
+                    data.insert(
+                        "contract_name".to_string(),
+                        Value::String(self.metadata.contract_name.clone()),
+                    );
+                    data.insert("caller".to_string(), Value::String(caller.to_string()));
+                    data.insert(
+                        "reason".to_string(),
+                        Value::String("admin_permission".to_string()),
+                    );
+                    data.insert(
+                        "caller_permissions".to_string(),
+                        Value::List(
+                            permissions
+                                .iter()
+                                .map(|p| Value::String(p.clone()))
+                                .collect(),
+                        ),
+                    );
+                    data
+                },
+                Some("state_isolation"),
+            );
             return Ok(());
         }
 
         // Phase 2: Audit log admin access denial
-        crate::stdlib::log::audit("state_isolation_admin_access_denied", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("contract_address".to_string(), Value::String(self.contract_address.clone()));
-            data.insert("contract_name".to_string(), Value::String(self.metadata.contract_name.clone()));
-            data.insert("caller".to_string(), Value::String(caller.to_string()));
-            data.insert("owner".to_string(), Value::String(self.metadata.owner.clone()));
-            data.insert("reason".to_string(), Value::String("insufficient_admin_permissions".to_string()));
-            data.insert("caller_permissions".to_string(), Value::List(permissions.iter().map(|p| Value::String(p.clone())).collect()));
-            data
-        }, Some("state_isolation"));
+        crate::stdlib::log::audit(
+            "state_isolation_admin_access_denied",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert(
+                    "contract_address".to_string(),
+                    Value::String(self.contract_address.clone()),
+                );
+                data.insert(
+                    "contract_name".to_string(),
+                    Value::String(self.metadata.contract_name.clone()),
+                );
+                data.insert("caller".to_string(), Value::String(caller.to_string()));
+                data.insert(
+                    "owner".to_string(),
+                    Value::String(self.metadata.owner.clone()),
+                );
+                data.insert(
+                    "reason".to_string(),
+                    Value::String("insufficient_admin_permissions".to_string()),
+                );
+                data.insert(
+                    "caller_permissions".to_string(),
+                    Value::List(
+                        permissions
+                            .iter()
+                            .map(|p| Value::String(p.clone()))
+                            .collect(),
+                    ),
+                );
+                data
+            },
+            Some("state_isolation"),
+        );
 
-        Err(RuntimeError::PermissionDenied("Admin permission required".to_string()))
+        Err(RuntimeError::PermissionDenied(
+            "Admin permission required".to_string(),
+        ))
     }
 
     /// Estimate the serialized size of a value (for gas calculation)
@@ -347,18 +548,38 @@ impl IsolatedContractState {
             Value::Int(_) => 8,
             Value::Float(_) => 8,
             Value::String(s) => s.len(),
-            Value::List(arr) => arr.iter().map(|v| self.estimate_value_size(v)).sum::<usize>() + (arr.len() * 4),
-            Value::Map(obj) => obj.iter()
-                .map(|(k, v)| k.len() + self.estimate_value_size(v))
-                .sum::<usize>() + (obj.len() * 8),
-            Value::Array(arr) => arr.iter().map(|v| self.estimate_value_size(v)).sum::<usize>() + (arr.len() * 4),
-            Value::Result(ok, err) => self.estimate_value_size(ok) + self.estimate_value_size(err) + 8,
+            Value::List(arr) => {
+                arr.iter()
+                    .map(|v| self.estimate_value_size(v))
+                    .sum::<usize>()
+                    + (arr.len() * 4)
+            }
+            Value::Map(obj) => {
+                obj.iter()
+                    .map(|(k, v)| k.len() + self.estimate_value_size(v))
+                    .sum::<usize>()
+                    + (obj.len() * 8)
+            }
+            Value::Array(arr) => {
+                arr.iter()
+                    .map(|v| self.estimate_value_size(v))
+                    .sum::<usize>()
+                    + (arr.len() * 4)
+            }
+            Value::Result(ok, err) => {
+                self.estimate_value_size(ok) + self.estimate_value_size(err) + 8
+            }
             Value::Option(Some(v)) => self.estimate_value_size(v) + 4,
             Value::Option(None) => 4,
             Value::Set(s) => s.iter().map(|v| v.len()).sum::<usize>() + (s.len() * 4),
-            Value::Struct(name, fields) => name.len() + fields.iter()
-                .map(|(k, v)| k.len() + self.estimate_value_size(v))
-                .sum::<usize>() + (fields.len() * 8),
+            Value::Struct(name, fields) => {
+                name.len()
+                    + fields
+                        .iter()
+                        .map(|(k, v)| k.len() + self.estimate_value_size(v))
+                        .sum::<usize>()
+                    + (fields.len() * 8)
+            }
             Value::Closure(id) => id.len() + 8,
         }
     }
@@ -369,7 +590,7 @@ impl IsolatedContractState {
         use std::hash::{Hash, Hasher};
 
         let mut hasher = DefaultHasher::new();
-        
+
         // Sort keys for deterministic hashing
         let mut sorted_keys: Vec<_> = state.keys().collect();
         sorted_keys.sort();
@@ -480,13 +701,20 @@ impl IsolatedContractState {
     }
 
     /// Restore from a state snapshot (admin only)
-    pub fn restore_from_snapshot(&mut self, snapshot: StateSnapshot, caller: &str, permissions: &[String]) -> Result<(), RuntimeError> {
+    pub fn restore_from_snapshot(
+        &mut self,
+        snapshot: StateSnapshot,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<(), RuntimeError> {
         // Validate admin access
         self.validate_admin_access(caller, permissions)?;
 
         // Verify snapshot is for this contract
         if snapshot.contract_address != self.contract_address {
-            return Err(RuntimeError::General("Snapshot contract address mismatch".to_string()));
+            return Err(RuntimeError::General(
+                "Snapshot contract address mismatch".to_string(),
+            ));
         }
 
         let mut state = self.state.write().map_err(|_| {
@@ -501,7 +729,7 @@ impl IsolatedContractState {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        
+
         self.metadata.last_modified = now;
         self.metadata.state_version += 1;
         self.metadata.checksum = self.calculate_state_checksum(&state);
@@ -547,19 +775,18 @@ impl StateIsolationManager {
             return Err(RuntimeError::General("Contract already exists".to_string()));
         }
 
-        let contract_state = IsolatedContractState::new(
-            contract_address.clone(),
-            contract_name,
-            owner,
-            trust_level,
-        );
+        let contract_state =
+            IsolatedContractState::new(contract_address.clone(), contract_name, owner, trust_level);
 
         self.contracts.insert(contract_address, contract_state);
         Ok(())
     }
 
     /// Get mutable reference to contract state
-    pub fn get_contract_mut(&mut self, contract_address: &str) -> Option<&mut IsolatedContractState> {
+    pub fn get_contract_mut(
+        &mut self,
+        contract_address: &str,
+    ) -> Option<&mut IsolatedContractState> {
         self.contracts.get_mut(contract_address)
     }
 
@@ -570,12 +797,17 @@ impl StateIsolationManager {
 
     /// Create snapshot of contract state
     pub fn create_snapshot(&mut self, contract_address: &str) -> Result<(), RuntimeError> {
-        let contract = self.contracts.get(contract_address)
+        let contract = self
+            .contracts
+            .get(contract_address)
             .ok_or_else(|| RuntimeError::General("Contract not found".to_string()))?;
 
         let snapshot = contract.create_snapshot()?;
 
-        let snapshots = self.snapshots.entry(contract_address.to_string()).or_insert(Vec::new());
+        let snapshots = self
+            .snapshots
+            .entry(contract_address.to_string())
+            .or_insert(Vec::new());
         snapshots.push(snapshot);
 
         // Keep only the most recent snapshots
@@ -588,7 +820,8 @@ impl StateIsolationManager {
 
     /// List available snapshots for a contract
     pub fn get_snapshots(&self, contract_address: &str) -> Vec<&StateSnapshot> {
-        self.snapshots.get(contract_address)
+        self.snapshots
+            .get(contract_address)
             .map(|snapshots| snapshots.iter().collect())
             .unwrap_or_default()
     }
@@ -601,15 +834,20 @@ impl StateIsolationManager {
         caller: &str,
         permissions: &[String],
     ) -> Result<(), RuntimeError> {
-        let snapshots = self.snapshots.get(contract_address)
+        let snapshots = self
+            .snapshots
+            .get(contract_address)
             .ok_or_else(|| RuntimeError::General("No snapshots found for contract".to_string()))?;
 
-        let snapshot = snapshots.iter()
+        let snapshot = snapshots
+            .iter()
             .find(|s| s.timestamp == snapshot_timestamp)
             .ok_or_else(|| RuntimeError::General("Snapshot not found".to_string()))?
             .clone();
 
-        let contract = self.contracts.get_mut(contract_address)
+        let contract = self
+            .contracts
+            .get_mut(contract_address)
             .ok_or_else(|| RuntimeError::General("Contract not found".to_string()))?;
 
         contract.restore_from_snapshot(snapshot, caller, permissions)?;
@@ -618,7 +856,12 @@ impl StateIsolationManager {
     }
 
     /// Remove contract and all its snapshots (admin only)
-    pub fn remove_contract(&mut self, contract_address: &str, caller: &str, permissions: &[String]) -> Result<(), RuntimeError> {
+    pub fn remove_contract(
+        &mut self,
+        contract_address: &str,
+        caller: &str,
+        permissions: &[String],
+    ) -> Result<(), RuntimeError> {
         if let Some(contract) = self.contracts.get(contract_address) {
             contract.validate_admin_access(caller, permissions)?;
         }
@@ -661,14 +904,18 @@ mod tests {
         let permissions = vec!["write".to_string()];
 
         // Write a value
-        assert!(state.write_value("key1", Value::Int(42), "0x123", &permissions).is_ok());
+        assert!(state
+            .write_value("key1", Value::Int(42), "0x123", &permissions)
+            .is_ok());
 
         // Read the value
         let result = state.read_value("key1", "0x123", &permissions).unwrap();
         assert_eq!(result, Value::Int(42));
 
         // Read non-existent key
-        let result = state.read_value("nonexistent", "0x123", &permissions).unwrap();
+        let result = state
+            .read_value("nonexistent", "0x123", &permissions)
+            .unwrap();
         assert_eq!(result, Value::Null);
     }
 
@@ -684,10 +931,14 @@ mod tests {
         let permissions = vec!["write".to_string()];
 
         // Authorized caller should succeed
-        assert!(state.write_value("key1", Value::Int(42), "0x123", &permissions).is_ok());
+        assert!(state
+            .write_value("key1", Value::Int(42), "0x123", &permissions)
+            .is_ok());
 
         // Unauthorized caller should fail
-        assert!(state.write_value("key2", Value::Int(43), "0x456", &permissions).is_err());
+        assert!(state
+            .write_value("key2", Value::Int(43), "0x456", &permissions)
+            .is_err());
     }
 
     #[test]
@@ -703,13 +954,19 @@ mod tests {
         let write_permissions = vec!["write".to_string()];
 
         // Set to read-only mode
-        assert!(state.set_read_only(true, "owner123", &admin_permissions).is_ok());
+        assert!(state
+            .set_read_only(true, "owner123", &admin_permissions)
+            .is_ok());
 
         // Write should fail in read-only mode
-        assert!(state.write_value("key1", Value::Int(42), "0x123", &write_permissions).is_err());
+        assert!(state
+            .write_value("key1", Value::Int(42), "0x123", &write_permissions)
+            .is_err());
 
         // Read should still work
-        assert!(state.read_value("key1", "0x123", &write_permissions).is_ok());
+        assert!(state
+            .read_value("key1", "0x123", &write_permissions)
+            .is_ok());
     }
 
     #[test]
@@ -725,18 +982,30 @@ mod tests {
         let admin_permissions = vec!["admin".to_string()];
 
         // Write some initial state
-        assert!(state.write_value("key1", Value::Int(42), "0x123", &permissions).is_ok());
+        assert!(state
+            .write_value("key1", Value::Int(42), "0x123", &permissions)
+            .is_ok());
 
         // Create snapshot
         let snapshot = state.create_snapshot().unwrap();
         assert_eq!(snapshot.contract_address, "0x123");
 
         // Modify state
-        assert!(state.write_value("key1", Value::Int(100), "0x123", &permissions).is_ok());
-        assert_eq!(state.read_value("key1", "0x123", &permissions).unwrap(), Value::Int(100));
+        assert!(state
+            .write_value("key1", Value::Int(100), "0x123", &permissions)
+            .is_ok());
+        assert_eq!(
+            state.read_value("key1", "0x123", &permissions).unwrap(),
+            Value::Int(100)
+        );
 
         // Restore from snapshot
-        assert!(state.restore_from_snapshot(snapshot, "owner123", &admin_permissions).is_ok());
-        assert_eq!(state.read_value("key1", "0x123", &permissions).unwrap(), Value::Int(42));
+        assert!(state
+            .restore_from_snapshot(snapshot, "owner123", &admin_permissions)
+            .is_ok());
+        assert_eq!(
+            state.read_value("key1", "0x123", &permissions).unwrap(),
+            Value::Int(42)
+        );
     }
 }

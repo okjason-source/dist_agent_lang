@@ -4,7 +4,7 @@ use dist_agent_lang::parser::Parser;
 fn main() {
     println!("Simple Service Parsing Test");
     println!("===========================");
-    
+
     // Test service parsing
     let test_code = r#"
         @trust("hybrid")
@@ -17,17 +17,23 @@ fn main() {
             }
         }
     "#;
-    
+
     println!("Test Code:");
     println!("{}", test_code);
     println!();
-    
+
     // Tokenize
     println!("1. Tokenizing...");
     let tokens = match Lexer::new(test_code).tokenize() {
         Ok(tokens) => {
-            println!("✅ Tokenization successful! Generated {} tokens", tokens.len());
-            println!("   First 10 tokens: {:?}", &tokens[..std::cmp::min(10, tokens.len())]);
+            println!(
+                "✅ Tokenization successful! Generated {} tokens",
+                tokens.len()
+            );
+            println!(
+                "   First 10 tokens: {:?}",
+                &tokens[..std::cmp::min(10, tokens.len())]
+            );
             tokens
         }
         Err(e) => {
@@ -35,13 +41,16 @@ fn main() {
             return;
         }
     };
-    
+
     // Parse
     println!("\n2. Parsing...");
     let mut parser = Parser::new(tokens);
     let program = match parser.parse() {
         Ok(program) => {
-            println!("✅ Parsing successful! Parsed {} statements", program.statements.len());
+            println!(
+                "✅ Parsing successful! Parsed {} statements",
+                program.statements.len()
+            );
             program
         }
         Err(e) => {
@@ -49,16 +58,17 @@ fn main() {
             return;
         }
     };
-    
+
     // Check for service statement
     println!("\n3. Checking for service statement...");
-    let has_service = program.statements.iter().any(|stmt| {
-        matches!(stmt, dist_agent_lang::parser::ast::Statement::Service(_))
-    });
-    
+    let has_service = program
+        .statements
+        .iter()
+        .any(|stmt| matches!(stmt, dist_agent_lang::parser::ast::Statement::Service(_)));
+
     if has_service {
         println!("✅ Service statement found!");
-        
+
         // Print service details
         for stmt in &program.statements {
             if let dist_agent_lang::parser::ast::Statement::Service(service) = stmt {
@@ -82,7 +92,9 @@ fn main() {
         println!("   Available statement types:");
         for stmt in &program.statements {
             match stmt {
-                dist_agent_lang::parser::ast::Statement::Expression(_) => println!("     - Expression"),
+                dist_agent_lang::parser::ast::Statement::Expression(_) => {
+                    println!("     - Expression")
+                }
                 dist_agent_lang::parser::ast::Statement::Let(_) => println!("     - Let"),
                 dist_agent_lang::parser::ast::Statement::Return(_) => println!("     - Return"),
                 dist_agent_lang::parser::ast::Statement::Block(_) => println!("     - Block"),
@@ -103,6 +115,6 @@ fn main() {
             }
         }
     }
-    
+
     println!("\n🎉 Service parsing test completed!");
 }

@@ -1,5 +1,5 @@
-use crate::runtime::values::Value;
 use crate::runtime::scope::Scope;
+use crate::runtime::values::Value;
 
 pub type FunctionBody = Box<dyn Fn(&[Value], &mut Scope) -> Result<Value, RuntimeError>>;
 
@@ -64,58 +64,56 @@ impl Clone for Function {
     }
 }
 
-
-
 #[derive(Debug, thiserror::Error)]
 pub enum RuntimeError {
     #[error("Argument count mismatch: expected {expected}, got {got}")]
     ArgumentCountMismatch { expected: usize, got: usize },
-    
+
     #[error("Function not clonable")]
     FunctionNotClonable,
-    
+
     #[error("Variable '{0}' not found")]
     VariableNotFound(String),
-    
+
     #[error("Type error: expected {expected}, got {got}")]
     TypeError { expected: String, got: String },
-    
+
     #[error("Stack underflow")]
     StackUnderflow,
-    
+
     #[error("Function '{0}' not found")]
     FunctionNotFound(String),
-    
+
     #[error("Runtime error: {0}")]
     General(String),
-    
+
     #[error("Type mismatch in {0}")]
     TypeMismatch(String),
-    
+
     #[error("Division by zero")]
     DivisionByZero,
-    
+
     #[error("Unsupported operation: {0}")]
     UnsupportedOperation(String),
-    
+
     #[error("Permission denied: {0}")]
     PermissionDenied(String),
-    
+
     #[error("Re-entrancy detected: {0}")]
     ReentrancyDetected(String),
-    
+
     #[error("Integer overflow")]
     IntegerOverflow,
-    
+
     #[error("Integer underflow")]
     IntegerUnderflow,
-    
+
     #[error("Read-only violation")]
     ReadOnlyViolation,
-    
+
     #[error("Access denied")]
     AccessDenied,
-    
+
     #[error("Execution timeout: program exceeded maximum execution time")]
     ExecutionTimeout,
 }
@@ -124,10 +122,8 @@ impl RuntimeError {
     pub fn stack_underflow() -> Self {
         RuntimeError::StackUnderflow
     }
-    
+
     pub fn function_not_found(name: String) -> Self {
         RuntimeError::FunctionNotFound(name)
     }
 }
-
-

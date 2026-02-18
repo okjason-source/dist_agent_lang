@@ -40,22 +40,22 @@ impl FFIInputValidator {
                 limits.max_input_size
             ));
         }
-        
+
         // Check for null bytes (potential security issue)
         if source.contains('\0') {
             return Err("Input contains null bytes".to_string());
         }
-        
+
         // Check for extremely long lines (potential DoS)
         for line in source.lines() {
             if line.len() > 1_000_000 {
                 return Err("Line too long (potential DoS)".to_string());
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Validate value inputs
     pub fn validate_value(value: &Value, limits: &FFIResourceLimits) -> Result<(), String> {
         match value {
@@ -96,10 +96,10 @@ impl FFIInputValidator {
             }
             _ => {} // Other types are safe
         }
-        
+
         Ok(())
     }
-    
+
     /// Sanitize string input
     pub fn sanitize_string(input: &str) -> String {
         // Remove null bytes
@@ -120,7 +120,7 @@ impl FFIExecutionMonitor {
             limits,
         }
     }
-    
+
     /// Check if execution time limit exceeded
     pub fn check_timeout(&self) -> Result<(), String> {
         if self.start_time.elapsed() > self.limits.max_execution_time {
@@ -128,10 +128,12 @@ impl FFIExecutionMonitor {
         }
         Ok(())
     }
-    
+
     /// Check remaining time
     pub fn remaining_time(&self) -> Duration {
-        self.limits.max_execution_time.saturating_sub(self.start_time.elapsed())
+        self.limits
+            .max_execution_time
+            .saturating_sub(self.start_time.elapsed())
     }
 }
 
@@ -161,26 +163,26 @@ impl FFISandbox {
         if !self.allow_file_access {
             return false;
         }
-        
+
         if self.allowed_paths.is_empty() {
             return true; // All paths allowed if list is empty
         }
-        
+
         // Check if path is in allowed list
         for allowed in &self.allowed_paths {
             if path.starts_with(allowed) {
                 return true;
             }
         }
-        
+
         false
     }
-    
+
     /// Check if network access is allowed
     pub fn is_network_allowed(&self) -> bool {
         self.allow_network_access
     }
-    
+
     /// Check if system calls are allowed
     pub fn is_system_calls_allowed(&self) -> bool {
         self.allow_system_calls
@@ -220,13 +222,13 @@ impl FFISecurityContext {
             enable_validation: true,
         }
     }
-    
+
     /// Create a permissive security context (for trusted code)
     pub fn permissive() -> Self {
         Self {
             limits: FFIResourceLimits {
                 max_execution_time: Duration::from_secs(300), // 5 minutes
-                max_memory_bytes: 1_000_000_000, // 1GB
+                max_memory_bytes: 1_000_000_000,              // 1GB
                 max_stack_depth: 10000,
                 max_recursion_depth: 1000,
                 max_input_size: 100_000_000, // 100MB
@@ -241,4 +243,3 @@ impl FFISecurityContext {
         }
     }
 }
-

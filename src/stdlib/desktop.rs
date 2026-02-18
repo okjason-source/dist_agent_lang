@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::runtime::values::Value;
+use std::collections::HashMap;
 
 // Desktop GUI Framework - Phase 5
 // Comprehensive desktop application development with:
@@ -503,14 +503,21 @@ pub struct NotificationOptions {
 
 // Window Management
 pub fn create_window(config: WindowConfig) -> Result<Window, String> {
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("title".to_string(), Value::String(config.title.clone()));
-        data.insert("width".to_string(), Value::Int(config.width));
-        data.insert("height".to_string(), Value::Int(config.height));
-        data.insert("message".to_string(), Value::String("Creating desktop window".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("title".to_string(), Value::String(config.title.clone()));
+            data.insert("width".to_string(), Value::Int(config.width));
+            data.insert("height".to_string(), Value::Int(config.height));
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating desktop window".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     let window = Window {
         id: format!("window_{}", generate_id()),
@@ -536,12 +543,19 @@ pub fn create_window(config: WindowConfig) -> Result<Window, String> {
 pub fn show_window(window: &mut Window) -> Result<bool, String> {
     window.visible = true;
 
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("window_id".to_string(), Value::String(window.id.clone()));
-        data.insert("message".to_string(), Value::String("Showing desktop window".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("window_id".to_string(), Value::String(window.id.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Showing desktop window".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(true)
 }
@@ -549,12 +563,19 @@ pub fn show_window(window: &mut Window) -> Result<bool, String> {
 pub fn hide_window(window: &mut Window) -> Result<bool, String> {
     window.visible = false;
 
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("window_id".to_string(), Value::String(window.id.clone()));
-        data.insert("message".to_string(), Value::String("Hiding desktop window".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("window_id".to_string(), Value::String(window.id.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Hiding desktop window".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(true)
 }
@@ -563,12 +584,19 @@ pub fn close_window(window: &mut Window) -> Result<bool, String> {
     window.visible = false;
     window.components.clear();
 
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("window_id".to_string(), Value::String(window.id.clone()));
-        data.insert("message".to_string(), Value::String("Closing desktop window".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("window_id".to_string(), Value::String(window.id.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Closing desktop window".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(true)
 }
@@ -577,12 +605,19 @@ pub fn maximize_window(window: &mut Window) -> Result<bool, String> {
     window.maximized = true;
     window.minimized = false;
 
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("window_id".to_string(), Value::String(window.id.clone()));
-        data.insert("message".to_string(), Value::String("Maximizing desktop window".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("window_id".to_string(), Value::String(window.id.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Maximizing desktop window".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(true)
 }
@@ -591,12 +626,19 @@ pub fn minimize_window(window: &mut Window) -> Result<bool, String> {
     window.minimized = true;
     window.maximized = false;
 
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("window_id".to_string(), Value::String(window.id.clone()));
-        data.insert("message".to_string(), Value::String("Minimizing desktop window".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("window_id".to_string(), Value::String(window.id.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Minimizing desktop window".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(true)
 }
@@ -605,12 +647,19 @@ pub fn restore_window(window: &mut Window) -> Result<bool, String> {
     window.maximized = false;
     window.minimized = false;
 
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("window_id".to_string(), Value::String(window.id.clone()));
-        data.insert("message".to_string(), Value::String("Restoring desktop window".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("window_id".to_string(), Value::String(window.id.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Restoring desktop window".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(true)
 }
@@ -664,7 +713,13 @@ pub fn create_label(text: String, x: i64, y: i64, width: i64, height: i64) -> UI
     UIComponent::Label(label)
 }
 
-pub fn create_text_field(placeholder: Option<String>, x: i64, y: i64, width: i64, height: i64) -> UIComponent {
+pub fn create_text_field(
+    placeholder: Option<String>,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+) -> UIComponent {
     let properties = ComponentProperties {
         id: format!("textfield_{}", generate_id()),
         x,
@@ -690,7 +745,13 @@ pub fn create_text_field(placeholder: Option<String>, x: i64, y: i64, width: i64
     UIComponent::TextField(text_field)
 }
 
-pub fn create_text_area(placeholder: Option<String>, x: i64, y: i64, width: i64, height: i64) -> UIComponent {
+pub fn create_text_area(
+    placeholder: Option<String>,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+) -> UIComponent {
     let properties = ComponentProperties {
         id: format!("textarea_{}", generate_id()),
         x,
@@ -778,12 +839,15 @@ pub fn create_listbox(items: Vec<String>, x: i64, y: i64, width: i64, height: i6
         event_handlers: HashMap::new(),
     };
 
-    let list_items: Vec<ListItem> = items.into_iter().map(|text| ListItem {
-        text,
-        icon_path: None,
-        data: None,
-        enabled: true,
-    }).collect();
+    let list_items: Vec<ListItem> = items
+        .into_iter()
+        .map(|text| ListItem {
+            text,
+            icon_path: None,
+            data: None,
+            enabled: true,
+        })
+        .collect();
 
     let listbox = ListBoxComponent {
         properties,
@@ -809,14 +873,19 @@ pub fn create_table(columns: Vec<String>, x: i64, y: i64, width: i64, height: i6
         event_handlers: HashMap::new(),
     };
 
-    let table_columns: Vec<TableColumn> = columns.clone().into_iter().enumerate().map(|(i, title)| TableColumn {
-        id: format!("col_{}", i),
-        title,
-        width: width / columns.len() as i64,
-        resizable: true,
-        sortable: true,
-        data_type: "text".to_string(),
-    }).collect();
+    let table_columns: Vec<TableColumn> = columns
+        .clone()
+        .into_iter()
+        .enumerate()
+        .map(|(i, title)| TableColumn {
+            id: format!("col_{}", i),
+            title,
+            width: width / columns.len() as i64,
+            resizable: true,
+            sortable: true,
+            data_type: "text".to_string(),
+        })
+        .collect();
 
     let table = TableViewComponent {
         properties,
@@ -853,7 +922,13 @@ pub fn create_menu_bar() -> UIComponent {
     UIComponent::MenuBar(menu_bar)
 }
 
-pub fn create_toolbar(orientation: Orientation, x: i64, y: i64, width: i64, height: i64) -> UIComponent {
+pub fn create_toolbar(
+    orientation: Orientation,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+) -> UIComponent {
     let properties = ComponentProperties {
         id: format!("toolbar_{}", generate_id()),
         x,
@@ -921,7 +996,14 @@ pub fn create_tab_view(x: i64, y: i64, width: i64, height: i64) -> UIComponent {
     UIComponent::TabView(tab_view)
 }
 
-pub fn create_progress_bar(minimum: i64, maximum: i64, x: i64, y: i64, width: i64, height: i64) -> UIComponent {
+pub fn create_progress_bar(
+    minimum: i64,
+    maximum: i64,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+) -> UIComponent {
     let properties = ComponentProperties {
         id: format!("progressbar_{}", generate_id()),
         x,
@@ -973,34 +1055,62 @@ pub fn create_image_view(x: i64, y: i64, width: i64, height: i64) -> UIComponent
 }
 
 // Component Management
-pub fn add_component_to_window(window: &mut Window, component: UIComponent) -> Result<bool, String> {
+pub fn add_component_to_window(
+    window: &mut Window,
+    component: UIComponent,
+) -> Result<bool, String> {
     window.components.push(component);
 
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("window_id".to_string(), Value::String(window.id.clone()));
-        data.insert("component_count".to_string(), Value::Int(window.components.len() as i64));
-        data.insert("message".to_string(), Value::String("Added component to window".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("window_id".to_string(), Value::String(window.id.clone()));
+            data.insert(
+                "component_count".to_string(),
+                Value::Int(window.components.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Added component to window".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(true)
 }
 
-pub fn remove_component_from_window(window: &mut Window, component_id: &str) -> Result<bool, String> {
+pub fn remove_component_from_window(
+    window: &mut Window,
+    component_id: &str,
+) -> Result<bool, String> {
     let initial_count = window.components.len();
-    window.components.retain(|comp| get_component_id(comp) != component_id);
+    window
+        .components
+        .retain(|comp| get_component_id(comp) != component_id);
 
     let removed = window.components.len() < initial_count;
 
     if removed {
-        crate::stdlib::log::info("desktop", {
-            let mut data = std::collections::HashMap::new();
-            data.insert("window_id".to_string(), Value::String(window.id.clone()));
-            data.insert("component_id".to_string(), Value::String(component_id.to_string()));
-            data.insert("message".to_string(), Value::String("Removed component from window".to_string()));
-            data
-        }, Some("desktop"));
+        crate::stdlib::log::info(
+            "desktop",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert("window_id".to_string(), Value::String(window.id.clone()));
+                data.insert(
+                    "component_id".to_string(),
+                    Value::String(component_id.to_string()),
+                );
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Removed component from window".to_string()),
+                );
+                data
+            },
+            Some("desktop"),
+        );
     }
 
     Ok(removed)
@@ -1032,40 +1142,70 @@ pub fn get_component_id(component: &UIComponent) -> String {
 }
 
 // Event Handling
-pub fn add_event_handler(window: &mut Window, component_id: String, event_type: String, handler_function: String) -> Result<bool, String> {
-    window.event_handlers.insert(format!("{}_{}", component_id, event_type), handler_function);
+pub fn add_event_handler(
+    window: &mut Window,
+    component_id: String,
+    event_type: String,
+    handler_function: String,
+) -> Result<bool, String> {
+    window
+        .event_handlers
+        .insert(format!("{}_{}", component_id, event_type), handler_function);
 
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("window_id".to_string(), Value::String(window.id.clone()));
-        data.insert("component_id".to_string(), Value::String(component_id));
-        data.insert("event_type".to_string(), Value::String(event_type));
-        data.insert("message".to_string(), Value::String("Added event handler to window".to_string()));
-        data
-    }, Some("desktop"));
-
-    Ok(true)
-}
-
-pub fn remove_event_handler(window: &mut Window, component_id: String, event_type: String) -> Result<bool, String> {
-    let key = format!("{}_{}", component_id, event_type);
-    let removed = window.event_handlers.remove(&key).is_some();
-
-    if removed {
-        crate::stdlib::log::info("desktop", {
+    crate::stdlib::log::info(
+        "desktop",
+        {
             let mut data = std::collections::HashMap::new();
             data.insert("window_id".to_string(), Value::String(window.id.clone()));
             data.insert("component_id".to_string(), Value::String(component_id));
             data.insert("event_type".to_string(), Value::String(event_type));
-            data.insert("message".to_string(), Value::String("Removed event handler from window".to_string()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Added event handler to window".to_string()),
+            );
             data
-        }, Some("desktop"));
+        },
+        Some("desktop"),
+    );
+
+    Ok(true)
+}
+
+pub fn remove_event_handler(
+    window: &mut Window,
+    component_id: String,
+    event_type: String,
+) -> Result<bool, String> {
+    let key = format!("{}_{}", component_id, event_type);
+    let removed = window.event_handlers.remove(&key).is_some();
+
+    if removed {
+        crate::stdlib::log::info(
+            "desktop",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert("window_id".to_string(), Value::String(window.id.clone()));
+                data.insert("component_id".to_string(), Value::String(component_id));
+                data.insert("event_type".to_string(), Value::String(event_type));
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Removed event handler from window".to_string()),
+                );
+                data
+            },
+            Some("desktop"),
+        );
     }
 
     Ok(removed)
 }
 
-pub fn trigger_event(window: &Window, component_id: String, event_type: String, _event_data: HashMap<String, Value>) -> Result<Vec<String>, String> {
+pub fn trigger_event(
+    window: &Window,
+    component_id: String,
+    event_type: String,
+    _event_data: HashMap<String, Value>,
+) -> Result<Vec<String>, String> {
     let mut triggered_handlers = Vec::new();
 
     // Check for specific component event handler
@@ -1086,28 +1226,48 @@ pub fn trigger_event(window: &Window, component_id: String, event_type: String, 
         triggered_handlers.push(handler.clone());
     }
 
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("window_id".to_string(), Value::String(window.id.clone()));
-        data.insert("component_id".to_string(), Value::String(component_id));
-        data.insert("event_type".to_string(), Value::String(event_type));
-        data.insert("handlers_triggered".to_string(), Value::Int(triggered_handlers.len() as i64));
-        data.insert("message".to_string(), Value::String("Event triggered".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("window_id".to_string(), Value::String(window.id.clone()));
+            data.insert("component_id".to_string(), Value::String(component_id));
+            data.insert("event_type".to_string(), Value::String(event_type));
+            data.insert(
+                "handlers_triggered".to_string(),
+                Value::Int(triggered_handlers.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Event triggered".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(triggered_handlers)
 }
 
 // Dialogs and System Integration
 pub fn show_file_dialog(options: FileDialogOptions) -> Result<Vec<String>, String> {
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("title".to_string(), Value::String(options.title.clone()));
-        data.insert("multiple_selection".to_string(), Value::Bool(options.multiple_selection));
-        data.insert("message".to_string(), Value::String("Showing file dialog".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("title".to_string(), Value::String(options.title.clone()));
+            data.insert(
+                "multiple_selection".to_string(),
+                Value::Bool(options.multiple_selection),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Showing file dialog".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     // Simulated file selection
     if options.multiple_selection {
@@ -1121,38 +1281,62 @@ pub fn show_file_dialog(options: FileDialogOptions) -> Result<Vec<String>, Strin
 }
 
 pub fn show_save_dialog(options: FileDialogOptions) -> Result<String, String> {
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("title".to_string(), Value::String(options.title.clone()));
-        data.insert("message".to_string(), Value::String("Showing save dialog".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("title".to_string(), Value::String(options.title.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Showing save dialog".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     // Simulated file path
     Ok("/home/user/new_document.txt".to_string())
 }
 
 pub fn show_message_dialog(options: MessageDialogOptions) -> Result<String, String> {
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("title".to_string(), Value::String(options.title.clone()));
-        data.insert("message".to_string(), Value::String(options.message.clone()));
-        data.insert("message".to_string(), Value::String("Showing message dialog".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("title".to_string(), Value::String(options.title.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String(options.message.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Showing message dialog".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     // Simulated button selection
     Ok(options.buttons.get(0).unwrap_or(&"OK".to_string()).clone())
 }
 
 pub fn create_system_tray_icon(icon_path: String, tooltip: String) -> SystemTrayIcon {
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("icon_path".to_string(), Value::String(icon_path.clone()));
-        data.insert("tooltip".to_string(), Value::String(tooltip.clone()));
-        data.insert("message".to_string(), Value::String("Creating system tray icon".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("icon_path".to_string(), Value::String(icon_path.clone()));
+            data.insert("tooltip".to_string(), Value::String(tooltip.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating system tray icon".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     SystemTrayIcon {
         icon_path,
@@ -1163,14 +1347,24 @@ pub fn create_system_tray_icon(icon_path: String, tooltip: String) -> SystemTray
 }
 
 pub fn show_notification(options: NotificationOptions) -> Result<bool, String> {
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("title".to_string(), Value::String(options.title.clone()));
-        data.insert("message".to_string(), Value::String(options.message.clone()));
-        data.insert("sound".to_string(), Value::Bool(options.sound));
-        data.insert("message".to_string(), Value::String("Showing desktop notification".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("title".to_string(), Value::String(options.title.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String(options.message.clone()),
+            );
+            data.insert("sound".to_string(), Value::Bool(options.sound));
+            data.insert(
+                "message".to_string(),
+                Value::String("Showing desktop notification".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(true)
 }
@@ -1188,12 +1382,15 @@ pub fn create_theme(name: String) -> Theme {
     colors.insert("foreground".to_string(), "#212529".to_string());
 
     let mut fonts = HashMap::new();
-    fonts.insert("default".to_string(), FontDefinition {
-        family: "Arial".to_string(),
-        size: 12,
-        weight: "normal".to_string(),
-        style: "normal".to_string(),
-    });
+    fonts.insert(
+        "default".to_string(),
+        FontDefinition {
+            family: "Arial".to_string(),
+            size: 12,
+            weight: "normal".to_string(),
+            style: "normal".to_string(),
+        },
+    );
 
     let mut spacing = HashMap::new();
     spacing.insert("small".to_string(), 4);
@@ -1216,13 +1413,20 @@ pub fn apply_theme_to_window(window: &mut Window, theme: Theme) -> Result<bool, 
         apply_theme_to_component(component, &theme);
     }
 
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("window_id".to_string(), Value::String(window.id.clone()));
-        data.insert("theme_name".to_string(), Value::String(theme.name.clone()));
-        data.insert("message".to_string(), Value::String("Applied theme to window".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("window_id".to_string(), Value::String(window.id.clone()));
+            data.insert("theme_name".to_string(), Value::String(theme.name.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Applied theme to window".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(true)
 }
@@ -1230,11 +1434,38 @@ pub fn apply_theme_to_window(window: &mut Window, theme: Theme) -> Result<bool, 
 pub fn apply_theme_to_component(component: &mut UIComponent, theme: &Theme) {
     match component {
         UIComponent::Button(btn) => {
-            btn.properties.style.insert("background-color".to_string(), Value::String(theme.colors.get("primary").unwrap_or(&"#007acc".to_string()).clone()));
-            btn.properties.style.insert("color".to_string(), Value::String(theme.colors.get("background").unwrap_or(&"#ffffff".to_string()).clone()));
+            btn.properties.style.insert(
+                "background-color".to_string(),
+                Value::String(
+                    theme
+                        .colors
+                        .get("primary")
+                        .unwrap_or(&"#007acc".to_string())
+                        .clone(),
+                ),
+            );
+            btn.properties.style.insert(
+                "color".to_string(),
+                Value::String(
+                    theme
+                        .colors
+                        .get("background")
+                        .unwrap_or(&"#ffffff".to_string())
+                        .clone(),
+                ),
+            );
         }
         UIComponent::Label(lbl) => {
-            lbl.properties.style.insert("color".to_string(), Value::String(theme.colors.get("foreground").unwrap_or(&"#212529".to_string()).clone()));
+            lbl.properties.style.insert(
+                "color".to_string(),
+                Value::String(
+                    theme
+                        .colors
+                        .get("foreground")
+                        .unwrap_or(&"#212529".to_string())
+                        .clone(),
+                ),
+            );
         }
         _ => {
             // Apply general styling
@@ -1250,22 +1481,36 @@ pub fn generate_id() -> String {
 
 // Application Lifecycle
 pub fn run_event_loop() -> Result<(), String> {
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Starting desktop event loop".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Starting desktop event loop".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     // In a real implementation, this would start the GUI event loop
     Ok(())
 }
 
 pub fn exit_application() -> Result<(), String> {
-    crate::stdlib::log::info("desktop", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("message".to_string(), Value::String("Exiting desktop application".to_string()));
-        data
-    }, Some("desktop"));
+    crate::stdlib::log::info(
+        "desktop",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "message".to_string(),
+                Value::String("Exiting desktop application".to_string()),
+            );
+            data
+        },
+        Some("desktop"),
+    );
 
     Ok(())
 }

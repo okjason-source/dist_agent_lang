@@ -17,7 +17,10 @@ fn test_parser_empty_input() {
     // Catches: loop bound mutations in parse() and parse_with_recovery
     // Empty input produces [EOF] token; parser skips EOF and returns empty program
     let result = parse_source("");
-    assert!(result.is_ok(), "Empty input should parse successfully (catches loop bound mutations)");
+    assert!(
+        result.is_ok(),
+        "Empty input should parse successfully (catches loop bound mutations)"
+    );
     let program = result.unwrap();
     assert_eq!(
         program.statements.len(),
@@ -32,7 +35,11 @@ fn test_parser_whitespace_only() {
     let result = parse_source("   \n\t  ");
     assert!(result.is_ok(), "Whitespace-only input should parse");
     let program = result.unwrap();
-    assert_eq!(program.statements.len(), 0, "Whitespace-only should produce empty program");
+    assert_eq!(
+        program.statements.len(),
+        0,
+        "Whitespace-only should produce empty program"
+    );
 }
 
 #[test]
@@ -41,7 +48,10 @@ fn test_parser_single_semicolon() {
     let result = parse_source(";");
     assert!(result.is_ok(), "Single semicolon should parse");
     let program = result.unwrap();
-    assert!(!program.statements.is_empty(), "Semicolon produces statement");
+    assert!(
+        !program.statements.is_empty(),
+        "Semicolon produces statement"
+    );
 }
 
 // ============================================================================
@@ -54,7 +64,11 @@ fn test_parser_single_number() {
     let result = parse_source("42");
     assert!(result.is_ok(), "Single number should parse");
     let program = result.unwrap();
-    assert_eq!(program.statements.len(), 1, "Should have exactly 1 statement");
+    assert_eq!(
+        program.statements.len(),
+        1,
+        "Should have exactly 1 statement"
+    );
 }
 
 #[test]
@@ -63,7 +77,11 @@ fn test_parser_single_identifier() {
     let result = parse_source("x");
     assert!(result.is_ok(), "Single identifier should parse");
     let program = result.unwrap();
-    assert_eq!(program.statements.len(), 1, "Should have exactly 1 statement");
+    assert_eq!(
+        program.statements.len(),
+        1,
+        "Should have exactly 1 statement"
+    );
 }
 
 // ============================================================================
@@ -82,7 +100,10 @@ fn test_parser_array_literal() {
             Expression::ArrayLiteral(elements) => {
                 assert_eq!(elements.len(), 3, "[1,2,3] should produce 3 elements");
             }
-            _ => panic!("Expected ArrayLiteral from [1,2,3], got {:?}", let_stmt.value),
+            _ => panic!(
+                "Expected ArrayLiteral from [1,2,3], got {:?}",
+                let_stmt.value
+            ),
         }
     }
 }
@@ -96,9 +117,16 @@ fn test_parser_object_literal() {
     if let Statement::Let(ref let_stmt) = program.statements[0] {
         match &let_stmt.value {
             Expression::ObjectLiteral(map) => {
-                assert_eq!(map.len(), 2, r#"{{"a": 1, "b": 2}} should produce 2 key-value pairs"#);
+                assert_eq!(
+                    map.len(),
+                    2,
+                    r#"{{"a": 1, "b": 2}} should produce 2 key-value pairs"#
+                );
             }
-            _ => panic!("Expected ObjectLiteral from object literal, got {:?}", let_stmt.value),
+            _ => panic!(
+                "Expected ObjectLiteral from object literal, got {:?}",
+                let_stmt.value
+            ),
         }
     }
 }
@@ -112,14 +140,20 @@ fn test_parser_object_literal() {
 fn test_parser_invalid_input_returns_error() {
     // Catches: error path - invalid input must produce Err (not panic)
     let result = parse_source("let x = ");
-    assert!(result.is_err(), "Incomplete let statement should fail to parse");
+    assert!(
+        result.is_err(),
+        "Incomplete let statement should fail to parse"
+    );
 }
 
 #[test]
 fn test_parser_invalid_syntax_returns_error() {
     // Catches: error path - malformed syntax
     let result = parse_source("let = 1;");
-    assert!(result.is_err(), "Invalid let (missing identifier) should fail");
+    assert!(
+        result.is_err(),
+        "Invalid let (missing identifier) should fail"
+    );
 }
 
 #[test]
@@ -127,11 +161,19 @@ fn test_parser_with_recovery_on_invalid_input() {
     // Catches: parse_with_recovery path - set_recovery_skip_from, get_recovery_continue_at
     // Valid stmt + invalid stmt: recovery should collect error and continue
     let code = "let a = 1; let b = ;";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (program, errors) = parser.parse_with_recovery();
-    assert!(!errors.is_empty(), "Should collect parse errors from invalid statement");
-    assert!(program.statements.len() >= 1, "Should parse valid statements before error");
+    assert!(
+        !errors.is_empty(),
+        "Should collect parse errors from invalid statement"
+    );
+    assert!(
+        program.statements.len() >= 1,
+        "Should parse valid statements before error"
+    );
 }
 
 // ============================================================================
@@ -179,16 +221,26 @@ fn test_parser_vec_macro() {
     if let Statement::Let(ref let_stmt) = program.statements[0] {
         match &let_stmt.value {
             Expression::ArrayLiteral(elements) => {
-                assert_eq!(elements.len(), 3, "vec!(1,2,3) should produce ArrayLiteral with 3 elements");
+                assert_eq!(
+                    elements.len(),
+                    3,
+                    "vec!(1,2,3) should produce ArrayLiteral with 3 elements"
+                );
             }
             Expression::FunctionCall(call) => {
                 // If vec! parses as FunctionCall, the "vec" match arm isn't being hit
                 // This means the mutation test won't catch deletion of that arm
                 // For mutation testing purposes, we accept this but note it
-                assert_eq!(call.name, "vec!", "If not ArrayLiteral, should be FunctionCall with name 'vec!'");
+                assert_eq!(
+                    call.name, "vec!",
+                    "If not ArrayLiteral, should be FunctionCall with name 'vec!'"
+                );
                 assert_eq!(call.arguments.len(), 3);
             }
-            _ => panic!("Expected ArrayLiteral or FunctionCall from vec!(1,2,3), got {:?}", let_stmt.value),
+            _ => panic!(
+                "Expected ArrayLiteral or FunctionCall from vec!(1,2,3), got {:?}",
+                let_stmt.value
+            ),
         }
     }
 }
@@ -208,14 +260,24 @@ fn test_parser_map_macro() {
     if let Statement::Let(ref let_stmt) = program.statements[0] {
         match &let_stmt.value {
             Expression::ObjectLiteral(map) => {
-                assert_eq!(map.len(), 2, "map! should produce ObjectLiteral with 2 key-value pairs");
+                assert_eq!(
+                    map.len(),
+                    2,
+                    "map! should produce ObjectLiteral with 2 key-value pairs"
+                );
             }
             Expression::FunctionCall(call) => {
                 // If map! parses as FunctionCall, the "map" match arm isn't being hit
-                assert_eq!(call.name, "map!", "If not ObjectLiteral, should be FunctionCall with name 'map!'");
+                assert_eq!(
+                    call.name, "map!",
+                    "If not ObjectLiteral, should be FunctionCall with name 'map!'"
+                );
                 assert_eq!(call.arguments.len(), 4); // 4 args: "a", 1, "b", 2
             }
-            _ => panic!("Expected ObjectLiteral or FunctionCall from map!, got {:?}", let_stmt.value),
+            _ => panic!(
+                "Expected ObjectLiteral or FunctionCall from map!, got {:?}",
+                let_stmt.value
+            ),
         }
     }
 }
@@ -261,7 +323,11 @@ fn test_parser_single_statement_exact_count() {
     // Catches: loop bound < vs <= - "let x = 1;" should produce exactly 1 statement
     let code = "let x = 1;";
     let program = parse_source(code).unwrap();
-    assert_eq!(program.statements.len(), 1, "Single statement should produce exactly 1 (catches <= mutation)");
+    assert_eq!(
+        program.statements.len(),
+        1,
+        "Single statement should produce exactly 1 (catches <= mutation)"
+    );
 }
 
 #[test]
@@ -271,7 +337,11 @@ fn test_parser_empty_block() {
     let program = parse_source(code).unwrap();
     assert!(!program.statements.is_empty());
     if let Statement::If(ref if_stmt) = program.statements[0] {
-        assert_eq!(if_stmt.consequence.statements.len(), 0, "Empty block should have 0 statements");
+        assert_eq!(
+            if_stmt.consequence.statements.len(),
+            0,
+            "Empty block should have 0 statements"
+        );
     }
 }
 
@@ -281,7 +351,11 @@ fn test_parser_block_with_single_statement() {
     let code = "if (true) { let x = 1; }";
     let program = parse_source(code).unwrap();
     if let Statement::If(ref if_stmt) = program.statements[0] {
-        assert_eq!(if_stmt.consequence.statements.len(), 1, "Block with 1 statement should have exactly 1");
+        assert_eq!(
+            if_stmt.consequence.statements.len(),
+            1,
+            "Block with 1 statement should have exactly 1"
+        );
     }
 }
 
@@ -330,7 +404,11 @@ fn test_parser_binary_equality_exact_structure() {
         match &let_stmt.value {
             Expression::BinaryOp(_left, op, _right) => {
                 use dist_agent_lang::lexer::tokens::Operator;
-                assert_eq!(*op, Operator::Equal, "Should be Equal operator (== is tokenized as Equal)");
+                assert_eq!(
+                    *op,
+                    Operator::Equal,
+                    "Should be Equal operator (== is tokenized as Equal)"
+                );
             }
             _ => panic!("Expected BinaryOp(Equal), got {:?}", let_stmt.value),
         }
@@ -411,7 +489,10 @@ fn test_parser_unary_not_operator() {
             Expression::UnaryOp(op, expr) => {
                 use dist_agent_lang::lexer::tokens::Operator;
                 assert_eq!(*op, Operator::Not, "Should be Not operator");
-                assert!(matches!(expr.as_ref(), Expression::Literal(Literal::Bool(_))));
+                assert!(matches!(
+                    expr.as_ref(),
+                    Expression::Literal(Literal::Bool(_))
+                ));
             }
             _ => panic!("Expected UnaryOp(Not), got {:?}", let_stmt.value),
         }
@@ -504,11 +585,16 @@ fn test_parser_chained_binary_operations() {
 fn test_parser_error_recovery_multiple_errors() {
     // Catches: parse_with_recovery loop, error collection
     let code = "let a = 1; let b = ; let c = 2;";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (program, errors) = parser.parse_with_recovery();
     assert!(errors.len() >= 1, "Should collect at least one parse error");
-    assert!(program.statements.len() >= 1, "Should parse valid statements");
+    assert!(
+        program.statements.len() >= 1,
+        "Should parse valid statements"
+    );
 }
 
 #[test]
@@ -516,11 +602,16 @@ fn test_parser_error_recovery_invalid_block() {
     // Catches: parse_block_statement error path
     // Block has closing brace as sync point, so recovery should work
     let code = "if (true) { let x = ; }";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (program, errors) = parser.parse_with_recovery();
     // Recovery should collect error - the closing brace provides a sync point
-    assert!(!errors.is_empty() || program.statements.len() > 0, "Should either collect errors or parse successfully");
+    assert!(
+        !errors.is_empty() || program.statements.len() > 0,
+        "Should either collect errors or parse successfully"
+    );
 }
 
 // ============================================================================
@@ -532,7 +623,9 @@ fn test_parser_error_recovery_invalid_block() {
 fn test_parser_error_recovery_at_eof() {
     // Edge case: Error at EOF - recovery should exit gracefully
     let code = "let x = ";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (_program, errors) = parser.parse_with_recovery();
     assert!(!errors.is_empty(), "Should collect error");
@@ -544,18 +637,25 @@ fn test_parser_error_recovery_at_last_token() {
     // Edge case: Error at last token before EOF
     // First statement is valid, second has error at last token
     let code = "let x = 1; let y = ";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (program, errors) = parser.parse_with_recovery();
     assert!(errors.len() >= 1, "Should collect at least one error");
-    assert!(program.statements.len() >= 1, "Should parse first valid statement");
+    assert!(
+        program.statements.len() >= 1,
+        "Should parse first valid statement"
+    );
 }
 
 #[test]
 fn test_parser_error_recovery_at_start() {
     // Edge case: Error at position 0 (start of input)
     let code = "= 1;";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (_program, errors) = parser.parse_with_recovery();
     assert!(!errors.is_empty(), "Should collect error");
@@ -566,29 +666,41 @@ fn test_parser_error_recovery_at_start() {
 fn test_parser_error_recovery_sync_point_is_next_token() {
     // Edge case: Sync point is immediately after error position
     let code = "let x = ; let y = 2;";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (program, errors) = parser.parse_with_recovery();
     assert!(!errors.is_empty(), "Should collect error");
-    assert!(program.statements.len() >= 1, "Should parse valid statement after recovery");
+    assert!(
+        program.statements.len() >= 1,
+        "Should parse valid statement after recovery"
+    );
 }
 
 #[test]
 fn test_parser_error_recovery_nested_blocks() {
     // Edge case: Error in nested block - recovery should skip to outer closing brace
     let code = "if (true) { if (false) { let x = ; } }";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (program, errors) = parser.parse_with_recovery();
     // Should collect error and recover - closing braces provide sync points
-    assert!(!errors.is_empty() || program.statements.len() > 0, "Should handle nested block errors");
+    assert!(
+        !errors.is_empty() || program.statements.len() > 0,
+        "Should handle nested block errors"
+    );
 }
 
 #[test]
 fn test_parser_error_recovery_no_sync_point_until_eof() {
     // Edge case: No sync point found until EOF
     let code = "let x = let y = ";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (_program, errors) = parser.parse_with_recovery();
     assert!(!errors.is_empty(), "Should collect error");
@@ -599,7 +711,9 @@ fn test_parser_error_recovery_no_sync_point_until_eof() {
 fn test_parser_error_recovery_multiple_consecutive_errors() {
     // Edge case: Multiple consecutive errors - recovery should handle each
     let code = "let a = ; let b = ; let c = ;";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (_program, errors) = parser.parse_with_recovery();
     assert!(errors.len() >= 1, "Should collect errors");
@@ -610,7 +724,9 @@ fn test_parser_error_recovery_multiple_consecutive_errors() {
 fn test_parser_error_recovery_sync_point_is_eof() {
     // Edge case: Sync point is EOF itself
     let code = "let x = 1 let y = 2";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (_program, errors) = parser.parse_with_recovery();
     assert!(!errors.is_empty(), "Should collect error");
@@ -622,7 +738,9 @@ fn test_parser_error_recovery_start_plus_one_at_eof() {
     // Edge case: start + 1 >= tokens.len() (error at last token before EOF)
     // This tests the edge case where skip_to_sync_point_from starts beyond bounds
     let code = "let x =";
-    let tokens = Lexer::new(code).tokenize_with_positions_immutable().unwrap();
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (_program, errors) = parser.parse_with_recovery();
     assert!(!errors.is_empty(), "Should collect error");
@@ -640,7 +758,10 @@ fn test_parser_index_access_nested() {
                 assert!(matches!(index.as_ref(), Expression::Identifier(_)));
                 match container.as_ref() {
                     Expression::IndexAccess(inner_container, inner_index) => {
-                        assert!(matches!(inner_container.as_ref(), Expression::Identifier(_)));
+                        assert!(matches!(
+                            inner_container.as_ref(),
+                            Expression::Identifier(_)
+                        ));
                         assert!(matches!(inner_index.as_ref(), Expression::Identifier(_)));
                     }
                     _ => panic!("Expected nested IndexAccess"),
@@ -659,7 +780,10 @@ fn test_parser_range_expression() {
     if let Statement::Let(ref let_stmt) = program.statements[0] {
         match &let_stmt.value {
             Expression::Range(start, end) => {
-                assert!(matches!(start.as_ref(), Expression::Literal(Literal::Int(_))));
+                assert!(matches!(
+                    start.as_ref(),
+                    Expression::Literal(Literal::Int(_))
+                ));
                 assert!(matches!(end.as_ref(), Expression::Literal(Literal::Int(_))));
             }
             _ => panic!("Expected Range, got {:?}", let_stmt.value),

@@ -1,6 +1,6 @@
 // DAL Code Generator - Generates DAL source code from DAL AST
 
-use super::converter::{DALAST, Service, Field, DALFunction, DALParameter, DALEvent};
+use super::converter::{DALEvent, DALFunction, DALParameter, Field, Service, DALAST};
 
 /// DAL Code Generator
 pub struct DALGenerator {
@@ -12,31 +12,31 @@ impl DALGenerator {
     pub fn new() -> Self {
         Self { indent_level: 0 }
     }
-    
+
     /// Generate DAL source code from AST
     pub fn generate(&self, ast: DALAST) -> Result<String, String> {
         let mut code = String::new();
-        
+
         for service in ast.services {
             code.push_str(&self.generate_service(service)?);
             code.push_str("\n\n");
         }
-        
+
         Ok(code)
     }
-    
+
     fn generate_service(&self, service: Service) -> Result<String, String> {
         let mut code = String::new();
-        
+
         // Generate attributes
         for attr in &service.attributes {
             code.push_str(attr);
             code.push('\n');
         }
-        
+
         // Generate service declaration
         code.push_str(&format!("service {} {{\n", service.name));
-        
+
         // Generate fields
         if !service.fields.is_empty() {
             code.push_str("\n    // State variables\n");
@@ -44,7 +44,7 @@ impl DALGenerator {
                 code.push_str(&self.generate_field(field)?);
             }
         }
-        
+
         // Generate functions (pass field names for storage→self in body conversion)
         let field_names: Vec<String> = service.fields.iter().map(|f| f.name.clone()).collect();
         if !service.functions.is_empty() {
@@ -53,7 +53,7 @@ impl DALGenerator {
                 code.push_str(&self.generate_function(func, &field_names)?);
             }
         }
-        
+
         // Generate events
         if !service.events.is_empty() {
             code.push_str("\n    // Events\n");
@@ -61,29 +61,29 @@ impl DALGenerator {
                 code.push_str(&self.generate_event(event)?);
             }
         }
-        
+
         code.push_str("}\n");
-        
+
         Ok(code)
     }
-    
+
     fn generate_field(&self, field: &Field) -> Result<String, String> {
         let mut code = String::new();
-        
+
         code.push_str(&format!("    {}: {} = ", field.name, field.field_type));
-        
+
         if let Some(ref init) = field.initial_value {
             code.push_str(init);
         } else {
             // Default values based on type
             code.push_str(&self.default_value_for_type(&field.field_type));
         }
-        
+
         code.push_str(",\n");
-        
+
         Ok(code)
     }
-    
+
     fn default_value_for_type(&self, dal_type: &str) -> String {
         match dal_type {
             "int" => "0".to_string(),
@@ -95,23 +95,31 @@ impl DALGenerator {
             _ => "null".to_string(),
         }
     }
-    
-    fn generate_function(&self, func: &DALFunction, field_names: &[String]) -> Result<String, String> {
+
+    fn generate_function(
+        &self,
+        func: &DALFunction,
+        field_names: &[String],
+    ) -> Result<String, String> {
         let mut code = String::new();
-        
+
         // Generate attributes
         for attr in &func.attributes {
             code.push_str(&format!("    {}\n", attr));
         }
-        
+
         // Generate function signature
-        code.push_str(&format!("    fn {}({})", func.name, self.generate_parameters(&func.parameters)?));
-        
+        code.push_str(&format!(
+            "    fn {}({})",
+            func.name,
+            self.generate_parameters(&func.parameters)?
+        ));
+
         // Generate return type
         if let Some(ref return_type) = func.return_type {
             code.push_str(&format!(" -> {}", return_type));
         }
-        
+
         code.push_str(" {\n");
 
         if let Some(ref c) = func.comment {
@@ -137,7 +145,8 @@ impl DALGenerator {
         let mut out = String::new();
         for line in body_with_self.lines() {
             let trimmed = line.trim();
-            let dal = self.convert_require_line(trimmed)
+            let dal = self
+                .convert_require_line(trimmed)
                 .or_else(|| self.convert_revert_line(trimmed))
                 .or_else(|| self.convert_transfer_call_line(trimmed))
                 .or_else(|| self.convert_emit_line(trimmed))
@@ -174,7 +183,8 @@ impl DALGenerator {
         let mut i = 0;
         while i <= bytes.len() {
             if i + w.len() <= bytes.len() && &bytes[i..i + w.len()] == w {
-                let word_start_ok = i == 0 || !bytes[i - 1].is_ascii_alphanumeric() && bytes[i - 1] != b'_';
+                let word_start_ok =
+                    i == 0 || !bytes[i - 1].is_ascii_alphanumeric() && bytes[i - 1] != b'_';
                 let word_end_ok = i + w.len() == bytes.len()
                     || !bytes[i + w.len()].is_ascii_alphanumeric() && bytes[i + w.len()] != b'_';
                 if word_start_ok && word_end_ok {
@@ -202,7 +212,10 @@ impl DALGenerator {
             let (c, m) = inner.split_at(comma_pos);
             (c.trim(), m[1..].trim().trim_matches('"'))
         } else {
-            (inner.trim_end_matches(';').trim_end_matches(')').trim(), "require failed")
+            (
+                inner.trim_end_matches(';').trim_end_matches(')').trim(),
+                "require failed",
+            )
         };
         if cond.is_empty() {
             return None;
@@ -225,7 +238,10 @@ impl DALGenerator {
             }
         }
         if line.contains(".call(") || line.contains(".call{") {
-            let dot_call = line.find(".call(").or_else(|| line.find(".call{")).unwrap_or(0);
+            let dot_call = line
+                .find(".call(")
+                .or_else(|| line.find(".call{"))
+                .unwrap_or(0);
             let addr = line[..dot_call].trim();
             return Some(format!(
                 "chain::call(1, {}, \"call\", {{}});  // Solidity .call - fill function name and args as needed",
@@ -279,11 +295,16 @@ impl DALGenerator {
         if trimmed == "}" || trimmed == "{" {
             return Some(trimmed.to_string());
         }
-        if trimmed.starts_with("if ") || trimmed.starts_with("if(")
-            || trimmed.starts_with("for ") || trimmed.starts_with("for(")
-            || trimmed.starts_with("while ") || trimmed.starts_with("while(")
-            || trimmed.starts_with("do ") || trimmed.starts_with("} while(")
-            || trimmed.starts_with("else ") || trimmed.starts_with("else{")
+        if trimmed.starts_with("if ")
+            || trimmed.starts_with("if(")
+            || trimmed.starts_with("for ")
+            || trimmed.starts_with("for(")
+            || trimmed.starts_with("while ")
+            || trimmed.starts_with("while(")
+            || trimmed.starts_with("do ")
+            || trimmed.starts_with("} while(")
+            || trimmed.starts_with("else ")
+            || trimmed.starts_with("else{")
             || trimmed.starts_with("else {")
         {
             return Some(trimmed.to_string());
@@ -291,13 +312,23 @@ impl DALGenerator {
         if trimmed.starts_with("} else") {
             return Some(trimmed.to_string());
         }
-        if trimmed.starts_with("try ") || trimmed.starts_with("} catch") || trimmed.starts_with("catch ") || trimmed.starts_with("catch(") {
+        if trimmed.starts_with("try ")
+            || trimmed.starts_with("} catch")
+            || trimmed.starts_with("catch ")
+            || trimmed.starts_with("catch(")
+        {
             return Some(trimmed.to_string());
         }
-        if trimmed.starts_with("unchecked ") || trimmed.starts_with("unchecked{") || trimmed.starts_with("unchecked {") {
+        if trimmed.starts_with("unchecked ")
+            || trimmed.starts_with("unchecked{")
+            || trimmed.starts_with("unchecked {")
+        {
             return Some(trimmed.to_string());
         }
-        if trimmed.starts_with("assembly ") || trimmed.starts_with("assembly{") || trimmed.starts_with("assembly {") {
+        if trimmed.starts_with("assembly ")
+            || trimmed.starts_with("assembly{")
+            || trimmed.starts_with("assembly {")
+        {
             return Some(trimmed.to_string());
         }
         None
@@ -309,7 +340,10 @@ impl DALGenerator {
         if !line.starts_with("revert(") {
             return None;
         }
-        let inner = line["revert(".len()..].trim_end_matches(')').trim().trim_matches('"');
+        let inner = line["revert(".len()..]
+            .trim_end_matches(')')
+            .trim()
+            .trim_matches('"');
         let msg = if inner.is_empty() { "reverted" } else { inner };
         Some(format!("throw \"{}\";", msg))
     }
@@ -318,7 +352,12 @@ impl DALGenerator {
     /// Returns None to emit as comment if line is empty, only braces, or not a simple statement.
     fn convert_generic_line(&self, line: &str) -> Option<String> {
         let line = line.trim_end_matches(';').trim();
-        if line.is_empty() || line == "{" || line == "}" || line.starts_with("//") || line.starts_with("/*") {
+        if line.is_empty()
+            || line == "{"
+            || line == "}"
+            || line.starts_with("//")
+            || line.starts_with("/*")
+        {
             return None;
         }
         let mut dal = line.to_string();
@@ -355,21 +394,24 @@ impl DALGenerator {
         if params.is_empty() {
             return Ok(String::new());
         }
-        
-        let param_strings: Vec<String> = params.iter()
+
+        let param_strings: Vec<String> = params
+            .iter()
             .map(|p| format!("{}: {}", p.name, p.param_type))
             .collect();
-        
+
         Ok(param_strings.join(", "))
     }
-    
+
     fn generate_event(&self, event: &DALEvent) -> Result<String, String> {
         let mut code = String::new();
-        
-        code.push_str(&format!("    event {}({});\n", 
+
+        code.push_str(&format!(
+            "    event {}({});\n",
             event.name,
-            self.generate_parameters(&event.parameters)?));
-        
+            self.generate_parameters(&event.parameters)?
+        ));
+
         Ok(code)
     }
 }
@@ -379,4 +421,3 @@ impl Default for DALGenerator {
         Self::new()
     }
 }
-

@@ -3,8 +3,8 @@
 // and related token functionality
 
 use dist_agent_lang::lexer::tokens::{
-    CompilationTarget, TrustLevel, BlockchainNetwork, InterfaceLanguage,
-    TokenType, TokenStruct, Token
+    BlockchainNetwork, CompilationTarget, InterfaceLanguage, Token, TokenStruct, TokenType,
+    TrustLevel,
 };
 
 // ============================================================================
@@ -73,7 +73,10 @@ fn test_compilation_target_to_string_blockchain() {
     // Test to_string for Blockchain - catches return value mutations
     let target = CompilationTarget::Blockchain;
     let result = target.to_string();
-    assert_eq!(result, "blockchain", "Should return 'blockchain', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "blockchain",
+        "Should return 'blockchain', not empty string or 'xyzzy'"
+    );
 }
 
 #[test]
@@ -81,7 +84,10 @@ fn test_compilation_target_to_string_wasm() {
     // Test to_string for WebAssembly - catches return value mutations
     let target = CompilationTarget::WebAssembly;
     let result = target.to_string();
-    assert_eq!(result, "wasm", "Should return 'wasm', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "wasm",
+        "Should return 'wasm', not empty string or 'xyzzy'"
+    );
 }
 
 #[test]
@@ -89,7 +95,10 @@ fn test_compilation_target_to_string_native() {
     // Test to_string for Native - catches return value mutations
     let target = CompilationTarget::Native;
     let result = target.to_string();
-    assert_eq!(result, "native", "Should return 'native', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "native",
+        "Should return 'native', not empty string or 'xyzzy'"
+    );
 }
 
 #[test]
@@ -97,7 +106,10 @@ fn test_compilation_target_to_string_mobile() {
     // Test to_string for Mobile - catches return value mutations
     let target = CompilationTarget::Mobile;
     let result = target.to_string();
-    assert_eq!(result, "mobile", "Should return 'mobile', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "mobile",
+        "Should return 'mobile', not empty string or 'xyzzy'"
+    );
 }
 
 #[test]
@@ -105,7 +117,10 @@ fn test_compilation_target_to_string_edge() {
     // Test to_string for Edge - catches return value mutations
     let target = CompilationTarget::Edge;
     let result = target.to_string();
-    assert_eq!(result, "edge", "Should return 'edge', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "edge",
+        "Should return 'edge', not empty string or 'xyzzy'"
+    );
 }
 
 // ============================================================================
@@ -148,7 +163,10 @@ fn test_trust_level_to_string_decentralized() {
     // Test to_string for Decentralized - catches return value mutations
     let level = TrustLevel::Decentralized;
     let result = level.to_string();
-    assert_eq!(result, "decentralized", "Should return 'decentralized', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "decentralized",
+        "Should return 'decentralized', not empty string or 'xyzzy'"
+    );
 }
 
 #[test]
@@ -156,7 +174,10 @@ fn test_trust_level_to_string_hybrid() {
     // Test to_string for Hybrid - catches return value mutations
     let level = TrustLevel::Hybrid;
     let result = level.to_string();
-    assert_eq!(result, "hybrid", "Should return 'hybrid', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "hybrid",
+        "Should return 'hybrid', not empty string or 'xyzzy'"
+    );
 }
 
 #[test]
@@ -164,7 +185,10 @@ fn test_trust_level_to_string_centralized() {
     // Test to_string for Centralized - catches return value mutations
     let level = TrustLevel::Centralized;
     let result = level.to_string();
-    assert_eq!(result, "centralized", "Should return 'centralized', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "centralized",
+        "Should return 'centralized', not empty string or 'xyzzy'"
+    );
 }
 
 // ============================================================================
@@ -244,7 +268,10 @@ fn test_blockchain_network_to_string_ethereum() {
     // Test to_string for Ethereum - catches return value mutations
     let network = BlockchainNetwork::Ethereum;
     let result = network.to_string();
-    assert_eq!(result, "ethereum", "Should return 'ethereum', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "ethereum",
+        "Should return 'ethereum', not empty string or 'xyzzy'"
+    );
 }
 
 #[test]
@@ -252,7 +279,10 @@ fn test_blockchain_network_to_string_solana() {
     // Test to_string for Solana - catches return value mutations
     let network = BlockchainNetwork::Solana;
     let result = network.to_string();
-    assert_eq!(result, "solana", "Should return 'solana', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "solana",
+        "Should return 'solana', not empty string or 'xyzzy'"
+    );
 }
 
 #[test]
@@ -356,7 +386,10 @@ fn test_interface_language_to_string_typescript() {
     // Test to_string for TypeScript - catches return value mutations
     let lang = InterfaceLanguage::TypeScript;
     let result = lang.to_string();
-    assert_eq!(result, "typescript", "Should return 'typescript', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "typescript",
+        "Should return 'typescript', not empty string or 'xyzzy'"
+    );
 }
 
 #[test]
@@ -364,7 +397,10 @@ fn test_interface_language_to_string_javascript() {
     // Test to_string for JavaScript - catches return value mutations
     let lang = InterfaceLanguage::JavaScript;
     let result = lang.to_string();
-    assert_eq!(result, "javascript", "Should return 'javascript', not empty string or 'xyzzy'");
+    assert_eq!(
+        result, "javascript",
+        "Should return 'javascript', not empty string or 'xyzzy'"
+    );
 }
 
 // ============================================================================
@@ -406,7 +442,10 @@ fn test_token_display_keyword() {
     let result = format!("{}", token);
     // Should format correctly
     assert!(!result.is_empty(), "Display should not return empty string");
-    assert!(result.to_lowercase().contains("keyword"), "Display should include 'keyword'");
+    assert!(
+        result.to_lowercase().contains("keyword"),
+        "Display should include 'keyword'"
+    );
 }
 
 #[test]
@@ -417,5 +456,8 @@ fn test_token_display_operator() {
     let result = format!("{}", token);
     // Should format correctly
     assert!(!result.is_empty(), "Display should not return empty string");
-    assert!(result.to_lowercase().contains("operator"), "Display should include 'operator'");
+    assert!(
+        result.to_lowercase().contains("operator"),
+        "Display should include 'operator'"
+    );
 }

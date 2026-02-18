@@ -1,6 +1,6 @@
+use crate::runtime::values::Value;
 use std::collections::HashMap;
 use std::env;
-use crate::runtime::values::Value;
 
 #[cfg(feature = "http-interface")]
 fn value_to_serde_json(v: &Value) -> serde_json::Value {
@@ -12,12 +12,18 @@ fn value_to_serde_json(v: &Value) -> serde_json::Value {
         Value::Null => serde_json::Value::Null,
         Value::List(arr) => serde_json::Value::Array(arr.iter().map(value_to_serde_json).collect()),
         Value::Map(m) => serde_json::Value::Object(
-            m.iter().map(|(k, v)| (k.clone(), value_to_serde_json(v))).collect(),
+            m.iter()
+                .map(|(k, v)| (k.clone(), value_to_serde_json(v)))
+                .collect(),
         ),
         Value::Struct(_, m) => serde_json::Value::Object(
-            m.iter().map(|(k, v)| (k.clone(), value_to_serde_json(v))).collect(),
+            m.iter()
+                .map(|(k, v)| (k.clone(), value_to_serde_json(v)))
+                .collect(),
         ),
-        Value::Array(arr) => serde_json::Value::Array(arr.iter().map(value_to_serde_json).collect()),
+        Value::Array(arr) => {
+            serde_json::Value::Array(arr.iter().map(value_to_serde_json).collect())
+        }
         _ => serde_json::Value::String(v.to_string()),
     }
 }
@@ -86,7 +92,9 @@ pub fn device_type_from_string(s: &str) -> Option<DeviceType> {
         "smart_device" | "smart" => DeviceType::SmartDevice,
         "industrial_controller" | "industrial" | "plc" => DeviceType::IndustrialController,
         "wearable" => DeviceType::Wearable,
-        "programmable_hardware" | "programmable" | "fpga" | "microcontroller" => DeviceType::ProgrammableHardware,
+        "programmable_hardware" | "programmable" | "fpga" | "microcontroller" => {
+            DeviceType::ProgrammableHardware
+        }
         "robot_arm" | "robotarm" | "manipulator" => DeviceType::RobotArm,
         "mobile_robot" | "mobilerobot" | "agv" | "rover" => DeviceType::MobileRobot,
         "drone" | "uav" => DeviceType::Drone,
@@ -435,7 +443,7 @@ pub struct PowerStatus {
     pub battery_level: Option<f64>, // 0.0 to 1.0
     pub voltage: Option<f64>,
     pub current: Option<f64>,
-    pub power_consumption: f64, // watts
+    pub power_consumption: f64,         // watts
     pub estimated_runtime: Option<i64>, // minutes
 }
 
@@ -505,22 +513,37 @@ pub enum SinkType {
 
 // Device Management
 pub fn register_device(device_config: HashMap<String, Value>) -> Result<IoTDevice, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("action".to_string(), Value::String("register_device".to_string()));
-        data.insert("device_config".to_string(), Value::Map(device_config.clone()));
-        data.insert("message".to_string(), Value::String("Registering new IoT device".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "action".to_string(),
+                Value::String("register_device".to_string()),
+            );
+            data.insert(
+                "device_config".to_string(),
+                Value::Map(device_config.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Registering new IoT device".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
-    let device_id = device_config.get("device_id")
+    let device_id = device_config
+        .get("device_id")
         .and_then(|v| match v {
             Value::String(s) => Some(s.clone()),
             _ => None,
         })
         .unwrap_or_else(|| format!("device_{}", generate_id()));
 
-    let device_type = device_config.get("device_type")
+    let device_type = device_config
+        .get("device_type")
         .and_then(|v| match v {
             Value::String(s) => device_type_from_string(s),
             _ => None,
@@ -530,7 +553,8 @@ pub fn register_device(device_config: HashMap<String, Value>) -> Result<IoTDevic
     let device = IoTDevice {
         device_id: device_id.clone(),
         device_type,
-        name: device_config.get("name")
+        name: device_config
+            .get("name")
             .and_then(|v| match v {
                 Value::String(s) => Some(s.clone()),
                 _ => None,
@@ -567,18 +591,34 @@ pub fn register_device(device_config: HashMap<String, Value>) -> Result<IoTDevic
 }
 
 pub fn connect_device(device_id: &str) -> Result<IoTDevice, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("message".to_string(), Value::String("Connecting to IoT device".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Connecting to IoT device".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     // Simulate device connection
     let mut device = register_device({
         let mut config = HashMap::new();
-        config.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        config.insert("name".to_string(), Value::String(format!("Connected Device {}", device_id)));
+        config.insert(
+            "device_id".to_string(),
+            Value::String(device_id.to_string()),
+        );
+        config.insert(
+            "name".to_string(),
+            Value::String(format!("Connected Device {}", device_id)),
+        );
         config
     })?;
 
@@ -589,12 +629,22 @@ pub fn connect_device(device_id: &str) -> Result<IoTDevice, String> {
 }
 
 pub fn disconnect_device(device_id: &str) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("message".to_string(), Value::String("Disconnecting IoT device".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Disconnecting IoT device".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
@@ -605,28 +655,58 @@ pub fn get_device_status(_device_id: &str) -> Result<DeviceStatus, String> {
 }
 
 pub fn update_device_firmware(device_id: &str, firmware_version: &str) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("firmware_version".to_string(), Value::String(firmware_version.to_string()));
-        data.insert("message".to_string(), Value::String("Updating device firmware".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "firmware_version".to_string(),
+                Value::String(firmware_version.to_string()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Updating device firmware".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
 
 // Sensor Management
-pub fn add_sensor_to_device(device_id: &str, sensor_config: HashMap<String, Value>) -> Result<Sensor, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("sensor_config".to_string(), Value::Map(sensor_config.clone()));
-        data.insert("message".to_string(), Value::String("Adding sensor to device".to_string()));
-        data
-    }, Some("iot"));
+pub fn add_sensor_to_device(
+    device_id: &str,
+    sensor_config: HashMap<String, Value>,
+) -> Result<Sensor, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "sensor_config".to_string(),
+                Value::Map(sensor_config.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Adding sensor to device".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
-    let sensor_id = sensor_config.get("sensor_id")
+    let sensor_id = sensor_config
+        .get("sensor_id")
         .and_then(|v| match v {
             Value::String(s) => Some(s.clone()),
             _ => None,
@@ -636,7 +716,8 @@ pub fn add_sensor_to_device(device_id: &str, sensor_config: HashMap<String, Valu
     let sensor = Sensor {
         sensor_id: sensor_id.clone(),
         sensor_type: SensorType::Temperature,
-        name: sensor_config.get("name")
+        name: sensor_config
+            .get("name")
             .and_then(|v| match v {
                 Value::String(s) => Some(s.clone()),
                 _ => None,
@@ -658,12 +739,22 @@ pub fn add_sensor_to_device(device_id: &str, sensor_config: HashMap<String, Valu
 }
 
 pub fn read_sensor_data(sensor_id: &str) -> Result<SensorReading, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("sensor_id".to_string(), Value::String(sensor_id.to_string()));
-        data.insert("message".to_string(), Value::String("Reading sensor data".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "sensor_id".to_string(),
+                Value::String(sensor_id.to_string()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Reading sensor data".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     let reading = SensorReading {
         timestamp: "2024-01-01T00:00:00Z".to_string(),
@@ -671,8 +762,14 @@ pub fn read_sensor_data(sensor_id: &str) -> Result<SensorReading, String> {
         quality: ReadingQuality::Excellent,
         metadata: {
             let mut meta = HashMap::new();
-            meta.insert("device_id".to_string(), Value::String("device_123".to_string()));
-            meta.insert("sensor_type".to_string(), Value::String("temperature".to_string()));
+            meta.insert(
+                "device_id".to_string(),
+                Value::String("device_123".to_string()),
+            );
+            meta.insert(
+                "sensor_type".to_string(),
+                Value::String("temperature".to_string()),
+            );
             meta
         },
     };
@@ -680,29 +777,62 @@ pub fn read_sensor_data(sensor_id: &str) -> Result<SensorReading, String> {
     Ok(reading)
 }
 
-pub fn calibrate_sensor(sensor_id: &str, calibration_points: Vec<CalibrationPoint>) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("sensor_id".to_string(), Value::String(sensor_id.to_string()));
-        data.insert("calibration_points".to_string(), Value::Int(calibration_points.len() as i64));
-        data.insert("message".to_string(), Value::String("Calibrating sensor".to_string()));
-        data
-    }, Some("iot"));
+pub fn calibrate_sensor(
+    sensor_id: &str,
+    calibration_points: Vec<CalibrationPoint>,
+) -> Result<bool, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "sensor_id".to_string(),
+                Value::String(sensor_id.to_string()),
+            );
+            data.insert(
+                "calibration_points".to_string(),
+                Value::Int(calibration_points.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Calibrating sensor".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
 
 // Actuator Control
-pub fn add_actuator_to_device(device_id: &str, actuator_config: HashMap<String, Value>) -> Result<Actuator, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("actuator_config".to_string(), Value::Map(actuator_config.clone()));
-        data.insert("message".to_string(), Value::String("Adding actuator to device".to_string()));
-        data
-    }, Some("iot"));
+pub fn add_actuator_to_device(
+    device_id: &str,
+    actuator_config: HashMap<String, Value>,
+) -> Result<Actuator, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "actuator_config".to_string(),
+                Value::Map(actuator_config.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Adding actuator to device".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
-    let actuator_id = actuator_config.get("actuator_id")
+    let actuator_id = actuator_config
+        .get("actuator_id")
         .and_then(|v| match v {
             Value::String(s) => Some(s.clone()),
             _ => None,
@@ -712,7 +842,8 @@ pub fn add_actuator_to_device(device_id: &str, actuator_config: HashMap<String, 
     let actuator = Actuator {
         actuator_id: actuator_id.clone(),
         actuator_type: ActuatorType::Relay,
-        name: actuator_config.get("name")
+        name: actuator_config
+            .get("name")
             .and_then(|v| match v {
                 Value::String(s) => Some(s.clone()),
                 _ => None,
@@ -727,15 +858,29 @@ pub fn add_actuator_to_device(device_id: &str, actuator_config: HashMap<String, 
     Ok(actuator)
 }
 
-pub fn send_actuator_command(actuator_id: &str, command: &str, parameters: HashMap<String, Value>) -> Result<ActuatorCommand, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("actuator_id".to_string(), Value::String(actuator_id.to_string()));
-        data.insert("command".to_string(), Value::String(command.to_string()));
-        data.insert("parameters".to_string(), Value::Map(parameters.clone()));
-        data.insert("message".to_string(), Value::String("Sending actuator command".to_string()));
-        data
-    }, Some("iot"));
+pub fn send_actuator_command(
+    actuator_id: &str,
+    command: &str,
+    parameters: HashMap<String, Value>,
+) -> Result<ActuatorCommand, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "actuator_id".to_string(),
+                Value::String(actuator_id.to_string()),
+            );
+            data.insert("command".to_string(), Value::String(command.to_string()));
+            data.insert("parameters".to_string(), Value::Map(parameters.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Sending actuator command".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     let actuator_command = ActuatorCommand {
         command_id: format!("cmd_{}", generate_id()),
@@ -750,15 +895,26 @@ pub fn send_actuator_command(actuator_id: &str, command: &str, parameters: HashM
 
 // Edge Computing
 pub fn create_edge_node(node_config: HashMap<String, Value>) -> Result<EdgeNode, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("action".to_string(), Value::String("create_edge_node".to_string()));
-        data.insert("node_config".to_string(), Value::Map(node_config.clone()));
-        data.insert("message".to_string(), Value::String("Creating edge computing node".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "action".to_string(),
+                Value::String("create_edge_node".to_string()),
+            );
+            data.insert("node_config".to_string(), Value::Map(node_config.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating edge computing node".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
-    let node_id = node_config.get("node_id")
+    let node_id = node_config
+        .get("node_id")
         .and_then(|v| match v {
             Value::String(s) => Some(s.clone()),
             _ => None,
@@ -767,7 +923,8 @@ pub fn create_edge_node(node_config: HashMap<String, Value>) -> Result<EdgeNode,
 
     let edge_node = EdgeNode {
         node_id: node_id.clone(),
-        name: node_config.get("name")
+        name: node_config
+            .get("name")
             .and_then(|v| match v {
                 Value::String(s) => Some(s.clone()),
                 _ => None,
@@ -800,14 +957,31 @@ pub fn create_edge_node(node_config: HashMap<String, Value>) -> Result<EdgeNode,
     Ok(edge_node)
 }
 
-pub fn process_data_at_edge(edge_node_id: &str, data: Value, task_type: EdgeTaskType) -> Result<EdgeTask, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data_map = std::collections::HashMap::new();
-        data_map.insert("edge_node_id".to_string(), Value::String(edge_node_id.to_string()));
-        data_map.insert("task_type".to_string(), Value::String(format!("{:?}", task_type)));
-        data_map.insert("message".to_string(), Value::String("Processing data at edge node".to_string()));
-        data_map
-    }, Some("iot"));
+pub fn process_data_at_edge(
+    edge_node_id: &str,
+    data: Value,
+    task_type: EdgeTaskType,
+) -> Result<EdgeTask, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data_map = std::collections::HashMap::new();
+            data_map.insert(
+                "edge_node_id".to_string(),
+                Value::String(edge_node_id.to_string()),
+            );
+            data_map.insert(
+                "task_type".to_string(),
+                Value::String(format!("{:?}", task_type)),
+            );
+            data_map.insert(
+                "message".to_string(),
+                Value::String("Processing data at edge node".to_string()),
+            );
+            data_map
+        },
+        Some("iot"),
+    );
 
     let task = EdgeTask {
         task_id: format!("edge_task_{}", generate_id()),
@@ -823,15 +997,33 @@ pub fn process_data_at_edge(edge_node_id: &str, data: Value, task_type: EdgeTask
     Ok(task)
 }
 
-pub fn cache_data_at_edge(edge_node_id: &str, key: &str, _data: Value, ttl_seconds: Option<i64>) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data_map = std::collections::HashMap::new();
-        data_map.insert("edge_node_id".to_string(), Value::String(edge_node_id.to_string()));
-        data_map.insert("cache_key".to_string(), Value::String(key.to_string()));
-        data_map.insert("ttl_seconds".to_string(), Value::Int(ttl_seconds.unwrap_or(3600)));
-        data_map.insert("message".to_string(), Value::String("Caching data at edge node".to_string()));
-        data_map
-    }, Some("iot"));
+pub fn cache_data_at_edge(
+    edge_node_id: &str,
+    key: &str,
+    _data: Value,
+    ttl_seconds: Option<i64>,
+) -> Result<bool, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data_map = std::collections::HashMap::new();
+            data_map.insert(
+                "edge_node_id".to_string(),
+                Value::String(edge_node_id.to_string()),
+            );
+            data_map.insert("cache_key".to_string(), Value::String(key.to_string()));
+            data_map.insert(
+                "ttl_seconds".to_string(),
+                Value::Int(ttl_seconds.unwrap_or(3600)),
+            );
+            data_map.insert(
+                "message".to_string(),
+                Value::String("Caching data at edge node".to_string()),
+            );
+            data_map
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
@@ -843,15 +1035,29 @@ pub fn get_cached_data_from_edge(_edge_node_id: &str, _key: &str) -> Result<Opti
 
 // Data Streaming
 pub fn create_data_stream(stream_config: HashMap<String, Value>) -> Result<DataStream, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("action".to_string(), Value::String("create_data_stream".to_string()));
-        data.insert("stream_config".to_string(), Value::Map(stream_config.clone()));
-        data.insert("message".to_string(), Value::String("Creating data stream".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "action".to_string(),
+                Value::String("create_data_stream".to_string()),
+            );
+            data.insert(
+                "stream_config".to_string(),
+                Value::Map(stream_config.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating data stream".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
-    let stream_id = stream_config.get("stream_id")
+    let stream_id = stream_config
+        .get("stream_id")
         .and_then(|v| match v {
             Value::String(s) => Some(s.clone()),
             _ => None,
@@ -860,13 +1066,15 @@ pub fn create_data_stream(stream_config: HashMap<String, Value>) -> Result<DataS
 
     let data_stream = DataStream {
         stream_id: stream_id.clone(),
-        source_device: stream_config.get("source_device")
+        source_device: stream_config
+            .get("source_device")
             .and_then(|v| match v {
                 Value::String(s) => Some(s.clone()),
                 _ => None,
             })
             .unwrap_or_else(|| "device_unknown".to_string()),
-        data_type: stream_config.get("data_type")
+        data_type: stream_config
+            .get("data_type")
             .and_then(|v| match v {
                 Value::String(s) => Some(s.clone()),
                 _ => None,
@@ -883,112 +1091,233 @@ pub fn create_data_stream(stream_config: HashMap<String, Value>) -> Result<DataS
 }
 
 pub fn add_filter_to_stream(stream_id: &str, filter: DataFilter) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("stream_id".to_string(), Value::String(stream_id.to_string()));
-        data.insert("filter_type".to_string(), Value::String(format!("{:?}", filter.filter_type)));
-        data.insert("message".to_string(), Value::String("Adding filter to data stream".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "stream_id".to_string(),
+                Value::String(stream_id.to_string()),
+            );
+            data.insert(
+                "filter_type".to_string(),
+                Value::String(format!("{:?}", filter.filter_type)),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Adding filter to data stream".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
 
 pub fn add_processor_to_stream(stream_id: &str, processor: DataProcessor) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("stream_id".to_string(), Value::String(stream_id.to_string()));
-        data.insert("processor_type".to_string(), Value::String(format!("{:?}", processor.processor_type)));
-        data.insert("message".to_string(), Value::String("Adding processor to data stream".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "stream_id".to_string(),
+                Value::String(stream_id.to_string()),
+            );
+            data.insert(
+                "processor_type".to_string(),
+                Value::String(format!("{:?}", processor.processor_type)),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Adding processor to data stream".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
 
 pub fn add_sink_to_stream(stream_id: &str, sink: DataSink) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("stream_id".to_string(), Value::String(stream_id.to_string()));
-        data.insert("sink_type".to_string(), Value::String(format!("{:?}", sink.sink_type)));
-        data.insert("destination".to_string(), Value::String(sink.destination.clone()));
-        data.insert("message".to_string(), Value::String("Adding sink to data stream".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "stream_id".to_string(),
+                Value::String(stream_id.to_string()),
+            );
+            data.insert(
+                "sink_type".to_string(),
+                Value::String(format!("{:?}", sink.sink_type)),
+            );
+            data.insert(
+                "destination".to_string(),
+                Value::String(sink.destination.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Adding sink to data stream".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
 
 // Protocol Support
 pub fn configure_protocol(protocol_config: ProtocolConfig) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("protocol_type".to_string(), Value::String(format!("{:?}", protocol_config.protocol_type)));
-        data.insert("client_id".to_string(), Value::String(protocol_config.client_id.clone()));
-        data.insert("message".to_string(), Value::String("Configuring IoT communication protocol".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "protocol_type".to_string(),
+                Value::String(format!("{:?}", protocol_config.protocol_type)),
+            );
+            data.insert(
+                "client_id".to_string(),
+                Value::String(protocol_config.client_id.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Configuring IoT communication protocol".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
 
-pub fn publish_message(protocol_config: &ProtocolConfig, topic: &str, _payload: Value) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("topic".to_string(), Value::String(topic.to_string()));
-        data.insert("protocol".to_string(), Value::String(format!("{:?}", protocol_config.protocol_type)));
-        data.insert("message".to_string(), Value::String("Publishing message via IoT protocol".to_string()));
-        data
-    }, Some("iot"));
+pub fn publish_message(
+    protocol_config: &ProtocolConfig,
+    topic: &str,
+    _payload: Value,
+) -> Result<bool, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("topic".to_string(), Value::String(topic.to_string()));
+            data.insert(
+                "protocol".to_string(),
+                Value::String(format!("{:?}", protocol_config.protocol_type)),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Publishing message via IoT protocol".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
 
 pub fn subscribe_to_topic(protocol_config: &ProtocolConfig, topic: &str) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("topic".to_string(), Value::String(topic.to_string()));
-        data.insert("protocol".to_string(), Value::String(format!("{:?}", protocol_config.protocol_type)));
-        data.insert("message".to_string(), Value::String("Subscribing to IoT topic".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("topic".to_string(), Value::String(topic.to_string()));
+            data.insert(
+                "protocol".to_string(),
+                Value::String(format!("{:?}", protocol_config.protocol_type)),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Subscribing to IoT topic".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
 
 // Security Functions
 pub fn authenticate_device(device_id: &str, credentials: &Credentials) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("has_credentials".to_string(), Value::Bool(credentials.username.is_some()));
-        data.insert("message".to_string(), Value::String("Authenticating IoT device".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "has_credentials".to_string(),
+                Value::Bool(credentials.username.is_some()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Authenticating IoT device".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
 
-pub fn encrypt_device_data(_data: Value, security_profile: &SecurityProfile) -> Result<Value, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data_map = std::collections::HashMap::new();
-        data_map.insert("encryption_enabled".to_string(), Value::Bool(security_profile.encryption_enabled));
-        data_map.insert("security_level".to_string(), Value::String(format!("{:?}", security_profile.security_level)));
-        data_map.insert("message".to_string(), Value::String("Encrypting device data".to_string()));
-        data_map
-    }, Some("iot"));
+pub fn encrypt_device_data(
+    _data: Value,
+    security_profile: &SecurityProfile,
+) -> Result<Value, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data_map = std::collections::HashMap::new();
+            data_map.insert(
+                "encryption_enabled".to_string(),
+                Value::Bool(security_profile.encryption_enabled),
+            );
+            data_map.insert(
+                "security_level".to_string(),
+                Value::String(format!("{:?}", security_profile.security_level)),
+            );
+            data_map.insert(
+                "message".to_string(),
+                Value::String("Encrypting device data".to_string()),
+            );
+            data_map
+        },
+        Some("iot"),
+    );
 
     Ok(Value::String("encrypted_data".to_string()))
 }
 
 pub fn verify_device_certificate(device_id: &str, certificate_path: &str) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("certificate_path".to_string(), Value::String(certificate_path.to_string()));
-        data.insert("message".to_string(), Value::String("Verifying device certificate".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "certificate_path".to_string(),
+                Value::String(certificate_path.to_string()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Verifying device certificate".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     Ok(true)
 }
@@ -997,12 +1326,22 @@ pub fn verify_device_certificate(device_id: &str, certificate_path: &str) -> Res
 /// Sync device data to cloud. When IOT_CLOUD_URL (and optional IOT_CLOUD_KEY) are set and
 /// http-interface is enabled, POSTs to IOT_CLOUD_URL/sync; otherwise no-op success.
 pub fn sync_device_data_to_cloud(device_id: &str, data: Value) -> Result<bool, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data_map = std::collections::HashMap::new();
-        data_map.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data_map.insert("message".to_string(), Value::String("Syncing device data to cloud".to_string()));
-        data_map
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data_map = std::collections::HashMap::new();
+            data_map.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data_map.insert(
+                "message".to_string(),
+                Value::String("Syncing device data to cloud".to_string()),
+            );
+            data_map
+        },
+        Some("iot"),
+    );
 
     #[cfg(feature = "http-interface")]
     if let Ok(base) = env::var("IOT_CLOUD_URL") {
@@ -1027,14 +1366,30 @@ pub fn sync_device_data_to_cloud(device_id: &str, data: Value) -> Result<bool, S
 
 /// Get device data from cloud. When IOT_CLOUD_URL is set and http-interface enabled,
 /// GETs from IOT_CLOUD_URL/device/{device_id}; otherwise returns mock.
-pub fn get_device_data_from_cloud(device_id: &str, time_range: Option<(String, String)>) -> Result<Value, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("has_time_range".to_string(), Value::Bool(time_range.is_some()));
-        data.insert("message".to_string(), Value::String("Retrieving device data from cloud".to_string()));
-        data
-    }, Some("iot"));
+pub fn get_device_data_from_cloud(
+    device_id: &str,
+    time_range: Option<(String, String)>,
+) -> Result<Value, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "has_time_range".to_string(),
+                Value::Bool(time_range.is_some()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Retrieving device data from cloud".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     #[cfg(feature = "http-interface")]
     if let Ok(base) = env::var("IOT_CLOUD_URL") {
@@ -1048,7 +1403,9 @@ pub fn get_device_data_from_cloud(device_id: &str, time_range: Option<(String, S
             req = req.header("Authorization", format!("Bearer {}", key));
         }
         let resp = req.send().map_err(|e| format!("Cloud get failed: {}", e))?;
-        let json: serde_json::Value = resp.json().map_err(|e| format!("Cloud response parse failed: {}", e))?;
+        let json: serde_json::Value = resp
+            .json()
+            .map_err(|e| format!("Cloud response parse failed: {}", e))?;
         return Ok(serde_json_to_value(&json));
     }
 
@@ -1086,12 +1443,22 @@ fn serde_json_to_value(j: &serde_json::Value) -> Value {
 /// are set and http-interface is enabled, POSTs readings and expects JSON { "anomalies": ["..."] };
 /// otherwise returns a conservative mock result.
 pub fn detect_sensor_anomalies(sensor_data: Vec<SensorReading>) -> Result<Vec<String>, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("data_points".to_string(), Value::Int(sensor_data.len() as i64));
-        data.insert("message".to_string(), Value::String("Detecting sensor anomalies".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "data_points".to_string(),
+                Value::Int(sensor_data.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Detecting sensor anomalies".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     #[cfg(feature = "http-interface")]
     if let Ok(url) = env::var("IOT_ANOMALY_API_URL") {
@@ -1130,14 +1497,30 @@ pub fn detect_sensor_anomalies(sensor_data: Vec<SensorReading>) -> Result<Vec<St
 /// Predict device failure probability (0.0–1.0). When IOT_ML_API_URL (and optional IOT_ML_API_KEY)
 /// are set and http-interface is enabled, POSTs device_id and history and expects JSON
 /// { "probability": 0.15 }; otherwise returns 0.15.
-pub fn predict_device_failure(device_id: &str, sensor_history: Vec<SensorReading>) -> Result<f64, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("history_points".to_string(), Value::Int(sensor_history.len() as i64));
-        data.insert("message".to_string(), Value::String("Predicting device failure probability".to_string()));
-        data
-    }, Some("iot"));
+pub fn predict_device_failure(
+    device_id: &str,
+    sensor_history: Vec<SensorReading>,
+) -> Result<f64, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "history_points".to_string(),
+                Value::Int(sensor_history.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Predicting device failure probability".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     #[cfg(feature = "http-interface")]
     if let Ok(url) = env::var("IOT_ML_API_URL") {
@@ -1176,12 +1559,22 @@ pub fn generate_id() -> String {
 
 // Power Management
 pub fn monitor_power_consumption(device_id: &str) -> Result<PowerStatus, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("message".to_string(), Value::String("Monitoring device power consumption".to_string()));
-        data
-    }, Some("iot"));
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Monitoring device power consumption".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     let power_status = PowerStatus {
         source: PowerSource::Battery,
@@ -1195,14 +1588,30 @@ pub fn monitor_power_consumption(device_id: &str) -> Result<PowerStatus, String>
     Ok(power_status)
 }
 
-pub fn optimize_power_usage(device_id: &str, target_runtime: i64) -> Result<HashMap<String, Value>, String> {
-    crate::stdlib::log::info("iot", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("device_id".to_string(), Value::String(device_id.to_string()));
-        data.insert("target_runtime_hours".to_string(), Value::Int(target_runtime / 60));
-        data.insert("message".to_string(), Value::String("Optimizing device power usage".to_string()));
-        data
-    }, Some("iot"));
+pub fn optimize_power_usage(
+    device_id: &str,
+    target_runtime: i64,
+) -> Result<HashMap<String, Value>, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "target_runtime_hours".to_string(),
+                Value::Int(target_runtime / 60),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Optimizing device power usage".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
 
     let optimizations = {
         let mut opts = HashMap::new();

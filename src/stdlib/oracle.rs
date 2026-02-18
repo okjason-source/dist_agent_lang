@@ -1,7 +1,7 @@
 use crate::runtime::values::Value;
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
-use sha2::{Sha256, Digest};
 
 /// Metadata for an active stream. When a real WebSocket feature is added,
 /// this can hold the connection (e.g. `Option<WebSocketStream>`) or a
@@ -33,9 +33,7 @@ fn json_to_value(j: &serde_json::Value) -> Value {
             }
         }
         serde_json::Value::String(s) => Value::String(s.clone()),
-        serde_json::Value::Array(arr) => {
-            Value::List(arr.iter().map(json_to_value).collect())
-        }
+        serde_json::Value::Array(arr) => Value::List(arr.iter().map(json_to_value).collect()),
         serde_json::Value::Object(obj) => {
             let m: HashMap<String, Value> = obj
                 .iter()
@@ -47,7 +45,7 @@ fn json_to_value(j: &serde_json::Value) -> Value {
 }
 
 /// Oracle ABI - Interface for external data integration with security hardening
-/// 
+///
 /// This provides a namespace-based approach to oracle operations:
 /// - oracle::fetch(source, query) - Fetch data from external source
 /// - oracle::verify(data, signature) - Verify data authenticity
@@ -66,8 +64,8 @@ pub struct OracleSource {
     pub url: String,
     pub api_key: Option<String>,
     pub rate_limit: Option<i64>,
-    pub trusted: bool, // Security: Mark trusted sources
-    pub public_key: Option<String>, // Security: Public key for signature verification
+    pub trusted: bool,                  // Security: Mark trusted sources
+    pub public_key: Option<String>,     // Security: Public key for signature verification
     pub last_request_time: Option<u64>, // Security: For rate limiting
 }
 
@@ -86,7 +84,7 @@ pub struct OracleResponse {
     pub timestamp: u64, // Changed to u64 for proper timestamp handling
     pub source: String,
     pub signature: Option<String>,
-    pub verified: bool, // Security: Whether signature was verified
+    pub verified: bool,        // Security: Whether signature was verified
     pub confidence_score: f64, // Security: Confidence from multi-source validation (0.0-1.0)
 }
 
@@ -95,7 +93,7 @@ pub struct OracleResponse {
 pub struct OracleSecurityManager {
     trusted_sources: HashMap<String, OracleSource>,
     response_cache: HashMap<String, (OracleResponse, u64)>, // Cache with timestamp
-    max_age_seconds: u64, // Maximum age for cached responses
+    max_age_seconds: u64,                                   // Maximum age for cached responses
 }
 
 /// Security: Multi-source consensus validator
@@ -118,28 +116,28 @@ impl OracleSource {
             last_request_time: None,
         }
     }
-    
+
     pub fn with_api_key(mut self, api_key: String) -> Self {
         self.api_key = Some(api_key);
         self
     }
-    
+
     pub fn with_rate_limit(mut self, rate_limit: i64) -> Self {
         self.rate_limit = Some(rate_limit);
         self
     }
-    
+
     /// Security: Mark source as trusted with public key for verification
     pub fn with_trust(mut self, public_key: String) -> Self {
         self.trusted = true;
         self.public_key = Some(public_key);
         self
     }
-    
+
     /// Security: Check if rate limit allows request
     pub fn can_request(&mut self) -> bool {
         let now = get_current_timestamp();
-        
+
         if let Some(rate_limit) = self.rate_limit {
             if let Some(last_time) = self.last_request_time {
                 let min_interval = 1000 / rate_limit as u64; // Convert rate limit to min interval (ms)
@@ -148,7 +146,7 @@ impl OracleSource {
                 }
             }
         }
-        
+
         self.last_request_time = Some(now);
         true
     }
@@ -164,22 +162,22 @@ impl OracleQuery {
             min_confirmations: None,
         }
     }
-    
+
     pub fn with_parameter(mut self, key: String, value: Value) -> Self {
         self.parameters.insert(key, value);
         self
     }
-    
+
     pub fn with_timeout(mut self, timeout: i64) -> Self {
         self.timeout = Some(timeout);
         self
     }
-    
+
     /// Security: Require signature verification
     pub fn require_signature(mut self, required: bool) -> Self {
         self.require_signature = required;
         self
-}
+    }
 
     /// Security: Require multiple source confirmations
     pub fn with_confirmations(mut self, count: u32) -> Self {
@@ -196,14 +194,14 @@ impl OracleSecurityManager {
             max_age_seconds: 300, // Default: 5 minutes
         }
     }
-    
+
     /// Register a trusted oracle source
     pub fn register_trusted_source(&mut self, source: OracleSource) {
         if source.trusted && source.public_key.is_some() {
             self.trusted_sources.insert(source.name.clone(), source);
         }
     }
-    
+
     /// Security: Verify oracle response signature
     pub fn verify_response(&self, response: &OracleResponse) -> bool {
         if let Some(signature) = &response.signature {
@@ -217,16 +215,16 @@ impl OracleSecurityManager {
         }
         false
     }
-    
+
     /// Security: Validate response timestamp (prevent replay attacks)
     pub fn validate_timestamp(&self, timestamp: u64) -> bool {
         let now = get_current_timestamp();
         let age = now.saturating_sub(timestamp);
-        
+
         // Reject responses older than max_age
         age <= self.max_age_seconds * 1000 // Convert to ms
     }
-    
+
     /// Security: Get cached response if valid
     pub fn get_cached(&self, cache_key: &str) -> Option<OracleResponse> {
         if let Some((response, cached_time)) = self.response_cache.get(cache_key) {
@@ -246,21 +244,21 @@ impl OracleConsensus {
             consensus_threshold: threshold,
         }
     }
-    
+
     /// Add a response from a source
     pub fn add_response(&mut self, response: OracleResponse) {
         self.responses.push(response);
     }
-    
+
     /// Security: Determine consensus from multiple sources
     pub fn get_consensus(&self) -> Option<OracleResponse> {
         if self.responses.is_empty() {
             return None;
         }
-        
+
         // Find the most common value
         let mut value_counts: HashMap<String, (usize, OracleResponse)> = HashMap::new();
-        
+
         for response in &self.responses {
             let key = format!("{:?}", response.data); // Simplified comparison
             value_counts
@@ -268,7 +266,7 @@ impl OracleConsensus {
                 .and_modify(|(count, _)| *count += 1)
                 .or_insert((1, response.clone()));
         }
-        
+
         // Find majority
         let total = self.responses.len();
         for (count, response) in value_counts.values() {
@@ -279,7 +277,7 @@ impl OracleConsensus {
                 return Some(consensus_response);
             }
         }
-        
+
         None
     }
 }
@@ -292,7 +290,7 @@ pub fn fetch(source: &str, query: OracleQuery) -> Result<OracleResponse, String>
     if source.starts_with("http://") || source.starts_with("https://") {
         let client = reqwest::blocking::Client::builder()
             .timeout(std::time::Duration::from_secs(
-                query.timeout.unwrap_or(30) as u64,
+                query.timeout.unwrap_or(30) as u64
             ))
             .build()
             .map_err(|e| e.to_string())?;
@@ -362,12 +360,14 @@ pub fn fetch(source: &str, query: OracleQuery) -> Result<OracleResponse, String>
 }
 
 /// Security: Fetch data from multiple sources and validate consensus
-pub fn fetch_with_consensus(sources: Vec<&str>, query: OracleQuery, threshold: f64) -> Result<OracleResponse, String> {
-    let mut consensus = OracleConsensus::new(
-        sources.iter().map(|s| s.to_string()).collect(),
-        threshold,
-    );
-    
+pub fn fetch_with_consensus(
+    sources: Vec<&str>,
+    query: OracleQuery,
+    threshold: f64,
+) -> Result<OracleResponse, String> {
+    let mut consensus =
+        OracleConsensus::new(sources.iter().map(|s| s.to_string()).collect(), threshold);
+
     // Fetch from all sources
     for source in sources {
         match fetch(source, query.clone()) {
@@ -375,7 +375,7 @@ pub fn fetch_with_consensus(sources: Vec<&str>, query: OracleQuery, threshold: f
             Err(e) => eprintln!("Oracle source {} failed: {}", source, e),
         }
     }
-    
+
     // Get consensus
     consensus.get_consensus().ok_or_else(|| {
         format!(
@@ -417,11 +417,16 @@ pub fn stream(source: &str, _callback: &str) -> Result<String, String> {
         let stream_id = format!("stream_ws_{:x}", {
             let mut h = Sha256::new();
             h.update(source.as_bytes());
-            h.finalize()[0..8].iter().fold(0u64, |a, &b| (a << 8) | u64::from(b))
+            h.finalize()[0..8]
+                .iter()
+                .fold(0u64, |a, &b| (a << 8) | u64::from(b))
         });
         get_stream_registry().insert(
             stream_id.clone(),
-            StreamEntry { source: source.to_string(), created_at },
+            StreamEntry {
+                source: source.to_string(),
+                created_at,
+            },
         );
         return Ok(stream_id);
     }
@@ -438,7 +443,10 @@ pub fn stream(source: &str, _callback: &str) -> Result<String, String> {
     };
     get_stream_registry().insert(
         stream_id.clone(),
-        StreamEntry { source: source.to_string(), created_at },
+        StreamEntry {
+            source: source.to_string(),
+            created_at,
+        },
     );
     Ok(stream_id)
 }
@@ -490,12 +498,12 @@ fn verify_signature(data: &Value, signature: &str, public_key: &str) -> bool {
     // In production, this would use actual asymmetric crypto (ECDSA/EdDSA)
     // For now, implement basic verification using hash comparison
     let expected_sig = generate_signature(data, public_key);
-    
+
     // Constant-time comparison to prevent timing attacks
     if signature.len() != expected_sig.len() {
         return false;
     }
-    
+
     let mut matches = true;
     for (a, b) in signature.bytes().zip(expected_sig.bytes()) {
         if a != b {
@@ -510,55 +518,57 @@ fn verify_signature(data: &Value, signature: &str, public_key: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_oracle_security_manager() {
         let mut manager = OracleSecurityManager::new();
-        
-        let source = OracleSource::new("test_source".to_string(), "https://api.test.com".to_string())
-            .with_trust("test_public_key".to_string());
-        
+
+        let source = OracleSource::new(
+            "test_source".to_string(),
+            "https://api.test.com".to_string(),
+        )
+        .with_trust("test_public_key".to_string());
+
         manager.register_trusted_source(source);
         assert!(manager.trusted_sources.contains_key("test_source"));
     }
-    
+
     #[test]
     fn test_timestamp_validation() {
         let manager = OracleSecurityManager::new();
         let now = get_current_timestamp();
-        
+
         assert!(manager.validate_timestamp(now));
         assert!(manager.validate_timestamp(now - 1000)); // 1 second ago
         assert!(!manager.validate_timestamp(now - 400000)); // 400 seconds ago (> 5 min)
     }
-    
+
     #[test]
     fn test_signature_generation_and_verification() {
         let data = Value::Int(12345);
         let sig = generate_signature(&data, "test_key");
-        
+
         assert!(verify_signature(&data, &sig, "test_key"));
         assert!(!verify_signature(&data, &sig, "wrong_key"));
         assert!(!verify_signature(&data, "wrong_sig", "test_key"));
     }
-    
+
     #[test]
     fn test_oracle_fetch_with_security() {
-        let query = OracleQuery::new("btc_price".to_string())
-            .require_signature(true);
-        
+        let query = OracleQuery::new("btc_price".to_string()).require_signature(true);
+
         let result = fetch("price_feed", query);
         assert!(result.is_ok());
-        
+
         let response = result.unwrap();
         assert!(response.signature.is_some());
         assert_eq!(response.confidence_score, 1.0);
     }
-    
+
     #[test]
     fn test_rate_limiting() {
-        let mut source = OracleSource::new("test".to_string(), "url".to_string())
-            .with_rate_limit(10); // 10 requests/second
+        let mut source =
+            OracleSource::new("test".to_string(), "url".to_string()).with_rate_limit(10); // 10 requests/second
 
         // First request should succeed
         assert!(source.can_request());
@@ -567,14 +577,18 @@ mod tests {
         // We only assert the function runs without panicking.
         let _ = source.can_request();
     }
-    
+
     #[test]
     fn test_consensus_validation() {
         let mut consensus = OracleConsensus::new(
-            vec!["source1".to_string(), "source2".to_string(), "source3".to_string()],
+            vec![
+                "source1".to_string(),
+                "source2".to_string(),
+                "source3".to_string(),
+            ],
             0.66, // 66% threshold
         );
-        
+
         // Add 3 responses with 2 agreeing
         let response1 = OracleResponse {
             data: Value::Int(100),
@@ -584,7 +598,7 @@ mod tests {
             verified: true,
             confidence_score: 1.0,
         };
-        
+
         let response2 = OracleResponse {
             data: Value::Int(100),
             timestamp: get_current_timestamp(),
@@ -593,7 +607,7 @@ mod tests {
             verified: true,
             confidence_score: 1.0,
         };
-        
+
         let response3 = OracleResponse {
             data: Value::Int(99), // Different value
             timestamp: get_current_timestamp(),
@@ -602,14 +616,14 @@ mod tests {
             verified: true,
             confidence_score: 1.0,
         };
-        
+
         consensus.add_response(response1);
         consensus.add_response(response2);
         consensus.add_response(response3);
-        
+
         let result = consensus.get_consensus();
         assert!(result.is_some());
-        
+
         let consensus_response = result.unwrap();
         assert!(matches!(consensus_response.data, Value::Int(100)));
         assert!(consensus_response.confidence_score >= 0.66);

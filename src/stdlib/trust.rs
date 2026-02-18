@@ -1,8 +1,8 @@
 use crate::runtime::values::Value;
 use crate::stdlib::key::{self, create_capability_request};
 use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
 use std::env;
+use std::sync::{Mutex, OnceLock};
 
 /// Trust ABI - Interface for trust and admin authorization
 ///
@@ -49,12 +49,12 @@ impl AdminContext {
             metadata: HashMap::new(),
         }
     }
-    
+
     pub fn with_permissions(mut self, permissions: Vec<String>) -> Self {
         self.permissions = permissions;
         self
     }
-    
+
     pub fn with_metadata(mut self, metadata: HashMap<String, Value>) -> Self {
         self.metadata = metadata;
         self
@@ -76,7 +76,11 @@ struct AdminRegistry {
 
 fn get_admin_registry() -> std::sync::MutexGuard<'static, AdminRegistry> {
     static REG: OnceLock<Mutex<AdminRegistry>> = OnceLock::new();
-    let reg = REG.get_or_init(|| Mutex::new(AdminRegistry { admins: HashMap::new() }));
+    let reg = REG.get_or_init(|| {
+        Mutex::new(AdminRegistry {
+            admins: HashMap::new(),
+        })
+    });
     let mut guard = reg.lock().unwrap();
     if guard.admins.is_empty() {
         let mut to_insert = HashMap::new();
@@ -121,64 +125,129 @@ pub fn get_admin_info(admin_id: &str) -> Option<(AdminLevel, Vec<String>)> {
 /// 2) admin registry (or env ADMIN_IDS/ADMIN_LEVEL_*), 3) built-in rules.
 /// Phase 2: All admin authorization decisions are logged for audit purposes.
 pub fn authorize(admin_id: &str, operation: &str, resource: &str) -> bool {
-    let req = create_capability_request(resource.to_string(), operation.to_string(), admin_id.to_string());
-    
+    let req = create_capability_request(
+        resource.to_string(),
+        operation.to_string(),
+        admin_id.to_string(),
+    );
+
     let (allowed, reason) = if let Ok(true) = key::check(req) {
         (true, "key_registry_grant".to_string())
     } else if let Some((level, perms)) = get_admin_registry().admins.get(admin_id) {
         match operation {
-            "read" => {
-                (true, format!("admin_registry:{}:read", format!("{:?}", level)))
-            }
+            "read" => (
+                true,
+                format!("admin_registry:{}:read", format!("{:?}", level)),
+            ),
             "write" => {
-                let result = matches!(level, AdminLevel::Admin | AdminLevel::SuperAdmin) || perms.contains(&"write".to_string());
-                (result, format!("admin_registry:{}:write:{}", format!("{:?}", level), if result { "granted" } else { "denied" }))
+                let result = matches!(level, AdminLevel::Admin | AdminLevel::SuperAdmin)
+                    || perms.contains(&"write".to_string());
+                (
+                    result,
+                    format!(
+                        "admin_registry:{}:write:{}",
+                        format!("{:?}", level),
+                        if result { "granted" } else { "denied" }
+                    ),
+                )
             }
             "delete" => {
-                let result = *level == AdminLevel::SuperAdmin || perms.contains(&"delete".to_string());
-                (result, format!("admin_registry:{}:delete:{}", format!("{:?}", level), if result { "granted" } else { "denied" }))
+                let result =
+                    *level == AdminLevel::SuperAdmin || perms.contains(&"delete".to_string());
+                (
+                    result,
+                    format!(
+                        "admin_registry:{}:delete:{}",
+                        format!("{:?}", level),
+                        if result { "granted" } else { "denied" }
+                    ),
+                )
             }
             _ => {
                 let result = perms.contains(&operation.to_string());
-                (result, format!("admin_registry:{}:{}:{}", format!("{:?}", level), operation, if result { "granted" } else { "denied" }))
+                (
+                    result,
+                    format!(
+                        "admin_registry:{}:{}:{}",
+                        format!("{:?}", level),
+                        operation,
+                        if result { "granted" } else { "denied" }
+                    ),
+                )
             }
         }
     } else {
         match operation {
-            "read" => {
-                (true, "builtin_rule:read_allowed".to_string())
-            }
+            "read" => (true, "builtin_rule:read_allowed".to_string()),
             "write" => {
                 let result = admin_id == "admin" || admin_id == "superadmin";
-                (result, format!("builtin_rule:write:{}", if result { "granted" } else { "denied" }))
+                (
+                    result,
+                    format!(
+                        "builtin_rule:write:{}",
+                        if result { "granted" } else { "denied" }
+                    ),
+                )
             }
             "delete" => {
                 let result = admin_id == "superadmin";
-                (result, format!("builtin_rule:delete:{}", if result { "granted" } else { "denied" }))
+                (
+                    result,
+                    format!(
+                        "builtin_rule:delete:{}",
+                        if result { "granted" } else { "denied" }
+                    ),
+                )
             }
-            _ => {
-                (false, "builtin_rule:default_deny".to_string())
-            }
+            _ => (false, "builtin_rule:default_deny".to_string()),
         }
     };
-    
+
     // Phase 2: Audit log admin authorization decision
-    crate::stdlib::log::audit("admin_authorization", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("admin_id".to_string(), crate::runtime::values::Value::String(admin_id.to_string()));
-        data.insert("operation".to_string(), crate::runtime::values::Value::String(operation.to_string()));
-        data.insert("resource".to_string(), crate::runtime::values::Value::String(resource.to_string()));
-        data.insert("result".to_string(), crate::runtime::values::Value::String(if allowed { "allowed".to_string() } else { "denied".to_string() }));
-        data.insert("reason".to_string(), crate::runtime::values::Value::String(reason.clone()));
-        data
-    }, Some("trust"));
-    
+    crate::stdlib::log::audit(
+        "admin_authorization",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "admin_id".to_string(),
+                crate::runtime::values::Value::String(admin_id.to_string()),
+            );
+            data.insert(
+                "operation".to_string(),
+                crate::runtime::values::Value::String(operation.to_string()),
+            );
+            data.insert(
+                "resource".to_string(),
+                crate::runtime::values::Value::String(resource.to_string()),
+            );
+            data.insert(
+                "result".to_string(),
+                crate::runtime::values::Value::String(if allowed {
+                    "allowed".to_string()
+                } else {
+                    "denied".to_string()
+                }),
+            );
+            data.insert(
+                "reason".to_string(),
+                crate::runtime::values::Value::String(reason.clone()),
+            );
+            data
+        },
+        Some("trust"),
+    );
+
     allowed
 }
 
 fn policy_min_level(policy_name: &str) -> Option<AdminLevel> {
-    let key = format!("POLICY_{}_LEVEL", policy_name.to_uppercase().replace('-', "_"));
-    env::var(key).ok().and_then(|s| AdminLevel::from_string(s.trim()))
+    let key = format!(
+        "POLICY_{}_LEVEL",
+        policy_name.to_uppercase().replace('-', "_")
+    );
+    env::var(key)
+        .ok()
+        .and_then(|s| AdminLevel::from_string(s.trim()))
 }
 
 /// True if level is at least min_level in hierarchy User < Moderator < Admin < SuperAdmin.
@@ -186,10 +255,10 @@ fn level_at_least(level: &AdminLevel, min_level: &AdminLevel) -> bool {
     use AdminLevel::*;
     matches!(
         (min_level, level),
-        (User, _) |
-        (Moderator, Moderator | Admin | SuperAdmin) |
-        (Admin, Admin | SuperAdmin) |
-        (SuperAdmin, SuperAdmin)
+        (User, _)
+            | (Moderator, Moderator | Admin | SuperAdmin)
+            | (Admin, Admin | SuperAdmin)
+            | (SuperAdmin, SuperAdmin)
     )
 }
 
@@ -200,7 +269,9 @@ pub fn enforce_policy(policy_name: &str, context: AdminContext) -> Result<bool, 
     }
     match policy_name {
         "strict" => Ok(context.level == AdminLevel::SuperAdmin),
-        "moderate" => Ok(context.level == AdminLevel::Admin || context.level == AdminLevel::SuperAdmin),
+        "moderate" => {
+            Ok(context.level == AdminLevel::Admin || context.level == AdminLevel::SuperAdmin)
+        }
         "permissive" => Ok(true),
         _ => Err(format!("Unknown policy: {}", policy_name)),
     }

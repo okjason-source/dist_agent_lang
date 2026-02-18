@@ -54,9 +54,7 @@ pub enum ColorChoice {
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Run a DAL file
-    Run {
-        file: String,
-    },
+    Run { file: String },
 
     /// Run tests (discovers *.test.dal files)
     Test {
@@ -98,19 +96,13 @@ pub enum Commands {
     },
 
     /// Analyze Solidity contract
-    Analyze {
-        input: String,
-    },
+    Analyze { input: String },
 
     /// Parse and validate syntax
-    Parse {
-        file: String,
-    },
+    Parse { file: String },
 
     /// Type check without running
-    Check {
-        file: String,
-    },
+    Check { file: String },
 
     /// Format DAL code
     Fmt {
@@ -120,9 +112,7 @@ pub enum Commands {
     },
 
     /// Lint DAL code
-    Lint {
-        file: String,
-    },
+    Lint { file: String },
 
     /// Create new project
     New {
@@ -138,14 +128,10 @@ pub enum Commands {
     Repl,
 
     /// Watch file and re-run on change
-    Watch {
-        file: String,
-    },
+    Watch { file: String },
 
     /// Add package dependency
-    Add {
-        package: String,
-    },
+    Add { package: String },
 
     /// Install dependencies
     Install,
@@ -232,9 +218,7 @@ pub enum Commands {
     },
 
     /// Generate shell completions
-    Completions {
-        shell: String,
-    },
+    Completions { shell: String },
 
     /// Debug a DAL file
     Debug {
@@ -364,31 +348,19 @@ pub enum ChainSubcommand {
     List,
 
     /// Show chain configuration
-    Config {
-        chain_id: i64,
-    },
+    Config { chain_id: i64 },
 
     /// Get current gas price
-    GasPrice {
-        chain_id: i64,
-    },
+    GasPrice { chain_id: i64 },
 
     /// Get address balance
-    Balance {
-        chain_id: i64,
-        address: String,
-    },
+    Balance { chain_id: i64, address: String },
 
     /// Get transaction status
-    TxStatus {
-        chain_id: i64,
-        tx_hash: String,
-    },
+    TxStatus { chain_id: i64, tx_hash: String },
 
     /// Get latest block timestamp
-    BlockTime {
-        chain_id: i64,
-    },
+    BlockTime { chain_id: i64 },
 
     /// Deploy contract
     Deploy {
@@ -415,9 +387,7 @@ pub enum ChainSubcommand {
     },
 
     /// Get asset info
-    Asset {
-        id: String,
-    },
+    Asset { id: String },
 }
 
 impl Cli {
@@ -434,10 +404,20 @@ pub fn chain_subcommand_to_args(sub: &ChainSubcommand) -> Vec<String> {
         List => vec!["list".to_string()],
         Config { chain_id } => vec!["config".to_string(), chain_id.to_string()],
         GasPrice { chain_id } => vec!["gas-price".to_string(), chain_id.to_string()],
-        Balance { chain_id, address } => vec!["balance".to_string(), chain_id.to_string(), address.clone()],
-        TxStatus { chain_id, tx_hash } => vec!["tx-status".to_string(), chain_id.to_string(), tx_hash.clone()],
+        Balance { chain_id, address } => {
+            vec!["balance".to_string(), chain_id.to_string(), address.clone()]
+        }
+        TxStatus { chain_id, tx_hash } => vec![
+            "tx-status".to_string(),
+            chain_id.to_string(),
+            tx_hash.clone(),
+        ],
         BlockTime { chain_id } => vec!["block-time".to_string(), chain_id.to_string()],
-        Deploy { chain_id, contract, args } => {
+        Deploy {
+            chain_id,
+            contract,
+            args,
+        } => {
             let mut v = vec!["deploy".to_string(), chain_id.to_string(), contract.clone()];
             if let Some(a) = args {
                 v.push("--args".to_string());
@@ -445,8 +425,18 @@ pub fn chain_subcommand_to_args(sub: &ChainSubcommand) -> Vec<String> {
             }
             v
         }
-        Call { chain_id, address, function, args } => {
-            let mut v = vec!["call".to_string(), chain_id.to_string(), address.clone(), function.clone()];
+        Call {
+            chain_id,
+            address,
+            function,
+            args,
+        } => {
+            let mut v = vec![
+                "call".to_string(),
+                chain_id.to_string(),
+                address.clone(),
+                function.clone(),
+            ];
             if let Some(a) = args {
                 v.push("--args".to_string());
                 v.push(a.clone());

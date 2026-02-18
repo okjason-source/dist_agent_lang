@@ -1,10 +1,9 @@
+use crate::runtime::functions::RuntimeError;
+use crate::runtime::values::Value;
 /// Advanced Security Features for DAL Runtime
 /// Includes MEV protection, time-locks, and formal verification support
-
 use std::collections::{HashMap, VecDeque};
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::runtime::values::Value;
-use crate::runtime::functions::RuntimeError;
 
 /// MEV (Maximal Extractable Value) Protection System
 #[derive(Debug, Clone)]
@@ -95,8 +94,15 @@ impl MEVProtectionManager {
         args: Vec<Value>,
         protection_type: MEVProtectionType,
     ) -> Result<String, RuntimeError> {
-        let tx_id = format!("tx_{}_{}", sender, SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos());
-        
+        let tx_id = format!(
+            "tx_{}_{}",
+            sender,
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
+
         match protection_type {
             MEVProtectionType::CommitReveal => {
                 self.submit_commit_reveal_transaction(tx_id.clone(), sender, function_call, args)?;
@@ -122,18 +128,26 @@ impl MEVProtectionManager {
     ) -> Result<(), RuntimeError> {
         // Generate commitment hash
         let reveal_data = self.serialize_transaction_data(&function_call, &args);
-        let nonce = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         let commitment_hash = self.generate_commitment_hash(&reveal_data, nonce);
 
         // Store commitment
         let commit_data = CommitData {
             commitment_hash: commitment_hash.clone(),
             sender: sender.clone(),
-            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             revealed: false,
         };
-        
-        self.commitment_scheme.commits.insert(tx_id.clone(), commit_data);
+
+        self.commitment_scheme
+            .commits
+            .insert(tx_id.clone(), commit_data);
 
         // Store pending transaction with commitment
         let pending_tx = PendingTransaction {
@@ -143,7 +157,10 @@ impl MEVProtectionManager {
             args,
             commitment: Some(commitment_hash),
             reveal_data: Some(reveal_data),
-            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             priority_fee: 0,
             max_fee: 0,
         };
@@ -160,9 +177,12 @@ impl MEVProtectionManager {
         function_call: String,
         args: Vec<Value>,
     ) -> Result<(), RuntimeError> {
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
         let delay_window = 300; // 5 minutes
-        
+
         let pending_tx = PendingTransaction {
             id: tx_id.clone(),
             sender,
@@ -194,7 +214,10 @@ impl MEVProtectionManager {
             args,
             commitment: None,
             reveal_data: None,
-            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             priority_fee: 0,
             max_fee: 0,
         };
@@ -211,7 +234,10 @@ impl MEVProtectionManager {
 
     /// Process a fair batch of transactions
     fn process_fair_batch(&mut self) -> Result<Vec<String>, RuntimeError> {
-        let batch_size = self.fair_ordering.batch_size.min(self.transaction_pool.len());
+        let batch_size = self
+            .fair_ordering
+            .batch_size
+            .min(self.transaction_pool.len());
         let mut batch: Vec<PendingTransaction> = Vec::new();
 
         for _ in 0..batch_size {
@@ -248,7 +274,7 @@ impl MEVProtectionManager {
     fn calculate_fairness_score(&self, tx: &PendingTransaction) -> f64 {
         let time_factor = tx.timestamp as f64;
         let randomness = self.get_block_randomness() as f64;
-        
+
         // Combine timestamp with randomness to prevent manipulation
         (time_factor + randomness) % 1000000.0
     }
@@ -256,13 +282,17 @@ impl MEVProtectionManager {
     /// Get block randomness for fair ordering
     fn get_block_randomness(&self) -> u64 {
         // In practice, this would use VRF or block hash
-        SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos() as u64 % 1000000
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos() as u64
+            % 1000000
     }
 
     /// Generate commitment hash for commit-reveal scheme
     fn generate_commitment_hash(&self, data: &[u8], nonce: u128) -> String {
-        use sha2::{Sha256, Digest};
-        
+        use sha2::{Digest, Sha256};
+
         let mut hasher = Sha256::new();
         hasher.update(data);
         hasher.update(nonce.to_be_bytes());
@@ -273,28 +303,28 @@ impl MEVProtectionManager {
     fn serialize_transaction_data(&self, function_call: &str, args: &[Value]) -> Vec<u8> {
         format!("{}:{:?}", function_call, args).into_bytes()
     }
-    
+
     /// Analyze transaction for MEV attacks
     /// Returns warnings instead of blocking for monitoring code
     pub fn analyze_transaction(&mut self, transaction_data: &str) -> Result<(), RuntimeError> {
         // Basic MEV detection heuristics
         let suspicious_patterns = [
             "sandwich",
-            "frontrun", 
+            "frontrun",
             "backrun",
             "arbitrage",
             "liquidation",
-            "flashloan"
+            "flashloan",
         ];
-        
+
         let data_lower = transaction_data.to_lowercase();
-        
+
         // Check if this is monitoring code (find_*, detect_*, analyze_*, monitor_*, get_*)
         let is_monitoring = self.is_monitoring_code(&data_lower);
-        
+
         // Check if protection patterns are present
         let has_protection = self.has_protection_patterns(&data_lower);
-        
+
         for pattern in &suspicious_patterns {
             if data_lower.contains(pattern) {
                 // If it's monitoring code, allow it (just log info)
@@ -303,14 +333,14 @@ impl MEVProtectionManager {
                     // Could log: "MEV keyword in monitoring function - OK"
                     continue;
                 }
-                
+
                 // If protection patterns exist, allow it (already protected)
                 if has_protection {
                     // Protection detected - don't block
                     // Could log: "MEV pattern detected but protection present - OK"
                     continue;
                 }
-                
+
                 // Only block if it's execution code without protection
                 // This prevents false positives for legitimate monitoring/analytics
                 return Err(RuntimeError::General(format!(
@@ -319,39 +349,65 @@ impl MEVProtectionManager {
                 )));
             }
         }
-        
+
         // Check for rapid successive transactions (potential MEV bot behavior)
         // Only block if not monitoring code
         if !is_monitoring && (data_lower.contains("urgent") || data_lower.contains("priority")) {
-            return Err(RuntimeError::General("High-priority transaction flagged for MEV review".to_string()));
+            return Err(RuntimeError::General(
+                "High-priority transaction flagged for MEV review".to_string(),
+            ));
         }
-        
+
         Ok(())
     }
-    
+
     /// Check if code is monitoring/analytics (read-only, not execution)
     fn is_monitoring_code(&self, code: &str) -> bool {
         let monitoring_patterns = [
-            "fn find_", "fn detect_", "fn analyze_", "fn monitor_",
-            "fn get_", "fn check_", "fn query_", "fn calculate_",
-            "find_price", "detect_price", "analyze_price", "monitor_liquidity",
-            "price_difference", "market_opportunities"  // Common monitoring patterns
+            "fn find_",
+            "fn detect_",
+            "fn analyze_",
+            "fn monitor_",
+            "fn get_",
+            "fn check_",
+            "fn query_",
+            "fn calculate_",
+            "find_price",
+            "detect_price",
+            "analyze_price",
+            "monitor_liquidity",
+            "price_difference",
+            "market_opportunities", // Common monitoring patterns
         ];
-        
-        monitoring_patterns.iter().any(|pattern| code.contains(pattern))
+
+        monitoring_patterns
+            .iter()
+            .any(|pattern| code.contains(pattern))
     }
-    
+
     /// Check if protection patterns are present
     fn has_protection_patterns(&self, code: &str) -> bool {
         let protection_patterns = [
-            "commit_reveal", "commit-reveal", "commitment_hash", "commitment",
-            "slippage", "min_amount_out", "max_slippage",
-            "oracle_price", "get_oracle_price", "price_oracle",
-            "fair_batch", "time_delay", "protected_swap",
-            "execute_protected", "execute_single_chain_swap_protected"
+            "commit_reveal",
+            "commit-reveal",
+            "commitment_hash",
+            "commitment",
+            "slippage",
+            "min_amount_out",
+            "max_slippage",
+            "oracle_price",
+            "get_oracle_price",
+            "price_oracle",
+            "fair_batch",
+            "time_delay",
+            "protected_swap",
+            "execute_protected",
+            "execute_single_chain_swap_protected",
         ];
-        
-        protection_patterns.iter().any(|pattern| code.contains(pattern))
+
+        protection_patterns
+            .iter()
+            .any(|pattern| code.contains(pattern))
     }
 }
 
@@ -410,8 +466,9 @@ impl TimeLockManager {
         delay_seconds: u64,
         required_approvals: Vec<String>,
     ) -> Result<String, RuntimeError> {
-        let config = self.time_lock_configs.get(&operation_type)
-            .ok_or_else(|| RuntimeError::General("Time-lock configuration not found".to_string()))?;
+        let config = self.time_lock_configs.get(&operation_type).ok_or_else(|| {
+            RuntimeError::General("Time-lock configuration not found".to_string())
+        })?;
 
         // Validate delay
         if delay_seconds < config.min_delay || delay_seconds > config.max_delay {
@@ -421,7 +478,10 @@ impl TimeLockManager {
             )));
         }
 
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
         let operation_id = format!("timelock_{}_{}", operation_type, now);
 
         let time_lock_op = TimeLockOperation {
@@ -437,17 +497,26 @@ impl TimeLockManager {
             current_approvals: Vec::new(),
         };
 
-        self.locked_operations.insert(operation_id.clone(), time_lock_op);
+        self.locked_operations
+            .insert(operation_id.clone(), time_lock_op);
         Ok(operation_id)
     }
 
     /// Approve a time-locked operation
-    pub fn approve_operation(&mut self, operation_id: &str, approver: &str) -> Result<(), RuntimeError> {
-        let operation = self.locked_operations.get_mut(operation_id)
+    pub fn approve_operation(
+        &mut self,
+        operation_id: &str,
+        approver: &str,
+    ) -> Result<(), RuntimeError> {
+        let operation = self
+            .locked_operations
+            .get_mut(operation_id)
             .ok_or_else(|| RuntimeError::General("Operation not found".to_string()))?;
 
         if operation.executed || operation.cancelled {
-            return Err(RuntimeError::General("Operation already completed".to_string()));
+            return Err(RuntimeError::General(
+                "Operation already completed".to_string(),
+            ));
         }
 
         // Check if approver is authorized
@@ -457,7 +526,9 @@ impl TimeLockManager {
 
         // Check if already approved
         if operation.current_approvals.contains(&approver.to_string()) {
-            return Err(RuntimeError::General("Already approved by this approver".to_string()));
+            return Err(RuntimeError::General(
+                "Already approved by this approver".to_string(),
+            ));
         }
 
         operation.current_approvals.push(approver.to_string());
@@ -465,33 +536,52 @@ impl TimeLockManager {
     }
 
     /// Execute a time-locked operation
-    pub fn execute_operation(&mut self, operation_id: &str, executor: &str) -> Result<Vec<u8>, RuntimeError> {
-        let operation = self.locked_operations.get_mut(operation_id)
+    pub fn execute_operation(
+        &mut self,
+        operation_id: &str,
+        executor: &str,
+    ) -> Result<Vec<u8>, RuntimeError> {
+        let operation = self
+            .locked_operations
+            .get_mut(operation_id)
             .ok_or_else(|| RuntimeError::General("Operation not found".to_string()))?;
 
         if operation.executed {
-            return Err(RuntimeError::General("Operation already executed".to_string()));
+            return Err(RuntimeError::General(
+                "Operation already executed".to_string(),
+            ));
         }
 
         if operation.cancelled {
             return Err(RuntimeError::General("Operation was cancelled".to_string()));
         }
 
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
         if now < operation.unlock_time {
-            return Err(RuntimeError::General("Operation is still time-locked".to_string()));
+            return Err(RuntimeError::General(
+                "Operation is still time-locked".to_string(),
+            ));
         }
 
         // Check if sufficient approvals
-        let config = self.time_lock_configs.get(&operation.operation_type)
-            .ok_or_else(|| RuntimeError::General("Time-lock configuration not found".to_string()))?;
+        let config = self
+            .time_lock_configs
+            .get(&operation.operation_type)
+            .ok_or_else(|| {
+                RuntimeError::General("Time-lock configuration not found".to_string())
+            })?;
 
         if operation.current_approvals.len() < config.min_approvals as usize {
             return Err(RuntimeError::General("Insufficient approvals".to_string()));
         }
 
         // Check if executor is authorized (creator or approver)
-        if executor != operation.creator && !operation.current_approvals.contains(&executor.to_string()) {
+        if executor != operation.creator
+            && !operation.current_approvals.contains(&executor.to_string())
+        {
             return Err(RuntimeError::General("Unauthorized executor".to_string()));
         }
 
@@ -500,32 +590,52 @@ impl TimeLockManager {
     }
 
     /// Cancel a time-locked operation (emergency guardian only)
-    pub fn cancel_operation(&mut self, operation_id: &str, canceller: &str) -> Result<(), RuntimeError> {
-        let operation = self.locked_operations.get_mut(operation_id)
+    pub fn cancel_operation(
+        &mut self,
+        operation_id: &str,
+        canceller: &str,
+    ) -> Result<(), RuntimeError> {
+        let operation = self
+            .locked_operations
+            .get_mut(operation_id)
             .ok_or_else(|| RuntimeError::General("Operation not found".to_string()))?;
 
         if operation.executed {
-            return Err(RuntimeError::General("Cannot cancel executed operation".to_string()));
+            return Err(RuntimeError::General(
+                "Cannot cancel executed operation".to_string(),
+            ));
         }
 
         if operation.cancelled {
-            return Err(RuntimeError::General("Operation already cancelled".to_string()));
+            return Err(RuntimeError::General(
+                "Operation already cancelled".to_string(),
+            ));
         }
 
-        let config = self.time_lock_configs.get(&operation.operation_type)
-            .ok_or_else(|| RuntimeError::General("Time-lock configuration not found".to_string()))?;
+        let config = self
+            .time_lock_configs
+            .get(&operation.operation_type)
+            .ok_or_else(|| {
+                RuntimeError::General("Time-lock configuration not found".to_string())
+            })?;
 
         if !config.can_cancel {
-            return Err(RuntimeError::General("Operation cannot be cancelled".to_string()));
+            return Err(RuntimeError::General(
+                "Operation cannot be cancelled".to_string(),
+            ));
         }
 
         // Check if canceller is emergency guardian
         if let Some(ref guardian) = config.emergency_guardian {
             if canceller != guardian {
-                return Err(RuntimeError::General("Only emergency guardian can cancel".to_string()));
+                return Err(RuntimeError::General(
+                    "Only emergency guardian can cancel".to_string(),
+                ));
             }
         } else {
-            return Err(RuntimeError::General("No emergency guardian configured".to_string()));
+            return Err(RuntimeError::General(
+                "No emergency guardian configured".to_string(),
+            ));
         }
 
         operation.cancelled = true;
@@ -536,7 +646,7 @@ impl TimeLockManager {
     pub fn add_config(&mut self, operation_type: String, config: TimeLockConfig) {
         self.time_lock_configs.insert(operation_type, config);
     }
-    
+
     /// Check if function is time-locked
     pub fn check_lock(&self, function_name: &str) -> Result<(), RuntimeError> {
         // Check if this function type has a time-lock configuration
@@ -550,7 +660,7 @@ impl TimeLockManager {
                             .duration_since(std::time::UNIX_EPOCH)
                             .unwrap_or_default()
                             .as_secs();
-                        
+
                         if current_time < operation.unlock_time {
                             return Err(RuntimeError::General(format!(
                                 "Function '{}' is time-locked until timestamp: {}",
@@ -561,7 +671,7 @@ impl TimeLockManager {
                 }
             }
         }
-        
+
         Ok(())
     }
 }
@@ -641,12 +751,19 @@ impl FormalVerificationManager {
 
     /// Add contract specification for verification
     pub fn add_specification(&mut self, spec: ContractSpecification) {
-        self.contract_specifications.insert(spec.contract_name.clone(), spec);
+        self.contract_specifications
+            .insert(spec.contract_name.clone(), spec);
     }
 
     /// Verify contract against specification
-    pub fn verify_contract(&mut self, contract_name: &str, contract_code: &str) -> Result<VerificationResult, RuntimeError> {
-        let spec = self.contract_specifications.get(contract_name)
+    pub fn verify_contract(
+        &mut self,
+        contract_name: &str,
+        contract_code: &str,
+    ) -> Result<VerificationResult, RuntimeError> {
+        let spec = self
+            .contract_specifications
+            .get(contract_name)
             .ok_or_else(|| RuntimeError::General("Contract specification not found".to_string()))?;
 
         let mut failed_properties = Vec::new();
@@ -669,20 +786,27 @@ impl FormalVerificationManager {
         // Verify liveness properties
         for liveness_prop in &spec.liveness_properties {
             if !self.check_liveness_property(contract_code, liveness_prop) {
-                warnings.push(format!("Liveness property may not hold: {}", liveness_prop.name));
+                warnings.push(format!(
+                    "Liveness property may not hold: {}",
+                    liveness_prop.name
+                ));
             }
         }
 
         let result = VerificationResult {
             contract_name: contract_name.to_string(),
-            verified_at: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            verified_at: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             passed: failed_properties.is_empty(),
             failed_properties,
             warnings,
             proof_size: contract_code.len(),
         };
 
-        self.verification_results.insert(contract_name.to_string(), result.clone());
+        self.verification_results
+            .insert(contract_name.to_string(), result.clone());
         Ok(result)
     }
 
@@ -701,7 +825,11 @@ impl FormalVerificationManager {
     }
 
     /// Check liveness property holds for contract
-    fn check_liveness_property(&self, _contract_code: &str, liveness_prop: &LivenessProperty) -> bool {
+    fn check_liveness_property(
+        &self,
+        _contract_code: &str,
+        liveness_prop: &LivenessProperty,
+    ) -> bool {
         // Simplified liveness checking - in practice would use temporal logic
         // For demonstration, assume basic liveness properties pass
         !liveness_prop.property.contains("deadlock")
@@ -713,16 +841,32 @@ impl FormalVerificationManager {
     }
 
     /// Generate formal proof for property
-    pub fn generate_proof(&mut self, contract_name: &str, property_name: &str) -> Result<ProofData, RuntimeError> {
-        let spec = self.contract_specifications.get(contract_name)
+    pub fn generate_proof(
+        &mut self,
+        contract_name: &str,
+        property_name: &str,
+    ) -> Result<ProofData, RuntimeError> {
+        let spec = self
+            .contract_specifications
+            .get(contract_name)
             .ok_or_else(|| RuntimeError::General("Contract specification not found".to_string()))?;
 
         // Find property in specification
-        let property_found = spec.invariants.iter().find(|inv| inv.name == property_name).is_some() ||
-                           spec.safety_properties.iter().find(|sp| sp.name == property_name).is_some();
-        
+        let property_found = spec
+            .invariants
+            .iter()
+            .find(|inv| inv.name == property_name)
+            .is_some()
+            || spec
+                .safety_properties
+                .iter()
+                .find(|sp| sp.name == property_name)
+                .is_some();
+
         if !property_found {
-            return Err(RuntimeError::General("Property not found in specification".to_string()));
+            return Err(RuntimeError::General(
+                "Property not found in specification".to_string(),
+            ));
         }
 
         // Generate proof steps (simplified)
@@ -737,7 +881,10 @@ impl FormalVerificationManager {
             property_name: property_name.to_string(),
             proof_method: "Inductive Verification".to_string(),
             proof_steps,
-            verification_time: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            verification_time: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
         };
 
         let proof_key = format!("{}::{}", contract_name, property_name);
@@ -754,14 +901,14 @@ mod tests {
     #[test]
     fn test_mev_protection_commit_reveal() {
         let mut mev_manager = MEVProtectionManager::new();
-        
+
         let result = mev_manager.submit_protected_transaction(
             "user1".to_string(),
             "transfer".to_string(),
             vec![Value::String("recipient".to_string()), Value::Int(100)],
             MEVProtectionType::CommitReveal,
         );
-        
+
         assert!(result.is_ok());
         assert_eq!(mev_manager.transaction_pool.len(), 1);
     }
@@ -769,7 +916,7 @@ mod tests {
     #[test]
     fn test_time_lock_creation() {
         let mut timelock_manager = TimeLockManager::new();
-        
+
         // Add configuration
         let config = TimeLockConfig {
             min_delay: 3600,  // 1 hour
@@ -780,7 +927,7 @@ mod tests {
             can_cancel: true,
         };
         timelock_manager.add_config("upgrade".to_string(), config);
-        
+
         let result = timelock_manager.create_time_lock(
             "upgrade".to_string(),
             b"upgrade_data".to_vec(),
@@ -788,14 +935,14 @@ mod tests {
             7200, // 2 hours
             vec!["approver1".to_string(), "approver2".to_string()],
         );
-        
+
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_formal_verification() {
         let mut verifier = FormalVerificationManager::new();
-        
+
         let spec = ContractSpecification {
             contract_name: "TestContract".to_string(),
             invariants: vec![Invariant {
@@ -812,9 +959,9 @@ mod tests {
             }],
             liveness_properties: vec![],
         };
-        
+
         verifier.add_specification(spec);
-        
+
         let result = verifier.verify_contract("TestContract", "contract code here");
         assert!(result.is_ok());
         assert!(result.unwrap().passed);
@@ -837,29 +984,45 @@ impl AdvancedSecurityManager {
             formal_verification: FormalVerificationManager::new(),
         }
     }
-    
+
     /// Analyze transaction for MEV attacks
-    pub fn analyze_transaction_for_mev(&mut self, transaction_data: &str) -> Result<(), RuntimeError> {
+    pub fn analyze_transaction_for_mev(
+        &mut self,
+        transaction_data: &str,
+    ) -> Result<(), RuntimeError> {
         self.mev_protection.analyze_transaction(transaction_data)
     }
-    
+
     /// Check timelock restrictions for sensitive functions
     pub fn check_timelock(&self, function_name: &str) -> Result<(), RuntimeError> {
         self.timelock_manager.check_lock(function_name)
     }
-    
+
     /// Verify assignment using formal verification
-    pub fn verify_assignment(&mut self, variable_name: &str, value: &Value) -> Result<(), RuntimeError> {
+    pub fn verify_assignment(
+        &mut self,
+        variable_name: &str,
+        value: &Value,
+    ) -> Result<(), RuntimeError> {
         // Create a simple assignment verification
         let contract_code = format!("let {} = {:?};", variable_name, value);
         // Only verify if a specification exists - otherwise skip (optional verification)
-        if self.formal_verification.contract_specifications.contains_key("assignment") {
-            let result = self.formal_verification.verify_contract("assignment", &contract_code)?;
-            
+        if self
+            .formal_verification
+            .contract_specifications
+            .contains_key("assignment")
+        {
+            let result = self
+                .formal_verification
+                .verify_contract("assignment", &contract_code)?;
+
             if result.passed {
                 Ok(())
             } else {
-                Err(RuntimeError::General(format!("Formal verification failed for assignment: {}", variable_name)))
+                Err(RuntimeError::General(format!(
+                    "Formal verification failed for assignment: {}",
+                    variable_name
+                )))
             }
         } else {
             // No specification exists, skip verification

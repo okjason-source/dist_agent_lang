@@ -1,19 +1,21 @@
 // HTTP Server Handlers with Middleware Support
 // Generic handler that executes middleware chain and route handlers
 
+use crate::http_server::WebServerState;
+use crate::http_server_converters::{
+    axum_request_to_http_request, error_response, http_response_to_axum_response,
+};
+use crate::http_server_middleware::{execute_middleware_chain, execute_route_handler};
+use crate::runtime::engine::Runtime;
 use axum::{
+    body::Body,
     extract::{Request, State},
     response::Response,
-    body::Body,
 };
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use crate::http_server::WebServerState;
-use crate::runtime::engine::Runtime;
-use crate::http_server_middleware::{execute_middleware_chain, execute_route_handler};
-use crate::http_server_converters::{axum_request_to_http_request, http_response_to_axum_response, error_response};
 
 /// Generic handler that executes middleware and route handler.
 /// Uses spawn_blocking for DAL execution so the async runtime stays responsive.
@@ -51,16 +53,13 @@ pub async fn handle_with_middleware(
         };
 
         // Execute middleware chain
-        let processed_request = match execute_middleware_chain(
-            &mut runtime,
-            &middleware_list,
-            http_request,
-        ) {
-            Ok(req) => req,
-            Err(e) => {
-                return Err(format!("Middleware error: {}", e));
-            }
-        };
+        let processed_request =
+            match execute_middleware_chain(&mut runtime, &middleware_list, http_request) {
+                Ok(req) => req,
+                Err(e) => {
+                    return Err(format!("Middleware error: {}", e));
+                }
+            };
 
         // Execute route handler
         let result = execute_route_handler(&mut runtime, &handler_name, processed_request)
@@ -134,9 +133,7 @@ pub fn get_route_handler_name_and_params(
     // Match path patterns (e.g. GET:/users/:id for path /users/123)
     for (key, route) in &server.routes {
         if let Some((route_method, route_path)) = key.split_once(':') {
-            if route_method.eq_ignore_ascii_case(method)
-                && path_pattern_matches(route_path, path)
-            {
+            if route_method.eq_ignore_ascii_case(method) && path_pattern_matches(route_path, path) {
                 let params = path_params_from_match(route_path, path).unwrap_or_default();
                 return Some((route.handler.clone(), params));
             }
@@ -153,4 +150,3 @@ pub fn get_route_handler_name(
 ) -> Option<String> {
     get_route_handler_name_and_params(server, method, path).map(|(name, _)| name)
 }
-

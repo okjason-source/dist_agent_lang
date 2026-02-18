@@ -7,8 +7,7 @@
 /// - cloudadmin::enforce_policy(policy_name, context) - Enforce admin policy
 /// - cloudadmin::validate_hybrid_trust(admin_trust, user_trust) - Validate hybrid trust
 /// - cloudadmin::bridge_trusts(centralized_trust, decentralized_trust) - Bridge trust models
-
-pub use crate::stdlib::trust::{AdminContext, AdminLevel, AdminPolicy, create_admin_context};
+pub use crate::stdlib::trust::{create_admin_context, AdminContext, AdminLevel, AdminPolicy};
 
 /// Authorize admin operation (delegates to trust policy engine: key registry, admin registry, env).
 pub fn authorize(admin_id: &str, operation: &str, resource: &str) -> bool {

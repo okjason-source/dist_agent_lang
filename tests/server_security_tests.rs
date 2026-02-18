@@ -22,7 +22,7 @@ fn test_server_invalid_method_rejection() {
             static_path: "./public".to_string(),
         },
     };
-    
+
     assert_eq!(server.port, 8080);
 }
 
@@ -31,7 +31,7 @@ fn test_server_invalid_method_rejection() {
 fn test_server_input_validation() {
     // Test that server endpoints would validate inputs
     // This is a placeholder - actual tests would require running server
-    
+
     // Test cases to validate:
     // - Empty parameters
     // - Invalid types
@@ -39,7 +39,7 @@ fn test_server_input_validation() {
     // - Special characters
     // - SQL injection patterns
     // - XSS patterns
-    
+
     assert!(true); // Placeholder
 }
 
@@ -50,7 +50,7 @@ fn test_server_cors_handling() {
     // - Allowed origins should be restricted
     // - Allowed methods should be specified
     // - Credentials should be handled correctly
-    
+
     // Current implementation allows all origins - needs fixing
     assert!(true); // Placeholder
 }
@@ -62,7 +62,7 @@ fn test_server_rate_limiting() {
     // - Per IP limits
     // - Per endpoint limits
     // - Sliding window
-    
+
     // Rate limiting not yet implemented
     assert!(true); // Placeholder
 }
@@ -75,7 +75,7 @@ fn test_server_error_sanitization() {
     // - No file paths
     // - No internal state
     // - Generic error messages
-    
+
     assert!(true); // Placeholder
 }
 
@@ -86,7 +86,7 @@ fn test_server_request_size_limits() {
     // - Body size limits
     // - Header size limits
     // - URL length limits
-    
+
     assert!(true); // Placeholder
 }
 
@@ -100,7 +100,7 @@ fn test_server_path_traversal_prevention() {
         "/etc/passwd",
         "C:\\Windows\\System32",
     ];
-    
+
     for path in traversal_paths {
         // Should reject or sanitize
         assert!(!path.contains("..") || path.contains("..")); // Placeholder
@@ -115,7 +115,7 @@ fn test_server_json_validation() {
     // - Invalid JSON
     // - Malformed JSON
     // - Oversized JSON
-    
+
     assert!(true); // Placeholder
 }
 
@@ -128,7 +128,7 @@ fn test_server_security_headers() {
     // - X-Content-Type-Options
     // - Strict-Transport-Security
     // - X-XSS-Protection
-    
+
     // Security headers not yet implemented
     assert!(true); // Placeholder
 }
@@ -137,7 +137,7 @@ fn test_server_security_headers() {
 #[test]
 fn test_server_concurrent_requests() {
     use std::thread;
-    
+
     // Test concurrent request handling
     let handles: Vec<_> = (0..10)
         .map(|i| {
@@ -147,7 +147,7 @@ fn test_server_concurrent_requests() {
             })
         })
         .collect();
-    
+
     for handle in handles {
         let result = handle.join().unwrap();
         assert!(!result.is_empty());
@@ -162,7 +162,7 @@ fn test_server_security_logging() {
     // - Rate limit violations
     // - Invalid requests
     // - Suspicious patterns
-    
+
     // Logging not yet implemented
     assert!(true); // Placeholder
 }
@@ -174,7 +174,7 @@ fn test_server_csrf_prevention() {
     // - Origin header validation
     // - Referer header validation
     // - CSRF tokens
-    
+
     // CSRF protection not yet implemented
     assert!(true); // Placeholder
 }
@@ -186,7 +186,7 @@ fn test_server_content_type_validation() {
     // - Accept header validation
     // - Content-Type header validation
     // - Reject invalid types
-    
+
     assert!(true); // Placeholder
 }
 
@@ -197,7 +197,7 @@ fn test_server_timeout_handling() {
     // - Request timeout
     // - Connection timeout
     // - Graceful timeout handling
-    
+
     assert!(true); // Placeholder
 }
 
@@ -209,7 +209,6 @@ fn test_server_dos_prevention() {
     // - Request rate limits
     // - Resource limits
     // - Slowloris protection
-    
+
     assert!(true); // Placeholder
 }
-

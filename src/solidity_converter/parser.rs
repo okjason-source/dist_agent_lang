@@ -108,25 +108,25 @@ impl SolidityParser {
     pub fn new() -> Self {
         Self {}
     }
-    
+
     /// Parse Solidity source code
     pub fn parse(&self, source: &str) -> Result<SolidityAST, String> {
         // Extract pragma
         let pragma = self.extract_pragma(source);
-        
+
         // Extract imports
         let imports = self.extract_imports(source);
-        
+
         // Extract contracts
         let contracts = self.extract_contracts(source)?;
-        
+
         Ok(SolidityAST {
             contracts,
             pragma,
             imports,
         })
     }
-    
+
     fn extract_pragma(&self, source: &str) -> Option<String> {
         for line in source.lines() {
             let line = line.trim();
@@ -136,7 +136,7 @@ impl SolidityParser {
         }
         None
     }
-    
+
     fn extract_imports(&self, source: &str) -> Vec<String> {
         let mut imports = Vec::new();
         for line in source.lines() {
@@ -147,14 +147,14 @@ impl SolidityParser {
         }
         imports
     }
-    
+
     fn extract_contracts(&self, source: &str) -> Result<Vec<Contract>, String> {
         let mut contracts = Vec::new();
         let mut in_contract = false;
         let mut contract_start = 0;
         let mut brace_count = 0;
         let mut current_contract: Option<Contract> = None;
-        
+
         let lines: Vec<&str> = source.lines().collect();
         let mut nested_stack: Vec<Contract> = Vec::new();
         let mut nested_brace_counts: Vec<i32> = Vec::new();
@@ -277,12 +277,12 @@ impl SolidityParser {
                 i += 1;
             }
         }
-        
+
         // Handle unclosed contract
         if let Some(contract) = current_contract {
             contracts.push(contract);
         }
-        
+
         Ok(contracts)
     }
 
@@ -296,10 +296,10 @@ impl SolidityParser {
             || trimmed.starts_with("event ")
             || trimmed.starts_with("modifier ")
     }
-    
+
     fn parse_contract_declaration(&self, line: &str) -> Result<(String, ContractKind), String> {
         let parts: Vec<&str> = line.split_whitespace().collect();
-        
+
         let (kind, name_idx) = if line.starts_with("interface ") {
             (ContractKind::Interface, 1)
         } else if line.starts_with("abstract contract ") {
@@ -309,24 +309,24 @@ impl SolidityParser {
         } else {
             (ContractKind::Contract, 1)
         };
-        
+
         if parts.len() <= name_idx {
             return Err("Invalid contract declaration".to_string());
         }
-        
+
         let name = parts[name_idx].trim_end_matches('{').to_string();
-        
+
         Ok((name, kind))
     }
-    
+
     fn parse_contract_line(&self, line: &str, contract: &mut Contract) -> Result<(), String> {
         let trimmed = line.trim();
-        
+
         // Skip empty lines and comments
         if trimmed.is_empty() || trimmed.starts_with("//") || trimmed.starts_with("/*") {
             return Ok(());
         }
-        
+
         // Parse constructor, receive, fallback, or function
         if trimmed.starts_with("constructor") {
             if let Ok(func) = self.parse_constructor(line) {
@@ -345,38 +345,39 @@ impl SolidityParser {
                 contract.functions.push(func);
             }
         }
-        
+
         // Parse event
         if trimmed.starts_with("event ") {
             if let Ok(event) = self.parse_event(line) {
                 contract.events.push(event);
             }
         }
-        
+
         // Parse modifier
         if trimmed.starts_with("modifier ") {
             if let Ok(modifier) = self.parse_modifier(line) {
                 contract.modifiers.push(modifier);
             }
         }
-        
+
         // Parse state variable (simplified - variables without function keyword)
-        if !trimmed.starts_with("function ") && 
-           !trimmed.starts_with("event ") &&
-           !trimmed.starts_with("modifier ") &&
-           !trimmed.starts_with("struct ") &&
-           !trimmed.starts_with("enum ") &&
-           !trimmed.starts_with("constructor") &&
-           trimmed.contains(' ') &&
-           !trimmed.starts_with("//") {
+        if !trimmed.starts_with("function ")
+            && !trimmed.starts_with("event ")
+            && !trimmed.starts_with("modifier ")
+            && !trimmed.starts_with("struct ")
+            && !trimmed.starts_with("enum ")
+            && !trimmed.starts_with("constructor")
+            && trimmed.contains(' ')
+            && !trimmed.starts_with("//")
+        {
             if let Ok(var) = self.parse_state_variable(line) {
                 contract.state_variables.push(var);
             }
         }
-        
+
         Ok(())
     }
-    
+
     fn parse_function(&self, line: &str) -> Result<Function, String> {
         let mut func = Function {
             name: String::new(),
@@ -441,16 +442,14 @@ impl SolidityParser {
         let modifiers_start = if let Some(returns_open) = after_params.find("returns(") {
             let returns_abs = params_end + 1 + returns_open;
             let paren_start = returns_abs + 7;
-            Self::find_matching_paren(line, paren_start).map(|i| i + 1).unwrap_or(params_end + 1)
+            Self::find_matching_paren(line, paren_start)
+                .map(|i| i + 1)
+                .unwrap_or(params_end + 1)
         } else {
             params_end + 1
         };
         let rest = line[modifiers_start..].trim();
-        let modifiers_str = rest
-            .split(&['{', ';'][..])
-            .next()
-            .unwrap_or("")
-            .trim();
+        let modifiers_str = rest.split(&['{', ';'][..]).next().unwrap_or("").trim();
         for word in modifiers_str.split_whitespace() {
             let w = word.trim_end_matches(',');
             match w {
@@ -479,11 +478,14 @@ impl SolidityParser {
     }
 
     fn parse_constructor(&self, line: &str) -> Result<Function, String> {
-        let kw = line.find("constructor").ok_or("constructor: missing keyword")?;
+        let kw = line
+            .find("constructor")
+            .ok_or("constructor: missing keyword")?;
         let from = &line[kw + 11..];
         let open_in_from = from.find('(').ok_or("constructor: missing '('")?;
         let params_start_abs = kw + 11 + open_in_from;
-        let params_end = Self::find_matching_paren(line, params_start_abs).ok_or("constructor: unclosed '('")?;
+        let params_end =
+            Self::find_matching_paren(line, params_start_abs).ok_or("constructor: unclosed '('")?;
         let params_str = line[params_start_abs + 1..params_end].trim();
         let parameters = self.parse_parameters(params_str)?;
         let rest = line[params_end + 1..].trim();
@@ -491,7 +493,12 @@ impl SolidityParser {
         let mut modifiers = Vec::new();
         for word in modifiers_str.split_whitespace() {
             let w = word.trim_end_matches(',');
-            if !["public", "external", "internal", "private", "view", "pure", "payable"].contains(&w) && !w.is_empty() {
+            if ![
+                "public", "external", "internal", "private", "view", "pure", "payable",
+            ]
+            .contains(&w)
+                && !w.is_empty()
+            {
                 modifiers.push(w.to_string());
             }
         }
@@ -499,8 +506,18 @@ impl SolidityParser {
             name: "constructor".to_string(),
             parameters,
             returns: Vec::new(),
-            visibility: if line.contains(" public") { Visibility::Public } else if line.contains(" external") { Visibility::External } else { Visibility::Internal },
-            mutability: if line.contains(" payable") { Mutability::Payable } else { Mutability::NonPayable },
+            visibility: if line.contains(" public") {
+                Visibility::Public
+            } else if line.contains(" external") {
+                Visibility::External
+            } else {
+                Visibility::Internal
+            },
+            mutability: if line.contains(" payable") {
+                Mutability::Payable
+            } else {
+                Mutability::NonPayable
+            },
             modifiers,
             body: None,
         })
@@ -523,12 +540,23 @@ impl SolidityParser {
         let from = &line[kw + 8..];
         let open_in_from = from.find('(').ok_or("fallback: missing '('")?;
         let params_start_abs = kw + 8 + open_in_from;
-        let params_end = Self::find_matching_paren(line, params_start_abs).ok_or("fallback: unclosed '('")?;
+        let params_end =
+            Self::find_matching_paren(line, params_start_abs).ok_or("fallback: unclosed '('")?;
         let params_str = line[params_start_abs + 1..params_end].trim();
         let parameters = self.parse_parameters(params_str)?;
         let rest = line[params_end + 1..].trim();
-        let visibility = if rest.contains(" external") { Visibility::External } else if rest.contains(" public") { Visibility::Public } else { Visibility::External };
-        let mutability = if rest.contains(" payable") { Mutability::Payable } else { Mutability::NonPayable };
+        let visibility = if rest.contains(" external") {
+            Visibility::External
+        } else if rest.contains(" public") {
+            Visibility::Public
+        } else {
+            Visibility::External
+        };
+        let mutability = if rest.contains(" payable") {
+            Mutability::Payable
+        } else {
+            Mutability::NonPayable
+        };
         Ok(Function {
             name: "fallback".to_string(),
             parameters,
@@ -539,7 +567,7 @@ impl SolidityParser {
             body: None,
         })
     }
-    
+
     /// Find the index of the closing `)` that matches the `(` at `open_idx`.
     fn find_matching_paren(s: &str, open_idx: usize) -> Option<usize> {
         let mut depth = 1u32;
@@ -655,10 +683,7 @@ impl SolidityParser {
                 // Last token is name, rest is type (e.g. "uint256" "x" or "mapping(address => uint256)" "balances")
                 let name = parts[parts.len() - 1].to_string();
                 let param_type = parts[..parts.len() - 1].join(" ");
-                params.push(Parameter {
-                    param_type,
-                    name,
-                });
+                params.push(Parameter { param_type, name });
             } else if parts.len() == 1 {
                 params.push(Parameter {
                     param_type: parts[0].to_string(),
@@ -668,20 +693,20 @@ impl SolidityParser {
         }
         Ok(params)
     }
-    
+
     fn parse_event(&self, line: &str) -> Result<Event, String> {
         let mut event = Event {
             name: String::new(),
             parameters: Vec::new(),
             anonymous: line.contains("anonymous"),
         };
-        
+
         if let Some(start) = line.find("event ") {
             let after_event = &line[start + 6..];
             if let Some(name_end) = after_event.find('(') {
                 event.name = after_event[..name_end].trim().to_string();
             }
-            
+
             if let Some(params_start) = line.find('(') {
                 if let Some(params_end) = line.find(')') {
                     let params_str = &line[params_start + 1..params_end];
@@ -689,23 +714,23 @@ impl SolidityParser {
                 }
             }
         }
-        
+
         Ok(event)
     }
-    
+
     fn parse_modifier(&self, line: &str) -> Result<Modifier, String> {
         let mut modifier = Modifier {
             name: String::new(),
             parameters: Vec::new(),
             body: None,
         };
-        
+
         if let Some(start) = line.find("modifier ") {
             let after_modifier = &line[start + 9..];
             if let Some(name_end) = after_modifier.find('(') {
                 modifier.name = after_modifier[..name_end].trim().to_string();
             }
-            
+
             if let Some(params_start) = line.find('(') {
                 if let Some(params_end) = line.find(')') {
                     let params_str = &line[params_start + 1..params_end];
@@ -713,10 +738,10 @@ impl SolidityParser {
                 }
             }
         }
-        
+
         Ok(modifier)
     }
-    
+
     /// Find the last identifier (alphanumeric + underscore) in `s`, scanning from the end.
     /// Returns (name, start_index) so that s[start..end] is the name; everything before is type/modifiers.
     fn last_identifier(s: &str) -> Option<(&str, usize)> {
@@ -754,13 +779,21 @@ impl SolidityParser {
         let (before_eq, initial_value) = if let Some(eq_pos) = trimmed.find('=') {
             (
                 trimmed[..eq_pos].trim(),
-                Some(trimmed[eq_pos + 1..].trim().trim_end_matches(';').trim().to_string()),
+                Some(
+                    trimmed[eq_pos + 1..]
+                        .trim()
+                        .trim_end_matches(';')
+                        .trim()
+                        .to_string(),
+                ),
             )
         } else {
             (trimmed, None)
         };
 
-        let (name, var_type) = if let Some((name_slice, name_start)) = Self::last_identifier(before_eq) {
+        let (name, var_type) = if let Some((name_slice, name_start)) =
+            Self::last_identifier(before_eq)
+        {
             let name = name_slice.to_string();
             let before_name = before_eq[..name_start].trim();
             // Strip trailing visibility and mutability keywords to get the type
@@ -809,4 +842,3 @@ impl SolidityParser {
         })
     }
 }
-

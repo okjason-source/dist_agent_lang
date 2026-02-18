@@ -9,37 +9,38 @@ impl SecurityConverter {
     pub fn new() -> Self {
         Self
     }
-    
+
     /// Detect security patterns in contract
     pub fn detect_patterns(&self, contract: &Contract) -> Vec<String> {
         let mut patterns = Vec::new();
-        
+
         // Check for reentrancy patterns
         if self.has_reentrancy_risk(contract) {
             patterns.push("@secure".to_string());
             patterns.push("@reentrancy_guard".to_string());
         }
-        
+
         // Check for safe math patterns
         if self.uses_arithmetic(contract) {
             patterns.push("@safe_math".to_string());
         }
-        
+
         // Check for access control
         if self.has_access_control(contract) {
             patterns.push("@admin".to_string());
         }
-        
+
         patterns
     }
-    
+
     /// Reentrancy risk: (public|external) + (payable|nonPayable) and body contains external call (.call, .transfer, .call{).
     /// Centralized here for converter and analyzer; DAL runtime has reentrancy protection so this guides attribute suggestions.
     pub fn has_reentrancy_risk(&self, contract: &Contract) -> bool {
-        use super::parser::{Visibility, Mutability};
+        use super::parser::{Mutability, Visibility};
         contract.functions.iter().any(|f| {
             let visible = matches!(f.visibility, Visibility::Public | Visibility::External);
-            let state_changing = matches!(f.mutability, Mutability::Payable | Mutability::NonPayable);
+            let state_changing =
+                matches!(f.mutability, Mutability::Payable | Mutability::NonPayable);
             let has_external_call = Self::body_has_external_call(f.body.as_deref().unwrap_or(""));
             visible && state_changing && has_external_call
         })
@@ -53,8 +54,10 @@ impl SecurityConverter {
     /// Arithmetic usage: scan function bodies for +, -, *, /, ** (and legacy add/sub/mul/div in names).
     pub fn uses_arithmetic(&self, contract: &Contract) -> bool {
         if contract.functions.iter().any(|f| {
-            f.name.contains("add") || f.name.contains("sub")
-                || f.name.contains("mul") || f.name.contains("div")
+            f.name.contains("add")
+                || f.name.contains("sub")
+                || f.name.contains("mul")
+                || f.name.contains("div")
         }) {
             return true;
         }
@@ -82,7 +85,10 @@ impl SecurityConverter {
         while i < bytes.len() {
             if i + 1 < bytes.len() {
                 match (bytes[i], bytes[i + 1]) {
-                    (b'+', b'+') | (b'-', b'-') | (b'-', b'>') => { i += 2; continue; }
+                    (b'+', b'+') | (b'-', b'-') | (b'-', b'>') => {
+                        i += 2;
+                        continue;
+                    }
                     (b'*', b'*') => return true,
                     _ => {}
                 }
@@ -95,15 +101,13 @@ impl SecurityConverter {
         }
         false
     }
-    
+
     fn has_access_control(&self, contract: &Contract) -> bool {
         // Check for owner/access control patterns
         contract.functions.iter().any(|f| {
-            f.modifiers.iter().any(|m| 
-                m.contains("onlyOwner") || 
-                m.contains("onlyAdmin") ||
-                m.contains("onlyRole")
-            )
+            f.modifiers.iter().any(|m| {
+                m.contains("onlyOwner") || m.contains("onlyAdmin") || m.contains("onlyRole")
+            })
         })
     }
 }
@@ -113,4 +117,3 @@ impl Default for SecurityConverter {
         Self::new()
     }
 }
-

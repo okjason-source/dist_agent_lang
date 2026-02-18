@@ -1,10 +1,10 @@
-use std::collections::HashMap;
-use std::env;
-use std::sync::{Mutex, OnceLock};
 use crate::runtime::values::Value;
 #[cfg(feature = "http-interface")]
 use base64::Engine;
+use std::collections::HashMap;
+use std::env;
 use std::path::PathBuf;
+use std::sync::{Mutex, OnceLock};
 
 // AI Agent Framework - Phase 4
 // Comprehensive AI capabilities including:
@@ -63,20 +63,18 @@ static AI_CONFIG: OnceLock<Mutex<AIConfig>> = OnceLock::new();
 /// 3. Config file (.dal/ai_config.toml)
 /// 4. Default fallback
 pub fn init_ai_config() {
-    let _config = AI_CONFIG.get_or_init(|| {
-        Mutex::new(load_ai_config())
-    });
+    let _config = AI_CONFIG.get_or_init(|| Mutex::new(load_ai_config()));
 }
 
 /// Load AI configuration from all sources
 fn load_ai_config() -> AIConfig {
     let mut config = AIConfig::default();
-    
+
     // Step 1: Try loading from config file
     if let Some(file_config) = load_config_file() {
         config = file_config;
     }
-    
+
     // Step 2: Override with environment variables (higher priority)
     if let Ok(key) = env::var("OPENAI_API_KEY") {
         if !key.is_empty() && key != "none" {
@@ -103,26 +101,26 @@ fn load_ai_config() -> AIConfig {
             }
         }
     }
-    
+
     // Step 3: Apply optional configuration overrides
     if let Ok(temp) = env::var("DAL_AI_TEMPERATURE") {
         if let Ok(t) = temp.parse::<f32>() {
             config.temperature = t;
         }
     }
-    
+
     if let Ok(tokens) = env::var("DAL_AI_MAX_TOKENS") {
         if let Ok(t) = tokens.parse::<u32>() {
             config.max_tokens = t;
         }
     }
-    
+
     if let Ok(timeout) = env::var("DAL_AI_TIMEOUT") {
         if let Ok(t) = timeout.parse::<u64>() {
             config.timeout_seconds = t;
         }
     }
-    
+
     config
 }
 
@@ -134,12 +132,12 @@ fn load_config_file() -> Option<AIConfig> {
         PathBuf::from("dal_config.toml"),
         PathBuf::from(".dalconfig"),
     ];
-    
+
     // Add home directory config if available
     if let Ok(home) = env::var("HOME") {
         locations.push(PathBuf::from(home).join(".dal/config.toml"));
     }
-    
+
     for path in locations {
         if path.exists() {
             if let Ok(content) = std::fs::read_to_string(&path) {
@@ -147,7 +145,7 @@ fn load_config_file() -> Option<AIConfig> {
             }
         }
     }
-    
+
     None
 }
 
@@ -156,17 +154,17 @@ fn load_config_file() -> Option<AIConfig> {
 fn parse_config_file(content: &str) -> Option<AIConfig> {
     let mut config = AIConfig::default();
     let mut found_config = false;
-    
+
     for line in content.lines() {
         let line = line.trim();
         if line.is_empty() || line.starts_with('#') {
             continue;
         }
-        
+
         if let Some((key, value)) = line.split_once('=') {
             let key = key.trim();
             let value = value.trim().trim_matches('"').trim_matches('\'');
-            
+
             match key {
                 "provider" => {
                     config.provider = match value.to_lowercase().as_str() {
@@ -205,7 +203,7 @@ fn parse_config_file(content: &str) -> Option<AIConfig> {
             }
         }
     }
-    
+
     if found_config {
         Some(config)
     } else {
@@ -263,7 +261,7 @@ pub fn configure_custom(
     provider_name: String,
     endpoint: String,
     api_key: String,
-    model: Option<String>
+    model: Option<String>,
 ) {
     let mut config = AIConfig::default();
     config.provider = AIProvider::Custom(provider_name);
@@ -280,30 +278,21 @@ pub fn configure_cohere(api_key: String, model: Option<String>) {
         "cohere".to_string(),
         "https://api.cohere.ai/v1/generate".to_string(),
         api_key,
-        model
+        model,
     );
 }
 
 pub fn configure_huggingface(api_key: String, model: String) {
     let endpoint = format!("https://api-inference.huggingface.co/models/{}", model);
-    configure_custom(
-        "huggingface".to_string(),
-        endpoint,
-        api_key,
-        Some(model)
-    );
+    configure_custom("huggingface".to_string(), endpoint, api_key, Some(model));
 }
 
-pub fn configure_azure_openai(
-    endpoint: String,
-    api_key: String,
-    deployment_name: String
-) {
+pub fn configure_azure_openai(endpoint: String, api_key: String, deployment_name: String) {
     configure_custom(
         "azure-openai".to_string(),
         endpoint,
         api_key,
-        Some(deployment_name)
+        Some(deployment_name),
     );
 }
 
@@ -312,7 +301,7 @@ pub fn configure_replicate(api_key: String, model_version: String) {
         "replicate".to_string(),
         "https://api.replicate.com/v1/predictions".to_string(),
         api_key,
-        Some(model_version)
+        Some(model_version),
     );
 }
 
@@ -321,7 +310,7 @@ pub fn configure_together_ai(api_key: String, model: Option<String>) {
         "together-ai".to_string(),
         "https://api.together.xyz/v1/chat/completions".to_string(),
         api_key,
-        model
+        model,
     );
 }
 
@@ -330,7 +319,7 @@ pub fn configure_openrouter(api_key: String, model: Option<String>) {
         "openrouter".to_string(),
         "https://openrouter.ai/api/v1/chat/completions".to_string(),
         api_key,
-        model
+        model,
     );
 }
 
@@ -560,13 +549,20 @@ pub struct CommunicationProtocol {
 
 // Agent Lifecycle Management
 pub fn spawn_agent(config: AgentConfig) -> Result<Agent, String> {
-    crate::stdlib::log::info("Spawning new AI agent", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("agent_name".to_string(), Value::String(config.name.clone()));
-        data.insert("agent_role".to_string(), Value::String(config.role.clone()));
-        data.insert("message".to_string(), Value::String("Spawning new AI agent".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Spawning new AI agent",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("agent_name".to_string(), Value::String(config.name.clone()));
+            data.insert("agent_role".to_string(), Value::String(config.role.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Spawning new AI agent".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     let mut agent = Agent {
         id: format!("agent_{}", generate_id()),
@@ -581,19 +577,28 @@ pub fn spawn_agent(config: AgentConfig) -> Result<Agent, String> {
 
     // Initialize agent capabilities
     for capability in &config.capabilities {
-        agent.memory.insert(format!("capability_{}", capability), Value::Bool(true));
+        agent
+            .memory
+            .insert(format!("capability_{}", capability), Value::Bool(true));
     }
 
     Ok(agent)
 }
 
 pub fn terminate_agent(agent: &mut Agent) -> Result<bool, String> {
-    crate::stdlib::log::info("Terminating AI agent", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
-        data.insert("message".to_string(), Value::String("Terminating AI agent".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Terminating AI agent",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Terminating AI agent".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     agent.status = AgentStatus::Terminated;
 
@@ -616,7 +621,13 @@ pub fn get_agent_status(agent: &Agent) -> String {
 }
 
 // Message Passing System
-pub fn send_message(from_agent: &str, to_agent: &str, message_type: String, content: Value, priority: MessagePriority) -> Result<Message, String> {
+pub fn send_message(
+    from_agent: &str,
+    to_agent: &str,
+    message_type: String,
+    content: Value,
+    priority: MessagePriority,
+) -> Result<Message, String> {
     let message = Message {
         id: format!("msg_{}", generate_id()),
         from_agent: from_agent.to_string(),
@@ -628,26 +639,46 @@ pub fn send_message(from_agent: &str, to_agent: &str, message_type: String, cont
         correlation_id: None,
     };
 
-    crate::stdlib::log::info("Message sent between agents", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("from_agent".to_string(), Value::String(from_agent.to_string()));
-        data.insert("to_agent".to_string(), Value::String(to_agent.to_string()));
-        data.insert("message_type".to_string(), Value::String(message.message_type.clone()));
-        data.insert("message".to_string(), Value::String("Message sent between agents".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Message sent between agents",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "from_agent".to_string(),
+                Value::String(from_agent.to_string()),
+            );
+            data.insert("to_agent".to_string(), Value::String(to_agent.to_string()));
+            data.insert(
+                "message_type".to_string(),
+                Value::String(message.message_type.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Message sent between agents".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     Ok(message)
 }
 
 pub fn receive_message(agent: &mut Agent, message: Message) -> Result<(), String> {
-    crate::stdlib::log::info("Message received by agent", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
-        data.insert("message_id".to_string(), Value::String(message.id.clone()));
-        data.insert("message".to_string(), Value::String("Message received by agent".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Message received by agent",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
+            data.insert("message_id".to_string(), Value::String(message.id.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Message received by agent".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     agent.message_queue.push(message);
     agent.last_active = "2024-01-01T00:00:00Z".to_string();
@@ -673,7 +704,10 @@ pub fn process_message(agent: &mut Agent, message: &Message) -> Result<Value, St
         "text_analysis" => {
             if let Value::String(text) = &message.content {
                 let analysis = analyze_text(text.clone())?;
-                Ok(Value::String(format!("Text analysis: {}", analysis.summary)))
+                Ok(Value::String(format!(
+                    "Text analysis: {}",
+                    analysis.summary
+                )))
             } else {
                 Err("Invalid content type for text analysis".to_string())
             }
@@ -693,13 +727,21 @@ pub fn process_message(agent: &mut Agent, message: &Message) -> Result<Value, St
         }
         _ => {
             // Generic message processing
-            Ok(Value::String(format!("Processed message: {}", message.message_type)))
+            Ok(Value::String(format!(
+                "Processed message: {}",
+                message.message_type
+            )))
         }
     }
 }
 
 // Task Management
-pub fn create_task(agent: &mut Agent, task_type: String, description: String, parameters: HashMap<String, Value>) -> Result<Task, String> {
+pub fn create_task(
+    agent: &mut Agent,
+    task_type: String,
+    description: String,
+    parameters: HashMap<String, Value>,
+) -> Result<Task, String> {
     let task = Task {
         id: format!("task_{}", generate_id()),
         agent_id: agent.id.clone(),
@@ -716,34 +758,50 @@ pub fn create_task(agent: &mut Agent, task_type: String, description: String, pa
 
     agent.tasks.push(task.clone());
 
-    crate::stdlib::log::info("Task created", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
-        data.insert("task_id".to_string(), Value::String(task.id.clone()));
-        data.insert("task_type".to_string(), Value::String(task.task_type.clone()));
-        data.insert("message".to_string(), Value::String("Task created".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Task created",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
+            data.insert("task_id".to_string(), Value::String(task.id.clone()));
+            data.insert(
+                "task_type".to_string(),
+                Value::String(task.task_type.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Task created".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     Ok(task)
 }
 
-pub fn create_task_from_message(agent: &mut Agent, task_data: &HashMap<String, Value>) -> Result<Task, String> {
-    let task_type = task_data.get("task_type")
+pub fn create_task_from_message(
+    agent: &mut Agent,
+    task_data: &HashMap<String, Value>,
+) -> Result<Task, String> {
+    let task_type = task_data
+        .get("task_type")
         .and_then(|v| match v {
             Value::String(s) => Some(s.clone()),
             _ => None,
         })
         .unwrap_or_else(|| "generic".to_string());
 
-    let description = task_data.get("description")
+    let description = task_data
+        .get("description")
         .and_then(|v| match v {
             Value::String(s) => Some(s.clone()),
             _ => None,
         })
         .unwrap_or_else(|| "Task from message".to_string());
 
-    let parameters = task_data.get("parameters")
+    let parameters = task_data
+        .get("parameters")
         .and_then(|v| match v {
             Value::Struct(_, s) => Some(s.clone()),
             _ => None,
@@ -754,12 +812,15 @@ pub fn create_task_from_message(agent: &mut Agent, task_data: &HashMap<String, V
 }
 
 pub fn execute_task(agent: &mut Agent, task_id: &str) -> Result<Value, String> {
-    let task_index = agent.tasks.iter().position(|t| t.id == task_id)
+    let task_index = agent
+        .tasks
+        .iter()
+        .position(|t| t.id == task_id)
         .ok_or_else(|| format!("Task {} not found", task_id))?;
 
     // Clone the task to avoid borrow checker issues
     let task_clone = agent.tasks[task_index].clone();
-    
+
     // Update the task status first
     {
         let task = &mut agent.tasks[task_index];
@@ -777,15 +838,9 @@ pub fn execute_task(agent: &mut Agent, task_id: &str) -> Result<Value, String> {
                 Value::String("No text provided for analysis".to_string())
             }
         }
-        "data_processing" => {
-            process_data_task(&task_clone)?
-        }
-        "communication" => {
-            handle_communication_task(agent, &task_clone)?
-        }
-        _ => {
-            Value::String(format!("Executed {} task", task_clone.task_type))
-        }
+        "data_processing" => process_data_task(&task_clone)?,
+        "communication" => handle_communication_task(agent, &task_clone)?,
+        _ => Value::String(format!("Executed {} task", task_clone.task_type)),
     };
 
     // Update the task with results
@@ -796,38 +851,50 @@ pub fn execute_task(agent: &mut Agent, task_id: &str) -> Result<Value, String> {
         task.result = Some(result.clone());
     }
 
-    crate::stdlib::log::info("Task executed successfully", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
-        data.insert("task_id".to_string(), Value::String(task_id.to_string()));
-        data.insert("message".to_string(), Value::String("Task executed successfully".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Task executed successfully",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
+            data.insert("task_id".to_string(), Value::String(task_id.to_string()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Task executed successfully".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     Ok(result)
 }
 
 // AI Processing Functions
 pub fn analyze_text(text: String) -> Result<TextAnalysis, String> {
-    crate::stdlib::log::info("Analyzing text", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("text_length".to_string(), Value::Int(text.len() as i64));
-        data.insert("message".to_string(), Value::String("Analyzing text".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Analyzing text",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("text_length".to_string(), Value::Int(text.len() as i64));
+            data.insert(
+                "message".to_string(),
+                Value::String("Analyzing text".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     // Simulated text analysis
     let analysis = TextAnalysis {
         sentiment: 0.7,
-        entities: vec![
-            Entity {
-                text: "example".to_string(),
-                entity_type: "NOUN".to_string(),
-                confidence: 0.9,
-                start_pos: 0,
-                end_pos: 7,
-            }
-        ],
+        entities: vec![Entity {
+            text: "example".to_string(),
+            entity_type: "NOUN".to_string(),
+            confidence: 0.9,
+            start_pos: 0,
+            end_pos: 7,
+        }],
         keywords: vec!["example".to_string(), "text".to_string()],
         summary: format!("Summary of: {}", text),
         language: "en".to_string(),
@@ -839,16 +906,27 @@ pub fn analyze_text(text: String) -> Result<TextAnalysis, String> {
 
 /// Analyze image bytes. **Full API:** when an API key is configured (env OPENAI_API_KEY; any vision-capable provider), calls vision API and returns structured analysis. **Simplified:** returns mock objects/colors when no API key.
 pub fn analyze_image(image_data: Vec<u8>) -> Result<ImageAnalysis, String> {
-    crate::stdlib::log::info("Analyzing image", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("image_size".to_string(), Value::Int(image_data.len() as i64));
-        data.insert("message".to_string(), Value::String("Analyzing image".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Analyzing image",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "image_size".to_string(),
+                Value::Int(image_data.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Analyzing image".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     #[cfg(feature = "http-interface")]
     if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base = env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+        let base =
+            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let svc = crate::stdlib::service::AIService::new("gpt-4o".to_string())
             .with_api_key(api_key)
             .with_base_url(base);
@@ -858,7 +936,12 @@ pub fn analyze_image(image_data: Vec<u8>) -> Result<ImageAnalysis, String> {
                 objects: vec![DetectedObject {
                     object_type: "described".to_string(),
                     confidence: 0.9,
-                    bounding_box: BoundingBox { x: 0, y: 0, width: 0, height: 0 },
+                    bounding_box: BoundingBox {
+                        x: 0,
+                        y: 0,
+                        width: 0,
+                        height: 0,
+                    },
                 }],
                 faces: vec![],
                 text: vec![description],
@@ -870,18 +953,16 @@ pub fn analyze_image(image_data: Vec<u8>) -> Result<ImageAnalysis, String> {
 
     // Simplified: simulated image analysis
     let analysis = ImageAnalysis {
-        objects: vec![
-            DetectedObject {
-                object_type: "person".to_string(),
-                confidence: 0.95,
-                bounding_box: BoundingBox {
-                    x: 100,
-                    y: 50,
-                    width: 200,
-                    height: 400,
-                },
-            }
-        ],
+        objects: vec![DetectedObject {
+            object_type: "person".to_string(),
+            confidence: 0.95,
+            bounding_box: BoundingBox {
+                x: 100,
+                y: 50,
+                width: 200,
+                height: 400,
+            },
+        }],
         faces: vec![],
         text: vec!["Sample text".to_string()],
         colors: vec!["blue".to_string(), "white".to_string()],
@@ -892,16 +973,23 @@ pub fn analyze_image(image_data: Vec<u8>) -> Result<ImageAnalysis, String> {
 }
 
 pub fn generate_text(prompt: String) -> Result<String, String> {
-    crate::stdlib::log::info("Generating text response", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("prompt_length".to_string(), Value::Int(prompt.len() as i64));
-        data.insert("message".to_string(), Value::String("Generating text response".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Generating text response",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("prompt_length".to_string(), Value::Int(prompt.len() as i64));
+            data.insert(
+                "message".to_string(),
+                Value::String("Generating text response".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     // Load configuration (from env, file, or runtime)
     let config = get_ai_config();
-    
+
     // Try configured provider first
     match &config.provider {
         AIProvider::OpenAI => {
@@ -941,24 +1029,33 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
                     match call_custom_provider(&prompt, endpoint, api_key, provider_name, &config) {
                         Ok(response) => return Ok(response),
                         Err(e) => {
-                            eprintln!("Custom provider '{}' failed: {}. Trying fallback...", provider_name, e);
+                            eprintln!(
+                                "Custom provider '{}' failed: {}. Trying fallback...",
+                                provider_name, e
+                            );
                         }
                     }
                 } else {
-                    eprintln!("Custom provider '{}' requires api_key. Using fallback...", provider_name);
+                    eprintln!(
+                        "Custom provider '{}' requires api_key. Using fallback...",
+                        provider_name
+                    );
                 }
             } else {
-                eprintln!("Custom provider '{}' requires endpoint. Using fallback...", provider_name);
+                eprintln!(
+                    "Custom provider '{}' requires endpoint. Using fallback...",
+                    provider_name
+                );
             }
         }
         AIProvider::None => {
             // Fall through to automatic detection
         }
     }
-    
+
     // Automatic provider detection (backward compatibility)
     // Priority: OpenAI > Anthropic > Local > Fallback
-    
+
     if let Ok(api_key) = env::var("OPENAI_API_KEY") {
         if !api_key.is_empty() && api_key != "none" {
             match call_openai_api(&prompt, &api_key, &config) {
@@ -969,7 +1066,7 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
             }
         }
     }
-    
+
     if let Ok(api_key) = env::var("ANTHROPIC_API_KEY") {
         if !api_key.is_empty() && api_key != "none" {
             match call_anthropic_api(&prompt, &api_key, &config) {
@@ -980,7 +1077,7 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
             }
         }
     }
-    
+
     if let Ok(endpoint) = env::var("DAL_AI_ENDPOINT") {
         if !endpoint.is_empty() {
             match call_local_model(&prompt, &endpoint, &config) {
@@ -991,7 +1088,7 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
             }
         }
     }
-    
+
     // Fallback to simulated response
     Ok(format!("Generated response to: {}", prompt))
 }
@@ -999,17 +1096,19 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
 #[cfg(feature = "http-interface")]
 fn call_openai_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<String, String> {
     use serde_json::json;
-    
+
     let timeout = std::time::Duration::from_secs(config.timeout_seconds);
     let client = reqwest::blocking::Client::builder()
         .timeout(timeout)
         .build()
         .map_err(|e| e.to_string())?;
-    
-    let model = config.model.clone()
+
+    let model = config
+        .model
+        .clone()
         .or_else(|| env::var("OPENAI_MODEL").ok())
         .unwrap_or_else(|| "gpt-4".to_string());
-    
+
     let body = json!({
         "model": model,
         "messages": [
@@ -1025,7 +1124,7 @@ fn call_openai_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<Str
         "temperature": config.temperature,
         "max_tokens": config.max_tokens
     });
-    
+
     let response = client
         .post("https://api.openai.com/v1/chat/completions")
         .header("Authorization", format!("Bearer {}", api_key))
@@ -1033,17 +1132,17 @@ fn call_openai_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<Str
         .json(&body)
         .send()
         .map_err(|e| format!("Request failed: {}", e))?;
-    
+
     let status = response.status();
     if !status.is_success() {
-        let error_text = response.text().unwrap_or_else(|_| "Unknown error".to_string());
+        let error_text = response
+            .text()
+            .unwrap_or_else(|_| "Unknown error".to_string());
         return Err(format!("API error {}: {}", status, error_text));
     }
-    
-    let json: serde_json::Value = response
-        .json()
-        .map_err(|e| format!("Parse error: {}", e))?;
-    
+
+    let json: serde_json::Value = response.json().map_err(|e| format!("Parse error: {}", e))?;
+
     json["choices"][0]["message"]["content"]
         .as_str()
         .map(|s| s.trim().to_string())
@@ -1053,17 +1152,19 @@ fn call_openai_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<Str
 #[cfg(feature = "http-interface")]
 fn call_anthropic_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<String, String> {
     use serde_json::json;
-    
+
     let timeout = std::time::Duration::from_secs(config.timeout_seconds);
     let client = reqwest::blocking::Client::builder()
         .timeout(timeout)
         .build()
         .map_err(|e| e.to_string())?;
-    
-    let model = config.model.clone()
+
+    let model = config
+        .model
+        .clone()
         .or_else(|| env::var("ANTHROPIC_MODEL").ok())
         .unwrap_or_else(|| "claude-3-5-sonnet-20241022".to_string());
-    
+
     let body = json!({
         "model": model,
         "max_tokens": config.max_tokens,
@@ -1074,7 +1175,7 @@ fn call_anthropic_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<
             }
         ]
     });
-    
+
     let response = client
         .post("https://api.anthropic.com/v1/messages")
         .header("x-api-key", api_key)
@@ -1083,17 +1184,17 @@ fn call_anthropic_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<
         .json(&body)
         .send()
         .map_err(|e| format!("Request failed: {}", e))?;
-    
+
     let status = response.status();
     if !status.is_success() {
-        let error_text = response.text().unwrap_or_else(|_| "Unknown error".to_string());
+        let error_text = response
+            .text()
+            .unwrap_or_else(|_| "Unknown error".to_string());
         return Err(format!("API error {}: {}", status, error_text));
     }
-    
-    let json: serde_json::Value = response
-        .json()
-        .map_err(|e| format!("Parse error: {}", e))?;
-    
+
+    let json: serde_json::Value = response.json().map_err(|e| format!("Parse error: {}", e))?;
+
     json["content"][0]["text"]
         .as_str()
         .map(|s| s.trim().to_string())
@@ -1103,17 +1204,19 @@ fn call_anthropic_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<
 #[cfg(feature = "http-interface")]
 fn call_local_model(prompt: &str, endpoint: &str, config: &AIConfig) -> Result<String, String> {
     use serde_json::json;
-    
+
     let timeout = std::time::Duration::from_secs(config.timeout_seconds.max(60));
     let client = reqwest::blocking::Client::builder()
         .timeout(timeout)
         .build()
         .map_err(|e| e.to_string())?;
-    
-    let model = config.model.clone()
+
+    let model = config
+        .model
+        .clone()
         .or_else(|| env::var("DAL_AI_MODEL").ok())
         .unwrap_or_else(|| "codellama".to_string());
-    
+
     let body = json!({
         "model": model,
         "prompt": prompt,
@@ -1123,23 +1226,23 @@ fn call_local_model(prompt: &str, endpoint: &str, config: &AIConfig) -> Result<S
             "num_predict": config.max_tokens
         }
     });
-    
+
     let response = client
         .post(endpoint)
         .json(&body)
         .send()
         .map_err(|e| format!("Request failed: {}", e))?;
-    
+
     let status = response.status();
     if !status.is_success() {
-        let error_text = response.text().unwrap_or_else(|_| "Unknown error".to_string());
+        let error_text = response
+            .text()
+            .unwrap_or_else(|_| "Unknown error".to_string());
         return Err(format!("API error {}: {}", status, error_text));
     }
-    
-    let json: serde_json::Value = response
-        .json()
-        .map_err(|e| format!("Parse error: {}", e))?;
-    
+
+    let json: serde_json::Value = response.json().map_err(|e| format!("Parse error: {}", e))?;
+
     json["response"]
         .as_str()
         .map(|s| s.trim().to_string())
@@ -1165,22 +1268,25 @@ fn call_local_model(_prompt: &str, _endpoint: &str, _config: &AIConfig) -> Resul
 /// Uses flexible JSON structure to support different APIs
 #[cfg(feature = "http-interface")]
 fn call_custom_provider(
-    prompt: &str, 
-    endpoint: &str, 
+    prompt: &str,
+    endpoint: &str,
     api_key: &str,
     provider_name: &str,
-    config: &AIConfig
+    config: &AIConfig,
 ) -> Result<String, String> {
     use serde_json::json;
-    
+
     let timeout = std::time::Duration::from_secs(config.timeout_seconds);
     let client = reqwest::blocking::Client::builder()
         .timeout(timeout)
         .build()
         .map_err(|e| e.to_string())?;
-    
-    let model = config.model.clone().unwrap_or_else(|| "default".to_string());
-    
+
+    let model = config
+        .model
+        .clone()
+        .unwrap_or_else(|| "default".to_string());
+
     // Build request based on provider type
     let (body, headers) = match provider_name.to_lowercase().as_str() {
         "cohere" => {
@@ -1310,36 +1416,35 @@ fn call_custom_provider(
             (body, headers)
         }
     };
-    
+
     // Build request
     let mut request = client.post(endpoint).json(&body);
     for (key, value) in headers {
         request = request.header(key, value);
     }
-    
+
     // Send request
     let response = request
         .send()
         .map_err(|e| format!("Request failed: {}", e))?;
-    
+
     let status = response.status();
     if !status.is_success() {
-        let error_text = response.text().unwrap_or_else(|_| "Unknown error".to_string());
+        let error_text = response
+            .text()
+            .unwrap_or_else(|_| "Unknown error".to_string());
         return Err(format!("API error {}: {}", status, error_text));
     }
-    
+
     // Parse response
-    let json: serde_json::Value = response
-        .json()
-        .map_err(|e| format!("Parse error: {}", e))?;
-    
+    let json: serde_json::Value = response.json().map_err(|e| format!("Parse error: {}", e))?;
+
     // Try to extract response from different formats
     extract_response_text(&json, provider_name)
 }
 
 #[cfg(feature = "http-interface")]
 fn extract_response_text(json: &serde_json::Value, provider: &str) -> Result<String, String> {
-    
     match provider.to_lowercase().as_str() {
         "cohere" => {
             // Cohere: { "generations": [{ "text": "..." }] }
@@ -1374,7 +1479,8 @@ fn extract_response_text(json: &serde_json::Value, provider: &str) -> Result<Str
         "replicate" => {
             // Replicate: { "output": ["text"] } or { "output": "text" }
             if let Some(output) = json["output"].as_array() {
-                Ok(output.iter()
+                Ok(output
+                    .iter()
                     .filter_map(|v| v.as_str())
                     .collect::<Vec<_>>()
                     .join(""))
@@ -1390,51 +1496,67 @@ fn extract_response_text(json: &serde_json::Value, provider: &str) -> Result<Str
             if let Some(content) = json["choices"][0]["message"]["content"].as_str() {
                 return Ok(content.trim().to_string());
             }
-            
+
             // Try direct text field
             if let Some(text) = json["text"].as_str() {
                 return Ok(text.trim().to_string());
             }
-            
+
             // Try generation field
             if let Some(text) = json["generation"].as_str() {
                 return Ok(text.trim().to_string());
             }
-            
+
             // Try output field
             if let Some(text) = json["output"].as_str() {
                 return Ok(text.trim().to_string());
             }
-            
+
             // Try response field
             if let Some(text) = json["response"].as_str() {
                 return Ok(text.trim().to_string());
             }
-            
-            Err(format!("Unable to extract text from response. JSON: {}", json))
+
+            Err(format!(
+                "Unable to extract text from response. JSON: {}",
+                json
+            ))
         }
     }
 }
 
 #[cfg(not(feature = "http-interface"))]
 fn call_custom_provider(
-    _prompt: &str, 
-    _endpoint: &str, 
+    _prompt: &str,
+    _endpoint: &str,
     _api_key: &str,
     _provider_name: &str,
-    _config: &AIConfig
+    _config: &AIConfig,
 ) -> Result<String, String> {
     Err("HTTP interface not enabled".to_string())
 }
 
 pub fn train_model(training_data: TrainingData) -> Result<Model, String> {
-    crate::stdlib::log::info("Training AI model", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("data_type".to_string(), Value::String(training_data.data_type.clone()));
-        data.insert("samples".to_string(), Value::Int(training_data.samples.len() as i64));
-        data.insert("message".to_string(), Value::String("Training AI model".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Training AI model",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "data_type".to_string(),
+                Value::String(training_data.data_type.clone()),
+            );
+            data.insert(
+                "samples".to_string(),
+                Value::Int(training_data.samples.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Training AI model".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     // Simulated model training
     let model = Model {
@@ -1451,12 +1573,22 @@ pub fn train_model(training_data: TrainingData) -> Result<Model, String> {
 }
 
 pub fn predict(model: &Model, _input: Value) -> Result<Prediction, String> {
-    crate::stdlib::log::info("Making prediction", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("model_id".to_string(), Value::String(model.model_id.clone()));
-        data.insert("message".to_string(), Value::String("Making prediction".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Making prediction",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "model_id".to_string(),
+                Value::String(model.model_id.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Making prediction".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     // Simulated prediction
     let prediction = Prediction {
@@ -1476,12 +1608,22 @@ pub fn predict(model: &Model, _input: Value) -> Result<Prediction, String> {
 
 // Agent Coordination
 pub fn create_coordinator(coordinator_id: String) -> AgentCoordinator {
-    crate::stdlib::log::info("Creating agent coordinator", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("coordinator_id".to_string(), Value::String(coordinator_id.clone()));
-        data.insert("message".to_string(), Value::String("Creating agent coordinator".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Creating agent coordinator",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "coordinator_id".to_string(),
+                Value::String(coordinator_id.clone()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Creating agent coordinator".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     AgentCoordinator {
         coordinator_id,
@@ -1496,16 +1638,30 @@ pub fn add_agent_to_coordinator(coordinator: &mut AgentCoordinator, agent: Agent
     let agent_id = agent.id.clone();
     coordinator.agents.push(agent);
 
-    crate::stdlib::log::info("Agent added to coordinator", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("coordinator_id".to_string(), Value::String(coordinator.coordinator_id.clone()));
-        data.insert("agent_id".to_string(), Value::String(agent_id));
-        data.insert("message".to_string(), Value::String("Agent added to coordinator".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Agent added to coordinator",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "coordinator_id".to_string(),
+                Value::String(coordinator.coordinator_id.clone()),
+            );
+            data.insert("agent_id".to_string(), Value::String(agent_id));
+            data.insert(
+                "message".to_string(),
+                Value::String("Agent added to coordinator".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 }
 
-pub fn create_workflow(coordinator: &mut AgentCoordinator, name: String, steps: Vec<WorkflowStep>) -> Workflow {
+pub fn create_workflow(
+    coordinator: &mut AgentCoordinator,
+    name: String,
+    steps: Vec<WorkflowStep>,
+) -> Workflow {
     let workflow = Workflow {
         workflow_id: format!("workflow_{}", generate_id()),
         name,
@@ -1516,20 +1672,39 @@ pub fn create_workflow(coordinator: &mut AgentCoordinator, name: String, steps: 
 
     coordinator.workflows.push(workflow.clone());
 
-    crate::stdlib::log::info("Workflow created", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("workflow_id".to_string(), Value::String(workflow.workflow_id.clone()));
-        data.insert("workflow_name".to_string(), Value::String(workflow.name.clone()));
-        data.insert("steps".to_string(), Value::Int(workflow.steps.len() as i64));
-        data.insert("message".to_string(), Value::String("Workflow created".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Workflow created",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "workflow_id".to_string(),
+                Value::String(workflow.workflow_id.clone()),
+            );
+            data.insert(
+                "workflow_name".to_string(),
+                Value::String(workflow.name.clone()),
+            );
+            data.insert("steps".to_string(), Value::Int(workflow.steps.len() as i64));
+            data.insert(
+                "message".to_string(),
+                Value::String("Workflow created".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     workflow
 }
 
-pub fn execute_workflow(coordinator: &mut AgentCoordinator, workflow_id: &str) -> Result<bool, String> {
-    let workflow_index = coordinator.workflows.iter().position(|w| w.workflow_id == workflow_id)
+pub fn execute_workflow(
+    coordinator: &mut AgentCoordinator,
+    workflow_id: &str,
+) -> Result<bool, String> {
+    let workflow_index = coordinator
+        .workflows
+        .iter()
+        .position(|w| w.workflow_id == workflow_id)
         .ok_or_else(|| format!("Workflow {} not found", workflow_id))?;
 
     let workflow = &mut coordinator.workflows[workflow_index];
@@ -1537,7 +1712,9 @@ pub fn execute_workflow(coordinator: &mut AgentCoordinator, workflow_id: &str) -
 
     // Collect step IDs and completed step IDs before mutable iteration
     let step_ids: Vec<_> = workflow.steps.iter().map(|s| s.step_id.clone()).collect();
-    let completed_step_ids: Vec<_> = workflow.steps.iter()
+    let completed_step_ids: Vec<_> = workflow
+        .steps
+        .iter()
         .filter(|s| matches!(s.status, StepStatus::Completed))
         .map(|s| s.step_id.clone())
         .collect();
@@ -1545,17 +1722,26 @@ pub fn execute_workflow(coordinator: &mut AgentCoordinator, workflow_id: &str) -
     for step in &mut workflow.steps {
         // Check dependencies using the pre-collected data
         let dependencies_met = step.dependencies.iter().all(|dep_id| {
-            step_ids.iter().any(|s_id| s_id == dep_id) && 
-            completed_step_ids.iter().any(|s_id| s_id == dep_id)
+            step_ids.iter().any(|s_id| s_id == dep_id)
+                && completed_step_ids.iter().any(|s_id| s_id == dep_id)
         });
 
         if dependencies_met {
             step.status = StepStatus::Running;
 
             // Find the agent for this step
-            if let Some(agent) = coordinator.agents.iter_mut().find(|a| a.id == step.agent_id) {
+            if let Some(agent) = coordinator
+                .agents
+                .iter_mut()
+                .find(|a| a.id == step.agent_id)
+            {
                 // Create and execute task
-                let _task = create_task(agent, step.task_type.clone(), format!("Workflow step: {}", step.step_id), HashMap::new())?;
+                let _task = create_task(
+                    agent,
+                    step.task_type.clone(),
+                    format!("Workflow step: {}", step.step_id),
+                    HashMap::new(),
+                )?;
                 let _result = execute_task(agent, &_task.id)?;
                 step.status = StepStatus::Completed;
             }
@@ -1564,12 +1750,22 @@ pub fn execute_workflow(coordinator: &mut AgentCoordinator, workflow_id: &str) -
 
     workflow.status = WorkflowStatus::Completed;
 
-    crate::stdlib::log::info("Workflow executed successfully", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("workflow_id".to_string(), Value::String(workflow_id.to_string()));
-        data.insert("message".to_string(), Value::String("Workflow executed successfully".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Workflow executed successfully",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "workflow_id".to_string(),
+                Value::String(workflow_id.to_string()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Workflow executed successfully".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     Ok(true)
 }
@@ -1592,31 +1788,50 @@ pub fn generate_id() -> String {
 
 // Agent State Management
 pub fn save_agent_state(agent: &Agent) -> Result<bool, String> {
-    crate::stdlib::log::info("Saving agent state", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
-        data.insert("message".to_string(), Value::String("Saving agent state".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Saving agent state",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("agent_id".to_string(), Value::String(agent.id.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Saving agent state".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     // Simulated state saving
     Ok(true)
 }
 
 pub fn load_agent_state(agent_id: &str) -> Result<Agent, String> {
-    crate::stdlib::log::info("Loading agent state", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
-        data.insert("message".to_string(), Value::String("Loading agent state".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Loading agent state",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Loading agent state".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     // Simulated state loading
     Err("Agent state not found".to_string())
 }
 
 // Agent Communication Protocols
-pub fn create_communication_protocol(name: String, supported_types: Vec<String>, encryption: bool, auth: bool) -> CommunicationProtocol {
+pub fn create_communication_protocol(
+    name: String,
+    supported_types: Vec<String>,
+    encryption: bool,
+    auth: bool,
+) -> CommunicationProtocol {
     CommunicationProtocol {
         protocol_id: format!("protocol_{}", generate_id()),
         name,
@@ -1626,9 +1841,18 @@ pub fn create_communication_protocol(name: String, supported_types: Vec<String>,
     }
 }
 
-pub fn validate_message_protocol(message: &Message, protocol: &CommunicationProtocol) -> Result<bool, String> {
-    if !protocol.supported_message_types.contains(&message.message_type) {
-        return Err(format!("Message type {} not supported by protocol {}", message.message_type, protocol.name));
+pub fn validate_message_protocol(
+    message: &Message,
+    protocol: &CommunicationProtocol,
+) -> Result<bool, String> {
+    if !protocol
+        .supported_message_types
+        .contains(&message.message_type)
+    {
+        return Err(format!(
+            "Message type {} not supported by protocol {}",
+            message.message_type, protocol.name
+        ));
     }
 
     Ok(true)
@@ -1639,22 +1863,52 @@ pub fn get_agent_metrics(agent: &Agent) -> HashMap<String, Value> {
     let mut metrics = HashMap::new();
     metrics.insert("agent_id".to_string(), Value::String(agent.id.clone()));
     metrics.insert("status".to_string(), Value::String(get_agent_status(agent)));
-    metrics.insert("tasks_count".to_string(), Value::Int(agent.tasks.len() as i64));
-    metrics.insert("messages_count".to_string(), Value::Int(agent.message_queue.len() as i64));
-    metrics.insert("memory_entries".to_string(), Value::Int(agent.memory.len() as i64));
-    metrics.insert("created_at".to_string(), Value::String(agent.created_at.clone()));
-    metrics.insert("last_active".to_string(), Value::String(agent.last_active.clone()));
+    metrics.insert(
+        "tasks_count".to_string(),
+        Value::Int(agent.tasks.len() as i64),
+    );
+    metrics.insert(
+        "messages_count".to_string(),
+        Value::Int(agent.message_queue.len() as i64),
+    );
+    metrics.insert(
+        "memory_entries".to_string(),
+        Value::Int(agent.memory.len() as i64),
+    );
+    metrics.insert(
+        "created_at".to_string(),
+        Value::String(agent.created_at.clone()),
+    );
+    metrics.insert(
+        "last_active".to_string(),
+        Value::String(agent.last_active.clone()),
+    );
 
     metrics
 }
 
 pub fn get_coordinator_metrics(coordinator: &AgentCoordinator) -> HashMap<String, Value> {
     let mut metrics = HashMap::new();
-    metrics.insert("coordinator_id".to_string(), Value::String(coordinator.coordinator_id.clone()));
-    metrics.insert("agents_count".to_string(), Value::Int(coordinator.agents.len() as i64));
-    metrics.insert("workflows_count".to_string(), Value::Int(coordinator.workflows.len() as i64));
-    metrics.insert("active_tasks".to_string(), Value::Int(coordinator.active_tasks.len() as i64));
-    metrics.insert("messages_in_bus".to_string(), Value::Int(coordinator.message_bus.len() as i64));
+    metrics.insert(
+        "coordinator_id".to_string(),
+        Value::String(coordinator.coordinator_id.clone()),
+    );
+    metrics.insert(
+        "agents_count".to_string(),
+        Value::Int(coordinator.agents.len() as i64),
+    );
+    metrics.insert(
+        "workflows_count".to_string(),
+        Value::Int(coordinator.workflows.len() as i64),
+    );
+    metrics.insert(
+        "active_tasks".to_string(),
+        Value::Int(coordinator.active_tasks.len() as i64),
+    );
+    metrics.insert(
+        "messages_in_bus".to_string(),
+        Value::Int(coordinator.message_bus.len() as i64),
+    );
 
     metrics
 }
@@ -1687,14 +1941,21 @@ fn get_model_registry() -> std::sync::MutexGuard<'static, HashMap<String, Model>
 /// Register a trained model with a name for easy access
 pub fn register_model(name: String, model: Model) {
     let mut registry = get_model_registry();
-    
-    crate::stdlib::log::info("Model registered", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("model_name".to_string(), Value::String(name.clone()));
-        data.insert("message".to_string(), Value::String("Model registered".to_string()));
-        data
-    }, Some("ai"));
-    
+
+    crate::stdlib::log::info(
+        "Model registered",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("model_name".to_string(), Value::String(name.clone()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Model registered".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
+
     registry.insert(name, model);
 }
 
@@ -1709,25 +1970,33 @@ pub fn get_model(name: &str) -> Option<Model> {
 // ============================================================================
 
 /// Classify text using a named model (simplified API)
-/// 
+///
 /// This is a convenience wrapper that:
 /// 1. Creates a temporary agent
 /// 2. Performs text analysis
 /// 3. Returns a simplified classification result
 /// 4. Cleans up automatically
 pub fn classify(model: &str, input: &str) -> Result<String, String> {
-    crate::stdlib::log::info("Classifying text (simplified API)", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("model".to_string(), Value::String(model.to_string()));
-        data.insert("input_length".to_string(), Value::Int(input.len() as i64));
-        data.insert("message".to_string(), Value::String("Classifying text (simplified API)".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Classifying text (simplified API)",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("model".to_string(), Value::String(model.to_string()));
+            data.insert("input_length".to_string(), Value::Int(input.len() as i64));
+            data.insert(
+                "message".to_string(),
+                Value::String("Classifying text (simplified API)".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     // Optional real API path when OPENAI_API_KEY (and optionally OPENAI_BASE_URL) are set
     #[cfg(feature = "http-interface")]
     if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base = env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+        let base =
+            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let svc = crate::stdlib::service::AIService::new(model.to_string())
             .with_api_key(api_key)
             .with_base_url(base);
@@ -1745,7 +2014,7 @@ pub fn classify(model: &str, input: &str) -> Result<String, String> {
 
     // Fallback: built-in text analysis
     let analysis = analyze_text(input.to_string())?;
-    
+
     // Map model type to classification
     match model {
         "sentiment_model" | "sentiment" => {
@@ -1761,11 +2030,11 @@ pub fn classify(model: &str, input: &str) -> Result<String, String> {
         "spam_detector" | "spam" => {
             // Spam detection based on sentiment and keywords
             let has_spam_keywords = analysis.keywords.iter().any(|k| {
-                k.to_lowercase().contains("free") ||
-                k.to_lowercase().contains("win") ||
-                k.to_lowercase().contains("click")
+                k.to_lowercase().contains("free")
+                    || k.to_lowercase().contains("win")
+                    || k.to_lowercase().contains("click")
             });
-            
+
             if has_spam_keywords {
                 Ok("spam".to_string())
             } else {
@@ -1823,18 +2092,26 @@ pub fn classify_with_confidence(model: &str, input: &str) -> Result<(String, f64
 
 /// Generate text using a named model (simplified API). When an API key is configured (env OPENAI_API_KEY; any compatible provider), calls real LLM via service::ai().
 pub fn generate(model: &str, prompt: &str) -> Result<String, String> {
-    crate::stdlib::log::info("Generating text (simplified API)", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("model".to_string(), Value::String(model.to_string()));
-        data.insert("prompt_length".to_string(), Value::Int(prompt.len() as i64));
-        data.insert("message".to_string(), Value::String("Generating text (simplified API)".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Generating text (simplified API)",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("model".to_string(), Value::String(model.to_string()));
+            data.insert("prompt_length".to_string(), Value::Int(prompt.len() as i64));
+            data.insert(
+                "message".to_string(),
+                Value::String("Generating text (simplified API)".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     // Optional real API path when OPENAI_API_KEY (and optionally OPENAI_BASE_URL) are set
     #[cfg(feature = "http-interface")]
     if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base = env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+        let base =
+            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let svc = crate::stdlib::service::AIService::new(model.to_string())
             .with_api_key(api_key)
             .with_base_url(base);
@@ -1845,7 +2122,7 @@ pub fn generate(model: &str, prompt: &str) -> Result<String, String> {
 
     // Fallback: built-in text generation
     let mut response = generate_text(prompt.to_string())?;
-    
+
     // Add model-specific formatting
     match model {
         "gpt-4" | "gpt-3.5" => {
@@ -1864,23 +2141,31 @@ pub fn generate(model: &str, prompt: &str) -> Result<String, String> {
             // Default: no prefix
         }
     }
-    
+
     Ok(response)
 }
 
 /// Generate embeddings for text (simplified API). When an API key is configured (env OPENAI_API_KEY; any provider with /embeddings), calls service::embeddings().
 pub fn embed(text: &str) -> Result<Vec<f64>, String> {
-    crate::stdlib::log::info("Generating embeddings", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("text_length".to_string(), Value::Int(text.len() as i64));
-        data.insert("message".to_string(), Value::String("Generating embeddings".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Generating embeddings",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("text_length".to_string(), Value::Int(text.len() as i64));
+            data.insert(
+                "message".to_string(),
+                Value::String("Generating embeddings".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     // Optional real API path when OPENAI_API_KEY (and optionally OPENAI_BASE_URL) are set
     #[cfg(feature = "http-interface")]
     if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base = env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+        let base =
+            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let svc = crate::stdlib::service::AIService::new("text-embedding-3-small".to_string())
             .with_api_key(api_key)
             .with_base_url(base);
@@ -1892,7 +2177,7 @@ pub fn embed(text: &str) -> Result<Vec<f64>, String> {
     // Fallback: hash-based embedding
     let mut embeddings = Vec::new();
     let words: Vec<&str> = text.split_whitespace().collect();
-    
+
     // Generate 384-dimensional embeddings (common size)
     for i in 0..384 {
         let mut value = 0.0;
@@ -1903,7 +2188,7 @@ pub fn embed(text: &str) -> Result<Vec<f64>, String> {
         value = value.tanh(); // Normalize to [-1, 1]
         embeddings.push(value);
     }
-    
+
     Ok(embeddings)
 }
 
@@ -1912,24 +2197,24 @@ pub fn cosine_similarity(vec1: &[f64], vec2: &[f64]) -> Result<f64, String> {
     if vec1.len() != vec2.len() {
         return Err("Vectors must have the same length".to_string());
     }
-    
+
     let mut dot_product = 0.0;
     let mut norm1 = 0.0;
     let mut norm2 = 0.0;
-    
+
     for i in 0..vec1.len() {
         dot_product += vec1[i] * vec2[i];
         norm1 += vec1[i] * vec1[i];
         norm2 += vec2[i] * vec2[i];
     }
-    
+
     norm1 = norm1.sqrt();
     norm2 = norm2.sqrt();
-    
+
     if norm1 == 0.0 || norm2 == 0.0 {
         return Ok(0.0);
     }
-    
+
     Ok(dot_product / (norm1 * norm2))
 }
 
@@ -1938,48 +2223,66 @@ pub fn detect_anomaly(data: &[f64], new_value: f64) -> Result<bool, String> {
     if data.is_empty() {
         return Ok(false);
     }
-    
-    crate::stdlib::log::info("Detecting anomaly", {
-        let mut log_data = std::collections::HashMap::new();
-        log_data.insert("data_points".to_string(), Value::Int(data.len() as i64));
-        log_data.insert("new_value".to_string(), Value::Int(new_value as i64));
-        log_data.insert("message".to_string(), Value::String("Detecting anomaly in data".to_string()));
-        log_data
-    }, Some("ai"));
+
+    crate::stdlib::log::info(
+        "Detecting anomaly",
+        {
+            let mut log_data = std::collections::HashMap::new();
+            log_data.insert("data_points".to_string(), Value::Int(data.len() as i64));
+            log_data.insert("new_value".to_string(), Value::Int(new_value as i64));
+            log_data.insert(
+                "message".to_string(),
+                Value::String("Detecting anomaly in data".to_string()),
+            );
+            log_data
+        },
+        Some("ai"),
+    );
 
     // Calculate mean and standard deviation
     let mean = data.iter().sum::<f64>() / data.len() as f64;
     let variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64;
     let std_dev = variance.sqrt();
-    
+
     // Z-score threshold for anomaly detection
     let z_score = (new_value - mean).abs() / std_dev;
     let threshold = 3.0; // 3 standard deviations
-    
+
     Ok(z_score > threshold)
 }
 
 /// Predict using a named model (simplified API)
 pub fn predict_with_model(model_name: &str, input: Value) -> Result<Value, String> {
-    crate::stdlib::log::info("Making prediction (simplified API)", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("model_name".to_string(), Value::String(model_name.to_string()));
-        data.insert("message".to_string(), Value::String("Making prediction (simplified API)".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Making prediction (simplified API)",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "model_name".to_string(),
+                Value::String(model_name.to_string()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Making prediction (simplified API)".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     // Try to get registered model
     if let Some(model) = get_model(model_name) {
         let prediction = predict(&model, input)?;
         return Ok(prediction.prediction);
     }
-    
+
     // Fall back to built-in prediction logic based on model name
     match model_name {
         "price_model" | "price_predictor" => {
             // Simple price prediction
             if let Value::Array(prices) = input {
-                let sum: i64 = prices.iter()
+                let sum: i64 = prices
+                    .iter()
                     .filter_map(|v| match v {
                         Value::Int(i) => Some(i),
                         _ => None,
@@ -2000,24 +2303,30 @@ pub fn predict_with_model(model_name: &str, input: Value) -> Result<Value, Strin
             // Risk score (0-100)
             Ok(Value::Int(50)) // Default medium risk
         }
-        _ => {
-            Err(format!("Model '{}' not found", model_name))
-        }
+        _ => Err(format!("Model '{}' not found", model_name)),
     }
 }
 
 /// Analyze image from URL. **Full API:** when OPENAI_API_KEY is set and http-interface enabled, sends image URL to vision API. **Simplified:** returns mock analysis when no API key.
 pub fn analyze_image_url(url: &str) -> Result<ImageAnalysis, String> {
-    crate::stdlib::log::info("Analyzing image from URL", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("url".to_string(), Value::String(url.to_string()));
-        data.insert("message".to_string(), Value::String("Analyzing image from URL".to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        "Analyzing image from URL",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("url".to_string(), Value::String(url.to_string()));
+            data.insert(
+                "message".to_string(),
+                Value::String("Analyzing image from URL".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     #[cfg(feature = "http-interface")]
     if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base = env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+        let base =
+            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let svc = crate::stdlib::service::AIService::new("gpt-4o".to_string())
             .with_api_key(api_key)
             .with_base_url(base);
@@ -2026,7 +2335,12 @@ pub fn analyze_image_url(url: &str) -> Result<ImageAnalysis, String> {
                 objects: vec![DetectedObject {
                     object_type: "described".to_string(),
                     confidence: 0.9,
-                    bounding_box: BoundingBox { x: 0, y: 0, width: 0, height: 0 },
+                    bounding_box: BoundingBox {
+                        x: 0,
+                        y: 0,
+                        width: 0,
+                        height: 0,
+                    },
                 }],
                 faces: vec![],
                 text: vec![description],
@@ -2043,17 +2357,22 @@ pub fn analyze_image_url(url: &str) -> Result<ImageAnalysis, String> {
 /// Generate image from prompt. **Full API:** when an API key is configured (env OPENAI_API_KEY; any provider with /images/generations), returns image URL or base64. **Simplified:** returns a placeholder URL when no API key.
 pub fn generate_image(model: &str, prompt: &str) -> Result<String, String> {
     let msg = "Generating image from prompt";
-    crate::stdlib::log::info(msg, {
-        let mut data = std::collections::HashMap::new();
-        data.insert("model".to_string(), Value::String(model.to_string()));
-        data.insert("prompt".to_string(), Value::String(prompt.to_string()));
-        data.insert("message".to_string(), Value::String(msg.to_string()));
-        data
-    }, Some("ai"));
+    crate::stdlib::log::info(
+        msg,
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert("model".to_string(), Value::String(model.to_string()));
+            data.insert("prompt".to_string(), Value::String(prompt.to_string()));
+            data.insert("message".to_string(), Value::String(msg.to_string()));
+            data
+        },
+        Some("ai"),
+    );
 
     #[cfg(feature = "http-interface")]
     if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base = env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+        let base =
+            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let image_model = if model.is_empty() || model == "default" {
             "dall-e-2"
         } else {
@@ -2068,20 +2387,39 @@ pub fn generate_image(model: &str, prompt: &str) -> Result<String, String> {
     }
 
     // Simplified: placeholder URL
-    Ok(format!("https://ai-generated-images.example.com/{}/{}",
-               model,
-               simple_hash_str(prompt, 0)))
+    Ok(format!(
+        "https://ai-generated-images.example.com/{}/{}",
+        model,
+        simple_hash_str(prompt, 0)
+    ))
 }
 
 /// Recommend items based on preferences. **Full API:** when an API key is configured (env OPENAI_API_KEY; any provider with embeddings), embeds preferences and items and ranks by cosine similarity. **Simplified:** keyword matching when no API key.
-pub fn recommend(user_preferences: Vec<String>, available_items: Vec<String>, count: usize) -> Result<Vec<String>, String> {
-    crate::stdlib::log::info("Generating recommendations", {
-        let mut data = std::collections::HashMap::new();
-        data.insert("preferences_count".to_string(), Value::Int(user_preferences.len() as i64));
-        data.insert("items_count".to_string(), Value::Int(available_items.len() as i64));
-        data.insert("message".to_string(), Value::String("Generating recommendations".to_string()));
-        data
-    }, Some("ai"));
+pub fn recommend(
+    user_preferences: Vec<String>,
+    available_items: Vec<String>,
+    count: usize,
+) -> Result<Vec<String>, String> {
+    crate::stdlib::log::info(
+        "Generating recommendations",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "preferences_count".to_string(),
+                Value::Int(user_preferences.len() as i64),
+            );
+            data.insert(
+                "items_count".to_string(),
+                Value::Int(available_items.len() as i64),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Generating recommendations".to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
 
     #[cfg(feature = "http-interface")]
     if let Ok(pref_emb) = embed(&user_preferences.join(" ")) {
@@ -2111,7 +2449,8 @@ pub fn recommend(user_preferences: Vec<String>, available_items: Vec<String>, co
         }
     }
     recommendations.sort_by(|a, b| b.1.cmp(&a.1));
-    Ok(recommendations.iter()
+    Ok(recommendations
+        .iter()
         .take(count)
         .map(|(item, _)| item.clone())
         .collect())
@@ -2141,31 +2480,43 @@ fn simple_hash_str(text: &str, seed: usize) -> String {
 #[cfg(test)]
 mod wrapper_tests {
     use super::*;
-    
+
     #[test]
     fn test_classify_sentiment() {
         let result = classify("sentiment", "This is amazing! I love it!");
         assert!(result.is_ok());
         let classification = result.unwrap();
         // Accept any valid sentiment
-        assert!(classification == "positive" || classification == "neutral" || classification == "negative");
-        
+        assert!(
+            classification == "positive"
+                || classification == "neutral"
+                || classification == "negative"
+        );
+
         let result = classify("sentiment", "This is terrible and awful.");
         assert!(result.is_ok());
         let classification = result.unwrap();
-        assert!(classification == "positive" || classification == "neutral" || classification == "negative");
+        assert!(
+            classification == "positive"
+                || classification == "neutral"
+                || classification == "negative"
+        );
     }
-    
+
     #[test]
     fn test_classify_with_confidence() {
         let result = classify_with_confidence("sentiment", "Great product!");
         assert!(result.is_ok());
         let (classification, confidence) = result.unwrap();
         // Accept any valid sentiment
-        assert!(classification == "positive" || classification == "neutral" || classification == "negative");
+        assert!(
+            classification == "positive"
+                || classification == "neutral"
+                || classification == "negative"
+        );
         assert!(confidence > 0.0 && confidence <= 1.0);
     }
-    
+
     #[test]
     fn test_generate() {
         let result = generate("gpt-4", "Explain blockchain");
@@ -2173,20 +2524,20 @@ mod wrapper_tests {
         let response = result.unwrap();
         assert!(response.contains("GPT"));
     }
-    
+
     #[test]
     fn test_embed() {
         let result = embed("Hello world");
         assert!(result.is_ok());
         let embeddings = result.unwrap();
         assert_eq!(embeddings.len(), 384);
-        
+
         // Check values are in reasonable range
         for val in embeddings {
             assert!(val >= -1.0 && val <= 1.0);
         }
     }
-    
+
     #[test]
     fn test_cosine_similarity() {
         let vec1 = vec![1.0, 0.0, 0.0];
@@ -2194,28 +2545,28 @@ mod wrapper_tests {
         let result = cosine_similarity(&vec1, &vec2);
         assert!(result.is_ok());
         assert!((result.unwrap() - 1.0).abs() < 0.001);
-        
+
         let vec3 = vec![0.0, 1.0, 0.0];
         let result = cosine_similarity(&vec1, &vec3);
         assert!(result.is_ok());
         assert!((result.unwrap() - 0.0).abs() < 0.001);
     }
-    
+
     #[test]
     fn test_detect_anomaly() {
         let data = vec![10.0, 12.0, 11.0, 13.0, 10.5];
-        
+
         // Normal value
         let result = detect_anomaly(&data, 11.5);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), false);
-        
+
         // Anomalous value
         let result = detect_anomaly(&data, 50.0);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), true);
     }
-    
+
     #[test]
     fn test_recommend() {
         let preferences = vec!["blockchain".to_string(), "defi".to_string()];
@@ -2225,14 +2576,14 @@ mod wrapper_tests {
             "Web Development".to_string(),
             "Blockchain DeFi Guide".to_string(),
         ];
-        
+
         let result = recommend(preferences, items, 2);
         assert!(result.is_ok());
         let recommendations = result.unwrap();
         assert_eq!(recommendations.len(), 2);
         assert!(recommendations[0].contains("Blockchain") || recommendations[0].contains("DeFi"));
     }
-    
+
     #[test]
     fn test_model_registry() {
         let model = Model {
@@ -2244,9 +2595,9 @@ mod wrapper_tests {
             created_at: "2024-01-01".to_string(),
             last_updated: "2024-01-01".to_string(),
         };
-        
+
         register_model("test".to_string(), model.clone());
-        
+
         let retrieved = get_model("test");
         assert!(retrieved.is_some());
         assert_eq!(retrieved.unwrap().model_id, "test_model");
