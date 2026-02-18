@@ -1,6 +1,6 @@
-# 🤖 AI Features Guide - dist_agent_lang (v1.0.1)
+# 🤖 AI Features Guide - dist_agent_lang (v1.0.5)
 
-> **📢 Beta Release v1.0.1:** Includes new AI Simplified Wrapper API. Actively maintained with consistent updates. Test AI features thoroughly. **Beta testing feedback appreciated!** 🙏
+> **📢 Beta Release v1.0.5:** Includes comprehensive AI agent framework. Actively maintained with consistent updates. Test AI features thoroughly. **Beta testing feedback appreciated!** 🙏
 
 Complete guide to building **AI-powered smart contracts** and **intelligent agents** with dist_agent_lang.
 
@@ -68,174 +68,216 @@ Complete guide to building **AI-powered smart contracts** and **intelligent agen
 
 ### Current Implementation (Phase 1)
 
-The AI module currently implements a **comprehensive agent framework** for building intelligent, autonomous agents. The simplified API shown in tutorials is for illustrative purposes.
+The AI module currently implements a **comprehensive agent framework** for building intelligent, autonomous agents.
 
 #### Agent Lifecycle Management
 
 ```dal
 // Create and spawn a new AI agent
-@public
-function createIntelligentAgent() -> Agent {
-    let config = AgentConfig {
-        agent_id: "trader_001",
-        name: "Trading Agent",
-        role: "market_analyzer",
-        capabilities: ["text_analysis", "data_processing", "trading"],
-        memory_size: 1024,
-        max_concurrent_tasks: 5,
-        trust_level: "high",
-        communication_protocols: ["secure_message"],
-        ai_models: ["sentiment_analyzer", "price_predictor"]
-    };
+service AgentManager {
+    fn create_intelligent_agent() {
+        let config = {
+            "agent_id": "trader_001",
+            "name": "Trading Agent",
+            "role": "market_analyzer",
+            "capabilities": ["text_analysis", "data_processing", "trading"],
+            "memory_size": 1024,
+            "max_concurrent_tasks": 5,
+            "trust_level": "high",
+            "communication_protocols": ["secure_message"],
+            "ai_models": ["sentiment_analyzer", "price_predictor"]
+        };
+        
+        let agent_result = ai::spawn_agent(config);
+        if agent_result.is_ok() {
+            let agent = agent_result.unwrap();
+            log::info("ai", "Agent created: " + agent.id);
+        }
+    }
     
-    let agent = ai::spawn_agent(config);
-    return agent;
-}
-
-// Get agent status
-@public
-@view
-function checkAgentStatus(Agent agent) -> string {
-    return ai::get_agent_status(agent);
-    // Returns: "idle", "active", "busy", "error", or "terminated"
-}
-
-// Terminate agent when done
-@public
-function shutdownAgent(Agent agent) {
-    ai::terminate_agent(agent);
+    // Get agent status
+    fn check_agent_status(agent_id: string) -> string {
+        // Note: In actual implementation, you'd need to store agent reference
+        // This is a simplified example
+        return "idle"; // Returns: "idle", "active", "busy", "error", or "terminated"
+    }
+    
+    // Terminate agent when done
+    fn shutdown_agent(agent_id: string) {
+        // Note: In actual implementation, you'd need agent reference
+        log::info("ai", "Shutting down agent: " + agent_id);
+    }
 }
 ```
 
 #### Text Analysis (Built-in)
 
 ```dal
-// Analyze text with AI
-@public
-function analyzeText(string memory text) -> TextAnalysis {
-    let analysis = ai::analyze_text(text);
-    
-    // TextAnalysis includes:
-    // - sentiment: f64
-    // - entities: Vec<Entity>
-    // - keywords: Vec<String>
-    // - summary: String
-    // - language: String
-    // - confidence: f64
-    
-    return analysis;
+service TextAnalyzer {
+    // Analyze text with AI
+    fn analyze_text(text: string) {
+        let analysis_result = ai::analyze_text(text);
+        
+        if analysis_result.is_ok() {
+            let analysis = analysis_result.unwrap();
+            
+            // TextAnalysis includes:
+            // - sentiment: float (0.0 to 1.0)
+            // - entities: list of Entity objects
+            // - keywords: list of strings
+            // - summary: string
+            // - language: string
+            // - confidence: float
+            
+            log::info("ai", "Sentiment: " + analysis.sentiment.to_string());
+            log::info("ai", "Confidence: " + analysis.confidence.to_string());
+        }
+    }
 }
 ```
 
 #### Text Generation (Built-in)
 
 ```dal
-// Generate text response
-@public
-function generateResponse(string memory prompt) -> string {
-    let response = ai::generate_text(prompt);
-    return response;
+service TextGenerator {
+    // Generate text response
+    fn generate_response(prompt: string) -> string {
+        let result = ai::generate_text(prompt);
+        if result.is_ok() {
+            return result.unwrap();
+        }
+        return "";
+    }
+}
+```
+
+#### Simplified API Functions
+
+```dal
+service SimplifiedAI {
+    // Classify text using simplified API
+    fn classify_text(input: string) -> string {
+        let result = ai::classify("sentiment_model", input);
+        return result.unwrap_or("");
+    }
+    
+    // Generate text using simplified API
+    fn generate_text(prompt: string) -> string {
+        let result = ai::generate("gpt-4", prompt);
+        return result.unwrap_or("");
+    }
+    
+    // Generate embeddings
+    fn get_embeddings(text: string) -> list<float> {
+        let result = ai::embed(text);
+        return result.unwrap_or([]);
+    }
+    
+    // Detect anomalies
+    fn check_anomaly(data: list<float>, new_value: float) -> bool {
+        let result = ai::detect_anomaly(data, new_value);
+        return result.unwrap_or(false);
+    }
 }
 ```
 
 #### Task Management
 
 ```dal
-// Create and execute tasks for agents
-@public
-function createAnalysisTask(Agent agent, string memory data) -> Task {
-    let params = HashMap::new();
-    params.insert("text", data);
+service TaskManager {
+    fn create_analysis_task(agent_id: string, data: string) {
+        // Note: In actual implementation, you'd need agent reference
+        // This shows the concept
+        
+        let params = {
+            "text": data
+        };
+        
+        // Create task would require agent reference
+        // let task = ai::create_task(agent, "text_analysis", "Analyze market sentiment", params);
+        
+        log::info("ai", "Task created for agent: " + agent_id);
+    }
     
-    let task = ai::create_task(
-        agent,
-        "text_analysis",
-        "Analyze market sentiment",
-        params
-    );
-    
-    return task;
-}
-
-// Execute task and get results
-@public
-function executeAnalysis(Agent agent, string taskId) -> Value {
-    let result = ai::execute_task(agent, taskId);
-    return result;
-}
-```
-
-#### Message Passing System
-
-```dal
-// Communication between agents
-@public
-function sendAgentMessage(
-    string fromAgent,
-    string toAgent,
-    string messageType,
-    Value content
-) -> Message {
-    let message = ai::send_message(
-        fromAgent,
-        toAgent,
-        messageType,
-        content,
-        MessagePriority::Normal
-    );
-    
-    return message;
-}
-
-// Agent receives and processes messages
-@public
-function processMessages(Agent agent) -> Vec<Value> {
-    let results = ai::process_message_queue(agent);
-    return results;
+    // Execute task and get results
+    fn execute_analysis(agent_id: string, task_id: string) {
+        // Note: In actual implementation, you'd need agent reference
+        // let result = ai::execute_task(agent, task_id);
+        
+        log::info("ai", "Task executed: " + task_id);
+    }
 }
 ```
 
 #### Image Analysis (Built-in)
 
 ```dal
-// Analyze image data
-@public
-function analyzeNFTImage(bytes imageData) -> ImageAnalysis {
-    let analysis = ai::analyze_image(imageData);
+service ImageAnalyzer {
+    // Analyze image data
+    fn analyze_nft_image(image_data: list<int>) {
+        // Convert list<int> to Vec<u8> internally
+        let result = ai::analyze_image(image_data);
+        
+        if result.is_ok() {
+            let analysis = result.unwrap();
+            
+            // ImageAnalysis includes:
+            // - objects: list of DetectedObject
+            // - faces: list of Face
+            // - text: list of strings
+            // - colors: list of strings
+            // - quality_score: float
+            
+            log::info("ai", "Quality score: " + analysis.quality_score.to_string());
+        }
+    }
     
-    // ImageAnalysis includes:
-    // - objects: Vec<DetectedObject>
-    // - faces: Vec<Face>
-    // - text: Vec<String>
-    // - colors: Vec<String>
-    // - quality_score: f64
-    
-    return analysis;
+    // Analyze image from URL
+    fn analyze_image_url(url: string) {
+        let result = ai::analyze_image_url(url);
+        if result.is_ok() {
+            let analysis = result.unwrap();
+            log::info("ai", "Image analyzed from URL");
+        }
+    }
 }
 ```
 
 #### AI Model Training & Prediction
 
 ```dal
-// Train a custom model
-@public
-function trainCustomModel(TrainingData data) -> Model {
-    let model = ai::train_model(data);
-    return model;
-}
-
-// Make predictions with trained model
-@public
-function makePrediction(Model model, Value input) -> Prediction {
-    let prediction = ai::predict(model, input);
+service ModelTrainer {
+    // Train a custom model
+    fn train_custom_model(data_type: string, samples: list<any>, labels: list<any>) {
+        let training_data = {
+            "data_type": data_type,
+            "samples": samples,
+            "labels": labels
+        };
+        
+        let result = ai::train_model(training_data);
+        if result.is_ok() {
+            let model = result.unwrap();
+            log::info("ai", "Model trained: " + model.model_id);
+        }
+    }
     
-    // Prediction includes:
-    // - prediction: Value
-    // - confidence: f64
-    // - probabilities: HashMap<String, f64>
-    // - explanation: Option<String>
+    // Make predictions with trained model
+    fn make_prediction(model_id: string, input: any) {
+        // Note: Would need model reference in actual implementation
+        // let prediction = ai::predict(model, input);
+        
+        log::info("ai", "Making prediction with model: " + model_id);
+    }
     
-    return prediction;
+    // Simplified prediction API
+    fn predict_with_model(model_name: string, input: any) {
+        let result = ai::predict_with_model(model_name, input);
+        if result.is_ok() {
+            let prediction = result.unwrap();
+            log::info("ai", "Prediction made");
+        }
+    }
 }
 ```
 
@@ -246,89 +288,65 @@ function makePrediction(Model model, Value input) -> Prediction {
 ### Agent Architecture (Actual Implementation)
 
 ```dal
-@contract
-@blockchain("ethereum")
-contract IntelligentTradingSystem {
+@ai
+@chain("ethereum")
+service IntelligentTradingSystem {
     // Agent storage
-    mapping(address => Agent) public userAgents;
+    user_agents: map<string, string> = {}; // user_id -> agent_id
     
     // Create a trading agent using the AI framework
-    @public
-    function createTradingAgent(
-        string memory name,
-        string memory strategy
-    ) {
+    fn create_trading_agent(user_id: string, name: string, strategy: string) {
         // Create agent configuration
-        let config = AgentConfig {
-            agent_id: string::concat("trader_", msg.sender),
-            name: name,
-            role: "trading_agent",
-            capabilities: vec!["text_analysis", "market_analysis", "trading"],
-            memory_size: 2048,
-            max_concurrent_tasks: 10,
-            trust_level: "high",
-            communication_protocols: vec!["secure"],
-            ai_models: vec!["sentiment", "predictor"]
+        let config = {
+            "agent_id": "trader_" + user_id,
+            "name": name,
+            "role": "trading_agent",
+            "capabilities": ["text_analysis", "market_analysis", "trading"],
+            "memory_size": 2048,
+            "max_concurrent_tasks": 10,
+            "trust_level": "high",
+            "communication_protocols": ["secure"],
+            "ai_models": ["sentiment", "predictor"]
         };
         
         // Spawn the agent
-        let agent = ai::spawn_agent(config);
-        userAgents[msg.sender] = agent;
-        
-        emit AgentCreated(msg.sender, name);
-    }
-    
-    // AI-powered decision making using actual framework
-    @public
-    function analyzeMarketSentiment(string memory marketData) -> string {
-        let agent = userAgents[msg.sender];
-        require(agent.id != "", "No agent created");
-        
-        // Use AI to analyze text
-        let analysis = ai::analyze_text(marketData);
-        
-        // sentiment is a float: positive > 0.5, negative < 0.5
-        if (analysis.sentiment > 0.7) {
-            return "bullish";
-        } else if (analysis.sentiment < 0.3) {
-            return "bearish";
-        } else {
-            return "neutral";
+        let agent_result = ai::spawn_agent(config);
+        if agent_result.is_ok() {
+            let agent = agent_result.unwrap();
+            user_agents[user_id] = agent.id;
+            log::info("ai", "Trading agent created: " + agent.id);
         }
     }
     
-    // Generate trading recommendation
-    @public
-    function getTradeRecommendation(string memory prompt) -> string {
-        let agent = userAgents[msg.sender];
-        require(agent.id != "", "No agent created");
+    // AI-powered decision making using actual framework
+    fn analyze_market_sentiment(market_data: string) -> string {
+        // Use AI to analyze text
+        let analysis_result = ai::analyze_text(market_data);
         
-        // Generate text recommendation
-        let recommendation = ai::generate_text(prompt);
+        if analysis_result.is_ok() {
+            let analysis = analysis_result.unwrap();
+            
+            // sentiment is a float: positive > 0.5, negative < 0.5
+            if analysis.sentiment > 0.7 {
+                return "bullish";
+            } else if analysis.sentiment < 0.3 {
+                return "bearish";
+            } else {
+                return "neutral";
+            }
+        }
         
-        return recommendation;
+        return "unknown";
     }
     
-    // Execute task through agent
-    @public
-    function executeAnalysisTask(string memory data) -> Value {
-        let agent = userAgents[msg.sender];
-        
-        // Create task
-        let mut params = HashMap::new();
-        params.insert("text", Value::String(data));
-        
-        let task = ai::create_task(
-            agent,
-            "text_analysis",
-            "Analyze market data",
-            params
-        );
-        
-        // Execute and get result
-        let result = ai::execute_task(agent, task.id);
-        
-        return result;
+    // Generate trading recommendation
+    fn get_trade_recommendation(prompt: string) -> string {
+        // Generate text recommendation
+        let result = ai::generate_text(prompt);
+        if result.is_ok() {
+            return result.unwrap();
+        }
+        return "";
     }
 }
 ```
@@ -336,116 +354,52 @@ contract IntelligentTradingSystem {
 ### Multi-Agent Coordination (Actual Framework)
 
 ```dal
-@contract
-@blockchain("ethereum")
-contract MultiAgentCoordinator {
-    AgentCoordinator public coordinator;
+@ai
+@chain("ethereum")
+service MultiAgentCoordinator {
+    coordinator_id: string = "";
     
-    @public
-    function initializeCoordinator() {
-        coordinator = ai::create_coordinator("dao_coordinator");
+    fn initialize_coordinator() {
+        let coordinator = ai::create_coordinator("dao_coordinator");
+        coordinator_id = coordinator.coordinator_id;
+        log::info("ai", "Coordinator created: " + coordinator_id);
     }
     
-    @public
-    function addSpecializedAgent(
-        string memory role,
-        string memory name
-    ) {
+    fn add_specialized_agent(role: string, name: string) {
         // Create agent config for specific role
-        let config = AgentConfig {
-            agent_id: string::concat(role, "_agent"),
-            name: name,
-            role: role,  // "analyst", "trader", "risk_manager"
-            capabilities: getRoleCapabilities(role),
-            memory_size: 2048,
-            max_concurrent_tasks: 5,
-            trust_level: "high",
-            communication_protocols: vec!["secure"],
-            ai_models: getRoleModels(role)
+        let config = {
+            "agent_id": role + "_agent",
+            "name": name,
+            "role": role, // "analyst", "trader", "risk_manager"
+            "capabilities": get_role_capabilities(role),
+            "memory_size": 2048,
+            "max_concurrent_tasks": 5,
+            "trust_level": "high",
+            "communication_protocols": ["secure"],
+            "ai_models": get_role_models(role)
         };
         
         // Spawn and add to coordinator
-        let agent = ai::spawn_agent(config);
-        ai::add_agent_to_coordinator(coordinator, agent);
-        
-        emit AgentAdded(role, name);
-    }
-    
-    @public
-    function analyzeProposal(string memory proposal) -> Vec<Value> {
-        // Create analysis tasks for each agent
-        let mut results = Vec::new();
-        
-        for agent in coordinator.agents {
-            // Create analysis task
-            let mut params = HashMap::new();
-            params.insert("proposal", Value::String(proposal));
-            params.insert("role", Value::String(agent.config.role));
-            
-            let task = ai::create_task(
-                agent,
-                "proposal_analysis",
-                "Analyze proposal from role perspective",
-                params
-            );
-            
-            // Execute task
-            let result = ai::execute_task(agent, task.id);
-            results.push(result);
+        let agent_result = ai::spawn_agent(config);
+        if agent_result.is_ok() {
+            let agent = agent_result.unwrap();
+            log::info("ai", "Agent added: " + agent.id);
         }
-        
-        return results;
     }
     
-    @public
-    function createWorkflow(string memory workflowName) -> Workflow {
-        // Define workflow steps
-        let mut steps = Vec::new();
-        
-        // Step 1: Analyst reviews
-        steps.push(WorkflowStep {
-            step_id: "step_1",
-            agent_id: "analyst_agent",
-            task_type: "analysis",
-            dependencies: vec![],
-            status: StepStatus::Pending
-        });
-        
-        // Step 2: Risk manager assesses (depends on step 1)
-        steps.push(WorkflowStep {
-            step_id: "step_2",
-            agent_id: "risk_manager_agent",
-            task_type: "risk_assessment",
-            dependencies: vec!["step_1"],
-            status: StepStatus::Pending
-        });
-        
-        // Create workflow
-        let workflow = ai::create_workflow(coordinator, workflowName, steps);
-        
-        return workflow;
-    }
-    
-    @public
-    function executeWorkflow(string memory workflowId) -> bool {
-        return ai::execute_workflow(coordinator, workflowId);
-    }
-    
-    @private
-    function getRoleCapabilities(string memory role) -> Vec<String> {
-        if (role == "analyst") {
-            return vec!["text_analysis", "data_analysis"];
-        } else if (role == "trader") {
-            return vec!["trading", "market_analysis"];
-        } else if (role == "risk_manager") {
-            return vec!["risk_assessment", "validation"];
+    fn get_role_capabilities(role: string) -> list<string> {
+        if role == "analyst" {
+            return ["text_analysis", "data_analysis"];
+        } else if role == "trader" {
+            return ["trading", "market_analysis"];
+        } else if role == "risk_manager" {
+            return ["risk_assessment", "validation"];
         }
-        return vec!["general"];
+        return ["general"];
     }
     
-    @private
-    function getRoleModels(string memory role) -> Vec<String> {
-        return vec!["sentiment_analyzer", "text_generator"];
+    fn get_role_models(role: string) -> list<string> {
+        return ["sentiment_analyzer", "text_generator"];
     }
 }
 ```
@@ -457,54 +411,58 @@ contract MultiAgentCoordinator {
 ### Intelligent Price Feeds with Anomaly Detection
 
 ```dal
-@contract
-@blockchain("ethereum")
 @ai
-contract IntelligentOracle {
-    uint256 public currentPrice;
-    uint256[] public priceHistory;
-    uint256 constant MAX_HISTORY = 100;
+@chain("ethereum")
+service IntelligentOracle {
+    current_price: int = 0;
+    price_history: list<int> = [];
+    max_history: int = 100;
     
-    @public
-    function updatePriceWithValidation() {
-        // Fetch from multiple oracles
-        let priceData = oracle::fetch_with_consensus(
-            ["chainlink", "uniswap", "band"],
-            oracle::create_query("ETH/USD"),
-            0.66
-        );
+    fn update_price_with_validation() {
+        // Fetch from oracle
+        let oracle_result = oracle::fetch("chainlink", "ETH/USD");
         
-        // Use AI to detect anomalies
-        priceHistory.push(priceData.data);
-        if (priceHistory.length > MAX_HISTORY) {
-            // Remove oldest
-            for (uint i = 0; i < priceHistory.length - 1; i++) {
-                priceHistory[i] = priceHistory[i + 1];
+        if oracle_result.is_ok() {
+            let price_data = oracle_result.unwrap();
+            let new_price = price_data.data;
+            
+            // Use AI to detect anomalies
+            price_history.push(new_price);
+            if price_history.len() > max_history {
+                // Remove oldest
+                price_history = price_history.slice(1);
             }
-            priceHistory.pop();
+            
+            // AI anomaly detection
+            let history_floats: list<float> = [];
+            for price in price_history {
+                history_floats.push(price.to_float());
+            }
+            
+            let anomaly_result = ai::detect_anomaly(history_floats, new_price.to_float());
+            
+            if anomaly_result.is_ok() && anomaly_result.unwrap() {
+                // Price is unusual - require additional validation
+                log::warn("oracle", "Anomalous price detected: " + new_price.to_string());
+                
+                // Use AI to analyze if this is a real market event
+                let market_data = json::stringify({
+                    "historical": price_history,
+                    "new": new_price
+                });
+                
+                let analysis = ai::generate_text("Is this price movement legitimate? " + market_data);
+                let legitimacy = ai::classify("legitimacy_classifier", analysis);
+                
+                if legitimacy != "legitimate" {
+                    log::error("oracle", "Suspicious price movement detected");
+                    return;
+                }
+            }
+            
+            current_price = new_price;
+            log::info("oracle", "Price updated: " + current_price.to_string());
         }
-        
-        // AI anomaly detection
-        let isAnomaly = ai::detect_anomaly(priceHistory, priceData.data);
-        
-        if (isAnomaly) {
-            // Price is unusual - require additional validation
-            log::warn("Anomalous price detected: " + string::from_int(priceData.data));
-            
-            // Use AI to analyze if this is a real market event
-            let analysis = ai::generate(
-                "market_analyzer",
-                "Is this price movement legitimate? Historical: " + 
-                json::stringify(priceHistory) + ", New: " + string::from_int(priceData.data)
-            );
-            
-            let legitimacy = ai::classify("legitimacy_classifier", analysis);
-            
-            require(legitimacy == "legitimate", "Suspicious price movement detected");
-        }
-        
-        currentPrice = priceData.data;
-        emit PriceUpdated(currentPrice, isAnomaly);
     }
 }
 ```
@@ -516,66 +474,63 @@ contract IntelligentOracle {
 ### AI-Powered Automated Market Maker (AMM)
 
 ```dal
-@contract
-@blockchain("ethereum")
 @ai
-@reentrancy_guard
-contract IntelligentAMM {
+@chain("ethereum")
+service IntelligentAMM {
     // Dynamic fee adjustment based on market conditions
-    @public
-    function getSwapFee(
-        address tokenIn,
-        address tokenOut,
-        uint256 amountIn
-    ) -> uint256 {
+    fn get_swap_fee(token_in: string, token_out: string, amount_in: int) -> int {
         // Get market volatility
-        let volatility = calculateVolatility(tokenIn, tokenOut);
+        let volatility = calculate_volatility(token_in, token_out);
         
         // Get AI recommendation for fee
-        let marketData = json::stringify({
-            "token_in": tokenIn,
-            "token_out": tokenOut,
-            "amount": amountIn,
+        let market_data = json::stringify({
+            "token_in": token_in,
+            "token_out": token_out,
+            "amount": amount_in,
             "volatility": volatility,
-            "pool_tvl": getTotalValueLocked(),
-            "recent_volume": getRecentVolume()
+            "pool_tvl": get_total_value_locked(),
+            "recent_volume": get_recent_volume()
         });
         
-        let feeRecommendation = ai::generate(
-            "fee_optimizer",
-            "Recommend optimal swap fee for these conditions: " + marketData
-        );
+        let fee_recommendation = ai::generate("fee_optimizer", "Recommend optimal swap fee for these conditions: " + market_data);
         
-        // Parse AI recommendation (e.g., "0.3%")
-        uint256 recommendedFee = parseFeeBps(feeRecommendation);
+        if fee_recommendation.is_ok() {
+            // Parse AI recommendation (e.g., "0.3%")
+            let recommended_fee = parse_fee_bps(fee_recommendation.unwrap());
+            
+            // Ensure fee is within acceptable range
+            let min_fee = 10;  // 0.1%
+            let max_fee = 100; // 1%
+            
+            if recommended_fee < min_fee {
+                return min_fee;
+            }
+            if recommended_fee > max_fee {
+                return max_fee;
+            }
+            
+            return recommended_fee;
+        }
         
-        // Ensure fee is within acceptable range
-        uint256 minFee = 10;  // 0.1%
-        uint256 maxFee = 100; // 1%
-        
-        if (recommendedFee < minFee) return minFee;
-        if (recommendedFee > maxFee) return maxFee;
-        
-        return recommendedFee;
+        return 30; // Default 0.3%
     }
     
-    // AI-powered impermanent loss prediction
-    @public
-    @view
-    function predictImpermanentLoss(
-        address tokenA,
-        address tokenB,
-        uint256 amountA,
-        uint256 amountB,
-        uint256 durationDays
-    ) -> uint256 {
-        // Get historical price data
-        let priceHistory = getHistoricalPrices(tokenA, tokenB, durationDays * 2);
-        
-        // Use AI to predict future price divergence
-        let prediction = ai::predict("il_predictor", priceHistory);
-        
-        return prediction;  // Returns predicted IL as percentage
+    fn calculate_volatility(token_in: string, token_out: string) -> float {
+        // Simplified volatility calculation
+        return 0.05; // 5% volatility
+    }
+    
+    fn get_total_value_locked() -> int {
+        return 1000000; // Simplified
+    }
+    
+    fn get_recent_volume() -> int {
+        return 50000; // Simplified
+    }
+    
+    fn parse_fee_bps(fee_text: string) -> int {
+        // Parse fee from text (simplified)
+        return 30; // Default
     }
 }
 ```
@@ -583,54 +538,86 @@ contract IntelligentAMM {
 ### AI-Driven Lending Protocol
 
 ```dal
-@contract
-@blockchain("ethereum")
 @ai
-contract SmartLendingPool {
+@chain("ethereum")
+service SmartLendingPool {
     // AI-powered credit scoring
-    @public
-    @view
-    function getCreditScore(address user) -> uint256 {
+    fn get_credit_score(user_address: string) -> int {
         // Gather user's on-chain history
-        let transactionHistory = getUserTransactions(user);
-        let borrowHistory = getUserBorrowHistory(user);
-        let collateralHistory = getUserCollateralHistory(user);
+        let transaction_history = get_user_transactions(user_address);
+        let borrow_history = get_user_borrow_history(user_address);
+        let collateral_history = get_user_collateral_history(user_address);
         
         // Prepare data for AI model
-        let userData = json::stringify({
-            "address": user,
-            "tx_count": transactionHistory.length,
-            "borrow_history": borrowHistory,
-            "collateral_history": collateralHistory,
-            "account_age": block.timestamp - getUserCreationTime(user)
+        let user_data = json::stringify({
+            "address": user_address,
+            "tx_count": transaction_history.len(),
+            "borrow_history": borrow_history,
+            "collateral_history": collateral_history,
+            "account_age": get_account_age(user_address)
         });
         
         // AI credit score (0-1000)
-        let scoreText = ai::generate("credit_scorer", 
-            "Calculate credit score for this user: " + userData
-        );
+        let score_result = ai::generate("credit_scorer", "Calculate credit score for this user: " + user_data);
         
-        return parseCreditScore(scoreText);
+        if score_result.is_ok() {
+            return parse_credit_score(score_result.unwrap());
+        }
+        
+        return 500; // Default score
     }
     
     // Dynamic interest rates based on risk
-    @public
-    @view
-    function getInterestRate(address user, uint256 amount) -> uint256 {
-        let creditScore = getCreditScore(user);
-        let poolUtilization = getUtilizationRate();
+    fn get_interest_rate(user_address: string, amount: int) -> int {
+        let credit_score = get_credit_score(user_address);
+        let pool_utilization = get_utilization_rate();
         
         // AI-powered rate calculation
-        let rateData = json::stringify({
-            "credit_score": creditScore,
-            "utilization": poolUtilization,
+        let rate_data = json::stringify({
+            "credit_score": credit_score,
+            "utilization": pool_utilization,
             "borrow_amount": amount,
-            "market_conditions": getCurrentMarketConditions()
+            "market_conditions": get_current_market_conditions()
         });
         
-        let rate = ai::predict("interest_rate_model", rateData);
+        let rate_result = ai::predict_with_model("interest_rate_model", rate_data);
         
-        return rate;  // Returns APR in basis points
+        if rate_result.is_ok() {
+            let rate_value = rate_result.unwrap();
+            // Extract rate from Value (simplified)
+            return 500; // 5% APR in basis points
+        }
+        
+        return 500; // Default rate
+    }
+    
+    fn get_user_transactions(address: string) -> list<any> {
+        return [];
+    }
+    
+    fn get_user_borrow_history(address: string) -> list<any> {
+        return [];
+    }
+    
+    fn get_user_collateral_history(address: string) -> list<any> {
+        return [];
+    }
+    
+    fn get_account_age(address: string) -> int {
+        return 86400; // 1 day
+    }
+    
+    fn get_utilization_rate() -> float {
+        return 0.75; // 75%
+    }
+    
+    fn get_current_market_conditions() -> string {
+        return "stable";
+    }
+    
+    fn parse_credit_score(score_text: string) -> int {
+        // Parse score from text (simplified)
+        return 600;
     }
 }
 ```
@@ -642,85 +629,93 @@ contract SmartLendingPool {
 ### Dynamic AI-Generated NFTs
 
 ```dal
-@contract
-@blockchain("ethereum")
 @ai
-contract DynamicNFT {
-    struct NFTMetadata {
-        uint256 tokenId;
-        string basePrompt;
-        uint256 lastEvolution;
-        uint256 evolutionCount;
-    }
-    
-    mapping(uint256 => NFTMetadata) public nftData;
+@chain("ethereum")
+service DynamicNFT {
+    nft_data: map<int, map<string, any>> = {};
+    next_token_id: int = 1;
     
     // Mint NFT with AI-generated art
-    @public
-    function mintAINFT(string memory prompt) -> uint256 {
-        uint256 tokenId = nextTokenId++;
+    fn mint_ai_nft(prompt: string) -> int {
+        let token_id = next_token_id;
+        next_token_id = next_token_id + 1;
         
         // Generate image using AI
-        let imageUrl = ai::generate_image("stable_diffusion", prompt);
+        let image_result = ai::generate_image("stable_diffusion", prompt);
         
-        // Store on IPFS
-        let metadata = json::stringify({
-            "name": "AI NFT #" + string::from_int(tokenId),
-            "description": "AI-generated NFT that evolves over time",
-            "image": imageUrl,
-            "prompt": prompt,
-            "created": block.timestamp
-        });
+        if image_result.is_ok() {
+            let image_url = image_result.unwrap();
+            
+            // Store metadata
+            let metadata = json::stringify({
+                "name": "AI NFT #" + token_id.to_string(),
+                "description": "AI-generated NFT that evolves over time",
+                "image": image_url,
+                "prompt": prompt,
+                "created": time::now()
+            });
+            
+            nft_data[token_id] = {
+                "token_id": token_id,
+                "base_prompt": prompt,
+                "last_evolution": time::now(),
+                "evolution_count": 0,
+                "metadata": metadata
+            };
+            
+            log::info("nft", "NFT minted: " + token_id.to_string());
+            return token_id;
+        }
         
-        let metadataUrl = ipfs::upload(metadata);
-        
-        _mint(msg.sender, tokenId);
-        _setTokenURI(tokenId, metadataUrl);
-        
-        nftData[tokenId] = NFTMetadata({
-            tokenId: tokenId,
-            basePrompt: prompt,
-            lastEvolution: block.timestamp,
-            evolutionCount: 0
-        });
-        
-        return tokenId;
+        return 0;
     }
     
     // NFT evolves over time using AI
-    @public
-    function evolveNFT(uint256 tokenId) {
-        require(ownerOf(tokenId) == msg.sender, "Not token owner");
-        require(
-            block.timestamp - nftData[tokenId].lastEvolution > 30 days,
-            "Evolution cooldown"
-        );
+    fn evolve_nft(token_id: int) {
+        if !nft_data.has(token_id) {
+            log::error("nft", "NFT not found");
+            return;
+        }
+        
+        let nft = nft_data[token_id];
+        let last_evolution = nft.get("last_evolution", 0);
+        let evolution_count = nft.get("evolution_count", 0);
+        
+        // Check cooldown (30 days)
+        if time::now() - last_evolution < 2592000 {
+            log::error("nft", "Evolution cooldown");
+            return;
+        }
         
         // Generate evolved version using AI
-        let evolutionPrompt = nftData[tokenId].basePrompt + 
-            ", evolved form, iteration " + 
-            string::from_int(nftData[tokenId].evolutionCount + 1);
+        let base_prompt = nft.get("base_prompt", "");
+        let evolution_prompt = base_prompt + ", evolved form, iteration " + (evolution_count + 1).to_string();
         
-        let newImageUrl = ai::generate_image("stable_diffusion", evolutionPrompt);
+        let new_image_result = ai::generate_image("stable_diffusion", evolution_prompt);
         
-        // Update metadata
-        let newMetadata = json::stringify({
-            "name": "AI NFT #" + string::from_int(tokenId),
-            "description": "AI-generated NFT - Evolution " + 
-                string::from_int(nftData[tokenId].evolutionCount + 1),
-            "image": newImageUrl,
-            "prompt": evolutionPrompt,
-            "created": block.timestamp,
-            "evolution": nftData[tokenId].evolutionCount + 1
-        });
-        
-        let metadataUrl = ipfs::upload(newMetadata);
-        _setTokenURI(tokenId, metadataUrl);
-        
-        nftData[tokenId].lastEvolution = block.timestamp;
-        nftData[tokenId].evolutionCount++;
-        
-        emit NFTEvolved(tokenId, nftData[tokenId].evolutionCount);
+        if new_image_result.is_ok() {
+            let new_image_url = new_image_result.unwrap();
+            
+            // Update metadata
+            let new_metadata = json::stringify({
+                "name": "AI NFT #" + token_id.to_string(),
+                "description": "AI-generated NFT - Evolution " + (evolution_count + 1).to_string(),
+                "image": new_image_url,
+                "prompt": evolution_prompt,
+                "created": time::now(),
+                "evolution": evolution_count + 1
+            });
+            
+            nft_data[token_id] = {
+                "token_id": token_id,
+                "base_prompt": base_prompt,
+                "last_evolution": time::now(),
+                "evolution_count": evolution_count + 1,
+                "metadata": new_metadata
+            };
+            
+            log::info("nft", "NFT evolved: " + token_id.to_string());
+        }
     }
 }
 ```
@@ -734,48 +729,49 @@ contract DynamicNFT {
 **AI operations are executed off-chain but verified on-chain:**
 
 ```dal
-@contract
-@blockchain("ethereum")
 @ai
-contract OptimizedAIContract {
+@chain("ethereum")
+service OptimizedAIContract {
     // Cache AI results to save gas
-    mapping(bytes32 => string) public aiResultCache;
-    mapping(bytes32 => uint256) public cacheTimestamp;
-    uint256 constant CACHE_DURATION = 1 hours;
+    ai_result_cache: map<string, string> = {};
+    cache_timestamp: map<string, int> = {};
+    cache_duration: int = 3600; // 1 hour
     
-    @public
-    @view
-    function getCachedAIResult(string memory input) -> string {
-        bytes32 cacheKey = keccak256(abi.encodePacked(input));
+    fn get_cached_ai_result(input: string) -> string {
+        let cache_key = crypto::hash(input);
         
         // Check cache first
-        if (cacheTimestamp[cacheKey] > 0 && 
-            block.timestamp - cacheTimestamp[cacheKey] < CACHE_DURATION) {
-            return aiResultCache[cacheKey];
+        let timestamp = cache_timestamp.get(cache_key, 0);
+        if timestamp > 0 && time::now() - timestamp < cache_duration {
+            return ai_result_cache.get(cache_key, "");
         }
         
         // Cache miss - would need new AI call
         return "";
     }
     
-    @public
-    function getAIResultWithCache(string memory input) -> string {
-        bytes32 cacheKey = keccak256(abi.encodePacked(input));
+    fn get_ai_result_with_cache(input: string) -> string {
+        let cache_key = crypto::hash(input);
         
         // Try cache first
-        string memory cached = getCachedAIResult(input);
-        if (bytes(cached).length > 0) {
+        let cached = get_cached_ai_result(input);
+        if cached != "" {
             return cached;
         }
         
         // Generate new result
-        string memory result = ai::classify("model", input);
+        let result = ai::classify("model", input);
+        if result.is_ok() {
+            let result_value = result.unwrap();
+            
+            // Update cache
+            ai_result_cache[cache_key] = result_value;
+            cache_timestamp[cache_key] = time::now();
+            
+            return result_value;
+        }
         
-        // Update cache
-        aiResultCache[cacheKey] = result;
-        cacheTimestamp[cacheKey] = block.timestamp;
-        
-        return result;
+        return "";
     }
 }
 ```
@@ -797,17 +793,40 @@ contract OptimizedAIContract {
 
 ```dal
 // Always verify AI outputs
-@public
-function executeAIDecision(string memory decision) {
-    // Parse AI decision
-    let action = parseAction(decision);
+service SecureAI {
+    fn execute_ai_decision(decision: string) {
+        // Parse AI decision
+        let action = parse_action(decision);
+        
+        // Validate action is reasonable
+        if !is_valid_action(action) {
+            log::error("ai", "Invalid AI decision");
+            return;
+        }
+        if !is_within_risk_limits(action) {
+            log::error("ai", "Action exceeds risk limits");
+            return;
+        }
+        
+        // Execute with additional safety checks
+        execute_with_safety(action);
+    }
     
-    // Validate action is reasonable
-    require(isValidAction(action), "Invalid AI decision");
-    require(isWithinRiskLimits(action), "Action exceeds risk limits");
+    fn parse_action(decision: string) -> string {
+        return decision; // Simplified
+    }
     
-    // Execute with additional safety checks
-    executeWithSafety(action);
+    fn is_valid_action(action: string) -> bool {
+        return action != "";
+    }
+    
+    fn is_within_risk_limits(action: string) -> bool {
+        return true; // Simplified
+    }
+    
+    fn execute_with_safety(action: string) {
+        log::info("ai", "Executing: " + action);
+    }
 }
 ```
 
@@ -815,45 +834,66 @@ function executeAIDecision(string memory decision) {
 
 ```dal
 // Combine oracle data with AI validation
-@public
-function updatePriceSecure() {
-    // Get oracle price
-    let oraclePrice = oracle::fetch("chainlink", "ETH/USD").data;
+service SecureOracle {
+    current_price: int = 0;
     
-    // AI sanity check
-    let validation = ai::classify("price_validator", 
-        string::from_int(oraclePrice)
-    );
-    
-    require(validation == "valid", "AI detected suspicious price");
-    
-    // Additional checks
-    require(oraclePrice > 0, "Invalid price");
-    require(oraclePrice < MAX_REASONABLE_PRICE, "Price too high");
-    
-    currentPrice = oraclePrice;
+    fn update_price_secure() {
+        // Get oracle price
+        let oracle_result = oracle::fetch("chainlink", "ETH/USD");
+        
+        if oracle_result.is_ok() {
+            let oracle_data = oracle_result.unwrap();
+            let oracle_price = oracle_data.data;
+            
+            // AI sanity check
+            let validation = ai::classify("price_validator", oracle_price.to_string());
+            
+            if validation != "valid" {
+                log::error("oracle", "AI detected suspicious price");
+                return;
+            }
+            
+            // Additional checks
+            if oracle_price <= 0 {
+                log::error("oracle", "Invalid price");
+                return;
+            }
+            
+            current_price = oracle_price;
+            log::info("oracle", "Price updated: " + current_price.to_string());
+        }
+    }
 }
 ```
 
 ### 3. Rate Limiting AI Calls
 
 ```dal
-mapping(address => uint256) public lastAICall;
-uint256 constant AI_COOLDOWN = 60;  // 60 seconds
-
-@modifier rateLimitAI() {
-    require(
-        block.timestamp - lastAICall[msg.sender] >= AI_COOLDOWN,
-        "AI call rate limit exceeded"
-    );
-    lastAICall[msg.sender] = block.timestamp;
-    _;
-}
-
-@public
-@rateLimitAI
-function makeAIDecision() {
-    // AI operations
+service RateLimitedAI {
+    last_ai_call: map<string, int> = {};
+    ai_cooldown: int = 60; // 60 seconds
+    
+    fn make_ai_decision(user_id: string, input: string) {
+        let current_time = time::now();
+        let last_call = last_ai_call.get(user_id, 0);
+        
+        if current_time - last_call < ai_cooldown {
+            log::error("ai", "AI call rate limit exceeded");
+            return;
+        }
+        
+        last_ai_call[user_id] = current_time;
+        
+        // AI operations
+        let result = ai::classify("model", input);
+        if result.is_ok() {
+            process_result(result.unwrap());
+        }
+    }
+    
+    fn process_result(result: string) {
+        log::info("ai", "Result: " + result);
+    }
 }
 ```
 
@@ -904,40 +944,70 @@ The AI module (`src/stdlib/ai.rs`) currently provides:
 - Message passing system (`send_message`, `receive_message`, `process_message_queue`)
 - Task management (`create_task`, `execute_task`)
 - Text analysis (`analyze_text` - returns TextAnalysis struct)
-- Image analysis (`analyze_image` - returns ImageAnalysis struct)
+- Image analysis (`analyze_image`, `analyze_image_url` - returns ImageAnalysis struct)
 - Text generation (`generate_text`)
+- Simplified API (`classify`, `generate`, `embed`, `detect_anomaly`, `predict_with_model`)
 - Model training (`train_model`)
 - Prediction (`predict`)
 - Agent coordination (`create_coordinator`, `create_workflow`, `execute_workflow`)
+- Image generation (`generate_image`)
+- Recommendations (`recommend`)
 
-⚠️ **Simplified API (Tutorial Examples)**:
-The tutorials show simplified function calls like `ai::classify()` and `ai::generate()` for clarity. These map to the actual framework functions shown above.
+### Configuration
+
+AI providers can be configured via environment variables or runtime configuration:
+
+```bash
+# OpenAI
+export OPENAI_API_KEY=your_key_here
+export OPENAI_BASE_URL=https://api.openai.com/v1  # Optional
+
+# Anthropic
+export ANTHROPIC_API_KEY=your_key_here
+
+# Custom providers
+export AI_PROVIDER=custom
+export AI_ENDPOINT=https://your-endpoint.com
+export AI_API_KEY=your_key_here
+```
+
+Or programmatically:
+```dal
+// Configure OpenAI
+ai::configure_openai("your-api-key", Some("gpt-4"));
+
+// Configure Anthropic
+ai::configure_anthropic("your-api-key", Some("claude-3"));
+
+// Configure custom provider
+ai::configure_custom("provider-name", "https://endpoint.com", "api-key", Some("model"));
+```
 
 ### How to Use
 
 When building with the AI framework:
-1. Create `AgentConfig` structures
-2. Spawn agents with `ai::spawn_agent()`
-3. Create tasks with `ai::create_task()`
-4. Execute tasks with `ai::execute_task()`
-5. Use built-in analysis functions (`analyze_text`, `analyze_image`, `generate_text`)
+1. Configure AI provider (environment variables or `ai::configure_*` functions)
+2. Use simplified API for quick operations (`ai::classify`, `ai::generate`, `ai::embed`)
+3. For complex agent systems, use the full agent framework (`spawn_agent`, `create_task`, etc.)
+4. Use built-in analysis functions (`analyze_text`, `analyze_image`, `generate_text`)
 
 For multi-agent systems:
 1. Create coordinator with `ai::create_coordinator()`
-2. Add agents with `ai::add_agent_to_coordinator()`
-3. Define workflows with `ai::create_workflow()`
-4. Execute with `ai::execute_workflow()`
+2. Spawn agents with `ai::spawn_agent()`
+3. Create tasks with `ai::create_task()`
+4. Execute tasks with `ai::execute_task()`
+5. Define workflows with `ai::create_workflow()`
+6. Execute workflows with `ai::execute_workflow()`
 
 ---
 
 ## 📚 Next Steps
 
-1. **[AI Agent Tutorial](tutorials/02_ai_trading_agent.md)** - Build using the agent framework
-2. **[AI Best Practices](AI_BEST_PRACTICES.md)** - Security and optimization
-3. **[Full AI Implementation](../dist_agent_lang/src/stdlib/ai.rs)** - See the actual code
-4. **[API Reference](API_REFERENCE.md#6-ai-aiml-integration)** - Complete AI API docs
+1. **[AI Best Practices](AI_BEST_PRACTICES.md)** - Security and optimization
+2. **[Standard Library Reference](../STDLIB_REFERENCE.md#ai-module)** - Complete AI API docs
+3. **[Full AI Implementation](../../src/stdlib/ai.rs)** - See the actual code
+4. **[CLI Commands](../CLI_QUICK_REFERENCE.md#ai-commands)** - Command-line AI tools
 
 ---
 
-**Ready to build intelligent contracts? Start with [Tutorial: AI Trading Agent →](tutorials/02_ai_trading_agent.md)**
-
+**Ready to build intelligent contracts? Start with [AI Best Practices →](AI_BEST_PRACTICES.md)**

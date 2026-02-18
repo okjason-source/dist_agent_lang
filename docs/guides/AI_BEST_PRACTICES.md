@@ -1,6 +1,6 @@
-# 🤖 AI Best Practices for Smart Contracts (v1.0.1)
+# 🤖 AI Best Practices for Smart Contracts (v1.0.5)
 
-> **📢 Beta Release v1.0.1:** Follow these best practices for AI features. Test thoroughly before production. **Beta testing contributions welcome!** 🙏
+> **📢 Beta Release v1.0.5:** Follow these best practices for AI features. Test thoroughly before production. **Beta testing contributions welcome!** 🙏
 
 Security, performance, and reliability best practices for **AI-powered smart contracts**.
 
@@ -24,52 +24,64 @@ Security, performance, and reliability best practices for **AI-powered smart con
 
 **❌ DON'T:**
 ```dal
-@public
-function executeAIDecision() {
-    let decision = ai::generate("model", "What should I do?");
-    
-    // Dangerous! Executing without validation
-    executeTrade(decision);
+service UnsafeAIContract {
+    fn execute_ai_decision() {
+        let decision = ai::generate_text("What should I do?");
+        
+        // Dangerous! Executing without validation
+        execute_trade(decision);
+    }
 }
 ```
 
 **✅ DO:**
 ```dal
-@public
-function executeAIDecision() {
-    let decision = ai::generate("model", "What should I do?");
+@secure
+service SafeAIContract {
+    fn execute_ai_decision() {
+        let decision = ai::generate_text("What should I do?");
+        
+        // Validate AI output
+        if !is_valid_decision(decision) {
+            log::error("ai", "Invalid AI decision");
+            return;
+        }
+        if !is_within_risk_limits(decision) {
+            log::error("ai", "Exceeds risk limits");
+            return;
+        }
+        if !has_required_approvals(decision) {
+            log::error("ai", "Requires approval");
+            return;
+        }
+        
+        // Log for audit
+        log::info("ai", "AI Decision: " + decision);
+        
+        // Execute with safety checks
+        execute_trade_with_safety(decision);
+    }
     
-    // Validate AI output
-    require(isValidDecision(decision), "Invalid AI decision");
-    require(isWithinRiskLimits(decision), "Exceeds risk limits");
-    require(hasRequiredApprovals(decision), "Requires approval");
+    fn is_valid_decision(decision: string) -> bool {
+        // Validate decision format
+        if decision == "" {
+            return false;
+        }
+        
+        // Check if decision is one of allowed actions
+        return string::contains(decision, "buy") || 
+               string::contains(decision, "sell") ||
+               string::contains(decision, "hold");
+    }
     
-    // Log for audit
-    log::info("AI Decision: " + decision);
-    
-    // Execute with safety checks
-    executeTradeWithSafety(decision);
-}
-
-@private
-function isValidDecision(string memory decision) -> bool {
-    // Validate decision format
-    if (bytes(decision).length == 0) return false;
-    
-    // Check if decision is one of allowed actions
-    return string::contains(decision, "buy") || 
-           string::contains(decision, "sell") ||
-           string::contains(decision, "hold");
-}
-
-@private
-function isWithinRiskLimits(string memory decision) -> bool {
-    // Parse decision amount
-    uint256 amount = parseAmount(decision);
-    
-    // Check against risk limits
-    return amount <= maxTradeAmount && 
-           amount >= minTradeAmount;
+    fn is_within_risk_limits(decision: string) -> bool {
+        // Parse decision amount
+        let amount = parse_amount(decision);
+        
+        // Check against risk limits
+        return amount <= max_trade_amount && 
+               amount >= min_trade_amount;
+    }
 }
 ```
 
@@ -77,46 +89,38 @@ function isWithinRiskLimits(string memory decision) -> bool {
 
 **✅ DO:**
 ```dal
-@contract
 @ai
-contract SafeAIContract {
+@secure
+service SafeAIContract {
     // Circuit breaker state
-    uint256 public consecutiveAIFailures = 0;
-    uint256 constant MAX_FAILURES = 3;
-    bool public aiCircuitBreakerTripped = false;
+    consecutive_ai_failures: int = 0;
+    max_failures: int = 3;
+    ai_circuit_breaker_tripped: bool = false;
     
-    @modifier
-    modifier aiCircuitBreaker() {
-        require(!aiCircuitBreakerTripped, "AI circuit breaker tripped");
-        _;
+    fn ai_operation(input: string) {
+        if ai_circuit_breaker_tripped {
+            log::error("ai", "AI circuit breaker tripped");
+            return;
+        }
         
-        // Reset on success
-        consecutiveAIFailures = 0;
-    }
-    
-    @public
-    @aiCircuitBreaker
-    function aiOperation() {
-        try {
-            let result = ai::classify("model", input);
-            processResult(result);
-        } catch {
-            consecutiveAIFailures++;
+        let result = ai::classify("model", input);
+        if result.is_ok() {
+            process_result(result.unwrap());
+            // Reset on success
+            consecutive_ai_failures = 0;
+        } else {
+            consecutive_ai_failures = consecutive_ai_failures + 1;
             
-            if (consecutiveAIFailures >= MAX_FAILURES) {
-                aiCircuitBreakerTripped = true;
-                emit CircuitBreakerTripped("AI");
+            if consecutive_ai_failures >= max_failures {
+                ai_circuit_breaker_tripped = true;
+                log::error("ai", "Circuit breaker tripped");
             }
-            
-            revert("AI operation failed");
         }
     }
     
-    @public
-    @onlyOwner
-    function resetCircuitBreaker() {
-        aiCircuitBreakerTripped = false;
-        consecutiveAIFailures = 0;
+    fn reset_circuit_breaker() {
+        ai_circuit_breaker_tripped = false;
+        consecutive_ai_failures = 0;
     }
 }
 ```
@@ -125,39 +129,40 @@ contract SafeAIContract {
 
 **✅ DO:**
 ```dal
-mapping(address => uint256) public lastAICall;
-mapping(address => uint256) public aiCallCount;
-
-uint256 constant AI_CALL_COOLDOWN = 60 seconds;
-uint256 constant MAX_AI_CALLS_PER_DAY = 100;
-
-@modifier
-modifier rateLimitAI() {
-    // Time-based rate limiting
-    require(
-        block.timestamp - lastAICall[msg.sender] >= AI_CALL_COOLDOWN,
-        "AI call cooldown active"
-    );
+service RateLimitedAI {
+    last_ai_call: map<string, int> = {};
+    ai_call_count: map<string, int> = {};
     
-    // Daily limit
-    if (block.timestamp - lastAICall[msg.sender] > 1 days) {
-        aiCallCount[msg.sender] = 0;  // Reset daily count
+    ai_call_cooldown: int = 60; // seconds
+    max_ai_calls_per_day: int = 100;
+    
+    fn make_ai_decision(user_id: string, input: string) {
+        // Time-based rate limiting
+        let current_time = time::now();
+        let last_call = last_ai_call.get(user_id, 0);
+        
+        if current_time - last_call < ai_call_cooldown {
+            log::error("ai", "AI call cooldown active");
+            return;
+        }
+        
+        // Daily limit
+        if current_time - last_call > 86400 { // 1 day
+            ai_call_count[user_id] = 0; // Reset daily count
+        }
+        
+        if ai_call_count.get(user_id, 0) >= max_ai_calls_per_day {
+            log::error("ai", "Daily AI call limit exceeded");
+            return;
+        }
+        
+        last_ai_call[user_id] = current_time;
+        ai_call_count[user_id] = ai_call_count.get(user_id, 0) + 1;
+        
+        // Perform AI operation
+        let result = ai::classify("model", input);
+        process_result(result);
     }
-    
-    require(
-        aiCallCount[msg.sender] < MAX_AI_CALLS_PER_DAY,
-        "Daily AI call limit exceeded"
-    );
-    
-    lastAICall[msg.sender] = block.timestamp;
-    aiCallCount[msg.sender]++;
-    _;
-}
-
-@public
-@rateLimitAI
-function makeAIDecision() {
-    // AI operations
 }
 ```
 
@@ -165,28 +170,38 @@ function makeAIDecision() {
 
 **✅ DO:**
 ```dal
-@public
-function getPriceWithAIValidation() -> uint256 {
-    // Get oracle price
-    let oraclePrice = oracle::fetch("chainlink", "ETH/USD").data;
-    
-    // AI sanity check
-    let historicalPrices = getRecentPrices(10);
-    let aiValidation = ai::classify(
-        "price_validator",
-        json::stringify({
-            "current": oraclePrice,
-            "historical": historicalPrices
-        })
-    );
-    
-    require(aiValidation == "valid", "AI flagged suspicious price");
-    
-    // Additional bounds check
-    require(oraclePrice > 0, "Invalid price");
-    require(oraclePrice < 10000 * 1e18, "Price unreasonably high");
-    
-    return oraclePrice;
+service ValidatedAIOracle {
+    fn get_price_with_ai_validation() -> int {
+        // Get oracle price
+        let oracle_result = oracle::fetch("chainlink", "ETH/USD");
+        let oracle_price = oracle_result.data;
+        
+        // AI sanity check
+        let historical_prices = get_recent_prices(10);
+        let price_data = json::stringify({
+            "current": oracle_price,
+            "historical": historical_prices
+        });
+        
+        let ai_validation = ai::classify("price_validator", price_data);
+        
+        if ai_validation != "valid" {
+            log::error("ai", "AI flagged suspicious price");
+            return 0;
+        }
+        
+        // Additional bounds check
+        if oracle_price <= 0 {
+            log::error("ai", "Invalid price");
+            return 0;
+        }
+        if oracle_price > 10000 {
+            log::error("ai", "Price unreasonably high");
+            return 0;
+        }
+        
+        return oracle_price;
+    }
 }
 ```
 
@@ -194,33 +209,37 @@ function getPriceWithAIValidation() -> uint256 {
 
 **✅ DO:**
 ```dal
-@public
-function getAIConsensus(string memory input) -> string {
-    // Get predictions from multiple models
-    let model1 = ai::classify("model_a", input);
-    let model2 = ai::classify("model_b", input);
-    let model3 = ai::classify("model_c", input);
-    
-    // Require 2 out of 3 consensus
-    uint256 agreementCount = 0;
-    string memory consensus;
-    
-    if (string::equals(model1, model2)) {
-        agreementCount++;
-        consensus = model1;
+service MultiModelConsensus {
+    fn get_ai_consensus(input: string) -> string {
+        // Get predictions from multiple models
+        let model1 = ai::classify("model_a", input);
+        let model2 = ai::classify("model_b", input);
+        let model3 = ai::classify("model_c", input);
+        
+        // Require 2 out of 3 consensus
+        let agreement_count = 0;
+        let consensus = "";
+        
+        if model1 == model2 {
+            agreement_count = agreement_count + 1;
+            consensus = model1;
+        }
+        if model2 == model3 {
+            agreement_count = agreement_count + 1;
+            consensus = model2;
+        }
+        if model1 == model3 {
+            agreement_count = agreement_count + 1;
+            consensus = model1;
+        }
+        
+        if agreement_count < 2 {
+            log::error("ai", "No model consensus");
+            return "";
+        }
+        
+        return consensus;
     }
-    if (string::equals(model2, model3)) {
-        agreementCount++;
-        consensus = model2;
-    }
-    if (string::equals(model1, model3)) {
-        agreementCount++;
-        consensus = model1;
-    }
-    
-    require(agreementCount >= 2, "No model consensus");
-    
-    return consensus;
 }
 ```
 
@@ -232,41 +251,37 @@ function getAIConsensus(string memory input) -> string {
 
 **✅ DO:**
 ```dal
-// Cache structure
-struct CachedAIResult {
-    string result;
-    uint256 timestamp;
-    uint256 hitCount;
-}
-
-mapping(bytes32 => CachedAIResult) public aiCache;
-uint256 constant CACHE_DURATION = 1 hours;
-
-@public
-@view
-function getAIResultCached(string memory input) -> string {
-    bytes32 cacheKey = keccak256(abi.encodePacked(input));
-    CachedAIResult memory cached = aiCache[cacheKey];
+service CachedAI {
+    ai_cache: map<string, string> = {};
+    cache_timestamp: map<string, int> = {};
+    cache_duration: int = 3600; // 1 hour
     
-    // Check cache validity
-    if (cached.timestamp > 0 && 
-        block.timestamp - cached.timestamp < CACHE_DURATION) {
-        // Cache hit
-        aiCache[cacheKey].hitCount++;
-        return cached.result;
+    fn get_ai_result_cached(input: string) -> string {
+        let cache_key = crypto::hash(input);
+        let cached = ai_cache.get(cache_key, "");
+        let timestamp = cache_timestamp.get(cache_key, 0);
+        let current_time = time::now();
+        
+        // Check cache validity
+        if cached != "" && current_time - timestamp < cache_duration {
+            // Cache hit
+            return cached;
+        }
+        
+        // Cache miss - generate new result
+        let result = ai::classify("model", input);
+        if result.is_ok() {
+            let result_value = result.unwrap();
+            
+            // Update cache
+            ai_cache[cache_key] = result_value;
+            cache_timestamp[cache_key] = current_time;
+            
+            return result_value;
+        }
+        
+        return "";
     }
-    
-    // Cache miss - generate new result
-    string memory result = ai::classify("model", input);
-    
-    // Update cache
-    aiCache[cacheKey] = CachedAIResult({
-        result: result,
-        timestamp: block.timestamp,
-        hitCount: 1
-    });
-    
-    return result;
 }
 ```
 
@@ -274,20 +289,29 @@ function getAIResultCached(string memory input) -> string {
 
 **✅ DO:**
 ```dal
-@public
-function batchClassify(string[] memory inputs) -> string[] {
-    require(inputs.length <= 10, "Max 10 items per batch");
-    
-    string[] memory results = new string[](inputs.length);
-    
-    // Single AI call for batch
-    let batchInput = json::stringify(inputs);
-    let batchResult = ai::classify("batch_model", batchInput);
-    
-    // Parse results
-    results = json::parse(batchResult);
-    
-    return results;
+service BatchAI {
+    fn batch_classify(inputs: list<string>) -> list<string> {
+        if inputs.len() > 10 {
+            log::error("ai", "Max 10 items per batch");
+            return [];
+        }
+        
+        let results: list<string> = [];
+        
+        // Single AI call for batch
+        let batch_input = json::stringify(inputs);
+        let batch_result = ai::classify("batch_model", batch_input);
+        
+        if batch_result.is_ok() {
+            // Parse results
+            let parsed = json::parse(batch_result.unwrap());
+            if parsed.is_ok() {
+                return parsed.unwrap();
+            }
+        }
+        
+        return results;
+    }
 }
 ```
 
@@ -295,24 +319,25 @@ function batchClassify(string[] memory inputs) -> string[] {
 
 **✅ DO:**
 ```dal
-@public
-@async
-async function analyzeInBackground(string memory data) {
-    // Non-blocking AI operation
-    let analysis = await ai::analyze("model", data);
+service AsyncAI {
+    fn analyze_in_background(data: string) {
+        // Non-blocking AI operation
+        spawn {
+            let analysis = ai::analyze_text(data);
+            if analysis.is_ok() {
+                process_analysis(analysis.unwrap());
+            }
+        };
+    }
     
-    // Process results asynchronously
-    await processAnalysis(analysis);
-}
-
-// Critical path doesn't wait
-@public
-function criticalOperation() {
-    // Start analysis in background
-    analyzeInBackground(data);
-    
-    // Continue with critical operations
-    executeCriticalLogic();
+    // Critical path doesn't wait
+    fn critical_operation() {
+        // Start analysis in background
+        analyze_in_background("data");
+        
+        // Continue with critical operations
+        execute_critical_logic();
+    }
 }
 ```
 
@@ -324,33 +349,38 @@ function criticalOperation() {
 
 **✅ DO:**
 ```dal
-@public
-@view
-function estimateAICost(string memory operation) -> uint256 {
-    // Cost varies by operation
-    if (string::equals(operation, "classify")) {
-        return 0.001 ether;  // Classification cost
-    } else if (string::equals(operation, "generate")) {
-        return 0.01 ether;   // Generation cost (higher)
-    } else if (string::equals(operation, "embed")) {
-        return 0.0005 ether; // Embedding cost
+service CostAwareAI {
+    fn estimate_ai_cost(operation: string) -> int {
+        // Cost varies by operation
+        if operation == "classify" {
+            return 1000; // Classification cost
+        } else if operation == "generate" {
+            return 10000; // Generation cost (higher)
+        } else if operation == "embed" {
+            return 500; // Embedding cost
+        }
+        
+        return 5000; // Default
     }
     
-    return 0.005 ether;  // Default
-}
-
-@public
-payable
-function performAIOperation(string memory operation) {
-    uint256 estimatedCost = estimateAICost(operation);
-    require(msg.value >= estimatedCost, "Insufficient payment");
-    
-    // Perform operation
-    performOperation(operation);
-    
-    // Refund excess
-    if (msg.value > estimatedCost) {
-        payable(msg.sender).transfer(msg.value - estimatedCost);
+    fn perform_ai_operation(user_id: string, operation: string, payment: int) {
+        let estimated_cost = estimate_ai_cost(operation);
+        
+        if payment < estimated_cost {
+            log::error("ai", "Insufficient payment");
+            return;
+        }
+        
+        // Perform operation
+        if operation == "classify" {
+            let result = ai::classify("model", "input");
+            process_result(result);
+        }
+        
+        // Refund excess
+        if payment > estimated_cost {
+            refund(user_id, payment - estimated_cost);
+        }
     }
 }
 ```
@@ -359,15 +389,16 @@ function performAIOperation(string memory operation) {
 
 **✅ DO:**
 ```dal
-@public
-function classifyWithOptimalModel(string memory input) -> string {
-    // Use simple model for short inputs
-    if (bytes(input).length < 100) {
-        return ai::classify("fast_model", input);  // Cheaper
+service OptimalModelSelection {
+    fn classify_with_optimal_model(input: string) -> string {
+        // Use simple model for short inputs
+        if input.len() < 100 {
+            return ai::classify("fast_model", input).unwrap_or(""); // Cheaper
+        }
+        
+        // Use advanced model for complex inputs
+        return ai::classify("advanced_model", input).unwrap_or(""); // More expensive but accurate
     }
-    
-    // Use advanced model for complex inputs
-    return ai::classify("advanced_model", input);   // More expensive but accurate
 }
 ```
 
@@ -375,31 +406,40 @@ function classifyWithOptimalModel(string memory input) -> string {
 
 **✅ DO:**
 ```dal
-uint256 public dailyAIBudget = 1 ether;
-uint256 public dailyAISpent = 0;
-uint256 public lastBudgetReset;
-
-@modifier
-modifier withinBudget(uint256 cost) {
-    // Reset daily budget
-    if (block.timestamp - lastBudgetReset > 1 days) {
-        dailyAISpent = 0;
-        lastBudgetReset = block.timestamp;
+service BudgetLimitedAI {
+    daily_ai_budget: int = 1000000; // 1 ETH equivalent
+    daily_ai_spent: int = 0;
+    last_budget_reset: int = 0;
+    
+    fn within_budget(cost: int) -> bool {
+        let current_time = time::now();
+        
+        // Reset daily budget
+        if current_time - last_budget_reset > 86400 { // 1 day
+            daily_ai_spent = 0;
+            last_budget_reset = current_time;
+        }
+        
+        if daily_ai_spent + cost > daily_ai_budget {
+            log::error("ai", "Daily AI budget exceeded");
+            return false;
+        }
+        
+        daily_ai_spent = daily_ai_spent + cost;
+        return true;
     }
     
-    require(
-        dailyAISpent + cost <= dailyAIBudget,
-        "Daily AI budget exceeded"
-    );
-    
-    dailyAISpent += cost;
-    _;
-}
-
-@public
-@withinBudget(0.01 ether)
-function expensiveAIOperation() {
-    // Operation that costs 0.01 ETH
+    fn expensive_ai_operation() {
+        let cost = 10000; // 0.01 ETH equivalent
+        
+        if !within_budget(cost) {
+            return;
+        }
+        
+        // Operation that costs 0.01 ETH
+        let result = ai::generate_text("complex prompt");
+        process_result(result);
+    }
 }
 ```
 
@@ -411,39 +451,44 @@ function expensiveAIOperation() {
 
 **✅ DO:**
 ```dal
-@public
-function getDecisionWithFallback() -> string {
-    // Try AI first
-    try {
-        let decision = ai::generate("primary_model", input);
-        if (isValidDecision(decision)) {
-            return decision;
+service FallbackAI {
+    fn get_decision_with_fallback(input: string) -> string {
+        // Try AI first
+        let decision = ai::generate_text("primary_model: " + input);
+        if decision.is_ok() {
+            let decision_value = decision.unwrap();
+            if is_valid_decision(decision_value) {
+                return decision_value;
+            }
         }
-    } catch {
-        log::warn("Primary AI model failed");
+        
+        log::warn("ai", "Primary AI model failed");
+        
+        // Fallback to secondary model
+        let decision2 = ai::generate_text("fallback_model: " + input);
+        if decision2.is_ok() {
+            let decision_value = decision2.unwrap();
+            if is_valid_decision(decision_value) {
+                return decision_value;
+            }
+        }
+        
+        log::warn("ai", "Fallback AI model failed");
+        
+        // Ultimate fallback: rule-based decision
+        return get_rule_based_decision(input);
     }
     
-    // Fallback to secondary model
-    try {
-        let decision = ai::generate("fallback_model", input);
-        if (isValidDecision(decision)) {
-            return decision;
+    fn get_rule_based_decision(input: string) -> string {
+        // Simple rule-based logic as last resort
+        let current_price = get_current_price();
+        let average_price = get_average_price();
+        
+        if current_price > average_price {
+            return "sell";
+        } else {
+            return "buy";
         }
-    } catch {
-        log::warn("Fallback AI model failed");
-    }
-    
-    // Ultimate fallback: rule-based decision
-    return getRuleBasedDecision(input);
-}
-
-@private
-function getRuleBasedDecision(string memory input) -> string {
-    // Simple rule-based logic as last resort
-    if (getCurrentPrice() > getAveragePrice()) {
-        return "sell";
-    } else {
-        return "buy";
     }
 }
 ```
@@ -452,21 +497,28 @@ function getRuleBasedDecision(string memory input) -> string {
 
 **✅ DO:**
 ```dal
-@public
-function aiOperationWithTimeout(string memory input) -> string {
-    uint256 startTime = block.timestamp;
-    uint256 timeout = 30 seconds;
-    
-    // Start AI operation
-    let result = ai::classify("model", input);
-    
-    // Check if operation completed in time
-    require(
-        block.timestamp - startTime < timeout,
-        "AI operation timed out"
-    );
-    
-    return result;
+service TimeoutAwareAI {
+    fn ai_operation_with_timeout(input: string) -> string {
+        let start_time = time::now();
+        let timeout = 30; // 30 seconds
+        
+        // Start AI operation
+        let result = ai::classify("model", input);
+        
+        if result.is_ok() {
+            let elapsed = time::now() - start_time;
+            
+            // Check if operation completed in time
+            if elapsed < timeout {
+                return result.unwrap();
+            } else {
+                log::error("ai", "AI operation timed out");
+                return "";
+            }
+        }
+        
+        return "";
+    }
 }
 ```
 
@@ -474,31 +526,19 @@ function aiOperationWithTimeout(string memory input) -> string {
 
 **✅ DO:**
 ```dal
-event AIOperationFailed(
-    string operation,
-    string input,
-    string error,
-    uint256 timestamp
-);
-
-@public
-function aiOperationWithLogging(string memory input) {
-    try {
+service LoggedAI {
+    fn ai_operation_with_logging(input: string) {
         let result = ai::classify("model", input);
-        processResult(result);
-    } catch Error(string memory reason) {
-        // Log failure
-        emit AIOperationFailed(
-            "classify",
-            input,
-            reason,
-            block.timestamp
-        );
         
-        log::error("AI operation failed: " + reason);
-        
-        // Use fallback
-        useFallbackLogic();
+        if result.is_ok() {
+            process_result(result.unwrap());
+        } else {
+            // Log failure
+            log::error("ai", "AI operation failed: " + result.unwrap_err());
+            
+            // Use fallback
+            use_fallback_logic();
+        }
     }
 }
 ```
@@ -511,31 +551,28 @@ function aiOperationWithLogging(string memory input) {
 
 **✅ DO:**
 ```dal
-// Test mode flag
-bool public testMode = false;
-mapping(string => string) public mockResponses;
-
-@public
-@onlyOwner
-function setTestMode(bool enabled) {
-    testMode = enabled;
-}
-
-@public
-@onlyOwner
-function setMockResponse(string memory input, string memory response) {
-    mockResponses[input] = response;
-}
-
-@public
-function getAIResult(string memory input) -> string {
-    if (testMode) {
-        // Return mock response in test mode
-        return mockResponses[input];
+service TestableAI {
+    test_mode: bool = false;
+    mock_responses: map<string, string> = {};
+    
+    fn set_test_mode(enabled: bool) {
+        test_mode = enabled;
     }
     
-    // Real AI call in production
-    return ai::classify("model", input);
+    fn set_mock_response(input: string, response: string) {
+        mock_responses[input] = response;
+    }
+    
+    fn get_ai_result(input: string) -> string {
+        if test_mode {
+            // Return mock response in test mode
+            return mock_responses.get(input, "");
+        }
+        
+        // Real AI call in production
+        let result = ai::classify("model", input);
+        return result.unwrap_or("");
+    }
 }
 ```
 
@@ -543,26 +580,33 @@ function getAIResult(string memory input) -> string {
 
 **✅ DO:**
 ```dal
-@property_test("AI results should be consistent")
-function prop_aiConsistency(string memory input) {
-    // Same input should give same output (within cache period)
-    let result1 = ai::classify("model", input);
-    let result2 = ai::classify("model", input);
+service TestableAIConsistency {
+    fn test_ai_consistency(input: string) -> bool {
+        // Same input should give same output (within cache period)
+        let result1 = ai::classify("model", input);
+        let result2 = ai::classify("model", input);
+        
+        if result1.is_ok() && result2.is_ok() {
+            return result1.unwrap() == result2.unwrap();
+        }
+        
+        return false;
+    }
     
-    assert_eq(result1, result2, "AI results should be consistent");
-}
-
-@property_test("AI results should be valid")
-function prop_aiValidOutput(string memory input) {
-    let result = ai::classify("sentiment_model", input);
-    
-    // Result should be one of valid sentiments
-    assert_true(
-        result == "positive" || 
-        result == "negative" || 
-        result == "neutral",
-        "AI should return valid sentiment"
-    );
+    fn test_ai_valid_output(input: string) -> bool {
+        let result = ai::classify("sentiment_model", input);
+        
+        if result.is_ok() {
+            let classification = result.unwrap();
+            
+            // Result should be one of valid sentiments
+            return classification == "positive" || 
+                   classification == "negative" || 
+                   classification == "neutral";
+        }
+        
+        return false;
+    }
 }
 ```
 
@@ -582,21 +626,22 @@ function prop_aiValidOutput(string memory input) {
 
 **✅ DO:**
 ```dal
-@public
-function selectOptimalModel(string memory taskType, uint256 urgency) -> string {
-    if (string::equals(taskType, "sentiment")) {
-        return "sentiment_model";  // Fast and cheap
-    } else if (string::equals(taskType, "generation")) {
-        if (urgency > 8) {
-            return "llama-3";  // Faster, cheaper
-        } else {
-            return "gpt-4";    // Better quality
+service OptimalModelSelection {
+    fn select_optimal_model(task_type: string, urgency: int) -> string {
+        if task_type == "sentiment" {
+            return "sentiment_model"; // Fast and cheap
+        } else if task_type == "generation" {
+            if urgency > 8 {
+                return "llama-3"; // Faster, cheaper
+            } else {
+                return "gpt-4"; // Better quality
+            }
+        } else if task_type == "prediction" {
+            return "price_model";
         }
-    } else if (string::equals(taskType, "prediction")) {
-        return "price_model";
+        
+        return "default_model";
     }
-    
-    return "default_model";
 }
 ```
 
@@ -608,35 +653,39 @@ function selectOptimalModel(string memory taskType, uint256 urgency) -> string {
 
 **❌ DON'T:**
 ```dal
-@public
-function dangerousAILoop() {
-    while (true) {
-        let decision = ai::generate("model", "What next?");
-        execute(decision);
-        // Infinite loop! No exit condition!
+service DangerousAI {
+    fn dangerous_ai_loop() {
+        loop {
+            let decision = ai::generate_text("What next?");
+            execute(decision);
+            // Infinite loop! No exit condition!
+        }
     }
 }
 ```
 
 **✅ DO:**
 ```dal
-@public
-function safeAILoop() {
-    uint256 maxIterations = 10;
-    uint256 iterations = 0;
-    
-    while (iterations < maxIterations) {
-        let decision = ai::generate("model", "What next?");
+service SafeAI {
+    fn safe_ai_loop() {
+        let max_iterations = 10;
+        let iterations = 0;
         
-        if (string::equals(decision, "stop")) {
-            break;  // Exit condition
+        while iterations < max_iterations {
+            let decision = ai::generate_text("What next?");
+            
+            if decision == "stop" {
+                break; // Exit condition
+            }
+            
+            execute(decision);
+            iterations = iterations + 1;
         }
         
-        execute(decision);
-        iterations++;
+        if iterations >= max_iterations {
+            log::error("ai", "Max iterations reached");
+        }
     }
-    
-    require(iterations < maxIterations, "Max iterations reached");
 }
 ```
 
@@ -644,24 +693,35 @@ function safeAILoop() {
 
 **❌ DON'T:**
 ```dal
-@public
-function ignoreConfidence() {
-    let result = ai::classify("model", input);
-    // Using result without checking confidence!
-    execute(result);
+service IgnoreConfidence {
+    fn ignore_confidence(input: string) {
+        let result = ai::classify("model", input);
+        // Using result without checking confidence!
+        execute(result);
+    }
 }
 ```
 
 **✅ DO:**
 ```dal
-@public
-function checkConfidence() {
-    let result = ai::classify_with_confidence("model", input);
-    
-    require(result.confidence > 0.8, "Low confidence prediction");
-    
-    // Only use high-confidence results
-    execute(result.prediction);
+service CheckConfidence {
+    fn check_confidence(input: string) {
+        let analysis = ai::analyze_text(input);
+        
+        if analysis.is_ok() {
+            let analysis_value = analysis.unwrap();
+            
+            if analysis_value.confidence > 0.8 {
+                // Only use high-confidence results
+                let classification = ai::classify("model", input);
+                if classification.is_ok() {
+                    execute(classification.unwrap());
+                }
+            } else {
+                log::warn("ai", "Low confidence prediction");
+            }
+        }
+    }
 }
 ```
 
@@ -669,23 +729,23 @@ function checkConfidence() {
 
 **✅ DO:**
 ```dal
-string public currentModelVersion = "v1.0";
-mapping(string => bool) public approvedModels;
-
-@public
-@onlyOwner
-function approveModel(string memory version) {
-    approvedModels[version] = true;
-}
-
-@public
-function useApprovedModel(string memory input) -> string {
-    require(
-        approvedModels[currentModelVersion],
-        "Model version not approved"
-    );
+service ModelVersioning {
+    current_model_version: string = "v1.0";
+    approved_models: map<string, bool> = {};
     
-    return ai::classify(currentModelVersion, input);
+    fn approve_model(version: string) {
+        approved_models[version] = true;
+    }
+    
+    fn use_approved_model(input: string) -> string {
+        if !approved_models.get(current_model_version, false) {
+            log::error("ai", "Model version not approved");
+            return "";
+        }
+        
+        let result = ai::classify(current_model_version, input);
+        return result.unwrap_or("");
+    }
 }
 ```
 
@@ -694,11 +754,10 @@ function useApprovedModel(string memory input) -> string {
 ## 📚 Additional Resources
 
 - [AI Features Guide](AI_FEATURES_GUIDE.md) - Complete AI capabilities overview
-- [AI Trading Agent Tutorial](tutorials/02_ai_trading_agent.md) - Build an AI agent
-- [Best Practices](BEST_PRACTICES.md) - General smart contract best practices
-- [Security Guide](SECURITY_GUIDE.md) - Security deep dive
+- [Best Practices](../BEST_PRACTICES.md) - General smart contract best practices
+- [Security Guide](../SECURITY_GUIDE.md) - Security deep dive
+- [Standard Library Reference](../STDLIB_REFERENCE.md#ai-module) - AI module API
 
 ---
 
-**Next:** [Build Your First AI Agent →](tutorials/02_ai_trading_agent.md)
-
+**Next:** [AI Features Guide →](AI_FEATURES_GUIDE.md)

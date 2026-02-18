@@ -1,6 +1,6 @@
 # 👔 CloudAdmin Guide: Hybrid Trust & Administrative Control
 
-> **📢 Beta Release v1.0.1:** CloudAdmin is actively maintained with consistent updates. Test thoroughly before production. **Beta testing contributions appreciated!** 🙏
+> **📢 Beta Release v1.0.5:** CloudAdmin is actively maintained with consistent updates. Test thoroughly before production. **Beta testing contributions appreciated!** 🙏
 
 **Complete guide to CloudAdmin security architecture for hybrid applications**
 
@@ -16,10 +16,11 @@
 6. [Policy Enforcement](#policy-enforcement)
 7. [Hybrid Trust Model](#hybrid-trust-model)
 8. [Process Management](#process-management)
-9. [API Reference](#api-reference)
-10. [Examples](#examples)
-11. [Best Practices](#best-practices)
-12. [Security Considerations](#security-considerations)
+9. [CLI Commands](#cli-commands)
+10. [API Reference](#api-reference)
+11. [Examples](#examples)
+12. [Best Practices](#best-practices)
+13. [Security Considerations](#security-considerations)
 
 ---
 
@@ -111,7 +112,12 @@ Flexible policy-based security
 
 ```dal
 let context = cloudadmin::create_admin_context(admin_id, "admin");
-let allowed = cloudadmin::enforce_policy("moderate", context);
+if context != null {
+    let allowed = cloudadmin::enforce_policy("moderate", context);
+    if allowed.is_ok() && allowed.unwrap() {
+        // Proceed with operation
+    }
+}
 ```
 
 ### 3. **Hybrid Trust Validation** ✅
@@ -260,8 +266,12 @@ CloudAdmin supports **three policy levels** for flexible security:
 - **Example**:
   ```dal
   let context = cloudadmin::create_admin_context("admin_id", "superadmin");
-  let allowed = cloudadmin::enforce_policy("strict", context);
-  // Returns: true only if admin is SuperAdmin
+  if context != null {
+      let allowed = cloudadmin::enforce_policy("strict", context);
+      if allowed.is_ok() && allowed.unwrap() {
+          // Proceed with strict operation
+      }
+  }
   ```
 
 ### 2. **Moderate Policy** 🛡️
@@ -270,8 +280,12 @@ CloudAdmin supports **three policy levels** for flexible security:
 - **Example**:
   ```dal
   let context = cloudadmin::create_admin_context("admin_id", "admin");
-  let allowed = cloudadmin::enforce_policy("moderate", context);
-  // Returns: true if admin is Admin or SuperAdmin
+  if context != null {
+      let allowed = cloudadmin::enforce_policy("moderate", context);
+      if allowed.is_ok() && allowed.unwrap() {
+          // Proceed with moderate operation
+      }
+  }
   ```
 
 ### 3. **Permissive Policy** 🔓
@@ -280,28 +294,27 @@ CloudAdmin supports **three policy levels** for flexible security:
 - **Example**:
   ```dal
   let context = cloudadmin::create_admin_context("user_id", "user");
-  let allowed = cloudadmin::enforce_policy("permissive", context);
-  // Returns: true for all users
+  if context != null {
+      let allowed = cloudadmin::enforce_policy("permissive", context);
+      if allowed.is_ok() && allowed.unwrap() {
+          // Proceed with permissive operation
+      }
+  }
   ```
 
-### Creating Admin Context:
+### Environment Variable Overrides:
 
-```dal
-// Create context with admin level
-let context = cloudadmin::create_admin_context(admin_id, "admin");
+You can override policy requirements via environment variables:
 
-// Add permissions
-context = context.with_permissions(["read_users", "write_config"]);
+```bash
+# Require SuperAdmin for strict policy
+export POLICY_STRICT_LEVEL=superadmin
 
-// Add metadata
-context = context.with_metadata({
-    "department": "engineering",
-    "region": "us-west",
-    "clearance_level": 3
-});
+# Require Admin for moderate policy
+export POLICY_MODERATE_LEVEL=admin
 
-// Enforce policy
-let allowed = cloudadmin::enforce_policy("moderate", context);
+# Allow all users for permissive policy
+export POLICY_PERMISSIVE_LEVEL=user
 ```
 
 ---
@@ -339,7 +352,7 @@ service HybridMarketplace {
         
         if is_trusted {
             // Create listing with both admin and user trust
-            chain::create_nft(listing_data);
+            chain::deploy(1, "ListingContract", [listing_data]);
         } else {
             log::error("hybrid", "Trust validation failed");
         }
@@ -415,7 +428,7 @@ let result = admin::kill("agent_123", "resource_violation");
 if result.is_ok() {
     log::info("admin", "Agent terminated successfully");
 } else {
-    log::error("admin", "Failed to terminate: " + result.error());
+    log::error("admin", "Failed to terminate: " + result.unwrap_err());
 }
 ```
 
@@ -449,8 +462,10 @@ if info.is_ok() {
     let process = info.unwrap();
     log::info("admin", "Process: " + process.name);
     log::info("admin", "Status: " + process.status);
-    log::info("admin", "CPU: " + process.resource_usage["cpu"]);
-    log::info("admin", "Memory: " + process.resource_usage["memory"]);
+    let cpu = process.resource_usage["cpu"];
+    let memory = process.resource_usage["memory"];
+    log::info("admin", "CPU: " + cpu.to_string());
+    log::info("admin", "Memory: " + memory.to_string());
 }
 ```
 
@@ -475,6 +490,88 @@ for process in processes {
 
 ---
 
+## 💻 CLI Commands
+
+CloudAdmin provides CLI commands via `dal cloud`:
+
+### Authorization
+
+```bash
+# Check if user is authorized for operation
+dal cloud authorize <user_id> <operation> <resource>
+
+# Example
+dal cloud authorize user_123 read config/db
+dal cloud authorize admin_456 write /data/users
+```
+
+### Admin Management
+
+```bash
+# Grant admin role to user
+dal cloud grant <user_id> <role> <scope>
+
+# Roles: superadmin, admin, moderator, user
+# Example
+dal cloud grant user_123 admin ec2:admin
+
+# Revoke admin role
+dal cloud revoke <user_id>
+
+# List user roles
+dal cloud roles <user_id>
+```
+
+### Trust Operations
+
+```bash
+# Validate hybrid trust
+dal cloud trust validate <admin_trust> <user_trust>
+
+# Example
+dal cloud trust validate valid valid
+
+# Bridge trusts
+dal cloud trust bridge <centralized_trust> <decentralized_trust>
+
+# Example
+dal cloud trust bridge admin user
+```
+
+### Audit & Compliance
+
+```bash
+# View audit log (instructions)
+dal cloud audit-log
+
+# View policies
+dal cloud policies
+
+# Compliance scan
+dal cloud compliance scan [--standard SOC2|HIPAA|GDPR]
+
+# Generate compliance report
+dal cloud compliance report <standard> [-o file]
+```
+
+### Chain Logging
+
+```bash
+# Log event to blockchain
+dal cloud chain-log "<event>" [--chain_id <id>]
+
+# Example
+dal cloud chain-log "user_123 deleted resource" --chain_id 1
+
+# Verify chain log
+dal cloud chain-verify <log_id>
+
+# Export chain logs
+dal cloud chain-export
+```
+
+---
+
 ## 📚 API Reference
 
 ### cloudadmin:: Module
@@ -489,6 +586,11 @@ Check if admin is authorized for operation on resource.
 
 **Returns:** `bool` - true if authorized
 
+**Implementation Notes:**
+- First checks key registry (`key::check`)
+- Then checks admin registry (from `ADMIN_IDS` env or `trust::register_admin`)
+- Falls back to built-in rules
+
 ---
 
 #### `enforce_policy(policy_name, context) -> Result<bool, string>`
@@ -500,6 +602,11 @@ Enforce admin policy based on context.
 
 **Returns:** `Result<bool, string>` - Success or error message
 
+**Policy Levels:**
+- `"strict"` - Requires SuperAdmin (or `POLICY_STRICT_LEVEL` env override)
+- `"moderate"` - Requires Admin or SuperAdmin (or `POLICY_MODERATE_LEVEL` env override)
+- `"permissive"` - Allows all users (or `POLICY_PERMISSIVE_LEVEL` env override)
+
 ---
 
 #### `validate_hybrid_trust(admin_trust, user_trust) -> bool`
@@ -509,7 +616,7 @@ Validate hybrid trust between admin and user.
 - `admin_trust: string` - Admin trust status ("valid" or "invalid")
 - `user_trust: string` - User trust status ("valid" or "invalid")
 
-**Returns:** `bool` - true if both are valid
+**Returns:** `bool` - true if both are "valid"
 
 ---
 
@@ -520,7 +627,7 @@ Bridge centralized admin trust with decentralized user trust.
 - `centralized_trust: string` - Centralized trust type ("admin" or other)
 - `decentralized_trust: string` - Decentralized trust type ("user" or other)
 
-**Returns:** `bool` - true if compatible
+**Returns:** `bool` - true if compatible (centralized="admin" AND decentralized="user")
 
 ---
 
@@ -531,7 +638,15 @@ Create a new admin context.
 - `admin_id: string` - Admin identifier
 - `level: string` - Admin level (superadmin, admin, moderator, user)
 
-**Returns:** `Option<AdminContext>` - Context or None if invalid level
+**Returns:** `Option<AdminContext>` - Context or null if invalid level
+
+**Note:** In DAL, check for `null` before using the context:
+```dal
+let context = cloudadmin::create_admin_context(admin_id, "admin");
+if context != null {
+    // Use context
+}
+```
 
 ---
 
@@ -542,9 +657,14 @@ Terminate process or agent.
 
 **Parameters:**
 - `process_id: string` - Process identifier
-- `reason: string` - Termination reason (required)
+- `reason: string` - Termination reason (required, cannot be empty)
 
 **Returns:** `Result<bool, string>` - Success or error message
+
+**Errors:**
+- Empty reason: `"Kill reason is required"`
+- Process not found: `"Process not found: <id>"`
+- System process: `"Cannot kill system processes"`
 
 ---
 
@@ -555,6 +675,13 @@ Get detailed process information.
 - `process_id: string` - Process identifier
 
 **Returns:** `Result<ProcessInfo, string>` - Process info or error
+
+**ProcessInfo Fields:**
+- `process_id: string`
+- `name: string`
+- `status: string` (e.g., "running", "stopped", "error")
+- `start_time: int` (Unix timestamp)
+- `resource_usage: map<string, any>` (e.g., `{"cpu": 45, "memory": 1024}`)
 
 ---
 
@@ -584,13 +711,16 @@ service ModeratedMarketplace {
             return false;
         }
         
-        // Create admin context
+        // Create admin context and enforce policy
         let context = cloudadmin::create_admin_context(admin_id, "admin");
-        let policy_ok = cloudadmin::enforce_policy("moderate", context);
+        if context == null {
+            return false;
+        }
         
+        let policy_ok = cloudadmin::enforce_policy("moderate", context);
         if policy_ok.is_ok() && policy_ok.unwrap() {
             // Approve listing on blockchain
-            chain::update_listing(listing_id, "approved");
+            chain::call(1, contract_address, "approveListing", [listing_id]);
             log::audit("marketplace", "Listing approved by admin");
             return true;
         }
@@ -599,7 +729,7 @@ service ModeratedMarketplace {
     }
     
     // User creates listing (decentralized)
-    fn create_listing(user_id: string, item_data: map) -> bool {
+    fn create_listing(user_id: string, item_data: map<string, any>) -> bool {
         // Verify user signature
         let user_verified = auth::verify_session();
         let user_trust = if user_verified { "valid" } else { "invalid" };
@@ -611,7 +741,7 @@ service ModeratedMarketplace {
         let is_trusted = cloudadmin::validate_hybrid_trust(admin_trust, user_trust);
         
         if is_trusted {
-            chain::create_listing(user_id, item_data);
+            chain::deploy(1, "ListingContract", [user_id, item_data]);
             return true;
         }
         
@@ -633,8 +763,8 @@ service AIAgentManager {
         for process in processes {
             if process.name.starts_with("ai_agent_") {
                 // Check resource usage
-                let cpu = process.resource_usage["cpu"].as_int();
-                let memory = process.resource_usage["memory"].as_int();
+                let cpu = process.resource_usage["cpu"];
+                let memory = process.resource_usage["memory"];
                 
                 // Kill if exceeding limits
                 if cpu > 80 || memory > 4096 {
@@ -652,11 +782,12 @@ service AIAgentManager {
     fn override_decision(decision_id: string, admin_id: string, new_decision: string) {
         // Check SuperAdmin level for overrides
         let context = cloudadmin::create_admin_context(admin_id, "superadmin");
-        let allowed = cloudadmin::enforce_policy("strict", context);
-        
-        if allowed.is_ok() && allowed.unwrap() {
-            ai::update_decision(decision_id, new_decision);
-            log::audit("ai_manager", "Decision overridden by admin");
+        if context != null {
+            let allowed = cloudadmin::enforce_policy("strict", context);
+            if allowed.is_ok() && allowed.unwrap() {
+                ai::update_decision(decision_id, new_decision);
+                log::audit("ai_manager", "Decision overridden by admin");
+            }
         }
     }
 }
@@ -666,7 +797,7 @@ service AIAgentManager {
 
 ```dal
 @trust("hybrid")
-@chain("ethereum,polygon")
+@chain("ethereum", "polygon")
 service AdminControlledBridge {
     // Bridge assets with admin approval
     fn bridge_assets(
@@ -692,7 +823,7 @@ service AdminControlledBridge {
             chain::lock_assets(from_chain, amount);
             chain::mint_assets(to_chain, amount, user_address);
             
-            log::audit("bridge", "Bridged " + amount + " from " + from_chain + " to " + to_chain);
+            log::audit("bridge", "Bridged " + amount.to_string() + " from " + from_chain + " to " + to_chain);
             return true;
         }
         
@@ -722,11 +853,21 @@ perform_operation(); // ❌
 ```dal
 // Good - Strict for critical operations
 let context = cloudadmin::create_admin_context(admin_id, "superadmin");
-cloudadmin::enforce_policy("strict", context);
+if context != null {
+    let allowed = cloudadmin::enforce_policy("strict", context);
+    if allowed.is_ok() && allowed.unwrap() {
+        perform_critical_operation();
+    }
+}
 
 // Good - Moderate for standard operations
 let context = cloudadmin::create_admin_context(admin_id, "admin");
-cloudadmin::enforce_policy("moderate", context);
+if context != null {
+    let allowed = cloudadmin::enforce_policy("moderate", context);
+    if allowed.is_ok() && allowed.unwrap() {
+        perform_standard_operation();
+    }
+}
 ```
 
 ### 3. **Provide Clear Termination Reasons** ✅
@@ -743,6 +884,7 @@ admin::kill(process_id, ""); // ❌ Empty reason
 let result = cloudadmin::authorize(admin_id, "delete", resource);
 if result {
     log::audit("cloudadmin", "Admin " + admin_id + " deleted " + resource);
+    perform_delete();
 }
 ```
 
@@ -750,6 +892,9 @@ if result {
 ```dal
 // Good - Validate both admin and user
 let is_trusted = cloudadmin::validate_hybrid_trust(admin_trust, user_trust);
+if is_trusted {
+    perform_sensitive_operation();
+}
 
 // Bad - Only one trust model
 if admin_trust == "valid" { } // ❌ Missing user validation
@@ -760,22 +905,26 @@ if admin_trust == "valid" { } // ❌ Missing user validation
 // Good - Regular monitoring
 let info = admin::get_process_info(process_id);
 if info.is_ok() {
-    let cpu = info.unwrap().resource_usage["cpu"];
+    let process = info.unwrap();
+    let cpu = process.resource_usage["cpu"];
     if cpu > threshold {
         admin::kill(process_id, "excessive_cpu_usage");
     }
 }
 ```
 
-### 7. **Use Context with Metadata** ✅
+### 7. **Check Context Before Use** ✅
 ```dal
-// Good - Rich context
-let context = cloudadmin::create_admin_context(admin_id, "admin")
-    .with_permissions(["read_users", "write_config"])
-    .with_metadata({
-        "department": "ops",
-        "session_id": session_id
-    });
+// Good - Null check
+let context = cloudadmin::create_admin_context(admin_id, "admin");
+if context != null {
+    let allowed = cloudadmin::enforce_policy("moderate", context);
+    // Use context
+}
+
+// Bad - No null check
+let context = cloudadmin::create_admin_context(admin_id, "admin");
+let allowed = cloudadmin::enforce_policy("moderate", context); // ❌ May fail if context is null
 ```
 
 ---
@@ -789,7 +938,7 @@ let context = cloudadmin::create_admin_context(admin_id, "admin")
 - Regular credential rotation
 
 ### 2. **Operation Auditing** 📝
-- Log all admin actions
+- Log all admin actions using `log::audit()`
 - Track authorization attempts
 - Monitor policy enforcement
 - Alert on suspicious patterns
@@ -830,9 +979,10 @@ let context = cloudadmin::create_admin_context(admin_id, "admin")
 
 1. **Read the API Reference** - Understand all functions
 2. **Try the Examples** - Run sample code
-3. **Implement CloudAdmin** - Add to your application
-4. **Test Thoroughly** - Validate all security scenarios
-5. **Monitor in Production** - Track admin actions and process health
+3. **Use CLI Commands** - Test with `dal cloud` commands
+4. **Implement CloudAdmin** - Add to your application
+5. **Test Thoroughly** - Validate all security scenarios
+6. **Monitor in Production** - Track admin actions and process health
 
 ---
 
@@ -848,16 +998,15 @@ CloudAdmin is actively developed. Contributions welcome:
 
 ## 📚 Related Documentation
 
-- [Trust Model Guide](TRUST_MODEL_GUIDE.md)
-- [Security Best Practices](BEST_PRACTICES.md#security)
-- [Process Management](PROCESS_MANAGEMENT_GUIDE.md)
-- [Hybrid Applications](HYBRID_INTEGRATION_GUIDE.md)
-- [Admin Module API](API_REFERENCE.md#admin-module)
+- [Trust Module](../STDLIB_REFERENCE.md#trust-module) - Underlying trust system
+- [Security Best Practices](BEST_PRACTICES.md#security) - General security guidelines
+- [Hybrid Integration Guide](HYBRID_INTEGRATION_GUIDE.md) - Hybrid system patterns
+- [CLI Reference](../CLI_QUICK_REFERENCE.md#cloud--enterprise-phase-4) - Complete CLI documentation
 
 ---
 
 **CloudAdmin: Bridging Centralized Control with Decentralized Trust** 🌉
 
-**Version**: v1.0.1 (Beta Release)  
+**Version**: v1.0.5 (Beta Release)  
 **Status**: Actively Developed  
 **Contributions**: Welcome!
