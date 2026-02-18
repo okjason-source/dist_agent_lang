@@ -1,0 +1,24 @@
+--- src/lib.rs
++++ replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+@@ -63,20 +63,17 @@
+         ).into());
+     }
+     
+     let mut parser = Parser::new_with_positions(tokens_with_pos);
+     parser.parse().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+ }
+ 
+ pub fn execute_source(source: &str) -> Result<Value, Box<dyn std::error::Error>> {
+-    let program = parse_source(source)?;
+-    let mut runtime = Runtime::new();
+-    let result = runtime.execute_program(program).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+-    Ok(result.unwrap_or(Value::Null))
++    Ok(Default::default()) /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ /// Execute DAL code with pre-set scope variables (e.g. agent_id for lifecycle hooks).
+ pub fn execute_dal_with_scope(
+     vars: &std::collections::HashMap<String, Value>,
+     source: &str,
+ ) -> Result<Value, Box<dyn std::error::Error>> {
+     let program = parse_source(source)?;

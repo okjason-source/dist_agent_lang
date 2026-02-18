@@ -1,0 +1,21 @@
+--- src/lexer/lexer.rs
++++ replace >= with < in Lexer::next_token_immutable
+@@ -88,17 +88,17 @@
+         let (new_pos, new_line, new_col, token) = self.next_token_immutable(self.position, self.line, self.column)?;
+         self.position = new_pos;
+         self.line = new_line;
+         self.column = new_col;
+         Ok(token)
+     }
+ 
+     fn next_token_immutable(&self, position: usize, line: usize, column: usize) -> Result<(usize, usize, usize, Token), LexerError> {
+-        if position >= self.input.len() {
++        if position < /* ~ changed by cargo-mutants ~ */ self.input.len() {
+             return Err(LexerError::UnexpectedCharacter('\0', line, column));
+         }
+         
+         let ch = self.input[position];
+         let mut new_position = position;
+         let new_line = line;
+         let mut new_column = column.max(1); // Ensure column is always >= 1
+         

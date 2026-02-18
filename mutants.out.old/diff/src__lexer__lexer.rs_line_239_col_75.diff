@@ -1,0 +1,21 @@
+--- src/lexer/lexer.rs
++++ replace + with - in Lexer::next_token_immutable
+@@ -231,17 +231,17 @@
+                 } else {
+                     new_position += 1;
+                     new_column += 1;
+                     Ok((new_position, new_line, new_column, Token::Operator(Operator::Greater)))
+                 }
+             }
+             
+             '&' => {
+-                if position + 1 < self.input.len() && self.input[position + 1] == '&' {
++                if position + 1 < self.input.len() && self.input[position - /* ~ changed by cargo-mutants ~ */ 1] == '&' {
+                     new_position += 2;
+                     new_column += 2;
+                     Ok((new_position, new_line, new_column, Token::Operator(Operator::And)))
+                 } else {
+                     Err(LexerError::UnexpectedCharacter(ch, line, column))
+                 }
+             }
+             

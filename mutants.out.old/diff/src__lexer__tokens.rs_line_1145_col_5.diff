@@ -1,0 +1,123 @@
+--- src/lexer/tokens.rs
++++ replace get_target_constraints -> HashMap<CompilationTarget, TargetConstraint> with HashMap::new()
+@@ -1137,119 +1137,10 @@
+     pub deploy_methods: Vec<InterfaceMethod>,
+     pub verify_methods: Vec<InterfaceMethod>,
+     pub rollback_methods: Vec<InterfaceMethod>,
+     pub status_methods: Vec<InterfaceMethod>,
+ }
+ 
+ // Predefined target constraints
+ pub fn get_target_constraints() -> HashMap<CompilationTarget, TargetConstraint> {
+-    let mut constraints = HashMap::new();
+-    
+-    // Blockchain constraints
+-    constraints.insert(CompilationTarget::Blockchain, TargetConstraint::new(CompilationTarget::Blockchain)
+-        .with_allowed_operations(vec![
+-            "chain::transaction".to_string(),
+-            "chain::deploy".to_string(),
+-            "chain::call".to_string(),
+-            "oracle::fetch".to_string(),
+-            "crypto::sign".to_string(),
+-            "crypto::verify".to_string(),
+-            "auth::verify".to_string(),
+-            "log::info".to_string(),
+-        ])
+-        .with_forbidden_operations(vec![
+-            "web::http_request".to_string(),
+-            "web::websocket".to_string(),
+-            "desktop::window".to_string(),
+-            "mobile::notification".to_string(),
+-            "iot::sensor_read".to_string(),
+-        ])
+-        .with_required_attributes(vec![
+-            "@secure".to_string(),
+-            "@trust".to_string(),
+-        ])
+-    );
+-    
+-    // WebAssembly constraints
+-    constraints.insert(CompilationTarget::WebAssembly, TargetConstraint::new(CompilationTarget::WebAssembly)
+-        .with_allowed_operations(vec![
+-            "web::dom_manipulation".to_string(),
+-            "web::local_storage".to_string(),
+-            "web::fetch".to_string(),
+-            "web::websocket".to_string(),
+-            "web::event_listener".to_string(),
+-            "web::element_create".to_string(),
+-        ])
+-        .with_forbidden_operations(vec![
+-            "chain::transaction".to_string(),
+-            "chain::deploy".to_string(),
+-            "desktop::file_system".to_string(),
+-            "mobile::camera".to_string(),
+-            "iot::device_control".to_string(),
+-        ])
+-        .with_required_attributes(vec![
+-            "@web".to_string(),
+-        ])
+-    );
+-    
+-    // Native constraints
+-    constraints.insert(CompilationTarget::Native, TargetConstraint::new(CompilationTarget::Native)
+-        .with_allowed_operations(vec![
+-            "system::file_io".to_string(),
+-            "system::process".to_string(),
+-            "system::network".to_string(),
+-            "desktop::window".to_string(),
+-            "desktop::menu".to_string(),
+-            "database::query".to_string(),
+-        ])
+-        .with_forbidden_operations(vec![
+-            "chain::transaction".to_string(),
+-            "mobile::touch_event".to_string(),
+-            "iot::sensor_read".to_string(),
+-        ])
+-        .with_required_attributes(vec![
+-            "@native".to_string(),
+-        ])
+-    );
+-    
+-    // Mobile constraints
+-    constraints.insert(CompilationTarget::Mobile, TargetConstraint::new(CompilationTarget::Mobile)
+-        .with_allowed_operations(vec![
+-            "mobile::notification".to_string(),
+-            "mobile::camera".to_string(),
+-            "mobile::location".to_string(),
+-            "mobile::touch_event".to_string(),
+-            "mobile::vibration".to_string(),
+-            "mobile::storage".to_string(),
+-        ])
+-        .with_forbidden_operations(vec![
+-            "chain::transaction".to_string(),
+-            "desktop::window".to_string(),
+-            "iot::device_control".to_string(),
+-        ])
+-        .with_required_attributes(vec![
+-            "@mobile".to_string(),
+-        ])
+-    );
+-    
+-    // Edge constraints
+-    constraints.insert(CompilationTarget::Edge, TargetConstraint::new(CompilationTarget::Edge)
+-        .with_allowed_operations(vec![
+-            "iot::sensor_read".to_string(),
+-            "iot::device_control".to_string(),
+-            "iot::data_process".to_string(),
+-            "iot::network_send".to_string(),
+-            "iot::local_storage".to_string(),
+-        ])
+-        .with_forbidden_operations(vec![
+-            "chain::transaction".to_string(),
+-            "web::dom_manipulation".to_string(),
+-            "desktop::window".to_string(),
+-            "mobile::camera".to_string(),
+-        ])
+-        .with_required_attributes(vec![
+-            "@edge".to_string(),
+-        ])
+-    );
+-    
+-    constraints
++    HashMap::new() /* ~ changed by cargo-mutants ~ */
+ }

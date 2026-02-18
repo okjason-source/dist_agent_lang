@@ -1,0 +1,264 @@
+--- src/lexer/lexer.rs
++++ replace Lexer::next_token_immutable -> Result<(usize, usize, usize, Token), LexerError> with Ok((0, 1, 0, Default::default()))
+@@ -88,260 +88,17 @@
+         let (new_pos, new_line, new_col, token) = self.next_token_immutable(self.position, self.line, self.column)?;
+         self.position = new_pos;
+         self.line = new_line;
+         self.column = new_col;
+         Ok(token)
+     }
+ 
+     fn next_token_immutable(&self, position: usize, line: usize, column: usize) -> Result<(usize, usize, usize, Token), LexerError> {
+-        if position >= self.input.len() {
+-            return Err(LexerError::UnexpectedCharacter('\0', line, column));
+-        }
+-        
+-        let ch = self.input[position];
+-        let mut new_position = position;
+-        let new_line = line;
+-        let mut new_column = column.max(1); // Ensure column is always >= 1
+-        
+-        match ch {
+-            // Identifiers and keywords (include $ for SQL placeholders in strings, identifiers)
+-            'a'..='z' | 'A'..='Z' | '_' | '$' => {
+-                let (pos, identifier) = self.read_identifier_immutable(position);
+-                new_position = pos;
+-                
+-                // Handle boolean and null literals
+-                match identifier.as_str() {
+-                    "true" => Ok((new_position, new_line, new_column, Token::Literal(Literal::Bool(true)))),
+-                    "false" => Ok((new_position, new_line, new_column, Token::Literal(Literal::Bool(false)))),
+-                    "null" => Ok((new_position, new_line, new_column, Token::Literal(Literal::Null))),
+-                    _ => {
+-                        // Check if this might be a namespace call (identifier::)
+-                        if new_position < self.input.len() && 
+-                           self.input[new_position] == ':' && 
+-                           new_position + 1 < self.input.len() && 
+-                           self.input[new_position + 1] == ':' {
+-                            // Treat as identifier for namespace calls
+-                            Ok((new_position, new_line, new_column, Token::Identifier(identifier)))
+-                        } else if let Some(keyword) = self.is_keyword(&identifier) {
+-                            Ok((new_position, new_line, new_column, Token::Keyword(keyword)))
+-                        } else {
+-                            Ok((new_position, new_line, new_column, Token::Identifier(identifier)))
+-                        }
+-                    }
+-                }
+-            }
+-            
+-            // Numbers
+-            '0'..='9' => {
+-                let (pos, literal) = self.read_number_immutable(position)?;
+-                new_position = pos;
+-                Ok((new_position, new_line, new_column, Token::Literal(literal)))
+-            }
+-            
+-            // Strings
+-            '"' => {
+-                let (pos, final_line, final_col, string) = self.read_string_immutable_with_positions(position, new_line, new_column)?;
+-                new_position = pos;
+-                Ok((new_position, final_line, final_col, Token::Literal(Literal::String(string))))
+-            }
+-            
+-            // Operators and punctuation
+-            '+' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Operator(Operator::Plus)))
+-            }
+-            '-' => {
+-                if position + 1 < self.input.len() && self.input[position + 1] == '>' {
+-                    new_position += 2;
+-                    new_column += 2;
+-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Arrow)))
+-                } else {
+-                    new_position += 1;
+-                    new_column += 1;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Minus)))
+-                }
+-            }
+-            '*' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Operator(Operator::Star)))
+-            }
+-            '/' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Operator(Operator::Slash)))
+-            }
+-            '%' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Operator(Operator::Percent)))
+-            }
+-            
+-            '@' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::At)))
+-            }
+-            
+-            '=' => {
+-                if position + 1 < self.input.len() && self.input[position + 1] == '>' {
+-                    new_position += 2;
+-                    new_column += 2;
+-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::FatArrow)))
+-                } else if position + 1 < self.input.len() && self.input[position + 1] == '=' {
+-                    new_position += 2;
+-                    new_column += 2;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Equal)))
+-                } else {
+-                    new_position += 1;
+-                    new_column += 1;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Assign)))
+-                }
+-            }
+-            
+-            '!' => {
+-                if position + 1 < self.input.len() && self.input[position + 1] == '=' {
+-                    new_position += 2;
+-                    new_column += 2;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::NotEqual)))
+-                } else {
+-                    new_position += 1;
+-                    new_column += 1;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Not)))
+-                }
+-            }
+-            
+-            '<' => {
+-                if position + 1 < self.input.len() && self.input[position + 1] == '=' {
+-                    new_position += 2;
+-                    new_column += 2;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::LessEqual)))
+-                } else {
+-                    new_position += 1;
+-                    new_column += 1;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Less)))
+-                }
+-            }
+-            
+-            '>' => {
+-                if position + 1 < self.input.len() && self.input[position + 1] == '=' {
+-                    new_position += 2;
+-                    new_column += 2;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::GreaterEqual)))
+-                } else {
+-                    new_position += 1;
+-                    new_column += 1;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Greater)))
+-                }
+-            }
+-            
+-            '&' => {
+-                if position + 1 < self.input.len() && self.input[position + 1] == '&' {
+-                    new_position += 2;
+-                    new_column += 2;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::And)))
+-                } else {
+-                    Err(LexerError::UnexpectedCharacter(ch, line, column))
+-                }
+-            }
+-            
+-            '|' => {
+-                if position + 1 < self.input.len() && self.input[position + 1] == '|' {
+-                    new_position += 2;
+-                    new_column += 2;
+-                    Ok((new_position, new_line, new_column, Token::Operator(Operator::Or)))
+-                } else {
+-                    Err(LexerError::UnexpectedCharacter(ch, line, column))
+-                }
+-            }
+-            
+-            ':' => {
+-                if position + 1 < self.input.len() && self.input[position + 1] == ':' {
+-                    new_position += 2;
+-                    new_column += 2;
+-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::DoubleColon)))
+-                } else {
+-                    new_position += 1;
+-                    new_column += 1;
+-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Colon)))
+-                }
+-            }
+-            
+-            '.' => {
+-                // Check for range operator (..)
+-                if position + 1 < self.input.len() && self.input[position + 1] == '.' {
+-                    new_position += 2;
+-                    new_column += 2;
+-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::DotDot)))
+-                } else {
+-                    new_position += 1;
+-                    new_column += 1;
+-                    Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Dot)))
+-                }
+-            }
+-            '?' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Question)))
+-            }
+-            ',' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Comma)))
+-            }
+-            ';' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Semicolon)))
+-            }
+-            '[' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::LeftBracket)))
+-            }
+-            ']' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::RightBracket)))
+-            }
+-            '{' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::LeftBrace)))
+-            }
+-            '}' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::RightBrace)))
+-            }
+-            '(' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::LeftParen)))
+-            }
+-            ')' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::RightParen)))
+-            }
+-            
+-            _ => Err(LexerError::UnexpectedCharacter(ch, line, column)),
+-        }
+-        .map(|(pos, ln, col, token)| {
+-            // Safety: Ensure position always advances and column is always >= 1
+-            // This prevents infinite loops from mutations that cause position to not advance
+-            if pos <= position {
+-                Err(LexerError::UnexpectedCharacter('\0', line, column))
+-            } else {
+-                Ok((pos, ln, col.max(1), token))
+-            }
+-        })
+-        .and_then(|x| x)
++        Ok((0, 1, 0, Default::default())) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn read_identifier(&mut self) -> String {
+         let start = self.position;
+         
+         while self.position < self.input.len() {
+             let ch = self.current_char();
+             if ch.is_alphanumeric() || ch == '_' {

@@ -1,0 +1,25 @@
+--- src/lexer/lexer.rs
++++ delete match arm '[' in Lexer::next_token_immutable
+@@ -289,21 +289,17 @@
+                 new_column += 1;
+                 Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Comma)))
+             }
+             ';' => {
+                 new_position += 1;
+                 new_column += 1;
+                 Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Semicolon)))
+             }
+-            '[' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::LeftBracket)))
+-            }
++             /* ~ changed by cargo-mutants ~ */
+             ']' => {
+                 new_position += 1;
+                 new_column += 1;
+                 Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::RightBracket)))
+             }
+             '{' => {
+                 new_position += 1;
+                 new_column += 1;

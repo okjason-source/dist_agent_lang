@@ -1,0 +1,21 @@
+--- src/lib.rs
++++ replace > with < in parse_source
+@@ -50,17 +50,17 @@
+     
+     let lexer = Lexer::new(source);
+     let tokens_with_pos = lexer
+         .tokenize_with_positions_immutable()
+         .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+     
+     // Phase 2: Token count limit - prevent DoS via excessive tokens
+     const MAX_TOKENS: usize = 1_000_000; // 1M tokens
+-    if tokens_with_pos.len() > MAX_TOKENS {
++    if tokens_with_pos.len() < /* ~ changed by cargo-mutants ~ */ MAX_TOKENS {
+         return Err(format!(
+             "Too many tokens: {} (max: {})",
+             tokens_with_pos.len(),
+             MAX_TOKENS
+         ).into());
+     }
+     
+     let mut parser = Parser::new_with_positions(tokens_with_pos);

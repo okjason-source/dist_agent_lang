@@ -14,6 +14,8 @@ jobs:
   audit:
     name: Dependency Security Audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
       CARGO_HTTP_CAINFO: /etc/ssl/certs/ca-certificates.crt
@@ -43,6 +45,8 @@ jobs:
   clippy-security:
     name: Clippy Security Checks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
       CARGO_HTTP_CAINFO: /etc/ssl/certs/ca-certificates.crt
@@ -68,6 +72,8 @@ jobs:
   fmt-check:
     name: Code Formatting Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

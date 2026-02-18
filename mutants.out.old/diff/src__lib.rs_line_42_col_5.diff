@@ -1,0 +1,46 @@
+--- src/lib.rs
++++ replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+@@ -34,42 +34,17 @@
+ pub use testing::{
+     TestCase, TestSuite, TestResult, TestStatus, TestConfig, TestRunner,
+     MockFunction, MockRegistry, MockBuilder,
+ };
+ 
+ // For external integrations
+ pub fn parse_source(source: &str) -> Result<ast::Program, Box<dyn std::error::Error>> {
+     // Phase 2: Input size limit - prevent DoS via oversized source code
+-    const MAX_SOURCE_SIZE: usize = 10 * 1024 * 1024; // 10MB
+-    if source.len() > MAX_SOURCE_SIZE {
+-        return Err(format!(
+-            "Source code too large: {} bytes (max: {} bytes)",
+-            source.len(),
+-            MAX_SOURCE_SIZE
+-        ).into());
+-    }
+-    
+-    let lexer = Lexer::new(source);
+-    let tokens_with_pos = lexer
+-        .tokenize_with_positions_immutable()
+-        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+-    
+-    // Phase 2: Token count limit - prevent DoS via excessive tokens
+-    const MAX_TOKENS: usize = 1_000_000; // 1M tokens
+-    if tokens_with_pos.len() > MAX_TOKENS {
+-        return Err(format!(
+-            "Too many tokens: {} (max: {})",
+-            tokens_with_pos.len(),
+-            MAX_TOKENS
+-        ).into());
+-    }
+-    
+-    let mut parser = Parser::new_with_positions(tokens_with_pos);
+-    parser.parse().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
++    Ok(Default::default()) /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ pub fn execute_source(source: &str) -> Result<Value, Box<dyn std::error::Error>> {
+     let program = parse_source(source)?;
+     let mut runtime = Runtime::new();
+     let result = runtime.execute_program(program).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+     Ok(result.unwrap_or(Value::Null))
+ }

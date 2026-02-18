@@ -1,0 +1,25 @@
+--- src/lexer/lexer.rs
++++ delete match arm ')' in Lexer::next_token_immutable
+@@ -314,21 +314,17 @@
+                 new_column += 1;
+                 Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::RightBrace)))
+             }
+             '(' => {
+                 new_position += 1;
+                 new_column += 1;
+                 Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::LeftParen)))
+             }
+-            ')' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::RightParen)))
+-            }
++             /* ~ changed by cargo-mutants ~ */
+             
+             _ => Err(LexerError::UnexpectedCharacter(ch, line, column)),
+         }
+         .map(|(pos, ln, col, token)| {
+             // Safety: Ensure position always advances and column is always >= 1
+             // This prevents infinite loops from mutations that cause position to not advance
+             if pos <= position {
+                 Err(LexerError::UnexpectedCharacter('\0', line, column))

@@ -1,0 +1,45 @@
+--- src/lexer/lexer.rs
++++ delete match arm 'a'..= 'z' | 'A'..= 'Z' | '_' | '$' in Lexer::next_token_immutable
+@@ -99,41 +99,17 @@
+         
+         let ch = self.input[position];
+         let mut new_position = position;
+         let new_line = line;
+         let mut new_column = column.max(1); // Ensure column is always >= 1
+         
+         match ch {
+             // Identifiers and keywords (include $ for SQL placeholders in strings, identifiers)
+-            'a'..='z' | 'A'..='Z' | '_' | '$' => {
+-                let (pos, identifier) = self.read_identifier_immutable(position);
+-                new_position = pos;
+-                
+-                // Handle boolean and null literals
+-                match identifier.as_str() {
+-                    "true" => Ok((new_position, new_line, new_column, Token::Literal(Literal::Bool(true)))),
+-                    "false" => Ok((new_position, new_line, new_column, Token::Literal(Literal::Bool(false)))),
+-                    "null" => Ok((new_position, new_line, new_column, Token::Literal(Literal::Null))),
+-                    _ => {
+-                        // Check if this might be a namespace call (identifier::)
+-                        if new_position < self.input.len() && 
+-                           self.input[new_position] == ':' && 
+-                           new_position + 1 < self.input.len() && 
+-                           self.input[new_position + 1] == ':' {
+-                            // Treat as identifier for namespace calls
+-                            Ok((new_position, new_line, new_column, Token::Identifier(identifier)))
+-                        } else if let Some(keyword) = self.is_keyword(&identifier) {
+-                            Ok((new_position, new_line, new_column, Token::Keyword(keyword)))
+-                        } else {
+-                            Ok((new_position, new_line, new_column, Token::Identifier(identifier)))
+-                        }
+-                    }
+-                }
+-            }
++             /* ~ changed by cargo-mutants ~ */
+             
+             // Numbers
+             '0'..='9' => {
+                 let (pos, literal) = self.read_number_immutable(position)?;
+                 new_position = pos;
+                 Ok((new_position, new_line, new_column, Token::Literal(literal)))
+             }
+             

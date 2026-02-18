@@ -1,0 +1,25 @@
+--- src/lexer/lexer.rs
++++ delete match arm '?' in Lexer::next_token_immutable
+@@ -274,21 +274,17 @@
+                     new_column += 2;
+                     Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::DotDot)))
+                 } else {
+                     new_position += 1;
+                     new_column += 1;
+                     Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Dot)))
+                 }
+             }
+-            '?' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Question)))
+-            }
++             /* ~ changed by cargo-mutants ~ */
+             ',' => {
+                 new_position += 1;
+                 new_column += 1;
+                 Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::Comma)))
+             }
+             ';' => {
+                 new_position += 1;
+                 new_column += 1;

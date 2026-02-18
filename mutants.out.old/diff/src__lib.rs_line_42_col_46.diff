@@ -1,0 +1,21 @@
+--- src/lib.rs
++++ replace * with + in parse_source
+@@ -34,17 +34,17 @@
+ pub use testing::{
+     TestCase, TestSuite, TestResult, TestStatus, TestConfig, TestRunner,
+     MockFunction, MockRegistry, MockBuilder,
+ };
+ 
+ // For external integrations
+ pub fn parse_source(source: &str) -> Result<ast::Program, Box<dyn std::error::Error>> {
+     // Phase 2: Input size limit - prevent DoS via oversized source code
+-    const MAX_SOURCE_SIZE: usize = 10 * 1024 * 1024; // 10MB
++    const MAX_SOURCE_SIZE: usize = 10 * 1024 + /* ~ changed by cargo-mutants ~ */ 1024; // 10MB
+     if source.len() > MAX_SOURCE_SIZE {
+         return Err(format!(
+             "Source code too large: {} bytes (max: {} bytes)",
+             source.len(),
+             MAX_SOURCE_SIZE
+         ).into());
+     }
+     

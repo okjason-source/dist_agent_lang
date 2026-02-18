@@ -1,0 +1,17 @@
+--- src/lib.rs
++++ replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+@@ -95,13 +95,10 @@
+     source: &str,
+ ) -> Result<
+     (
+         std::collections::HashMap<String, runtime::engine::UserFunction>,
+         runtime::scope::Scope,
+     ),
+     Box<dyn std::error::Error>,
+ > {
+-    let program = parse_source(source)?;
+-    let mut runtime = Runtime::new();
+-    runtime.execute_program(program).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+-    Ok((runtime.user_functions.clone(), runtime.scope.clone()))
++    Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default())) /* ~ changed by cargo-mutants ~ */
+ }

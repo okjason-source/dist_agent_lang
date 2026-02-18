@@ -1,0 +1,25 @@
+--- src/lexer/lexer.rs
++++ delete match arm '%' in Lexer::next_token_immutable
+@@ -166,21 +166,17 @@
+                 new_column += 1;
+                 Ok((new_position, new_line, new_column, Token::Operator(Operator::Star)))
+             }
+             '/' => {
+                 new_position += 1;
+                 new_column += 1;
+                 Ok((new_position, new_line, new_column, Token::Operator(Operator::Slash)))
+             }
+-            '%' => {
+-                new_position += 1;
+-                new_column += 1;
+-                Ok((new_position, new_line, new_column, Token::Operator(Operator::Percent)))
+-            }
++             /* ~ changed by cargo-mutants ~ */
+             
+             '@' => {
+                 new_position += 1;
+                 new_column += 1;
+                 Ok((new_position, new_line, new_column, Token::Punctuation(Punctuation::At)))
+             }
+             
+             '=' => {

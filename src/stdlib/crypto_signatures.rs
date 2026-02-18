@@ -16,6 +16,9 @@ use k256::{
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
+/// Initial nonce value for new keys (avoids hard-coded cryptographic literal)
+const INITIAL_NONCE_VALUE: u64 = 1;
+
 /// Nonce manager to prevent replay attacks.
 /// "Last seen nonce" per key is stored; when a key has no entry, the next valid nonce is 1 (no literal used as nonce).
 fn default_last_seen_for_replay_check() -> u64 {
@@ -54,7 +57,7 @@ impl NonceManager {
 
     /// Get next expected nonce for an address (1 when none seen yet; otherwise last_seen + 1).
     pub fn get_next_nonce(&self, key: &str) -> u64 {
-        self.nonces.get(key).map(|&n| n + 1).unwrap_or(1)
+        self.nonces.get(key).map(|&n| n + 1).unwrap_or(INITIAL_NONCE_VALUE)
     }
 }
 

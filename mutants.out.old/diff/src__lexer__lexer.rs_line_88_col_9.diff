@@ -1,0 +1,25 @@
+--- src/lexer/lexer.rs
++++ replace Lexer::next_token -> Result<Token, LexerError> with Ok(Default::default())
+@@ -80,21 +80,17 @@
+             column = new_col.max(1); // Ensure column is always >= 1
+         }
+         
+         tokens.push(crate::lexer::tokens::TokenWithPosition::new(Token::EOF, line, column));
+         Ok(tokens)
+     }
+ 
+     fn next_token(&mut self) -> Result<Token, LexerError> {
+-        let (new_pos, new_line, new_col, token) = self.next_token_immutable(self.position, self.line, self.column)?;
+-        self.position = new_pos;
+-        self.line = new_line;
+-        self.column = new_col;
+-        Ok(token)
++        Ok(Default::default()) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn next_token_immutable(&self, position: usize, line: usize, column: usize) -> Result<(usize, usize, usize, Token), LexerError> {
+         if position >= self.input.len() {
+             return Err(LexerError::UnexpectedCharacter('\0', line, column));
+         }
+         
+         let ch = self.input[position];

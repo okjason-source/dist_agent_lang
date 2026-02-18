@@ -1,0 +1,21 @@
+--- src/lexer/lexer.rs
++++ replace * with / in Lexer::tokenize_with_positions_immutable
+@@ -34,17 +34,17 @@
+         let mut position = self.position;
+         let mut line = self.line;
+         let mut column = self.column;
+         
+         // Phase 2: Token count limit - prevent DoS via excessive tokens
+         const MAX_TOKENS: usize = 1_000_000; // 1M tokens
+         
+         // Safety: Prevent infinite loops from mutations that cause position to not advance
+-        let max_iterations = self.input.len() * 2; // Allow up to 2x input length iterations
++        let max_iterations = self.input.len() / /* ~ changed by cargo-mutants ~ */ 2; // Allow up to 2x input length iterations
+         let mut iterations = 0;
+         
+         while position < self.input.len() {
+             // Safety check: prevent infinite loops
+             iterations += 1;
+             if iterations > max_iterations {
+                 return Err(LexerError::UnexpectedCharacter('\0', line, column));
+             }
