@@ -186,7 +186,7 @@ cargo install dist_agent_lang
 ```bash
 git clone https://github.com/okjason-source/dist_agent_lang.git
 cd dist_agent_lang
-cargo install --path .
+cargo install --path
 ```
 
 **From release binary:** Download from [GitHub Releases](https://github.com/okjason-source/dist_agent_lang/releases) and extract the binary to your PATH.
