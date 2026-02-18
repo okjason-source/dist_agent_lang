@@ -6,17 +6,15 @@ on:
       - 'v*'
   workflow_dispatch: {}
 
-env:
-  SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
-  CARGO_HTTP_CAINFO: /etc/ssl/certs/ca-certificates.crt
-
 jobs:
-  # Build on each platform natively (cross-compile doesn't work without extra tooling)
   build-linux:
     name: Build Linux x86_64
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+      CARGO_HTTP_CAINFO: /etc/ssl/certs/ca-certificates.crt
     steps:
       - uses: actions/checkout@v4
 
