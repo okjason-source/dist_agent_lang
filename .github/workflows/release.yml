@@ -79,10 +79,39 @@ jobs:
           name: macos
           path: dist_agent_lang-${{ github.ref_name }}-macos-*.tar.gz
 
+  build-windows:
+    name: Build Windows x86_64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p staging
+          cp target/release/dal.exe staging/
+          cp README.md LICENSE CHANGELOG.md staging/ 2>/dev/null || true
+          cd staging && 7z a ../dist_agent_lang-${{ github.ref_name }}-windows-x64.zip *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: dist_agent_lang-${{ github.ref_name }}-windows-x64.zip
+
   # Create a GitHub Release with all artifacts
   release:
     name: Create Release
-    needs: [build-linux, build-macos]
+    needs: [build-linux, build-macos, build-windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -126,6 +155,8 @@ jobs:
             # macOS (ARM64 or x64)
             tar xzf dist_agent_lang-${{ github.ref_name }}-macos-arm64.tar.gz
             sudo mv dal /usr/local/bin/
+
+            # Windows x64 — extract the zip, then add dal.exe to your PATH
             ```
 
             **Build from source:**
