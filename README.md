@@ -221,7 +221,7 @@ dist_agent_lang is an **actively maintained beta release** with consistent updat
 - Critical Infrastructure (additional validation needed)
 - Sensitive Data Applications (additional security audits recommended)
 
-**Target for Production (v1.1.0+):** ~14 weeks with community validation
+**Target for Production (v1.1.0+):** ~community validation requested
 
 ---
 
