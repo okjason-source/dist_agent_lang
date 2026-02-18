@@ -145,28 +145,28 @@ fn dal_to_python_value(value: Value) -> PyObject {
             for v in items {
                 py_list.append(dal_to_python_value(v)).unwrap();
             }
-            py_list.upcast().unbind()
+            py_list.into_any().unbind()
         }
         Value::Map(map) => {
             let py_dict = pyo3::types::PyDict::new(py);
             for (k, v) in map {
                 py_dict.set_item(k, dal_to_python_value(v)).unwrap();
             }
-            py_dict.upcast().unbind()
+            py_dict.into_any().unbind()
         }
         Value::Struct(_, fields) => {
             let py_dict = pyo3::types::PyDict::new(py);
             for (k, v) in fields {
                 py_dict.set_item(k, dal_to_python_value(v)).unwrap();
             }
-            py_dict.upcast().unbind()
+            py_dict.into_any().unbind()
         }
         Value::Set(set) => {
             let py_list = pyo3::types::PyList::empty(py);
             for v in set {
                 py_list.append(v).unwrap();
             }
-            py_list.upcast().unbind()
+            py_list.into_any().unbind()
         }
         Value::Result(ok, _err) => dal_to_python_value(*ok),
         Value::Option(opt) => match opt {

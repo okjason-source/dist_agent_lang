@@ -596,23 +596,27 @@ fn test_log_audit() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_log_get_entries() {
-    // First log something
+    // Isolate from other tests: clear then add one entry so we don't race on global LOG_STORAGE
+    log::clear();
     let mut data = HashMap::new();
     data.insert("test".to_string(), Value::String("value".to_string()));
     log::info("test_source", data, None);
 
-    // Get entries
     let entries = log::get_entries();
-
-    // Should have at least one entry
-    assert!(!entries.is_empty());
+    assert!(
+        !entries.is_empty(),
+        "get_entries() should return at least the entry we just logged"
+    );
 }
 
 #[test]
+#[serial_test::serial]
 fn test_log_get_entries_by_level() {
     use dist_agent_lang::stdlib::log::LogLevel;
 
+    log::clear();
     let mut data = HashMap::new();
     data.insert("test".to_string(), Value::String("value".to_string()));
     log::info("test_source", data, None);
@@ -622,6 +626,7 @@ fn test_log_get_entries_by_level() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_log_get_entries_by_source() {
     // BUG FOUND: log::info() hardcodes source as "system", not the message parameter
     // The first parameter is the message, not the source
@@ -661,7 +666,9 @@ fn test_log_get_entries_by_source() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_log_get_stats() {
+    log::clear();
     let mut data = HashMap::new();
     data.insert("test".to_string(), Value::String("value".to_string()));
     log::info("test_source", data, None);
@@ -675,6 +682,7 @@ fn test_log_get_stats() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_log_clear() {
     // Use a unique source so we can find our entry even if other tests log in parallel
     let unique_source = format!("test_log_clear_{}", std::process::id());
