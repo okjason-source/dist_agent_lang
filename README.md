@@ -79,8 +79,8 @@ Comprehensive tooling including debugger, formatter, and package manager.
 ### ⌨️ CLI Commands
 Powerful command-line interface with commands for running, testing, formatting, and managing your DAL projects.
 
-### 🧬 Agent Molds
-Reusable agent templates and configurations for rapid development and deployment.
+### 🧬 Agent Mold System
+Reusable configurations linked to agents for rapid development and deployment.
 
 ---
 
