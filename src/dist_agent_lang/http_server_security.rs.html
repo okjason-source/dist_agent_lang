@@ -446,9 +446,9 @@
 <a href=#446 id=446 data-nosnippet>446</a>        <span class="macro">log::warn!</span>(target: <span class="string">"security::input"</span>, <span class="string">"Invalid input from IP {}: {}"</span>, ip, input);
 <a href=#447 id=447 data-nosnippet>447</a>    }
 <a href=#448 id=448 data-nosnippet>448</a>
-<a href=#449 id=449 data-nosnippet>449</a>    <span class="doccomment">/// Log successful authentication
-<a href=#450 id=450 data-nosnippet>450</a>    </span><span class="kw">pub fn </span>log_auth_success(ip: <span class="kw-2">&amp;</span>str, user_id: <span class="kw-2">&amp;</span>str) {
-<a href=#451 id=451 data-nosnippet>451</a>        <span class="macro">log::info!</span>(target: <span class="string">"security::auth"</span>, <span class="string">"Successful authentication for user {} from IP {}"</span>, user_id, ip);
+<a href=#449 id=449 data-nosnippet>449</a>    <span class="doccomment">/// Log successful authentication (user_id is not logged to avoid cleartext exposure)
+<a href=#450 id=450 data-nosnippet>450</a>    </span><span class="kw">pub fn </span>log_auth_success(ip: <span class="kw-2">&amp;</span>str, _user_id: <span class="kw-2">&amp;</span>str) {
+<a href=#451 id=451 data-nosnippet>451</a>        <span class="macro">log::info!</span>(target: <span class="string">"security::auth"</span>, <span class="string">"Successful authentication from IP {}"</span>, ip);
 <a href=#452 id=452 data-nosnippet>452</a>    }
 <a href=#453 id=453 data-nosnippet>453</a>
 <a href=#454 id=454 data-nosnippet>454</a>    <span class="doccomment">/// Log suspicious activity
