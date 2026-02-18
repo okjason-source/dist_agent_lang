@@ -15,12 +15,16 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+      CARGO_HTTP_CAINFO: /etc/ssl/certs/ca-certificates.crt
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install CA certificates
-        run: sudo update-ca-certificates
+      - name: Fix CA cert path for Cargo/curl
+        run: |
+          sudo mkdir -p /usr/local/etc/ca-certificates
+          sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+          sudo update-ca-certificates
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -40,12 +44,16 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+      CARGO_HTTP_CAINFO: /etc/ssl/certs/ca-certificates.crt
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install CA certificates
-        run: sudo update-ca-certificates
+      - name: Fix CA cert path for Cargo/curl
+        run: |
+          sudo mkdir -p /usr/local/etc/ca-certificates
+          sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+          sudo update-ca-certificates
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1

@@ -11,6 +11,8 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+  CARGO_HTTP_CAINFO: /etc/ssl/certs/ca-certificates.crt
 
 jobs:
   # Code quality checks
@@ -20,6 +22,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Fix CA cert path for Cargo/curl
+      run: |
+        sudo mkdir -p /usr/local/etc/ca-certificates
+        sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+        sudo update-ca-certificates
     
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -58,6 +66,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Fix CA cert path for Cargo/curl
+      run: |
+        sudo mkdir -p /usr/local/etc/ca-certificates
+        sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+        sudo update-ca-certificates
+    
     - name: Install Rust ${{ matrix.rust }}
       uses: actions-rs/toolchain@v1
       with:
@@ -89,6 +103,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Fix CA cert path for Cargo/curl
+      run: |
+        sudo mkdir -p /usr/local/etc/ca-certificates
+        sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+        sudo update-ca-certificates
+    
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -108,6 +128,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Fix CA cert path for Cargo/curl
+      run: |
+        sudo mkdir -p /usr/local/etc/ca-certificates
+        sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+        sudo update-ca-certificates
     
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -144,6 +170,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Fix CA cert path for Cargo/curl
+      run: |
+        sudo mkdir -p /usr/local/etc/ca-certificates
+        sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+        sudo update-ca-certificates
     
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -265,6 +297,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Fix CA cert path for Cargo/curl
+      run: |
+        sudo mkdir -p /usr/local/etc/ca-certificates
+        sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+        sudo update-ca-certificates
     
     - name: Install Rust
       uses: actions-rs/toolchain@v1
