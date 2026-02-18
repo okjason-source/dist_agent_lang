@@ -101,12 +101,12 @@ jobs:
         run: cargo build --release
 
       - name: Package
-        shell: bash
+        shell: pwsh
         run: |
-          mkdir -p staging
-          cp target/release/dal.exe staging/
-          cp README.md LICENSE CHANGELOG.md staging/ 2>/dev/null || true
-          cd staging && 7z a ../dist_agent_lang-${{ github.ref_name }}-windows-x64.zip *
+          New-Item -ItemType Directory -Force -Path staging | Out-Null
+          Copy-Item target/release/dal.exe staging/
+          Copy-Item README.md, LICENSE, CHANGELOG.md staging/ -ErrorAction SilentlyContinue
+          Compress-Archive -Path staging\* -DestinationPath dist_agent_lang-${{ github.ref_name }}-windows-x64.zip -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
