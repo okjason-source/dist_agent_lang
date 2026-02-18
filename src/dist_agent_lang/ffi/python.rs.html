@@ -145,28 +145,28 @@
 <a href=#145 id=145 data-nosnippet>145</a>            <span class="kw">for </span>v <span class="kw">in </span>items {
 <a href=#146 id=146 data-nosnippet>146</a>                py_list.append(dal_to_python_value(v)).unwrap();
 <a href=#147 id=147 data-nosnippet>147</a>            }
-<a href=#148 id=148 data-nosnippet>148</a>            py_list.unbind()
+<a href=#148 id=148 data-nosnippet>148</a>            py_list.into_any().unbind()
 <a href=#149 id=149 data-nosnippet>149</a>        }
 <a href=#150 id=150 data-nosnippet>150</a>        Value::Map(map) =&gt; {
 <a href=#151 id=151 data-nosnippet>151</a>            <span class="kw">let </span>py_dict = pyo3::types::PyDict::new(py);
 <a href=#152 id=152 data-nosnippet>152</a>            <span class="kw">for </span>(k, v) <span class="kw">in </span>map {
 <a href=#153 id=153 data-nosnippet>153</a>                py_dict.set_item(k, dal_to_python_value(v)).unwrap();
 <a href=#154 id=154 data-nosnippet>154</a>            }
-<a href=#155 id=155 data-nosnippet>155</a>            py_dict.unbind()
+<a href=#155 id=155 data-nosnippet>155</a>            py_dict.into_any().unbind()
 <a href=#156 id=156 data-nosnippet>156</a>        }
 <a href=#157 id=157 data-nosnippet>157</a>        Value::Struct(<span class="kw">_</span>, fields) =&gt; {
 <a href=#158 id=158 data-nosnippet>158</a>            <span class="kw">let </span>py_dict = pyo3::types::PyDict::new(py);
 <a href=#159 id=159 data-nosnippet>159</a>            <span class="kw">for </span>(k, v) <span class="kw">in </span>fields {
 <a href=#160 id=160 data-nosnippet>160</a>                py_dict.set_item(k, dal_to_python_value(v)).unwrap();
 <a href=#161 id=161 data-nosnippet>161</a>            }
-<a href=#162 id=162 data-nosnippet>162</a>            py_dict.unbind()
+<a href=#162 id=162 data-nosnippet>162</a>            py_dict.into_any().unbind()
 <a href=#163 id=163 data-nosnippet>163</a>        }
 <a href=#164 id=164 data-nosnippet>164</a>        Value::Set(set) =&gt; {
 <a href=#165 id=165 data-nosnippet>165</a>            <span class="kw">let </span>py_list = pyo3::types::PyList::empty(py);
 <a href=#166 id=166 data-nosnippet>166</a>            <span class="kw">for </span>v <span class="kw">in </span>set {
 <a href=#167 id=167 data-nosnippet>167</a>                py_list.append(v).unwrap();
 <a href=#168 id=168 data-nosnippet>168</a>            }
-<a href=#169 id=169 data-nosnippet>169</a>            py_list.unbind()
+<a href=#169 id=169 data-nosnippet>169</a>            py_list.into_any().unbind()
 <a href=#170 id=170 data-nosnippet>170</a>        }
 <a href=#171 id=171 data-nosnippet>171</a>        Value::Result(ok, _err) =&gt; dal_to_python_value(<span class="kw-2">*</span>ok),
 <a href=#172 id=172 data-nosnippet>172</a>        Value::Option(opt) =&gt; <span class="kw">match </span>opt {
