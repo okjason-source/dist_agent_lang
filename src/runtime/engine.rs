@@ -1124,31 +1124,53 @@ impl Runtime {
     /// Convert OracleSource to Value::Struct for DAL runtime
     ///
     /// Converts a Rust `OracleSource` struct into a DAL `Value::Struct` that can be
-    /// returned to DAL code. The struct has fields: name, url, api_key, rate_limit,
-    /// trusted, public_key.
+    /// returned to DAL code. The struct has fields: name, url, api_key (masked),
+    /// rate_limit, trusted, public_key (masked).
+    ///
+    /// **Security**: Sensitive fields (`api_key`, `public_key`) are masked to prevent
+    /// credential exposure in logs or when serialized. The masked value shows only
+    /// that a credential exists, not its actual value.
     fn oracle_source_to_value(&self, source: &OracleSource) -> Value {
         let mut fields = HashMap::new();
         fields.insert("name".to_string(), Value::String(source.name.clone()));
         fields.insert("url".to_string(), Value::String(source.url.clone()));
+
+        // Mask API key to prevent credential exposure - fully redact sensitive credentials
         fields.insert(
             "api_key".to_string(),
             source
                 .api_key
                 .as_ref()
-                .map(|k| Value::String(k.clone()))
+                .map(|_| {
+                    // Fully mask API keys - never expose any part of the credential
+                    Value::String("***REDACTED***".to_string())
+                })
                 .unwrap_or(Value::Null),
         );
+
         fields.insert(
             "rate_limit".to_string(),
             source.rate_limit.map(Value::Int).unwrap_or(Value::Null),
         );
         fields.insert("trusted".to_string(), Value::Bool(source.trusted));
+
+        // Mask public key - while public keys are meant to be public, we mask them here
+        // for consistency and to prevent accidental exposure in logs
         fields.insert(
             "public_key".to_string(),
             source
                 .public_key
                 .as_ref()
-                .map(|k| Value::String(k.clone()))
+                .map(|k| {
+                    // Show fingerprint (first 8 chars) for identification without full exposure
+                    // This allows identification while reducing exposure risk
+                    if k.len() > 8 {
+                        let prefix = &k[..8.min(k.len())];
+                        Value::String(format!("{}...***REDACTED***", prefix))
+                    } else {
+                        Value::String("***REDACTED***".to_string())
+                    }
+                })
                 .unwrap_or(Value::Null),
         );
         Value::Struct("OracleSource".to_string(), fields)
