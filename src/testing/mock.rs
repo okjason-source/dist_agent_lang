@@ -1,9 +1,119 @@
+//! Mocking system for dist_agent_lang testing framework
+//!
+//! This module provides a comprehensive mocking system that allows developers to:
+//! - Mock function calls (both namespaced and global)
+//! - Validate function arguments
+//! - Track call counts and history
+//! - Execute side effects (set variables, call functions, log, throw errors, delay)
+//! - Verify mock expectations
+//!
+//! # Example Usage
+//!
+//! ```rust
+//! use dist_agent_lang::testing::{MockBuilder, MockRegistry};
+//! use dist_agent_lang::runtime::values::Value;
+//!
+//! // Create a mock using the builder pattern
+//! let mock = MockBuilder::new("mint")
+//!     .in_namespace("chain")
+//!     .returns(Value::Int(12345))
+//!     .expects_calls(1)
+//!     .validates_args(|args| {
+//!         if args.len() != 2 {
+//!             Err("Expected 2 arguments".to_string())
+//!         } else {
+//!             Ok(())
+//!         }
+//!     })
+//!     .logs("Mock chain::mint called")
+//!     .build();
+//!
+//! // Register the mock
+//! let mut registry = MockRegistry::new();
+//! registry.register(mock);
+//!
+//! // Call the mock
+//! let result = registry.call_mock("mint", Some("chain"), &[
+//!     Value::String("0x123".to_string()),
+//!     Value::Int(100)
+//! ])?;
+//!
+//! // Verify expectations
+//! registry.verify_all()?;
+//! ```
+//!
+//! # Integration with Runtime
+//!
+//! To actually intercept function calls in Runtime, you need to:
+//! 1. Add a `mock_registry: Option<MockRegistry>` field to Runtime
+//! 2. Check for mocks in `Runtime::call_function()` and `call_namespace_function()`
+//! 3. Call `mock_registry.call_mock_with_runtime()` if a mock exists
+//!
+//! See `MockRuntime` for a wrapper that combines Runtime with MockRegistry.
+
+use crate::runtime::values::Value;
+use crate::runtime::Runtime;
+use std::collections::HashMap;
+
+//! Mocking system for dist_agent_lang testing framework
+//!
+//! This module provides a comprehensive mocking system that allows developers to:
+//! - Mock function calls (both namespaced and global)
+//! - Validate function arguments
+//! - Track call counts and history
+//! - Execute side effects (set variables, call functions, log, throw errors, delay)
+//! - Verify mock expectations
+//!
+//! # Example Usage
+//!
+//! ```rust
+//! use dist_agent_lang::testing::{MockBuilder, MockRegistry};
+//! use dist_agent_lang::runtime::values::Value;
+//!
+//! // Create a mock using the builder pattern
+//! let mock = MockBuilder::new("mint")
+//!     .in_namespace("chain")
+//!     .returns(Value::Int(12345))
+//!     .expects_calls(1)
+//!     .validates_args(|args| {
+//!         if args.len() != 2 {
+//!             Err("Expected 2 arguments".to_string())
+//!         } else {
+//!             Ok(())
+//!         }
+//!     })
+//!     .logs("Mock chain::mint called")
+//!     .build();
+//!
+//! // Register the mock
+//! let mut registry = MockRegistry::new();
+//! registry.register(mock);
+//!
+//! // Call the mock
+//! let result = registry.call_mock("mint", Some("chain"), &[
+//!     Value::String("0x123".to_string()),
+//!     Value::Int(100)
+//! ])?;
+//!
+//! // Verify expectations
+//! registry.verify_all()?;
+//! ```
+//!
+//! # Integration with Runtime
+//!
+//! To actually intercept function calls in Runtime, you need to:
+//! 1. Add a `mock_registry: Option<MockRegistry>` field to Runtime
+//! 2. Check for mocks in `Runtime::call_function()` and `call_namespace_function()`
+//! 3. Call `mock_registry.call_mock_with_runtime()` if a mock exists
+//!
+//! See `MockRuntime` for a wrapper that combines Runtime with MockRegistry.
+
 use crate::runtime::values::Value;
 use crate::runtime::Runtime;
 use std::collections::HashMap;
 
 /// Mock function definition
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MockFunction {
     pub name: String,
     pub namespace: Option<String>,
@@ -11,6 +121,10 @@ pub struct MockFunction {
     pub side_effects: Vec<MockSideEffect>,
     pub call_count: usize,
     pub expected_calls: Option<usize>,
+    /// Validator function for argument validation (not Clone-safe, so stored as trait object)
+    pub arguments_validator: Option<Box<dyn Fn(&[Value]) -> Result<(), String> + Send + Sync>>,
+    /// Captured arguments from all calls (for inspection)
+    pub call_history: Vec<Vec<Value>>,
 }
 
 impl MockFunction {
@@ -22,6 +136,8 @@ impl MockFunction {
             side_effects: Vec::new(),
             call_count: 0,
             expected_calls: None,
+            arguments_validator: None,
+            call_history: Vec::new(),
         }
     }
 
@@ -45,18 +161,35 @@ impl MockFunction {
         self
     }
 
-    pub fn validates_arguments<F>(self, _validator: F) -> Self
+    pub fn validates_arguments<F>(mut self, validator: F) -> Self
     where
-        F: Fn(&[Value]) -> Result<(), String> + 'static,
+        F: Fn(&[Value]) -> Result<(), String> + Send + Sync + 'static,
     {
-        // Validator functionality removed for simplicity
+        self.arguments_validator = Some(Box::new(validator));
         self
     }
 
-    pub fn call(&mut self, args: &[Value]) -> Result<Value, String> {
-        self.call_count += 1;
+    /// Get the last call's arguments
+    pub fn last_call_args(&self) -> Option<&[Value]> {
+        self.call_history.last().map(|v| v.as_slice())
+    }
 
-        // Execute side effects
+    /// Get all call arguments
+    pub fn all_call_args(&self) -> &[Vec<Value>] {
+        &self.call_history
+    }
+
+    pub fn call(&mut self, args: &[Value]) -> Result<Value, String> {
+        // Validate arguments if validator is set
+        if let Some(ref validator) = self.arguments_validator {
+            validator(args).map_err(|e| format!("Argument validation failed: {}", e))?;
+        }
+
+        // Record call
+        self.call_count += 1;
+        self.call_history.push(args.to_vec());
+
+        // Execute side effects (may mutate runtime state)
         for side_effect in &self.side_effects {
             side_effect.execute(args)?;
         }
@@ -81,22 +214,31 @@ impl MockFunction {
 /// Side effects that can be triggered by mock functions
 #[derive(Debug, Clone)]
 pub enum MockSideEffect {
+    /// Set a variable in the runtime scope (requires runtime reference)
     SetVariable(String, Value),
+    /// Call another function in the runtime (requires runtime reference)
     CallFunction(String, Vec<Value>),
+    /// Log a message to stdout
     LogMessage(String),
+    /// Throw an error (stops execution)
     ThrowError(String),
+    /// Delay execution (useful for testing timeouts/async behavior)
     Delay(std::time::Duration),
 }
 
 impl MockSideEffect {
+    /// Execute the side effect. For SetVariable and CallFunction, a runtime reference
+    /// must be provided via execute_with_runtime() instead.
     pub fn execute(&self, _args: &[Value]) -> Result<(), String> {
         match self {
-            MockSideEffect::SetVariable(_, _) => {
-                // In a real implementation, this would set a variable in the runtime
+            MockSideEffect::SetVariable(var_name, _) => {
+                // Note: This requires runtime access - use execute_with_runtime() instead
+                eprintln!("[MOCK WARNING] SetVariable side effect for '{}' requires runtime access. Use execute_with_runtime() or MockRuntime.", var_name);
                 Ok(())
             }
-            MockSideEffect::CallFunction(_, _) => {
-                // In a real implementation, this would call another function
+            MockSideEffect::CallFunction(func_name, _) => {
+                // Note: This requires runtime access - use execute_with_runtime() instead
+                eprintln!("[MOCK WARNING] CallFunction side effect for '{}' requires runtime access. Use execute_with_runtime() or MockRuntime.", func_name);
                 Ok(())
             }
             MockSideEffect::LogMessage(message) => {
@@ -110,10 +252,32 @@ impl MockSideEffect {
             }
         }
     }
+
+    /// Execute side effect with runtime access (for SetVariable and CallFunction)
+    pub fn execute_with_runtime(
+        &self,
+        args: &[Value],
+        runtime: &mut Runtime,
+    ) -> Result<(), String> {
+        match self {
+            MockSideEffect::SetVariable(var_name, value) => {
+                runtime.scope.set(var_name.clone(), value.clone());
+                Ok(())
+            }
+            MockSideEffect::CallFunction(func_name, call_args) => {
+                // Try to call the function - if it fails, return error
+                runtime
+                    .call_function(func_name, call_args)
+                    .map_err(|e| format!("Mock side effect CallFunction failed: {}", e))?;
+                Ok(())
+            }
+            _ => self.execute(args),
+        }
+    }
 }
 
 /// Mock registry for managing multiple mocks
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MockRegistry {
     pub mocks: HashMap<String, MockFunction>,
     pub enabled: bool,
@@ -149,6 +313,45 @@ impl MockRegistry {
 
         if let Some(mock) = self.get_mock(name, namespace) {
             mock.call(args)
+        } else {
+            Err(format!(
+                "No mock found for '{}{}'",
+                namespace.map(|ns| format!("{}::", ns)).unwrap_or_default(),
+                name
+            ))
+        }
+    }
+
+    /// Call mock with runtime access (for side effects that need runtime)
+    pub fn call_mock_with_runtime(
+        &mut self,
+        name: &str,
+        namespace: Option<&str>,
+        args: &[Value],
+        runtime: &mut Runtime,
+    ) -> Result<Value, String> {
+        if !self.enabled {
+            return Err("Mock registry is disabled".to_string());
+        }
+
+        let key = self.get_mock_key(name, namespace);
+        if let Some(mock) = self.mocks.get_mut(&key) {
+            // Validate arguments
+            if let Some(ref validator) = mock.arguments_validator {
+                validator(args).map_err(|e| format!("Argument validation failed: {}", e))?;
+            }
+
+            // Record call
+            mock.call_count += 1;
+            mock.call_history.push(args.to_vec());
+
+            // Execute side effects with runtime access
+            for side_effect in &mock.side_effects {
+                side_effect.execute_with_runtime(args, runtime)?;
+            }
+
+            // Return mock value
+            Ok(mock.return_value.clone().unwrap_or(Value::Null))
         } else {
             Err(format!(
                 "No mock found for '{}{}'",
@@ -256,6 +459,8 @@ impl MockBuilder {
             side_effects: self.side_effects,
             call_count: 0,
             expected_calls: self.expected_calls,
+            arguments_validator: self.arguments_validator,
+            call_history: Vec::new(),
         }
     }
 }
@@ -279,14 +484,46 @@ impl MockRuntime {
         self
     }
 
-    pub fn execute_with_mocks(&mut self, _source_code: &str) -> Result<Value, String> {
-        // In a real implementation, this would:
-        // 1. Parse the source code
-        // 2. Intercept function calls to check for mocks
-        // 3. Execute the code with mock support
+    /// Execute DAL source code with mock interception enabled.
+    /// Mocks registered via with_mock() will automatically intercept function calls
+    /// during execution thanks to Runtime integration.
+    pub fn execute_with_mocks(&mut self, source_code: &str) -> Result<Value, String> {
+        use crate::lexer::Lexer;
+        use crate::parser::Parser;
+        use crate::parser::error::SimpleErrorReporter;
 
-        // For now, we'll just return a placeholder
-        Ok(Value::String("Mock execution completed".to_string()))
+        // Set mock registry on Runtime before execution (Runtime will use it for interception)
+        self.mock_registry.enable();
+        // Move our registry to Runtime (Runtime will own it during execution)
+        let registry = std::mem::replace(&mut self.mock_registry, MockRegistry::new());
+        self.runtime.set_mock_registry(registry);
+
+        // Parse the source code
+        let mut error_reporter = SimpleErrorReporter::new();
+        let lexer = Lexer::new(source_code);
+        let tokens: Result<Vec<_>, _> = lexer.collect();
+        let tokens = tokens.map_err(|e| format!("Lexer error: {}", e))?;
+
+        let mut parser = Parser::new(&tokens, &mut error_reporter);
+        let statements = parser
+            .parse()
+            .map_err(|e| format!("Parser error: {}", e))?;
+
+        // Execute - Runtime will automatically check for mocks in call_function/call_namespace_function
+        let result = self.runtime
+            .execute_program(&statements)
+            .map_err(|e| format!("Runtime error: {}", e));
+
+        // Get the registry back from Runtime (with updated call counts from execution)
+        if let Some(rt_registry) = self.runtime.take_mock_registry() {
+            self.mock_registry = rt_registry;
+        }
+
+        // Return result
+        match result {
+            Ok(_) => Ok(self.runtime.stack.last().cloned().unwrap_or(Value::Null)),
+            Err(e) => Err(e),
+        }
     }
 
     pub fn verify_mocks(&self) -> Result<(), String> {
@@ -336,16 +573,17 @@ pub mod mock_helpers {
 
 /// Test utilities for working with mocks
 pub trait MockTestUtils {
-    fn setup_mocks(&mut self) -> MockRegistry;
+    /// Enable mocks (returns mutable reference to registry for chaining)
+    fn setup_mocks(&mut self) -> &mut MockRegistry;
     fn teardown_mocks(&mut self);
     fn assert_mock_called(&self, name: &str, namespace: Option<&str>, expected_calls: usize);
     fn assert_mock_not_called(&self, name: &str, namespace: Option<&str>);
 }
 
 impl MockTestUtils for MockRuntime {
-    fn setup_mocks(&mut self) -> MockRegistry {
+    fn setup_mocks(&mut self) -> &mut MockRegistry {
         self.mock_registry.enable();
-        self.mock_registry.clone()
+        &mut self.mock_registry
     }
 
     fn teardown_mocks(&mut self) {
@@ -375,5 +613,17 @@ impl MockTestUtils for MockRuntime {
                 key, mock.call_count
             );
         }
+    }
+}
+
+impl Default for MockRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Default for MockRuntime {
+    fn default() -> Self {
+        Self::new()
     }
 }

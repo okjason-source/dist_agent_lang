@@ -10,6 +10,7 @@ use crate::runtime::transaction::TransactionManager;
 use crate::runtime::values::Value;
 use crate::stdlib::cross_chain_security::CrossChainSecurityManager;
 use crate::stdlib::log;
+use crate::testing::mock::MockRegistry;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::sync::mpsc;
@@ -87,6 +88,8 @@ pub struct Runtime {
     test_tests: Vec<(String, String, String)>,
     /// When a Return is executed inside an If/Block, this is set so call_function can break.
     return_pending: Option<Value>,
+    /// Mock registry for testing (intercepts function calls when enabled)
+    pub mock_registry: Option<MockRegistry>,
 }
 
 // NEW: Service instance structure
@@ -146,6 +149,7 @@ impl Runtime {
             test_suite_after_each: HashMap::new(),
             test_tests: Vec::new(),
             return_pending: None,
+            mock_registry: None, // Mock registry for testing (optional)
         };
 
         // Register built-in functions
@@ -181,6 +185,7 @@ impl Runtime {
             test_suite_after_each: HashMap::new(),
             test_tests: Vec::new(),
             return_pending: None,
+            mock_registry: None, // Mock registry for testing (optional)
         };
 
         // Register built-in functions
@@ -357,6 +362,26 @@ impl Runtime {
         self.functions.insert(function.name.clone(), function);
     }
 
+    /// Set the mock registry for testing (enables mock interception)
+    pub fn set_mock_registry(&mut self, registry: MockRegistry) {
+        self.mock_registry = Some(registry);
+    }
+
+    /// Get mutable reference to mock registry (if set)
+    pub fn mock_registry_mut(&mut self) -> Option<&mut MockRegistry> {
+        self.mock_registry.as_mut()
+    }
+
+    /// Get reference to mock registry (if set)
+    pub fn mock_registry(&self) -> Option<&MockRegistry> {
+        self.mock_registry.as_ref()
+    }
+
+    /// Take the mock registry (moves it out of Runtime)
+    pub fn take_mock_registry(&mut self) -> Option<MockRegistry> {
+        self.mock_registry.take()
+    }
+
     /// Check if a function is considered sensitive and requires time-lock protection
     fn is_sensitive_function(&self, name: &str) -> bool {
         // Define sensitive functions that require time-lock protection
@@ -380,6 +405,15 @@ impl Runtime {
     }
 
     pub fn call_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        // Check for mock interception first (before any other logic)
+        if let Some(ref mut registry) = self.mock_registry {
+            if registry.enabled && registry.has_mock(name, None) {
+                return registry
+                    .call_mock_with_runtime(name, None, args, self)
+                    .map_err(|e| RuntimeError::General(format!("Mock error: {}", e)));
+            }
+        }
+
         // Phase 4: Check time-lock restrictions for sensitive functions
         if self.is_sensitive_function(name) {
             self.advanced_security.check_timelock(name)?;
@@ -932,6 +966,15 @@ impl Runtime {
 
         let namespace = parts[0];
         let function_name = parts[1];
+
+        // Check for mock interception first (before any other logic)
+        if let Some(ref mut registry) = self.mock_registry {
+            if registry.enabled && registry.has_mock(function_name, Some(namespace)) {
+                return registry
+                    .call_mock_with_runtime(function_name, Some(namespace), args, self)
+                    .map_err(|e| RuntimeError::General(format!("Mock error: {}", e)));
+            }
+        }
 
         // Check if namespace is a registered service name
         if self.services.contains_key(namespace) {
