@@ -340,4 +340,4 @@ fn test_before_deploy() {
 - ✅ **Event listening** - React to contract events
 - ✅ **Easy testing** - Built-in testing utilities
 
-**Use dist_agent_lang for orchestration, keep Solidity for core contracts!**
+**Use dist_agent_lang for orchestration, keep Solidity for core contracts**

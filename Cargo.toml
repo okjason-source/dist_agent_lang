@@ -2,7 +2,7 @@
 name = "dist_agent_lang"
 version = "1.0.5"
 edition = "2021"
-description = "A hybrid programming language for decentralized and centralized network integration"
+description = "Hybrid programming with library and CLI support for Off/On-chain network integration"
 authors = ["OK Jason <jason.dinh.developer@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/okjason-source/dist_agent_lang"

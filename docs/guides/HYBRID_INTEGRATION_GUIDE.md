@@ -8,7 +8,7 @@
 
 This guide provides comprehensive patterns and best practices for designing systems that seamlessly integrate blockchain (onchain) and traditional (offchain) infrastructure using `dist_agent_lang`. The language's **hybrid trust model** enables developers to build applications that leverage the strengths of both paradigms while maintaining security, performance, and user experience.
 
-**NEW in v1.0.2**: Production-ready cryptography with real JWT authentication, ECDSA (secp256k1), and EdDSA (Ed25519) signatures. All security features are now production-ready for financial applications.
+**NEW in v1.0.2**: Production-ready cryptography with real JWT authentication, ECDSA (secp256k1), and EdDSA (Ed25519) signatures. All security features are ready for you to try your build.
 
 ## 🏗️ Core Architecture Principles
 

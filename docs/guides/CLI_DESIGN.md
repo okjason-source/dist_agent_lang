@@ -1,6 +1,6 @@
 # DAL CLI Design
 
-**Principles:** Intuitive, on-brand, project-type agnostic, AI-forward.
+**Principles:** Intuitive, Off/On-chain, AI-forward.
 
 ---
 

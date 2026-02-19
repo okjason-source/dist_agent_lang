@@ -2,7 +2,7 @@
 
 ## Overview
 
-`dist_agent_lang` is a comprehensive programming language designed for blockchain development, AI integration, and multi-chain operations. This guide explains how to properly use the language and its features.
+`dist_agent_lang` is a comprehensive library designed for blockchain development, AI integration, and multi-chain operations. This guide explains how to properly use the language and its features.
 
 ---
 
@@ -56,7 +56,7 @@ service DeFiService {
 ```rust
 @chain("ethereum")               // Ethereum mainnet
 @chain("polygon")                // Polygon network
-@chain("binance")                // Binance Smart Chain
+@chain("bsc")                // Binance Smart Chain
 @chain("solana")                 // Solana network
 @chain("avalanche")              // Avalanche network
 @chain("arbitrum")               // Arbitrum network
