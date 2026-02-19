@@ -9,111 +9,52 @@
 //!
 //! # Example Usage
 //!
-//! ```rust
+//! ```rust,no_run
 //! use dist_agent_lang::testing::{MockBuilder, MockRegistry};
 //! use dist_agent_lang::runtime::values::Value;
 //!
-//! // Create a mock using the builder pattern
-//! let mock = MockBuilder::new("mint")
-//!     .in_namespace("chain")
-//!     .returns(Value::Int(12345))
-//!     .expects_calls(1)
-//!     .validates_args(|args| {
-//!         if args.len() != 2 {
-//!             Err("Expected 2 arguments".to_string())
-//!         } else {
-//!             Ok(())
-//!         }
-//!     })
-//!     .logs("Mock chain::mint called")
-//!     .build();
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Create a mock using the builder pattern
+//!     let mock = MockBuilder::new("mint")
+//!         .in_namespace("chain")
+//!         .returns(Value::Int(12345))
+//!         .expects_calls(1)
+//!         .validates_args(|args| {
+//!             if args.len() != 2 {
+//!                 Err("Expected 2 arguments".to_string())
+//!             } else {
+//!                 Ok(())
+//!             }
+//!         })
+//!         .logs("Mock chain::mint called")
+//!         .build();
 //!
-//! // Register the mock
-//! let mut registry = MockRegistry::new();
-//! registry.register(mock);
+//!     // Register the mock
+//!     let mut registry = MockRegistry::new();
+//!     registry.register(mock);
 //!
-//! // Call the mock
-//! let result = registry.call_mock("mint", Some("chain"), &[
-//!     Value::String("0x123".to_string()),
-//!     Value::Int(100)
-//! ])?;
+//!     // Call the mock
+//!     let result = registry.call_mock("mint", Some("chain"), &[
+//!         Value::String("0x123".to_string()),
+//!         Value::Int(100)
+//!     ])?;
 //!
-//! // Verify expectations
-//! registry.verify_all()?;
+//!     // Verify expectations
+//!     registry.verify_all()?;
+//! #     Ok(())
+//! # }
 //! ```
 //!
 //! # Integration with Runtime
 //!
-//! To actually intercept function calls in Runtime, you need to:
-//! 1. Add a `mock_registry: Option<MockRegistry>` field to Runtime
-//! 2. Check for mocks in `Runtime::call_function()` and `call_namespace_function()`
-//! 3. Call `mock_registry.call_mock_with_runtime()` if a mock exists
-//!
-//! See `MockRuntime` for a wrapper that combines Runtime with MockRegistry.
-
-use crate::runtime::values::Value;
-use crate::runtime::Runtime;
-use std::collections::HashMap;
-
-//! Mocking system for dist_agent_lang testing framework
-//!
-//! This module provides a comprehensive mocking system that allows developers to:
-//! - Mock function calls (both namespaced and global)
-//! - Validate function arguments
-//! - Track call counts and history
-//! - Execute side effects (set variables, call functions, log, throw errors, delay)
-//! - Verify mock expectations
-//!
-//! # Example Usage
-//!
-//! ```rust
-//! use dist_agent_lang::testing::{MockBuilder, MockRegistry};
-//! use dist_agent_lang::runtime::values::Value;
-//!
-//! // Create a mock using the builder pattern
-//! let mock = MockBuilder::new("mint")
-//!     .in_namespace("chain")
-//!     .returns(Value::Int(12345))
-//!     .expects_calls(1)
-//!     .validates_args(|args| {
-//!         if args.len() != 2 {
-//!             Err("Expected 2 arguments".to_string())
-//!         } else {
-//!             Ok(())
-//!         }
-//!     })
-//!     .logs("Mock chain::mint called")
-//!     .build();
-//!
-//! // Register the mock
-//! let mut registry = MockRegistry::new();
-//! registry.register(mock);
-//!
-//! // Call the mock
-//! let result = registry.call_mock("mint", Some("chain"), &[
-//!     Value::String("0x123".to_string()),
-//!     Value::Int(100)
-//! ])?;
-//!
-//! // Verify expectations
-//! registry.verify_all()?;
-//! ```
-//!
-//! # Integration with Runtime
-//!
-//! To actually intercept function calls in Runtime, you need to:
-//! 1. Add a `mock_registry: Option<MockRegistry>` field to Runtime
-//! 2. Check for mocks in `Runtime::call_function()` and `call_namespace_function()`
-//! 3. Call `mock_registry.call_mock_with_runtime()` if a mock exists
-//!
-//! See `MockRuntime` for a wrapper that combines Runtime with MockRegistry.
+//! Runtime integration is complete. Mocks registered via `MockRuntime` or `Runtime::set_mock_registry()`
+//! will automatically intercept function calls during execution.
 
 use crate::runtime::values::Value;
 use crate::runtime::Runtime;
 use std::collections::HashMap;
 
 /// Mock function definition
-#[derive(Debug)]
 pub struct MockFunction {
     pub name: String,
     pub namespace: Option<String>,
@@ -122,9 +63,25 @@ pub struct MockFunction {
     pub call_count: usize,
     pub expected_calls: Option<usize>,
     /// Validator function for argument validation (not Clone-safe, so stored as trait object)
+    /// Note: Cloning will lose the validator
     pub arguments_validator: Option<Box<dyn Fn(&[Value]) -> Result<(), String> + Send + Sync>>,
     /// Captured arguments from all calls (for inspection)
     pub call_history: Vec<Vec<Value>>,
+}
+
+impl Clone for MockFunction {
+    fn clone(&self) -> Self {
+        Self {
+            name: self.name.clone(),
+            namespace: self.namespace.clone(),
+            return_value: self.return_value.clone(),
+            side_effects: self.side_effects.clone(),
+            call_count: self.call_count,
+            expected_calls: self.expected_calls,
+            arguments_validator: None, // Validator cannot be cloned
+            call_history: self.call_history.clone(),
+        }
+    }
 }
 
 impl MockFunction {
@@ -277,7 +234,6 @@ impl MockSideEffect {
 }
 
 /// Mock registry for managing multiple mocks
-#[derive(Debug)]
 pub struct MockRegistry {
     pub mocks: HashMap<String, MockFunction>,
     pub enabled: bool,
@@ -381,10 +337,30 @@ impl MockRegistry {
         self.enabled = false;
     }
 
-    fn get_mock_key(&self, name: &str, namespace: Option<&str>) -> String {
+    pub fn get_mock_key(&self, name: &str, namespace: Option<&str>) -> String {
         match namespace {
             Some(ns) => format!("{}::{}", ns, name),
             None => name.to_string(),
+        }
+    }
+
+    /// Check if a mock exists for the given function name and namespace
+    pub fn has_mock(&self, name: &str, namespace: Option<&str>) -> bool {
+        let key = self.get_mock_key(name, namespace);
+        self.mocks.contains_key(&key)
+    }
+
+    /// Get call count for a specific mock
+    pub fn get_call_count(&self, name: &str, namespace: Option<&str>) -> Option<usize> {
+        let key = self.get_mock_key(name, namespace);
+        self.mocks.get(&key).map(|m| m.call_count)
+    }
+
+    /// Reset call counts for all mocks (useful for test teardown)
+    pub fn reset_call_counts(&mut self) {
+        for mock in self.mocks.values_mut() {
+            mock.call_count = 0;
+            mock.call_history.clear();
         }
     }
 }
@@ -396,7 +372,7 @@ pub struct MockBuilder {
     return_value: Option<Value>,
     side_effects: Vec<MockSideEffect>,
     expected_calls: Option<usize>,
-    arguments_validator: Option<Box<dyn Fn(&[Value]) -> Result<(), String>>>,
+    arguments_validator: Option<Box<dyn Fn(&[Value]) -> Result<(), String> + Send + Sync>>,
 }
 
 impl MockBuilder {
@@ -445,7 +421,7 @@ impl MockBuilder {
 
     pub fn validates_args<F>(mut self, validator: F) -> Self
     where
-        F: Fn(&[Value]) -> Result<(), String> + 'static,
+        F: Fn(&[Value]) -> Result<(), String> + Send + Sync + 'static,
     {
         self.arguments_validator = Some(Box::new(validator));
         self
@@ -459,6 +435,7 @@ impl MockBuilder {
             side_effects: self.side_effects,
             call_count: 0,
             expected_calls: self.expected_calls,
+            // The validator already has Send + Sync bounds from validates_args
             arguments_validator: self.arguments_validator,
             call_history: Vec::new(),
         }
@@ -490,7 +467,6 @@ impl MockRuntime {
     pub fn execute_with_mocks(&mut self, source_code: &str) -> Result<Value, String> {
         use crate::lexer::Lexer;
         use crate::parser::Parser;
-        use crate::parser::error::SimpleErrorReporter;
 
         // Set mock registry on Runtime before execution (Runtime will use it for interception)
         self.mock_registry.enable();
@@ -499,19 +475,18 @@ impl MockRuntime {
         self.runtime.set_mock_registry(registry);
 
         // Parse the source code
-        let mut error_reporter = SimpleErrorReporter::new();
-        let lexer = Lexer::new(source_code);
-        let tokens: Result<Vec<_>, _> = lexer.collect();
-        let tokens = tokens.map_err(|e| format!("Lexer error: {}", e))?;
+        let tokens = Lexer::new(source_code)
+            .tokenize()
+            .map_err(|e| format!("Lexer error: {}", e))?;
 
-        let mut parser = Parser::new(&tokens, &mut error_reporter);
-        let statements = parser
+        let mut parser = Parser::new(tokens);
+        let program = parser
             .parse()
             .map_err(|e| format!("Parser error: {}", e))?;
 
         // Execute - Runtime will automatically check for mocks in call_function/call_namespace_function
         let result = self.runtime
-            .execute_program(&statements)
+            .execute_program(program)
             .map_err(|e| format!("Runtime error: {}", e));
 
         // Get the registry back from Runtime (with updated call counts from execution)

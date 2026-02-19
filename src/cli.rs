@@ -201,6 +201,14 @@ pub enum Commands {
         rest: Vec<String>,
     },
 
+    /// Oracle operations (fetch, verify, stream external data)
+    Oracle {
+        #[arg(required = true)]
+        subcommand: String,
+        #[arg(trailing_var_arg = true)]
+        rest: Vec<String>,
+    },
+
     /// Start LSP server
     Lsp {
         #[arg(trailing_var_arg = true)]

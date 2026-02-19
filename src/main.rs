@@ -170,6 +170,11 @@ fn main() {
             a.extend(rest.iter().cloned());
             handle_cloud_command(&a);
         }
+        Commands::Oracle { subcommand, rest } => {
+            let mut a = vec![subcommand.clone()];
+            a.extend(rest.iter().cloned());
+            handle_oracle_command(&a);
+        }
         Commands::Lsp { rest } => handle_lsp_command(rest),
         Commands::Doc {
             target,
@@ -1161,11 +1166,18 @@ fn test_error_handling_and_testing_framework() {
 
     let mut mock_registry = MockRegistry::new();
     mock_registry.register(mock_chain_mint.clone());
-    mock_registry.register(mock_oracle_fetch);
+    mock_registry.register(mock_oracle_fetch.clone());
 
     println!("   ✅ Mock registry: {} mocks", mock_registry.mocks.len());
 
-    // Test runner
+    // Test runner (create a fresh mock since cloning loses the validator)
+    let mock_chain_mint_for_runner = MockBuilder::new("mint")
+        .in_namespace("chain")
+        .returns(Value::Int(12345))
+        .logs("Mock chain::mint called")
+        .expects_calls(1)
+        .build();
+    
     let mut test_runner = TestRunner::new()
         .with_config(TestConfig {
             verbose: false, // Changed from true to false for less verbose output
@@ -1177,7 +1189,7 @@ fn test_error_handling_and_testing_framework() {
             coverage_enabled: true,
             output_format: OutputFormat::Text,
         })
-        .with_mock(mock_chain_mint);
+        .with_mock(mock_chain_mint_for_runner);
 
     let stats = test_runner.run_suite(test_suite);
 
@@ -4048,6 +4060,162 @@ fn handle_web_command(args: &[String]) {
 }
 
 // ============================================================================
+// Phase 3.5: Oracle Commands (fetch, verify, stream, create_source, create_query)
+// ============================================================================
+
+fn handle_oracle_command(args: &[String]) {
+    use crate::runtime::values::Value;
+    use stdlib::oracle;
+
+    if args.is_empty() {
+        eprintln!("Usage: {} oracle <subcommand> [args...]", binary_name());
+        eprintln!();
+        eprintln!("Subcommands:");
+        eprintln!("  fetch <source> <query_type>          Fetch data from oracle source");
+        eprintln!("  verify <data> <signature>            Verify oracle data signature");
+        eprintln!("  stream <source> <callback>          Stream real-time data");
+        eprintln!("  create-source <name> <url>          Create oracle source");
+        eprintln!("  create-query <query_type>            Create oracle query");
+        eprintln!("  get-stream <stream_id>              Get stream info");
+        eprintln!("  close-stream <stream_id>            Close stream");
+        std::process::exit(1);
+    }
+
+    match args[0].as_str() {
+        "fetch" => {
+            if args.len() < 3 {
+                eprintln!("Usage: {} oracle fetch <source> <query_type>", binary_name());
+                std::process::exit(1);
+            }
+            let source = &args[1];
+            let query_type = &args[2];
+            let query = oracle::create_query(query_type.clone());
+
+            match oracle::fetch(source, query) {
+                Ok(response) => {
+                    println!("✅ Oracle fetch successful");
+                    println!("   Source: {}", response.source);
+                    println!("   Timestamp: {}", response.timestamp);
+                    println!("   Data: {:?}", response.data);
+                    if let Some(sig) = &response.signature {
+                        println!("   Signature: {} (verified: {})", sig, response.verified);
+                    }
+                    println!("   Confidence: {:.2}%", response.confidence_score * 100.0);
+                }
+                Err(e) => {
+                    eprintln!("❌ Oracle fetch failed: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+
+        "verify" => {
+            if args.len() < 3 {
+                eprintln!("Usage: {} oracle verify <data> <signature>", binary_name());
+                std::process::exit(1);
+            }
+            // For CLI, treat data as string; in DAL code it can be any Value
+            let data = Value::String(args[1].clone());
+            let signature = &args[2];
+            let is_valid = oracle::verify(&data, signature);
+            if is_valid {
+                println!("✅ Signature verified");
+            } else {
+                eprintln!("❌ Signature verification failed");
+                std::process::exit(1);
+            }
+        }
+
+        "stream" => {
+            if args.len() < 3 {
+                eprintln!("Usage: {} oracle stream <source> <callback>", binary_name());
+                std::process::exit(1);
+            }
+            let source = &args[1];
+            let callback = &args[2];
+
+            match oracle::stream(source, callback) {
+                Ok(stream_id) => {
+                    println!("✅ Stream created: {}", stream_id);
+                    println!("   Source: {}", source);
+                    println!("   Callback: {}", callback);
+                }
+                Err(e) => {
+                    eprintln!("❌ Stream creation failed: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+
+        "create-source" => {
+            if args.len() < 3 {
+                eprintln!("Usage: {} oracle create-source <name> <url>", binary_name());
+                std::process::exit(1);
+            }
+            let name = args[1].clone();
+            let url = args[2].clone();
+            let source = oracle::create_source(name.clone(), url.clone());
+            println!("✅ Oracle source created");
+            println!("   Name: {}", source.name);
+            println!("   URL: {}", source.url);
+            println!("   Trusted: {}", source.trusted);
+        }
+
+        "create-query" => {
+            if args.len() < 2 {
+                eprintln!("Usage: {} oracle create-query <query_type>", binary_name());
+                std::process::exit(1);
+            }
+            let query_type = &args[1];
+            let query = oracle::create_query(query_type.clone());
+            println!("✅ Oracle query created");
+            println!("   Type: {}", query.query_type);
+            println!("   Require signature: {}", query.require_signature);
+        }
+
+        "get-stream" => {
+            if args.len() < 2 {
+                eprintln!("Usage: {} oracle get-stream <stream_id>", binary_name());
+                std::process::exit(1);
+            }
+            let stream_id = &args[1];
+            match oracle::get_stream(stream_id) {
+                Some(entry) => {
+                    println!("✅ Stream found: {}", stream_id);
+                    println!("   Source: {}", entry.source);
+                    println!("   Created at: {}", entry.created_at);
+                }
+                None => {
+                    eprintln!("❌ Stream not found: {}", stream_id);
+                    std::process::exit(1);
+                }
+            }
+        }
+
+        "close-stream" => {
+            if args.len() < 2 {
+                eprintln!("Usage: {} oracle close-stream <stream_id>", binary_name());
+                std::process::exit(1);
+            }
+            let stream_id = &args[1];
+            let closed = oracle::close_stream(stream_id);
+            if closed {
+                println!("✅ Stream closed: {}", stream_id);
+            } else {
+                eprintln!("❌ Stream not found: {}", stream_id);
+                std::process::exit(1);
+            }
+        }
+
+        _ => {
+            eprintln!("Unknown oracle subcommand: {}", args[0]);
+            eprintln!("Use: fetch, verify, stream, create-source, create-query, get-stream, close-stream");
+            std::process::exit(1);
+        }
+    }
+}
+
+// ============================================================================
 // Phase 4: Cloud & Enterprise (authorize, grant, revoke, audit, tenant, compliance, trust)
 // ============================================================================
 
@@ -5030,6 +5198,7 @@ fn handle_completions_command(args: &[String]) {
         "db",
         "ai",
         "cloud",
+        "oracle",
         "lsp",
         "doc",
         "completions",

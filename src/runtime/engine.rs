@@ -10,6 +10,7 @@ use crate::runtime::transaction::TransactionManager;
 use crate::runtime::values::Value;
 use crate::stdlib::cross_chain_security::CrossChainSecurityManager;
 use crate::stdlib::log;
+use crate::stdlib::oracle::{self, OracleQuery, OracleResponse, OracleSource};
 use crate::testing::mock::MockRegistry;
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -406,13 +407,36 @@ impl Runtime {
 
     pub fn call_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         // Check for mock interception first (before any other logic)
+        // The mutable borrow is scoped to this block and released before normal execution
         if let Some(ref mut registry) = self.mock_registry {
             if registry.enabled && registry.has_mock(name, None) {
-                return registry
-                    .call_mock_with_runtime(name, None, args, self)
-                    .map_err(|e| RuntimeError::General(format!("Mock error: {}", e)));
+                // Get the key and extract mock data to avoid double borrow
+                let key = registry.get_mock_key(name, None);
+                let (return_val, side_effects) = if let Some(mock) = registry.mocks.get_mut(&key) {
+                    // Validate arguments if validator is set
+                    if let Some(ref validator) = mock.arguments_validator {
+                        validator(args).map_err(|e| RuntimeError::General(format!("Argument validation failed: {}", e)))?;
+                    }
+                    // Record call
+                    mock.call_count += 1;
+                    mock.call_history.push(args.to_vec());
+                    // Extract return value and side effects (clone side effects)
+                    (mock.return_value.clone(), mock.side_effects.clone())
+                } else {
+                    return Err(RuntimeError::General(format!("Mock '{}' not found", key)));
+                };
+                
+                // Execute side effects with runtime access (registry borrow is released here)
+                for side_effect in &side_effects {
+                    side_effect.execute_with_runtime(args, self)
+                        .map_err(|e| RuntimeError::General(format!("Mock side effect error: {}", e)))?;
+                }
+                // Return mock value
+                return Ok(return_val.unwrap_or(Value::Null));
             }
-        }
+        } // Registry borrow released here - normal execution can proceed
+
+        // Normal execution path (no active borrows on mock_registry)
 
         // Phase 4: Check time-lock restrictions for sensitive functions
         if self.is_sensitive_function(name) {
@@ -968,13 +992,36 @@ impl Runtime {
         let function_name = parts[1];
 
         // Check for mock interception first (before any other logic)
+        // The mutable borrow is scoped to this block and released before normal execution
         if let Some(ref mut registry) = self.mock_registry {
             if registry.enabled && registry.has_mock(function_name, Some(namespace)) {
-                return registry
-                    .call_mock_with_runtime(function_name, Some(namespace), args, self)
-                    .map_err(|e| RuntimeError::General(format!("Mock error: {}", e)));
+                // Get the key and extract mock data to avoid double borrow
+                let key = registry.get_mock_key(function_name, Some(namespace));
+                let (return_val, side_effects) = if let Some(mock) = registry.mocks.get_mut(&key) {
+                    // Validate arguments if validator is set
+                    if let Some(ref validator) = mock.arguments_validator {
+                        validator(args).map_err(|e| RuntimeError::General(format!("Argument validation failed: {}", e)))?;
+                    }
+                    // Record call
+                    mock.call_count += 1;
+                    mock.call_history.push(args.to_vec());
+                    // Extract return value and side effects (clone side effects)
+                    (mock.return_value.clone(), mock.side_effects.clone())
+                } else {
+                    return Err(RuntimeError::General(format!("Mock '{}' not found", key)));
+                };
+                
+                // Execute side effects with runtime access (registry borrow is released here)
+                for side_effect in &side_effects {
+                    side_effect.execute_with_runtime(args, self)
+                        .map_err(|e| RuntimeError::General(format!("Mock side effect error: {}", e)))?;
+                }
+                // Return mock value
+                return Ok(return_val.unwrap_or(Value::Null));
             }
-        }
+        } // Registry borrow released here - normal execution can proceed
+
+        // Normal execution path (no active borrows on mock_registry)
 
         // Check if namespace is a registered service name
         if self.services.contains_key(namespace) {
@@ -1068,8 +1115,185 @@ impl Runtime {
         }
     }
 
+    /// Convert OracleSource to Value::Struct for DAL runtime
+    ///
+    /// Converts a Rust `OracleSource` struct into a DAL `Value::Struct` that can be
+    /// returned to DAL code. The struct has fields: name, url, api_key, rate_limit,
+    /// trusted, public_key.
+    fn oracle_source_to_value(&self, source: &OracleSource) -> Value {
+        let mut fields = HashMap::new();
+        fields.insert("name".to_string(), Value::String(source.name.clone()));
+        fields.insert("url".to_string(), Value::String(source.url.clone()));
+        fields.insert(
+            "api_key".to_string(),
+            source
+                .api_key
+                .as_ref()
+                .map(|k| Value::String(k.clone()))
+                .unwrap_or(Value::Null),
+        );
+        fields.insert(
+            "rate_limit".to_string(),
+            source
+                .rate_limit
+                .map(Value::Int)
+                .unwrap_or(Value::Null),
+        );
+        fields.insert("trusted".to_string(), Value::Bool(source.trusted));
+        fields.insert(
+            "public_key".to_string(),
+            source
+                .public_key
+                .as_ref()
+                .map(|k| Value::String(k.clone()))
+                .unwrap_or(Value::Null),
+        );
+        Value::Struct("OracleSource".to_string(), fields)
+    }
+
+    /// Convert Value to OracleQuery for DAL runtime
+    ///
+    /// Converts a DAL `Value` (either a `Value::Struct("OracleQuery", fields)` or
+    /// a `Value::String(query_type)`) into a Rust `OracleQuery` struct. Supports
+    /// extracting query_type, parameters, timeout, require_signature, and min_confirmations.
+    fn value_to_oracle_query(&self, value: &Value) -> Result<OracleQuery, RuntimeError> {
+        match value {
+            Value::Struct(_, fields) => {
+                let query_type = match fields.get("query_type") {
+                    Some(Value::String(s)) => s.clone(),
+                    Some(v) => self.value_to_string(v)?,
+                    None => return Err(RuntimeError::General("Missing query_type".to_string())),
+                };
+
+                let mut query = OracleQuery::new(query_type);
+
+                if let Some(Value::Map(params)) = fields.get("parameters") {
+                    query.parameters = params.clone();
+                }
+
+                if let Some(Value::Int(timeout)) = fields.get("timeout") {
+                    query.timeout = Some(*timeout);
+                }
+
+                if let Some(Value::Bool(require_sig)) = fields.get("require_signature") {
+                    query.require_signature = *require_sig;
+                }
+
+                if let Some(Value::Int(confirmations)) = fields.get("min_confirmations") {
+                    query.min_confirmations = Some(*confirmations as u32);
+                }
+
+                Ok(query)
+            }
+            Value::String(query_type) => Ok(OracleQuery::new(query_type.clone())),
+            _ => Err(RuntimeError::TypeError {
+                expected: "OracleQuery or String".to_string(),
+                got: format!("{:?}", value),
+            }),
+        }
+    }
+
+    /// Convert OracleResponse to Value::Struct for DAL runtime
+    ///
+    /// Converts a Rust `OracleResponse` struct into a DAL `Value::Struct` that can be
+    /// returned to DAL code. The struct has fields: data, timestamp, source, signature,
+    /// verified, confidence_score. Used when returning oracle fetch results to DAL code.
+    fn oracle_response_to_value(&self, response: &OracleResponse) -> Value {
+        let mut fields = HashMap::new();
+        fields.insert("data".to_string(), response.data.clone());
+        fields.insert("timestamp".to_string(), Value::Int(response.timestamp as i64));
+        fields.insert("source".to_string(), Value::String(response.source.clone()));
+        fields.insert(
+            "signature".to_string(),
+            response
+                .signature
+                .as_ref()
+                .map(|s| Value::String(s.clone()))
+                .unwrap_or(Value::Null),
+        );
+        fields.insert("verified".to_string(), Value::Bool(response.verified));
+        fields.insert(
+            "confidence_score".to_string(),
+            Value::Float(response.confidence_score),
+        );
+        Value::Struct("OracleResponse".to_string(), fields)
+    }
+
+    /// Oracle namespace functions - integrated with stdlib::oracle
+    ///
+    /// Provides runtime integration for the `oracle::` namespace, enabling DAL code to:
+    /// - Fetch data from external oracle sources (HTTP endpoints, named feeds)
+    /// - Verify cryptographic signatures on oracle responses
+    /// - Stream real-time data from oracle sources
+    /// - Create and manage oracle sources and queries
+    ///
+    /// # Supported Functions
+    ///
+    /// - `oracle::create_source(name, url)` - Create an oracle source configuration
+    /// - `oracle::create_query(query_type)` - Create an oracle query
+    /// - `oracle::fetch(source, query)` - Fetch data from an oracle source (returns Result<OracleResponse, String>)
+    /// - `oracle::fetch_with_consensus(sources, query, threshold)` - Fetch from multiple sources with consensus
+    /// - `oracle::verify(data, signature)` - Verify oracle data signature
+    /// - `oracle::stream(source, callback)` - Create a real-time data stream
+    /// - `oracle::get_stream(stream_id)` - Get stream metadata
+    /// - `oracle::close_stream(stream_id)` - Close a stream
+    ///
+    /// # Security Features
+    ///
+    /// The oracle system includes built-in security features:
+    /// - Signature verification for trusted sources
+    /// - Rate limiting per source
+    /// - Timestamp validation (replay protection)
+    /// - Multi-source consensus validation
+    /// - Trusted source allowlisting
+    ///
+    /// # Example DAL Usage
+    ///
+    /// ```dal
+    /// // Create a query
+    /// let query = oracle::create_query("btc_price");
+    ///
+    /// // Fetch from oracle source
+    /// let result = oracle::fetch("price_feed", query);
+    /// match result {
+    ///     ok(response) => {
+    ///         log::info("Price", response.data);
+    ///         if response.verified {
+    ///             log::info("Security", "Signature verified");
+    ///         }
+    ///     },
+    ///     err(msg) => log::error("Oracle", msg)
+    /// }
+    ///
+    /// // Stream real-time data
+    /// let stream_id = oracle::stream("price_feed", "price_callback");
+    /// ```
+    ///
+    /// # Implementation Details
+    ///
+    /// This function converts between DAL `Value` types and Rust oracle types:
+    /// - `OracleSource` ↔ `Value::Struct("OracleSource", fields)`
+    /// - `OracleQuery` ↔ `Value::Struct("OracleQuery", fields)` or `Value::String(query_type)`
+    /// - `OracleResponse` ↔ `Value::Struct("OracleResponse", fields)`
+    ///
+    /// HTTP-based oracle sources (URLs starting with `http://` or `https://`) are supported
+    /// when the `http-interface` feature is enabled. The runtime uses `reqwest` to fetch
+    /// data and parses JSON responses into DAL `Value` types.
     fn call_oracle_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         match name {
+            "create_source" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                let url = self.value_to_string(&args[1])?;
+                let source = oracle::create_source(name, url);
+                Ok(self.oracle_source_to_value(&source))
+            }
+
             "create_query" => {
                 if args.len() != 1 {
                     return Err(RuntimeError::ArgumentCountMismatch {
@@ -1077,8 +1301,33 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String(format!("query_{}", args[0])))
+                let query_type = self.value_to_string(&args[0])?;
+                let query = oracle::create_query(query_type);
+                // Convert OracleQuery to Value::Struct
+                let mut fields = HashMap::new();
+                fields.insert("query_type".to_string(), Value::String(query.query_type.clone()));
+                fields.insert(
+                    "parameters".to_string(),
+                    Value::Map(query.parameters.clone()),
+                );
+                fields.insert(
+                    "timeout".to_string(),
+                    query.timeout.map(Value::Int).unwrap_or(Value::Null),
+                );
+                fields.insert(
+                    "require_signature".to_string(),
+                    Value::Bool(query.require_signature),
+                );
+                fields.insert(
+                    "min_confirmations".to_string(),
+                    query
+                        .min_confirmations
+                        .map(|c| Value::Int(c as i64))
+                        .unwrap_or(Value::Null),
+                );
+                Ok(Value::Struct("OracleQuery".to_string(), fields))
             }
+
             "fetch" => {
                 if args.len() != 2 {
                     return Err(RuntimeError::ArgumentCountMismatch {
@@ -1086,9 +1335,96 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                // Simulate fetching data
-                Ok(Value::Int(42000)) // Simulated price
+                let source = self.value_to_string(&args[0])?;
+                let query = self.value_to_oracle_query(&args[1])?;
+
+                match oracle::fetch(&source, query) {
+                    Ok(response) => {
+                        // Return as Result<OracleResponse, String>
+                        Ok(Value::Result(
+                            Box::new(self.oracle_response_to_value(&response)),
+                            Box::new(Value::Null),
+                        ))
+                    }
+                    Err(e) => Ok(Value::Result(
+                        Box::new(Value::Null),
+                        Box::new(Value::String(e)),
+                    )),
+                }
             }
+
+            "fetch_with_consensus" => {
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+
+                // Extract sources list
+                let sources = match &args[0] {
+                    Value::List(list) => {
+                        let mut source_vec = Vec::new();
+                        for v in list {
+                            source_vec.push(self.value_to_string(v)?);
+                        }
+                        source_vec
+                    }
+                    Value::Array(arr) => {
+                        let mut source_vec = Vec::new();
+                        for v in arr {
+                            source_vec.push(self.value_to_string(v)?);
+                        }
+                        source_vec
+                    }
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "List or Array of strings".to_string(),
+                            got: format!("{:?}", args[0]),
+                        })
+                    }
+                };
+
+                let query = self.value_to_oracle_query(&args[1])?;
+
+                // Extract threshold (float)
+                let threshold = match &args[2] {
+                    Value::Float(f) => *f,
+                    Value::Int(i) => *i as f64,
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "Float".to_string(),
+                            got: format!("{:?}", args[2]),
+                        })
+                    }
+                };
+
+                let source_refs: Vec<&str> = sources.iter().map(|s| s.as_str()).collect();
+                match oracle::fetch_with_consensus(source_refs, query, threshold) {
+                    Ok(response) => Ok(Value::Result(
+                        Box::new(self.oracle_response_to_value(&response)),
+                        Box::new(Value::Null),
+                    )),
+                    Err(e) => Ok(Value::Result(
+                        Box::new(Value::Null),
+                        Box::new(Value::String(e)),
+                    )),
+                }
+            }
+
+            "verify" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let data = &args[0];
+                let signature = self.value_to_string(&args[1])?;
+                let is_valid = oracle::verify(data, &signature);
+                Ok(Value::Bool(is_valid))
+            }
+
             "stream" => {
                 if args.len() != 2 {
                     return Err(RuntimeError::ArgumentCountMismatch {
@@ -1096,8 +1432,47 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String(format!("stream_{}", args[0])))
+                let source = self.value_to_string(&args[0])?;
+                let callback = self.value_to_string(&args[1])?;
+
+                match oracle::stream(&source, &callback) {
+                    Ok(stream_id) => Ok(Value::String(stream_id)),
+                    Err(e) => Err(RuntimeError::General(e)),
+                }
             }
+
+            "get_stream" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let stream_id = self.value_to_string(&args[0])?;
+
+                match oracle::get_stream(&stream_id) {
+                    Some(entry) => {
+                        let mut fields = HashMap::new();
+                        fields.insert("source".to_string(), Value::String(entry.source));
+                        fields.insert("created_at".to_string(), Value::Int(entry.created_at as i64));
+                        Ok(Value::Struct("StreamEntry".to_string(), fields))
+                    }
+                    None => Ok(Value::Null),
+                }
+            }
+
+            "close_stream" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let stream_id = self.value_to_string(&args[0])?;
+                let closed = oracle::close_stream(&stream_id);
+                Ok(Value::Bool(closed))
+            }
+
             _ => Err(RuntimeError::function_not_found(format!(
                 "oracle::{}",
                 name
@@ -2497,6 +2872,7 @@ impl Runtime {
                                 transaction_manager: TransactionManager::new(),
                                 execution_start: None,
                                 current_caller: None,
+                                mock_registry: None,
                                 current_transaction_id: None,
                                 pending_spawns: HashMap::new(),
                                 spawn_counter: 0,
