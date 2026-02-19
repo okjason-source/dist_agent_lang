@@ -1,6 +1,6 @@
 [package]
 name = "dist_agent_lang"
-version = "1.0.5"
+version = "1.0.6"
 edition = "2021"
 description = "A hybrid programming language for decentralized and centralized network integration"
 authors = ["OK Jason <jason.dinh.developer@gmail.com>"]
