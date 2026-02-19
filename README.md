@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.5-blue.svg)](https://github.com/okjason-source/dist_agent_lang)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](https://github.com/okjason-source/dist_agent_lang)
 
-**A hybrid compiled programming language for simplicity in a sophisticated future.**
+**A hybrid compiled programming language built with simplicity for a sophisticated future.**
 
 > 🌱 **v1.0.5 Beta Release** — Actively maintained with consistent updates. Test thoroughly before production. **Beta testing contributions appreciated!** 🙏
 
