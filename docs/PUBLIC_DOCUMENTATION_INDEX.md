@@ -547,9 +547,9 @@ function coordinate_agents() {
 - ❌ Remove attribution from documentation
 - ❌ Create competing languages from DAL
 
-### Community Templates
+### Mold System
 
-Templates in the marketplace have individual licenses (MIT, Apache, Commercial, etc.)
+Agent configurations in the marketplace can have individual licenses (MIT, Apache, Commercial, etc.)built purposefully on chain.
 
 ---
 
@@ -580,19 +580,13 @@ Templates in the marketplace have individual licenses (MIT, Apache, Commercial, 
 
 ### Professional Training
 
-- **DAL Fundamentals:** 2-day workshop, $1,500
-- **Advanced DAL Development:** 3-day workshop, $2,500
-- **Enterprise Deployment:** Custom, contact for pricing
-
-### Certification
-
-- **DAL Certified Developer:** $299 (exam + cert)
-- **DAL Certified Architect:** $499 (exam + cert)
-- **Info:** certification@dist_agent_lang.org
+- **DAL Fundamentals:** 2-day workshop, $15,000
+- **Advanced DAL Development:** 3-day workshop, $25,000
+- **Enterprise Deployment:** Custom, contact for requests
 
 ---
 
-## 🏆 Success Stories
+## 🏆 Case Studies
 
 ### Companies Using DAL
 
@@ -600,7 +594,7 @@ Templates in the marketplace have individual licenses (MIT, Apache, Commercial, 
 - **IoT Solutions Inc:** Smart home automation (10,000 devices managed)
 - **DeFi Protocol:** Hybrid exchange (centralized + decentralized)
 
-### Case Studies
+### Stories
 
 - [How FinTech Corp reduced fraud by 85%](https://dist_agent_lang.org/case-studies/fintech-fraud)
 - [IoT Solutions' journey to 10,000 devices](https://dist_agent_lang.org/case-studies/iot-scale)
