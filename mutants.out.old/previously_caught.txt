@@ -1,3 +1,141 @@
+src/lib.rs:89:46: replace * with + in parse_source
+src/lib.rs:89:46: replace * with / in parse_source
+src/lib.rs:89:39: replace * with / in parse_source
+src/lib.rs:90:21: replace > with < in parse_source
+src/lib.rs:106:30: replace > with < in parse_source
+src/http_server_converters.rs:10:5: replace percent_decode -> String with String::new()
+src/http_server_converters.rs:10:5: replace percent_decode -> String with "xyzzy".into()
+src/http_server_converters.rs:14:15: replace == with != in percent_decode
+src/http_server_converters.rs:29:22: replace == with != in percent_decode
+src/http_server_converters.rs:102:40: replace * with /
+src/http_server_converters.rs:102:33: replace * with /
+src/http_server_converters.rs:106:5: replace extract_body -> Result<String, String> with Ok(String::new())
+src/http_server_converters.rs:106:5: replace extract_body -> Result<String, String> with Ok("xyzzy".into())
+src/http_server_converters.rs:117:5: replace http_response_to_axum_response -> Response<Body> with Response::new(Default::default())
+src/http_server_converters.rs:117:5: replace http_response_to_axum_response -> Response<Body> with Response::from(Default::default())
+src/http_server_converters.rs:173:5: replace error_response -> Response<Body> with Response::new(Default::default())
+src/http_server_converters.rs:173:5: replace error_response -> Response<Body> with Response::from(Default::default())
+src/http_server_converters.rs:192:5: replace json_response -> Response<Body> with Response::new(Default::default())
+src/http_server_converters.rs:192:5: replace json_response -> Response<Body> with Response::from(Default::default())
+src/http_server_handlers.rs:28:5: replace handle_with_middleware -> Response<Body> with Response::new(Default::default())
+src/http_server_handlers.rs:28:5: replace handle_with_middleware -> Response<Body> with Response::from(Default::default())
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::new()))
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([(String::new(), String::new())])))
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([(String::new(), "xyzzy".into())])))
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([("xyzzy".into(), String::new())])))
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some((String::new(), HashMap::from_iter([("xyzzy".into(), "xyzzy".into())])))
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::new()))
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([(String::new(), String::new())])))
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([(String::new(), "xyzzy".into())])))
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([("xyzzy".into(), String::new())])))
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with Some(("xyzzy".into(), HashMap::from_iter([("xyzzy".into(), "xyzzy".into())])))
+src/http_server_handlers.rs:151:5: replace get_route_handler_name -> Option<String> with Some(String::new())
+src/http_server_handlers.rs:151:5: replace get_route_handler_name -> Option<String> with Some("xyzzy".into())
+src/http_server_integration.rs:73:17: delete match arm "POST" in create_router_with_options
+src/http_server_middleware.rs:362:9: delete match arm Value::Map(map) in value_to_http_response
+src/http_server_security.rs:98:9: replace InputValidator::validate_string -> Result<(), String> with Ok(())
+src/http_server_security.rs:98:24: replace > with == in InputValidator::validate_string
+src/http_server_security.rs:98:24: replace > with < in InputValidator::validate_string
+src/http_server_security.rs:98:24: replace > with >= in InputValidator::validate_string
+src/http_server_security.rs:148:9: replace InputValidator::validate_number -> Result<(), String> with Ok(())
+src/http_server_security.rs:148:24: replace || with && in InputValidator::validate_number
+src/http_server_security.rs:148:18: replace < with == in InputValidator::validate_number
+src/http_server_security.rs:148:18: replace < with > in InputValidator::validate_number
+src/http_server_security.rs:148:18: replace < with <= in InputValidator::validate_number
+src/http_server_security.rs:148:33: replace > with == in InputValidator::validate_number
+src/http_server_security.rs:148:33: replace > with < in InputValidator::validate_number
+src/http_server_security.rs:148:33: replace > with >= in InputValidator::validate_number
+src/http_server_security.rs:156:9: replace InputValidator::validate_address -> Result<(), String> with Ok(())
+src/http_server_security.rs:156:12: delete ! in InputValidator::validate_address
+src/http_server_security.rs:160:26: replace != with == in InputValidator::validate_address
+src/http_server_security.rs:164:12: delete ! in InputValidator::validate_address
+src/http_server_security.rs:173:9: replace InputValidator::sanitize_string -> String with String::new()
+src/http_server_security.rs:173:9: replace InputValidator::sanitize_string -> String with "xyzzy".into()
+src/http_server_security.rs:175:84: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:175:71: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:175:58: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:175:45: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:175:51: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:175:64: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:175:77: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:175:90: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:232:9: replace Claims::is_expired -> bool with true
+src/http_server_security.rs:232:9: replace Claims::is_expired -> bool with false
+src/http_server_security.rs:233:18: replace < with == in Claims::is_expired
+src/http_server_security.rs:233:18: replace < with > in Claims::is_expired
+src/http_server_security.rs:233:18: replace < with <= in Claims::is_expired
+src/http_server_security.rs:265:9: replace JwtConfig::with_expiration -> Self with Default::default()
+src/http_server_security.rs:319:9: replace AuthValidator::generate_token -> Result<String, String> with Ok(String::new())
+src/http_server_security.rs:319:9: replace AuthValidator::generate_token -> Result<String, String> with Ok("xyzzy".into())
+src/http_server_security.rs:329:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:329:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:339:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:339:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:347:9: replace AuthValidator::extract_token -> Option<String> with None
+src/http_server_security.rs:347:9: replace AuthValidator::extract_token -> Option<String> with Some(String::new())
+src/http_server_security.rs:347:9: replace AuthValidator::extract_token -> Option<String> with Some("xyzzy".into())
+src/http_server_security.rs:385:9: replace RequestSizeLimiter::validate_request -> Result<(), StatusCode> with Ok(())
+src/http_server_security.rs:385:22: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:385:22: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:385:22: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:390:23: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:390:23: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:390:23: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:397:54: replace + with - in RequestSizeLimiter::validate_request
+src/http_server_security.rs:397:54: replace + with * in RequestSizeLimiter::validate_request
+src/http_server_security.rs:400:24: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:400:24: replace > with < in RequestSizeLimiter::validate_request
+src/lib.rs:89:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:122:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:135:5: replace execute_dal_with_scope -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:158:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:158:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:158:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/cli.rs:396:9: replace Cli::parse -> Self with Default::default()
+src/http_server.rs:139:5: replace home_handler -> Html<String> with Html::new()
+src/http_server.rs:139:5: replace home_handler -> Html<String> with Html::from_iter([String::new()])
+src/http_server.rs:139:5: replace home_handler -> Html<String> with Html::new(String::new())
+src/http_server.rs:139:5: replace home_handler -> Html<String> with Html::from_iter(["xyzzy".into()])
+src/http_server.rs:139:5: replace home_handler -> Html<String> with Html::new("xyzzy".into())
+src/http_server.rs:139:5: replace home_handler -> Html<String> with Html::from("xyzzy".into())
+src/http_server.rs:487:5: replace balance_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:487:5: replace balance_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:487:5: replace balance_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:487:5: replace balance_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:499:5: replace connect_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:499:5: replace connect_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:499:5: replace connect_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:499:5: replace connect_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:510:5: replace transfer_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:510:5: replace transfer_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:510:5: replace transfer_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:510:5: replace transfer_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:521:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:521:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:521:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:521:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:532:5: replace health_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:532:5: replace health_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:532:5: replace health_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:532:5: replace health_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server_converters.rs:41:5: replace axum_request_to_http_request -> HttpRequest with Default::default()
+src/http_server_converters.rs:117:5: replace http_response_to_axum_response -> Response<Body> with Response::new()
+src/http_server_converters.rs:117:5: replace http_response_to_axum_response -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_converters.rs:173:5: replace error_response -> Response<Body> with Response::new()
+src/http_server_converters.rs:173:5: replace error_response -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_converters.rs:192:5: replace json_response -> Response<Body> with Response::new()
+src/http_server_converters.rs:192:5: replace json_response -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_handlers.rs:28:5: replace handle_with_middleware -> Response<Body> with Response::new()
+src/http_server_handlers.rs:28:5: replace handle_with_middleware -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_integration.rs:102:5: replace home_handler -> Response<Body> with Response::new()
+src/http_server_integration.rs:102:5: replace home_handler -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_integration.rs:107:5: replace health_handler -> Response<Body> with Response::new()
+src/http_server_integration.rs:107:5: replace health_handler -> Response<Body> with Response::from_iter([Default::default()])
+src/http_server_middleware.rs:60:5: replace http_request_to_value -> Value with Default::default()
+src/http_server_middleware.rs:114:5: replace value_to_http_request -> Result<HttpRequest, String> with Ok(Default::default())
+src/http_server_middleware.rs:344:5: replace execute_route_handler -> Result<HttpResponse, MiddlewareError> with Ok(HttpResponse::Ok().finish())
+src/http_server_middleware.rs:361:5: replace value_to_http_response -> Result<HttpResponse, String> with Ok(HttpResponse::Ok().finish())
+src/http_server_security.rs:290:9: replace AuthValidator::validate_api_key -> Result<Claims, String> with Ok(Default::default())
 src/lib.rs:42:46: replace * with + in parse_source
 src/lib.rs:42:46: replace * with / in parse_source
 src/lib.rs:42:39: replace * with / in parse_source

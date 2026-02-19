@@ -15,6 +15,7 @@
 # Mutation testing and logs (do not publish)
 /mutants.out/
 /mutants.out.old/
+*.out.old/
 /logs/
 *.log
 

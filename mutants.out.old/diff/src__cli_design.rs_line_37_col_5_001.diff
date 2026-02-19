@@ -1,6 +1,6 @@
 --- src/cli_design.rs
 +++ replace help_content -> String with "xyzzy".into()
-@@ -29,81 +29,10 @@
+@@ -29,84 +29,10 @@
      println!("┌──────────────────────────────────────────────────────────────────────┐");
      println!("│  {} v{}  —  {}  │", bin, version(), TAGLINE_FULL);
      println!("└──────────────────────────────────────────────────────────────────────┘");
@@ -9,7 +9,8 @@
  
  /// Help content organized by use case (project-type agnostic, AI-forward)
  pub fn help_content(bin: &str) -> String {
--    format!(r#"
+-    format!(
+-        r#"
 -GET STARTED
 -  new <name> [--type <type>]  Create a new project
 -                              Types: ai, iot, agent, chain, web, cli, lib
@@ -80,6 +81,8 @@
 -  {0} run app.dal
 -
 -For subcommand help: {0} <command> --help
--"#, bin)
+-"#,
+-        bin
+-    )
 +    "xyzzy".into() /* ~ changed by cargo-mutants ~ */
  }
