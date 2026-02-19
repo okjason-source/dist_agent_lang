@@ -72,8 +72,6 @@ if [[ -d .git ]]; then
   # List of files/directories to remove (from .gitignore)
   IGNORED_FILES=(
     "docs/PRODUCTION_ROADMAP.md"
-    "docs/ADVANCED_SECURITY_BEST_PRACTICES.md"
-    "docs/ADVANCED_SECURITY_BLOCKING_BEHAVIOR.md"
     "docs/ADVANCED_SECURITY_DESIGN.md"
     "docs/IMPLEMENTATION_SUMMARY.md"
     "docs/RUNTIME_TESTING_STATUS.md"
@@ -81,11 +79,9 @@ if [[ -d .git ]]; then
     "docs/TESTING_ATTRIBUTES.md"
     "docs/EXAMPLE_TESTING_GUIDE.md"
     "docs/MEV_FIX_EXAMPLE.md"
-    "docs/MEV_PROTECTION_MANUAL.md"
     "docs/SECURE_FUNCTION_LEVEL_AND_MEV.md"
     "docs/SECURE_SCOPE.md"
     "docs/SEMANTIC_VALIDATION_FEATURE.md"
-    "docs/REENTRANCY_CLARITY.md"
     "docs/READINESS_CHECKLIST.md"
     "docs/PARSE_COMMAND_SUMMARY.md"
     "docs/AI_ENHANCED_TOOLS_SUMMARY.md"
@@ -100,15 +96,19 @@ if [[ -d .git ]]; then
     "docs/guides/ARCHITECTURE_SEPARATION.md"
     "docs/guides/SMART_CONTRACT_INTERFACE_SEPARATION.md"
     "docs/guides/LLM_ADOPTION_ANALYSIS.md"
-    "docs/guides/GENERAL_PURPOSE_LANGUAGE_ANALYSIS.md"
     "docs/guides/PROJECT_STRUCTURE.md"
     "docs/guides/FIXES_SUMMARY.md"
     "docs/guides/BETA_RELEASE_SUMMARY.md"
     "docs/guides/AUDIT_REPORT.md"
     "docs/guides/RUNTIME_IMPLEMENTATION.md"
     "docs/guides/ORIGINAL_VISION.md"
-    "docs/guides/SMART_CONTRACTS_WITH_DAL_REVIEW.md"
-    "docs/guides/TXN_ATTRIBUTE_GUIDE.md"
+    /syntax-highlighting/
+    /scripts/create-release.js
+    /scripts/push_to_github.sh
+    /scripts/install.sh
+    /scripts/run_dal_tests.sh
+    /scripts/run-tests.sh
+    /scripts/test_examples.sh
   )
   
   REMOVED_COUNT=0
