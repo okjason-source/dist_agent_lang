@@ -724,19 +724,28 @@ fn test_oracle_create_query() {
 }
 
 #[test]
-fn test_oracle_fetch() {
+#[cfg(feature = "http-interface")]
+fn test_oracle_fetch_requires_http_url() {
+    // Test that non-HTTP sources return an error (dynamic oracle system)
     let query = oracle::OracleQuery::new("btc_price".to_string());
     let result = oracle::fetch("price_feed", query);
 
-    assert!(result.is_ok());
-    let response = result.unwrap();
-    match response.data {
-        Value::String(_) => assert!(true),
-        Value::Int(_) => assert!(true),
-        Value::Float(_) => assert!(true),
-        _ => assert!(true, "Any value type is acceptable"),
-    }
-    assert_eq!(response.source, "price_feed");
+    assert!(result.is_err());
+    assert!(result
+        .unwrap_err()
+        .contains("Oracle source must be an HTTP/HTTPS URL"));
+}
+
+#[test]
+#[cfg(not(feature = "http-interface"))]
+fn test_oracle_fetch_requires_feature() {
+    let query = oracle::OracleQuery::new("btc_price".to_string());
+    let result = oracle::fetch("https://api.example.com/oracle", query);
+
+    assert!(result.is_err());
+    assert!(result
+        .unwrap_err()
+        .contains("requires the 'http-interface' feature"));
 }
 
 #[test]

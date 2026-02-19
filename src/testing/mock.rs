@@ -480,12 +480,11 @@ impl MockRuntime {
             .map_err(|e| format!("Lexer error: {}", e))?;
 
         let mut parser = Parser::new(tokens);
-        let program = parser
-            .parse()
-            .map_err(|e| format!("Parser error: {}", e))?;
+        let program = parser.parse().map_err(|e| format!("Parser error: {}", e))?;
 
         // Execute - Runtime will automatically check for mocks in call_function/call_namespace_function
-        let result = self.runtime
+        let result = self
+            .runtime
             .execute_program(program)
             .map_err(|e| format!("Runtime error: {}", e));
 

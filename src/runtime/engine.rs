@@ -415,7 +415,9 @@ impl Runtime {
                 let (return_val, side_effects) = if let Some(mock) = registry.mocks.get_mut(&key) {
                     // Validate arguments if validator is set
                     if let Some(ref validator) = mock.arguments_validator {
-                        validator(args).map_err(|e| RuntimeError::General(format!("Argument validation failed: {}", e)))?;
+                        validator(args).map_err(|e| {
+                            RuntimeError::General(format!("Argument validation failed: {}", e))
+                        })?;
                     }
                     // Record call
                     mock.call_count += 1;
@@ -425,11 +427,12 @@ impl Runtime {
                 } else {
                     return Err(RuntimeError::General(format!("Mock '{}' not found", key)));
                 };
-                
+
                 // Execute side effects with runtime access (registry borrow is released here)
                 for side_effect in &side_effects {
-                    side_effect.execute_with_runtime(args, self)
-                        .map_err(|e| RuntimeError::General(format!("Mock side effect error: {}", e)))?;
+                    side_effect.execute_with_runtime(args, self).map_err(|e| {
+                        RuntimeError::General(format!("Mock side effect error: {}", e))
+                    })?;
                 }
                 // Return mock value
                 return Ok(return_val.unwrap_or(Value::Null));
@@ -1000,7 +1003,9 @@ impl Runtime {
                 let (return_val, side_effects) = if let Some(mock) = registry.mocks.get_mut(&key) {
                     // Validate arguments if validator is set
                     if let Some(ref validator) = mock.arguments_validator {
-                        validator(args).map_err(|e| RuntimeError::General(format!("Argument validation failed: {}", e)))?;
+                        validator(args).map_err(|e| {
+                            RuntimeError::General(format!("Argument validation failed: {}", e))
+                        })?;
                     }
                     // Record call
                     mock.call_count += 1;
@@ -1010,11 +1015,12 @@ impl Runtime {
                 } else {
                     return Err(RuntimeError::General(format!("Mock '{}' not found", key)));
                 };
-                
+
                 // Execute side effects with runtime access (registry borrow is released here)
                 for side_effect in &side_effects {
-                    side_effect.execute_with_runtime(args, self)
-                        .map_err(|e| RuntimeError::General(format!("Mock side effect error: {}", e)))?;
+                    side_effect.execute_with_runtime(args, self).map_err(|e| {
+                        RuntimeError::General(format!("Mock side effect error: {}", e))
+                    })?;
                 }
                 // Return mock value
                 return Ok(return_val.unwrap_or(Value::Null));
@@ -1134,10 +1140,7 @@ impl Runtime {
         );
         fields.insert(
             "rate_limit".to_string(),
-            source
-                .rate_limit
-                .map(Value::Int)
-                .unwrap_or(Value::Null),
+            source.rate_limit.map(Value::Int).unwrap_or(Value::Null),
         );
         fields.insert("trusted".to_string(), Value::Bool(source.trusted));
         fields.insert(
@@ -1201,7 +1204,10 @@ impl Runtime {
     fn oracle_response_to_value(&self, response: &OracleResponse) -> Value {
         let mut fields = HashMap::new();
         fields.insert("data".to_string(), response.data.clone());
-        fields.insert("timestamp".to_string(), Value::Int(response.timestamp as i64));
+        fields.insert(
+            "timestamp".to_string(),
+            Value::Int(response.timestamp as i64),
+        );
         fields.insert("source".to_string(), Value::String(response.source.clone()));
         fields.insert(
             "signature".to_string(),
@@ -1253,8 +1259,8 @@ impl Runtime {
     /// // Create a query
     /// let query = oracle::create_query("btc_price");
     ///
-    /// // Fetch from oracle source
-    /// let result = oracle::fetch("price_feed", query);
+    /// // Fetch from oracle source (must be HTTP/HTTPS URL)
+    /// let result = oracle::fetch("https://api.example.com/oracle/price", query);
     /// match result {
     ///     ok(response) => {
     ///         log::info("Price", response.data);
@@ -1265,8 +1271,8 @@ impl Runtime {
     ///     err(msg) => log::error("Oracle", msg)
     /// }
     ///
-    /// // Stream real-time data
-    /// let stream_id = oracle::stream("price_feed", "price_callback");
+    /// // Stream real-time data (WebSocket URL or any source identifier)
+    /// let stream_id = oracle::stream("wss://api.example.com/oracle/stream", "price_callback");
     /// ```
     ///
     /// # Implementation Details
@@ -1305,7 +1311,10 @@ impl Runtime {
                 let query = oracle::create_query(query_type);
                 // Convert OracleQuery to Value::Struct
                 let mut fields = HashMap::new();
-                fields.insert("query_type".to_string(), Value::String(query.query_type.clone()));
+                fields.insert(
+                    "query_type".to_string(),
+                    Value::String(query.query_type.clone()),
+                );
                 fields.insert(
                     "parameters".to_string(),
                     Value::Map(query.parameters.clone()),
@@ -1454,7 +1463,10 @@ impl Runtime {
                     Some(entry) => {
                         let mut fields = HashMap::new();
                         fields.insert("source".to_string(), Value::String(entry.source));
-                        fields.insert("created_at".to_string(), Value::Int(entry.created_at as i64));
+                        fields.insert(
+                            "created_at".to_string(),
+                            Value::Int(entry.created_at as i64),
+                        );
                         Ok(Value::Struct("StreamEntry".to_string(), fields))
                     }
                     None => Ok(Value::Null),

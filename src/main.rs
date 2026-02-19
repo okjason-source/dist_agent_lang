@@ -903,9 +903,9 @@ fn secure_function() {
 }
 
 let price_query = oracle::create_query("btc_price");
-let btc_price = oracle::fetch("price_feed", price_query);
+let btc_price = oracle::fetch("https://api.example.com/oracle/price", price_query);
 
-let stream_id = oracle::stream("price_feed", "price_callback");
+let stream_id = oracle::stream("wss://api.example.com/oracle/stream", "price_callback");
 
 let ai_service = service::create_ai_service("gpt-4");
 let ai_response = service::ai("What is blockchain?", ai_service);
@@ -1177,7 +1177,7 @@ fn test_error_handling_and_testing_framework() {
         .logs("Mock chain::mint called")
         .expects_calls(1)
         .build();
-    
+
     let mut test_runner = TestRunner::new()
         .with_config(TestConfig {
             verbose: false, // Changed from true to false for less verbose output
@@ -4084,7 +4084,10 @@ fn handle_oracle_command(args: &[String]) {
     match args[0].as_str() {
         "fetch" => {
             if args.len() < 3 {
-                eprintln!("Usage: {} oracle fetch <source> <query_type>", binary_name());
+                eprintln!(
+                    "Usage: {} oracle fetch <source> <query_type>",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let source = &args[1];
@@ -4209,7 +4212,9 @@ fn handle_oracle_command(args: &[String]) {
 
         _ => {
             eprintln!("Unknown oracle subcommand: {}", args[0]);
-            eprintln!("Use: fetch, verify, stream, create-source, create-query, get-stream, close-stream");
+            eprintln!(
+                "Use: fetch, verify, stream, create-source, create-query, get-stream, close-stream"
+            );
             std::process::exit(1);
         }
     }

@@ -282,10 +282,31 @@ impl OracleConsensus {
     }
 }
 
-/// Security: Fetch data from external oracle source with validation. When http-interface and source is a URL, GETs and parses response; optional X-Signature header.
+/// Security: Fetch data from external oracle source with validation.
+///
+/// Oracle sources must be HTTP/HTTPS URLs. The function fetches data from the URL,
+/// parses JSON responses, and optionally validates signatures from the X-Signature header.
+///
+/// For dynamic oracle sources, use `oracle::create_source()` to register sources
+/// that can be referenced by name. All sources must ultimately resolve to HTTP URLs.
+///
+/// # Arguments
+/// - `source`: HTTP/HTTPS URL or a registered source name (must resolve to URL)
+/// - `query`: OracleQuery specifying query type, parameters, timeout, and security requirements
+///
+/// # Returns
+/// OracleResponse with data, timestamp, source, signature (if provided), and verification status
+///
+/// # Errors
+/// Returns error if:
+/// - Source is not an HTTP/HTTPS URL and not a registered source
+/// - HTTP request fails
+/// - JSON parsing fails
+/// - Signature is required but not provided
 pub fn fetch(source: &str, query: OracleQuery) -> Result<OracleResponse, String> {
     let timestamp = get_current_timestamp();
 
+    // Check if source is an HTTP/HTTPS URL
     #[cfg(feature = "http-interface")]
     if source.starts_with("http://") || source.starts_with("https://") {
         let client = reqwest::blocking::Client::builder()
@@ -318,45 +339,23 @@ pub fn fetch(source: &str, query: OracleQuery) -> Result<OracleResponse, String>
         });
     }
 
-    // Fallback: mock by source name
-    let (mock_data, signature) = match source {
-        "price_feed" => {
-            let data = match query.query_type.as_str() {
-                "btc_price" => Value::Int(45000),
-                "eth_price" => Value::Int(3200),
-                "sol_price" => Value::Int(98),
-                _ => Value::String("unknown_query".to_string()),
-            };
-            let sig = generate_signature(&data, "oracle_key_12345");
-            (data, Some(sig))
-        }
-        "weather" => {
-            let data = match query.query_type.as_str() {
-                "temperature" => Value::Int(72),
-                "humidity" => Value::Int(65),
-                "forecast" => Value::String("sunny".to_string()),
-                _ => Value::String("unknown_query".to_string()),
-            };
-            let sig = generate_signature(&data, "weather_key_67890");
-            (data, Some(sig))
-        }
-        _ => return Err(format!("Unknown oracle source: {}", source)),
-    };
-
-    let response = OracleResponse {
-        data: mock_data,
-        timestamp,
-        source: source.to_string(),
-        signature,
-        verified: false,
-        confidence_score: 1.0,
-    };
-
-    if query.require_signature && response.signature.is_none() {
-        return Err("Signature required but not provided".to_string());
+    // If not HTTP URL and http-interface feature is enabled, return error
+    #[cfg(feature = "http-interface")]
+    {
+        return Err(format!(
+            "Oracle source must be an HTTP/HTTPS URL. Got: '{}'. Use oracle::create_source() to register sources, or provide a URL directly.",
+            source
+        ));
     }
 
-    Ok(response)
+    // If http-interface feature is not enabled, return error
+    #[cfg(not(feature = "http-interface"))]
+    {
+        return Err(format!(
+            "Oracle fetching requires the 'http-interface' feature. Source: '{}'",
+            source
+        ));
+    }
 }
 
 /// Security: Fetch data from multiple sources and validate consensus
@@ -392,27 +391,29 @@ pub fn verify(data: &Value, signature: &str) -> bool {
     verify_signature(data, signature, "default_public_key")
 }
 
-/// Stream real-time data from oracle source with security.
+/// Stream real-time data from oracle source.
 ///
-/// A real implementation would establish WebSocket connections (e.g. via
-/// tokio-tungstenite). When `source` is a `ws://` or `wss://` URL, it is
-/// accepted and a stream id is returned; actual connection logic could be
-/// added behind a Cargo feature (e.g. `oracle-websocket`) that enables
-/// tokio-tungstenite. Named sources (price_feed, weather, events) return
-/// mock stream ids for testing.
+/// Creates a stream entry for real-time data feeds. When `source` is a `ws://` or `wss://` URL,
+/// a stream ID is returned. A future implementation could establish WebSocket connections
+/// (e.g. via tokio-tungstenite) behind a Cargo feature (e.g. `oracle-websocket`).
 ///
-/// **App developers** can use WebSockets today: call `stream(ws_url, …)`
-/// to get a `stream_id`, then implement their own WebSocket client (in-app,
-/// frontend, or another service) and use `stream_id` with `get_stream` /
-/// `close_stream` for correlation; they are not blocked on the crate
-/// adding a built-in WebSocket connection.
+/// For HTTP-based sources, developers can use `oracle::fetch()` in a polling loop or
+/// implement their own WebSocket client using the returned `stream_id` for correlation.
+///
+/// **App developers** can use WebSockets today: call `stream(ws_url, …)` to get a `stream_id`,
+/// then implement their own WebSocket client (in-app, frontend, or another service) and use
+/// `stream_id` with `get_stream` / `close_stream` for correlation.
+///
+/// # Arguments
+/// - `source`: WebSocket URL (`ws://` or `wss://`) or any source identifier
+/// - `callback`: Callback identifier (reserved for future use)
+///
+/// # Returns
+/// Stream ID string that can be used with `get_stream()` and `close_stream()`
 pub fn stream(source: &str, _callback: &str) -> Result<String, String> {
-    // Security: Validate source before streaming
-    let trusted_named = ["price_feed", "weather", "events"];
-
     let created_at = get_current_timestamp();
 
-    // Real-world: accept ws/wss URLs; real connection would use WebSocket (e.g. tokio-tungstenite)
+    // Accept WebSocket URLs (ws:// or wss://)
     if source.starts_with("ws://") || source.starts_with("wss://") {
         let stream_id = format!("stream_ws_{:x}", {
             let mut h = Sha256::new();
@@ -431,16 +432,16 @@ pub fn stream(source: &str, _callback: &str) -> Result<String, String> {
         return Ok(stream_id);
     }
 
-    if !trusted_named.contains(&source) {
-        return Err(format!("Untrusted source for streaming: {}", source));
-    }
-
-    let stream_id = match source {
-        "price_feed" => "stream_id_price_123".to_string(),
-        "weather" => "stream_id_weather_456".to_string(),
-        "events" => "stream_id_events_789".to_string(),
-        _ => return Err(format!("Streaming not supported for source: {}", source)),
-    };
+    // For any other source identifier, generate a stream ID
+    // This allows developers to use any source name and implement their own streaming logic
+    let stream_id = format!("stream_{:x}", {
+        let mut h = Sha256::new();
+        h.update(source.as_bytes());
+        h.update(created_at.to_be_bytes().as_slice());
+        h.finalize()[0..8]
+            .iter()
+            .fold(0u64, |a, &b| (a << 8) | u64::from(b))
+    });
     get_stream_registry().insert(
         stream_id.clone(),
         StreamEntry {
@@ -554,15 +555,34 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "http-interface")]
     fn test_oracle_fetch_with_security() {
+        // Test that non-HTTP sources return an error (dynamic oracle system)
         let query = OracleQuery::new("btc_price".to_string()).require_signature(true);
 
-        let result = fetch("price_feed", query);
-        assert!(result.is_ok());
+        let result = fetch("price_feed", query.clone());
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .contains("Oracle source must be an HTTP/HTTPS URL"));
 
-        let response = result.unwrap();
-        assert!(response.signature.is_some());
-        assert_eq!(response.confidence_score, 1.0);
+        // Test that HTTP URLs are accepted (even if they fail, the error is different)
+        let result = fetch("https://api.example.com/oracle", query);
+        // This will fail with network error or HTTP error, but not "must be HTTP URL"
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(!err.contains("must be an HTTP/HTTPS URL"));
+    }
+
+    #[test]
+    #[cfg(not(feature = "http-interface"))]
+    fn test_oracle_fetch_requires_http_interface() {
+        let query = OracleQuery::new("btc_price".to_string());
+        let result = fetch("https://api.example.com/oracle", query);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .contains("requires the 'http-interface' feature"));
     }
 
     #[test]

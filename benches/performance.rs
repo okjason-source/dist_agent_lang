@@ -24,8 +24,8 @@ fn benchmark_function() {
 }
 
 let price_query = oracle::create_query("btc_price");
-let btc_price = oracle::fetch("price_feed", price_query);
-let stream_id = oracle::stream("price_feed", "price_callback");
+let btc_price = oracle::fetch("https://api.example.com/oracle/price", price_query);
+let stream_id = oracle::stream("wss://api.example.com/oracle/stream", "price_callback");
 
 let ai_service = service::create_ai_service("gpt-4");
 let ai_response = service::ai("What is blockchain?", ai_service);
@@ -66,7 +66,7 @@ fn test_function() {
     return 0;
 }
 
-let price = oracle::fetch("price_feed", oracle::create_query("btc_price"));
+let price = oracle::fetch("https://api.example.com/oracle/price", oracle::create_query("btc_price"));
 let ai_response = service::ai("What is blockchain?", service::create_ai_service("gpt-4"));
 "#;
 
