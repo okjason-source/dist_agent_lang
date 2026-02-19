@@ -1,0 +1,55 @@
+# Build artifacts (rebuilt inside image)
+target/
+**/target/
+
+# Git and IDE
+.git/
+.gitignore
+.cursor/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Dependencies (Rust fetches in-container; Node not needed at runtime)
+node_modules/
+
+# Local dev and test outputs
+logs/
+mutants.out/
+*.log
+.coverage
+htmlcov/
+.pytest_cache/
+__pycache__/
+
+# Release artifacts (not needed to build image)
+dist_agent_lang-*/
+*.tar.gz
+*.zip
+
+# Docs that aren't needed in minimal runtime (optional: remove to include full docs)
+docs/  # Uncomment to exclude docs from image
+
+# Tests and benchmarks (reduce context size)
+tests/
+benches/
+*.test.rs
+*.bench.rs
+
+# CI and local tooling
+.github/
+.circleci/
+.travis.yml
+Makefile
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Misc
+*.md
+!README.md
+.env
+.env.*
+*.pem
+*.key
