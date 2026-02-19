@@ -81,6 +81,7 @@ Makefile
 *.swp
 *~
 /syntax-highlighting/
+**/syntax-highlighting/
 
 # Fuzz artifacts (keep corpus if you want; uncomment to exclude)
 /fuzz/corpus/
