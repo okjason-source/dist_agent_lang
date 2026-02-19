@@ -14,7 +14,7 @@
 
 ### Installation
 
-**From Source (Recommended):**
+**From Source (Become a Contributor):**
 ```bash
 git clone https://github.com/okjason-source/dist_agent_lang.git
 cd dist_agent_lang
