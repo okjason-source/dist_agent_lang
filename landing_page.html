@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>dist_agent_lang - Hybrid Language for simplicity in a sophisticated future.</title>
-    <meta name="description" content="A hybrid compiled programming language for simplicity in a sophisticated future. Multi-chain support, built-in security, and native AI integration.">
+    <meta name="description" content="A hybrid compiled programming language with simplicity for a sophisticated future. Multi-chain support, built-in security, and native AI integration.">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="apple-touch-icon" href="favicon.svg">
     <style>
@@ -37,6 +37,7 @@
             color: var(--text);
             line-height: 1.6;
             background: var(--bg);
+            overflow-x: hidden;
         }
 
         /* Header */
@@ -94,11 +95,11 @@
             background-position: center;
             background-attachment: fixed;
             color: white;
-            padding: 3rem 2rem;
+            padding: 2rem;
             text-align: center;
             position: relative;
             overflow: hidden;
-            min-height: 100vh;
+            min-height: 60vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -148,48 +149,55 @@
             display: inline-block;
             background: rgba(45, 80, 22, 0.7);
             border: 2px solid rgba(122, 197, 90, 0.6);
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.9rem;
             border-radius: 20px;
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
         }
 
+        /* Section anchor offset so content isn't hidden under sticky header */
+        section[id] {
+            scroll-margin-top: 4rem;
+        }
+
         /* Installation Section */
         .installation {
             width: 100%;
-            margin: 2rem auto;
-            padding: 2rem;
+            max-width: 100%;
+            margin: 1rem auto;
+            padding: 1.25rem 2rem;
+            box-sizing: border-box;
         }
 
         .section-title {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
             text-align: center;
         }
 
         .section-subtitle {
             text-align: center;
             color: var(--text-light);
-            margin-bottom: 1.5rem;
-            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            font-size: 1rem;
         }
 
         .install-methods {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
         }
 
         .install-card {
             background: white;
             border: 2px solid var(--border);
             border-radius: 12px;
-            padding: 2rem;
+            padding: 1.25rem;
             box-shadow: var(--shadow);
             transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         }
@@ -201,8 +209,8 @@
         }
 
         .install-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
             color: var(--primary);
             display: flex;
             align-items: center;
@@ -217,18 +225,21 @@
         .code-block {
             background: #1e1e1e;
             color: #d4d4d4;
-            padding: 1.5rem;
+            padding: 1rem;
             border-radius: 8px;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.9rem;
-            overflow-x: auto;
-            margin: 1rem 0;
+            font-size: 0.85rem;
+            margin: 0.75rem 0;
             position: relative;
+            max-width: 100%;
+            overflow-wrap: break-word;
         }
 
         .code-block code {
             display: block;
-            white-space: pre;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .copy-btn {
@@ -257,7 +268,7 @@
         /* Quick Start */
         .quick-start {
             background: linear-gradient(to bottom, var(--bg) 0%, var(--bg-light) 100%);
-            padding: 2rem;
+            padding: 1.25rem 2rem;
             border-top: 3px solid var(--accent-light);
             border-bottom: 3px solid var(--accent-light);
         }
@@ -272,8 +283,8 @@
         .step {
             background: white;
             border-left: 5px solid var(--accent);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
             border-radius: 8px;
             box-shadow: var(--shadow);
             transition: transform 0.2s, box-shadow 0.2s;
@@ -286,51 +297,53 @@
 
         .step h4 {
             color: var(--primary);
-            margin-bottom: 0.5rem;
-            font-size: 1.2rem;
+            margin-bottom: 0.35rem;
+            font-size: 1.1rem;
             font-weight: 700;
         }
 
-        /* Features */
+        /* Features — 5 over 5 (5 per row, 2 rows) */
         .features {
             width: 100%;
-            margin: 2rem auto;
-            padding: 2rem;
+            margin: 1rem auto;
+            padding: 1.25rem 2rem;
         }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
+            margin-top: 0.75rem;
         }
 
         .feature {
             text-align: center;
-            padding: 1rem;
+            padding: 0.75rem;
         }
 
         .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
+            font-size: 2rem;
+            margin-bottom: 0.35rem;
         }
 
         .feature h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.25rem;
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
             color: var(--primary);
             font-weight: 700;
         }
 
         .feature p {
             color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.4;
         }
 
         /* CTA Section */
         .cta {
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--primary-light) 100%);
             color: white;
-            padding: 2rem;
+            padding: 1.5rem 2rem;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -355,13 +368,13 @@
         }
 
         .cta h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
         }
 
         .cta p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
+            font-size: 1rem;
+            margin-bottom: 1.25rem;
             opacity: 0.95;
         }
 
@@ -401,7 +414,7 @@
         footer {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 3rem 2rem;
+            padding: 1.5rem 2rem;
             text-align: center;
             border-top: 3px solid var(--accent-light);
         }
@@ -410,7 +423,7 @@
             display: flex;
             justify-content: center;
             gap: 2rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             flex-wrap: wrap;
         }
 
@@ -527,7 +540,7 @@
             <p style="margin-top: 1rem; font-size: 1rem; opacity: 0.9;">🌳 Growing the future of decentralized development</p>
             <div>
                 <a href="#install" class="btn">Get Started</a>
-                <a href="https://github.com/okjason-source/dist_agent_lang" class="btn btn-secondary" target="_blank">View on GitHub</a>
+                <a href="https://github.com/okjason-source/dist_agent_lang/releases/tag/v1.0.5" class="btn btn-secondary" target="_blank">View on GitHub</a>
             </div>
         </div>
     </section>
@@ -544,7 +557,7 @@
         <div id="source" class="tab-content active">
             <div class="install-methods">
                 <div class="install-card">
-                    <h3><span class="icon">🔧</span> Build from Source</h3>
+                    <h3><span class="icon"></span> Build from Source</h3>
                     <p>Recommended for development and latest features</p>
                     <div class="code-block">
                         <button class="copy-btn" onclick="copyCode(this, 'source-code')">Copy</button>
@@ -570,7 +583,7 @@ export PATH="$PWD/target/release:$PATH"</code>
         <div id="binary" class="tab-content">
             <div class="install-methods">
                 <div class="install-card">
-                    <h3><span class="icon">💻</span> Linux / macOS</h3>
+                    <h3><span class="icon"></span> Linux / macOS</h3>
                     <p>Download pre-built binary</p>
                     <div class="code-block">
                         <button class="copy-btn" onclick="copyCode(this, 'binary-linux')">Copy</button>
@@ -596,7 +609,7 @@ dal --version</code>
                 </div>
 
                 <div class="install-card">
-                    <h3><span class="icon">🪟</span> Windows</h3>
+                    <h3><span class="icon"></span> Windows</h3>
                     <p>Download pre-built binary</p>
                     <div class="code-block">
                         <button class="copy-btn" onclick="copyCode(this, 'binary-windows')">Copy</button>
@@ -620,7 +633,7 @@ dal --version</code>
         <div id="package" class="tab-content">
             <div class="install-methods">
                 <div class="install-card">
-                    <h3><span class="icon">🍺</span> Homebrew (macOS)</h3>
+                    <h3><span class="icon"></span> Homebrew (macOS)</h3>
                     <p>Install via Homebrew package manager</p>
                     <div class="code-block">
                         <button class="copy-btn" onclick="copyCode(this, 'homebrew')">Copy</button>
@@ -637,29 +650,31 @@ dist_agent_lang --version</code>
                 </div>
 
                 <div class="install-card">
-                    <h3><span class="icon">📦</span> Cargo (Rust)</h3>
-                    <p>Install via Cargo package manager</p>
+                    <h3><span class="icon"></span> Install</h3>
                     <div class="code-block">
                         <button class="copy-btn" onclick="copyCode(this, 'cargo')">Copy</button>
-                        <code id="cargo"># Install from crates.io (when published)
-cargo install dist_agent_lang
-
-# Or install from git
-cargo install --git https://github.com/okjason-source/dist_agent_lang.git --bin dal
-
-# Or clone and install locally
-git clone https://github.com/okjason-source/dist_agent_lang.git
-cd dist_agent_lang
-cargo install --path . --bin dal
-
-# Verify
-dal --version</code>
+                        <code id="cargo">cargo install dist_agent_lang</code>
                     </div>
-                    <p><em>Note: crates.io publication coming soon</em></p>
+                    <p>Running the above command will globally install the <code>dal</code> binary.</p>
+                    <p><strong>Verify:</strong> <code>dal --version</code></p>
                 </div>
 
                 <div class="install-card">
-                    <h3><span class="icon">📦</span> npm (Node.js)</h3>
+                    <h3><span class="icon"></span> Install as library</h3>
+                    <p>Run the following Cargo command in your project directory:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this, 'cargo-lib')">Copy</button>
+                        <code id="cargo-lib">cargo add dist_agent_lang</code>
+                    </div>
+                    <p>Or add the following line to your <code>Cargo.toml</code>:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this, 'cargo-toml')">Copy</button>
+                        <code id="cargo-toml">dist_agent_lang = "1.0.5"</code>
+                    </div>
+                </div>
+
+                <div class="install-card">
+                    <h3><span class="icon"></span> npm (Node.js)</h3>
                     <p>Install via npm package manager</p>
                     <div class="code-block">
                         <button class="copy-btn" onclick="copyCode(this, 'npm')">Copy</button>
@@ -688,7 +703,7 @@ dist_agent_lang --version</code>
 # Should output:
 # dist_agent_lang v1.0.5
 # Beta Release - Actively Developed
-# Built with Rust</code>
+            </code>
                 </div>
             </div>
 
@@ -844,4 +859,6 @@ service HelloWorld {
     </script>
 </body>
 </html>
+
+
 

@@ -4,6 +4,14 @@
 /staging/
 **/staging/
 
+# Scripts (do not publish)
+/scripts/create-release.js
+/scripts/push_to_github.sh
+/scripts/install.sh
+/scripts/run_dal_tests.sh
+/scripts/run-tests.sh
+/scripts/test_examples.sh
+
 # Mutation testing and logs (do not publish)
 /mutants.out/
 /mutants.out.old/
@@ -20,6 +28,7 @@
 *_PLAN.md
 *_STATUS.md
 PHASE*.md
+
 
 # Internal/planning documentation (do not publish)
 /docs/PRODUCTION_ROADMAP.md
@@ -65,6 +74,7 @@ PHASE*.md
 .DS_Store
 *.swp
 *~
+/syntax-highlighting/
 
 # Fuzz artifacts (keep corpus if you want; uncomment to exclude)
 # /fuzz/corpus/

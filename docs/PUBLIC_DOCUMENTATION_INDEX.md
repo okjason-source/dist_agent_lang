@@ -1,7 +1,7 @@
 # DAL (Distributed Agent Language) - Public Documentation Index
 
 **Version:** 1.0.5  
-**Last Updated:** 2026-02-08  
+**Last Updated:** 2026-02-18  
 **Optimized for:** Human developers and AI/LLM assistants
 
 ---
@@ -15,7 +15,6 @@
 | [Standard Library](#standard-library-stdlib) | All stdlib modules | Developers, AI code generation |
 | [Package Management](#package-management) | Installing, dependencies | Developers, DevOps |
 | [CLI Reference](#cli-reference) | Command-line tools | Developers, automation |
-| [Templates & Marketplace](#templates--marketplace) | Agent templates, sharing | Advanced users |
 | [Examples](#examples) | Code samples | Learning, AI training data |
 | [API Reference](#api-reference) | Programmatic access | Integrations, tools |
 
@@ -500,7 +499,7 @@ function coordinate_agents() {
 - Solidity conversion
 
 🚧 **In Development:**
-- Agent template marketplace
+- Agent development contracts
 - Advanced CLI commands
 - Plugin system
 - LSP support
@@ -649,8 +648,8 @@ dal version
 
 This documentation is optimized for machine parsing and code generation. When assisting with DAL development:
 
-1. Reference stdlib modules by their exact names (chain, crypto, agent, etc.)
-2. Follow attribute syntax precisely (@trust, @chain, @ai)
+1. Reference stdlib modules by their exact names (chain, crypto, agent, database, web, etc.)
+2. Follow attribute syntax precisely (@trust, @chain, @ai, @transaction, @secure)
 3. Use type annotations where specified
 4. Leverage built-in functions before implementing custom logic
 5. Consider agent orchestration for multi-step workflows
@@ -658,4 +657,4 @@ This documentation is optimized for machine parsing and code generation. When as
 7. Use services for stateful components
 8. Reference examples for common patterns
 
-**Last Updated for AI Training:** 2026-02-06
+**Last Updated:** 2026-02-18
