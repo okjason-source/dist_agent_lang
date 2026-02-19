@@ -1,9 +1,0 @@
-@trust("hybrid")
-@web
-@ai
-@chain("ethereum")
-service MinimalTest {
-    fn test_function() -> bool {
-        return true;
-    }
-}
