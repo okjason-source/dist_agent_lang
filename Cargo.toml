@@ -1,6 +1,6 @@
 [package]
 name = "dist_agent_lang"
-version = "1.0.6"
+version = "1.0.5"
 edition = "2021"
 description = "A hybrid programming language for decentralized and centralized network integration"
 authors = ["OK Jason <jason.dinh.developer@gmail.com>"]
@@ -8,6 +8,26 @@ license = "MIT"
 repository = "https://github.com/okjason-source/dist_agent_lang"
 keywords = ["programming-language", "blockchain", "smart-contracts", "distributed-systems"]
 categories = ["development-tools"]
+# Keep crate under crates.io 10 MB limit
+exclude = [
+  "dist_agent_lang-*",
+  "*.tar.gz",
+  "*.zip",
+  "docs",
+  ".github",
+  "Dockerfile",
+  "Dockerfile*",
+  "Makefile",
+  ".dockerignore",
+  ".gitignore",
+  "Cargo.toml.orig",
+  "debug-tokens.dal",
+  "debug_benchmark.rs",
+  "FUZZING_GUIDE.md",
+  "GOOD_FIRST_ISSUES.md",
+  "INSTALLATION.md",
+  "SECURITY_DISCLAIMER.md",
+]
 
 # Single CLI binary (invoke as `dal` or `dist_agent_lang` via install name / symlink)
 [[bin]]

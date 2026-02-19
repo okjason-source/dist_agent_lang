@@ -72,10 +72,14 @@ PHASE*.md
 .idea/
 .vscode/
 .DS_Store
+.dockerignore
+.cargoignore
+Dockerfile*
+Makefile
 *.swp
 *~
 /syntax-highlighting/
 
 # Fuzz artifacts (keep corpus if you want; uncomment to exclude)
-# /fuzz/corpus/
-# /fuzz/artifacts/
+/fuzz/corpus/
+/fuzz/artifacts/
