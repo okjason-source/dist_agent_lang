@@ -586,22 +586,6 @@ Agent configurations in the marketplace can have individual licenses (MIT, Apach
 
 ---
 
-## 🏆 Case Studies
-
-### Companies Using DAL
-
-- **FinTech Corp:** Fraud detection with AI agents (500 agents, 99.9% accuracy)
-- **IoT Solutions Inc:** Smart home automation (10,000 devices managed)
-- **DeFi Protocol:** Hybrid exchange (centralized + decentralized)
-
-### Stories
-
-- [How FinTech Corp reduced fraud by 85%](https://dist_agent_lang.org/case-studies/fintech-fraud)
-- [IoT Solutions' journey to 10,000 devices](https://dist_agent_lang.org/case-studies/iot-scale)
-- [Building a hybrid DEX with DAL](https://dist_agent_lang.org/case-studies/defi-exchange)
-
----
-
 **Document Version:** 1.0  
 **Maintained by:** DAL Language Team  
 **Contributions:** Welcome via GitHub  
