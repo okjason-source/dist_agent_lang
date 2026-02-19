@@ -24,21 +24,7 @@
 
 ### Installation
 
-**Quick Install (Recommended):**
-```bash
-curl -sSf https://dist_agent_lang.org/install.sh | sh
-```
-
-**Or download binaries:**
-- Linux: https://dist_agent_lang.org/downloads/dal-linux-x64
-- macOS: https://dist_agent_lang.org/downloads/dal-macos-x64
-- Windows: https://dist_agent_lang.org/downloads/dal-windows-x64.exe
-
-**Verify Installation:**
-```bash
-dal --version
-# Output: dist_agent_lang v1.0.5
-```
+**Quick Install - Github Releases - (Recommended):**
 
 ### Your First DAL Program
 
