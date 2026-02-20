@@ -1,0 +1,9 @@
+// Complex type system
+service Types {
+    data: map<string, map<int, list<string>>>;
+    matrix: vector<vector<int>>;
+    
+    fn process(data: map<string, any>) -> list<int> {
+        return [];
+    }
+}

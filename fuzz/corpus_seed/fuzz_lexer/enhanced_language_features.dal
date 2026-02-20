@@ -1,0 +1,379 @@
+// Enhanced Language Features Example
+// Demonstrates the new type system, attributes, and namespaces from Phase 1
+
+@trust("hybrid")
+@secure
+@web
+@persistent
+@chain("ethereum")
+service EnhancedFeatures {
+    // State variables with new types
+    users: map<string, any>,
+    products: vector<any>,
+    transactions: map<string, bool>,
+    cache: map<string, any>,
+    db_connection: string,
+    web_server: string,
+    
+    // Events
+    event UserCreated { user_id: string, name: string },
+    event ProductAdded { product_id: int, name: string },
+    event TransactionProcessed { tx_id: string, amount: int },
+}
+
+// Enhanced type definitions
+struct User {
+    id: string,
+    name: string,
+    email: string,
+    wallet_address: string,
+    kyc_status: string,
+    created_at: int,
+}
+
+struct Product {
+    id: int,
+    name: string,
+    price: float,
+    description: string,
+    category: string,
+    in_stock: bool,
+}
+
+struct Transaction {
+    id: string,
+    from_address: string,
+    to_address: string,
+    amount: int,
+    status: string,
+    timestamp: int,
+}
+
+impl EnhancedFeatures {
+    // Initialize the service with database and web server
+    fn initialize() -> Result<Unit, Error> {
+        // Connect to database
+        let db_result = database::connect("postgresql://localhost/enhanced_db");
+        match db_result {
+            Ok(db) => {
+                self.db_connection = "connected";
+                log::info("init", "Database connected successfully");
+            },
+            Err(error) => {
+                log::error("init", // format!("Database connection failed: {}", error));
+                return Err(Error::new("Database connection failed", error));
+            }
+        }
+        
+        // Create web server
+        let server = web::create_server(8080);
+        self.web_server = // format!("server_{}", 8080);
+        log::info("init", "Web server created successfully");
+        
+        return Ok(Unit);
+    }
+    
+    // Create a new user with KYC verification
+    fn create_user(name: string, email: string, wallet_address: string) -> Result<string, Error> {
+        // Perform KYC verification
+        let kyc_result = kyc::verify_identity("securekyc", wallet_address, "basic", {
+            "name": name,
+            "email": email
+        });
+        
+        if (kyc_result.get("status") != "verified" {
+            return Err(Error::new("KYC verification failed", "User verification incomplete"));
+        }
+        
+        // Create user in database
+        let user_id = "user_" + crypto::hash(name);
+        let user = {
+            "id": user_id,
+            "name": name,
+            "email": email,
+            "wallet_address": wallet_address,
+            "kyc_status": "verified",
+            "created_at": chain::get_block_timestamp()
+        };
+        
+        // Store in database
+        let insert_result = database::query(self.db_connection, 
+            "INSERT INTO users (id, name, email, wallet_address, kyc_status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            [user["id"], user["name"], user["email"], user["wallet_address"], user["kyc_status"], user["created_at"]]
+        );
+        
+        match insert_result {
+            Ok(_) => {
+                self.users[user_id] = user;
+                log::info("create_user", "User created: " + user_id);
+                return Ok(user_id);
+            },
+            Err(error) => {
+                log::error("create_user", // format!("Database error: {}", error));
+                return Err(Error::new("Database error", error));
+            }
+        }
+    }
+    
+    // Add a product with web interface
+    fn add_product(name: string, price: float, description: string, category: string) -> Result<int, Error> {
+        let product_id = self.products.size() + 1;
+        let product = {
+            "id": product_id,
+            "name": name,
+            "price": price,
+            "description": description,
+            "category": category,
+            "in_stock": true
+        };
+        
+        // Add to database
+        let insert_result = database::query(self.db_connection,
+            "INSERT INTO products (id, name, price, description, category, in_stock) VALUES ($1, $2, $3, $4, $5, $6)",
+            [product.id, product.name, product.price, product.description, product.category, product.in_stock]
+        );
+        
+        match insert_result {
+            Ok(_) => {
+                self.products.push(product);
+                self.emit(ProductAdded { product_id: product_id, name: name });
+                log::info("add_product", // format!("Product added: {}", product_id));
+                return Ok(product_id);
+            },
+            Err(error) => {
+                log::error("add_product", // format!("Database error: {}", error));
+                return Err(Error::new("Database error", error));
+            }
+        }
+    }
+    
+    // Process a transaction with AML check
+    fn process_transaction(from_address: string, to_address: string, amount: int) -> Result<string, Error> {
+        // Perform AML check
+        let aml_result = aml::perform_check("chainalysis", from_address, "sanctions", {
+            "amount": amount,
+            "to_address": to_address
+        });
+        
+        if (aml_result.get("status") != "passed" {
+            return Err(Error::new("AML check failed", "Transaction blocked by AML"));
+        }
+        
+        // Create transaction
+        let tx_id = // format!("tx_{}", crypto::hash(// format!("{}{}{}", from_address, to_address, amount)));
+        let transaction = Transaction {
+            id: tx_id.clone(),
+            from_address: from_address,
+            to_address: to_address,
+            amount: amount,
+            status: "pending".to_string(),
+            timestamp: chain::get_block_timestamp(1),
+        };
+        
+        // Store in database
+        let insert_result = database::query(self.db_connection,
+            "INSERT INTO transactions (id, from_address, to_address, amount, status, timestamp) VALUES ($1, $2, $3, $4, $5, $6)",
+            [transaction.id, transaction.from_address, transaction.to_address, transaction.amount, transaction.status, transaction.timestamp]
+        );
+        
+        match insert_result {
+            Ok(_) => {
+                self.transactions.insert(tx_id.clone());
+                self.emit(TransactionProcessed { tx_id: tx_id.clone(), amount: amount });
+                log::info("process_transaction", // format!("Transaction processed: {}", tx_id));
+                return Ok(tx_id);
+            },
+            Err(error) => {
+                log::error("process_transaction", // format!("Database error: {}", error));
+                return Err(Error::new("Database error", error));
+            }
+        }
+    }
+    
+    // Web API endpoint for getting users
+    fn get_users_api() -> HttpResponse {
+        let users_result = database::query(self.db_connection, "SELECT * FROM users", []);
+        
+        match users_result {
+            Ok(result) => {
+                let users_data = result.rows;
+                return web::json_response(users_data);
+            },
+            Err(error) => {
+                log::error("get_users_api", // format!("Database error: {}", error));
+                return web::error_response(500, // format!("Database error: {}", error));
+            }
+        }
+    }
+    
+    // Web API endpoint for creating users
+    fn create_user_api(request: HttpRequest) -> HttpResponse {
+        let body = request.body;
+        let user_data = web::parse_json(body);
+        
+        let name = user_data.get("name");
+        let email = user_data.get("email");
+        let wallet_address = user_data.get("wallet_address");
+        
+//         if (name == null || email == null 
+            return web::error_response(400, "Missing required fields");
+        }
+        
+        let create_result = self.create_user(name, email, wallet_address);
+        
+        match create_result {
+            Ok(user_id) => {
+                let response_data = {
+                    let mut data = HashMap::new();
+                    data.insert("user_id".to_string(), user_id);
+                    data.insert("status".to_string(), "created");
+                    data
+                };
+                return web::json_response(response_data);
+            },
+            Err(error) => {
+                log::error("create_user_api", // format!("Error: {}", error));
+                return web::error_response(500, // format!("Error: {}", error));
+            }
+        }
+    }
+    
+    // Cache management
+    fn cache_set(key: string, value: any, ttl: int) {
+        self.cache.insert(key, value);
+        log::info("cache", // format!("Cached value for key: {}", key));
+    }
+    
+    fn cache_get(key: string) -> Option<any> {
+        if (self.cache.contains_key(key) {
+            return Some(self.cache.get(key));
+        }
+        return None;
+    }
+    
+    // Get user by ID with caching
+    fn get_user_by_id(user_id: string) -> Option<User> {
+        // Check cache first
+        let cached_user = self.cache_get(// format!("user_{}", user_id));
+        if (cached_user != None {
+            return cached_user;
+        }
+        
+        // Query database
+        let query_result = database::query(self.db_connection,
+            "SELECT * FROM users WHERE id = $1",
+            [user_id]
+        );
+        
+        match query_result {
+            Ok(result) => {
+                if (result.rows.length > 0 {
+                    let user_data = result.rows[0];
+                    let user = User::from_row(user_data);
+                    
+                    // Cache the result
+                    self.cache_set(// format!("user_{}", user_id), user.clone(), 300);
+                    
+                    return Some(user);
+                }
+                return None;
+            },
+            Err(error) => {
+                log::error("get_user_by_id", // format!("Database error: {}", error));
+                return None;
+            }
+        }
+    }
+    
+    // Get all products with web rendering
+    fn get_products_web() -> Html {
+        let products_result = database::query(self.db_connection, "SELECT * FROM products", []);
+        
+        match products_result {
+            Ok(result) => {
+                let html = web::create_html_element("div", {
+                    let mut attrs = HashMap::new();
+                    attrs.insert("class".to_string(), "products-container".to_string());
+                    attrs
+                });
+                
+                for product_data in result.rows  {
+                    let product = Product::from_row(product_data);
+                    
+                    let product_element = web::create_html_element("div", {
+                        let mut attrs = HashMap::new();
+                        attrs.insert("class".to_string(), "product-item".to_string());
+                        attrs
+                    });
+                    
+                    web::set_text(product_element, product.name + " - $" + product.price);
+                    web::add_child(html, product_element);
+                }
+                
+                return html;
+            },
+            Err(error) => {
+                log::error("get_products_web", // format!("Database error: {}", error));
+                return web::create_html_element("div", {
+                    let mut attrs = HashMap::new();
+                    attrs.insert("class".to_string(), "error".to_string());
+                    attrs
+                });
+            }
+        }
+    }
+    
+    // Get service statistics
+    fn get_statistics() -> map<string, any> {
+        let mut stats = HashMap::new();
+        
+        stats.insert("total_users".to_string(), self.users.size());
+        stats.insert("total_products".to_string(), self.products.length());
+        stats.insert("total_transactions".to_string(), self.transactions.size());
+        stats.insert("cache_size".to_string(), self.cache.size());
+        stats.insert("db_connected".to_string(), self.db_connection != "");
+        stats.insert("web_server_running".to_string(), self.web_server != "");
+        
+        return stats;
+    }
+}
+
+// Main function to demonstrate enhanced features
+fn main() {
+    let service = EnhancedFeatures::new();
+    
+    // Initialize the service
+    let init_result = service.initialize();
+    match init_result {
+        Ok(_) => log::info("main", "Service initialized successfully"),
+        Err(error) => {
+            log::error("main", // format!("Initialization failed: {}", error));
+            return;
+        }
+    }
+    
+    // Create some test data
+    let user_result = service.create_user("John Doe", "john@example.com", "0x1234567890abcdef");
+    match user_result {
+        Ok(user_id) => log::info("main", // format!("User created: {}", user_id)),
+        Err(error) => log::error("main", // format!("User creation failed: {}", error)),
+    }
+    
+    let product_result = service.add_product("Enhanced Product", 29.99, "A great product", "electronics");
+    match product_result {
+        Ok(product_id) => log::info("main", // format!("Product added: {}", product_id)),
+        Err(error) => log::error("main", // format!("Product addition failed: {}", error)),
+    }
+    
+    let tx_result = service.process_transaction("0x1234567890abcdef", "0xfedcba0987654321", 100);
+    match tx_result {
+        Ok(tx_id) => log::info("main", // format!("Transaction processed: {}", tx_id)),
+        Err(error) => log::error("main", // format!("Transaction failed: {}", error)),
+    }
+    
+    // Get statistics
+    let stats = service.get_statistics();
+    log::info("main", // format!("Service statistics: {:?}", stats));
+    
+    log::info("main", "Enhanced language features demonstration completed!");
+}

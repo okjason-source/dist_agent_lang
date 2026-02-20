@@ -25,7 +25,7 @@ jobs:
         run: |
           mkdir -p staging
           cp target/release/dal staging/
-          cp README.md LICENSE CHANGELOG.md staging/ 2>/dev/null || true
+          cp README.md LICENSE NOTICE CHANGELOG.md staging/ 2>/dev/null || true
           tar -czf dist_agent_lang-${{ github.ref_name }}-linux-x64.tar.gz -C staging .
 
       - name: Upload artifact
@@ -35,7 +35,7 @@ jobs:
           path: dist_agent_lang-${{ github.ref_name }}-linux-x64.tar.gz
 
   build-macos:
-    name: Build macOS (x64 + ARM64)
+    name: Build macOS (Intel x64 + Apple Silicon ARM64)
     runs-on: macos-latest
     permissions:
       contents: read
@@ -45,26 +45,35 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build release binary
+      - name: Build macOS ARM64 (native)
         run: cargo build --release
 
-      - name: Package
+      - name: Build macOS Intel x64 (cross-compile)
         run: |
-          mkdir -p staging
-          cp target/release/dal staging/
-          cp README.md LICENSE CHANGELOG.md staging/ 2>/dev/null || true
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "arm64" ]; then
-            tar -czf dist_agent_lang-${{ github.ref_name }}-macos-arm64.tar.gz -C staging .
-          else
-            tar -czf dist_agent_lang-${{ github.ref_name }}-macos-x64.tar.gz -C staging .
-          fi
+          rustup target add x86_64-apple-darwin
+          cargo build --release --target x86_64-apple-darwin
 
-      - name: Upload artifact
+      - name: Package macOS ARM64
+        run: |
+          mkdir -p staging-arm64
+          cp target/release/dal staging-arm64/
+          cp README.md LICENSE NOTICE CHANGELOG.md staging-arm64/ 2>/dev/null || true
+          tar -czf dist_agent_lang-${{ github.ref_name }}-macos-arm64.tar.gz -C staging-arm64 .
+
+      - name: Package macOS Intel x64
+        run: |
+          mkdir -p staging-x64
+          cp target/x86_64-apple-darwin/release/dal staging-x64/
+          cp README.md LICENSE NOTICE CHANGELOG.md staging-x64/ 2>/dev/null || true
+          tar -czf dist_agent_lang-${{ github.ref_name }}-macos-x64.tar.gz -C staging-x64 .
+
+      - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos
-          path: dist_agent_lang-${{ github.ref_name }}-macos-*.tar.gz
+          path: |
+            dist_agent_lang-${{ github.ref_name }}-macos-arm64.tar.gz
+            dist_agent_lang-${{ github.ref_name }}-macos-x64.tar.gz
 
   build-windows:
     name: Build Windows x86_64
@@ -85,7 +94,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path staging | Out-Null
           Copy-Item target/release/dal.exe staging/
-          Copy-Item README.md, LICENSE, CHANGELOG.md staging/ -ErrorAction SilentlyContinue
+          Copy-Item README.md, LICENSE, NOTICE, CHANGELOG.md staging/ -ErrorAction SilentlyContinue
           Compress-Archive -Path staging\* -DestinationPath dist_agent_lang-${{ github.ref_name }}-windows-x64.zip -Force
 
       - name: Upload artifact
@@ -116,7 +125,7 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p dist_agent_lang-${VERSION}
-          cp -r src examples docs Cargo.toml Cargo.lock README.md LICENSE CHANGELOG.md dist_agent_lang-${VERSION}/ 2>/dev/null || true
+          cp -r src examples docs Cargo.toml Cargo.lock README.md LICENSE NOTICE CHANGELOG.md dist_agent_lang-${VERSION}/ 2>/dev/null || true
           tar -czf artifacts/dist_agent_lang-${VERSION}-source.tar.gz dist_agent_lang-${VERSION}/
 
       - name: Determine if pre-release
@@ -152,8 +161,12 @@ jobs:
             tar xzf dist_agent_lang-${{ github.ref_name }}-linux-x64.tar.gz
             sudo mv dal /usr/local/bin/
 
-            # macOS (ARM64 or x64)
+            # macOS Apple Silicon (M1/M2/M3)
             tar xzf dist_agent_lang-${{ github.ref_name }}-macos-arm64.tar.gz
+            sudo mv dal /usr/local/bin/
+
+            # macOS Intel (x64)
+            tar xzf dist_agent_lang-${{ github.ref_name }}-macos-x64.tar.gz
             sudo mv dal /usr/local/bin/
 
             # Windows x64 — extract the zip, then add dal.exe to your PATH

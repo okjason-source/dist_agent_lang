@@ -3,7 +3,7 @@
   "version": "1.0.3",
   "description": "A hybrid compiled programming language for AI agents, blockchain, and distributed systems",
   "main": "src/main.rs",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "keywords": [
     "programming-language",
     "ai-agents",
@@ -71,6 +71,7 @@
     "Cargo.toml",
     "README.md",
     "LICENSE",
+    "NOTICE",
     "CHANGELOG.md",
     "scripts/",
     "templates/",

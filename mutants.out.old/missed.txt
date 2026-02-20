@@ -12,3 +12,200 @@ src/cli_design.rs:21:5: replace print_banner with ()
 src/cli_design.rs:37:5: replace help_content -> String with String::new()
 src/cli_design.rs:37:5: replace help_content -> String with "xyzzy".into()
 src/ffi/mod.rs:63:9: replace FFIConfig::both -> Self with Default::default()
+src/ffi/mod.rs:70:9: replace FFIConfig::auto_detect -> Self with Default::default()
+src/http_server.rs:47:5: replace start_http_server -> Result<(), Box<dyn std::error::Error>> with Ok(())
+src/http_server.rs:97:17: delete match arm "GET" in start_http_server
+src/http_server.rs:98:17: delete match arm "POST" in start_http_server
+src/http_server.rs:99:17: delete match arm "PUT" in start_http_server
+src/http_server.rs:100:17: delete match arm "DELETE" in start_http_server
+src/http_server.rs:139:5: replace home_handler -> Html<String> with Html::from(String::new())
+src/http_server_converters.rs:102:40: replace * with +
+src/http_server_converters.rs:102:33: replace * with +
+src/http_server_handlers.rs:87:5: replace path_pattern_matches -> bool with true
+src/http_server_handlers.rs:87:5: replace path_pattern_matches -> bool with false
+src/http_server_handlers.rs:87:69: delete ! in path_pattern_matches
+src/http_server_handlers.rs:88:63: delete ! in path_pattern_matches
+src/http_server_handlers.rs:89:31: replace != with == in path_pattern_matches
+src/http_server_handlers.rs:93:12: delete ! in path_pattern_matches
+src/http_server_handlers.rs:93:23: replace || with && in path_pattern_matches
+src/http_server_handlers.rs:93:17: replace == with != in path_pattern_matches
+src/http_server_handlers.rs:93:46: replace && with || in path_pattern_matches
+src/http_server_handlers.rs:93:49: delete ! in path_pattern_matches
+src/http_server_handlers.rs:102:5: replace path_params_from_match -> Option<HashMap<String, String>> with None
+src/http_server_handlers.rs:102:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::new())
+src/http_server_handlers.rs:102:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([(String::new(), String::new())]))
+src/http_server_handlers.rs:102:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([(String::new(), "xyzzy".into())]))
+src/http_server_handlers.rs:102:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([("xyzzy".into(), String::new())]))
+src/http_server_handlers.rs:102:5: replace path_params_from_match -> Option<HashMap<String, String>> with Some(HashMap::from_iter([("xyzzy".into(), "xyzzy".into())]))
+src/http_server_handlers.rs:102:69: delete ! in path_params_from_match
+src/http_server_handlers.rs:103:63: delete ! in path_params_from_match
+src/http_server_handlers.rs:104:31: replace != with == in path_params_from_match
+src/http_server_handlers.rs:109:31: replace && with || in path_params_from_match
+src/http_server_handlers.rs:109:34: delete ! in path_params_from_match
+src/http_server_handlers.rs:112:22: replace != with == in path_params_from_match
+src/http_server_handlers.rs:125:5: replace get_route_handler_name_and_params -> Option<(String, HashMap<String, String>)> with None
+src/http_server_handlers.rs:136:58: replace && with || in get_route_handler_name_and_params
+src/http_server_handlers.rs:151:5: replace get_route_handler_name -> Option<String> with None
+src/http_server_integration.rs:70:17: delete match arm "GET" in create_router_with_options
+src/http_server_integration.rs:76:17: delete match arm "PUT" in create_router_with_options
+src/http_server_integration.rs:79:17: delete match arm "DELETE" in create_router_with_options
+src/http_server_integration.rs:102:5: replace home_handler -> Response<Body> with Response::new(Default::default())
+src/http_server_integration.rs:102:5: replace home_handler -> Response<Body> with Response::from(Default::default())
+src/http_server_integration.rs:107:5: replace health_handler -> Response<Body> with Response::new(Default::default())
+src/http_server_integration.rs:107:5: replace health_handler -> Response<Body> with Response::from(Default::default())
+src/http_server_middleware.rs:115:9: delete match arm Value::Map(map) in value_to_http_request
+src/http_server_middleware.rs:323:9: replace <impl std::fmt::Display for MiddlewareError>::fmt -> std::fmt::Result with Ok(Default::default())
+src/http_server_middleware.rs:423:9: delete match arm Value::String(s) in value_to_http_response
+src/http_server_security.rs:62:5: replace security_headers_middleware -> Response with Default::default()
+src/http_server_security.rs:400:24: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:414:9: replace SecurityLogger::log_event with ()
+src/http_server_security.rs:433:9: replace SecurityLogger::log_rate_limit with ()
+src/http_server_security.rs:439:9: replace SecurityLogger::log_auth_failure with ()
+src/http_server_security.rs:445:9: replace SecurityLogger::log_invalid_input with ()
+src/http_server_security.rs:451:9: replace SecurityLogger::log_auth_success with ()
+src/http_server_security.rs:456:9: replace SecurityLogger::log_suspicious_activity with ()
+src/http_server_security.rs:462:9: replace SecurityLogger::log_token_validation_failure with ()
+src/mold/mod.rs:27:5: replace use_mold_and_spawn -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/mold/mod.rs:29:8: delete ! in use_mold_and_spawn
+src/mold/mod.rs:122:5: replace load_mold_from_source -> Result<MoldConfig, String> with Ok(Default::default())
+src/mold/mod.rs:155:5: replace list_local_paths -> Vec<PathBuf> with vec![]
+src/mold/mod.rs:155:5: replace list_local_paths -> Vec<PathBuf> with vec![Default::default()]
+src/mold/mod.rs:167:53: replace || with && in list_local_paths
+src/mold/mod.rs:181:5: replace resolve_mold_path -> Result<PathBuf, String> with Ok(Default::default())
+src/mold/mod.rs:182:24: replace && with || in resolve_mold_path
+src/mold/mod.rs:203:50: replace == with != in resolve_mold_path
+src/mold/mod.rs:209:23: replace == with != in resolve_mold_path
+src/mold/mod.rs:222:5: replace scaffold_mold -> Result<(), String> with Ok(())
+src/ffi/auto_detect.rs:123:28: replace && with || in InterfaceSelector::select_interface
+src/ffi/auto_detect.rs:123:31: delete ! in InterfaceSelector::select_interface
+src/ffi/auto_detect.rs:126:28: replace && with || in InterfaceSelector::select_interface
+src/ffi/auto_detect.rs:126:31: delete ! in InterfaceSelector::select_interface
+src/ffi/auto_detect.rs:147:9: replace InterfaceSelector::set_default with ()
+src/ffi/auto_detect.rs:157:9: replace InterfaceSelector::service_count -> usize with 1
+src/ffi/auto_detect.rs:162:9: replace InterfaceSelector::has_service -> bool with true
+src/ffi/auto_detect.rs:162:9: replace InterfaceSelector::has_service -> bool with false
+src/ffi/interface.rs:133:9: replace FFIInterface::auto_detect_interface -> bool with true
+src/ffi/interface.rs:133:9: replace FFIInterface::auto_detect_interface -> bool with false
+src/ffi/interface.rs:160:31: replace < with == in FFIInterface::auto_detect_interface
+src/ffi/interface.rs:160:31: replace < with > in FFIInterface::auto_detect_interface
+src/ffi/interface.rs:160:31: replace < with <= in FFIInterface::auto_detect_interface
+src/ffi/interface.rs:179:48: replace || with && in FFIInterface::auto_detect_interface
+src/ffi/interface.rs:186:38: replace && with || in FFIInterface::auto_detect_interface
+src/ffi/interface.rs:191:9: replace FFIInterface::estimate_value_size -> usize with 0
+src/ffi/interface.rs:191:9: replace FFIInterface::estimate_value_size -> usize with 1
+src/ffi/interface.rs:201:39: replace + with - in FFIInterface::estimate_value_size
+src/ffi/interface.rs:201:39: replace + with * in FFIInterface::estimate_value_size
+src/ffi/interface.rs:204:50: replace + with - in FFIInterface::estimate_value_size
+src/ffi/interface.rs:204:50: replace + with * in FFIInterface::estimate_value_size
+src/ffi/interface.rs:210:42: replace * with + in FFIInterface::estimate_value_size
+src/ffi/interface.rs:210:42: replace * with / in FFIInterface::estimate_value_size
+src/ffi/interface.rs:213:39: replace + with - in FFIInterface::estimate_value_size
+src/ffi/interface.rs:213:39: replace + with * in FFIInterface::estimate_value_size
+src/ffi/interface.rs:215:44: replace + with - in FFIInterface::estimate_value_size
+src/ffi/interface.rs:215:44: replace + with * in FFIInterface::estimate_value_size
+src/ffi/interface.rs:268:9: replace <impl ServiceInterface for HttpInterface>::is_available -> bool with false
+src/ffi/interface.rs:291:9: replace <impl ServiceInterface for HttpInterface>::call_function -> Result<Value, String> with Ok(Default::default())
+src/ffi/interface.rs:295:9: replace <impl ServiceInterface for HttpInterface>::interface_type -> InterfaceType with Default::default()
+src/ffi/interface.rs:299:9: replace <impl ServiceInterface for HttpInterface>::is_available -> bool with true
+src/ffi/interface.rs:335:9: replace <impl ServiceInterface for RustFFIInterface>::is_available -> bool with false
+src/ffi/interface.rs:411:30: replace != with == in json_to_value
+src/ffi/python.rs:15:5: replace dist_agent_lang -> PyResult<()> with PyResult::new()
+src/ffi/python.rs:15:5: replace dist_agent_lang -> PyResult<()> with PyResult::from_iter([()])
+src/ffi/python.rs:15:5: replace dist_agent_lang -> PyResult<()> with PyResult::new(())
+src/ffi/python.rs:15:5: replace dist_agent_lang -> PyResult<()> with PyResult::from(())
+src/ffi/python.rs:41:9: replace DistAgentLangRuntime::call_function -> PyResult<PyObject> with PyResult::new()
+src/ffi/python.rs:41:9: replace DistAgentLangRuntime::call_function -> PyResult<PyObject> with PyResult::from_iter([Default::default()])
+src/ffi/python.rs:41:9: replace DistAgentLangRuntime::call_function -> PyResult<PyObject> with PyResult::new(Default::default())
+src/ffi/python.rs:41:9: replace DistAgentLangRuntime::call_function -> PyResult<PyObject> with PyResult::from(Default::default())
+src/ffi/python.rs:57:9: replace DistAgentLangRuntime::execute -> PyResult<PyObject> with PyResult::new()
+src/ffi/python.rs:57:9: replace DistAgentLangRuntime::execute -> PyResult<PyObject> with PyResult::from_iter([Default::default()])
+src/ffi/python.rs:57:9: replace DistAgentLangRuntime::execute -> PyResult<PyObject> with PyResult::new(Default::default())
+src/ffi/python.rs:57:9: replace DistAgentLangRuntime::execute -> PyResult<PyObject> with PyResult::from(Default::default())
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::new()
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::from_iter([String::new()])
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::new(String::new())
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::from(String::new())
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::from_iter(["xyzzy".into()])
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::new("xyzzy".into())
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::from("xyzzy".into())
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::new()
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::from_iter([String::new()])
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::new(String::new())
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::from(String::new())
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::from_iter(["xyzzy".into()])
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::new("xyzzy".into())
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::from("xyzzy".into())
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::new()
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::from_iter([true])
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::new(true)
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::from(true)
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::from_iter([false])
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::new(false)
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::from(false)
+src/ffi/python.rs:99:5: replace python_to_dal_value -> Result<Value, String> with Ok(Default::default())
+src/ffi/python.rs:137:5: replace dal_to_python_value -> PyObject with Default::default()
+src/ffi/rust.rs:58:5: replace dist_agent_lang_runtime_new -> *mut RustFFIRuntime with Default::default()
+src/ffi/rust.rs:63:5: replace dist_agent_lang_runtime_free with ()
+src/ffi/rust.rs:63:8: delete ! in dist_agent_lang_runtime_free
+src/ffi/rust.rs:78:5: replace dist_agent_lang_hash -> c_int with Default::default()
+src/ffi/rust.rs:79:50: replace || with && in dist_agent_lang_hash
+src/ffi/rust.rs:79:27: replace || with && in dist_agent_lang_hash
+src/ffi/rust.rs:80:20: delete - in dist_agent_lang_hash
+src/ffi/rust.rs:86:21: replace > with == in dist_agent_lang_hash
+src/ffi/rust.rs:86:21: replace > with < in dist_agent_lang_hash
+src/ffi/rust.rs:86:21: replace > with >= in dist_agent_lang_hash
+src/ffi/rust.rs:87:20: delete - in dist_agent_lang_hash
+src/ffi/rust.rs:96:37: replace >= with < in dist_agent_lang_hash
+src/ffi/rust.rs:97:28: delete - in dist_agent_lang_hash
+src/ffi/rust.rs:102:53: replace - with + in dist_agent_lang_hash
+src/ffi/rust.rs:102:53: replace - with / in dist_agent_lang_hash
+src/ffi/rust.rs:107:23: delete - in dist_agent_lang_hash
+src/ffi/rust.rs:121:5: replace dist_agent_lang_sign -> c_int with Default::default()
+src/ffi/rust.rs:122:52: replace || with && in dist_agent_lang_sign
+src/ffi/rust.rs:122:27: replace || with && in dist_agent_lang_sign
+src/ffi/rust.rs:123:20: delete - in dist_agent_lang_sign
+src/ffi/rust.rs:129:45: replace || with && in dist_agent_lang_sign
+src/ffi/rust.rs:129:21: replace > with == in dist_agent_lang_sign
+src/ffi/rust.rs:129:21: replace > with < in dist_agent_lang_sign
+src/ffi/rust.rs:129:21: replace > with >= in dist_agent_lang_sign
+src/ffi/rust.rs:129:56: replace > with == in dist_agent_lang_sign
+src/ffi/rust.rs:129:56: replace > with < in dist_agent_lang_sign
+src/ffi/rust.rs:129:56: replace > with >= in dist_agent_lang_sign
+src/ffi/rust.rs:130:20: delete - in dist_agent_lang_sign
+src/ffi/rust.rs:139:30: replace > with == in dist_agent_lang_sign
+src/ffi/rust.rs:139:30: replace > with < in dist_agent_lang_sign
+src/ffi/rust.rs:139:30: replace > with >= in dist_agent_lang_sign
+src/ffi/rust.rs:140:28: delete - in dist_agent_lang_sign
+src/ffi/rust.rs:145:23: delete - in dist_agent_lang_sign
+src/ffi/rust.rs:159:5: replace dist_agent_lang_verify -> c_int with Default::default()
+src/ffi/rust.rs:160:50: replace || with && in dist_agent_lang_verify
+src/ffi/rust.rs:160:27: replace || with && in dist_agent_lang_verify
+src/ffi/rust.rs:161:20: delete - in dist_agent_lang_verify
+src/ffi/rust.rs:169:13: replace || with && in dist_agent_lang_verify
+src/ffi/rust.rs:168:13: replace || with && in dist_agent_lang_verify
+src/ffi/rust.rs:167:21: replace > with == in dist_agent_lang_verify
+src/ffi/rust.rs:167:21: replace > with < in dist_agent_lang_verify
+src/ffi/rust.rs:167:21: replace > with >= in dist_agent_lang_verify
+src/ffi/rust.rs:168:24: replace > with == in dist_agent_lang_verify
+src/ffi/rust.rs:168:24: replace > with < in dist_agent_lang_verify
+src/ffi/rust.rs:168:24: replace > with >= in dist_agent_lang_verify
+src/ffi/rust.rs:169:24: replace > with == in dist_agent_lang_verify
+src/ffi/rust.rs:169:24: replace > with < in dist_agent_lang_verify
+src/ffi/rust.rs:169:24: replace > with >= in dist_agent_lang_verify
+src/ffi/rust.rs:171:20: delete - in dist_agent_lang_verify
+src/ffi/rust.rs:188:23: delete - in dist_agent_lang_verify
+src/lexer/lexer.rs:43:47: replace * with + in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:49:27: replace > with == in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:49:27: replace > with >= in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:155:29: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:155:49: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:155:45: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:155:45: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:156:56: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:253:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:276:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:294:32: replace += with *= in Lexer::next_token_immutable
