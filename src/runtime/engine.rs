@@ -1140,9 +1140,12 @@ impl Runtime {
             "api_key".to_string(),
             source
                 .api_key
-                .as_ref()// if api_key is not None, mask it
-                .map(|_| Value::String("***REDACTED***".to_string()))
-                .unwrap_or(Value::Null), // if api_key is None, return Null
+                .as_ref()// if api_key is Some, mask it, otherwise return Null
+                .map(|_| {
+                    // Fully mask API keys - never expose any part of the credential
+                    Value::String("***REDACTED***".to_string())
+                })
+                .unwrap_or(Value::Null),
         );
 
         fields.insert(
