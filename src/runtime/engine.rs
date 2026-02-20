@@ -1140,7 +1140,7 @@ impl Runtime {
             "api_key".to_string(),
             source
                 .api_key
-                .as_ref()// if api_key is Some, mask it, otherwise return Null
+                .as_ref()
                 .map(|_| {
                     // Fully mask API keys - never expose any part of the credential
                     Value::String("***REDACTED***".to_string())
