@@ -5,8 +5,9 @@
 **/staging/
 
 # Scripts (do not publish)
-*/scripts/create-release.js
+/scripts/push_to_github.sh
 */scripts/push_to_github.sh
+*/scripts/create-release.js
 */scripts/run_dal_tests.sh
 */scripts/run-tests.sh
 */scripts/test_examples.sh
