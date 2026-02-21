@@ -471,7 +471,7 @@
 <a href=#471 id=471 data-nosnippet>471</a>        <span class="comment">// Set mock registry on Runtime before execution (Runtime will use it for interception)
 <a href=#472 id=472 data-nosnippet>472</a>        </span><span class="self">self</span>.mock_registry.enable();
 <a href=#473 id=473 data-nosnippet>473</a>        <span class="comment">// Move our registry to Runtime (Runtime will own it during execution)
-<a href=#474 id=474 data-nosnippet>474</a>        </span><span class="kw">let </span>registry = std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.mock_registry, MockRegistry::new());
+<a href=#474 id=474 data-nosnippet>474</a>        </span><span class="kw">let </span>registry = std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.mock_registry);
 <a href=#475 id=475 data-nosnippet>475</a>        <span class="self">self</span>.runtime.set_mock_registry(registry);
 <a href=#476 id=476 data-nosnippet>476</a>
 <a href=#477 id=477 data-nosnippet>477</a>        <span class="comment">// Parse the source code
