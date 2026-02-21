@@ -590,7 +590,10 @@ fn test_parser_error_recovery_multiple_errors() {
         .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (program, errors) = parser.parse_with_recovery();
-    assert!(!errors.is_empty(), "Should collect at least one parse error");
+    assert!(
+        !errors.is_empty(),
+        "Should collect at least one parse error"
+    );
     assert!(
         !program.statements.is_empty(),
         "Should parse valid statements"

@@ -135,7 +135,6 @@ async fn test_axum_request_to_http_request_extract_body() {
         .unwrap();
 
     let _http_request = axum_request_to_http_request(request).await;
-
 }
 
 #[test]
@@ -271,7 +270,6 @@ fn test_create_router_with_middleware_creates_router() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 #[test]
@@ -297,7 +295,6 @@ fn test_create_router_with_middleware_get_method() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 #[test]
@@ -323,7 +320,6 @@ fn test_create_router_with_middleware_post_method() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 #[test]
@@ -349,7 +345,6 @@ fn test_create_router_with_middleware_put_method() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 #[test]
@@ -375,7 +370,6 @@ fn test_create_router_with_middleware_delete_method() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 // ============================================================================
@@ -726,7 +720,6 @@ fn test_create_router_with_middleware_delete_method_with_route() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 #[test]
@@ -788,7 +781,6 @@ fn test_create_router_with_middleware_all_methods_coverage() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 // ============================================================================
@@ -910,7 +902,6 @@ async fn test_home_handler_response_content() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 #[tokio::test]
@@ -936,7 +927,6 @@ async fn test_health_handler_response_content() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 #[test]
@@ -973,7 +963,6 @@ fn test_handle_with_middleware_response_verification() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 // ============================================================================
@@ -1022,7 +1011,6 @@ fn test_middleware_chain_execution() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 #[test]
@@ -1077,7 +1065,6 @@ fn test_middleware_chain_multiple_middleware() {
     };
 
     let _router = create_router_with_middleware(server);
-
 }
 
 // ============================================================================

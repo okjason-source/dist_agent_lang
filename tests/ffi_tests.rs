@@ -189,7 +189,6 @@ fn test_auto_detect_interface_hash_function() {
     // Hash function should prefer FFI
     let interface = selector.select_interface("CryptoService", "hash_data", &[]);
     assert_eq!(interface, InterfaceType::FFI);
-
 }
 
 #[test]
@@ -203,7 +202,6 @@ fn test_auto_detect_interface_chain_function() {
     // Chain function should prefer HTTP based on pattern matching
     let interface = selector.select_interface("ChainService", "chain::get_balance", &[]);
     assert_eq!(interface, InterfaceType::HTTP);
-
 }
 
 #[test]
@@ -235,7 +233,6 @@ fn test_ffi_interface_http_only() {
     assert_eq!(config.interface_type, InterfaceType::HTTP);
     assert!(config.enable_http);
     assert!(!config.enable_ffi);
-
 }
 
 #[test]
@@ -264,7 +261,6 @@ fn test_ffi_interface_both_with_preference() {
 
     // Prefer FFI - should work with FFI-only config
     let _result1 = interface_ffi.call("Service", "function", &args, Some(true));
-
 }
 
 // Integration tests with runtime
@@ -339,7 +335,6 @@ fn test_interface_fallback_mechanism() {
     assert_eq!(config.interface_type, InterfaceType::Both);
     assert!(config.enable_http);
     assert!(config.enable_ffi);
-
 }
 
 #[test]

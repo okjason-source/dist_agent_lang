@@ -129,7 +129,6 @@ fn test_security_logger() {
     SecurityLogger::log_rate_limit("127.0.0.1");
     SecurityLogger::log_auth_failure("127.0.0.1", "Invalid token");
     SecurityLogger::log_invalid_input("127.0.0.1", "SQL injection attempt");
-
 }
 
 /// Test: Input sanitization should remove dangerous characters

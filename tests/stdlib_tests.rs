@@ -898,9 +898,7 @@ fn test_kyc_verify_identity() {
     );
 
     assert!(!result.is_empty());
-    assert!(
-        result.contains_key("verification_id") || result.contains_key("status")
-    );
+    assert!(result.contains_key("verification_id") || result.contains_key("status"));
 }
 
 #[test]
@@ -916,9 +914,7 @@ fn test_aml_perform_check() {
     );
 
     assert!(!result.is_empty());
-    assert!(
-        result.contains_key("check_id") || result.contains_key("status")
-    );
+    assert!(result.contains_key("check_id") || result.contains_key("status"));
 }
 
 // ============================================

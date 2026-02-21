@@ -30,7 +30,6 @@ impl BlockchainNetwork {
             _ => Some(BlockchainNetwork::Custom(s.to_string())),
         }
     }
-
 }
 
 impl std::fmt::Display for BlockchainNetwork {
@@ -254,8 +253,7 @@ fn validate_chain_operation(network: &BlockchainNetwork, operation: &str) -> Res
     if !config.supported_operations.contains(&operation.to_string()) {
         return Err(format!(
             "Unsupported operation '{}' for chain '{}'",
-            operation,
-            network
+            operation, network
         ));
     }
 
@@ -263,8 +261,7 @@ fn validate_chain_operation(network: &BlockchainNetwork, operation: &str) -> Res
     if config.forbidden_operations.contains(&operation.to_string()) {
         return Err(format!(
             "Forbidden operation '{}' for chain '{}'",
-            operation,
-            network
+            operation, network
         ));
     }
 
@@ -282,8 +279,7 @@ fn validate_cross_chain_operation(operation: &CrossChainOperation) -> Result<(),
     if !are_chains_compatible(&operation.source_chain, &operation.target_chain) {
         return Err(format!(
             "Incompatible chains: {} and {}",
-            operation.source_chain,
-            operation.target_chain
+            operation.source_chain, operation.target_chain
         ));
     }
 
@@ -743,8 +739,7 @@ fn test_all_evm_chain_combinations() {
             assert!(
                 compatible,
                 "EVM chains {} and {} should be compatible",
-                evm_chains[i],
-                evm_chains[j]
+                evm_chains[i], evm_chains[j]
             );
         }
     }
@@ -1259,12 +1254,9 @@ fn test_chain_compatibility_matrix() {
     for (chain1, chain2, expected) in test_cases {
         let compatible = are_chains_compatible(&chain1, &chain2);
         assert_eq!(
-            compatible,
-            expected,
+            compatible, expected,
             "Compatibility between {} and {} should be {}",
-            chain1,
-            chain2,
-            expected
+            chain1, chain2, expected
         );
     }
 }
