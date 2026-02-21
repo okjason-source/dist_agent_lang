@@ -1,0 +1,2 @@
+❌ Parsing failed: Syntax Error: Unexpected token 'Punctuation(Comma)' at line 11, column 11. Expected one of: Punctuation(Semicolon)
+🔍 Error details: UnexpectedToken { token: "Punctuation(Comma)", expected: "Punctuation(Semicolon)", line: 11, column: 11, context: ErrorContext { file_path: None, source_code: None, call_stack: [], variable_scope: [], suggestions: [] } }

@@ -257,19 +257,31 @@ impl ParserError {
         }
     }
 
-    /// Format error with source code context
+    /// Format error with source code context (file path, source line, caret, suggestions).
     pub fn format_with_source(&self) -> String {
-        let mut output = format!("{}\n", self);
+        let mut output = String::new();
+
+        // File path first (production-style: user sees which file immediately)
+        if let Some(path) = &self.context().file_path {
+            if !path.is_empty() {
+                output.push_str(&format!("  --> {}\n", path));
+            }
+        }
+
+        output.push_str(&format!("{}\n", self));
 
         if let Some(line_num) = self.line_number() {
             if let Some(source) = &self.context().source_code {
                 let lines: Vec<&str> = source.lines().collect();
                 if line_num > 0 && line_num <= lines.len() {
                     let line_content = lines[line_num - 1];
-                    output.push_str(&format!("  --> Line {}: {}\n", line_num, line_content));
+                    let prefix = format!("  --> Line {}: ", line_num);
+                    output.push_str(&format!("{}{}\n", prefix, line_content));
 
                     if let Some(col) = self.column_number() {
-                        let pointer = " ".repeat(col + 8) + "^";
+                        // Caret under the offending column (column is 1-based)
+                        let pad = prefix.len() + col.saturating_sub(1);
+                        let pointer = " ".repeat(pad) + "^";
                         output.push_str(&format!("  {}\n", pointer));
                     }
                 }
