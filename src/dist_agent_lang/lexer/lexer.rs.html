@@ -949,4 +949,16 @@
 <a href=#949 id=949 data-nosnippet>949</a>    <span class="attr">#[error(<span class="string">"Too many tokens: {2} (max: {3}) at line {0}, column {1}"</span>)]
 <a href=#950 id=950 data-nosnippet>950</a>    </span>TooManyTokens(usize, usize, usize, usize),
 <a href=#951 id=951 data-nosnippet>951</a>}
+<a href=#952 id=952 data-nosnippet>952</a>
+<a href=#953 id=953 data-nosnippet>953</a><span class="kw">impl </span>LexerError {
+<a href=#954 id=954 data-nosnippet>954</a>    <span class="doccomment">/// Line and column for source snippet display (1-based). Returns None for errors without location.
+<a href=#955 id=955 data-nosnippet>955</a>    </span><span class="kw">pub fn </span>line_column(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, usize)&gt; {
+<a href=#956 id=956 data-nosnippet>956</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#957 id=957 data-nosnippet>957</a>            LexerError::UnexpectedCharacter(<span class="kw">_</span>, line, col) =&gt; <span class="prelude-val">Some</span>((<span class="kw-2">*</span>line, <span class="kw-2">*</span>col)),
+<a href=#958 id=958 data-nosnippet>958</a>            LexerError::InvalidNumber(<span class="kw">_</span>, line, col) =&gt; <span class="prelude-val">Some</span>((<span class="kw-2">*</span>line, <span class="kw-2">*</span>col)),
+<a href=#959 id=959 data-nosnippet>959</a>            LexerError::UnterminatedString(line, col) =&gt; <span class="prelude-val">Some</span>((<span class="kw-2">*</span>line, <span class="kw-2">*</span>col)),
+<a href=#960 id=960 data-nosnippet>960</a>            LexerError::TooManyTokens(line, col, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="prelude-val">Some</span>((<span class="kw-2">*</span>line, <span class="kw-2">*</span>col)),
+<a href=#961 id=961 data-nosnippet>961</a>        }
+<a href=#962 id=962 data-nosnippet>962</a>    }
+<a href=#963 id=963 data-nosnippet>963</a>}
 </code></pre></div></section></main></body></html>

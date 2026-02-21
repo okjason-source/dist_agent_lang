@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["RuntimeError"],"struct":["Function"],"type":["FunctionBody"]};
+window.SIDEBAR_ITEMS = {"enum":["RuntimeError"],"struct":["CallFrameInfo","Function","RuntimeErrorWithContext","SourceLocation"],"type":["FunctionBody"]};

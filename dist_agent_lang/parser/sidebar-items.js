@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["ast","error","parser"]};
+window.SIDEBAR_ITEMS = {"mod":["ast","error","parser","warnings"]};
