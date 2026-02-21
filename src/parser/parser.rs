@@ -4,8 +4,8 @@ use crate::parser::ast::{
     CompilationTargetInfo, ContinueStatement, EventDeclaration, EventStatement, Expression,
     FieldVisibility, ForInStatement, FunctionCall, FunctionStatement, IfStatement, LetStatement,
     LoopStatement, MatchCase, MatchPattern, MatchStatement, MessageStatement, Parameter, Program,
-    ReturnStatement, ServiceField, ServiceStatement, Span, SpawnStatement, Statement,
-    TryStatement, WhileStatement,
+    ReturnStatement, ServiceField, ServiceStatement, Span, SpawnStatement, Statement, TryStatement,
+    WhileStatement,
 };
 use crate::parser::error::{ErrorContext, ErrorRecovery, ParserError};
 use std::collections::{HashMap, HashSet};

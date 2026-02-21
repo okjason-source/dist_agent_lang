@@ -248,7 +248,9 @@ impl ParserError {
                 "Verify that all required arguments are provided".to_string(),
                 "Ensure function arguments match the expected types".to_string(),
             ],
-            ParserError::RecoveryError { original_error, .. } => original_error.generate_suggestions(),
+            ParserError::RecoveryError { original_error, .. } => {
+                original_error.generate_suggestions()
+            }
             _ => vec![
                 "Review the syntax and ensure it follows the language specification".to_string(),
             ],

@@ -235,7 +235,11 @@ fn test_txn_attribute_commit_on_success() {
         v
     "#;
     let result = dist_agent_lang::execute_source(source).expect("Execution failed");
-    assert_eq!(result, Value::Int(100), "@txn function should commit tx_write");
+    assert_eq!(
+        result,
+        Value::Int(100),
+        "@txn function should commit tx_write"
+    );
 }
 
 /// @txn attribute: function with @txn rolls back on error
@@ -264,7 +268,8 @@ fn test_txn_attribute_rollback_on_error() {
     "#;
     let result = dist_agent_lang::execute_source(source).expect("Execution failed");
     assert_eq!(
-        result, Value::Int(42),
+        result,
+        Value::Int(42),
         "After @txn function throws, tx_write should be rolled back"
     );
 }

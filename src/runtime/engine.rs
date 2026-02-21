@@ -428,14 +428,12 @@ impl Runtime {
                 Err(e) => {
                     self.execution_start = None;
                     let suggestions = self.suggestions_for_error(&e);
-                    return Err(
-                        RuntimeErrorWithContext::new(
-                            e,
-                            self.current_location.clone(),
-                            self.get_call_stack_info(),
-                        )
-                        .with_suggestions(suggestions),
-                    );
+                    return Err(RuntimeErrorWithContext::new(
+                        e,
+                        self.current_location.clone(),
+                        self.get_call_stack_info(),
+                    )
+                    .with_suggestions(suggestions));
                 }
             }
             if self.return_pending.is_some() {

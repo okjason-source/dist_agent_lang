@@ -640,9 +640,9 @@ pub struct TransactionManager {
     write_locks: HashMap<String, String>,     // key -> transaction_id
     /// Wait-for graph for cycle-based deadlock detection: wait_for[a] = [b, c] means a is blocked by b and c.
     wait_for: HashMap<String, Vec<String>>,
-    default_timeout_ms: Option<u64>,          // Default timeout for new transactions
+    default_timeout_ms: Option<u64>, // Default timeout for new transactions
     event_callback: Option<TransactionEventCallback>, // Optional lifecycle event observer
-    transaction_log: Option<TransactionLog>,  // Optional persistent audit log
+    transaction_log: Option<TransactionLog>, // Optional persistent audit log
     /// When true, read-only commits (keys_modified == 0) are not written to the transaction log.
     optimize_read_only_audit: bool,
     // Resource limits
@@ -1148,7 +1148,10 @@ impl TransactionManager {
 
     /// Record that `from` is blocked by `to`. If this creates a cycle (path from to back to from), return the cycle.
     fn add_wait_edge_and_detect_cycle(&mut self, from: &str, to: &str) -> Option<Vec<String>> {
-        let entry = self.wait_for.entry(from.to_string()).or_insert_with(Vec::new);
+        let entry = self
+            .wait_for
+            .entry(from.to_string())
+            .or_insert_with(Vec::new);
         if !entry.contains(&to.to_string()) {
             entry.push(to.to_string());
         }
@@ -1684,8 +1687,12 @@ mod tests {
         let tx2 = manager
             .begin_transaction(IsolationLevel::ReadCommitted)
             .unwrap();
-        manager.write(&tx1, "key1".to_string(), Value::Int(1)).unwrap();
-        manager.write(&tx2, "key2".to_string(), Value::Int(2)).unwrap();
+        manager
+            .write(&tx1, "key1".to_string(), Value::Int(1))
+            .unwrap();
+        manager
+            .write(&tx2, "key2".to_string(), Value::Int(2))
+            .unwrap();
         // tx1 holds key1, tx2 holds key2. tx1 tries key2 -> conflict (tx1 blocked by tx2)
         let r1 = manager.write(&tx1, "key2".to_string(), Value::Int(0));
         assert!(r1.is_err());
@@ -1800,7 +1807,10 @@ mod tests {
             storage.get("name"),
             Some(Value::String("from_tmp".to_string()))
         );
-        assert!(storage_path.exists(), "main file should be promoted from .tmp");
+        assert!(
+            storage_path.exists(),
+            "main file should be promoted from .tmp"
+        );
     }
 
     #[test]

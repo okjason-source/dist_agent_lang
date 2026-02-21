@@ -186,25 +186,14 @@ impl RuntimeErrorWithContext {
     }
 
     /// Format for display: message, then "  at line X, column Y" if location present, then call stack, then suggestions.
-    pub fn format_display(
-        &self,
-        _source: Option<&str>,
-        file_path: Option<&str>,
-    ) -> String {
+    pub fn format_display(&self, _source: Option<&str>, file_path: Option<&str>) -> String {
         let mut out = format!("{}\n", self.inner);
         if let Some(loc) = &self.location {
-            let path = loc
-                .file_path
-                .as_deref()
-                .or(file_path)
-                .unwrap_or("");
+            let path = loc.file_path.as_deref().or(file_path).unwrap_or("");
             if path.is_empty() {
                 out.push_str(&format!("  at line {}, column {}\n", loc.line, loc.column));
             } else {
-                out.push_str(&format!(
-                    "  at {}:{}:{}\n",
-                    path, loc.line, loc.column
-                ));
+                out.push_str(&format!("  at {}:{}:{}\n", path, loc.line, loc.column));
             }
         }
         if !self.call_stack.is_empty() {

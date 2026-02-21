@@ -10,11 +10,7 @@ use crate::parser::ParseWarning;
 use crate::runtime::functions::RuntimeErrorWithContext;
 
 /// Format a lexer error for display: message, optional file path, and source line with caret.
-pub fn format_lexer_error(
-    e: &LexerError,
-    file_path: Option<&str>,
-    source: Option<&str>,
-) -> String {
+pub fn format_lexer_error(e: &LexerError, file_path: Option<&str>, source: Option<&str>) -> String {
     let mut out = String::new();
     if let Some(path) = file_path {
         if !path.is_empty() {
