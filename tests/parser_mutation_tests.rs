@@ -171,7 +171,7 @@ fn test_parser_with_recovery_on_invalid_input() {
         "Should collect parse errors from invalid statement"
     );
     assert!(
-        program.statements.len() >= 1,
+        !program.statements.is_empty(),
         "Should parse valid statements before error"
     );
 }
@@ -590,9 +590,9 @@ fn test_parser_error_recovery_multiple_errors() {
         .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (program, errors) = parser.parse_with_recovery();
-    assert!(errors.len() >= 1, "Should collect at least one parse error");
+    assert!(!errors.is_empty(), "Should collect at least one parse error");
     assert!(
-        program.statements.len() >= 1,
+        !program.statements.is_empty(),
         "Should parse valid statements"
     );
 }
@@ -609,7 +609,7 @@ fn test_parser_error_recovery_invalid_block() {
     let (program, errors) = parser.parse_with_recovery();
     // Recovery should collect error - the closing brace provides a sync point
     assert!(
-        !errors.is_empty() || program.statements.len() > 0,
+        !errors.is_empty() || !program.statements.is_empty(),
         "Should either collect errors or parse successfully"
     );
 }
@@ -642,9 +642,9 @@ fn test_parser_error_recovery_at_last_token() {
         .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (program, errors) = parser.parse_with_recovery();
-    assert!(errors.len() >= 1, "Should collect at least one error");
+    assert!(!errors.is_empty(), "Should collect at least one error");
     assert!(
-        program.statements.len() >= 1,
+        !program.statements.is_empty(),
         "Should parse first valid statement"
     );
 }
@@ -673,7 +673,7 @@ fn test_parser_error_recovery_sync_point_is_next_token() {
     let (program, errors) = parser.parse_with_recovery();
     assert!(!errors.is_empty(), "Should collect error");
     assert!(
-        program.statements.len() >= 1,
+        !program.statements.is_empty(),
         "Should parse valid statement after recovery"
     );
 }
@@ -689,7 +689,7 @@ fn test_parser_error_recovery_nested_blocks() {
     let (program, errors) = parser.parse_with_recovery();
     // Should collect error and recover - closing braces provide sync points
     assert!(
-        !errors.is_empty() || program.statements.len() > 0,
+        !errors.is_empty() || !program.statements.is_empty(),
         "Should handle nested block errors"
     );
 }
@@ -716,7 +716,7 @@ fn test_parser_error_recovery_multiple_consecutive_errors() {
         .unwrap();
     let mut parser = Parser::new_with_positions(tokens);
     let (_program, errors) = parser.parse_with_recovery();
-    assert!(errors.len() >= 1, "Should collect errors");
+    assert!(!errors.is_empty(), "Should collect errors");
     // Should not hang - each error should recover to next semicolon
 }
 

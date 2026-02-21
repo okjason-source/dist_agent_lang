@@ -33,18 +33,19 @@ fn test_auth_password() -> String {
     std::env::var("TEST_AUTH_PASSWORD").unwrap_or_else(|_| {
         // Generate password programmatically to avoid hard-coded cryptographic value
         // Compute from ASCII values using arithmetic to avoid CodeQL detection
-        let mut bytes = Vec::with_capacity(11);
-        bytes.push(b'a' + 15);
-        bytes.push(b'a');
-        bytes.push(b'a' + 18);
-        bytes.push(b'a' + 18);
-        bytes.push(b'a' + 22);
-        bytes.push(b'a' + 14);
-        bytes.push(b'a' + 17);
-        bytes.push(b'a' + 3);
-        bytes.push(b'0' + 1);
-        bytes.push(b'0' + 2);
-        bytes.push(b'0' + 3);
+        let bytes = vec![
+            b'a' + 15,
+            b'a',
+            b'a' + 18,
+            b'a' + 18,
+            b'a' + 22,
+            b'a' + 14,
+            b'a' + 17,
+            b'a' + 3,
+            b'0' + 1,
+            b'0' + 2,
+            b'0' + 3,
+        ];
         String::from_utf8(bytes).unwrap()
     })
 }
@@ -52,19 +53,20 @@ fn test_auth_password_strong() -> String {
     std::env::var("TEST_AUTH_PASSWORD_STRONG").unwrap_or_else(|_| {
         // Generate password programmatically to avoid hard-coded cryptographic value
         // Compute from ASCII values using arithmetic to avoid CodeQL detection
-        let mut bytes = Vec::with_capacity(12);
-        bytes.push(b'A' + 15);
-        bytes.push(b'a');
-        bytes.push(b'a' + 18);
-        bytes.push(b'a' + 18);
-        bytes.push(b'a' + 22);
-        bytes.push(b'a' + 14);
-        bytes.push(b'a' + 17);
-        bytes.push(b'a' + 3);
-        bytes.push(b'0' + 1);
-        bytes.push(b'0' + 2);
-        bytes.push(b'0' + 3);
-        bytes.push(b'!');
+        let bytes = vec![
+            b'A' + 15,
+            b'a',
+            b'a' + 18,
+            b'a' + 18,
+            b'a' + 22,
+            b'a' + 14,
+            b'a' + 17,
+            b'a' + 3,
+            b'0' + 1,
+            b'0' + 2,
+            b'0' + 3,
+            b'!',
+        ];
         String::from_utf8(bytes).unwrap()
     })
 }
@@ -226,7 +228,7 @@ fn test_ai_spawn_agent() {
     assert_eq!(agent.config.name, "Test Agent");
     // Check status using match since it doesn't implement PartialEq
     match agent.status {
-        ai::AgentStatus::Idle => assert!(true),
+        ai::AgentStatus::Idle => {}
         _ => panic!("Agent should be Idle"),
     }
 }
@@ -510,10 +512,7 @@ fn test_crypto_signatures_ecdsa_sign_verify() {
     let verify_result = crypto_signatures::verify(data, &signature, &public_key);
     // Accept either success or failure - depends on mock implementation validation
     // The important thing is that it doesn't panic
-    match verify_result {
-        Ok(_) => assert!(true, "Verification succeeded"),
-        Err(_) => assert!(true, "Verification failed (expected for mock/invalid key)"),
-    }
+    let _ = verify_result;
 }
 
 #[test]
@@ -550,7 +549,6 @@ fn test_log_info() {
     data.insert("message".to_string(), Value::String("Test log".to_string()));
 
     log::info("test_source", data, None);
-    assert!(true);
 }
 
 #[test]
@@ -562,7 +560,6 @@ fn test_log_warning() {
     );
 
     log::warning("test_source", data, None);
-    assert!(true);
 }
 
 #[test]
@@ -571,7 +568,6 @@ fn test_log_error() {
     data.insert("error".to_string(), Value::String("Test error".to_string()));
 
     log::error("test_source", data, None);
-    assert!(true);
 }
 
 #[test]
@@ -580,7 +576,6 @@ fn test_log_debug() {
     data.insert("debug".to_string(), Value::String("Test debug".to_string()));
 
     log::debug("test_source", data, None);
-    assert!(true);
 }
 
 #[test]
@@ -592,7 +587,6 @@ fn test_log_audit() {
     );
 
     log::audit("test_action", data, None);
-    assert!(true);
 }
 
 #[test]
@@ -675,9 +669,8 @@ fn test_log_get_stats() {
 
     let stats = log::get_stats();
     // Stats returns HashMap<String, Value>
-    match stats.get(&"total_entries".to_string()) {
-        Some(Value::Int(_)) => assert!(true),
-        _ => assert!(true, "Stats may have different structure"),
+    if let Some(Value::Int(_)) = stats.get("total_entries") {
+        // Stats have expected structure
     }
 }
 
@@ -792,7 +785,6 @@ fn test_oracle_fetch_with_consensus() {
 #[test]
 fn test_auth_init_auth_system() {
     auth::init_auth_system();
-    assert!(true);
 }
 
 #[test]
@@ -907,8 +899,7 @@ fn test_kyc_verify_identity() {
 
     assert!(!result.is_empty());
     assert!(
-        result.contains_key(&"verification_id".to_string())
-            || result.contains_key(&"status".to_string())
+        result.contains_key("verification_id") || result.contains_key("status")
     );
 }
 
@@ -926,7 +917,7 @@ fn test_aml_perform_check() {
 
     assert!(!result.is_empty());
     assert!(
-        result.contains_key(&"check_id".to_string()) || result.contains_key(&"status".to_string())
+        result.contains_key("check_id") || result.contains_key("status")
     );
 }
 
@@ -998,8 +989,6 @@ fn test_web_parse_url() {
 
     // Should parse URL components into HashMap
     assert!(!parsed.is_empty());
-    // URL parsing returns HashMap with parsed components
-    assert!(true);
 }
 
 #[test]
@@ -1068,7 +1057,7 @@ fn test_web_create_api_endpoint() {
     assert_eq!(endpoint.path, "/api/users");
     // Method is HttpMethod enum, not string
     match endpoint.method {
-        web::HttpMethod::GET => assert!(true),
+        web::HttpMethod::GET => {}
         _ => panic!("Expected GET method"),
     }
 }
@@ -1591,9 +1580,6 @@ fn test_key_revoke_all() {
 #[test]
 fn test_cross_chain_security_new() {
     let _manager = cross_chain_security::CrossChainSecurityManager::new();
-
-    // Manager should be created successfully
-    assert!(true);
 }
 
 #[test]
@@ -1611,7 +1597,7 @@ fn test_cross_chain_security_chain_config() {
     assert_eq!(config.chain_id, 1);
     assert_eq!(config.name, "Ethereum");
     match config.signature_scheme {
-        cross_chain_security::SignatureScheme::ECDSA => assert!(true),
+        cross_chain_security::SignatureScheme::ECDSA => {}
         _ => panic!("Expected ECDSA"),
     }
 }
@@ -1642,9 +1628,6 @@ fn test_cross_chain_security_bridge_config() {
 #[test]
 fn test_secure_auth_new() {
     let _store = secure_auth::SecureUserStore::new();
-
-    // Store should be created successfully
-    assert!(true);
 }
 
 #[test]
@@ -1879,7 +1862,7 @@ fn test_mobile_create_app() {
     assert_eq!(app.name, "TestApp");
     assert_eq!(app.config.bundle_id, "com.test.app");
     match app.platform {
-        mobile::MobilePlatform::IOs => assert!(true),
+        mobile::MobilePlatform::IOs => {}
         _ => panic!("Expected IOs platform"),
     }
 }
@@ -1896,7 +1879,7 @@ fn test_mobile_create_mobile_label() {
     let label = mobile::create_mobile_label("Hello".to_string(), 10, 20, 100, 30);
 
     match label {
-        mobile::MobileComponent::Label(_) => assert!(true),
+        mobile::MobileComponent::Label(_) => {}
         _ => panic!("Expected Label component"),
     }
 }
@@ -1906,7 +1889,7 @@ fn test_mobile_create_mobile_button() {
     let button = mobile::create_mobile_button("Click Me".to_string(), 10, 20, 100, 40);
 
     match button {
-        mobile::MobileComponent::Button(_) => assert!(true),
+        mobile::MobileComponent::Button(_) => {}
         _ => panic!("Expected Button component"),
     }
 }
@@ -1968,7 +1951,7 @@ fn test_desktop_create_button() {
     let button = desktop::create_button("Click Me".to_string(), 10, 20, 100, 40);
 
     match button {
-        desktop::UIComponent::Button(_) => assert!(true),
+        desktop::UIComponent::Button(_) => {}
         _ => panic!("Expected Button component"),
     }
 }
@@ -1978,7 +1961,7 @@ fn test_desktop_create_label() {
     let label = desktop::create_label("Hello".to_string(), 10, 20, 100, 30);
 
     match label {
-        desktop::UIComponent::Label(_) => assert!(true),
+        desktop::UIComponent::Label(_) => {}
         _ => panic!("Expected Label component"),
     }
 }
@@ -1988,7 +1971,7 @@ fn test_desktop_create_text_field() {
     let text_field = desktop::create_text_field(Some("Enter text".to_string()), 10, 20, 200, 30);
 
     match text_field {
-        desktop::UIComponent::TextField(_) => assert!(true),
+        desktop::UIComponent::TextField(_) => {}
         _ => panic!("Expected TextField component"),
     }
 }
@@ -1998,7 +1981,7 @@ fn test_desktop_create_menu_bar() {
     let menu_bar = desktop::create_menu_bar();
 
     match menu_bar {
-        desktop::UIComponent::MenuBar(_) => assert!(true),
+        desktop::UIComponent::MenuBar(_) => {}
         _ => panic!("Expected MenuBar component"),
     }
 }
@@ -2011,17 +1994,17 @@ fn test_desktop_create_menu_bar() {
 fn test_iot_device_types() {
     // Test DeviceType enum variants
     match iot::DeviceType::SensorNode {
-        iot::DeviceType::SensorNode => assert!(true),
+        iot::DeviceType::SensorNode => {}
         _ => panic!("Expected SensorNode"),
     }
 
     match iot::DeviceType::ActuatorNode {
-        iot::DeviceType::ActuatorNode => assert!(true),
+        iot::DeviceType::ActuatorNode => {}
         _ => panic!("Expected ActuatorNode"),
     }
 
     match iot::DeviceType::Gateway {
-        iot::DeviceType::Gateway => assert!(true),
+        iot::DeviceType::Gateway => {}
         _ => panic!("Expected Gateway"),
     }
 }
@@ -2030,12 +2013,12 @@ fn test_iot_device_types() {
 fn test_iot_device_status() {
     // Test DeviceStatus enum
     match iot::DeviceStatus::Online {
-        iot::DeviceStatus::Online => assert!(true),
+        iot::DeviceStatus::Online => {}
         _ => panic!("Expected Online status"),
     }
 
     match iot::DeviceStatus::Offline {
-        iot::DeviceStatus::Offline => assert!(true),
+        iot::DeviceStatus::Offline => {}
         _ => panic!("Expected Offline status"),
     }
 }
@@ -2054,7 +2037,7 @@ fn test_iot_sensor_reading_struct() {
         _ => panic!("Expected Float value"),
     }
     match reading.quality {
-        iot::ReadingQuality::Good => assert!(true),
+        iot::ReadingQuality::Good => {}
         _ => panic!("Expected Good quality"),
     }
 }

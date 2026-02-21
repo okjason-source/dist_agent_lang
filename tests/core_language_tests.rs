@@ -807,7 +807,7 @@ fn test_runtime_variable_assignment() {
     // Runtime execution may not be fully implemented for all features
     let result = execute_source(code);
     // Test passes if it parses correctly (runtime execution is bonus)
-    assert!(result.is_ok() || program.statements.len() > 0);
+    assert!(result.is_ok() || !program.statements.is_empty());
 }
 
 #[test]
@@ -822,7 +822,7 @@ fn test_runtime_function_call() {
 
     let result = execute_source(code);
     // Test passes if it parses correctly
-    assert!(result.is_ok() || program.statements.len() > 0);
+    assert!(result.is_ok() || !program.statements.is_empty());
 }
 
 #[test]
@@ -838,7 +838,7 @@ fn test_runtime_control_flow() {
 
     let result = execute_source(code);
     // Runtime execution may not be fully implemented yet
-    assert!(result.is_ok() || program.statements.len() > 0);
+    assert!(result.is_ok() || !program.statements.is_empty());
 }
 
 #[test]
@@ -853,7 +853,7 @@ fn test_runtime_scope_management() {
 
     let result = execute_source(code);
     // Block scoping may not be fully implemented in runtime
-    assert!(result.is_ok() || program.statements.len() > 0);
+    assert!(result.is_ok() || !program.statements.is_empty());
 }
 
 #[test]
@@ -869,7 +869,7 @@ fn test_runtime_error_handling() {
 
     let result = execute_source(code);
     // May succeed or fail depending on error handling implementation
-    assert!(result.is_ok() || program.statements.len() > 0);
+    assert!(result.is_ok() || !program.statements.is_empty());
 }
 
 // ============================================

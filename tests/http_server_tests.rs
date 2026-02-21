@@ -136,12 +136,6 @@ async fn test_axum_request_to_http_request_extract_body() {
 
     let _http_request = axum_request_to_http_request(request).await;
 
-    // Verify body extraction (extract_body may return empty for now, but function should execute)
-    // The key is that extract_body is called, not that it returns specific content
-    assert!(
-        true,
-        "extract_body should be called during request conversion"
-    );
 }
 
 #[test]
@@ -278,8 +272,6 @@ fn test_create_router_with_middleware_creates_router() {
 
     let _router = create_router_with_middleware(server);
 
-    // Should create a router, not just Router::new()
-    assert!(true, "Should create router with middleware");
 }
 
 #[test]
@@ -306,8 +298,6 @@ fn test_create_router_with_middleware_get_method() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should handle GET method (if match arm is deleted, this may fail)
-    assert!(true, "Router should handle GET method");
 }
 
 #[test]
@@ -334,8 +324,6 @@ fn test_create_router_with_middleware_post_method() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should handle POST method
-    assert!(true, "Router should handle POST method");
 }
 
 #[test]
@@ -362,8 +350,6 @@ fn test_create_router_with_middleware_put_method() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should handle PUT method
-    assert!(true, "Router should handle PUT method");
 }
 
 #[test]
@@ -390,8 +376,6 @@ fn test_create_router_with_middleware_delete_method() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should handle DELETE method
-    assert!(true, "Router should handle DELETE method");
 }
 
 // ============================================================================
@@ -743,8 +727,6 @@ fn test_create_router_with_middleware_delete_method_with_route() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should handle DELETE method (if match arm is deleted, this may fail)
-    assert!(true, "Router should handle DELETE method with route");
 }
 
 #[test]
@@ -807,11 +789,6 @@ fn test_create_router_with_middleware_all_methods_coverage() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should handle all methods
-    assert!(
-        true,
-        "Router should handle all HTTP methods (GET, POST, PUT, DELETE)"
-    );
 }
 
 // ============================================================================
@@ -851,10 +828,6 @@ fn test_middleware_value_conversion_map_request() {
     // If the match arm is deleted, middleware execution will fail
     // This test verifies the router can be created with middleware
     let _router = create_router_with_middleware(server);
-    assert!(
-        true,
-        "Router with middleware should handle Map value conversion"
-    );
 }
 
 #[test]
@@ -879,12 +852,7 @@ fn test_middleware_value_conversion_map_response() {
         },
     };
 
-    // Router creation exercises value conversion paths
     let _router = create_router_with_middleware(server);
-    assert!(
-        true,
-        "Router should handle Map value conversion in responses"
-    );
 }
 
 #[test]
@@ -909,12 +877,7 @@ fn test_middleware_value_conversion_string_response() {
         },
     };
 
-    // Router creation exercises value conversion paths
     let _router = create_router_with_middleware(server);
-    assert!(
-        true,
-        "Router should handle String value conversion in responses"
-    );
 }
 
 // ============================================================================
@@ -948,13 +911,6 @@ async fn test_home_handler_response_content() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should be created successfully
-    // If home_handler is mutated to return Default::default(), the router still works
-    // but the handler would return wrong status. This test verifies router creation.
-    assert!(
-        true,
-        "Router with default home_handler should be created successfully"
-    );
 }
 
 #[tokio::test]
@@ -981,12 +937,6 @@ async fn test_health_handler_response_content() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should be created successfully
-    // If health_handler is mutated to return Default::default(), the router still works
-    assert!(
-        true,
-        "Router with default health_handler should be created successfully"
-    );
 }
 
 #[test]
@@ -1024,13 +974,6 @@ fn test_handle_with_middleware_response_verification() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should be created successfully
-    // If handle_with_middleware is mutated to return Default::default(), the router still works
-    // but requests would fail. This test verifies router creation.
-    assert!(
-        true,
-        "Router with handle_with_middleware should be created successfully"
-    );
 }
 
 // ============================================================================
@@ -1080,12 +1023,6 @@ fn test_middleware_chain_execution() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should be created successfully with middleware
-    // If execute_middleware_chain is mutated, middleware wouldn't process correctly
-    assert!(
-        true,
-        "Router with middleware chain should be created successfully"
-    );
 }
 
 #[test]
@@ -1141,11 +1078,6 @@ fn test_middleware_chain_multiple_middleware() {
 
     let _router = create_router_with_middleware(server);
 
-    // Router should handle multiple middleware
-    assert!(
-        true,
-        "Router with multiple middleware should be created successfully"
-    );
 }
 
 // ============================================================================
@@ -1194,7 +1126,7 @@ async fn test_dal_routes_e2e_registered_route_returns_handler_response() {
             |args, _scope| {
                 let mut map = HashMap::new();
                 map.insert("status".to_string(), dist_agent_lang::Value::Int(201));
-                let body = args.get(0).map(|v| v.to_string()).unwrap_or_default();
+                let body = args.first().map(|v| v.to_string()).unwrap_or_default();
                 map.insert("body".to_string(), dist_agent_lang::Value::String(body));
                 Ok(dist_agent_lang::Value::Map(map))
             },
@@ -1553,7 +1485,7 @@ async fn test_dal_todo_backend_e2e_real_world() {
         "Response must have 'todo' key"
     );
     assert_eq!(post_body["todo"]["text"].as_str().unwrap(), "Buy milk");
-    assert_eq!(post_body["todo"]["completed"].as_bool().unwrap(), false);
+    assert!(!post_body["todo"]["completed"].as_bool().unwrap());
     assert!(post_body["todo"].get("id").is_some());
 
     // 8. POST with empty text - ideally 400 (validation)

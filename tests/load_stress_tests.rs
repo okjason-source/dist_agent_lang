@@ -272,7 +272,7 @@ fn test_large_string_handling() {
 /// Test: Parser error recovery
 #[test]
 fn test_parser_error_recovery() {
-    let invalid_codes = vec![
+    let invalid_codes = [
         "let x = ;", // Missing value
         "let = 5;",  // Missing identifier
         "let x 5;",  // Missing equals

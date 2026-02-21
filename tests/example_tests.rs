@@ -485,7 +485,7 @@ fn test_all_examples_with_semantic_validation() {
             Ok(ast) => {
                 // Semantic validation
                 if let Err(e) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    validate_ast_semantics(&ast, &path);
+                    validate_ast_semantics(&ast, path);
                 })) {
                     let msg = if let Some(s) = e.downcast_ref::<String>() {
                         s.clone()

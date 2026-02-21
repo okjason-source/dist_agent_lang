@@ -40,7 +40,6 @@ fn test_server_input_validation() {
     // - SQL injection patterns
     // - XSS patterns
 
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should handle CORS properly
@@ -52,7 +51,6 @@ fn test_server_cors_handling() {
     // - Credentials should be handled correctly
 
     // Current implementation allows all origins - needs fixing
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should rate limit requests
@@ -64,7 +62,6 @@ fn test_server_rate_limiting() {
     // - Sliding window
 
     // Rate limiting not yet implemented
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should sanitize error messages
@@ -76,7 +73,6 @@ fn test_server_error_sanitization() {
     // - No internal state
     // - Generic error messages
 
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should validate request size
@@ -87,7 +83,6 @@ fn test_server_request_size_limits() {
     // - Header size limits
     // - URL length limits
 
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should handle path traversal attempts
@@ -116,7 +111,6 @@ fn test_server_json_validation() {
     // - Malformed JSON
     // - Oversized JSON
 
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should set security headers
@@ -130,7 +124,6 @@ fn test_server_security_headers() {
     // - X-XSS-Protection
 
     // Security headers not yet implemented
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should handle concurrent requests
@@ -164,7 +157,6 @@ fn test_server_security_logging() {
     // - Suspicious patterns
 
     // Logging not yet implemented
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should prevent CSRF attacks
@@ -176,7 +168,6 @@ fn test_server_csrf_prevention() {
     // - CSRF tokens
 
     // CSRF protection not yet implemented
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should validate content types
@@ -187,7 +178,6 @@ fn test_server_content_type_validation() {
     // - Content-Type header validation
     // - Reject invalid types
 
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should handle timeouts
@@ -198,7 +188,6 @@ fn test_server_timeout_handling() {
     // - Connection timeout
     // - Graceful timeout handling
 
-    assert!(true); // Placeholder
 }
 
 /// Test: Server should prevent DoS attacks
@@ -210,5 +199,4 @@ fn test_server_dos_prevention() {
     // - Resource limits
     // - Slowloris protection
 
-    assert!(true); // Placeholder
 }

@@ -175,8 +175,7 @@ fn test_interface_selector_with_metadata() {
 fn test_ffi_interface_creation() {
     let config = FFIConfig::both();
     let _interface = FFIInterface::new(config);
-    // Should create successfully
-    assert!(true); // Just verify it doesn't panic
+    // Should create successfully (no panic)
 }
 
 #[test]
@@ -191,8 +190,6 @@ fn test_auto_detect_interface_hash_function() {
     let interface = selector.select_interface("CryptoService", "hash_data", &[]);
     assert_eq!(interface, InterfaceType::FFI);
 
-    // Verify pattern matching works correctly
-    assert!(true);
 }
 
 #[test]
@@ -207,8 +204,6 @@ fn test_auto_detect_interface_chain_function() {
     let interface = selector.select_interface("ChainService", "chain::get_balance", &[]);
     assert_eq!(interface, InterfaceType::HTTP);
 
-    // Verify the selection logic works
-    assert!(true);
 }
 
 #[test]
@@ -230,8 +225,6 @@ fn test_estimate_value_size() {
     let interface_large = selector.select_interface("Service", "hash_data", &large_args);
     // Still prefers FFI due to function pattern
     assert_eq!(interface_large, InterfaceType::FFI);
-
-    assert!(true);
 }
 
 #[test]
@@ -243,8 +236,6 @@ fn test_ffi_interface_http_only() {
     assert!(config.enable_http);
     assert!(!config.enable_ffi);
 
-    // Verify configuration is correct
-    assert!(true);
 }
 
 #[test]
@@ -274,8 +265,6 @@ fn test_ffi_interface_both_with_preference() {
     // Prefer FFI - should work with FFI-only config
     let _result1 = interface_ffi.call("Service", "function", &args, Some(true));
 
-    // Verify configuration supports preferences
-    assert!(true);
 }
 
 // Integration tests with runtime
@@ -303,10 +292,9 @@ fn test_ffi_integration_with_runtime() {
     let config = FFIConfig::ffi_only();
     let _interface = FFIInterface::new(config);
 
-    let _args = vec![Value::Int(5), Value::Int(3)];
+    let _args = [Value::Int(5), Value::Int(3)];
     // Note: This requires the runtime to be accessible from FFI
     // For now, just verify the interface can be created
-    assert!(true);
 }
 
 #[test]
@@ -332,7 +320,7 @@ fn test_value_size_estimation() {
     assert_eq!(interface_large, InterfaceType::FFI);
 
     // Test that values can be created and measured
-    let test_values = vec![
+    let test_values = [
         Value::Int(42),
         Value::Float(3.15),
         Value::String("hello".to_string()),
@@ -340,9 +328,7 @@ fn test_value_size_estimation() {
         Value::Null,
     ];
 
-    // Verify values are created successfully
     assert_eq!(test_values.len(), 5);
-    assert!(true);
 }
 
 #[test]
@@ -354,8 +340,6 @@ fn test_interface_fallback_mechanism() {
     assert!(config.enable_http);
     assert!(config.enable_ffi);
 
-    // Verify both interfaces are enabled for fallback
-    assert!(true);
 }
 
 #[test]

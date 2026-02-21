@@ -431,7 +431,7 @@ fn test_claims_expiration_logic() {
         // But the important thing is that is_expired actually checks
         let expired_0h = claims_0h.is_expired();
         // Just verify the method returns a boolean (not always false)
-        assert!(expired_0h == true || expired_0h == false);
+        let _: bool = expired_0h;
     });
 }
 
@@ -541,7 +541,6 @@ fn test_security_headers_middleware_function_exists() {
 
     // The function exists if we can reference it
     // Actual behavior testing requires integration tests with a real server
-    assert!(true, "Function exists and is accessible");
 }
 
 // ============================================================================
@@ -765,8 +764,10 @@ fn test_request_size_limiter_header_size_exact_calculation_plus_vs_multiply() {
     use dist_agent_lang::http_server_security::RequestSizeLimiter;
 
     // Create a limiter with a smaller max_header_size to make the test more sensitive
-    let mut limiter = RequestSizeLimiter::default();
-    limiter.max_header_size = 1000; // Smaller limit to catch arithmetic errors
+    let limiter = RequestSizeLimiter {
+        max_header_size: 1000, // Smaller limit to catch arithmetic errors
+        ..Default::default()
+    };
 
     let mut headers = HeaderMap::new();
 
@@ -942,7 +943,6 @@ fn test_security_logger_log_event_actually_logs() {
 
     // If we get here without panicking, the function executed
     // For mutation testing, executing the code path is what matters
-    assert!(true, "log_event should be callable and execute");
 }
 
 #[test]
@@ -954,7 +954,6 @@ fn test_security_logger_log_rate_limit() {
     // Call multiple times to verify it executes
     SecurityLogger::log_rate_limit("127.0.0.1");
     SecurityLogger::log_rate_limit("192.168.1.1");
-    assert!(true, "log_rate_limit should be callable and execute");
 }
 
 #[test]
@@ -966,7 +965,6 @@ fn test_security_logger_log_auth_failure() {
     // Call multiple times to verify it executes
     SecurityLogger::log_auth_failure("127.0.0.1", "invalid token");
     SecurityLogger::log_auth_failure("192.168.1.1", "expired token");
-    assert!(true, "log_auth_failure should be callable and execute");
 }
 
 #[test]
@@ -978,7 +976,6 @@ fn test_security_logger_log_invalid_input() {
     // Call multiple times to verify it executes
     SecurityLogger::log_invalid_input("127.0.0.1", "malformed input");
     SecurityLogger::log_invalid_input("192.168.1.1", "sql injection attempt");
-    assert!(true, "log_invalid_input should be callable and execute");
 }
 
 #[test]
@@ -990,7 +987,6 @@ fn test_security_logger_log_auth_success() {
     // Call multiple times to verify it executes
     SecurityLogger::log_auth_success("127.0.0.1", "user123");
     SecurityLogger::log_auth_success("192.168.1.1", "user456");
-    assert!(true, "log_auth_success should be callable and execute");
 }
 
 #[test]
@@ -1002,10 +998,6 @@ fn test_security_logger_log_suspicious_activity() {
     // Call multiple times to verify it executes
     SecurityLogger::log_suspicious_activity("127.0.0.1", "multiple failed logins");
     SecurityLogger::log_suspicious_activity("192.168.1.1", "unusual access pattern");
-    assert!(
-        true,
-        "log_suspicious_activity should be callable and execute"
-    );
 }
 
 #[test]
@@ -1017,8 +1009,4 @@ fn test_security_logger_log_token_validation_failure() {
     // Call multiple times to verify it executes
     SecurityLogger::log_token_validation_failure("127.0.0.1", "expired token");
     SecurityLogger::log_token_validation_failure("192.168.1.1", "invalid signature");
-    assert!(
-        true,
-        "log_token_validation_failure should be callable and execute"
-    );
 }

@@ -235,7 +235,7 @@ fn test_get_trust_profiles_return_value() {
 
     // Verify profiles have expected structure (not empty/default)
     assert!(
-        profiles.get(&TrustLevel::Decentralized).is_some(),
+        profiles.contains_key(&TrustLevel::Decentralized),
         "Decentralized profile should have configuration"
     );
 }

@@ -31,19 +31,24 @@ impl BlockchainNetwork {
         }
     }
 
-    pub fn to_string(&self) -> String {
+}
+
+impl std::fmt::Display for BlockchainNetwork {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BlockchainNetwork::Ethereum => "ethereum".to_string(),
-            BlockchainNetwork::Polygon => "polygon".to_string(),
-            BlockchainNetwork::Binance => "binance".to_string(),
-            BlockchainNetwork::Solana => "solana".to_string(),
-            BlockchainNetwork::Avalanche => "avalanche".to_string(),
-            BlockchainNetwork::Arbitrum => "arbitrum".to_string(),
-            BlockchainNetwork::Optimism => "optimism".to_string(),
-            BlockchainNetwork::Custom(name) => name.clone(),
+            BlockchainNetwork::Ethereum => write!(f, "ethereum"),
+            BlockchainNetwork::Polygon => write!(f, "polygon"),
+            BlockchainNetwork::Binance => write!(f, "binance"),
+            BlockchainNetwork::Solana => write!(f, "solana"),
+            BlockchainNetwork::Avalanche => write!(f, "avalanche"),
+            BlockchainNetwork::Arbitrum => write!(f, "arbitrum"),
+            BlockchainNetwork::Optimism => write!(f, "optimism"),
+            BlockchainNetwork::Custom(name) => write!(f, "{}", name),
         }
     }
+}
 
+impl BlockchainNetwork {
     pub fn is_evm_compatible(&self) -> bool {
         matches!(
             self,
@@ -243,14 +248,14 @@ fn validate_chain_operation(network: &BlockchainNetwork, operation: &str) -> Res
     let configs = get_chain_configs();
     let config = configs
         .get(network)
-        .ok_or_else(|| format!("Unknown chain: {}", network.to_string()))?;
+        .ok_or_else(|| format!("Unknown chain: {}", network))?;
 
     // Check if operation is supported
     if !config.supported_operations.contains(&operation.to_string()) {
         return Err(format!(
             "Unsupported operation '{}' for chain '{}'",
             operation,
-            network.to_string()
+            network
         ));
     }
 
@@ -259,7 +264,7 @@ fn validate_chain_operation(network: &BlockchainNetwork, operation: &str) -> Res
         return Err(format!(
             "Forbidden operation '{}' for chain '{}'",
             operation,
-            network.to_string()
+            network
         ));
     }
 
@@ -277,8 +282,8 @@ fn validate_cross_chain_operation(operation: &CrossChainOperation) -> Result<(),
     if !are_chains_compatible(&operation.source_chain, &operation.target_chain) {
         return Err(format!(
             "Incompatible chains: {} and {}",
-            operation.source_chain.to_string(),
-            operation.target_chain.to_string()
+            operation.source_chain,
+            operation.target_chain
         ));
     }
 
@@ -363,7 +368,7 @@ impl MultiChainDeployment {
         let configs = get_chain_configs();
         let config = configs
             .get(&chain)
-            .ok_or_else(|| format!("Unknown chain: {}", chain.to_string()))?;
+            .ok_or_else(|| format!("Unknown chain: {}", chain))?;
 
         // Generate contract address (in real implementation, this would be actual deployment)
         let mut hasher = DefaultHasher::new();
@@ -636,7 +641,7 @@ fn test_multi_chain_deployment() {
         assert!(
             result.success,
             "Deployment to {} should succeed",
-            result.chain.to_string()
+            result.chain
         );
         assert!(
             !result.contract_address.is_empty(),
@@ -723,7 +728,7 @@ fn test_bridge_configuration_validation() {
 #[test]
 fn test_all_evm_chain_combinations() {
     // Test all EVM chain pairs for compatibility
-    let evm_chains = vec![
+    let evm_chains = [
         BlockchainNetwork::Ethereum,
         BlockchainNetwork::Polygon,
         BlockchainNetwork::Binance,
@@ -738,8 +743,8 @@ fn test_all_evm_chain_combinations() {
             assert!(
                 compatible,
                 "EVM chains {} and {} should be compatible",
-                evm_chains[i].to_string(),
-                evm_chains[j].to_string()
+                evm_chains[i],
+                evm_chains[j]
             );
         }
     }
@@ -1089,7 +1094,7 @@ fn test_all_supported_chains() {
         assert!(
             configs.contains_key(&chain),
             "Chain {} should be supported",
-            chain.to_string()
+            chain
         );
     }
 }
@@ -1139,14 +1144,14 @@ fn test_rpc_url_format() {
         assert!(
             !config.rpc_url.is_empty(),
             "RPC URL for {} should not be empty",
-            network.to_string()
+            network
         );
 
         // RPC URL should start with http:// or https://
         assert!(
             config.rpc_url.starts_with("http://") || config.rpc_url.starts_with("https://"),
             "RPC URL for {} should start with http:// or https://",
-            network.to_string()
+            network
         );
     }
 }
@@ -1257,8 +1262,8 @@ fn test_chain_compatibility_matrix() {
             compatible,
             expected,
             "Compatibility between {} and {} should be {}",
-            chain1.to_string(),
-            chain2.to_string(),
+            chain1,
+            chain2,
             expected
         );
     }
@@ -1552,28 +1557,28 @@ fn test_chain_configuration_completeness() {
         assert!(
             config.chain_id > 0,
             "Chain {} should have valid chain ID",
-            network.to_string()
+            network
         );
 
         // All configs should have native token
         assert!(
             !config.native_token.is_empty(),
             "Chain {} should have native token",
-            network.to_string()
+            network
         );
 
         // All configs should have RPC URL
         assert!(
             !config.rpc_url.is_empty(),
             "Chain {} should have RPC URL",
-            network.to_string()
+            network
         );
 
         // All configs should have gas configuration
         assert!(
             config.gas_limit > 0,
             "Chain {} should have gas limit",
-            network.to_string()
+            network
         );
     }
 }
@@ -1755,7 +1760,7 @@ fn test_multi_chain_deployment_status_tracking() {
 #[test]
 fn test_operation_type_enumeration() {
     // Test that all operation types are distinct and can be enumerated
-    let operation_types = vec![
+    let operation_types = [
         CrossChainOpType::Transfer,
         CrossChainOpType::Deploy,
         CrossChainOpType::Call,

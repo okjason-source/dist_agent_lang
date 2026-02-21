@@ -80,9 +80,13 @@ let ai_response = service::ai("What is blockchain?", service::create_ai_service(
                     .parse()
                     .unwrap_or_else(|_| dist_agent_lang::parser::ast::Program {
                         statements: vec![],
+                        statement_spans: vec![],
                     })
             } else {
-                dist_agent_lang::parser::ast::Program { statements: vec![] }
+                dist_agent_lang::parser::ast::Program {
+                    statements: vec![],
+                    statement_spans: vec![],
+                }
             }
         })
     });
