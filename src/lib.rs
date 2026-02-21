@@ -48,7 +48,6 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::wildcard_in_or_patterns)]
 
-
 pub mod cli;
 pub mod cli_design;
 pub mod ffi;
