@@ -280,13 +280,11 @@ fn test_fuzz_runtime_crash_stack_overflow_and_no_panic() {
 
 /// Parser crash: crash-161522ed7f1f2ac04d9aa2e317697ce14c287338
 /// Fuzzer-generated "try { }" -like input with typos; previously panicked, now must return Err.
-const CRASH_PARSER_161522ED: &str =
-    include_str!("fixtures/fuzz/crash_parser_161522ed.txt");
+const CRASH_PARSER_161522ED: &str = include_str!("fixtures/fuzz/crash_parser_161522ed.txt");
 
 /// Runtime slow unit: slow-unit-a36a588e7961eb86bef4a0d3f2553cea65b8d045
 /// Contains while (true) { ... }; must not hang - runtime should return ExecutionTimeout.
-const SLOW_UNIT_RUNTIME_A36A588E: &str =
-    include_str!("fixtures/fuzz/slow_unit_a36a588e.dal");
+const SLOW_UNIT_RUNTIME_A36A588E: &str = include_str!("fixtures/fuzz/slow_unit_a36a588e.dal");
 
 #[test]
 fn test_fuzz_parser_crash_161522ed_no_panic() {
