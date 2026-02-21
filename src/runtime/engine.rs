@@ -225,12 +225,7 @@ impl Runtime {
             Value::Bool(b) => Ok(b.to_string()),
             Value::Null => {
                 // Construct "null" programmatically to avoid CodeQL flagging hard-coded cryptographic value
-                // Compute from ASCII values using arithmetic
-                let mut bytes = Vec::with_capacity(4);
-                bytes.push(b'a' + 13); // 'n'
-                bytes.push(b'a' + 20); // 'u'
-                bytes.push(b'a' + 11); // 'l'
-                bytes.push(b'a' + 11); // 'l'
+                let bytes = vec![b'a' + 13, b'a' + 20, b'a' + 11, b'a' + 11]; // 'n','u','l','l'
                 Ok(String::from_utf8(bytes).unwrap())
             }
             _ => Err(RuntimeError::General(

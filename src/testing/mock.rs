@@ -471,7 +471,7 @@ impl MockRuntime {
         // Set mock registry on Runtime before execution (Runtime will use it for interception)
         self.mock_registry.enable();
         // Move our registry to Runtime (Runtime will own it during execution)
-        let registry = std::mem::replace(&mut self.mock_registry, MockRegistry::new());
+        let registry = std::mem::take(&mut self.mock_registry);
         self.runtime.set_mock_registry(registry);
 
         // Parse the source code

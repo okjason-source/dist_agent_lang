@@ -58,17 +58,23 @@ pub extern "C" fn dist_agent_lang_runtime_new() -> *mut RustFFIRuntime {
     Box::into_raw(Box::new(RustFFIRuntime::new()))
 }
 
+/// Free a runtime handle created by `dist_agent_lang_runtime_new`.
+///
+/// # Safety
+/// Caller must pass a valid pointer from `dist_agent_lang_runtime_new`, or null. Must not be called twice with the same non-null pointer.
 #[no_mangle]
-pub extern "C" fn dist_agent_lang_runtime_free(ptr: *mut RustFFIRuntime) {
+pub unsafe extern "C" fn dist_agent_lang_runtime_free(ptr: *mut RustFFIRuntime) {
     if !ptr.is_null() {
-        unsafe {
-            let _ = Box::from_raw(ptr);
-        }
+        let _ = Box::from_raw(ptr);
     }
 }
 
+/// Hash data with the given algorithm name, writing the hex-encoded hash into `output`.
+///
+/// # Safety
+/// Caller must ensure `data` points to at least `data_len` bytes, `algorithm` is a valid null-terminated C string, and `output` points to at least `output_len` bytes. All pointers must be valid for the duration of the call.
 #[no_mangle]
-pub extern "C" fn dist_agent_lang_hash(
+pub unsafe extern "C" fn dist_agent_lang_hash(
     data: *const u8,
     data_len: usize,
     algorithm: *const c_char,
@@ -109,8 +115,12 @@ pub extern "C" fn dist_agent_lang_hash(
     }
 }
 
+/// Sign `data` with `private_key`, writing the raw signature into `signature`.
+///
+/// # Safety
+/// Caller must ensure `data`, `private_key`, and `signature` point to valid buffers of at least the corresponding length. All pointers must be valid for the duration of the call.
 #[no_mangle]
-pub extern "C" fn dist_agent_lang_sign(
+pub unsafe extern "C" fn dist_agent_lang_sign(
     data: *const u8,
     data_len: usize,
     private_key: *const u8,
@@ -147,8 +157,12 @@ pub extern "C" fn dist_agent_lang_sign(
     }
 }
 
+/// Verify that `signature` is valid for `data` using `public_key`. Returns 1 if valid, 0 if invalid, negative on error.
+///
+/// # Safety
+/// Caller must ensure `data`, `signature`, and `public_key` point to valid buffers of at least the corresponding length. All pointers must be valid for the duration of the call.
 #[no_mangle]
-pub extern "C" fn dist_agent_lang_verify(
+pub unsafe extern "C" fn dist_agent_lang_verify(
     data: *const u8,
     data_len: usize,
     signature: *const u8,

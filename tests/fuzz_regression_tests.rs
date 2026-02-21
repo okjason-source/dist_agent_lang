@@ -277,3 +277,68 @@ fn test_fuzz_runtime_crash_stack_overflow_and_no_panic() {
         .join()
         .unwrap();
 }
+
+/// Parser crash: crash-161522ed7f1f2ac04d9aa2e317697ce14c287338
+/// Fuzzer-generated "try { }" -like input with typos; previously panicked, now must return Err.
+const CRASH_PARSER_161522ED: &str =
+    include_str!("fixtures/fuzz/crash_parser_161522ed.txt");
+
+/// Runtime slow unit: slow-unit-a36a588e7961eb86bef4a0d3f2553cea65b8d045
+/// Contains while (true) { ... }; must not hang - runtime should return ExecutionTimeout.
+const SLOW_UNIT_RUNTIME_A36A588E: &str =
+    include_str!("fixtures/fuzz/slow_unit_a36a588e.dal");
+
+#[test]
+fn test_fuzz_parser_crash_161522ed_no_panic() {
+    // Regression: crash-161522ed7f1f2ac04d9aa2e317697ce14c287338
+    // Parser must not panic; must return Err (e.g. "Unexpected end of file. Expected: }").
+    // Use 8MB stack - deep try { } nesting can overflow default stack before limit.
+    std::thread::Builder::new()
+        .stack_size(8 * 1024 * 1024)
+        .spawn(|| {
+            let lexer = Lexer::new(CRASH_PARSER_161522ED);
+            let tokens_with_pos = match lexer.tokenize_with_positions_immutable() {
+                Ok(t) => t,
+                Err(_) => return,
+            };
+            let mut parser = Parser::new_with_positions(tokens_with_pos);
+            let result = parser.parse();
+            assert!(
+                result.is_err(),
+                "Parser should return error for this input, not panic"
+            );
+        })
+        .unwrap()
+        .join()
+        .unwrap();
+}
+
+#[test]
+fn test_fuzz_runtime_slow_unit_a36a588e_no_panic() {
+    // Regression: slow-unit-a36a588e7961eb86bef4a0d3f2553cea65b8d045
+    // Input contains while (true) { ... }. Must not hang; runtime should return ExecutionTimeout.
+    let lexer = Lexer::new(SLOW_UNIT_RUNTIME_A36A588E);
+    let tokens_with_pos = match lexer.tokenize_with_positions_immutable() {
+        Ok(t) => t,
+        Err(_) => return,
+    };
+    let mut parser = Parser::new_with_positions(tokens_with_pos);
+    let program = match parser.parse() {
+        Ok(p) => p,
+        Err(_) => return,
+    };
+    let mut runtime = Runtime::new();
+    let result = runtime.execute_program(program);
+    // Must not panic. Expect Err(ExecutionTimeout) for infinite loop.
+    assert!(
+        result.is_err(),
+        "Infinite loop should return ExecutionTimeout, got: {:?}",
+        result
+    );
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.to_lowercase().contains("timeout"),
+        "Expected timeout error, got: {}",
+        err_msg
+    );
+}

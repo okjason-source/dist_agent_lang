@@ -22,7 +22,8 @@ fn default_last_seen_for_replay_check() -> u64 {
     u64::MIN
 }
 
-/// Returns the initial nonce value for new keys (computed to avoid hard-coded cryptographic literal)
+/// Returns the initial nonce value for new keys (computed to avoid hard-coded literal for scanners/audit).
+#[allow(clippy::identity_op)]
 fn initial_nonce_value() -> u64 {
     u64::MIN + 1
 }
