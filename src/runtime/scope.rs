@@ -39,6 +39,15 @@ impl Scope {
 
         None
     }
+
+    /// Collect all variable names visible in this scope (current + parent chain). For "did you mean" suggestions.
+    pub fn keys(&self) -> Vec<String> {
+        let mut out: Vec<String> = self.variables.keys().cloned().collect();
+        if let Some(parent) = &self.parent {
+            out.extend(parent.keys());
+        }
+        out
+    }
 }
 
 impl Default for Scope {

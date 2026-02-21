@@ -4,8 +4,8 @@ use crate::parser::ast::{
     CompilationTargetInfo, ContinueStatement, EventDeclaration, EventStatement, Expression,
     FieldVisibility, ForInStatement, FunctionCall, FunctionStatement, IfStatement, LetStatement,
     LoopStatement, MatchCase, MatchPattern, MatchStatement, MessageStatement, Parameter, Program,
-    ReturnStatement, ServiceField, ServiceStatement, SpawnStatement, Statement, TryStatement,
-    WhileStatement,
+    ReturnStatement, ServiceField, ServiceStatement, Span, SpawnStatement, Statement,
+    TryStatement, WhileStatement,
 };
 use crate::parser::error::{ErrorContext, ErrorRecovery, ParserError};
 use std::collections::{HashMap, HashSet};
@@ -159,7 +159,8 @@ impl Parser {
             }
 
             let (new_position, statement) = self.parse_statement(position, 0)?;
-            program.add_statement(statement);
+            let (line, column) = self.get_token_position(position);
+            program.add_statement_with_span(statement, Some(Span { line, column }));
             position = new_position;
         }
 
@@ -180,7 +181,8 @@ impl Parser {
             }
             match self.parse_statement(position, 0) {
                 Ok((new_position, statement)) => {
-                    program.add_statement(statement);
+                    let (line, column) = self.get_token_position(position);
+                    program.add_statement_with_span(statement, Some(Span { line, column }));
                     position = new_position;
                 }
                 Err(e) => {
@@ -330,6 +332,7 @@ impl Parser {
     }
 
     fn parse_let_statement(&mut self, position: usize) -> Result<(usize, Statement), ParserError> {
+        let (line, _) = self.get_token_position(position);
         let mut current_position = position + 1; // consume 'let'
 
         // Check for 'mut' keyword
@@ -360,7 +363,11 @@ impl Parser {
 
         Ok((
             current_position,
-            Statement::Let(LetStatement { name, value }),
+            Statement::Let(LetStatement {
+                name,
+                value,
+                line: Some(line),
+            }),
         ))
     }
 

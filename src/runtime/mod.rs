@@ -11,6 +11,7 @@ pub mod types;
 pub mod values;
 
 pub use engine::Runtime;
+pub use functions::{CallFrameInfo, RuntimeError, RuntimeErrorWithContext, SourceLocation};
 
 // Re-export security modules for testing and external use
 pub use control_flow::{ControlFlow, StatementOutcome, StatementResult};

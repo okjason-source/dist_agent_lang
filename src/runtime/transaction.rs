@@ -1,123 +1,7 @@
-// Transaction Atomicity Module
-// Provides ACID guarantees for distributed operations
-//
-// # Features
-//
-// - **Transaction lifecycle**: begin/commit/rollback with ACID semantics
-// - **Savepoints**: Partial rollback to named checkpoints within a transaction
-// - **Isolation levels**: ReadUncommitted, ReadCommitted (default), RepeatableRead, Serializable
-// - **Deadlock detection**: Timeout-based detection of circular wait conditions
-// - **Observability**: Optional event callbacks for transaction lifecycle (begin, commit, rollback, conflicts, deadlocks)
-// - **Pluggable storage**: StateStorage trait; in-memory, file-backed, and SQLite backends available
-// - **Resource limits**: Configurable max active transactions and keys per transaction (Phase 4)
-// - **Audit logging**: Optional append-only transaction log for compliance and debugging (Phase 4)
-// - **Two-phase commit**: Basic support for distributed transactions
-//
-// # Isolation Levels
-//
-// - **ReadUncommitted**: Lowest isolation; dirty reads possible; highest performance; no read locks.
-// - **ReadCommitted** (recommended default): Prevents dirty reads; transactions see only committed data; standard for most use cases.
-// - **RepeatableRead**: Prevents non-repeatable reads; same query returns same results within a transaction.
-// - **Serializable**: Highest isolation; transactions appear to execute serially; lowest concurrency.
-//
-// # Safe Production Defaults (Phase 4)
-//
-// - **Isolation level**: `ReadCommitted` (balance of correctness and performance)
-// - **Transaction timeout**: `30000ms` (30 seconds; prevents hung transactions)
-// - **Max active transactions**: `1000` (prevents resource exhaustion)
-// - **Max keys per transaction**: `10000` (prevents unbounded memory use)
-// - **Storage backend**: `memory` (use `file` or `sqlite` for persistence)
-//
-// Set via environment:
-// ```bash
-// export DAL_TX_STORAGE=sqlite
-// export DAL_TX_TIMEOUT_MS=30000
-// export DAL_TX_MAX_ACTIVE=1000
-// export DAL_TX_MAX_KEYS=10000
-// export DAL_TX_LOG_PATH=/var/log/dal/transactions.log  # Optional audit log
-// ```
-//
-// # Usage
-//
-// ```rust
-// use dist_agent_lang::runtime::{TransactionManager, IsolationLevel, Value};
-//
-// let mut manager = TransactionManager::new()
-//     .with_default_timeout(Some(30000)) // 30 seconds
-//     .with_event_callback(Box::new(|event| {
-//         println!("Transaction event: {:?}", event);
-//     }));
-//
-// // Begin a transaction
-// let tx_id = manager.begin_transaction(IsolationLevel::ReadCommitted).unwrap();
-//
-// // Read and write within transaction
-// manager.write(&tx_id, "balance".to_string(), Value::Int(100)).unwrap();
-// let value = manager.read(&tx_id, "balance").unwrap();
-//
-// // Create savepoint (optional)
-// manager.create_savepoint(&tx_id, "checkpoint1".to_string()).unwrap();
-//
-// // Commit or rollback
-// manager.commit(&tx_id).unwrap();
-// // or: manager.rollback(&tx_id).unwrap();
-// // or: manager.rollback_to_savepoint(&tx_id, "checkpoint1").unwrap();
-// ```
-//
-// # Deadlock Detection (Phase 1)
-//
-// Current implementation uses timeout-based deadlock detection: if a transaction
-// exceeds its timeout while trying to acquire a lock, it's treated as a potential
-// deadlock and returns `TransactionError::Deadlock`. Future phases may add
-// cycle detection in the lock wait graph for more precise detection.
-//
-// # Durability Contracts (Phase 2+)
-//
-// ## InMemoryStorage
-// - **Durability**: None. State is lost on process exit or crash.
-// - **Performance**: Highest; no I/O overhead.
-// - **Use case**: Development, testing, ephemeral state.
-//
-// ## FileBackedStorage
-// - **Durability**: Strong. Each `set()` and `remove()` flushes to disk immediately by default.
-// - **Performance**: Moderate; disk I/O on every write. Suitable for moderate write loads.
-// - **Use case**: Single-node production deployments with state persistence requirements.
-// - **Format**: JSON file; human-readable; atomic rename for crash safety.
-//
-// ## TransactionLog (Optional)
-// - **Durability**: Strong. Append-only log with immediate flush after each event.
-// - **Performance**: Moderate; one append per transaction event.
-// - **Use case**: Audit trail, debugging, potential recovery (future).
-// - **Format**: Line-delimited JSON; one event per line.
-//
-// # Audit Logging (Phase 4)
-//
-// Enable structured audit logging with `DAL_TX_LOG_PATH`:
-// ```bash
-// export DAL_TX_LOG_PATH=/var/log/dal/transactions.log
-// ```
-//
-// Each transaction event is written as line-delimited JSON:
-// ```json
-// {"timestamp":1675889234567,"tx_id":"tx_1","event_type":"begin","keys":[],"isolation_level":"ReadCommitted"}
-// {"timestamp":1675889234578,"tx_id":"tx_1","event_type":"write","keys":["account:123:balance"],"isolation_level":null}
-// {"timestamp":1675889234589,"tx_id":"tx_1","event_type":"commit","keys":["account:123:balance"],"isolation_level":null}
-// ```
-//
-// Use for:
-// - Compliance and audit trails
-// - Debugging production issues
-// - Performance analysis
-// - Future: Replay and recovery
-//
-// # Future Enhancements (Phase 5+)
-//
-// See `docs/development/implementation/TRANSACTION_ADVANCED_FEATURES_PLAN.md` for detailed roadmap:
-//
-// - **Phase 5**: Write-ahead log (WAL) for point-in-time recovery, read-only transaction optimization, key expiration (TTL)
-// - **Phase 6**: Cycle detection for deadlocks (wait-for graph), distributed two-phase commit with real coordinator
-// - **Phase 7**: Transaction metrics & monitoring (Prometheus), transaction debugger/profiler, adaptive isolation levels
-// - **Phase 8**: Optimistic concurrency control (OCC), multi-version concurrency control (MVCC)
+//! Transaction Atomicity Module — ACID guarantees for runtime state.
+//!
+//! **Full documentation (features, durability, recovery, configuration, usage):**
+//! [docs/guides/TRANSACTION_MODULE_GUIDE.md](../../../docs/guides/TRANSACTION_MODULE_GUIDE.md)
 
 use crate::runtime::values::Value;
 use std::collections::HashMap;
@@ -167,6 +51,8 @@ pub enum TransactionEvent {
     },
     Deadlock {
         tx_id: String,
+        /// When deadlock is due to cycle in lock-wait graph, the involved tx_ids (optional).
+        cycle: Option<Vec<String>>,
     },
 }
 
@@ -289,11 +175,14 @@ impl TransactionLog {
                 keys: vec![key.clone(), reason.clone()],
                 isolation_level: None,
             },
-            TransactionEvent::Deadlock { tx_id } => TransactionLogEntry {
+            TransactionEvent::Deadlock { tx_id, cycle } => TransactionLogEntry {
                 timestamp: get_current_timestamp(),
                 tx_id: tx_id.clone(),
                 event_type: "deadlock".to_string(),
-                keys: vec![],
+                keys: cycle
+                    .as_ref()
+                    .map(|c| vec![format!("cycle:{}", c.join(","))])
+                    .unwrap_or_default(),
                 isolation_level: None,
             },
         };
@@ -399,12 +288,8 @@ impl FileBackedStorage {
             fs::create_dir_all(parent)?;
         }
 
-        // Load existing state or create empty
-        let state = if file_path.exists() {
-            Self::load_from_file(&file_path)?
-        } else {
-            HashMap::new()
-        };
+        // Load existing state or create empty; recover from .tmp if main missing or corrupt
+        let state = Self::load_state_recovery(&file_path)?;
 
         Ok(Self {
             state,
@@ -413,19 +298,62 @@ impl FileBackedStorage {
         })
     }
 
-    /// Load state from JSON file
+    /// Load state with recovery: prefer main file; if missing or corrupt, try .tmp (from interrupted flush).
+    fn load_state_recovery(file_path: &Path) -> io::Result<HashMap<String, Value>> {
+        let temp_path = file_path.with_extension("tmp");
+        let from_main = file_path.exists().then(|| Self::load_from_file(file_path));
+        match from_main {
+            Some(Ok(state)) => Ok(state),
+            Some(Err(e)) => {
+                eprintln!(
+                    "Warning: Failed to load transaction state from {:?}: {}. Trying recovery from .tmp.",
+                    file_path, e
+                );
+                if temp_path.exists() {
+                    match Self::load_from_file(&temp_path) {
+                        Ok(state) => {
+                            let _ = fs::rename(&temp_path, file_path);
+                            Ok(state)
+                        }
+                        Err(e2) => {
+                            eprintln!("Warning: Recovery from .tmp failed: {}. Starting with empty state.", e2);
+                            Ok(HashMap::new())
+                        }
+                    }
+                } else {
+                    Ok(HashMap::new())
+                }
+            }
+            None => {
+                if temp_path.exists() {
+                    match Self::load_from_file(&temp_path) {
+                        Ok(state) => {
+                            let _ = fs::rename(&temp_path, file_path);
+                            Ok(state)
+                        }
+                        Err(e) => {
+                            eprintln!("Warning: Recovery from .tmp failed: {}. Starting with empty state.", e);
+                            Ok(HashMap::new())
+                        }
+                    }
+                } else {
+                    Ok(HashMap::new())
+                }
+            }
+        }
+    }
+
+    /// Load state from a JSON file (single path, no recovery).
     fn load_from_file(path: &Path) -> io::Result<HashMap<String, Value>> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
 
-        // Parse JSON
         match serde_json::from_reader(reader) {
             Ok(state) => Ok(state),
-            Err(e) => {
-                // If file is empty or corrupt, start with empty state
-                eprintln!("Warning: Failed to load transaction state from {:?}: {}. Starting with empty state.", path, e);
-                Ok(HashMap::new())
-            }
+            Err(e) => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Invalid JSON in {:?}: {}", path, e),
+            )),
         }
     }
 
@@ -501,6 +429,9 @@ impl Drop for FileBackedStorage {
 ///
 /// **Format**: SQLite database with single table `kv_store(key TEXT PRIMARY KEY, value TEXT)`.
 /// Values are JSON-encoded.
+///
+/// **Recovery**: WAL mode is enabled. After a crash, SQLite automatically recovers on next open
+/// (replays or rolls back the WAL). No application-level recovery steps required.
 #[cfg(feature = "sqlite-storage")]
 pub struct SqliteStorage {
     conn: rusqlite::Connection,
@@ -640,6 +571,10 @@ pub enum TransactionError {
     #[error("Deadlock detected")]
     Deadlock,
 
+    /// Deadlock detected by cycle in lock-wait graph; cycle lists involved transaction ids.
+    #[error("Deadlock detected (cycle: {0:?})")]
+    DeadlockWithCycle(Vec<String>),
+
     #[error("Transaction timeout")]
     Timeout,
 
@@ -703,11 +638,14 @@ pub struct TransactionManager {
     storage: Box<dyn StateStorage>,
     read_locks: HashMap<String, Vec<String>>, // key -> [transaction_ids]
     write_locks: HashMap<String, String>,     // key -> transaction_id
+    /// Wait-for graph for cycle-based deadlock detection: wait_for[a] = [b, c] means a is blocked by b and c.
+    wait_for: HashMap<String, Vec<String>>,
     default_timeout_ms: Option<u64>,          // Default timeout for new transactions
     event_callback: Option<TransactionEventCallback>, // Optional lifecycle event observer
     transaction_log: Option<TransactionLog>,  // Optional persistent audit log
-
-    // Resource limits (Phase 4: Production Hardening)
+    /// When true, read-only commits (keys_modified == 0) are not written to the transaction log.
+    optimize_read_only_audit: bool,
+    // Resource limits
     max_active_transactions: usize, // Max concurrent transactions (0 = unlimited)
     max_keys_per_transaction: usize, // Max keys modified per transaction (0 = unlimited)
 }
@@ -835,7 +773,7 @@ impl TransactionManager {
             manager = manager.with_transaction_log(log)?;
         }
 
-        // Phase 4: Set resource limits from environment
+        // Resource limits from environment
         if let Ok(max_active) = std::env::var("DAL_TX_MAX_ACTIVE") {
             if let Ok(limit) = max_active.parse::<usize>() {
                 manager = manager.with_max_active_transactions(limit);
@@ -846,6 +784,10 @@ impl TransactionManager {
             if let Ok(limit) = max_keys.parse::<usize>() {
                 manager = manager.with_max_keys_per_transaction(limit);
             }
+        }
+
+        if std::env::var("DAL_TX_READ_ONLY_AUDIT_OPTIMIZATION").as_deref() == Ok("1") {
+            manager = manager.with_read_only_audit_optimization(true);
         }
 
         Ok(manager)
@@ -859,11 +801,13 @@ impl TransactionManager {
             storage,
             read_locks: HashMap::new(),
             write_locks: HashMap::new(),
+            wait_for: HashMap::new(),
             default_timeout_ms: Some(30000), // Default: 30 seconds
             event_callback: None,
             transaction_log: None,
-            max_active_transactions: 1000, // Default: 1000 concurrent transactions
-            max_keys_per_transaction: 10000, // Default: 10,000 keys per transaction
+            optimize_read_only_audit: false,
+            max_active_transactions: 1000,
+            max_keys_per_transaction: 10000,
         }
     }
 
@@ -898,6 +842,12 @@ impl TransactionManager {
         Ok(self)
     }
 
+    /// When true, read-only commits (no writes) are not written to the transaction log (callback still runs).
+    pub fn with_read_only_audit_optimization(mut self, enable: bool) -> Self {
+        self.optimize_read_only_audit = enable;
+        self
+    }
+
     /// Emit a transaction event if a callback is registered and/or log to persistent log.
     fn emit_event(&mut self, event: TransactionEvent) {
         // Call event callback if registered
@@ -910,6 +860,13 @@ impl TransactionManager {
             if let Err(e) = log.log_event(&event) {
                 eprintln!("Warning: Failed to write to transaction log: {}", e);
             }
+        }
+    }
+
+    /// Emit event to callback only; do not write to transaction log (used for read-only commit optimization).
+    fn emit_event_skip_log(&mut self, event: TransactionEvent) {
+        if let Some(ref callback) = self.event_callback {
+            callback(&event);
         }
     }
 
@@ -1107,13 +1064,22 @@ impl TransactionManager {
         // Update state
         tx.state = TransactionState::Committed;
 
-        self.emit_event(TransactionEvent::Commit {
-            tx_id: tx_id.to_string(),
-            keys_modified,
-        });
+        let is_read_only = keys_modified == 0;
+        if is_read_only && self.optimize_read_only_audit {
+            self.emit_event_skip_log(TransactionEvent::Commit {
+                tx_id: tx_id.to_string(),
+                keys_modified,
+            });
+        } else {
+            self.emit_event(TransactionEvent::Commit {
+                tx_id: tx_id.to_string(),
+                keys_modified,
+            });
+        }
 
-        // Release locks
+        // Release locks and remove from wait-for graph
         self.release_locks(tx_id);
+        self.remove_from_wait_for(tx_id);
 
         // Remove transaction
         self.active_transactions.remove(tx_id);
@@ -1138,10 +1104,8 @@ impl TransactionManager {
             tx_id: tx_id.to_string(),
         });
 
-        // Release locks
         self.release_locks(tx_id);
-
-        // Remove transaction
+        self.remove_from_wait_for(tx_id);
         self.active_transactions.remove(tx_id);
 
         Ok(())
@@ -1167,13 +1131,66 @@ impl TransactionManager {
 
         tx.state = TransactionState::Committed;
 
-        // Release locks
         self.release_locks(tx_id);
-
-        // Remove transaction
+        self.remove_from_wait_for(tx_id);
         self.active_transactions.remove(tx_id);
 
         Ok(())
+    }
+
+    /// Remove a transaction from the wait-for graph (call when tx commits or rolls back).
+    fn remove_from_wait_for(&mut self, tx_id: &str) {
+        self.wait_for.remove(tx_id);
+        for blockers in self.wait_for.values_mut() {
+            blockers.retain(|b| b != tx_id);
+        }
+    }
+
+    /// Record that `from` is blocked by `to`. If this creates a cycle (path from to back to from), return the cycle.
+    fn add_wait_edge_and_detect_cycle(&mut self, from: &str, to: &str) -> Option<Vec<String>> {
+        let entry = self.wait_for.entry(from.to_string()).or_insert_with(Vec::new);
+        if !entry.contains(&to.to_string()) {
+            entry.push(to.to_string());
+        }
+        self.find_cycle(from, to)
+    }
+
+    /// If there is a path from `to` back to `from` in the wait-for graph, return the cycle (from -> ... -> from).
+    fn find_cycle(&self, from: &str, to: &str) -> Option<Vec<String>> {
+        let mut path = vec![to.to_string()];
+        let mut visited = std::collections::HashSet::new();
+        if self.find_cycle_dfs(from, to, &mut path, &mut visited) {
+            path.push(from.to_string());
+            Some(path)
+        } else {
+            None
+        }
+    }
+
+    fn find_cycle_dfs(
+        &self,
+        from: &str,
+        current: &str,
+        path: &mut Vec<String>,
+        visited: &mut std::collections::HashSet<String>,
+    ) -> bool {
+        if current == from {
+            return true;
+        }
+        if !visited.insert(current.to_string()) {
+            return false;
+        }
+        if let Some(blockers) = self.wait_for.get(current) {
+            for next in blockers {
+                path.push(next.clone());
+                if self.find_cycle_dfs(from, next, path, visited) {
+                    return true;
+                }
+                path.pop();
+            }
+        }
+        visited.remove(current);
+        false
     }
 
     /// Acquire read lock
@@ -1183,6 +1200,7 @@ impl TransactionManager {
             if tx.is_timed_out() {
                 self.emit_event(TransactionEvent::Deadlock {
                     tx_id: tx_id.to_string(),
+                    cycle: None,
                 });
                 return Err(TransactionError::Deadlock);
             }
@@ -1191,10 +1209,18 @@ impl TransactionManager {
         // Check for write lock by another transaction
         if let Some(write_owner) = self.write_locks.get(key) {
             if write_owner != tx_id {
+                let owner = write_owner.clone();
+                if let Some(cycle) = self.add_wait_edge_and_detect_cycle(tx_id, &owner) {
+                    self.emit_event(TransactionEvent::Deadlock {
+                        tx_id: tx_id.to_string(),
+                        cycle: Some(cycle.clone()),
+                    });
+                    return Err(TransactionError::DeadlockWithCycle(cycle));
+                }
                 self.emit_event(TransactionEvent::Conflict {
                     tx_id: tx_id.to_string(),
                     key: key.to_string(),
-                    reason: format!("Read blocked by write lock from {}", write_owner),
+                    reason: format!("Read blocked by write lock from {}", owner),
                 });
                 return Err(TransactionError::Conflict);
             }
@@ -1216,6 +1242,7 @@ impl TransactionManager {
             if tx.is_timed_out() {
                 self.emit_event(TransactionEvent::Deadlock {
                     tx_id: tx_id.to_string(),
+                    cycle: None,
                 });
                 return Err(TransactionError::Deadlock);
             }
@@ -1224,10 +1251,18 @@ impl TransactionManager {
         // Check for existing write lock by another transaction
         if let Some(write_owner) = self.write_locks.get(key) {
             if write_owner != tx_id {
+                let owner = write_owner.clone();
+                if let Some(cycle) = self.add_wait_edge_and_detect_cycle(tx_id, &owner) {
+                    self.emit_event(TransactionEvent::Deadlock {
+                        tx_id: tx_id.to_string(),
+                        cycle: Some(cycle.clone()),
+                    });
+                    return Err(TransactionError::DeadlockWithCycle(cycle));
+                }
                 self.emit_event(TransactionEvent::Conflict {
                     tx_id: tx_id.to_string(),
                     key: key.to_string(),
-                    reason: format!("Write blocked by write lock from {}", write_owner),
+                    reason: format!("Write blocked by write lock from {}", owner),
                 });
                 return Err(TransactionError::Conflict);
             }
@@ -1235,11 +1270,22 @@ impl TransactionManager {
 
         // Check for read locks by other transactions
         if let Some(readers) = self.read_locks.get(key) {
-            if readers.iter().any(|r| r != tx_id) {
+            let others: Vec<String> = readers.iter().filter(|r| *r != tx_id).cloned().collect();
+            let n_readers = others.len();
+            if !others.is_empty() {
+                for r in &others {
+                    if let Some(cycle) = self.add_wait_edge_and_detect_cycle(tx_id, r) {
+                        self.emit_event(TransactionEvent::Deadlock {
+                            tx_id: tx_id.to_string(),
+                            cycle: Some(cycle.clone()),
+                        });
+                        return Err(TransactionError::DeadlockWithCycle(cycle));
+                    }
+                }
                 self.emit_event(TransactionEvent::Conflict {
                     tx_id: tx_id.to_string(),
                     key: key.to_string(),
-                    reason: format!("Write blocked by {} read lock(s)", readers.len()),
+                    reason: format!("Write blocked by {} read lock(s)", n_readers),
                 });
                 return Err(TransactionError::Conflict);
             }
@@ -1630,6 +1676,34 @@ mod tests {
     }
 
     #[test]
+    fn test_deadlock_detection_cycle() {
+        let mut manager = TransactionManager::new();
+        let tx1 = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        let tx2 = manager
+            .begin_transaction(IsolationLevel::ReadCommitted)
+            .unwrap();
+        manager.write(&tx1, "key1".to_string(), Value::Int(1)).unwrap();
+        manager.write(&tx2, "key2".to_string(), Value::Int(2)).unwrap();
+        // tx1 holds key1, tx2 holds key2. tx1 tries key2 -> conflict (tx1 blocked by tx2)
+        let r1 = manager.write(&tx1, "key2".to_string(), Value::Int(0));
+        assert!(r1.is_err());
+        assert!(matches!(r1.unwrap_err(), TransactionError::Conflict));
+        // tx2 tries key1 -> blocked by tx1; graph has tx2->tx1 and tx1->tx2 -> cycle
+        let r2 = manager.write(&tx2, "key1".to_string(), Value::Int(0));
+        assert!(r2.is_err());
+        match r2.unwrap_err() {
+            TransactionError::DeadlockWithCycle(cycle) => {
+                assert!(cycle.len() >= 2);
+                assert!(cycle.contains(&tx1));
+                assert!(cycle.contains(&tx2));
+            }
+            _ => panic!("expected DeadlockWithCycle"),
+        }
+    }
+
+    #[test]
     fn test_rollback_event() {
         use std::sync::{Arc, Mutex};
 
@@ -1699,6 +1773,34 @@ mod tests {
             assert_eq!(storage.get("key1"), None);
             assert_eq!(storage.get("key2"), Some(Value::Int(2)));
         }
+    }
+
+    #[test]
+    fn test_file_backed_storage_recovery_from_tmp() {
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let storage_path = temp_dir.path().join("recovery_state.json");
+
+        // Write state to main file, then simulate interrupted flush: main gone, .tmp has content
+        {
+            let mut storage = FileBackedStorage::new(&storage_path).unwrap();
+            storage.set("recovered", Value::Int(99));
+            storage.set("name", Value::String("from_tmp".to_string()));
+        }
+        let content = fs::read_to_string(&storage_path).unwrap();
+        fs::remove_file(&storage_path).unwrap();
+        let tmp_path = storage_path.with_extension("tmp");
+        fs::write(&tmp_path, &content).unwrap();
+
+        // Open storage: should load from .tmp and promote to main
+        let storage = FileBackedStorage::new(&storage_path).unwrap();
+        assert_eq!(storage.get("recovered"), Some(Value::Int(99)));
+        assert_eq!(
+            storage.get("name"),
+            Some(Value::String("from_tmp".to_string()))
+        );
+        assert!(storage_path.exists(), "main file should be promoted from .tmp");
     }
 
     #[test]

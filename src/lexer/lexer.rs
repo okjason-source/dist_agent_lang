@@ -949,3 +949,15 @@ pub enum LexerError {
     #[error("Too many tokens: {2} (max: {3}) at line {0}, column {1}")]
     TooManyTokens(usize, usize, usize, usize),
 }
+
+impl LexerError {
+    /// Line and column for source snippet display (1-based). Returns None for errors without location.
+    pub fn line_column(&self) -> Option<(usize, usize)> {
+        match self {
+            LexerError::UnexpectedCharacter(_, line, col) => Some((*line, *col)),
+            LexerError::InvalidNumber(_, line, col) => Some((*line, *col)),
+            LexerError::UnterminatedString(line, col) => Some((*line, *col)),
+            LexerError::TooManyTokens(line, col, _, _) => Some((*line, *col)),
+        }
+    }
+}

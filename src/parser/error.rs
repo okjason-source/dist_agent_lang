@@ -47,6 +47,12 @@ impl ErrorContext {
         self.suggestions.push(suggestion);
         self
     }
+
+    /// Set suggestions (replaces any existing). Used when attaching generated suggestions to parse errors.
+    pub fn with_suggestions(mut self, suggestions: Vec<String>) -> Self {
+        self.suggestions = suggestions;
+        self
+    }
 }
 
 /// Comprehensive error types with context
@@ -224,6 +230,31 @@ impl ParserError {
         }
     }
 
+    /// Generate actionable suggestions for this error (used by CLI/IDE to show "what to do").
+    /// Call at the point of display; no parser instance required.
+    pub fn generate_suggestions(&self) -> Vec<String> {
+        match self {
+            ParserError::UnexpectedToken { expected, .. } => vec![
+                format!("Check if you meant one of: {}", expected),
+                "Make sure all parentheses and braces are properly closed".to_string(),
+                "Verify that all keywords are spelled correctly".to_string(),
+            ],
+            ParserError::MissingClosingBrace { .. } => vec![
+                "Add a closing brace '}' to match the opening brace".to_string(),
+                "Check for nested braces and ensure they're properly paired".to_string(),
+            ],
+            ParserError::InvalidFunctionCall { .. } => vec![
+                "Check that the function name is correct".to_string(),
+                "Verify that all required arguments are provided".to_string(),
+                "Ensure function arguments match the expected types".to_string(),
+            ],
+            ParserError::RecoveryError { original_error, .. } => original_error.generate_suggestions(),
+            _ => vec![
+                "Review the syntax and ensure it follows the language specification".to_string(),
+            ],
+        }
+    }
+
     /// Format error with source code context
     pub fn format_with_source(&self) -> String {
         let mut output = format!("{}\n", self);
@@ -352,30 +383,6 @@ impl ErrorRecovery for crate::parser::Parser {
     }
 
     fn generate_suggestions(&self, error: &ParserError) -> Vec<String> {
-        match error {
-            ParserError::UnexpectedToken { expected, .. } => {
-                vec![
-                    format!("Check if you meant one of: {}", expected),
-                    "Make sure all parentheses and braces are properly closed".to_string(),
-                    "Verify that all keywords are spelled correctly".to_string(),
-                ]
-            }
-            ParserError::MissingClosingBrace { .. } => {
-                vec![
-                    "Add a closing brace '}' to match the opening brace".to_string(),
-                    "Check for nested braces and ensure they're properly paired".to_string(),
-                ]
-            }
-            ParserError::InvalidFunctionCall { .. } => {
-                vec![
-                    "Check that the function name is correct".to_string(),
-                    "Verify that all required arguments are provided".to_string(),
-                    "Ensure function arguments match the expected types".to_string(),
-                ]
-            }
-            _ => vec![
-                "Review the syntax and ensure it follows the language specification".to_string(),
-            ],
-        }
+        error.generate_suggestions()
     }
 }

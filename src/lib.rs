@@ -50,6 +50,7 @@
 
 pub mod cli;
 pub mod cli_design;
+pub mod reporting;
 pub mod ffi;
 pub mod http_server;
 pub mod http_server_converters;
@@ -74,7 +75,7 @@ pub use http_server_security::{InputValidator, RateLimiter, RequestSizeLimiter, 
 // Re-export main components for easy access
 pub use ffi::{FFIConfig, FFIInterface, InterfaceType};
 pub use lexer::{tokens::Token, Lexer};
-pub use parser::{ast, error::ParserError, Parser};
+pub use parser::{ast, collect_warnings, error::ParserError, Parser, ParseWarning};
 pub use runtime::{values::Value, Runtime};
 
 // Re-export testing framework for app developers: use dist_agent_lang::{TestCase, TestSuite, ...}

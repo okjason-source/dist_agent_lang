@@ -14,6 +14,9 @@ use dist_agent_lang::cli_design;
 use dist_agent_lang::lexer;
 use dist_agent_lang::parser;
 use dist_agent_lang::performance;
+use dist_agent_lang::reporting::{
+    format_lexer_error, format_parser_error, format_parse_warnings, format_runtime_error,
+};
 use dist_agent_lang::runtime;
 use dist_agent_lang::stdlib;
 use dist_agent_lang::testing;
@@ -290,7 +293,7 @@ fn parse_dal_file(filename: &str) {
             tokens
         }
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
@@ -302,7 +305,7 @@ fn parse_dal_file(filename: &str) {
             std::process::exit(0);
         }
         Err(e) => {
-            eprintln!("❌ Parsing failed: {}", e);
+            eprintln!("❌ Parsing failed:\n{}", format_parser_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     }
@@ -327,7 +330,7 @@ fn run_dal_file(filename: &str) {
             tokens
         }
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
@@ -339,12 +342,16 @@ fn run_dal_file(filename: &str) {
             ast
         }
         Err(e) => {
-            eprintln!("❌ Parsing failed: {}", e);
-            // Show more context about the error
-            eprintln!("🔍 Error details: {:?}", e);
+            eprintln!("❌ Parsing failed:\n{}", format_parser_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
+
+    // Warnings (unused variables, etc.)
+    let warnings = parser::collect_warnings(&ast);
+    if !warnings.is_empty() {
+        eprintln!("\n{}", format_parse_warnings(&warnings, Some(filename), Some(&source_code)));
+    }
 
     // Execute
     let mut runtime = Runtime::new();
@@ -356,12 +363,13 @@ fn run_dal_file(filename: &str) {
             }
             // Run Layer 3 tests if the file registered any (describe/it)
             if let Err(e) = runtime.run_registered_tests() {
-                eprintln!("❌ Test(s) failed: {}", e);
+                let with_ctx = dist_agent_lang::runtime::RuntimeErrorWithContext::from_error(e);
+                eprintln!("❌ Test(s) failed:\n{}", format_runtime_error(&with_ctx, Some(filename), Some(&source_code)));
                 std::process::exit(1);
             }
         }
         Err(e) => {
-            eprintln!("❌ Execution failed: {}", e);
+            eprintln!("❌ Execution failed:\n{}", format_runtime_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     }
@@ -452,7 +460,7 @@ fn run_dal_tests(path: &str) {
         // Execute program to register functions, then run each test
         let mut runtime = Runtime::new();
         if let Err(e) = runtime.execute_program(program) {
-            println!("   ❌ Runtime error during setup: {}\n", e);
+            println!("   ❌ Runtime error during setup:\n{}\n", format_runtime_error(&e, Some(test_file), Some(&content)));
             failed += test_names.len();
             continue;
         }
@@ -537,7 +545,7 @@ fn run_web_application(filename: &str) {
             tokens
         }
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
@@ -549,7 +557,7 @@ fn run_web_application(filename: &str) {
             program
         }
         Err(e) => {
-            eprintln!("❌ Parsing failed: {}", e);
+            eprintln!("❌ Parsing failed:\n{}", format_parser_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
@@ -928,7 +936,7 @@ let key_check = key::check(key_request);
             tokens
         }
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, None, Some(test_code)));
             return;
         }
     };
@@ -941,7 +949,7 @@ let key_check = key::check(key_request);
             println!("✅ Parser: {} statements parsed", program.statements.len());
         }
         Err(e) => {
-            eprintln!("❌ Parser error: {}", e);
+            eprintln!("❌ Parser error:\n{}", format_parser_error(&e, None, Some(test_code)));
             return;
         }
     };
@@ -1477,7 +1485,7 @@ fn test_service_parsing() {
     let tokens = match Lexer::new(test_code).tokenize() {
         Ok(tokens) => tokens,
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, None, Some(test_code)));
             return;
         }
     };
@@ -1487,7 +1495,7 @@ fn test_service_parsing() {
     let program = match parser.parse() {
         Ok(program) => program,
         Err(e) => {
-            eprintln!("❌ Parsing failed: {}", e);
+            eprintln!("❌ Parsing failed:\n{}", format_parser_error(&e, None, Some(test_code)));
             return;
         }
     };
@@ -1616,28 +1624,36 @@ fn check_dal_file(filename: &str) {
             tokens
         }
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
 
     // Parse
-    let _ast = match Parser::new_with_positions(tokens_with_pos).parse() {
+    let ast = match Parser::new_with_positions(tokens_with_pos).parse() {
         Ok(ast) => {
             println!("✅ Parsed {} statements", ast.statements.len());
-            println!("✅ Type check passed!");
-            println!("   {} statements validated", ast.statements.len());
-            println!("   No type errors found");
             ast
         }
         Err(e) => {
-            eprintln!("❌ Type check failed: {}", e);
+            eprintln!("❌ Type check failed:\n{}", format_parser_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
 
-    // TODO: Add semantic analysis (type checking, unused variables, etc.)
-    // For now, successful parsing means type check passed
+    // Warnings (unused variables, etc.)
+    let warnings = parser::collect_warnings(&ast);
+    if !warnings.is_empty() {
+        eprintln!("\n{}", format_parse_warnings(&warnings, Some(filename), Some(&source_code)));
+    }
+
+    println!("✅ Type check passed!");
+    println!("   {} statements validated", ast.statements.len());
+    if warnings.is_empty() {
+        println!("   No type errors or warnings found");
+    } else {
+        println!("   {} warning(s) (see above)", warnings.len());
+    }
 }
 
 /// Format DAL code
@@ -1664,7 +1680,7 @@ fn format_dal_file(filename: &str, check_only: bool) {
             tokens
         }
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
@@ -1675,7 +1691,7 @@ fn format_dal_file(filename: &str, check_only: bool) {
             ast
         }
         Err(e) => {
-            eprintln!("❌ Parsing failed: {}", e);
+            eprintln!("❌ Parsing failed:\n{}", format_parser_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
@@ -1902,7 +1918,7 @@ fn lint_dal_file(filename: &str) {
             tokens
         }
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
@@ -1913,7 +1929,7 @@ fn lint_dal_file(filename: &str) {
             ast
         }
         Err(e) => {
-            eprintln!("❌ Parsing failed: {}", e);
+            eprintln!("❌ Parsing failed:\n{}", format_parser_error(&e, Some(filename), Some(&source_code)));
             std::process::exit(1);
         }
     };
@@ -1921,19 +1937,14 @@ fn lint_dal_file(filename: &str) {
     // Run lint checks
     let mut issues = Vec::new();
 
-    // Check for unused variables
-    let mut declared_vars: std::collections::HashSet<String> = std::collections::HashSet::new();
-    let mut used_vars: std::collections::HashSet<String> = std::collections::HashSet::new();
-
-    for statement in &ast.statements {
-        collect_declared_vars(statement, &mut declared_vars);
-        collect_used_vars(statement, &mut used_vars);
-    }
-
-    for var in &declared_vars {
-        if !used_vars.contains(var) {
-            issues.push(format!("⚠️  Unused variable: '{}'", var));
-        }
+    // Unused variables (and similar) from parser warnings
+    let warnings = parser::collect_warnings(&ast);
+    for w in &warnings {
+        issues.push(if w.line > 0 {
+            format!("Line {}: {}", w.line, w.message)
+        } else {
+            w.message.clone()
+        });
     }
 
     // TODO: Add more lint checks:
@@ -1951,144 +1962,6 @@ fn lint_dal_file(filename: &str) {
             println!("   {}", issue);
         }
         std::process::exit(1);
-    }
-}
-
-fn collect_declared_vars(stmt: &Statement, vars: &mut std::collections::HashSet<String>) {
-    match stmt {
-        Statement::Let(let_stmt) => {
-            vars.insert(let_stmt.name.clone());
-        }
-        Statement::Function(fn_stmt) => {
-            vars.insert(fn_stmt.name.clone());
-            for param in &fn_stmt.parameters {
-                vars.insert(param.name.clone());
-            }
-            for s in &fn_stmt.body.statements {
-                collect_declared_vars(s, vars);
-            }
-        }
-        Statement::If(if_stmt) => {
-            for s in &if_stmt.consequence.statements {
-                collect_declared_vars(s, vars);
-            }
-            if let Some(alt) = &if_stmt.alternative {
-                for s in &alt.statements {
-                    collect_declared_vars(s, vars);
-                }
-            }
-        }
-        Statement::While(while_stmt) => {
-            for s in &while_stmt.body.statements {
-                collect_declared_vars(s, vars);
-            }
-        }
-        Statement::ForIn(for_stmt) => {
-            vars.insert(for_stmt.variable.clone());
-            for s in &for_stmt.body.statements {
-                collect_declared_vars(s, vars);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn collect_used_vars(stmt: &Statement, vars: &mut std::collections::HashSet<String>) {
-    match stmt {
-        Statement::Let(let_stmt) => collect_used_vars_in_expr(&let_stmt.value, vars),
-        Statement::Return(ret_stmt) => {
-            if let Some(expr) = &ret_stmt.value {
-                collect_used_vars_in_expr(expr, vars);
-            }
-        }
-        Statement::Expression(expr) => collect_used_vars_in_expr(expr, vars),
-        Statement::If(if_stmt) => {
-            collect_used_vars_in_expr(&if_stmt.condition, vars);
-            for s in &if_stmt.consequence.statements {
-                collect_used_vars(s, vars);
-            }
-            if let Some(alt) = &if_stmt.alternative {
-                for s in &alt.statements {
-                    collect_used_vars(s, vars);
-                }
-            }
-        }
-        Statement::While(while_stmt) => {
-            collect_used_vars_in_expr(&while_stmt.condition, vars);
-            for s in &while_stmt.body.statements {
-                collect_used_vars(s, vars);
-            }
-        }
-        Statement::ForIn(for_stmt) => {
-            collect_used_vars_in_expr(&for_stmt.iterable, vars);
-            for s in &for_stmt.body.statements {
-                collect_used_vars(s, vars);
-            }
-        }
-        Statement::Function(fn_stmt) => {
-            for s in &fn_stmt.body.statements {
-                collect_used_vars(s, vars);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn collect_used_vars_in_expr(
-    expr: &parser::ast::Expression,
-    vars: &mut std::collections::HashSet<String>,
-) {
-    use parser::ast::Expression;
-
-    match expr {
-        Expression::Identifier(name) => {
-            vars.insert(name.clone());
-        }
-        Expression::BinaryOp(left, _, right) => {
-            collect_used_vars_in_expr(left, vars);
-            collect_used_vars_in_expr(right, vars);
-        }
-        Expression::UnaryOp(_, expr) => {
-            collect_used_vars_in_expr(expr, vars);
-        }
-        Expression::FunctionCall(call) => {
-            for arg in &call.arguments {
-                collect_used_vars_in_expr(arg, vars);
-            }
-        }
-        Expression::ArrayLiteral(elements) => {
-            for elem in elements {
-                collect_used_vars_in_expr(elem, vars);
-            }
-        }
-        Expression::ObjectLiteral(obj) => {
-            for (_, v) in obj {
-                collect_used_vars_in_expr(v, vars);
-            }
-        }
-        Expression::Assignment(name, value) => {
-            vars.insert(name.clone());
-            collect_used_vars_in_expr(value, vars);
-        }
-        Expression::FieldAccess(obj, _) => {
-            collect_used_vars_in_expr(obj, vars);
-        }
-        Expression::FieldAssignment(obj, _, value) => {
-            collect_used_vars_in_expr(obj, vars);
-            collect_used_vars_in_expr(value, vars);
-        }
-        Expression::IndexAccess(arr, index) => {
-            collect_used_vars_in_expr(arr, vars);
-            collect_used_vars_in_expr(index, vars);
-        }
-        Expression::Await(expr) | Expression::Spawn(expr) | Expression::Throw(expr) => {
-            collect_used_vars_in_expr(expr, vars);
-        }
-        Expression::Range(start, end) => {
-            collect_used_vars_in_expr(start, vars);
-            collect_used_vars_in_expr(end, vars);
-        }
-        _ => {}
     }
 }
 
@@ -2806,7 +2679,7 @@ fn evaluate_repl_line(input: &str, runtime: &mut Runtime) -> Result<Option<Value
     // Execute
     runtime
         .execute_program(ast)
-        .map_err(|e| format!("Runtime error: {}", e))
+        .map_err(|e| e.to_string())
 }
 
 /// Watch DAL file and re-run on changes
@@ -3042,7 +2915,7 @@ fn profile_dal_file(filename: &str, memory_tracking: bool) {
         let t = Lexer::new(&source_code)
             .tokenize_immutable()
             .map_err(|e| {
-                eprintln!("❌ Lexer error: {}", e);
+                eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(filename), Some(&source_code)));
                 std::process::exit(1);
             })
             .unwrap();
@@ -3056,7 +2929,7 @@ fn profile_dal_file(filename: &str, memory_tracking: bool) {
         let a = parser
             .parse()
             .map_err(|e| {
-                eprintln!("❌ Parsing failed: {}", e);
+                eprintln!("❌ Parsing failed:\n{}", format_parser_error(&e, Some(filename), Some(&source_code)));
                 std::process::exit(1);
             })
             .unwrap();
@@ -3070,7 +2943,7 @@ fn profile_dal_file(filename: &str, memory_tracking: bool) {
         runtime
             .execute_program(ast)
             .map_err(|e| {
-                eprintln!("❌ Execution failed: {}", e);
+                eprintln!("❌ Execution failed:\n{}", format_runtime_error(&e, Some(filename), Some(&source_code)));
                 std::process::exit(1);
             })
             .unwrap();
@@ -3116,7 +2989,7 @@ fn optimize_dal_file(input_file: &str, output_file: Option<&str>, level: u8) {
             tokens
         }
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(input_file), Some(&source_code)));
             std::process::exit(1);
         }
     };
@@ -3128,7 +3001,7 @@ fn optimize_dal_file(input_file: &str, output_file: Option<&str>, level: u8) {
             ast
         }
         Err(e) => {
-            eprintln!("❌ Parsing failed: {}", e);
+            eprintln!("❌ Parsing failed:\n{}", format_parser_error(&e, Some(input_file), Some(&source_code)));
             std::process::exit(1);
         }
     };
@@ -5081,7 +4954,7 @@ fn handle_doc_command(args: &[String]) {
             t
         }
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(&path), Some(&source)));
             std::process::exit(1);
         }
     };
@@ -5091,7 +4964,7 @@ fn handle_doc_command(args: &[String]) {
             p
         }
         Err(e) => {
-            eprintln!("❌ Parse error: {}", e);
+            eprintln!("❌ Parse error:\n{}", format_parser_error(&e, Some(&path), Some(&source)));
             std::process::exit(1);
         }
     };
@@ -5303,7 +5176,7 @@ fn handle_debug_command(args: &[String]) {
             t
         }
         Err(e) => {
-            eprintln!("❌ Lexer error: {}", e);
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(file), Some(&source)));
             std::process::exit(1);
         }
     };
@@ -5313,7 +5186,7 @@ fn handle_debug_command(args: &[String]) {
             println!("✅ Parse OK. Execute with: {} run {}", binary_name(), file);
         }
         Err(e) => {
-            eprintln!("❌ Parse error: {}", e);
+            eprintln!("❌ Parse error:\n{}", format_parser_error(&e, Some(file), Some(&source)));
             std::process::exit(1);
         }
     }

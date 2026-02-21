@@ -2,9 +2,18 @@ use crate::lexer::tokens::Literal;
 use crate::lexer::tokens::Operator;
 use std::collections::HashMap;
 
+/// Source location (line, column) for error reporting and runtime diagnostics.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Span {
+    pub line: usize,
+    pub column: usize,
+}
+
 #[derive(Debug, Clone)]
 pub struct Program {
     pub statements: Vec<Statement>,
+    /// Parallel to `statements`: span for each top-level statement (from parser).
+    pub statement_spans: Vec<Option<Span>>,
 }
 
 #[derive(Debug, Clone)]
@@ -88,6 +97,8 @@ pub enum MatchPattern {
 pub struct LetStatement {
     pub name: String,
     pub value: Expression,
+    /// 1-based line number for warnings (e.g. unused variable); None if unknown.
+    pub line: Option<usize>,
 }
 
 #[derive(Debug, Clone)]
@@ -285,11 +296,17 @@ impl Program {
     pub fn new() -> Self {
         Self {
             statements: Vec::new(),
+            statement_spans: Vec::new(),
         }
     }
 
     pub fn add_statement(&mut self, statement: Statement) {
+        self.add_statement_with_span(statement, None);
+    }
+
+    pub fn add_statement_with_span(&mut self, statement: Statement, span: Option<Span>) {
         self.statements.push(statement);
+        self.statement_spans.push(span);
     }
 }
 

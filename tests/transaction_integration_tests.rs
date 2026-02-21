@@ -219,3 +219,52 @@ fn test_multiple_transactions_sequential() {
     );
     runtime.commit_transaction().unwrap();
 }
+
+/// @txn attribute: function with @txn commits on success
+#[test]
+fn test_txn_attribute_commit_on_success() {
+    let source = r#"
+        @txn
+        fn write_key() {
+            database::tx_write("attr_key", 100);
+        }
+        write_key();
+        let tx_id = database::begin_transaction("read_committed", 5000);
+        let v = database::tx_read("attr_key");
+        database::commit();
+        v
+    "#;
+    let result = dist_agent_lang::execute_source(source).expect("Execution failed");
+    assert_eq!(result, Value::Int(100), "@txn function should commit tx_write");
+}
+
+/// @txn attribute: function with @txn rolls back on error
+#[test]
+fn test_txn_attribute_rollback_on_error() {
+    // Single script: commit 42, then @txn fn writes 999 and throws → rollback, then read → 42
+    let source = r#"
+        let tx_id = database::begin_transaction("read_committed", 5000);
+        database::tx_write("rollback_key", 42);
+        database::commit();
+
+        @txn
+        fn bad_write() {
+            database::tx_write("rollback_key", 999);
+            throw "abort";
+        }
+        try {
+            bad_write();
+        } catch (e) {
+            null;
+        }
+        let tx_id2 = database::begin_transaction("read_committed", 5000);
+        let v = database::tx_read("rollback_key");
+        database::commit();
+        v
+    "#;
+    let result = dist_agent_lang::execute_source(source).expect("Execution failed");
+    assert_eq!(
+        result, Value::Int(42),
+        "After @txn function throws, tx_write should be rolled back"
+    );
+}

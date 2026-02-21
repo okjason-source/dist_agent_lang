@@ -127,3 +127,114 @@ impl RuntimeError {
         RuntimeError::FunctionNotFound(name)
     }
 }
+
+/// Source location for error reporting (line/column; optional file path).
+#[derive(Debug, Clone)]
+pub struct SourceLocation {
+    pub line: usize,
+    pub column: usize,
+    pub file_path: Option<String>,
+}
+
+/// One frame in the call stack (function name and optional line).
+#[derive(Debug, Clone)]
+pub struct CallFrameInfo {
+    pub function_name: String,
+    pub line: Option<usize>,
+}
+
+/// Runtime error with optional location, call stack, and suggestions (P5 "did you mean").
+#[derive(Debug)]
+pub struct RuntimeErrorWithContext {
+    pub inner: RuntimeError,
+    pub location: Option<SourceLocation>,
+    pub call_stack: Vec<CallFrameInfo>,
+    pub suggestions: Vec<String>,
+}
+
+impl RuntimeErrorWithContext {
+    pub fn new(
+        inner: RuntimeError,
+        location: Option<SourceLocation>,
+        call_stack: Vec<CallFrameInfo>,
+    ) -> Self {
+        Self {
+            inner,
+            location,
+            call_stack,
+            suggestions: Vec::new(),
+        }
+    }
+
+    /// Wrap a plain RuntimeError with no location or call stack (e.g. from run_registered_tests).
+    pub fn from_error(inner: RuntimeError) -> Self {
+        Self {
+            inner,
+            location: None,
+            call_stack: Vec::new(),
+            suggestions: Vec::new(),
+        }
+    }
+
+    pub fn with_suggestions(mut self, suggestions: Vec<String>) -> Self {
+        self.suggestions = suggestions;
+        self
+    }
+
+    pub fn inner(&self) -> &RuntimeError {
+        &self.inner
+    }
+
+    /// Format for display: message, then "  at line X, column Y" if location present, then call stack, then suggestions.
+    pub fn format_display(
+        &self,
+        _source: Option<&str>,
+        file_path: Option<&str>,
+    ) -> String {
+        let mut out = format!("{}\n", self.inner);
+        if let Some(loc) = &self.location {
+            let path = loc
+                .file_path
+                .as_deref()
+                .or(file_path)
+                .unwrap_or("");
+            if path.is_empty() {
+                out.push_str(&format!("  at line {}, column {}\n", loc.line, loc.column));
+            } else {
+                out.push_str(&format!(
+                    "  at {}:{}:{}\n",
+                    path, loc.line, loc.column
+                ));
+            }
+        }
+        if !self.call_stack.is_empty() {
+            out.push_str("\nCall stack:\n");
+            for (i, frame) in self.call_stack.iter().enumerate() {
+                let line_info = frame
+                    .line
+                    .map(|l| format!(" (line {})", l))
+                    .unwrap_or_default();
+                out.push_str(&format!("  {}: {}{}\n", i, frame.function_name, line_info));
+            }
+        }
+        if !self.suggestions.is_empty() {
+            out.push_str("\nSuggestions:\n");
+            for s in &self.suggestions {
+                out.push_str(&format!("  did you mean '{}'?\n", s));
+            }
+        }
+        out
+    }
+}
+
+impl std::fmt::Display for RuntimeErrorWithContext {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
+
+impl std::error::Error for RuntimeErrorWithContext {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.inner)
+    }
+}

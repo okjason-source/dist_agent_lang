@@ -135,6 +135,7 @@ impl Optimizer {
                         optimized_statements.push(Statement::Let(LetStatement {
                             name: let_stmt.name.clone(),
                             value: folded_value,
+                            line: let_stmt.line,
                         }));
                         optimizations.push(format!("Constant folded: {}", let_stmt.name));
                     } else {
@@ -164,9 +165,11 @@ impl Optimizer {
             }
         }
 
+        let len = optimized_statements.len();
         (
             Program {
                 statements: optimized_statements,
+                statement_spans: vec![None; len],
             },
             optimizations,
         )
@@ -255,9 +258,11 @@ impl Optimizer {
             }
         }
 
+        let len = optimized_statements.len();
         (
             Program {
                 statements: optimized_statements,
+                statement_spans: vec![None; len],
             },
             optimizations,
         )
@@ -311,9 +316,11 @@ impl Optimizer {
             }
         }
 
+        let len = optimized_statements.len();
         (
             Program {
                 statements: optimized_statements,
+                statement_spans: vec![None; len],
             },
             optimizations,
         )
@@ -363,6 +370,7 @@ impl Optimizer {
                         optimized_statements.push(Statement::Let(LetStatement {
                             name: let_stmt.name.clone(),
                             value: Expression::Identifier(existing_var.clone()),
+                            line: let_stmt.line,
                         }));
                         optimizations.push(format!("CSE: {} = {}", let_stmt.name, existing_var));
                     } else {
@@ -374,9 +382,11 @@ impl Optimizer {
             }
         }
 
+        let len = optimized_statements.len();
         (
             Program {
                 statements: optimized_statements,
+                statement_spans: vec![None; len],
             },
             optimizations,
         )
@@ -416,9 +426,11 @@ impl Optimizer {
             }
         }
 
+        let len = optimized_statements.len();
         (
             Program {
                 statements: optimized_statements,
+                statement_spans: vec![None; len],
             },
             optimizations,
         )
@@ -463,6 +475,7 @@ impl Optimizer {
                         optimized_statements.push(Statement::Let(LetStatement {
                             name: let_stmt.name.clone(),
                             value: folded_value,
+                            line: let_stmt.line,
                         }));
                     } else {
                         optimized_statements.push(statement.clone());

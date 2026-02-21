@@ -1,7 +1,9 @@
 use crate::parser::ast::{BlockStatement, Program, ServiceStatement, Statement};
 use crate::runtime::advanced_security::AdvancedSecurityManager;
 use crate::runtime::control_flow::{ControlFlow, StatementOutcome, StatementResult};
-use crate::runtime::functions::{Function, RuntimeError};
+use crate::runtime::functions::{
+    CallFrameInfo, Function, RuntimeError, RuntimeErrorWithContext, SourceLocation,
+};
 use crate::runtime::reentrancy::ReentrancyGuard;
 use crate::runtime::safe_math::SafeMath;
 use crate::runtime::scope::Scope;
@@ -15,6 +17,48 @@ use crate::testing::mock::MockRegistry;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::sync::mpsc;
+
+/// Simple Levenshtein distance for "did you mean" suggestions (P5).
+fn edit_distance(a: &str, b: &str) -> usize {
+    let a: Vec<char> = a.chars().collect();
+    let b: Vec<char> = b.chars().collect();
+    let n = a.len();
+    let m = b.len();
+    let mut dp = vec![vec![0usize; m + 1]; n + 1];
+    for i in 0..=n {
+        dp[i][0] = i;
+    }
+    for j in 0..=m {
+        dp[0][j] = j;
+    }
+    for i in 1..=n {
+        for j in 1..=m {
+            let cost = if a[i - 1] == b[j - 1] { 0 } else { 1 };
+            dp[i][j] = (dp[i - 1][j] + 1)
+                .min(dp[i][j - 1] + 1)
+                .min(dp[i - 1][j - 1] + cost);
+        }
+    }
+    dp[n][m]
+}
+
+/// Return up to `limit` candidates from `candidates` nearest to `name` by edit distance.
+fn nearest_strings(name: &str, candidates: &[String], limit: usize) -> Vec<String> {
+    if candidates.is_empty() || limit == 0 {
+        return Vec::new();
+    }
+    let mut with_dist: Vec<(usize, &String)> = candidates
+        .iter()
+        .filter(|c| *c != name)
+        .map(|c| (edit_distance(name, c), c))
+        .collect();
+    with_dist.sort_by_key(|(d, _)| *d);
+    with_dist
+        .into_iter()
+        .take(limit)
+        .map(|(_, c)| c.clone())
+        .collect()
+}
 
 /// In-memory agent state: status, message queue, task queue (for ai:: and agent::).
 #[derive(Debug, Clone)]
@@ -91,6 +135,8 @@ pub struct Runtime {
     return_pending: Option<Value>,
     /// Mock registry for testing (intercepts function calls when enabled)
     pub mock_registry: Option<MockRegistry>,
+    /// Current statement span for runtime error location (P3).
+    current_location: Option<SourceLocation>,
 }
 
 // NEW: Service instance structure
@@ -119,6 +165,8 @@ pub struct ServiceContext {
 #[derive(Debug)]
 pub struct CallFrame {
     pub scope: Scope,
+    /// Function or method name for call-stack display (None for anonymous frames).
+    pub function_name: Option<String>,
 }
 
 impl Runtime {
@@ -151,6 +199,7 @@ impl Runtime {
             test_tests: Vec::new(),
             return_pending: None,
             mock_registry: None, // Mock registry for testing (optional)
+            current_location: None,
         };
 
         // Register built-in functions
@@ -187,6 +236,7 @@ impl Runtime {
             test_tests: Vec::new(),
             return_pending: None,
             mock_registry: None, // Mock registry for testing (optional)
+            current_location: None,
         };
 
         // Register built-in functions
@@ -280,7 +330,41 @@ impl Runtime {
         Ok(out)
     }
 
-    pub fn execute_program(&mut self, program: Program) -> Result<Option<Value>, RuntimeError> {
+    /// Build call-stack info for error reporting (P3).
+    pub fn get_call_stack_info(&self) -> Vec<CallFrameInfo> {
+        self.call_stack
+            .iter()
+            .map(|f| CallFrameInfo {
+                function_name: f
+                    .function_name
+                    .clone()
+                    .unwrap_or_else(|| "<anonymous>".to_string()),
+                line: None,
+            })
+            .collect()
+    }
+
+    /// P5: "did you mean" suggestions for VariableNotFound / FunctionNotFound.
+    fn suggestions_for_error(&self, e: &RuntimeError) -> Vec<String> {
+        const MAX_SUGGESTIONS: usize = 3;
+        match e {
+            RuntimeError::VariableNotFound(name) => {
+                let candidates = self.scope.keys();
+                nearest_strings(name, &candidates, MAX_SUGGESTIONS)
+            }
+            RuntimeError::FunctionNotFound(name) => {
+                let mut candidates: Vec<String> = self.functions.keys().cloned().collect();
+                candidates.extend(self.user_functions.keys().cloned());
+                nearest_strings(name, &candidates, MAX_SUGGESTIONS)
+            }
+            _ => Vec::new(),
+        }
+    }
+
+    pub fn execute_program(
+        &mut self,
+        program: Program,
+    ) -> Result<Option<Value>, RuntimeErrorWithContext> {
         use std::time::{Duration, Instant};
 
         const MAX_EXECUTION_TIME: Duration = Duration::from_secs(10);
@@ -302,18 +386,38 @@ impl Runtime {
         // Only run MEV detection if @advanced_security is explicitly requested
         // This prevents false positives from legitimate monitoring code
         if has_advanced_security {
-            self.advanced_security
-                .analyze_transaction_for_mev(&format!("{:?}", program))?;
+            if let Err(e) = self
+                .advanced_security
+                .analyze_transaction_for_mev(&format!("{:?}", program))
+            {
+                self.execution_start = None;
+                return Err(RuntimeErrorWithContext::new(
+                    e,
+                    None,
+                    self.get_call_stack_info(),
+                ));
+            }
         }
 
         let mut result = None;
+        let spans = program.statement_spans;
 
-        for statement in program.statements {
+        for (statement, span) in program.statements.into_iter().zip(spans) {
+            self.current_location = span.map(|s| SourceLocation {
+                line: s.line,
+                column: s.column,
+                file_path: None,
+            });
+
             // Check timeout before each statement
             if let Some(start) = self.execution_start {
                 if start.elapsed() > MAX_EXECUTION_TIME {
                     self.execution_start = None;
-                    return Err(RuntimeError::ExecutionTimeout);
+                    return Err(RuntimeErrorWithContext::new(
+                        RuntimeError::ExecutionTimeout,
+                        self.current_location.clone(),
+                        self.get_call_stack_info(),
+                    ));
                 }
             }
 
@@ -323,7 +427,15 @@ impl Runtime {
                 }
                 Err(e) => {
                     self.execution_start = None;
-                    return Err(e);
+                    let suggestions = self.suggestions_for_error(&e);
+                    return Err(
+                        RuntimeErrorWithContext::new(
+                            e,
+                            self.current_location.clone(),
+                            self.get_call_stack_info(),
+                        )
+                        .with_suggestions(suggestions),
+                    );
                 }
             }
             if self.return_pending.is_some() {
@@ -918,8 +1030,16 @@ impl Runtime {
                     got: args.len(),
                 });
             }
+            // @txn attribute: wrap execution in begin/commit or rollback
+            let has_txn = user_func.attributes.iter().any(|a| a.name == "txn");
+            let prev_tx = self.current_transaction_id.clone();
+            if has_txn {
+                let (level, timeout) = self.parse_txn_attribute(&user_func);
+                self.begin_transaction(level, timeout)?;
+            }
             let call_frame = CallFrame {
                 scope: self.scope.clone(),
+                function_name: Some(name.to_string()),
             };
             self.call_stack.push(call_frame);
             for (param, arg) in user_func.parameters.iter().zip(args.iter()) {
@@ -927,6 +1047,7 @@ impl Runtime {
             }
             let mut result = Value::Null;
             self.return_pending = None;
+            let mut exec_error = None::<RuntimeError>;
             for stmt in &user_func.body.statements {
                 match self.execute_statement(stmt) {
                     Ok(value) => {
@@ -936,17 +1057,27 @@ impl Runtime {
                         }
                     }
                     Err(e) => {
+                        exec_error = Some(e);
                         self.return_pending = None;
-                        if let Some(frame) = self.call_stack.pop() {
-                            self.scope = frame.scope;
-                        }
-                        return Err(e);
+                        break;
                     }
                 }
             }
             self.return_pending = None;
             if let Some(frame) = self.call_stack.pop() {
                 self.scope = frame.scope;
+            }
+            if has_txn {
+                if exec_error.is_none() {
+                    self.commit_transaction()
+                        .map_err(|e| RuntimeError::General(format!("@txn commit failed: {}", e)))?;
+                } else {
+                    let _ = self.rollback_transaction();
+                }
+                self.current_transaction_id = prev_tx;
+            }
+            if let Some(e) = exec_error {
+                return Err(e);
             }
             return Ok(result);
         }
@@ -959,6 +1090,7 @@ impl Runtime {
         // Create call frame
         let call_frame = CallFrame {
             scope: self.scope.clone(),
+            function_name: Some(name.to_string()),
         };
         self.call_stack.push(call_frame);
 
@@ -2913,6 +3045,7 @@ impl Runtime {
                                 test_suite_after_each: HashMap::new(),
                                 test_tests: Vec::new(),
                                 return_pending: None,
+                                current_location: None,
                             };
 
                             match catch_runtime.execute_statement_internal(
@@ -7316,6 +7449,7 @@ impl Runtime {
         let saved_scope = self.scope.clone();
         let call_frame = CallFrame {
             scope: saved_scope.clone(),
+            function_name: Some("<closure>".to_string()),
         };
         self.call_stack.push(call_frame);
         self.scope = entry.captured_scope.clone();
@@ -7499,6 +7633,7 @@ impl Runtime {
         let saved_scope = self.scope.clone();
         let call_frame = CallFrame {
             scope: saved_scope.clone(),
+            function_name: Some(format!("{}.{}", instance_id, method_name)),
         };
         self.call_stack.push(call_frame);
 
@@ -8046,6 +8181,40 @@ impl Runtime {
     /// Get the current active transaction ID
     pub fn current_transaction(&self) -> Option<&str> {
         self.current_transaction_id.as_deref()
+    }
+
+    /// Parse @txn attribute for automatic transaction wrapping.
+    /// Returns (isolation_level, timeout_ms). Defaults: ReadCommitted, 30s.
+    fn parse_txn_attribute(
+        &mut self,
+        user_func: &UserFunction,
+    ) -> (crate::runtime::transaction::IsolationLevel, Option<u64>) {
+        use crate::runtime::transaction::IsolationLevel;
+        let attr = match user_func.attributes.iter().find(|a| a.name == "txn") {
+            None => return (IsolationLevel::ReadCommitted, Some(30000)),
+            Some(a) => a,
+        };
+        let level = attr
+            .parameters
+            .get(0)
+            .and_then(|e| self.evaluate_expression(e).ok())
+            .and_then(|v| self.value_to_string(&v).ok())
+            .map(|s| match s.to_lowercase().as_str() {
+                "read_uncommitted" => IsolationLevel::ReadUncommitted,
+                "read_committed" => IsolationLevel::ReadCommitted,
+                "repeatable_read" => IsolationLevel::RepeatableRead,
+                "serializable" => IsolationLevel::Serializable,
+                _ => IsolationLevel::ReadCommitted,
+            })
+            .unwrap_or(IsolationLevel::ReadCommitted);
+        let timeout = attr
+            .parameters
+            .get(1)
+            .and_then(|e| self.evaluate_expression(e).ok())
+            .and_then(|v| self.value_to_int(&v).ok())
+            .map(|i| i as u64)
+            .or(Some(30000));
+        (level, timeout)
     }
 
     /// Read value from transaction (within active transaction)
