@@ -1,7 +1,6 @@
 // dist_agent_lang library
 // This file makes the project available as a library
 
-
 // Allow lints that need larger refactors or many mechanical fixes; address incrementally.
 #![allow(clippy::result_large_err)]
 #![allow(clippy::type_complexity)]
