@@ -1,12 +1,8 @@
 //! CT1: Compiler pipeline skeleton tests — driver, service selection, stub backend.
 
-use dist_agent_lang::compile::{
-    run_compile, select_services_for_target, CompileError,
-};
+use dist_agent_lang::compile::{run_compile, select_services_for_target, CompileError};
 use dist_agent_lang::lexer::tokens::{get_target_constraints, CompilationTarget, TargetConstraint};
-use dist_agent_lang::parser::ast::{
-    CompilationTargetInfo, Program, ServiceStatement, Statement,
-};
+use dist_agent_lang::parser::ast::{CompilationTargetInfo, Program, ServiceStatement, Statement};
 
 /// Build a minimal program with one service that has compilation_target set (no parser validation).
 fn program_with_native_service() -> Program {
@@ -141,7 +137,11 @@ service App @compile_target("native") {
         main_source,
     );
 
-    assert!(result.is_ok(), "build with imports should resolve and compile: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "build with imports should resolve and compile: {:?}",
+        result.err()
+    );
     let artifacts = result.unwrap();
     assert_eq!(artifacts.service_names, vec!["App"]);
 }
@@ -161,16 +161,34 @@ service Token @compile_target("blockchain") {
     let out = dir.path().join("out");
     std::fs::create_dir_all(&out).unwrap();
 
-    let result = run_compile(entry.clone(), CompilationTarget::Blockchain, out.clone(), source);
+    let result = run_compile(
+        entry.clone(),
+        CompilationTarget::Blockchain,
+        out.clone(),
+        source,
+    );
 
     match result {
         Ok(artifacts) => {
             assert_eq!(artifacts.target, "blockchain");
             assert_eq!(artifacts.service_names, vec!["Token"]);
-            assert!(!artifacts.stub, "blockchain backend should produce real artifacts when solc is available");
-            let has_bin = artifacts.artifact_paths.iter().any(|p| p.extension().map(|e| e == "bin").unwrap_or(false));
-            let has_abi = artifacts.artifact_paths.iter().any(|p| p.extension().map(|e| e == "abi").unwrap_or(false));
-            assert!(has_bin && has_abi, "expected .bin and .abi artifacts, got {:?}", artifacts.artifact_paths);
+            assert!(
+                !artifacts.stub,
+                "blockchain backend should produce real artifacts when solc is available"
+            );
+            let has_bin = artifacts
+                .artifact_paths
+                .iter()
+                .any(|p| p.extension().map(|e| e == "bin").unwrap_or(false));
+            let has_abi = artifacts
+                .artifact_paths
+                .iter()
+                .any(|p| p.extension().map(|e| e == "abi").unwrap_or(false));
+            assert!(
+                has_bin && has_abi,
+                "expected .bin and .abi artifacts, got {:?}",
+                artifacts.artifact_paths
+            );
             let manifest = out.join("compile-manifest.json");
             assert!(manifest.exists());
             let content = std::fs::read_to_string(manifest).unwrap();
@@ -252,7 +270,12 @@ service App @compile_target("native") { fn run() { 42 } }
     let out = dir.path().join("out");
     std::fs::create_dir_all(&out).unwrap();
 
-    let result = run_compile(entry.clone(), CompilationTarget::Native, out.clone(), source);
+    let result = run_compile(
+        entry.clone(),
+        CompilationTarget::Native,
+        out.clone(),
+        source,
+    );
 
     match result {
         Ok(artifacts) => {
@@ -262,7 +285,11 @@ service App @compile_target("native") { fn run() { 42 } }
                 !artifacts.stub,
                 "native backend should report real codegen when cargo is available"
             );
-            if let Some(p) = artifacts.artifact_paths.iter().find(|p| p.extension().map(|e| e == "rlib").unwrap_or(false)) {
+            if let Some(p) = artifacts
+                .artifact_paths
+                .iter()
+                .find(|p| p.extension().map(|e| e == "rlib").unwrap_or(false))
+            {
                 assert!(p.exists(), "rlib path should exist: {}", p.display());
             }
             let manifest = out.join("compile-manifest.json");

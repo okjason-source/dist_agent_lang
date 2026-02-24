@@ -237,7 +237,8 @@ impl Parser {
             let mut current_position = position + 1; // consume 'export'
             let mut attributes = Vec::new();
             while current_position < self.tokens.len() {
-                if let Some(Token::Punctuation(Punctuation::At)) = self.tokens.get(current_position) {
+                if let Some(Token::Punctuation(Punctuation::At)) = self.tokens.get(current_position)
+                {
                     let (new_pos, attr) = self.parse_attribute(current_position)?;
                     attributes.push(attr);
                     current_position = new_pos;
@@ -260,9 +261,13 @@ impl Parser {
                     func.exported = true;
                 }
                 return Ok((new_pos, func_stmt));
-            } else if let Some(Token::Keyword(Keyword::Service)) = self.tokens.get(current_position) {
-                let (new_pos, service_stmt) =
-                    self.parse_service_statement_with_attributes(current_position, attributes, true)?;
+            } else if let Some(Token::Keyword(Keyword::Service)) = self.tokens.get(current_position)
+            {
+                let (new_pos, service_stmt) = self.parse_service_statement_with_attributes(
+                    current_position,
+                    attributes,
+                    true,
+                )?;
                 return Ok((new_pos, service_stmt));
             } else {
                 let expected = vec!["function declaration", "service declaration"];
@@ -307,8 +312,11 @@ impl Parser {
                 return Ok((new_pos, func_stmt));
             } else if let Some(Token::Keyword(Keyword::Service)) = self.tokens.get(current_position)
             {
-                let (new_pos, service_stmt) =
-                    self.parse_service_statement_with_attributes(current_position, attributes, false)?;
+                let (new_pos, service_stmt) = self.parse_service_statement_with_attributes(
+                    current_position,
+                    attributes,
+                    false,
+                )?;
                 return Ok((new_pos, service_stmt));
             } else {
                 // Get the actual token for better error reporting
@@ -3178,10 +3186,8 @@ impl Parser {
         position: usize,
     ) -> Result<(usize, CompilationTargetInfo), ParserError> {
         let mut current_position = position + 1; // consume '@'
-        let (new_position, _) = self.expect_token(
-            current_position,
-            &Token::Keyword(Keyword::CompileTarget),
-        )?;
+        let (new_position, _) =
+            self.expect_token(current_position, &Token::Keyword(Keyword::CompileTarget))?;
         current_position = new_position; // consume 'compile_target'
 
         // Expect opening parenthesis

@@ -1172,15 +1172,9 @@ impl Runtime {
         function_name: &str,
         args: &[Value],
     ) -> Result<Value, RuntimeError> {
-        let user_func = exports
-            .user_functions
-            .get(function_name)
-            .ok_or_else(|| {
-                RuntimeError::General(format!(
-                    "module has no function '{}'",
-                    function_name
-                ))
-            })?;
+        let user_func = exports.user_functions.get(function_name).ok_or_else(|| {
+            RuntimeError::General(format!("module has no function '{}'", function_name))
+        })?;
         if args.len() != user_func.parameters.len() {
             return Err(RuntimeError::ArgumentCountMismatch {
                 expected: user_func.parameters.len(),
@@ -2958,12 +2952,8 @@ impl Runtime {
                         self.current_import_index += 1;
                         match &entry.resolved {
                             crate::module_resolver::ResolvedImport::Stdlib(ns) => {
-                                let alias = imp
-                                    .alias
-                                    .as_deref()
-                                    .unwrap_or(ns);
-                                self.stdlib_aliases
-                                    .insert(alias.to_string(), ns.clone());
+                                let alias = imp.alias.as_deref().unwrap_or(ns);
+                                self.stdlib_aliases.insert(alias.to_string(), ns.clone());
                             }
                             crate::module_resolver::ResolvedImport::RelativeFile(path) => {
                                 let source = std::fs::read_to_string(path).map_err(|e| {
@@ -2995,38 +2985,33 @@ impl Runtime {
                                         ))
                                     })?;
                                 let mut mod_runtime = Runtime::new();
-                                mod_runtime.execute_program(
-                                    dep_program,
-                                    Some(dep_resolved.as_slice()),
-                                ).map_err(|e| {
-                                    RuntimeError::General(format!(
-                                        "module {} execution: {}",
-                                        path.display(),
-                                        e.inner
-                                    ))
-                                })?;
+                                mod_runtime
+                                    .execute_program(dep_program, Some(dep_resolved.as_slice()))
+                                    .map_err(|e| {
+                                        RuntimeError::General(format!(
+                                            "module {} execution: {}",
+                                            path.display(),
+                                            e.inner
+                                        ))
+                                    })?;
                                 let alias = imp.alias.as_deref().unwrap_or("module");
                                 let exports = build_module_exports(&mod_runtime);
-                                self.module_exports
-                                    .insert(alias.to_string(), exports);
+                                self.module_exports.insert(alias.to_string(), exports);
                             }
-                            crate::module_resolver::ResolvedImport::Package { name: _pkg_name, path: package_root } => {
+                            crate::module_resolver::ResolvedImport::Package {
+                                name: _pkg_name,
+                                path: package_root,
+                            } => {
                                 // M3: Load package entry (main.dal or lib.dal) and run same as RelativeFile
                                 let main_dal = package_root.join("main.dal");
                                 let lib_dal = package_root.join("lib.dal");
                                 let entry_path: std::path::PathBuf = if main_dal.exists() {
                                     main_dal.canonicalize().map_err(|e| {
-                                        RuntimeError::General(format!(
-                                            "package main.dal: {}",
-                                            e
-                                        ))
+                                        RuntimeError::General(format!("package main.dal: {}", e))
                                     })?
                                 } else if lib_dal.exists() {
                                     lib_dal.canonicalize().map_err(|e| {
-                                        RuntimeError::General(format!(
-                                            "package lib.dal: {}",
-                                            e
-                                        ))
+                                        RuntimeError::General(format!("package lib.dal: {}", e))
                                     })?
                                 } else {
                                     return Err(RuntimeError::General(format!(
@@ -3062,20 +3047,18 @@ impl Runtime {
                                         ))
                                     })?;
                                 let mut mod_runtime = Runtime::new();
-                                mod_runtime.execute_program(
-                                    dep_program,
-                                    Some(dep_resolved.as_slice()),
-                                ).map_err(|e| {
-                                    RuntimeError::General(format!(
-                                        "package {} execution: {}",
-                                        entry_path.display(),
-                                        e.inner
-                                    ))
-                                })?;
+                                mod_runtime
+                                    .execute_program(dep_program, Some(dep_resolved.as_slice()))
+                                    .map_err(|e| {
+                                        RuntimeError::General(format!(
+                                            "package {} execution: {}",
+                                            entry_path.display(),
+                                            e.inner
+                                        ))
+                                    })?;
                                 let alias = imp.alias.as_deref().unwrap_or("module");
                                 let exports = build_module_exports(&mod_runtime);
-                                self.module_exports
-                                    .insert(alias.to_string(), exports);
+                                self.module_exports.insert(alias.to_string(), exports);
                             }
                         }
                     }
@@ -7654,9 +7637,7 @@ impl Runtime {
             }
             return Err(RuntimeError::General(format!(
                 "Service '{}' has @compile_target({:?}) but is missing required attribute: {}",
-                service_stmt.name,
-                target_info.target,
-                required
+                service_stmt.name, target_info.target, required
             )));
         }
         Ok(())

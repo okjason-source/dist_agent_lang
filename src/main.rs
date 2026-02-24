@@ -380,24 +380,28 @@ fn run_dal_file(filename: &str) {
     }
 
     // M2/M4: Resolve imports when running from a file; pass to runtime for loading
-    let has_imports = ast.statements.iter().any(|s| matches!(s, Statement::Import(_)));
+    let has_imports = ast
+        .statements
+        .iter()
+        .any(|s| matches!(s, Statement::Import(_)));
     // Execute (M4: pass resolved imports when present so runtime can load modules)
     let mut runtime = Runtime::new();
     let exec_result = if has_imports {
         let entry_path = std::path::Path::new(filename);
-        let entry_dir = entry_path.parent().unwrap_or_else(|| std::path::Path::new("."));
+        let entry_dir = entry_path
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("."));
         let manifest_path = entry_dir.join("dal.toml");
-        let mut resolver = dist_agent_lang::ModuleResolver::new()
-            .with_root_dir(entry_dir.to_path_buf());
+        let mut resolver =
+            dist_agent_lang::ModuleResolver::new().with_root_dir(entry_dir.to_path_buf());
         if manifest_path.exists() {
             if let Ok(deps) = dist_agent_lang::manifest::load_resolved_deps(&manifest_path) {
                 resolver = resolver.with_dependencies(deps);
             }
         }
-        let parse_fn = |s: &str| {
-            dist_agent_lang::parse_source(s).map_err(|e| e.to_string())
-        };
-        let resolved = match resolver.resolve_program_with_cycles(&ast, Some(entry_path), parse_fn) {
+        let parse_fn = |s: &str| dist_agent_lang::parse_source(s).map_err(|e| e.to_string());
+        let resolved = match resolver.resolve_program_with_cycles(&ast, Some(entry_path), parse_fn)
+        {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("❌ Import resolution failed: {}", e);
@@ -2786,7 +2790,9 @@ fn evaluate_repl_line(input: &str, runtime: &mut Runtime) -> Result<Option<Value
     let ast = parser.parse().map_err(|e| format!("Parse error: {}", e))?;
 
     // Execute
-    runtime.execute_program(ast, None).map_err(|e| e.to_string())
+    runtime
+        .execute_program(ast, None)
+        .map_err(|e| e.to_string())
 }
 
 /// Watch DAL file and re-run on changes
@@ -2887,11 +2893,15 @@ fn install_dependencies() {
             if resolved.is_empty() {
                 println!("   No path dependencies in [dependencies] (version-only deps not fetched yet).");
             } else {
-                if let Err(e) = dist_agent_lang::manifest::write_lockfile(&manifest_path, &resolved) {
+                if let Err(e) = dist_agent_lang::manifest::write_lockfile(&manifest_path, &resolved)
+                {
                     eprintln!("❌ Failed to write dal.lock: {}", e);
                     std::process::exit(1);
                 }
-                println!("   ✅ Resolved {} path dependency(ies), wrote dal.lock", resolved.len());
+                println!(
+                    "   ✅ Resolved {} path dependency(ies), wrote dal.lock",
+                    resolved.len()
+                );
                 for (name, path) in &resolved {
                     println!("   - {} -> {}", name, path.display());
                 }
@@ -2941,7 +2951,9 @@ fn run_benchmarks(file: Option<&str>, suite: Option<&str>) {
             let mut parser = Parser::new(tokens);
             let ast = parser.parse().map_err(|e| e.to_string())?;
             let mut runtime = Runtime::new();
-            runtime.execute_program(ast, None).map_err(|e| e.to_string())?;
+            runtime
+                .execute_program(ast, None)
+                .map_err(|e| e.to_string())?;
             Ok(())
         });
 
@@ -4964,12 +4976,7 @@ fn handle_build_command(entry: Option<&str>, target: Option<&str>, output: Optio
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| cwd.join("target").join("dal"));
 
-        match run_compile(
-            entry_path.clone(),
-            target_enum,
-            output_dir.clone(),
-            &source,
-        ) {
+        match run_compile(entry_path.clone(), target_enum, output_dir.clone(), &source) {
             Ok(artifacts) => {
                 println!(
                     "✅ Compiled {} service(s) to target '{}'",
@@ -4987,7 +4994,10 @@ fn handle_build_command(entry: Option<&str>, target: Option<&str>, output: Optio
                         println!("   - {}", p.display());
                     }
                 }
-                println!("   Manifest: {}", output_dir.join("compile-manifest.json").display());
+                println!(
+                    "   Manifest: {}",
+                    output_dir.join("compile-manifest.json").display()
+                );
             }
             Err(e) => {
                 eprintln!("❌ Build failed: {}", e);

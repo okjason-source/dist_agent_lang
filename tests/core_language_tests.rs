@@ -283,7 +283,11 @@ fn test_runtime_import_noop() {
     // M1: Import at runtime is no-op; script should not crash
     let code = "import stdlib::chain;";
     let result = execute_source(code);
-    assert!(result.is_ok(), "script with only import should run (no-op): {:?}", result);
+    assert!(
+        result.is_ok(),
+        "script with only import should run (no-op): {:?}",
+        result
+    );
 }
 
 #[test]

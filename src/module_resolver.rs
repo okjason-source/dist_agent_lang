@@ -10,10 +10,33 @@ use thiserror::Error;
 
 /// Known stdlib namespaces (must match engine's `call_namespace_function` and stdlib modules).
 const KNOWN_STDLIB: &[&str] = &[
-    "add_sol", "admin", "agent", "ai", "aml", "auth", "chain", "cloudadmin", "config",
-    "cross_chain_security", "crypto", "crypto_signatures", "database", "desktop", "iot",
-    "key", "kyc", "log", "mobile", "mold", "oracle", "secure_auth", "service", "sync",
-    "test", "trust", "web",
+    "add_sol",
+    "admin",
+    "agent",
+    "ai",
+    "aml",
+    "auth",
+    "chain",
+    "cloudadmin",
+    "config",
+    "cross_chain_security",
+    "crypto",
+    "crypto_signatures",
+    "database",
+    "desktop",
+    "iot",
+    "key",
+    "kyc",
+    "log",
+    "mobile",
+    "mold",
+    "oracle",
+    "secure_auth",
+    "service",
+    "sync",
+    "test",
+    "trust",
+    "web",
 ];
 
 /// Result of resolving a single import path.
@@ -118,7 +141,9 @@ impl ModuleResolver {
                 .or_else(|| self.root_dir.as_deref())
                 .ok_or(ResolveError::RelativeWithoutEntryPath)?;
             let joined = base.join(path);
-            let canonical = joined.canonicalize().map_err(|_| ResolveError::FileNotFound(joined.clone()))?;
+            let canonical = joined
+                .canonicalize()
+                .map_err(|_| ResolveError::FileNotFound(joined.clone()))?;
             if !canonical.is_file() {
                 return Err(ResolveError::FileNotFound(canonical));
             }
@@ -131,7 +156,9 @@ impl ModuleResolver {
                 .or_else(|| self.root_dir.as_deref())
                 .ok_or(ResolveError::RelativeWithoutEntryPath)?;
             let joined = base.join(path);
-            let canonical = joined.canonicalize().map_err(|_| ResolveError::FileNotFound(joined))?;
+            let canonical = joined
+                .canonicalize()
+                .map_err(|_| ResolveError::FileNotFound(joined))?;
             if !canonical.is_file() {
                 return Err(ResolveError::FileNotFound(canonical));
             }
@@ -183,13 +210,7 @@ impl ModuleResolver {
     ) -> Result<Vec<ResolvedImportEntry>, ResolveError> {
         let mut stack: Vec<PathBuf> = vec![];
         let mut result = Vec::new();
-        self.resolve_program_recursive(
-            program,
-            entry_path,
-            &mut stack,
-            &mut result,
-            &parse_fn,
-        )?;
+        self.resolve_program_recursive(program, entry_path, &mut stack, &mut result, &parse_fn)?;
         Ok(result)
     }
 
@@ -218,10 +239,11 @@ impl ModuleResolver {
                         }
                         let source = std::fs::read_to_string(&canonical)
                             .map_err(|_| ResolveError::FileNotFound(canonical.clone()))?;
-                        let dep_program = parse_fn(&source).map_err(|msg| ResolveError::ParseError {
-                            path: canonical.clone(),
-                            message: msg,
-                        })?;
+                        let dep_program =
+                            parse_fn(&source).map_err(|msg| ResolveError::ParseError {
+                                path: canonical.clone(),
+                                message: msg,
+                            })?;
                         stack.push(canonical.clone());
                         self.resolve_program_recursive(
                             &dep_program,
@@ -232,9 +254,12 @@ impl ModuleResolver {
                         )?;
                         stack.pop();
                     }
-                    ResolvedImport::Package { path: package_root, .. } => {
-                        let entry_path = package_entry_path(package_root)
-                            .ok_or_else(|| ResolveError::FileNotFound(package_root.join("main.dal")))?;
+                    ResolvedImport::Package {
+                        path: package_root, ..
+                    } => {
+                        let entry_path = package_entry_path(package_root).ok_or_else(|| {
+                            ResolveError::FileNotFound(package_root.join("main.dal"))
+                        })?;
                         if stack.contains(&entry_path) {
                             let chain: Vec<String> = stack
                                 .iter()
@@ -245,10 +270,11 @@ impl ModuleResolver {
                         }
                         let source = std::fs::read_to_string(&entry_path)
                             .map_err(|_| ResolveError::FileNotFound(entry_path.clone()))?;
-                        let dep_program = parse_fn(&source).map_err(|msg| ResolveError::ParseError {
-                            path: entry_path.clone(),
-                            message: msg,
-                        })?;
+                        let dep_program =
+                            parse_fn(&source).map_err(|msg| ResolveError::ParseError {
+                                path: entry_path.clone(),
+                                message: msg,
+                            })?;
                         stack.push(entry_path.clone());
                         self.resolve_program_recursive(
                             &dep_program,

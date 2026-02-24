@@ -1,7 +1,7 @@
 //! CT2: Blockchain (EVM) backend — transpile DAL services to Solidity and invoke solc.
 //! See docs/development/implementation/COMPILE_TARGET_IMPLEMENTATION_PLAN.md.
 
-use crate::compile::{CompileArtifacts, CompileError, CompileOptions, CompileBackend};
+use crate::compile::{CompileArtifacts, CompileBackend, CompileError, CompileOptions};
 use crate::parser::ast::{Program, ServiceStatement};
 use std::process::Command;
 
@@ -59,10 +59,7 @@ fn service_to_solidity(service: &ServiceStatement) -> String {
                 .parameters
                 .iter()
                 .map(|p| {
-                    let ty = p
-                        .param_type
-                        .as_deref()
-                        .unwrap_or("uint256");
+                    let ty = p.param_type.as_deref().unwrap_or("uint256");
                     format!("{} {}", dal_type_to_solidity(ty), p.name)
                 })
                 .collect();

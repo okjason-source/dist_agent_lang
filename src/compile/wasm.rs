@@ -26,11 +26,18 @@ fn dal_type_to_rust(dal_type: &str) -> String {
         return format!("Vec<{}>", dal_type_to_rust(inner));
     }
     if t.starts_with("map<") {
-        let inner = t.strip_prefix("map<").and_then(|s| s.strip_suffix('>')).unwrap_or("string, i32");
+        let inner = t
+            .strip_prefix("map<")
+            .and_then(|s| s.strip_suffix('>'))
+            .unwrap_or("string, i32");
         let mut parts = inner.splitn(2, ',');
         let k = parts.next().unwrap_or("String").trim();
         let v = parts.next().unwrap_or("i32").trim();
-        return format!("std::collections::HashMap<{}, {}>", dal_type_to_rust(k), dal_type_to_rust(v));
+        return format!(
+            "std::collections::HashMap<{}, {}>",
+            dal_type_to_rust(k),
+            dal_type_to_rust(v)
+        );
     }
     if t == "any" || t == "float" {
         return "f64".to_string();
@@ -129,12 +136,7 @@ crate-type = ["cdylib"]
 
         let output = Command::new("cargo")
             .current_dir(&build_dir)
-            .args([
-                "build",
-                "--target",
-                "wasm32-unknown-unknown",
-                "--release",
-            ])
+            .args(["build", "--target", "wasm32-unknown-unknown", "--release"])
             .output()
             .map_err(CompileError::Io)?;
 

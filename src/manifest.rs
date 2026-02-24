@@ -38,14 +38,14 @@ pub fn parse_dependencies(manifest_path: &Path) -> Result<DependenciesMap, Manif
     let deps_table = match table.get("dependencies") {
         Some(toml::Value::Table(t)) => t,
         None => return Ok(HashMap::new()),
-        _ => return Err(ManifestError::InvalidDependency {
-            name: "dependencies".to_string(),
-            message: "must be a table".to_string(),
-        }),
+        _ => {
+            return Err(ManifestError::InvalidDependency {
+                name: "dependencies".to_string(),
+                message: "must be a table".to_string(),
+            })
+        }
     };
-    let project_root = manifest_path
-        .parent()
-        .unwrap_or_else(|| Path::new("."));
+    let project_root = manifest_path.parent().unwrap_or_else(|| Path::new("."));
     let mut out = HashMap::new();
     for (name, val) in deps_table {
         let spec = match val {
@@ -64,7 +64,8 @@ pub fn parse_dependencies(manifest_path: &Path) -> Result<DependenciesMap, Manif
             _ => {
                 return Err(ManifestError::InvalidDependency {
                     name: name.clone(),
-                    message: "dependency must be string (version) or table { path = \"...\" }".to_string(),
+                    message: "dependency must be string (version) or table { path = \"...\" }"
+                        .to_string(),
                 });
             }
         };
@@ -80,10 +81,12 @@ pub fn resolve_dependencies(manifest_path: &Path) -> Result<ResolvedDeps, Manife
     for (name, spec) in deps {
         match spec {
             DependencySpec::Path(p) => {
-                let canonical = p.canonicalize().map_err(|e| ManifestError::InvalidDependency {
-                    name: name.clone(),
-                    message: format!("path {}: {}", p.display(), e),
-                })?;
+                let canonical = p
+                    .canonicalize()
+                    .map_err(|e| ManifestError::InvalidDependency {
+                        name: name.clone(),
+                        message: format!("path {}: {}", p.display(), e),
+                    })?;
                 if !canonical.is_dir() {
                     return Err(ManifestError::InvalidDependency {
                         name,

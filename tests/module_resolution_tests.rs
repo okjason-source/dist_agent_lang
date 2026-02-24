@@ -2,12 +2,12 @@
 //! M4: Runtime module loading — import then call (stdlib alias and relative module).
 //! M3: dal.toml and package resolution — path deps, lockfile, import package.
 
-use dist_agent_lang::manifest::{load_resolved_deps, parse_dependencies, resolve_dependencies, write_lockfile};
-use dist_agent_lang::module_resolver::{
-    ModuleResolver, ResolveError, ResolvedImport,
+use dist_agent_lang::manifest::{
+    load_resolved_deps, parse_dependencies, resolve_dependencies, write_lockfile,
 };
-use dist_agent_lang::runtime::values::Value;
+use dist_agent_lang::module_resolver::{ModuleResolver, ResolveError, ResolvedImport};
 use dist_agent_lang::parser::ast::Statement;
+use dist_agent_lang::runtime::values::Value;
 use dist_agent_lang::{parse_source, resolve_imports, Runtime};
 
 #[test]
@@ -20,10 +20,9 @@ fn test_resolve_program_imports_stdlib() {
 
 #[test]
 fn test_resolve_program_imports_multiple_stdlib() {
-    let program = parse_source(
-        "import stdlib::chain;\nimport stdlib::ai as ai_mod;\nimport stdlib::log;",
-    )
-    .unwrap();
+    let program =
+        parse_source("import stdlib::chain;\nimport stdlib::ai as ai_mod;\nimport stdlib::log;")
+            .unwrap();
     let resolved = resolve_imports(&program, None).unwrap();
     assert_eq!(resolved.len(), 3);
     assert!(matches!(&resolved[0].resolved, ResolvedImport::Stdlib(s) if s == "chain"));
@@ -40,7 +39,9 @@ fn test_resolve_relative_file() {
     std::fs::write(&dep, "let x = 1;").unwrap();
     let program = parse_source(r#"import "./mymod.dal" as m;"#).unwrap();
     let resolver = ModuleResolver::new();
-    let resolved = resolver.resolve_program_imports(&program, Some(entry.as_path())).unwrap();
+    let resolved = resolver
+        .resolve_program_imports(&program, Some(entry.as_path()))
+        .unwrap();
     assert_eq!(resolved.len(), 1);
     match &resolved[0].resolved {
         ResolvedImport::RelativeFile(p) => {
@@ -68,16 +69,8 @@ fn test_resolve_cycle_detected() {
     let dir = tempfile::tempdir().unwrap();
     let a_path = dir.path().join("a.dal");
     let b_path = dir.path().join("b.dal");
-    std::fs::write(
-        &a_path,
-        r#"import "./b.dal" as b; let x = 1;"#,
-    )
-    .unwrap();
-    std::fs::write(
-        &b_path,
-        r#"import "./a.dal" as a; let y = 2;"#,
-    )
-    .unwrap();
+    std::fs::write(&a_path, r#"import "./b.dal" as b; let x = 1;"#).unwrap();
+    std::fs::write(&b_path, r#"import "./a.dal" as a; let y = 2;"#).unwrap();
     let program = parse_source(&std::fs::read_to_string(&a_path).unwrap()).unwrap();
     let resolver = ModuleResolver::new();
     let parse_fn = |s: &str| parse_source(s).map_err(|e| e.to_string());
@@ -123,16 +116,8 @@ fn test_m4_relative_module_import_then_call() {
     let root = dir.path();
     let main_path = root.join("main.dal");
     let mymod_path = root.join("mymod.dal");
-    std::fs::write(
-        &mymod_path,
-        r#"fn foo() { 42 }"#,
-    )
-    .unwrap();
-    std::fs::write(
-        &main_path,
-        r#"import "./mymod.dal" as m; m::foo()"#,
-    )
-    .unwrap();
+    std::fs::write(&mymod_path, r#"fn foo() { 42 }"#).unwrap();
+    std::fs::write(&main_path, r#"import "./mymod.dal" as m; m::foo()"#).unwrap();
     let source = std::fs::read_to_string(&main_path).unwrap();
     let program = parse_source(&source).unwrap();
     let resolver = ModuleResolver::new();
@@ -224,11 +209,7 @@ utils = { path = "../utils" }
     .unwrap();
     std::fs::write(lib_dir.join("lib.dal"), "fn foo() { 42 }").unwrap();
     let main_path = app_dir.join("main.dal");
-    std::fs::write(
-        &main_path,
-        r#"import "utils" as m; m::foo()"#,
-    )
-    .unwrap();
+    std::fs::write(&main_path, r#"import "utils" as m; m::foo()"#).unwrap();
     let manifest_path = app_dir.join("dal.toml");
     let resolved = resolve_dependencies(&manifest_path).unwrap();
     write_lockfile(&manifest_path, &resolved).unwrap();

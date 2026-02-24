@@ -7,8 +7,8 @@ mod native;
 mod wasm;
 
 use crate::lexer::tokens::CompilationTarget;
-use crate::parser::ast::{Program, ServiceStatement, Statement};
 use crate::module_resolver::{ModuleResolver, ResolvedImport};
+use crate::parser::ast::{Program, ServiceStatement, Statement};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -36,8 +36,13 @@ pub struct CompileOptions {
 pub enum CompileError {
     Parse(String),
     Io(std::io::Error),
-    NoBackend { target: String },
-    CompilerNotFound { target: String, hint: String },
+    NoBackend {
+        target: String,
+    },
+    CompilerNotFound {
+        target: String,
+        hint: String,
+    },
     Backend(String),
     /// Import resolution failed (cycle, missing file, etc.)
     Resolve(String),
@@ -172,7 +177,11 @@ pub fn run_compile(
 ) -> Result<CompileArtifacts, CompileError> {
     let program = crate::parse_source(source).map_err(|e| CompileError::Parse(e.to_string()))?;
 
-    let program = if program.statements.iter().any(|s| matches!(s, Statement::Import(_))) {
+    let program = if program
+        .statements
+        .iter()
+        .any(|s| matches!(s, Statement::Import(_)))
+    {
         let entry_dir = entry_path.parent().unwrap_or_else(|| Path::new("."));
         let mut resolver = ModuleResolver::new().with_root_dir(entry_dir.to_path_buf());
         let manifest_path = entry_dir.join("dal.toml");
@@ -190,12 +199,10 @@ pub fn run_compile(
         for entry in &resolved {
             let dep_path = match &entry.resolved {
                 ResolvedImport::RelativeFile(p) => p.clone(),
-                ResolvedImport::Package { path, .. } => {
-                    match package_entry_path(path) {
-                        Some(p) => p,
-                        None => continue,
-                    }
-                }
+                ResolvedImport::Package { path, .. } => match package_entry_path(path) {
+                    Some(p) => p,
+                    None => continue,
+                },
                 ResolvedImport::Stdlib(_) => continue,
             };
             let dep_source = std::fs::read_to_string(&dep_path).map_err(CompileError::Io)?;
