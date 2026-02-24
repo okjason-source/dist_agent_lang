@@ -25,7 +25,7 @@ function_name(param1: Type, param2: Type) -> ReturnType
 - [db](#db-module) - Database operations
 - [ai](#ai-module) - AI/ML operations
 - [agent](#agent-module) - Agent orchestration
-- [mold](#mold-module) - Mold load/spawn (agent templates)
+- [mold](#mold-module) - Mold load/spawn
 - [iot](#iot-module) - IoT device management
 - [oracle](#oracle-module) - Oracle data feeds
 - [sync](#sync-module) - Data synchronization
