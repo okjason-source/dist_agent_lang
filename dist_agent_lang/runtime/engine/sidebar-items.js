@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["AgentState","CallFrame","ClosureEntry","Runtime","ServiceContext","ServiceInstance","UserFunction"]};
+window.SIDEBAR_ITEMS = {"struct":["AgentState","CallFrame","ClosureEntry","ModuleExports","Runtime","ServiceContext","ServiceInstance","UserFunction"]};

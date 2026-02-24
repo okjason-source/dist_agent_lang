@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DependencySpec","ManifestError"],"fn":["load_resolved_deps","parse_dependencies","resolve_dependencies","write_lockfile"],"type":["DependenciesMap","ResolvedDeps"]};

@@ -485,7 +485,7 @@
 <a href=#485 id=485 data-nosnippet>485</a>        <span class="comment">// Execute - Runtime will automatically check for mocks in call_function/call_namespace_function
 <a href=#486 id=486 data-nosnippet>486</a>        </span><span class="kw">let </span>result = <span class="self">self
 <a href=#487 id=487 data-nosnippet>487</a>            </span>.runtime
-<a href=#488 id=488 data-nosnippet>488</a>            .execute_program(program)
+<a href=#488 id=488 data-nosnippet>488</a>            .execute_program(program, <span class="prelude-val">None</span>)
 <a href=#489 id=489 data-nosnippet>489</a>            .map_err(|e| <span class="macro">format!</span>(<span class="string">"Runtime error: {}"</span>, e));
 <a href=#490 id=490 data-nosnippet>490</a>
 <a href=#491 id=491 data-nosnippet>491</a>        <span class="comment">// Get the registry back from Runtime (with updated call counts from execution)
