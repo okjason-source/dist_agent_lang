@@ -107,8 +107,8 @@ test::expect_valid_chain("solana")    // ✓
 test::expect_valid_chain("fake")      // ✗ Error
 
 // Validate attribute compatibility
+test::expect_compatible_attributes(["trust"])            // ✓
 test::expect_compatible_attributes(["trust", "chain"])   // ✓
-test::expect_compatible_attributes(["trust"])            // ✗ Needs @chain
 test::expect_compatible_attributes(["secure", "public"]) // ✗ Exclusive
 ```
 

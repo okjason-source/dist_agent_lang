@@ -310,8 +310,29 @@ pub enum Commands {
         name: Option<String>,
     },
 
-    /// Build project
+    /// Build project (compile to target: blockchain, wasm, native, etc.)
     Build {
+        /// Entry DAL file (default: from dal.toml or first .dal in cwd)
+        #[arg(required = false)]
+        entry: Option<String>,
+        /// Compilation target: blockchain, wasm, native, mobile, edge
+        #[arg(long, short = 't')]
+        target: Option<String>,
+        /// Output directory for artifacts (default: ./target/dal or ./out)
+        #[arg(long, short = 'o')]
+        output: Option<String>,
+        #[arg(trailing_var_arg = true)]
+        rest: Vec<String>,
+    },
+
+    /// Compile DAL to a target (alias for build)
+    Compile {
+        #[arg(required = false)]
+        entry: Option<String>,
+        #[arg(long, short = 't')]
+        target: Option<String>,
+        #[arg(long, short = 'o')]
+        output: Option<String>,
         #[arg(trailing_var_arg = true)]
         rest: Vec<String>,
     },

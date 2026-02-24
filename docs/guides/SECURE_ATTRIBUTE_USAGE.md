@@ -268,7 +268,7 @@ service InvalidService {
 ```dal
 @secure                    // Authentication + audit logging
 @trust("hybrid")          // Trust model
-@chain("ethereum")        // Required with @trust
+@chain("ethereum")        // When service uses blockchain
 @compile_target("webassembly")  // Deployment target
 @interface("typescript")  // Client interface generation
 service SecureWebService {
@@ -526,11 +526,11 @@ service SecureTransactionService {
    service SecureService { }
    ```
 
-3. **Always specify `@chain` when using `@trust`**
+3. **Add `@chain` when the service interacts with a blockchain**
    ```dal
    @secure
    @trust("hybrid")
-   @chain("ethereum")  // Required!
+   @chain("ethereum")  // When using chain:: or deploying/calling contracts
    service SecureService { }
    ```
 
@@ -559,14 +559,6 @@ service SecureTransactionService {
    ```dal
    @secure
    @public  // ❌ Parser error - mutually exclusive
-   service InvalidService { }
-   ```
-
-3. **Don't forget `@chain` with `@trust`**
-   ```dal
-   @secure
-   @trust("hybrid")
-   // ❌ Missing @chain - parser error
    service InvalidService { }
    ```
 
@@ -629,7 +621,6 @@ runtime.set_current_caller("0x1234...");  // Valid address
 
 **Common causes:**
 - `@secure` and `@public` used together (mutually exclusive)
-- Missing `@chain` when using `@trust`
 - Invalid trust model value
 
 ---
@@ -638,7 +629,7 @@ runtime.set_current_caller("0x1234...");  // Valid address
 
 - **Use `@secure`** for services requiring authentication
 - **Use `@public`** for public APIs (mutually exclusive)
-- **Always combine** with `@trust` and `@chain`
+- **Use `@trust`** for trust model; add **`@chain`** when using blockchain
 - **Let DAL handle** authentication and audit logging automatically
 - **Set `current_caller`** when calling `@secure` services
 - **Monitor audit logs** for security insights

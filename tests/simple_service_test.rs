@@ -112,6 +112,7 @@ fn main() {
                 dist_agent_lang::parser::ast::Statement::Continue(_) => println!("     - Continue"),
                 dist_agent_lang::parser::ast::Statement::Loop(_) => println!("     - Loop"),
                 dist_agent_lang::parser::ast::Statement::Match(_) => println!("     - Match"),
+                dist_agent_lang::parser::ast::Statement::Import(_) => println!("     - Import"),
             }
         }
     }

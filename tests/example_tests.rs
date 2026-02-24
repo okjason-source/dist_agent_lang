@@ -209,18 +209,8 @@ fn validate_chain(chain: &str, path: &Path) {
 
 // Validate attribute compatibility
 fn validate_attribute_compatibility(attrs: &[&str], path: &Path) {
-    let has_trust = attrs.contains(&"trust");
-    let has_chain = attrs.contains(&"chain");
     let has_secure = attrs.contains(&"secure");
     let has_public = attrs.contains(&"public");
-
-    // Rule: @trust requires @chain
-    if has_trust && !has_chain {
-        panic!(
-            "Service with @trust attribute must also have @chain attribute in {:?}",
-            path
-        );
-    }
 
     // Rule: @secure and @public are mutually exclusive
     if has_secure && has_public {
@@ -465,7 +455,7 @@ fn test_all_examples_parse() {
 /// This addresses the limitations of syntax-only validation by checking:
 /// - Trust model values (hybrid, centralized, decentralized, trustless)
 /// - Chain identifiers (ethereum, polygon, etc.)
-/// - Attribute compatibility (@trust requires @chain, @secure ⊕ @public)
+/// - Attribute compatibility (@secure and @public mutually exclusive)
 #[test]
 fn test_all_examples_with_semantic_validation() {
     let example_files: Vec<_> = get_example_files()

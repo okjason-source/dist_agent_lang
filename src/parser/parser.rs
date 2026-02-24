@@ -2,10 +2,10 @@ use crate::lexer::tokens::{Keyword, Literal, Operator, Punctuation, Token};
 use crate::parser::ast::{
     AgentStatement, Attribute, AttributeTarget, BlockStatement, BreakStatement, CatchBlock,
     CompilationTargetInfo, ContinueStatement, EventDeclaration, EventStatement, Expression,
-    FieldVisibility, ForInStatement, FunctionCall, FunctionStatement, IfStatement, LetStatement,
-    LoopStatement, MatchCase, MatchPattern, MatchStatement, MessageStatement, Parameter, Program,
-    ReturnStatement, ServiceField, ServiceStatement, Span, SpawnStatement, Statement, TryStatement,
-    WhileStatement,
+    FieldVisibility, ForInStatement, FunctionCall, FunctionStatement, IfStatement, ImportStatement,
+    LetStatement, LoopStatement, MatchCase, MatchPattern, MatchStatement, MessageStatement,
+    Parameter, Program, ReturnStatement, ServiceField, ServiceStatement, Span, SpawnStatement,
+    Statement, TryStatement, WhileStatement,
 };
 use crate::parser::error::{ErrorContext, ErrorRecovery, ParserError};
 use std::collections::{HashMap, HashSet};
@@ -227,6 +227,49 @@ impl Parser {
                 context: ErrorContext::new(),
             });
         }
+        // M5: Explicit export at top level: export fn ... / export service ...
+        if depth == 0
+            && matches!(
+                self.tokens.get(position),
+                Some(Token::Keyword(Keyword::Export))
+            )
+        {
+            let mut current_position = position + 1; // consume 'export'
+            let mut attributes = Vec::new();
+            while current_position < self.tokens.len() {
+                if let Some(Token::Punctuation(Punctuation::At)) = self.tokens.get(current_position) {
+                    let (new_pos, attr) = self.parse_attribute(current_position)?;
+                    attributes.push(attr);
+                    current_position = new_pos;
+                } else {
+                    break;
+                }
+            }
+            if let Some(Token::Keyword(Keyword::Fn)) = self.tokens.get(current_position) {
+                let (new_pos, mut func_stmt) = self.parse_function_statement(current_position)?;
+                if let Statement::Function(ref mut func) = func_stmt {
+                    func.attributes = attributes;
+                    func.exported = true;
+                }
+                return Ok((new_pos, func_stmt));
+            } else if let Some(Token::Keyword(Keyword::Async)) = self.tokens.get(current_position) {
+                let (new_pos, mut func_stmt) =
+                    self.parse_async_function_statement(current_position)?;
+                if let Statement::Function(ref mut func) = func_stmt {
+                    func.attributes = attributes;
+                    func.exported = true;
+                }
+                return Ok((new_pos, func_stmt));
+            } else if let Some(Token::Keyword(Keyword::Service)) = self.tokens.get(current_position) {
+                let (new_pos, service_stmt) =
+                    self.parse_service_statement_with_attributes(current_position, attributes, true)?;
+                return Ok((new_pos, service_stmt));
+            } else {
+                let expected = vec!["function declaration", "service declaration"];
+                return Err(self.error_unexpected_token(current_position, &expected));
+            }
+        }
+
         // Check for attributes first
         if let Some(Token::Punctuation(Punctuation::At)) = self.tokens.get(position) {
             // Attributes can appear before function or service declarations
@@ -265,13 +308,23 @@ impl Parser {
             } else if let Some(Token::Keyword(Keyword::Service)) = self.tokens.get(current_position)
             {
                 let (new_pos, service_stmt) =
-                    self.parse_service_statement_with_attributes(current_position, attributes)?;
+                    self.parse_service_statement_with_attributes(current_position, attributes, false)?;
                 return Ok((new_pos, service_stmt));
             } else {
                 // Get the actual token for better error reporting
                 let expected = vec!["function declaration", "service declaration"];
                 return Err(self.error_unexpected_token(current_position, &expected));
             }
+        }
+
+        // Import is top-level only (M1: module system)
+        if depth == 0
+            && matches!(
+                self.tokens.get(position),
+                Some(Token::Keyword(Keyword::Import))
+            )
+        {
+            return self.parse_import_statement(position);
         }
 
         if let Some(Token::Keyword(Keyword::Let)) = self.tokens.get(position) {
@@ -392,6 +445,67 @@ impl Parser {
             &Token::Punctuation(Punctuation::Semicolon),
         )?;
         Ok((new_position, Statement::Return(ReturnStatement { value })))
+    }
+
+    /// Parse top-level import: `import <path>;` or `import <path> as <alias>;`
+    /// Path is either an identifier path (e.g. stdlib::chain) or a string literal (e.g. "./mymod.dal", "pkg").
+    fn parse_import_statement(
+        &mut self,
+        position: usize,
+    ) -> Result<(usize, Statement), ParserError> {
+        use crate::lexer::tokens::Literal;
+        let mut current_position = position + 1; // consume 'import'
+
+        let path = if let Some(Token::Literal(Literal::String(s))) =
+            self.tokens.get(current_position)
+        {
+            current_position += 1;
+            s.clone()
+        } else if let Some(Token::Identifier(first)) = self.tokens.get(current_position) {
+            let mut parts = vec![first.clone()];
+            current_position += 1;
+            while current_position + 1 < self.tokens.len() {
+                if !matches!(
+                    self.tokens.get(current_position),
+                    Some(Token::Punctuation(Punctuation::DoubleColon))
+                ) {
+                    break;
+                }
+                let seg = match self.get_identifier_or_keyword_string_at(current_position + 1) {
+                    Some(s) => s,
+                    None => break,
+                };
+                parts.push(seg);
+                current_position += 2;
+            }
+            parts.join("::")
+        } else {
+            let (line, _) = self.get_token_position(current_position);
+            return Err(ParserError::SemanticError {
+                message: "import expects a path: string literal (e.g. \"./mymod.dal\") or identifier path (e.g. stdlib::chain)".to_string(),
+                line,
+                context: ErrorContext::new(),
+            });
+        };
+
+        let alias = if let Some(Token::Keyword(Keyword::As)) = self.tokens.get(current_position) {
+            current_position += 1;
+            let (new_position, name) = self.expect_identifier_or_keyword(current_position)?;
+            current_position = new_position;
+            Some(name)
+        } else {
+            None
+        };
+
+        let (new_position, _) = self.expect_token(
+            current_position,
+            &Token::Punctuation(Punctuation::Semicolon),
+        )?;
+
+        Ok((
+            new_position,
+            Statement::Import(ImportStatement { path, alias }),
+        ))
     }
 
     fn parse_block_statement(
@@ -1243,6 +1357,7 @@ impl Parser {
                 body,
                 attributes: Vec::new(),
                 is_async: false,
+                exported: false,
             }),
         ))
     }
@@ -1302,6 +1417,7 @@ impl Parser {
                 body,
                 attributes: Vec::new(),
                 is_async: true,
+                exported: false,
             }),
         ))
     }
@@ -1996,24 +2112,24 @@ impl Parser {
     fn parse_attribute(&mut self, position: usize) -> Result<(usize, Attribute), ParserError> {
         let mut current_position = position + 1; // consume '@'
 
-        // Parse attribute name (can be identifier or keyword)
-        let name = if let Some(Token::Identifier(name)) = self.tokens.get(current_position) {
+        // Parse attribute name (can be identifier or keyword). Store with leading @ so required_attributes match.
+        let name = if let Some(Token::Identifier(n)) = self.tokens.get(current_position) {
             let (new_position, _) = self.expect_identifier(current_position)?;
             current_position = new_position;
-            name.clone()
+            format!("@{}", n)
         } else if let Some(Token::Keyword(keyword)) = self.tokens.get(current_position) {
             let (new_position, _) =
                 self.expect_token(current_position, &Token::Keyword(keyword.clone()))?;
             current_position = new_position;
-            // Convert keyword to string representation
-            match keyword {
+            let raw = match keyword {
                 Keyword::Txn => "txn".to_string(),
                 Keyword::Secure => "secure".to_string(),
                 Keyword::Limit => "limit".to_string(),
                 Keyword::Trust => "trust".to_string(),
                 Keyword::Chain => "chain".to_string(),
                 _ => format!("{:?}", keyword).to_lowercase(),
-            }
+            };
+            format!("@{}", raw)
         } else {
             let (line, column) = self.get_token_position(current_position);
             return Err(ParserError::unexpected_token(
@@ -2498,11 +2614,12 @@ impl Parser {
         Ok((new_position, MatchPattern::Identifier(identifier)))
     }
 
-    // NEW: Service statement parsing with pre-parsed attributes
+    // NEW: Service statement parsing with pre-parsed attributes (M5: exported flag)
     fn parse_service_statement_with_attributes(
         &mut self,
         position: usize,
         pre_parsed_attributes: Vec<Attribute>,
+        exported: bool,
     ) -> Result<(usize, Statement), ParserError> {
         // Expect 'service' keyword
         let (new_position, _) = self.expect_token(position, &Token::Keyword(Keyword::Service))?;
@@ -2650,6 +2767,7 @@ impl Parser {
             methods,
             events,
             compilation_target,
+            exported,
         };
 
         // Validate target constraints if compilation target is specified
@@ -2812,6 +2930,7 @@ impl Parser {
             methods,
             events,
             compilation_target,
+            exported: false,
         };
 
         // Validate target constraints if compilation target is specified
@@ -3058,7 +3177,12 @@ impl Parser {
         &mut self,
         position: usize,
     ) -> Result<(usize, CompilationTargetInfo), ParserError> {
-        let mut current_position = position + 1; // consume '@compile_target'
+        let mut current_position = position + 1; // consume '@'
+        let (new_position, _) = self.expect_token(
+            current_position,
+            &Token::Keyword(Keyword::CompileTarget),
+        )?;
+        current_position = new_position; // consume 'compile_target'
 
         // Expect opening parenthesis
         let (new_position, _) = self.expect_token(
@@ -3269,6 +3393,9 @@ impl Parser {
                     out.extend(self.collect_namespaces_from_block(default_body));
                 }
             }
+            Statement::Import(_) => {
+                // Import path does not contribute namespace calls in this pass
+            }
         }
         out
     }
@@ -3285,7 +3412,7 @@ impl Parser {
         if let Some(ref target_info) = service.compilation_target {
             let constraint = &target_info.constraints;
 
-            // Check required attributes
+            // Check required attributes (attr.name stored with @ e.g. "@native")
             let mut found_required_attrs = Vec::new();
             for attr in &service.attributes {
                 if constraint.required_attributes.contains(&attr.name) {
@@ -3348,10 +3475,10 @@ impl Parser {
         // Collect attribute names for compatibility checks
         let attr_names: Vec<&str> = service.attributes.iter().map(|a| a.name.as_str()).collect();
 
-        let has_trust = attr_names.contains(&"trust");
-        let has_chain = attr_names.contains(&"chain");
-        let has_secure = attr_names.contains(&"secure");
-        let has_public = attr_names.contains(&"public");
+        let has_trust = attr_names.contains(&"@trust");
+        let has_chain = attr_names.contains(&"@chain");
+        let has_secure = attr_names.contains(&"@secure");
+        let has_public = attr_names.contains(&"@public");
 
         // Rule 1: @trust requires @chain (security-critical)
         if has_trust && !has_chain {
@@ -3381,7 +3508,7 @@ impl Parser {
 
         // Rule 3: Validate trust model values
         for attr in &service.attributes {
-            if attr.name == "trust" {
+            if attr.name == "@trust" {
                 if let Some(Expression::Literal(Literal::String(model))) = attr.parameters.first() {
                     let valid_models = ["hybrid", "centralized", "decentralized", "trustless"];
                     if !valid_models.contains(&model.as_str()) {
@@ -3399,7 +3526,7 @@ impl Parser {
             }
 
             // Rule 4: Validate chain identifiers
-            if attr.name == "chain" {
+            if attr.name == "@chain" {
                 for param in &attr.parameters {
                     if let Expression::Literal(Literal::String(chain)) = param {
                         let valid_chains = [
@@ -3437,8 +3564,8 @@ impl Parser {
             let func_attr_names: Vec<&str> =
                 method.attributes.iter().map(|a| a.name.as_str()).collect();
 
-            let func_has_secure = func_attr_names.contains(&"secure");
-            let func_has_public = func_attr_names.contains(&"public");
+            let func_has_secure = func_attr_names.contains(&"@secure");
+            let func_has_public = func_attr_names.contains(&"@public");
 
             if func_has_secure && func_has_public {
                 // Try to get line number for the function
@@ -3521,6 +3648,66 @@ impl Parser {
         }
     }
 
+    /// Returns the string value of the token at position if it is an Identifier or Keyword (for import path segments).
+    fn get_identifier_or_keyword_string_at(&self, position: usize) -> Option<String> {
+        match self.tokens.get(position) {
+            Some(Token::Identifier(s)) => Some(s.clone()),
+            Some(Token::Keyword(k)) => Some(self.keyword_to_string(k)),
+            _ => None,
+        }
+    }
+
+    fn keyword_to_string(&self, k: &Keyword) -> String {
+        match k {
+            Keyword::Service => "service".to_string(),
+            Keyword::Ai => "ai".to_string(),
+            Keyword::Chain => "chain".to_string(),
+            Keyword::Mobile => "mobile".to_string(),
+            Keyword::Desktop => "desktop".to_string(),
+            Keyword::Iot => "iot".to_string(),
+            Keyword::Persistent => "persistent".to_string(),
+            Keyword::Cached => "cached".to_string(),
+            Keyword::Versioned => "versioned".to_string(),
+            Keyword::Deprecated => "deprecated".to_string(),
+            Keyword::CompileTarget => "compile_target".to_string(),
+            Keyword::Interface => "interface".to_string(),
+            Keyword::Txn => "txn".to_string(),
+            Keyword::Secure => "secure".to_string(),
+            Keyword::Limit => "limit".to_string(),
+            Keyword::Trust => "trust".to_string(),
+            Keyword::Import => "import".to_string(),
+            Keyword::Export => "export".to_string(),
+            Keyword::As => "as".to_string(),
+            Keyword::Private => "private".to_string(),
+            Keyword::Audit => "audit".to_string(),
+            Keyword::With => "with".to_string(),
+            Keyword::Finally => "finally".to_string(),
+            Keyword::Await => "await".to_string(),
+            Keyword::Async => "async".to_string(),
+            Keyword::Result => "Result".to_string(),
+            Keyword::Option => "Option".to_string(),
+            Keyword::Some => "Some".to_string(),
+            Keyword::None => "None".to_string(),
+            Keyword::Ok => "Ok".to_string(),
+            Keyword::Err => "Err".to_string(),
+            Keyword::List => "List".to_string(),
+            Keyword::Map => "Map".to_string(),
+            Keyword::Set => "Set".to_string(),
+            Keyword::Generic => "Generic".to_string(),
+            Keyword::Box => "Box".to_string(),
+            Keyword::Ref => "ref".to_string(),
+            Keyword::Mut => "mut".to_string(),
+            Keyword::Const => "const".to_string(),
+            Keyword::Static => "static".to_string(),
+            Keyword::Extern => "extern".to_string(),
+            Keyword::Crate => "crate".to_string(),
+            Keyword::Super => "super".to_string(),
+            Keyword::Self_ => "self".to_string(),
+            Keyword::SelfType => "Self".to_string(),
+            _ => format!("{:?}", k).to_lowercase(),
+        }
+    }
+
     fn expect_identifier_or_keyword(
         &self,
         position: usize,
@@ -3528,55 +3715,7 @@ impl Parser {
         if let Some(Token::Identifier(name)) = self.tokens.get(position) {
             Ok((position + 1, name.clone()))
         } else if let Some(Token::Keyword(keyword)) = self.tokens.get(position) {
-            // Convert keyword to string representation
-            let name = match keyword {
-                Keyword::Service => "service".to_string(),
-                Keyword::Ai => "ai".to_string(),
-                Keyword::Chain => "chain".to_string(),
-                Keyword::Mobile => "mobile".to_string(),
-                Keyword::Desktop => "desktop".to_string(),
-                Keyword::Iot => "iot".to_string(),
-                Keyword::Persistent => "persistent".to_string(),
-                Keyword::Cached => "cached".to_string(),
-                Keyword::Versioned => "versioned".to_string(),
-                Keyword::Deprecated => "deprecated".to_string(),
-                Keyword::CompileTarget => "compile_target".to_string(),
-                Keyword::Interface => "interface".to_string(),
-                Keyword::Txn => "txn".to_string(),
-                Keyword::Secure => "secure".to_string(),
-                Keyword::Limit => "limit".to_string(),
-                Keyword::Trust => "trust".to_string(),
-                Keyword::Import => "import".to_string(),
-                Keyword::Export => "export".to_string(),
-                Keyword::As => "as".to_string(),
-                Keyword::Private => "private".to_string(),
-                Keyword::Audit => "audit".to_string(),
-                Keyword::With => "with".to_string(),
-                Keyword::Finally => "finally".to_string(),
-                Keyword::Await => "await".to_string(),
-                Keyword::Async => "async".to_string(),
-                Keyword::Result => "Result".to_string(),
-                Keyword::Option => "Option".to_string(),
-                Keyword::Some => "Some".to_string(),
-                Keyword::None => "None".to_string(),
-                Keyword::Ok => "Ok".to_string(),
-                Keyword::Err => "Err".to_string(),
-                Keyword::List => "List".to_string(),
-                Keyword::Map => "Map".to_string(),
-                Keyword::Set => "Set".to_string(),
-                Keyword::Generic => "Generic".to_string(),
-                Keyword::Box => "Box".to_string(),
-                Keyword::Ref => "ref".to_string(),
-                Keyword::Mut => "mut".to_string(),
-                Keyword::Const => "const".to_string(),
-                Keyword::Static => "static".to_string(),
-                Keyword::Extern => "extern".to_string(),
-                Keyword::Crate => "crate".to_string(),
-                Keyword::Super => "super".to_string(),
-                Keyword::Self_ => "self".to_string(),
-                Keyword::SelfType => "Self".to_string(),
-                _ => format!("{:?}", keyword).to_lowercase(),
-            };
+            let name = self.keyword_to_string(keyword);
             Ok((position + 1, name))
         } else {
             let (line, column) = self.get_token_position(position);

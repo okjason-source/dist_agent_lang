@@ -94,6 +94,8 @@ pub struct UserFunction {
     pub body: BlockStatement,
     /// Attributes from DAL source (e.g. @route("GET", "/api/users"), @secure)
     pub attributes: Vec<crate::parser::ast::Attribute>,
+    /// M5: true when declared with `export fn ...` (included in module exports when explicit exports used).
+    pub exported: bool,
 }
 
 pub struct Runtime {
@@ -137,6 +139,14 @@ pub struct Runtime {
     pub mock_registry: Option<MockRegistry>,
     /// Current statement span for runtime error location (P3).
     current_location: Option<SourceLocation>,
+    /// M4: Stdlib namespace aliases (e.g. "ch" -> "chain" for import stdlib::chain as ch).
+    stdlib_aliases: HashMap<String, String>,
+    /// M4: Loaded module exports (alias -> scope + functions + services).
+    module_exports: HashMap<String, ModuleExports>,
+    /// M4: Resolved imports for the current program (set at execute_program start).
+    resolved_imports: Option<Vec<crate::module_resolver::ResolvedImportEntry>>,
+    /// M4: Index into resolved_imports for the next import to process.
+    current_import_index: usize,
 }
 
 // NEW: Service instance structure
@@ -147,6 +157,47 @@ pub struct ServiceInstance {
     pub methods: Vec<crate::parser::ast::FunctionStatement>,
     pub events: Vec<crate::parser::ast::EventDeclaration>,
     pub attributes: Vec<String>,
+    /// M5: true when declared with `export service ...` (included in module exports when explicit exports used).
+    pub exported: bool,
+}
+
+/// M4: Exports from a loaded module (scope + functions + services) for alias::name() dispatch.
+#[derive(Clone)]
+pub struct ModuleExports {
+    pub scope: Scope,
+    pub user_functions: HashMap<String, UserFunction>,
+    pub services: HashMap<String, ServiceInstance>,
+}
+
+/// M5: Build ModuleExports from a runtime; if any item is explicitly exported, only include those.
+fn build_module_exports(runtime: &Runtime) -> ModuleExports {
+    let use_explicit = runtime.user_functions.values().any(|u| u.exported)
+        || runtime.services.values().any(|s| s.exported);
+    let user_functions = if use_explicit {
+        runtime
+            .user_functions
+            .iter()
+            .filter(|(_, u)| u.exported)
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
+    } else {
+        runtime.user_functions.clone()
+    };
+    let services = if use_explicit {
+        runtime
+            .services
+            .iter()
+            .filter(|(_, s)| s.exported)
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
+    } else {
+        runtime.services.clone()
+    };
+    ModuleExports {
+        scope: runtime.scope.clone(),
+        user_functions,
+        services,
+    }
 }
 
 // NEW: Service context for trust validation
@@ -200,6 +251,10 @@ impl Runtime {
             return_pending: None,
             mock_registry: None, // Mock registry for testing (optional)
             current_location: None,
+            stdlib_aliases: HashMap::new(),
+            module_exports: HashMap::new(),
+            resolved_imports: None,
+            current_import_index: 0,
         };
 
         // Register built-in functions
@@ -237,6 +292,10 @@ impl Runtime {
             return_pending: None,
             mock_registry: None, // Mock registry for testing (optional)
             current_location: None,
+            stdlib_aliases: HashMap::new(),
+            module_exports: HashMap::new(),
+            resolved_imports: None,
+            current_import_index: 0,
         };
 
         // Register built-in functions
@@ -364,19 +423,22 @@ impl Runtime {
     pub fn execute_program(
         &mut self,
         program: Program,
+        resolved_imports: Option<&[crate::module_resolver::ResolvedImportEntry]>,
     ) -> Result<Option<Value>, RuntimeErrorWithContext> {
         use std::time::{Duration, Instant};
 
         const MAX_EXECUTION_TIME: Duration = Duration::from_secs(10);
         let start_time = Instant::now();
         self.execution_start = Some(start_time);
+        self.resolved_imports = resolved_imports.map(|v| v.to_vec());
+        self.current_import_index = 0;
 
         // Phase 4: Check for MEV attacks before execution (only if @advanced_security is present)
         // Check if any service has @advanced_security attribute
         let has_advanced_security = program.statements.iter().any(|stmt| {
             if let crate::parser::ast::Statement::Service(service) = stmt {
                 service.attributes.iter().any(|attr| {
-                    attr.name == "advanced_security" || attr.name == "advanced-security"
+                    attr.name == "@advanced_security" || attr.name == "@advanced-security"
                 })
             } else {
                 false
@@ -1029,7 +1091,7 @@ impl Runtime {
                 });
             }
             // @txn attribute: wrap execution in begin/commit or rollback
-            let has_txn = user_func.attributes.iter().any(|a| a.name == "txn");
+            let has_txn = user_func.attributes.iter().any(|a| a.name == "@txn");
             let prev_tx = self.current_transaction_id.clone();
             if has_txn {
                 let (level, timeout) = self.parse_txn_attribute(&user_func);
@@ -1103,6 +1165,66 @@ impl Runtime {
         result
     }
 
+    /// M4: Call a function from a loaded module (alias::function_name).
+    fn call_module_function(
+        &mut self,
+        exports: &ModuleExports,
+        function_name: &str,
+        args: &[Value],
+    ) -> Result<Value, RuntimeError> {
+        let user_func = exports
+            .user_functions
+            .get(function_name)
+            .ok_or_else(|| {
+                RuntimeError::General(format!(
+                    "module has no function '{}'",
+                    function_name
+                ))
+            })?;
+        if args.len() != user_func.parameters.len() {
+            return Err(RuntimeError::ArgumentCountMismatch {
+                expected: user_func.parameters.len(),
+                got: args.len(),
+            });
+        }
+        let call_frame = CallFrame {
+            scope: self.scope.clone(),
+            function_name: Some(format!("{}::{}", "module", function_name)),
+        };
+        self.call_stack.push(call_frame);
+        let saved_scope = std::mem::replace(&mut self.scope, exports.scope.clone());
+        for (param, arg) in user_func.parameters.iter().zip(args.iter()) {
+            self.scope.set(param.clone(), arg.clone());
+        }
+        let mut result = Value::Null;
+        self.return_pending = None;
+        let mut exec_error = None::<RuntimeError>;
+        for stmt in &user_func.body.statements {
+            match self.execute_statement(stmt) {
+                Ok(value) => {
+                    result = value;
+                    if self.return_pending.is_some() {
+                        break;
+                    }
+                }
+                Err(e) => {
+                    exec_error = Some(e);
+                    self.return_pending = None;
+                    break;
+                }
+            }
+        }
+        self.return_pending = None;
+        self.scope = saved_scope;
+        if let Some(frame) = self.call_stack.pop() {
+            self.scope = frame.scope;
+        }
+        if let Some(e) = exec_error {
+            return Err(e);
+        }
+        Ok(result)
+    }
+
     fn call_namespace_function(
         &mut self,
         name: &str,
@@ -1118,6 +1240,15 @@ impl Runtime {
 
         let namespace = parts[0];
         let function_name = parts[1];
+
+        // M4: Resolve stdlib alias (e.g. import stdlib::chain as ch -> ch::deploy => chain::deploy)
+        // Use owned String so we don't hold &self.stdlib_aliases across mutable calls.
+        let namespace_resolved: String = self
+            .stdlib_aliases
+            .get(namespace)
+            .cloned()
+            .unwrap_or_else(|| namespace.to_string());
+        let namespace = namespace_resolved.as_str();
 
         // Check for mock interception first (before any other logic)
         // The mutable borrow is scoped to this block and released before normal execution
@@ -1153,6 +1284,11 @@ impl Runtime {
         } // Registry borrow released here - normal execution can proceed
 
         // Normal execution path (no active borrows on mock_registry)
+
+        // M4: Dispatch to loaded module (alias::function_name)
+        if let Some(exports) = self.module_exports.get(namespace).cloned() {
+            return self.call_module_function(&exports, function_name, args);
+        }
 
         // Check if namespace is a registered service name
         if self.services.contains_key(namespace) {
@@ -1216,6 +1352,7 @@ impl Runtime {
                 methods: service_template.methods.clone(),
                 events: service_template.events.clone(),
                 attributes: service_template.attributes.clone(),
+                exported: service_template.exported,
             };
 
             // Store the new instance with a unique identifier
@@ -1674,6 +1811,7 @@ impl Runtime {
                     methods: service_template.methods.clone(),
                     events: service_template.events.clone(),
                     attributes: service_template.attributes.clone(),
+                    exported: service_template.exported,
                 };
 
                 // Store the new instance with a unique identifier
@@ -2806,9 +2944,142 @@ impl Runtime {
                     parameters: parameters.clone(),
                     body: func_stmt.body.clone(),
                     attributes: func_stmt.attributes.clone(),
+                    exported: func_stmt.exported,
                 };
                 self.user_functions
                     .insert(func_stmt.name.clone(), user_func);
+                Ok(StatementOutcome::value(Value::Null))
+            }
+            crate::parser::ast::Statement::Import(imp) => {
+                // M4: Load and bind when we have resolved imports
+                if let Some(ref resolved) = self.resolved_imports {
+                    if self.current_import_index < resolved.len() {
+                        let entry = &resolved[self.current_import_index];
+                        self.current_import_index += 1;
+                        match &entry.resolved {
+                            crate::module_resolver::ResolvedImport::Stdlib(ns) => {
+                                let alias = imp
+                                    .alias
+                                    .as_deref()
+                                    .unwrap_or(ns);
+                                self.stdlib_aliases
+                                    .insert(alias.to_string(), ns.clone());
+                            }
+                            crate::module_resolver::ResolvedImport::RelativeFile(path) => {
+                                let source = std::fs::read_to_string(path).map_err(|e| {
+                                    RuntimeError::General(format!(
+                                        "failed to load module {}: {}",
+                                        path.display(),
+                                        e
+                                    ))
+                                })?;
+                                let dep_program = crate::parse_source(&source).map_err(|e| {
+                                    RuntimeError::General(format!(
+                                        "failed to parse module {}: {}",
+                                        path.display(),
+                                        e
+                                    ))
+                                })?;
+                                // Resolve nested imports for this module
+                                let dep_resolved = crate::ModuleResolver::new()
+                                    .resolve_program_with_cycles(
+                                        &dep_program,
+                                        Some(path.as_path()),
+                                        |s| crate::parse_source(s).map_err(|e| e.to_string()),
+                                    )
+                                    .map_err(|e| {
+                                        RuntimeError::General(format!(
+                                            "module {}: {}",
+                                            path.display(),
+                                            e
+                                        ))
+                                    })?;
+                                let mut mod_runtime = Runtime::new();
+                                mod_runtime.execute_program(
+                                    dep_program,
+                                    Some(dep_resolved.as_slice()),
+                                ).map_err(|e| {
+                                    RuntimeError::General(format!(
+                                        "module {} execution: {}",
+                                        path.display(),
+                                        e.inner
+                                    ))
+                                })?;
+                                let alias = imp.alias.as_deref().unwrap_or("module");
+                                let exports = build_module_exports(&mod_runtime);
+                                self.module_exports
+                                    .insert(alias.to_string(), exports);
+                            }
+                            crate::module_resolver::ResolvedImport::Package { name: _pkg_name, path: package_root } => {
+                                // M3: Load package entry (main.dal or lib.dal) and run same as RelativeFile
+                                let main_dal = package_root.join("main.dal");
+                                let lib_dal = package_root.join("lib.dal");
+                                let entry_path: std::path::PathBuf = if main_dal.exists() {
+                                    main_dal.canonicalize().map_err(|e| {
+                                        RuntimeError::General(format!(
+                                            "package main.dal: {}",
+                                            e
+                                        ))
+                                    })?
+                                } else if lib_dal.exists() {
+                                    lib_dal.canonicalize().map_err(|e| {
+                                        RuntimeError::General(format!(
+                                            "package lib.dal: {}",
+                                            e
+                                        ))
+                                    })?
+                                } else {
+                                    return Err(RuntimeError::General(format!(
+                                        "package at {} has no main.dal or lib.dal",
+                                        package_root.display()
+                                    )));
+                                };
+                                let source = std::fs::read_to_string(&entry_path).map_err(|e| {
+                                    RuntimeError::General(format!(
+                                        "failed to load package {}: {}",
+                                        entry_path.display(),
+                                        e
+                                    ))
+                                })?;
+                                let dep_program = crate::parse_source(&source).map_err(|e| {
+                                    RuntimeError::General(format!(
+                                        "failed to parse package {}: {}",
+                                        entry_path.display(),
+                                        e
+                                    ))
+                                })?;
+                                let dep_resolved = crate::ModuleResolver::new()
+                                    .resolve_program_with_cycles(
+                                        &dep_program,
+                                        Some(entry_path.as_path()),
+                                        |s| crate::parse_source(s).map_err(|e| e.to_string()),
+                                    )
+                                    .map_err(|e| {
+                                        RuntimeError::General(format!(
+                                            "package {}: {}",
+                                            entry_path.display(),
+                                            e
+                                        ))
+                                    })?;
+                                let mut mod_runtime = Runtime::new();
+                                mod_runtime.execute_program(
+                                    dep_program,
+                                    Some(dep_resolved.as_slice()),
+                                ).map_err(|e| {
+                                    RuntimeError::General(format!(
+                                        "package {} execution: {}",
+                                        entry_path.display(),
+                                        e.inner
+                                    ))
+                                })?;
+                                let alias = imp.alias.as_deref().unwrap_or("module");
+                                let exports = build_module_exports(&mod_runtime);
+                                self.module_exports
+                                    .insert(alias.to_string(), exports);
+                            }
+                        }
+                    }
+                }
                 Ok(StatementOutcome::value(Value::Null))
             }
             crate::parser::ast::Statement::Service(service_stmt) => self
@@ -3044,6 +3315,10 @@ impl Runtime {
                                 test_tests: Vec::new(),
                                 return_pending: None,
                                 current_location: None,
+                                stdlib_aliases: HashMap::new(),
+                                module_exports: HashMap::new(),
+                                resolved_imports: None,
+                                current_import_index: 0,
                             };
 
                             match catch_runtime.execute_statement_internal(
@@ -7359,11 +7634,41 @@ impl Runtime {
         }
     }
 
+    /// CT0: Lightweight runtime check that required attributes for @compile_target are present.
+    /// Parse-time validation is the main enforcement; this is defense-in-depth.
+    fn validate_compile_target(&self, service_stmt: &ServiceStatement) -> Result<(), RuntimeError> {
+        let target_info = match &service_stmt.compilation_target {
+            Some(info) => info,
+            None => return Ok(()),
+        };
+        let constraint = &target_info.constraints;
+        let attr_names: std::collections::HashSet<String> = service_stmt
+            .attributes
+            .iter()
+            .map(|a| a.name.clone())
+            .collect();
+        for required in &constraint.required_attributes {
+            let name_without_at = required.strip_prefix('@').unwrap_or(required);
+            if attr_names.contains(required) || attr_names.contains(name_without_at) {
+                continue;
+            }
+            return Err(RuntimeError::General(format!(
+                "Service '{}' has @compile_target({:?}) but is missing required attribute: {}",
+                service_stmt.name,
+                target_info.target,
+                required
+            )));
+        }
+        Ok(())
+    }
+
     // NEW: Service execution method
     fn execute_service_statement(
         &mut self,
         service_stmt: &ServiceStatement,
     ) -> Result<Value, RuntimeError> {
+        self.validate_compile_target(service_stmt)?;
+
         // Build attribute strings for context
         let attr_strings: Vec<String> = service_stmt
             .attributes
@@ -7389,6 +7694,7 @@ impl Runtime {
             methods: service_stmt.methods.clone(),
             events: service_stmt.events.clone(),
             attributes: attr_strings.clone(),
+            exported: service_stmt.exported,
         };
 
         // Initialize fields
@@ -7502,8 +7808,8 @@ impl Runtime {
                 let service_attrs = service.attributes.clone();
 
                 // Check function-level attributes first (override service-level)
-                let func_has_secure = method.attributes.iter().any(|attr| attr.name == "secure");
-                let func_has_public = method.attributes.iter().any(|attr| attr.name == "public");
+                let func_has_secure = method.attributes.iter().any(|attr| attr.name == "@secure");
+                let func_has_public = method.attributes.iter().any(|attr| attr.name == "@public");
 
                 // Check service-level attributes
                 let service_has_secure = service_attrs.iter().any(|attr| attr == "@secure");
@@ -8188,7 +8494,7 @@ impl Runtime {
         user_func: &UserFunction,
     ) -> (crate::runtime::transaction::IsolationLevel, Option<u64>) {
         use crate::runtime::transaction::IsolationLevel;
-        let attr = match user_func.attributes.iter().find(|a| a.name == "txn") {
+        let attr = match user_func.attributes.iter().find(|a| a.name == "@txn") {
             None => return (IsolationLevel::ReadCommitted, Some(30000)),
             Some(a) => a,
         };

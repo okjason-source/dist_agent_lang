@@ -253,7 +253,18 @@ fn main() {
             }
             handle_scaffold_command(&a);
         }
-        Commands::Build { rest } => handle_build_command(rest),
+        Commands::Build {
+            entry,
+            target,
+            output,
+            rest: _,
+        } => handle_build_command(entry.as_deref(), target.as_deref(), output.as_deref()),
+        Commands::Compile {
+            entry,
+            target,
+            output,
+            rest: _,
+        } => handle_build_command(entry.as_deref(), target.as_deref(), output.as_deref()),
         Commands::Clean { rest } => handle_clean_command(rest),
         Commands::Dist { rest } => handle_dist_command(rest),
         Commands::Bond { subcommand, rest } => {
@@ -368,9 +379,36 @@ fn run_dal_file(filename: &str) {
         );
     }
 
-    // Execute
+    // M2/M4: Resolve imports when running from a file; pass to runtime for loading
+    let has_imports = ast.statements.iter().any(|s| matches!(s, Statement::Import(_)));
+    // Execute (M4: pass resolved imports when present so runtime can load modules)
     let mut runtime = Runtime::new();
-    match runtime.execute_program(ast) {
+    let exec_result = if has_imports {
+        let entry_path = std::path::Path::new(filename);
+        let entry_dir = entry_path.parent().unwrap_or_else(|| std::path::Path::new("."));
+        let manifest_path = entry_dir.join("dal.toml");
+        let mut resolver = dist_agent_lang::ModuleResolver::new()
+            .with_root_dir(entry_dir.to_path_buf());
+        if manifest_path.exists() {
+            if let Ok(deps) = dist_agent_lang::manifest::load_resolved_deps(&manifest_path) {
+                resolver = resolver.with_dependencies(deps);
+            }
+        }
+        let parse_fn = |s: &str| {
+            dist_agent_lang::parse_source(s).map_err(|e| e.to_string())
+        };
+        let resolved = match resolver.resolve_program_with_cycles(&ast, Some(entry_path), parse_fn) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("❌ Import resolution failed: {}", e);
+                std::process::exit(1);
+            }
+        };
+        runtime.execute_program(ast, Some(&resolved))
+    } else {
+        runtime.execute_program(ast, None)
+    };
+    match exec_result {
         Ok(result) => {
             println!("✅ Execution successful!");
             if let Some(value) = result {
@@ -458,7 +496,7 @@ fn run_dal_tests(path: &str) {
             .iter()
             .filter_map(|stmt| {
                 if let Statement::Function(func) = stmt {
-                    let is_test = func.attributes.iter().any(|attr| attr.name == "test")
+                    let is_test = func.attributes.iter().any(|attr| attr.name == "@test")
                         || func.name.starts_with("test_");
                     if is_test {
                         Some(func.name.clone())
@@ -480,7 +518,7 @@ fn run_dal_tests(path: &str) {
 
         // Execute program to register functions, then run each test
         let mut runtime = Runtime::new();
-        if let Err(e) = runtime.execute_program(program) {
+        if let Err(e) = runtime.execute_program(program, None) {
             println!(
                 "   ❌ Runtime error during setup:\n{}\n",
                 format_runtime_error(&e, Some(test_file), Some(&content))
@@ -693,7 +731,7 @@ fn extract_routes_from_annotations(
     let mut routes = Vec::new();
     for (name, func) in user_functions {
         for attr in &func.attributes {
-            if attr.name == "route" && attr.parameters.len() == 2 {
+            if attr.name == "@route" && attr.parameters.len() == 2 {
                 // Extract method and path from string literal parameters
                 let method = match &attr.parameters[0] {
                     parser::ast::Expression::Literal(Literal::String(s)) => s.to_uppercase(),
@@ -1859,6 +1897,14 @@ fn format_statement(stmt: &Statement) -> String {
             result.push_str("}\n");
             result
         }
+        Statement::Import(import_stmt) => {
+            let alias = import_stmt
+                .alias
+                .as_ref()
+                .map(|a| format!(" as {}", a))
+                .unwrap_or_default();
+            format!("import {}{};\n", import_stmt.path, alias)
+        }
         _ => "// Unformatted statement\n".to_string(),
     }
 }
@@ -2740,7 +2786,7 @@ fn evaluate_repl_line(input: &str, runtime: &mut Runtime) -> Result<Option<Value
     let ast = parser.parse().map_err(|e| format!("Parse error: {}", e))?;
 
     // Execute
-    runtime.execute_program(ast).map_err(|e| e.to_string())
+    runtime.execute_program(ast, None).map_err(|e| e.to_string())
 }
 
 /// Watch DAL file and re-run on changes
@@ -2824,19 +2870,38 @@ fn add_package(package: &str) {
     }
 }
 
-/// Install dependencies from dal.toml
+/// Install dependencies from dal.toml (M3: resolve path deps, write dal.lock)
 fn install_dependencies() {
     println!("📦 Installing dependencies...");
 
-    // Check if dal.toml exists
-    if !std::path::Path::new("dal.toml").exists() {
+    let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    let manifest_path = cwd.join("dal.toml");
+
+    if !manifest_path.exists() {
         eprintln!("❌ No dal.toml found. Run '{} init' first.", binary_name());
         std::process::exit(1);
     }
 
-    // For now, just a placeholder
-    println!("   ℹ️  Package management coming soon!");
-    println!("   ✅ Dependencies would be installed here");
+    match dist_agent_lang::manifest::resolve_dependencies(&manifest_path) {
+        Ok(resolved) => {
+            if resolved.is_empty() {
+                println!("   No path dependencies in [dependencies] (version-only deps not fetched yet).");
+            } else {
+                if let Err(e) = dist_agent_lang::manifest::write_lockfile(&manifest_path, &resolved) {
+                    eprintln!("❌ Failed to write dal.lock: {}", e);
+                    std::process::exit(1);
+                }
+                println!("   ✅ Resolved {} path dependency(ies), wrote dal.lock", resolved.len());
+                for (name, path) in &resolved {
+                    println!("   - {} -> {}", name, path.display());
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("❌ {}", e);
+            std::process::exit(1);
+        }
+    }
 }
 
 // ============================================================================
@@ -2876,7 +2941,7 @@ fn run_benchmarks(file: Option<&str>, suite: Option<&str>) {
             let mut parser = Parser::new(tokens);
             let ast = parser.parse().map_err(|e| e.to_string())?;
             let mut runtime = Runtime::new();
-            runtime.execute_program(ast).map_err(|e| e.to_string())?;
+            runtime.execute_program(ast, None).map_err(|e| e.to_string())?;
             Ok(())
         });
 
@@ -3008,7 +3073,7 @@ fn profile_dal_file(filename: &str, memory_tracking: bool) {
     profiler.profile_scope("execution", || {
         let mut runtime = Runtime::new();
         runtime
-            .execute_program(ast)
+            .execute_program(ast, None)
             .map_err(|e| {
                 eprintln!(
                     "❌ Execution failed:\n{}",
@@ -4845,8 +4910,100 @@ fn visit_dal_files(
     Ok(count)
 }
 
-fn handle_build_command(_args: &[String]) {
+fn handle_build_command(entry: Option<&str>, target: Option<&str>, output: Option<&str>) {
     let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+
+    // CT1: If --target is set, run the compiler driver
+    if let Some(target_name) = target {
+        use dist_agent_lang::compile::{run_compile, CompileError};
+        use dist_agent_lang::lexer::tokens::CompilationTarget;
+
+        let target_enum = match CompilationTarget::from_string(target_name) {
+            Some(t) => t,
+            None => {
+                eprintln!(
+                    "❌ Unknown target '{}'. Use: blockchain, wasm, native, mobile, edge",
+                    target_name
+                );
+                std::process::exit(1);
+            }
+        };
+
+        let entry_path = match entry {
+            Some(f) => cwd.join(f),
+            None => {
+                // Default: main.dal or first .dal in cwd
+                let main = cwd.join("main.dal");
+                if main.exists() {
+                    main
+                } else {
+                    eprintln!(
+                        "❌ No entry file. Use '{} build <file.dal> --target {}' or create main.dal",
+                        binary_name(),
+                        target_name
+                    );
+                    std::process::exit(1);
+                }
+            }
+        };
+
+        if !entry_path.exists() {
+            eprintln!("❌ Entry file not found: {}", entry_path.display());
+            std::process::exit(1);
+        }
+
+        let source = match std::fs::read_to_string(&entry_path) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("❌ Failed to read {}: {}", entry_path.display(), e);
+                std::process::exit(1);
+            }
+        };
+
+        let output_dir = output
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| cwd.join("target").join("dal"));
+
+        match run_compile(
+            entry_path.clone(),
+            target_enum,
+            output_dir.clone(),
+            &source,
+        ) {
+            Ok(artifacts) => {
+                println!(
+                    "✅ Compiled {} service(s) to target '{}'",
+                    artifacts.service_names.len(),
+                    artifacts.target
+                );
+                if !artifacts.service_names.is_empty() {
+                    for n in &artifacts.service_names {
+                        println!("   - {}", n);
+                    }
+                }
+                if !artifacts.stub && !artifacts.artifact_paths.is_empty() {
+                    println!("   Artifacts:");
+                    for p in &artifacts.artifact_paths {
+                        println!("   - {}", p.display());
+                    }
+                }
+                println!("   Manifest: {}", output_dir.join("compile-manifest.json").display());
+            }
+            Err(e) => {
+                eprintln!("❌ Build failed: {}", e);
+                if let CompileError::CompilerNotFound { hint, .. } = &e {
+                    eprintln!("   {}", hint);
+                }
+                if let CompileError::Resolve(_) = &e {
+                    eprintln!("   Fix imports or run 'dal install' if using package dependencies.");
+                }
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
+
+    // No --target: legacy behavior (check dal.toml and validate DAL files)
     let dal_toml = cwd.join("dal.toml");
     if dal_toml.exists() {
         println!("🪩  Build");
@@ -4887,6 +5044,10 @@ fn handle_build_command(_args: &[String]) {
         println!("🔨 Build");
         println!(
             "   No dal.toml found. Run '{} init' or create dal.toml first.",
+            binary_name()
+        );
+        println!(
+            "   To compile to a target: {} build [file.dal] --target <blockchain|wasm|native|...> [--output dir]",
             binary_name()
         );
         println!(

@@ -282,7 +282,7 @@ fn test_ffi_integration_with_runtime() {
 
     // Parse and execute
     let program = dist_agent_lang::parse_source(source).unwrap();
-    let _result = runtime.execute_program(program);
+    let _result = runtime.execute_program(program, None);
 
     // Test FFI interface with runtime
     let config = FFIConfig::ffi_only();

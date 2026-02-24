@@ -36,6 +36,17 @@ pub enum Statement {
     Continue(ContinueStatement),
     Loop(LoopStatement),
     Match(MatchStatement),
+    /// Top-level only: `import <path>;` or `import <path> as <alias>;`
+    Import(ImportStatement),
+}
+
+/// `import <path>;` or `import <path> as <alias>;` — path is stdlib::name, relative path, or package name.
+#[derive(Debug, Clone)]
+pub struct ImportStatement {
+    /// Import path: e.g. "stdlib::chain", "./mymod.dal", "mypkg"
+    pub path: String,
+    /// Optional alias: name to bind in current scope (e.g. `as mymod`)
+    pub alias: Option<String>,
 }
 
 /// `while ( condition ) { body }`
@@ -119,6 +130,8 @@ pub struct FunctionStatement {
     pub body: BlockStatement,
     pub attributes: Vec<Attribute>,
     pub is_async: bool,
+    /// M5: true when declared with `export fn ...` (visible when module is imported).
+    pub exported: bool,
 }
 
 impl FunctionStatement {
@@ -135,6 +148,7 @@ impl FunctionStatement {
             body,
             attributes: Vec::new(),
             is_async: false,
+            exported: false,
         }
     }
 }
@@ -240,7 +254,7 @@ pub struct CompilationTargetInfo {
     pub validation_errors: Vec<String>,
 }
 
-// Extend ServiceStatement with compilation target
+// Extend ServiceStatement with compilation target and M5 export
 #[derive(Debug, Clone)]
 pub struct ServiceStatement {
     pub name: String,
@@ -249,6 +263,8 @@ pub struct ServiceStatement {
     pub methods: Vec<FunctionStatement>,
     pub events: Vec<EventDeclaration>,
     pub compilation_target: Option<CompilationTargetInfo>,
+    /// M5: true when declared with `export service ...` (visible when module is imported).
+    pub exported: bool,
 }
 
 #[derive(Debug, Clone)]

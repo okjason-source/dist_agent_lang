@@ -234,6 +234,7 @@ impl WarningPass {
                 }
             }
             Statement::Continue(ContinueStatement) => {}
+            Statement::Import(_) => {}
         }
     }
 

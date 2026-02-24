@@ -970,6 +970,7 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
+ "toml",
  "tower 0.4.13",
  "tower-http",
  "uuid 1.21.0",

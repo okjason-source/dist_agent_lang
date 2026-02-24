@@ -188,7 +188,7 @@ fn bench_runtime_variable_operations(c: &mut Criterion) {
     c.bench_function("runtime_variable_operations", |b| {
         b.iter(|| {
             let mut runtime = Runtime::new();
-            black_box(runtime.execute_program(black_box(program.clone())))
+            black_box(runtime.execute_program(black_box(program.clone()), None))
         })
     });
 }
@@ -211,7 +211,7 @@ fn bench_runtime_function_calls(c: &mut Criterion) {
     c.bench_function("runtime_function_calls", |b| {
         b.iter(|| {
             let mut runtime = Runtime::new();
-            black_box(runtime.execute_program(black_box(program.clone())))
+            black_box(runtime.execute_program(black_box(program.clone()), None))
         })
     });
 }
@@ -234,7 +234,7 @@ fn bench_runtime_control_flow(c: &mut Criterion) {
             c.bench_function("runtime_control_flow", |b| {
                 b.iter(|| {
                     let mut runtime = Runtime::new();
-                    black_box(runtime.execute_program(black_box(program.clone())))
+                    black_box(runtime.execute_program(black_box(program.clone()), None))
                 })
             });
         }

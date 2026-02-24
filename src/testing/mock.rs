@@ -485,7 +485,7 @@ impl MockRuntime {
         // Execute - Runtime will automatically check for mocks in call_function/call_namespace_function
         let result = self
             .runtime
-            .execute_program(program)
+            .execute_program(program, None)
             .map_err(|e| format!("Runtime error: {}", e));
 
         // Get the registry back from Runtime (with updated call counts from execution)

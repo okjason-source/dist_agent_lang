@@ -224,6 +224,75 @@ fn test_parser_multiple_variables() {
     assert!(program.statements.len() >= 3);
 }
 
+// ============================================
+// PARSER TESTS - IMPORT (M1: module system)
+// ============================================
+
+#[test]
+fn test_parser_import_stdlib_path() {
+    let code = "import stdlib::chain;";
+    let program = parse_source(code).unwrap();
+    assert_eq!(program.statements.len(), 1);
+    if let Statement::Import(imp) = &program.statements[0] {
+        assert_eq!(imp.path, "stdlib::chain");
+        assert!(imp.alias.is_none());
+    } else {
+        panic!("expected Statement::Import");
+    }
+}
+
+#[test]
+fn test_parser_import_string_path_with_alias() {
+    let code = r#"import "./mymod.dal" as mymod;"#;
+    let program = parse_source(code).unwrap();
+    assert_eq!(program.statements.len(), 1);
+    if let Statement::Import(imp) = &program.statements[0] {
+        assert_eq!(imp.path, "./mymod.dal");
+        assert_eq!(imp.alias.as_deref(), Some("mymod"));
+    } else {
+        panic!("expected Statement::Import");
+    }
+}
+
+#[test]
+fn test_parser_import_identifier_path_with_alias() {
+    let code = "import stdlib::chain as ch;";
+    let program = parse_source(code).unwrap();
+    assert_eq!(program.statements.len(), 1);
+    if let Statement::Import(imp) = &program.statements[0] {
+        assert_eq!(imp.path, "stdlib::chain");
+        assert_eq!(imp.alias.as_deref(), Some("ch"));
+    } else {
+        panic!("expected Statement::Import");
+    }
+}
+
+#[test]
+fn test_parser_import_inside_block_rejected() {
+    // Import is top-level only; inside a block it should not parse as import
+    let code = r#"fn f() { import "x"; }"#;
+    let result = parse_source(code);
+    if let Ok(program) = result {
+        assert_eq!(program.statements.len(), 1);
+        assert!(matches!(program.statements[0], Statement::Function(_)));
+    }
+}
+
+#[test]
+fn test_runtime_import_noop() {
+    // M1: Import at runtime is no-op; script should not crash
+    let code = "import stdlib::chain;";
+    let result = execute_source(code);
+    assert!(result.is_ok(), "script with only import should run (no-op): {:?}", result);
+}
+
+#[test]
+fn test_runtime_import_then_statement() {
+    let code = "import stdlib::chain;\nlet x = 1;";
+    let result = execute_source(code);
+    assert!(result.is_ok(), "import + let should run: {:?}", result);
+}
+
 #[test]
 fn test_parser_type_annotations() {
     let code = "let x: int = 42;";

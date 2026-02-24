@@ -52,18 +52,36 @@ Specifies the compilation target for the service.
 
 **Values:**
 - `"blockchain"` - Compile for blockchain deployment
-- `"webassembly"` - Compile to WebAssembly
+- `"webassembly"` - Compile to WebAssembly (also accepted: `"wasm"`)
 - `"native"` - Native binary compilation
 - `"mobile"` - Mobile app compilation
 - `"edge"` - Edge computing devices
 
+When `@compile_target` is present, the parser enforces **required attributes** and **forbidden operations** for that target. See [Compile targets (constraints)](#compile-targets-constraints) below.
+
 **Example:**
 ```rust
 @compile_target("blockchain")
+@secure
+@trust("hybrid")
 service SmartContract {
-    // Compiled as smart contract
+    // Compiled as smart contract; @secure and @trust required for blockchain
 }
 ```
+
+#### Compile targets (constraints)
+
+Each target defines required attributes (must appear on the service) and forbidden operations (stdlib namespaces that must not be used in service methods). The parser validates these at parse time; the runtime may re-check required attributes when the service is instantiated.
+
+| Target | Required attributes | Forbidden operations (namespaces / ops) |
+|--------|---------------------|-----------------------------------------|
+| **blockchain** | `@secure`, `@trust` | `web::http_request`, `web::websocket`, `desktop::window`, `mobile::notification`, `iot::sensor_read` |
+| **webassembly** | `@web` | `chain::transaction`, `chain::deploy`, `desktop::file_system`, `mobile::camera`, `iot::device_control` |
+| **native** | `@native` | `chain::transaction`, `mobile::touch_event`, `iot::sensor_read` |
+| **mobile** | `@mobile` | `chain::transaction`, `desktop::window`, `iot::device_control` |
+| **edge** | `@edge` | `chain::transaction`, `web::dom_manipulation`, `desktop::window`, `mobile::camera` |
+
+Allowed operations per target are defined in the implementation (`get_target_constraints()`); only the forbidden set and required attributes are listed here. If you use `@compile_target`, you must include the required attributes and avoid calling forbidden namespaces in any service method.
 
 ### `@interface(language)`
 

@@ -17,7 +17,7 @@ fn test_ffi_with_crypto_service() {
     
     let program = parse_source(source).unwrap();
     let mut runtime = Runtime::new();
-    let _result = runtime.execute_program(program);
+    let _result = runtime.execute_program(program, None);
     
     // Test that service was created
     assert!(runtime.services.contains_key("CryptoService"));
@@ -36,7 +36,7 @@ fn test_ffi_with_chain_service() {
     
     let program = parse_source(source).unwrap();
     let mut runtime = Runtime::new();
-    let _result = runtime.execute_program(program);
+    let _result = runtime.execute_program(program, None);
     
     // Test that service was created
     assert!(runtime.services.contains_key("ChainService"));
@@ -59,7 +59,7 @@ fn test_auto_detection_with_real_service() {
     
     let program = parse_source(source).unwrap();
     let mut runtime = Runtime::new();
-    let _result = runtime.execute_program(program);
+    let _result = runtime.execute_program(program, None);
     
     // Test interface selector
     use dist_agent_lang::ffi::InterfaceSelector;
@@ -87,7 +87,7 @@ fn test_ffi_config_with_service_execution() {
     
     let program = parse_source(source).unwrap();
     let mut runtime = Runtime::new();
-    let _result = runtime.execute_program(program);
+    let _result = runtime.execute_program(program, None);
     
     // Test different FFI configurations
     let config_http = FFIConfig::http_only();
@@ -185,7 +185,7 @@ fn test_ffi_with_stdlib_functions() {
     
     let program = parse_source(source).unwrap();
     let mut runtime = Runtime::new();
-    let _result = runtime.execute_program(program);
+    let _result = runtime.execute_program(program, None);
     
     // Verify service was created
     assert!(runtime.services.contains_key("StdLibService"));

@@ -84,7 +84,7 @@ test::expect_has_key(map, "key")
 ✅ Chains: ethereum, polygon, bsc, solana, bitcoin, etc.  
 ✅ Types: number, string, bool, map, vector, null, function  
 ✅ Ranges: min/max validation  
-✅ Compatibility: @trust requires @chain, @secure ⊕ @public  
+✅ Compatibility: @secure and @public mutually exclusive  
 
 ## Layer 3: DAL Test Files
 

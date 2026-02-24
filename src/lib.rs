@@ -50,6 +50,7 @@
 
 pub mod cli;
 pub mod cli_design;
+pub mod compile;
 pub mod ffi;
 pub mod http_server;
 pub mod http_server_converters;
@@ -59,7 +60,9 @@ pub mod http_server_middleware;
 pub mod http_server_security;
 pub mod http_server_security_middleware;
 pub mod lexer;
+pub mod manifest;
 pub mod mold;
+pub mod module_resolver;
 pub mod parser;
 pub mod performance;
 pub mod reporting;
@@ -77,6 +80,11 @@ pub use ffi::{FFIConfig, FFIInterface, InterfaceType};
 pub use lexer::{tokens::Token, Lexer};
 pub use parser::{ast, collect_warnings, error::ParserError, ParseWarning, Parser};
 pub use runtime::{values::Value, Runtime};
+
+// Module resolution (M2)
+pub use module_resolver::{
+    resolve_imports, ModuleResolver, ResolveError, ResolvedImport, ResolvedImportEntry,
+};
 
 // Re-export testing framework for app developers: use dist_agent_lang::{TestCase, TestSuite, ...}
 pub use testing::{
@@ -123,7 +131,7 @@ pub fn execute_source(source: &str) -> Result<Value, Box<dyn std::error::Error>>
     let program = parse_source(source)?;
     let mut runtime = Runtime::new();
     let result = runtime
-        .execute_program(program)
+        .execute_program(program, None)
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
     Ok(result.unwrap_or(Value::Null))
 }
@@ -139,7 +147,7 @@ pub fn execute_dal_with_scope(
         runtime.set_variable(k.clone(), v.clone());
     }
     let result = runtime
-        .execute_program(program)
+        .execute_program(program, None)
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
     Ok(result.unwrap_or(Value::Null))
 }
@@ -159,7 +167,7 @@ pub fn execute_dal_and_extract_handlers(
     let program = parse_source(source)?;
     let mut runtime = Runtime::new();
     runtime
-        .execute_program(program)
+        .execute_program(program, None)
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
     Ok((runtime.user_functions.clone(), runtime.scope.clone()))
 }

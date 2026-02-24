@@ -17,7 +17,7 @@ fn parse_and_execute(source: &str) -> Result<Value, String> {
         .map_err(|e| format!("Parser error: {:?}", e))?;
     let mut runtime = Runtime::new();
     runtime
-        .execute_program(program)
+        .execute_program(program, None)
         .map_err(|e| format!("Runtime error: {:?}", e))?
         .ok_or_else(|| "No return value".to_string())
 }

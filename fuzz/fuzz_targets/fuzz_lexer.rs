@@ -18,7 +18,13 @@ fuzz_target!(|data: &[u8]| {
         let input = input.to_string();
         let _ = std::thread::spawn(move || {
             let lexer = Lexer::new(&input);
-            let _ = lexer.tokenize_immutable();
+            if let Ok(tokens_with_pos) = lexer.tokenize_with_positions_immutable() {
+                // Skip pathological inputs that produce huge token counts (DoS / slow units)
+                if tokens_with_pos.len() > 50_000 {
+                    let _ = tx.send(());
+                    return;
+                }
+            }
             let _ = tx.send(());
         });
         let _ = rx.recv_timeout(Duration::from_secs(FUZZ_TIMEOUT_SECS));

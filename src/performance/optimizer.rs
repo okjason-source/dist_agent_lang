@@ -159,6 +159,7 @@ impl Optimizer {
                         body: optimized_body,
                         attributes: func_stmt.attributes.clone(),
                         is_async: func_stmt.is_async,
+                        exported: func_stmt.exported,
                     }));
                 }
                 _ => optimized_statements.push(statement.clone()),

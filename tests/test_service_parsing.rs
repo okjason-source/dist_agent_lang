@@ -94,7 +94,7 @@ fn main() {
     // Execute (if parsing was successful)
     println!("\n4. Executing...");
     let mut runtime = Runtime::new();
-    match runtime.execute_program(program) {
+    match runtime.execute_program(program, None) {
         Ok(result) => {
             println!("✅ Execution successful!");
             println!("   Result: {:?}", result);

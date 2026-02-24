@@ -21,7 +21,7 @@ fn test_evaluate_expression_equal_operator() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute equality comparison");
 
@@ -41,7 +41,7 @@ fn test_evaluate_expression_not_equal_operator() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute not-equal comparison");
 }
@@ -55,7 +55,7 @@ fn test_evaluate_expression_arithmetic_plus() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute addition");
 
@@ -75,7 +75,7 @@ fn test_evaluate_expression_arithmetic_minus() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute subtraction");
 
@@ -95,7 +95,7 @@ fn test_evaluate_expression_arithmetic_multiply() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute multiplication");
 
@@ -115,7 +115,7 @@ fn test_evaluate_expression_comparison_less() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute less-than comparison");
 
@@ -135,7 +135,7 @@ fn test_evaluate_expression_comparison_greater() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute greater-than comparison");
 
@@ -275,7 +275,7 @@ fn test_call_log_function_info_exact_args() {
         let mut parser = Parser::new(tokens);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program);
+            let result = runtime.execute_program(program, None);
 
             // Should succeed with exactly 2 arguments
             // If != is mutated to ==, this will fail incorrectly
@@ -297,7 +297,7 @@ fn test_call_log_function_info_wrong_args() {
         let mut parser = Parser::new(tokens);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program);
+            let result = runtime.execute_program(program, None);
 
             // Should fail with wrong number of arguments
             // If != is mutated to ==, this will incorrectly succeed
@@ -323,7 +323,7 @@ fn test_call_log_function_audit_exact_args() {
         let mut parser = Parser::new(tokens);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program);
+            let result = runtime.execute_program(program, None);
 
             // Should succeed with exactly 2 arguments
             assert!(result.is_ok(), "log::audit with 2 args should succeed");
@@ -348,7 +348,7 @@ fn test_call_crypto_function_hash() {
         let mut parser = Parser::new(tokens);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program);
+            let result = runtime.execute_program(program, None);
 
             // Should succeed - if "hash" match arm is deleted, this will fail
             assert!(result.is_ok(), "crypto::hash should be callable");
@@ -368,7 +368,7 @@ fn test_call_crypto_function_sign() {
         let mut parser = Parser::new(tokens);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program);
+            let result = runtime.execute_program(program, None);
 
             // Should succeed - if "sign" match arm is deleted, this will fail
             assert!(result.is_ok(), "crypto::sign should be callable");
@@ -388,7 +388,7 @@ fn test_call_crypto_function_verify() {
         let mut parser = Parser::new(tokens);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program);
+            let result = runtime.execute_program(program, None);
 
             // Should succeed with exactly 3 arguments
             // If != is mutated to ==, the argument count check will fail
@@ -409,7 +409,7 @@ fn test_call_crypto_function_verify_wrong_args() {
         let mut parser = Parser::new(tokens);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program);
+            let result = runtime.execute_program(program, None);
 
             // Should fail with wrong number of arguments
             // If != is mutated to ==, this will incorrectly succeed
@@ -435,7 +435,7 @@ fn test_value_addition_exact() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute addition");
 
@@ -458,7 +458,7 @@ fn test_value_subtraction_exact() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute subtraction");
 
@@ -481,7 +481,7 @@ fn test_value_multiplication_exact() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute multiplication");
 
@@ -506,7 +506,7 @@ fn test_comparison_less_equal_boundary() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute less-equal comparison");
 
@@ -526,7 +526,7 @@ fn test_comparison_greater_equal_boundary() {
 
     let program = parser.parse().unwrap();
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
 
     assert!(result.is_ok(), "Should execute greater-equal comparison");
 

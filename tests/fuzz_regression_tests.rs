@@ -116,7 +116,7 @@ fn test_fuzz_runtime_oom_range_no_panic() {
         let mut parser = Parser::new_with_positions(tokens_with_pos);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let _ = runtime.execute_program(program);
+            let _ = runtime.execute_program(program, None);
             // Must not panic; OOM fix returns Err("Range too large") instead of allocating
         }
     }
@@ -131,7 +131,7 @@ fn test_fuzz_runtime_oom_range_3622727b_no_panic() {
         let mut parser = Parser::new_with_positions(tokens_with_pos);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let _ = runtime.execute_program(program);
+            let _ = runtime.execute_program(program, None);
         }
     }
 }
@@ -163,7 +163,7 @@ fn test_fuzz_runtime_slow_unit_no_panic() {
         let mut parser = Parser::new_with_positions(tokens_with_pos);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let _ = runtime.execute_program(program);
+            let _ = runtime.execute_program(program, None);
         }
     }
 }
@@ -181,7 +181,7 @@ fn test_fuzz_runtime_crash_625b3824_no_panic() {
                 let mut parser = Parser::new_with_positions(tokens_with_pos);
                 if let Ok(program) = parser.parse() {
                     let mut runtime = Runtime::new();
-                    let _ = runtime.execute_program(program);
+                    let _ = runtime.execute_program(program, None);
                 }
             }
         })
@@ -212,7 +212,7 @@ fn test_fuzz_runtime_timeout_long_and_chain_no_panic() {
                 let mut parser = Parser::new_with_positions(tokens_with_pos);
                 if let Ok(program) = parser.parse() {
                     let mut runtime = Runtime::new();
-                    let _ = runtime.execute_program(program);
+                    let _ = runtime.execute_program(program, None);
                     // Must not panic or hang - short-circuit + timeout should complete within 10s
                 }
             }
@@ -231,7 +231,7 @@ fn test_fuzz_runtime_timeout_infinite_loop_returns_error() {
         let mut parser = Parser::new_with_positions(tokens_with_pos);
         if let Ok(program) = parser.parse() {
             let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program);
+            let result = runtime.execute_program(program, None);
             assert!(
                 result.is_err(),
                 "Infinite loop should return ExecutionTimeout"
@@ -260,7 +260,7 @@ fn test_fuzz_runtime_crash_stack_overflow_and_no_panic() {
                 let mut parser = Parser::new_with_positions(tokens_with_pos);
                 if let Ok(program) = parser.parse() {
                     let mut runtime = Runtime::new();
-                    let result = runtime.execute_program(program);
+                    let result = runtime.execute_program(program, None);
                     // Must not panic. Result may be Ok or Err (recursion depth exceeded).
                     assert!(
                         result.is_ok()
@@ -281,6 +281,10 @@ fn test_fuzz_runtime_crash_stack_overflow_and_no_panic() {
 /// Parser crash: crash-161522ed7f1f2ac04d9aa2e317697ce14c287338
 /// Fuzzer-generated "try { }" -like input with typos; previously panicked, now must return Err.
 const CRASH_PARSER_161522ED: &str = include_str!("fixtures/fuzz/crash_parser_161522ed.txt");
+
+/// Parser crash: crash-4a6efcfc0987cd7ded43c9b78bb300e7e63953c4
+/// Same class as 161522ed (deep try { } nesting, unclosed); must return Err, not panic.
+const CRASH_PARSER_4A6EFCFC: &str = include_str!("fixtures/fuzz/crash_parser_4a6efcfc.txt");
 
 /// Runtime slow unit: slow-unit-a36a588e7961eb86bef4a0d3f2553cea65b8d045
 /// Contains while (true) { ... }; must not hang - runtime should return ExecutionTimeout.
@@ -312,6 +316,30 @@ fn test_fuzz_parser_crash_161522ed_no_panic() {
 }
 
 #[test]
+fn test_fuzz_parser_crash_4a6efcfc_no_panic() {
+    // Regression: crash-4a6efcfc0987cd7ded43c9b78bb300e7e63953c4
+    // Same class as 161522ed; parser must return Err, not panic. Use 8MB stack.
+    std::thread::Builder::new()
+        .stack_size(8 * 1024 * 1024)
+        .spawn(|| {
+            let lexer = Lexer::new(CRASH_PARSER_4A6EFCFC);
+            let tokens_with_pos = match lexer.tokenize_with_positions_immutable() {
+                Ok(t) => t,
+                Err(_) => return,
+            };
+            let mut parser = Parser::new_with_positions(tokens_with_pos);
+            let result = parser.parse();
+            assert!(
+                result.is_err(),
+                "Parser should return error for this input, not panic"
+            );
+        })
+        .unwrap()
+        .join()
+        .unwrap();
+}
+
+#[test]
 fn test_fuzz_runtime_slow_unit_a36a588e_no_panic() {
     // Regression: slow-unit-a36a588e7961eb86bef4a0d3f2553cea65b8d045
     // Input contains while (true) { ... }. Must not hang; runtime should return ExecutionTimeout.
@@ -326,7 +354,7 @@ fn test_fuzz_runtime_slow_unit_a36a588e_no_panic() {
         Err(_) => return,
     };
     let mut runtime = Runtime::new();
-    let result = runtime.execute_program(program);
+    let result = runtime.execute_program(program, None);
     // Must not panic. Expect Err(ExecutionTimeout) for infinite loop.
     assert!(
         result.is_err(),

@@ -78,8 +78,7 @@ fn test_token_contract_parses() {
 **Semantic Validation** (Parse-time)
 - ✅ Trust model validation (hybrid, centralized, decentralized, trustless)
 - ✅ Blockchain identifier validation (ethereum, polygon, bsc, solana, etc.)
-- ✅ Attribute compatibility rules (@trust requires @chain)
-- ✅ Attribute mutual exclusivity (@secure ⊕ @public)
+- ✅ Attribute mutual exclusivity (@secure and @public)
 - ✅ Domain constraint enforcement
 
 **Runtime Behavior** (Layer 3)
@@ -116,8 +115,8 @@ expect_valid_chain("ethereum")           // ✅ Pass
 expect_valid_chain("fake_chain")         // ❌ Fail
 
 // Check attribute compatibility
+expect_compatible_attributes(vec!["trust"])            // ✅ Pass
 expect_compatible_attributes(vec!["trust", "chain"])  // ✅ Pass
-expect_compatible_attributes(vec!["trust"])           // ❌ Fail (needs @chain)
 expect_compatible_attributes(vec!["secure", "public"]) // ❌ Fail (exclusive)
 ```
 

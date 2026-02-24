@@ -461,7 +461,9 @@ pub fn expect_has_attribute(
     for stmt in &program.statements {
         if let Statement::Service(ref svc) = stmt {
             if svc.name == service_name {
-                let has = svc.attributes.iter().any(|a| a.name == attr_name);
+                let has = svc.attributes.iter().any(|a| {
+                    a.name == attr_name || a.name == format!("@{}", attr_name.trim_start_matches('@'))
+                });
                 return if has {
                     Ok(())
                 } else {
@@ -479,6 +481,7 @@ pub fn expect_has_attribute(
         }
     }
     Err(format!("Service '{}' not found in source", service_name))
+
 }
 
 /// Validate attribute compatibility rules

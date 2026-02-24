@@ -31,7 +31,7 @@ touch DefiToken.dal
 
 ## Step 1: Basic Token Structure
 
-DAL uses **services** (not `contract`). Attributes `@trust` and `@chain` are required together.
+DAL uses **services** (not `contract`). Use `@trust` for the service trust model; add `@chain` when the service interacts with a blockchain.
 
 ```dal
 // DefiToken.dal

@@ -28,7 +28,7 @@ fuzz_target!(|data: &[u8]| {
                 }
                 // Try to execute
                 let mut runtime = Runtime::new();
-                let _ = runtime.execute_program(program);
+                let _ = runtime.execute_program(program, None);
                 // We don't care about errors - we just want to ensure it doesn't panic
             }
         }

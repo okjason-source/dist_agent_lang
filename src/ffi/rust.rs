@@ -46,7 +46,7 @@ impl RustFFIRuntime {
         use crate::parse_source;
         let program = parse_source(source).map_err(|e| format!("Parse error: {}", e))?;
         self.runtime
-            .execute_program(program)
+            .execute_program(program, None)
             .map_err(|e| format!("Execution error: {}", e))?;
         Ok(Value::Null) // Return null for now - would need to capture return value
     }
