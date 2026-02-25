@@ -7,8 +7,8 @@ use dist_agent_lang::lexer::Lexer;
 use dist_agent_lang::parser::ast::Statement;
 use dist_agent_lang::parser::Parser;
 use lsp_types::{
-    CompletionItem, CompletionOptions, CompletionParams, CompletionResponse,
-    Diagnostic, DiagnosticSeverity, DidChangeTextDocumentParams, DidCloseTextDocumentParams,
+    CompletionItem, CompletionOptions, CompletionParams, CompletionResponse, Diagnostic,
+    DiagnosticSeverity, DidChangeTextDocumentParams, DidCloseTextDocumentParams,
     DidOpenTextDocumentParams, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents,
     HoverParams, HoverProviderCapability, InitializeParams, InitializeResult, InitializedParams,
     Location, OneOf, ParameterInformation, Position, Range, ServerCapabilities, SignatureHelp,
@@ -193,10 +193,14 @@ impl Backend {
                 Statement::Service(s) => {
                     symbols.push((s.name.clone(), format!("service {}", s.name)));
                     for f in &s.fields {
-                        symbols.push((f.name.clone(), format!("field {}: {}", f.name, f.field_type)));
+                        symbols.push((
+                            f.name.clone(),
+                            format!("field {}: {}", f.name, f.field_type),
+                        ));
                     }
                     for m in &s.methods {
-                        let params: Vec<String> = m.parameters.iter().map(|p| p.name.clone()).collect();
+                        let params: Vec<String> =
+                            m.parameters.iter().map(|p| p.name.clone()).collect();
                         let sig = format!("fn {}({})", m.name, params.join(", "));
                         symbols.push((m.name.clone(), sig));
                     }
@@ -231,7 +235,11 @@ impl Backend {
     /// Find the definition range (0-based) of a symbol in source. Returns None for keywords/stdlib.
     fn find_definition_range(source: &str, name: &str) -> Option<Range> {
         fn word_boundary_before(s: &str, i: usize) -> bool {
-            i == 0 || !s.chars().nth(i.saturating_sub(1)).map_or(false, |c| c.is_ascii_alphanumeric() || c == '_')
+            i == 0
+                || !s
+                    .chars()
+                    .nth(i.saturating_sub(1))
+                    .map_or(false, |c| c.is_ascii_alphanumeric() || c == '_')
         }
         fn word_boundary_after(s: &str, i: usize, len: usize) -> bool {
             let end = i + len;
@@ -241,27 +249,47 @@ impl Backend {
         for (line_0, line) in source.lines().enumerate() {
             // service Name { or service Name \n
             if let Some(rest) = line.strip_prefix("service ") {
-                let name_start = rest.find(|c: char| c.is_ascii_alphabetic() || c == '_').unwrap_or(0);
-                let name_end = rest[name_start..].find(|c: char| !c.is_ascii_alphanumeric() && c != '_').map_or(rest[name_start..].len(), |i| name_start + i);
+                let name_start = rest
+                    .find(|c: char| c.is_ascii_alphabetic() || c == '_')
+                    .unwrap_or(0);
+                let name_end = rest[name_start..]
+                    .find(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+                    .map_or(rest[name_start..].len(), |i| name_start + i);
                 let def_name = &rest[name_start..name_end];
                 if def_name == name && word_boundary_after(rest, name_start, name.len()) {
                     let char_0 = rest[..name_start].chars().count() as u32;
                     return Some(Range {
-                        start: Position { line: line_0 as u32, character: char_0 },
-                        end: Position { line: line_0 as u32, character: char_0 + name.chars().count() as u32 },
+                        start: Position {
+                            line: line_0 as u32,
+                            character: char_0,
+                        },
+                        end: Position {
+                            line: line_0 as u32,
+                            character: char_0 + name.chars().count() as u32,
+                        },
                     });
                 }
             }
             // fn name( or fn name (
             if let Some(rest) = line.strip_prefix("fn ") {
-                let name_start = rest.find(|c: char| c.is_ascii_alphabetic() || c == '_').unwrap_or(0);
-                let name_end = rest[name_start..].find(|c: char| c == '(' || c.is_whitespace()).map_or(rest[name_start..].len(), |i| name_start + i);
+                let name_start = rest
+                    .find(|c: char| c.is_ascii_alphabetic() || c == '_')
+                    .unwrap_or(0);
+                let name_end = rest[name_start..]
+                    .find(|c: char| c == '(' || c.is_whitespace())
+                    .map_or(rest[name_start..].len(), |i| name_start + i);
                 let def_name = &rest[name_start..name_end];
                 if def_name == name {
                     let char_0 = 3u32 + rest[..name_start].chars().count() as u32;
                     return Some(Range {
-                        start: Position { line: line_0 as u32, character: char_0 },
-                        end: Position { line: line_0 as u32, character: char_0 + name.chars().count() as u32 },
+                        start: Position {
+                            line: line_0 as u32,
+                            character: char_0,
+                        },
+                        end: Position {
+                            line: line_0 as u32,
+                            character: char_0 + name.chars().count() as u32,
+                        },
                     });
                 }
             }
@@ -269,11 +297,19 @@ impl Backend {
             if let Some(idx) = line.find(name) {
                 if word_boundary_before(line, idx) {
                     let after = &line[idx + name.len()..];
-                    if after.starts_with(':') && (idx == 0 || line[..idx].ends_with(' ') || line[..idx].ends_with('\t')) {
+                    if after.starts_with(':')
+                        && (idx == 0 || line[..idx].ends_with(' ') || line[..idx].ends_with('\t'))
+                    {
                         let char_0 = line[..idx].chars().count() as u32;
                         return Some(Range {
-                            start: Position { line: line_0 as u32, character: char_0 },
-                            end: Position { line: line_0 as u32, character: char_0 + name.chars().count() as u32 },
+                            start: Position {
+                                line: line_0 as u32,
+                                character: char_0,
+                            },
+                            end: Position {
+                                line: line_0 as u32,
+                                character: char_0 + name.chars().count() as u32,
+                            },
                         });
                     }
                 }
@@ -293,20 +329,31 @@ impl Backend {
         // Find the last "name(" before cursor on this line; if cursor is inside ( ), count commas to get active param.
         let open = prefix.rfind('(')?;
         let before_open = prefix[..open].trim_end();
-        let name_start = before_open.rfind(|c: char| c.is_ascii_alphanumeric() || c == '_' || c == ':')?;
+        let name_start =
+            before_open.rfind(|c: char| c.is_ascii_alphanumeric() || c == '_' || c == ':')?;
         let _name_end = before_open.len();
         let name_part = before_open[name_start..].trim_start_matches(':');
-        let name_start_in_part = name_part.find(|c: char| c.is_ascii_alphabetic() || c == '_').unwrap_or(0);
-        let fn_name = name_part[name_start_in_part..].split_whitespace().next()?.to_string();
+        let name_start_in_part = name_part
+            .find(|c: char| c.is_ascii_alphabetic() || c == '_')
+            .unwrap_or(0);
+        let fn_name = name_part[name_start_in_part..]
+            .split_whitespace()
+            .next()?
+            .to_string();
         let after_open = suffix.clone();
         let in_parens = prefix[open + 1..].to_string() + &after_open;
-        let (before_close, _) = in_parens.split_once(')').unwrap_or((in_parens.as_str(), ""));
+        let (before_close, _) = in_parens
+            .split_once(')')
+            .unwrap_or((in_parens.as_str(), ""));
         let active_param = before_close.split(',').count().saturating_sub(1) as u32;
         Some((fn_name, active_param))
     }
 
     /// Get signature label and parameter labels for a function (from AST or stdlib).
-    fn signature_for_function(source: &str, name: &str) -> Option<(String, Vec<String>, Option<String>)> {
+    fn signature_for_function(
+        source: &str,
+        name: &str,
+    ) -> Option<(String, Vec<String>, Option<String>)> {
         for (sym_name, detail) in Self::collect_symbols_from_source(source) {
             if sym_name == name && detail.starts_with("fn ") {
                 let label = detail.clone();
@@ -331,7 +378,10 @@ impl Backend {
 
 #[async_trait]
 impl LanguageServer for Backend {
-    async fn initialize(&self, _params: InitializeParams) -> tower_lsp::jsonrpc::Result<InitializeResult> {
+    async fn initialize(
+        &self,
+        _params: InitializeParams,
+    ) -> tower_lsp::jsonrpc::Result<InitializeResult> {
         Ok(InitializeResult {
             capabilities: ServerCapabilities {
                 text_document_sync: Some(TextDocumentSyncCapability::Options(
@@ -364,7 +414,10 @@ impl LanguageServer for Backend {
 
     async fn initialized(&self, _params: InitializedParams) {
         self.client
-            .log_message(lsp_types::MessageType::INFO, "DAL language server initialized")
+            .log_message(
+                lsp_types::MessageType::INFO,
+                "DAL language server initialized",
+            )
             .await;
     }
 
@@ -467,7 +520,9 @@ impl LanguageServer for Backend {
         }
 
         // Stdlib modules
-        let modules = ["chain", "ai", "log", "auth", "config", "db", "crypto", "oracle", "agent"];
+        let modules = [
+            "chain", "ai", "log", "auth", "config", "db", "crypto", "oracle", "agent",
+        ];
         for m in modules {
             if prefix.is_empty() || m.starts_with(&prefix) {
                 items.push(CompletionItem {
@@ -519,7 +574,10 @@ impl LanguageServer for Backend {
             Some(r) => r,
             None => return Ok(None),
         };
-        Ok(Some(GotoDefinitionResponse::Scalar(Location { uri, range })))
+        Ok(Some(GotoDefinitionResponse::Scalar(Location {
+            uri,
+            range,
+        })))
     }
 
     async fn signature_help(
@@ -533,10 +591,11 @@ impl LanguageServer for Backend {
             docs.get(&uri).map(|d| d.text.clone())
         };
         let source = source.unwrap_or_default();
-        let (fn_name, active_param) = match Self::function_call_at_position(&source, pos.line, pos.character) {
-            Some(x) => x,
-            None => return Ok(None),
-        };
+        let (fn_name, active_param) =
+            match Self::function_call_at_position(&source, pos.line, pos.character) {
+                Some(x) => x,
+                None => return Ok(None),
+            };
         let (label, param_labels, doc) = match Self::signature_for_function(&source, &fn_name) {
             Some(x) => x,
             None => return Ok(None),
