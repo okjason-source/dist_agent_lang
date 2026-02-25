@@ -74,6 +74,7 @@ PHASE*.md
 
 # IDE and OS
 .idea/
+.vscode/
 .DS_Store
 .dockerignore
 .cargoignore

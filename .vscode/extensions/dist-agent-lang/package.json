@@ -1,14 +1,17 @@
 {
   "name": "dist-agent-lang",
-  "displayName": "dist_agent_lang Language Support",
-  "description": "Syntax highlighting and language support for dist_agent_lang (.dal files)",
+  "displayName": "DAL Support",
+  "description": "Syntax highlighting and language support for DAL (dist_agent_lang): keywords, types, LSP (diagnostics, hover, completion, go to definition, signature help).",
   "version": "0.1.0",
   "publisher": "dist-agent-lang",
+  "license": "Apache-2.0",
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.74.0"
   },
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "Linters",
+    "Formatters"
   ],
   "keywords": [
     "dist_agent_lang",
@@ -16,19 +19,16 @@
     "blockchain",
     "ai",
     "agents",
-    "distributed"
+    "distributed",
+    "language-server"
   ],
+  "main": "./extension.js",
   "contributes": {
     "languages": [
       {
         "id": "dist_agent_lang",
-        "aliases": [
-          "dist_agent_lang",
-          "DAL"
-        ],
-        "extensions": [
-          ".dal"
-        ],
+        "extensions": [".dal"],
+        "aliases": ["DAL", "dal", "dist_agent_lang"],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -38,15 +38,42 @@
         "scopeName": "source.dist_agent_lang",
         "path": "./syntaxes/dist_agent_lang.tmLanguage.json"
       }
+    ],
+    "configuration": {
+      "title": "DAL",
+      "properties": {
+        "dal.languageServerPath": {
+          "type": "string",
+          "default": "dal",
+          "description": "Path to the DAL (dist_agent_lang) executable. Use 'dal' if it is on your PATH. Build the CLI with --features lsp for LSP support."
+        },
+        "dal.languageServerArgs": {
+          "type": "array",
+          "default": ["lsp"],
+          "description": "Arguments passed to the DAL executable to start the language server."
+        }
+      }
+    },
+    "tasks": [
+      {
+        "label": "Run DAL file",
+        "type": "shell",
+        "command": "${config:dal.languageServerPath}",
+        "args": ["run", "${file}"],
+        "group": "build",
+        "presentation": { "reveal": "always", "panel": "new" }
+      },
+      {
+        "label": "Check DAL file",
+        "type": "shell",
+        "command": "${config:dal.languageServerPath}",
+        "args": ["check", "${file}"],
+        "group": "build",
+        "presentation": { "reveal": "always", "panel": "shared" }
+      }
     ]
   },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.60.0",
-    "typescript": "^4.4.3"
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
   }
 }
