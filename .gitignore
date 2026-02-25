@@ -75,6 +75,7 @@ PHASE*.md
 # IDE and OS
 .idea/
 .vscode/
+!.vscode/dist-agent-lang.vsix
 .DS_Store
 .dockerignore
 .cargoignore
