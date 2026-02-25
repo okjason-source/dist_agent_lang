@@ -3,7 +3,11 @@
   "displayName": "DAL Support",
   "description": "Syntax highlighting and language support for DAL (dist_agent_lang): keywords, types, LSP (diagnostics, hover, completion, go to definition, signature help).",
   "version": "0.1.0",
-  "publisher": "dist-agent-lang",
+  "publisher": "dal-support",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/okjason-source/dist_agent_lang.git"
+  },
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.74.0"
@@ -14,12 +18,11 @@
     "Formatters"
   ],
   "keywords": [
-    "dist_agent_lang",
     "dal",
-    "blockchain",
-    "ai",
-    "agents",
-    "distributed",
+    "dist-agent-lang",
+    "ai-agent",
+    "orchestration",
+    "smart-contracts",
     "language-server"
   ],
   "main": "./extension.js",
