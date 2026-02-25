@@ -19,4 +19,191 @@ src/http_server.rs:98:17: delete match arm "POST" in start_http_server
 src/http_server.rs:99:17: delete match arm "PUT" in start_http_server
 src/http_server.rs:100:17: delete match arm "DELETE" in start_http_server
 src/http_server.rs:139:5: replace home_handler -> Html<String> with Html::from(String::new())
-
+src/mold/mod.rs:27:5: replace use_mold_and_spawn -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/mold/mod.rs:29:8: delete ! in use_mold_and_spawn
+src/mold/mod.rs:122:5: replace load_mold_from_source -> Result<MoldConfig, String> with Ok(Default::default())
+src/mold/mod.rs:155:5: replace list_local_paths -> Vec<PathBuf> with vec![]
+src/mold/mod.rs:155:5: replace list_local_paths -> Vec<PathBuf> with vec![Default::default()]
+src/mold/mod.rs:167:53: replace || with && in list_local_paths
+src/mold/mod.rs:181:5: replace resolve_mold_path -> Result<PathBuf, String> with Ok(Default::default())
+src/mold/mod.rs:182:24: replace && with || in resolve_mold_path
+src/mold/mod.rs:203:50: replace == with != in resolve_mold_path
+src/mold/mod.rs:209:23: replace == with != in resolve_mold_path
+src/mold/mod.rs:222:5: replace scaffold_mold -> Result<(), String> with Ok(())
+src/reporting.rs:14:5: replace format_lexer_error -> String with String::new()
+src/reporting.rs:14:5: replace format_lexer_error -> String with "xyzzy".into()
+src/reporting.rs:16:12: delete ! in format_lexer_error
+src/reporting.rs:23:21: replace && with || in format_lexer_error
+src/reporting.rs:23:17: replace > with == in format_lexer_error
+src/reporting.rs:23:17: replace > with < in format_lexer_error
+src/reporting.rs:23:17: replace > with >= in format_lexer_error
+src/reporting.rs:23:29: replace <= with > in format_lexer_error
+src/reporting.rs:24:43: replace - with + in format_lexer_error
+src/reporting.rs:24:43: replace - with / in format_lexer_error
+src/reporting.rs:26:41: replace >= with < in format_lexer_error
+src/reporting.rs:26:52: replace - with + in format_lexer_error
+src/reporting.rs:26:52: replace - with / in format_lexer_error
+src/reporting.rs:62:5: replace format_runtime_error -> String with String::new()
+src/reporting.rs:62:5: replace format_runtime_error -> String with "xyzzy".into()
+src/reporting.rs:71:5: replace format_parse_warnings -> String with String::new()
+src/reporting.rs:71:5: replace format_parse_warnings -> String with "xyzzy".into()
+src/reporting.rs:76:12: delete ! in format_parse_warnings
+src/reporting.rs:82:19: replace > with == in format_parse_warnings
+src/reporting.rs:82:19: replace > with < in format_parse_warnings
+src/reporting.rs:82:19: replace > with >= in format_parse_warnings
+src/reporting.rs:86:27: replace <= with > in format_parse_warnings
+src/ffi/auto_detect.rs:123:28: replace && with || in InterfaceSelector::select_interface
+src/ffi/auto_detect.rs:123:31: delete ! in InterfaceSelector::select_interface
+src/ffi/auto_detect.rs:126:28: replace && with || in InterfaceSelector::select_interface
+src/ffi/auto_detect.rs:126:31: delete ! in InterfaceSelector::select_interface
+src/ffi/auto_detect.rs:147:9: replace InterfaceSelector::set_default with ()
+src/ffi/auto_detect.rs:157:9: replace InterfaceSelector::service_count -> usize with 1
+src/ffi/auto_detect.rs:162:9: replace InterfaceSelector::has_service -> bool with true
+src/ffi/auto_detect.rs:162:9: replace InterfaceSelector::has_service -> bool with false
+src/ffi/interface.rs:133:9: replace FFIInterface::auto_detect_interface -> bool with true
+src/ffi/interface.rs:133:9: replace FFIInterface::auto_detect_interface -> bool with false
+src/ffi/interface.rs:160:31: replace < with > in FFIInterface::auto_detect_interface
+src/ffi/interface.rs:160:31: replace < with <= in FFIInterface::auto_detect_interface
+src/ffi/interface.rs:179:48: replace || with && in FFIInterface::auto_detect_interface
+src/ffi/interface.rs:186:38: replace && with || in FFIInterface::auto_detect_interface
+src/ffi/interface.rs:191:9: replace FFIInterface::estimate_value_size -> usize with 0
+src/ffi/interface.rs:191:9: replace FFIInterface::estimate_value_size -> usize with 1
+src/ffi/interface.rs:201:39: replace + with - in FFIInterface::estimate_value_size
+src/ffi/interface.rs:201:39: replace + with * in FFIInterface::estimate_value_size
+src/ffi/interface.rs:204:50: replace + with - in FFIInterface::estimate_value_size
+src/ffi/interface.rs:204:50: replace + with * in FFIInterface::estimate_value_size
+src/ffi/interface.rs:210:42: replace * with + in FFIInterface::estimate_value_size
+src/ffi/interface.rs:210:42: replace * with / in FFIInterface::estimate_value_size
+src/ffi/interface.rs:213:39: replace + with - in FFIInterface::estimate_value_size
+src/ffi/interface.rs:213:39: replace + with * in FFIInterface::estimate_value_size
+src/ffi/interface.rs:215:44: replace + with - in FFIInterface::estimate_value_size
+src/ffi/interface.rs:215:44: replace + with * in FFIInterface::estimate_value_size
+src/ffi/interface.rs:268:9: replace <impl ServiceInterface for HttpInterface>::is_available -> bool with false
+src/ffi/interface.rs:291:9: replace <impl ServiceInterface for HttpInterface>::call_function -> Result<Value, String> with Ok(Default::default())
+src/ffi/interface.rs:295:9: replace <impl ServiceInterface for HttpInterface>::interface_type -> InterfaceType with Default::default()
+src/ffi/interface.rs:299:9: replace <impl ServiceInterface for HttpInterface>::is_available -> bool with true
+src/ffi/interface.rs:335:9: replace <impl ServiceInterface for RustFFIInterface>::is_available -> bool with false
+src/ffi/interface.rs:411:30: replace != with == in json_to_value
+src/ffi/python.rs:15:5: replace dist_agent_lang -> PyResult<()> with PyResult::new()
+src/ffi/python.rs:15:5: replace dist_agent_lang -> PyResult<()> with PyResult::from_iter([()])
+src/ffi/python.rs:15:5: replace dist_agent_lang -> PyResult<()> with PyResult::new(())
+src/ffi/python.rs:15:5: replace dist_agent_lang -> PyResult<()> with PyResult::from(())
+src/ffi/python.rs:41:9: replace DistAgentLangRuntime::call_function -> PyResult<PyObject> with PyResult::new()
+src/ffi/python.rs:41:9: replace DistAgentLangRuntime::call_function -> PyResult<PyObject> with PyResult::from_iter([Default::default()])
+src/ffi/python.rs:41:9: replace DistAgentLangRuntime::call_function -> PyResult<PyObject> with PyResult::new(Default::default())
+src/ffi/python.rs:41:9: replace DistAgentLangRuntime::call_function -> PyResult<PyObject> with PyResult::from(Default::default())
+src/ffi/python.rs:57:9: replace DistAgentLangRuntime::execute -> PyResult<PyObject> with PyResult::new()
+src/ffi/python.rs:57:9: replace DistAgentLangRuntime::execute -> PyResult<PyObject> with PyResult::from_iter([Default::default()])
+src/ffi/python.rs:57:9: replace DistAgentLangRuntime::execute -> PyResult<PyObject> with PyResult::new(Default::default())
+src/ffi/python.rs:57:9: replace DistAgentLangRuntime::execute -> PyResult<PyObject> with PyResult::from(Default::default())
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::new()
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::from_iter([String::new()])
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::new(String::new())
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::from(String::new())
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::from_iter(["xyzzy".into()])
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::new("xyzzy".into())
+src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::from("xyzzy".into())
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::new()
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::from_iter([String::new()])
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::new(String::new())
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::from(String::new())
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::from_iter(["xyzzy".into()])
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::new("xyzzy".into())
+src/ffi/python.rs:83:5: replace sign_data -> PyResult<String> with PyResult::from("xyzzy".into())
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::new()
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::from_iter([true])
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::new(true)
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::from(true)
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::from_iter([false])
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::new(false)
+src/ffi/python.rs:92:5: replace verify_signature -> PyResult<bool> with PyResult::from(false)
+src/ffi/python.rs:99:5: replace python_to_dal_value -> Result<Value, String> with Ok(Default::default())
+src/ffi/python.rs:137:5: replace dal_to_python_value -> PyObject with Default::default()
+src/ffi/rust.rs:58:5: replace dist_agent_lang_runtime_new -> *mut RustFFIRuntime with Default::default()
+src/lexer/lexer.rs:43:47: replace * with + in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:48:24: replace += with *= in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:49:27: replace > with == in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:49:27: replace > with >= in Lexer::tokenize_with_positions_immutable
+src/lexer/lexer.rs:155:29: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:155:49: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:155:45: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:156:56: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:202:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:222:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:222:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:233:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:233:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:243:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:243:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:253:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:253:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:264:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:276:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:276:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:294:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:294:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:307:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:316:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:316:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:329:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:338:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:338:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:351:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:360:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:360:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:371:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:386:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:388:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:403:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:412:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:412:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:435:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:435:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:446:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:446:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:456:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:456:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:466:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:466:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:476:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:476:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:486:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:486:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:496:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:496:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:506:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:506:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:516:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:516:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:526:28: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:526:28: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:550:9: replace Lexer::read_identifier -> String with String::new()
+src/lexer/lexer.rs:550:9: replace Lexer::read_identifier -> String with "xyzzy".into()
+src/lexer/lexer.rs:552:29: replace < with == in Lexer::read_identifier
+src/lexer/lexer.rs:552:29: replace < with > in Lexer::read_identifier
+src/lexer/lexer.rs:552:29: replace < with <= in Lexer::read_identifier
+src/lexer/lexer.rs:554:37: replace || with && in Lexer::read_identifier
+src/lexer/lexer.rs:554:43: replace == with != in Lexer::read_identifier
+src/lexer/lexer.rs:565:9: replace Lexer::read_number -> Result<i64, LexerError> with Ok(0)
+src/lexer/lexer.rs:565:9: replace Lexer::read_number -> Result<i64, LexerError> with Ok(1)
+src/lexer/lexer.rs:565:9: replace Lexer::read_number -> Result<i64, LexerError> with Ok(-1)
+src/lexer/lexer.rs:567:29: replace < with == in Lexer::read_number
+src/lexer/lexer.rs:567:29: replace < with > in Lexer::read_number
+src/lexer/lexer.rs:567:29: replace < with <= in Lexer::read_number
+src/lexer/lexer.rs:583:9: replace Lexer::read_string -> Result<String, LexerError> with Ok(String::new())
+src/lexer/lexer.rs:583:9: replace Lexer::read_string -> Result<String, LexerError> with Ok("xyzzy".into())
+src/lexer/lexer.rs:586:29: replace < with == in Lexer::read_string
+src/lexer/lexer.rs:586:29: replace < with > in Lexer::read_string
+src/lexer/lexer.rs:586:29: replace < with <= in Lexer::read_string
+src/lexer/lexer.rs:588:19: replace == with != in Lexer::read_string
+src/lexer/lexer.rs:591:26: replace == with != in Lexer::read_string
+src/lexer/lexer.rs:593:34: replace < with == in Lexer::read_string
+src/lexer/lexer.rs:593:34: replace < with > in Lexer::read_string
+src/lexer/lexer.rs:593:34: replace < with <= in Lexer::read_string
+src/lexer/lexer.rs:608:9: replace Lexer::skip_whitespace with ()
+src/lexer/lexer.rs:633:17: delete match arm '\r' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:634:56: replace && with || in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:634:37: replace < with == in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:634:37: replace < with > in Lexer::skip_whitespace_immutable

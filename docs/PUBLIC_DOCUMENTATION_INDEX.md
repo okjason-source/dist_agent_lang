@@ -15,6 +15,7 @@
 | [Standard Library](#standard-library-stdlib) | All stdlib modules | Developers, AI code generation |
 | [Package Management](#package-management) | Installing, dependencies | Developers, DevOps |
 | [CLI Reference](#cli-reference) | Command-line tools | Developers, automation |
+| [IDE and Agent Integration](#ide-and-agent-integration) | LSP setup, editor extension, agent tools | Editors, agent integrators |
 | [Examples](#examples) | Code samples | Learning, AI training data |
 | [API Reference](#api-reference) | Programmatic access | Integrations, tools |
 
@@ -63,6 +64,16 @@ dal run hello.dal
 - **Web-friendly:** HTTP, templates, middleware
 
 ### File: [docs/syntax.md](./syntax.md)
+
+---
+
+## 🔌 IDE and Agent Integration
+
+**➡️ [IDE and Agent Integration (IDE_AND_AGENT_INTEGRATION.md)](./IDE_AND_AGENT_INTEGRATION.md)**
+
+- **LSP:** How to build DAL with `--features lsp` and configure the language server in VS Code/Cursor (extension or manual).
+- **Editor agents:** Recommended tool schema (OpenAI-style JSON) for `dal_check`, `dal_run`, `dal_ai_code`, `dal_ai_explain`, `dal_build_blockchain`.
+- **Documentation context:** Pointers to this index, syntax, and STDLIB for agent context.
 
 ---
 

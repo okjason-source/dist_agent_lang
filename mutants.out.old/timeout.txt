@@ -1,0 +1,4 @@
+src/lexer/lexer.rs:625:30: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:631:30: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:634:37: replace < with <= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:634:33: replace + with - in Lexer::skip_whitespace_immutable

@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "*.dal": "dist_agent_lang"
+  },
+  "editor.semanticHighlighting.enabled": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true
+}

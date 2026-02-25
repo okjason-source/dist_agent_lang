@@ -39,6 +39,9 @@ use testing::{TestCase, TestConfig, TestRunner, TestSuite};
 
 // Performance imports - used in optimization commands and imported within functions to avoid unused warnings
 
+#[cfg(feature = "lsp")]
+mod lsp;
+
 /// Returns the binary name used to invoke the CLI (e.g. "dal" or "dist_agent_lang")
 fn binary_name() -> String {
     std::env::args()
@@ -178,7 +181,17 @@ fn main() {
             a.extend(rest.iter().cloned());
             handle_oracle_command(&a);
         }
-        Commands::Lsp { rest } => handle_lsp_command(rest),
+        Commands::Lsp { rest } => {
+            #[cfg(feature = "lsp")]
+            {
+                let _ = rest;
+                tokio::runtime::Runtime::new()
+                    .expect("tokio runtime")
+                    .block_on(lsp::run_lsp_server());
+            }
+            #[cfg(not(feature = "lsp"))]
+            handle_lsp_command(rest);
+        }
         Commands::Doc {
             target,
             output,
@@ -5123,6 +5136,7 @@ fn handle_dist_command(_args: &[String]) {
 // Phase 5: IDE & LSP Integration (lsp, doc, completions, debug)
 // ============================================================================
 
+#[cfg_attr(feature = "lsp", allow(dead_code))]
 fn handle_lsp_command(_args: &[String]) {
     println!("ℹ️  LSP (Language Server Protocol)");
     println!();

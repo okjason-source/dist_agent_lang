@@ -46,6 +46,8 @@ PHASE*.md
 /docs/READINESS_CHECKLIST.md
 /docs/PARSE_COMMAND_SUMMARY.md
 /docs/AI_ENHANCED_TOOLS_SUMMARY.md
+/docs/USER_FACING_DOCS.md
+/docs/IDE_AND_AGENT_INTEGRATION.md
 
 # Internal/planning guides (do not publish)
 /docs/guides/PACKAGING_STRATEGY.md
@@ -72,7 +74,6 @@ PHASE*.md
 
 # IDE and OS
 .idea/
-.vscode/
 .DS_Store
 .dockerignore
 .cargoignore
