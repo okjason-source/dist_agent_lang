@@ -48,6 +48,7 @@ PHASE*.md
 /docs/AI_ENHANCED_TOOLS_SUMMARY.md
 /docs/USER_FACING_DOCS.md
 /docs/IDE_AND_AGENT_INTEGRATION.md
+/docs/MUTATION_TESTING_ANALYSIS.md
 
 # Internal/planning guides (do not publish)
 /docs/guides/PACKAGING_STRATEGY.md

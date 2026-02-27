@@ -92,6 +92,9 @@ fn services_to_rust(services: &[&ServiceStatement]) -> String {
 
 /// Check that cargo/rustc is available.
 fn check_rust_available() -> bool {
+    if let Some(available) = super::get_compiler_available_override() {
+        return available;
+    }
     Command::new("cargo")
         .arg("--version")
         .output()

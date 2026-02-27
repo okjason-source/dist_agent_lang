@@ -1,3 +1,155 @@
+src/lib.rs:98:46: replace * with + in parse_source
+src/lib.rs:98:46: replace * with / in parse_source
+src/lib.rs:98:39: replace * with / in parse_source
+src/lib.rs:99:21: replace > with < in parse_source
+src/lib.rs:115:30: replace > with < in parse_source
+src/compile/mod.rs:124:5: replace get_backend -> Option<Box<dyn CompileBackend>> with None
+src/compile/mod.rs:142:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![]
+src/compile/mod.rs:148:36: replace == with != in select_services_for_target
+src/manifest.rs:35:5: replace parse_dependencies -> Result<DependenciesMap, ManifestError> with Ok(Default::default())
+src/manifest.rs:53:13: delete match arm toml::Value::Table(t) in parse_dependencies
+src/manifest.rs:79:5: replace resolve_dependencies -> Result<ResolvedDeps, ManifestError> with Ok(Default::default())
+src/manifest.rs:90:20: delete ! in resolve_dependencies
+src/manifest.rs:111:5: replace write_lockfile -> Result<(), ManifestError> with Ok(())
+src/manifest.rs:126:5: replace load_resolved_deps -> Result<ResolvedDeps, ManifestError> with Ok(Default::default())
+src/module_resolver.rs:109:9: replace ModuleResolver::with_dependencies -> Self with Default::default()
+src/module_resolver.rs:147:16: delete ! in ModuleResolver::resolve
+src/module_resolver.rs:189:9: replace ModuleResolver::resolve_program_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/module_resolver.rs:211:9: replace ModuleResolver::resolve_program_with_cycles -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/module_resolver.rs:225:9: replace ModuleResolver::resolve_program_recursive -> Result<(), ResolveError> with Ok(())
+src/module_resolver.rs:302:5: replace package_entry_path -> Option<PathBuf> with None
+src/module_resolver.rs:302:5: replace package_entry_path -> Option<PathBuf> with Some(Default::default())
+src/module_resolver.rs:318:5: replace resolve_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/compile/native.rs:50:5: replace services_to_rust -> String with "xyzzy".into()
+src/compile/native.rs:95:5: replace check_rust_available -> bool with false
+src/compile/native.rs:112:12: delete ! in <impl CompileBackend for NativeBackend>::compile
+src/compile/native.rs:145:12: delete ! in <impl CompileBackend for NativeBackend>::compile
+src/compile/wasm.rs:143:12: delete ! in <impl CompileBackend for WasmBackend>::compile
+src/lib.rs:98:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:131:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:144:5: replace execute_dal_with_scope -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:167:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:167:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:167:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/cli.rs:425:9: replace Cli::parse -> Self with Default::default()
+src/compile/mod.rs:95:9: replace <impl CompileBackend for StubBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/mod.rs:124:5: replace get_backend -> Option<Box<dyn CompileBackend>> with Some(Box::new(Default::default()))
+src/compile/mod.rs:142:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![Box::leak(Box::new(Default::default()))]
+src/compile/mod.rs:178:5: replace run_compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/manifest.rs:39:9: delete match arm Some(toml::Value::Table(t)) in parse_dependencies
+src/manifest.rs:132:13: delete match arm Some(toml::Value::Table(t)) in load_resolved_deps
+src/module_resolver.rs:119:9: replace ModuleResolver::resolve -> Result<ResolvedImport, ResolveError> with Ok(Default::default())
+src/module_resolver.rs:189:9: replace ModuleResolver::resolve_program_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![Default::default()])
+src/module_resolver.rs:211:9: replace ModuleResolver::resolve_program_with_cycles -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![Default::default()])
+src/module_resolver.rs:318:5: replace resolve_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![Default::default()])
+src/compile/blockchain.rs:117:9: replace <impl CompileBackend for BlockchainBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/native.rs:112:9: replace <impl CompileBackend for NativeBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/wasm.rs:110:9: replace <impl CompileBackend for WasmBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/ffi/interface.rs:160:31: replace < with == in FFIInterface::auto_detect_interface
+src/lexer/lexer.rs:349:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:349:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:349:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:349:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:349:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:349:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:349:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:349:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:350:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:350:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:351:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:359:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:359:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:371:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:371:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:371:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:371:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:371:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:371:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:371:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:371:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:372:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:372:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:373:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:373:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:386:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:386:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:386:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:386:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:386:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:386:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:386:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:386:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:387:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:387:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:388:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:401:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:401:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:401:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:401:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:401:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:401:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:401:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:401:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:401:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:402:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:402:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:403:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:411:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:411:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:424:52: replace && with || in Lexer::next_token_immutable
+src/lexer/lexer.rs:424:33: replace < with == in Lexer::next_token_immutable
+src/lexer/lexer.rs:424:33: replace < with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:424:33: replace < with <= in Lexer::next_token_immutable
+src/lexer/lexer.rs:424:29: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:424:29: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:424:80: replace == with != in Lexer::next_token_immutable
+src/lexer/lexer.rs:424:75: replace + with - in Lexer::next_token_immutable
+src/lexer/lexer.rs:424:75: replace + with * in Lexer::next_token_immutable
+src/lexer/lexer.rs:425:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:425:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:426:32: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:426:32: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:434:34: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:434:34: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:445:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:445:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:455:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:455:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:465:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:465:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:475:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:475:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:485:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:485:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:495:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:495:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:505:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:505:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:515:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:515:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:525:30: replace += with -= in Lexer::next_token_immutable
+src/lexer/lexer.rs:525:30: replace += with *= in Lexer::next_token_immutable
+src/lexer/lexer.rs:540:20: replace <= with > in Lexer::next_token_immutable
+src/lexer/lexer.rs:621:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 0, 0)
+src/lexer/lexer.rs:621:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 0, 1)
+src/lexer/lexer.rs:621:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 1, 0)
+src/lexer/lexer.rs:621:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (0, 1, 1)
+src/lexer/lexer.rs:621:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 0, 0)
+src/lexer/lexer.rs:621:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 0, 1)
+src/lexer/lexer.rs:621:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 1, 0)
+src/lexer/lexer.rs:621:9: replace Lexer::skip_whitespace_immutable -> (usize, usize, usize) with (1, 1, 1)
+src/lexer/lexer.rs:621:24: replace < with == in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:621:24: replace < with > in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:621:24: replace < with <= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:624:17: delete match arm ' ' | '\t' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:628:17: delete match arm '\n' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:641:17: delete match arm '/' in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:625:30: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:626:28: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:626:28: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:629:26: replace += with -= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:629:26: replace += with *= in Lexer::skip_whitespace_immutable
+src/lexer/lexer.rs:631:30: replace += with -= in Lexer::skip_whitespace_immutable
 src/http_server_converters.rs:102:40: replace * with +
 src/http_server_converters.rs:102:33: replace * with +
 src/http_server_handlers.rs:87:5: replace path_pattern_matches -> bool with true

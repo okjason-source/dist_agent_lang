@@ -1,0 +1,71 @@
+// Agent with many tasks: choose one by logic or by prompt
+// Run: dal run examples/agent_multi_task_choice.dal
+// Shows: task catalog in one DAL, then pick a task (logic or LLM) and assign it.
+
+service AgentMultiTaskChoice {
+    agent_id: string;
+    tasks: list<any>;
+    current_request: string;
+
+    fn initialize() {
+        self.agent_id = agent::spawn({
+            "name": "TaskRunner",
+            "type": "worker",
+            "role": "multi_task",
+            "capabilities": ["task_execution", "data_processing", "automation"]
+        });
+        self.current_request = "";
+
+        // Many tasks in one DAL — each has id, description, and optional keywords for matching
+        self.tasks = [
+            { "id": "task_email",   "description": "Check email and draft replies",        "keywords": ["email", "inbox", "reply"] },
+            { "id": "task_order",   "description": "Look up order status and respond",      "keywords": ["order", "shipping", "delivery"] },
+            { "id": "task_refund",  "description": "Process refund request",                 "keywords": ["refund", "return", "money back"] },
+            { "id": "task_faq",     "description": "Answer FAQ from knowledge base",         "keywords": ["how", "what", "why", "faq"] },
+            { "id": "task_escalate","description": "Escalate to human agent",               "keywords": ["human", "agent", "speak to", "complaint"] }
+        ];
+    }
+
+    // Choose a task by logic: match request prefix to task index (demo). In real code you could
+    // match keywords or use ai::generate_text to pick a task id from the request.
+    fn choose_task_by_keywords() -> string {
+        // Demo: first request -> task 1 (order), second -> task 2 (refund). Replace with
+        // keyword loop or LLM when string methods / prompts are available.
+        if (self.current_request == "check my order status") {
+            return self.tasks[1].description;
+        }
+        if (self.current_request == "refund for my purchase") {
+            return self.tasks[2].description;
+        }
+        return self.tasks[0].description;
+    }
+
+    // Optional: choose by prompt. Set self.current_request then call; use ai::generate_text
+    // to get a task id from the request and return the matching task description.
+
+    fn run_demo() {
+        print("Agent spawned: " + self.agent_id);
+        print("Tasks defined: 5");
+
+        self.current_request = "check my order status";
+        let desc1 = self.choose_task_by_keywords();
+        print("");
+        print("Request: " + self.current_request);
+        print("Chosen task: " + desc1);
+        let _ = agent::coordinate(self.agent_id, desc1, "task_distribution");
+
+        self.current_request = "refund for my purchase";
+        let desc2 = self.choose_task_by_keywords();
+        print("");
+        print("Request: " + self.current_request);
+        print("Chosen task: " + desc2);
+        let _ = agent::coordinate(self.agent_id, desc2, "task_distribution");
+
+        print("");
+        print("Done. Agent has tasks assigned; execution would run in your DAL (e.g. receive_pending_tasks then switch on task description).");
+    }
+}
+
+let svc = AgentMultiTaskChoice::new();
+svc.initialize();
+svc.run_demo();

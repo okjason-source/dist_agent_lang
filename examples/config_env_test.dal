@@ -1,0 +1,4 @@
+// Quick test: config:: namespace (get_env_or_default, get_required_env when set)
+print("config::get_env_or_default(\"DIST_AGENT_ENV\", \"dev\"): " + config::get_env_or_default("DIST_AGENT_ENV", "dev"));
+print("config::get_env_or_default(\"MISSING_KEY\", \"default\"): " + config::get_env_or_default("MISSING_KEY", "default"));
+print("done");

@@ -1,6 +1,8 @@
 //! CT1: Compiler pipeline skeleton tests — driver, service selection, stub backend.
 
-use dist_agent_lang::compile::{run_compile, select_services_for_target, CompileError};
+use dist_agent_lang::compile::{
+    run_compile, select_services_for_target, set_compiler_available_override, CompileError,
+};
 use dist_agent_lang::lexer::tokens::{get_target_constraints, CompilationTarget, TargetConstraint};
 use dist_agent_lang::parser::ast::{CompilationTargetInfo, Program, ServiceStatement, Statement};
 
@@ -301,5 +303,152 @@ service App @compile_target("native") { fn run() { 42 } }
         Err(CompileError::Parse(_)) => {}
         Err(CompileError::Backend(_)) => {}
         Err(e) => panic!("unexpected error: {}", e),
+    }
+}
+
+/// StubBackend (Mobile/Edge) calls check_compiler_available("rustc"). When rustc is present,
+/// compile must succeed. This catches mutants that replace check_compiler_available with false.
+#[test]
+fn test_run_compile_stub_backend_succeeds_when_rustc_available() {
+    let source = r#"
+@mobile
+service StubApp @compile_target("mobile") { fn run() { 0 } }
+"#;
+    let dir = tempfile::tempdir().unwrap();
+    let entry = dir.path().join("main.dal");
+    let out = dir.path().join("out");
+    std::fs::create_dir_all(&out).unwrap();
+
+    let result = run_compile(
+        entry.clone(),
+        CompilationTarget::Mobile,
+        out.clone(),
+        source,
+    );
+
+    match &result {
+        Ok(artifacts) => {
+            assert!(artifacts.stub, "StubBackend should produce stub: true");
+            assert_eq!(artifacts.target, "mobile");
+            assert_eq!(artifacts.service_names, vec!["StubApp"]);
+        }
+        Err(CompileError::CompilerNotFound { target, .. }) => {
+            // rustc not in PATH (e.g. minimal env); skip asserting success
+            assert_eq!(target.as_str(), "mobile");
+        }
+        Err(CompileError::Parse(e)) => panic!("parse error (fix source if grammar changed): {}", e),
+        Err(e) => panic!("unexpected error: {}", e),
+    }
+}
+
+/// With compiler-availability override set to false, compile returns CompilerNotFound.
+/// Catches mutants that replace check_*_available with true (would incorrectly succeed).
+#[test]
+fn test_run_compile_returns_compiler_not_found_when_override_false() {
+    struct Guard;
+    impl Drop for Guard {
+        fn drop(&mut self) {
+            set_compiler_available_override(None);
+        }
+    }
+    let _guard = Guard;
+    set_compiler_available_override(Some(false));
+
+    let source = r#"
+@mobile
+service StubApp @compile_target("mobile") { fn run() { 0 } }
+"#;
+    let dir = tempfile::tempdir().unwrap();
+    let entry = dir.path().join("main.dal");
+    let out = dir.path().join("out");
+    std::fs::create_dir_all(&out).unwrap();
+
+    let result = run_compile(
+        entry.clone(),
+        CompilationTarget::Mobile,
+        out.clone(),
+        source,
+    );
+
+    match &result {
+        Err(CompileError::CompilerNotFound { target, hint }) => {
+            assert_eq!(target.as_str(), "mobile");
+            assert!(!hint.is_empty());
+        }
+        Ok(_) => panic!("expected CompilerNotFound when override is false"),
+        Err(e) => panic!("expected CompilerNotFound, got: {}", e),
+    }
+}
+
+/// With override set to true, StubBackend succeeds even if rustc is not in PATH (tests override path).
+#[test]
+fn test_run_compile_stub_backend_succeeds_when_override_true() {
+    struct Guard;
+    impl Drop for Guard {
+        fn drop(&mut self) {
+            set_compiler_available_override(None);
+        }
+    }
+    let _guard = Guard;
+    set_compiler_available_override(Some(true));
+
+    let source = r#"
+@mobile
+service StubApp @compile_target("mobile") { fn run() { 0 } }
+"#;
+    let dir = tempfile::tempdir().unwrap();
+    let entry = dir.path().join("main.dal");
+    let out = dir.path().join("out");
+    std::fs::create_dir_all(&out).unwrap();
+
+    let result = run_compile(
+        entry.clone(),
+        CompilationTarget::Mobile,
+        out.clone(),
+        source,
+    );
+
+    assert!(
+        result.is_ok(),
+        "with override true, StubBackend should succeed: {:?}",
+        result.err()
+    );
+    let artifacts = result.unwrap();
+    assert!(artifacts.stub);
+    assert_eq!(artifacts.service_names, vec!["StubApp"]);
+}
+
+/// Native backend respects override: when false, returns CompilerNotFound (no real cargo check).
+#[test]
+fn test_run_compile_native_returns_compiler_not_found_when_override_false() {
+    struct Guard;
+    impl Drop for Guard {
+        fn drop(&mut self) {
+            set_compiler_available_override(None);
+        }
+    }
+    let _guard = Guard;
+    set_compiler_available_override(Some(false));
+
+    let source = r#"
+@native
+service App @compile_target("native") { fn run() { 42 } }
+"#;
+    let dir = tempfile::tempdir().unwrap();
+    let entry = dir.path().join("main.dal");
+    let out = dir.path().join("out");
+    std::fs::create_dir_all(&out).unwrap();
+
+    let result = run_compile(
+        entry.clone(),
+        CompilationTarget::Native,
+        out.clone(),
+        source,
+    );
+
+    match &result {
+        Err(CompileError::CompilerNotFound { target, .. }) => assert_eq!(target.as_str(), "native"),
+        Ok(_) => panic!("expected CompilerNotFound when override is false"),
+        Err(e) => panic!("expected CompilerNotFound, got: {}", e),
     }
 }

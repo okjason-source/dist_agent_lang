@@ -1312,6 +1312,7 @@ impl Runtime {
             "cloudadmin" => self.call_cloudadmin_function(function_name, args),
             "test" => self.call_test_function(function_name, args),
             "json" => self.call_json_function(function_name, args),
+            "config" => self.call_config_function(function_name, args),
             _ => {
                 // Check if namespace is a registered service name (e.g., TestNFT::new())
                 if self.services.contains_key(namespace) {
@@ -4767,6 +4768,91 @@ impl Runtime {
                 ))
             }
             _ => Err(RuntimeError::function_not_found(format!("json::{}", name))),
+        }
+    }
+
+    fn call_config_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::config;
+        match name {
+            "get_env" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let key = self.value_to_string(&args[0])?;
+                config::get_env(&key).map_err(RuntimeError::General)
+            }
+            "get_required_env" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let key = self.value_to_string(&args[0])?;
+                config::get_required_env(&key).map_err(RuntimeError::General)
+            }
+            "get_env_or_default" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let key = self.value_to_string(&args[0])?;
+                let default = args[1].clone();
+                Ok(config::get_env_or_default(&key, default))
+            }
+            "get_database_config" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                config::get_database_config()
+                    .map(Value::Map)
+                    .map_err(RuntimeError::General)
+            }
+            "get_api_config" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                config::get_api_config()
+                    .map(Value::Map)
+                    .map_err(RuntimeError::General)
+            }
+            "get_blockchain_config" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                config::get_blockchain_config()
+                    .map(Value::Map)
+                    .map_err(RuntimeError::General)
+            }
+            "get_ai_config" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                config::get_ai_config()
+                    .map(Value::Map)
+                    .map_err(RuntimeError::General)
+            }
+            _ => Err(RuntimeError::function_not_found(format!(
+                "config::{}",
+                name
+            ))),
         }
     }
 

@@ -85,6 +85,9 @@ fn services_to_rust(services: &[&ServiceStatement]) -> String {
 
 /// Check that rustc can build for wasm32 (target installed).
 fn check_wasm_target_available() -> bool {
+    if let Some(available) = super::get_compiler_available_override() {
+        return available;
+    }
     let out = Command::new("rustc")
         .args(["--print", "target-list"])
         .output();

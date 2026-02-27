@@ -97,6 +97,9 @@ fn service_to_solidity(service: &ServiceStatement) -> String {
 
 /// Check that solc is available.
 fn check_solc_available() -> bool {
+    if let Some(available) = super::get_compiler_available_override() {
+        return available;
+    }
     Command::new("solc")
         .arg("--version")
         .output()

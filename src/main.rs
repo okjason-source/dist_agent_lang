@@ -5979,6 +5979,7 @@ fn handle_agent_command(args: &[String]) {
 
     if args.is_empty() {
         eprintln!("Usage: {} agent <subcommand> [args...]", binary_name());
+        eprintln!("Subcommands: create, send, messages, chat, task, list, fleet");
         std::process::exit(1);
     }
 
@@ -6184,6 +6185,90 @@ fn handle_agent_command(args: &[String]) {
                 }
             }
         }
+        "chat" => {
+            // Interactive chat with an AI agent (same process). Creates agent then message loop; replies via LLM.
+            let name = if args.len() >= 2 {
+                args[1].as_str()
+            } else {
+                "assistant"
+            };
+            let config = AgentConfig::new(name.to_string(), AgentType::AI);
+            let ctx = match agent::spawn(config) {
+                Ok(c) => c,
+                Err(e) => {
+                    eprintln!("❌ Failed to spawn agent: {}", e);
+                    std::process::exit(1);
+                }
+            };
+            let agent_id = ctx.agent_id.clone();
+            const USER_ID: &str = "user";
+            println!("💬 Chat with AI agent: {}", agent_id);
+            println!("   Messages are sent to the agent; replies come from the LLM (OpenAI/Anthropic/local).");
+            println!(
+                "   Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or DAL_AI_ENDPOINT for real responses."
+            );
+            println!("   Commands: exit, quit\n");
+            loop {
+                print!("you> ");
+                std::io::Write::flush(&mut std::io::stdout()).unwrap();
+                let mut input = String::new();
+                if std::io::stdin().read_line(&mut input).is_err() {
+                    break;
+                }
+                let input = input.trim();
+                if input.is_empty() {
+                    continue;
+                }
+                if input == "exit" || input == "quit" {
+                    println!("Goodbye!");
+                    break;
+                }
+                // Send user -> agent
+                let msg_id = format!(
+                    "msg_{}",
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis()
+                );
+                let msg = agent::create_agent_message(
+                    msg_id.clone(),
+                    USER_ID.to_string(),
+                    agent_id.clone(),
+                    "text".to_string(),
+                    Value::String(input.to_string()),
+                );
+                if agent::communicate(USER_ID, &agent_id, msg).is_err() {
+                    eprintln!("❌ Send failed");
+                    continue;
+                }
+                // AI reply via LLM
+                let reply = match stdlib::ai::generate_text(input.to_string()) {
+                    Ok(s) => s.trim().to_string(),
+                    Err(e) => {
+                        eprintln!("⚠️  LLM error: {} (check API keys)", e);
+                        format!("(Could not get LLM reply: {})", e)
+                    }
+                };
+                let reply_msg = agent::create_agent_message(
+                    format!("{}_r", msg_id),
+                    agent_id.clone(),
+                    USER_ID.to_string(),
+                    "text".to_string(),
+                    Value::String(reply.clone()),
+                );
+                let _ = agent::communicate(&agent_id, USER_ID, reply_msg);
+                // Print replies for user
+                let msgs = agent::receive_messages(USER_ID);
+                for m in msgs {
+                    let content = match &m.content {
+                        Value::String(s) => s.clone(),
+                        _ => format!("{:?}", m.content),
+                    };
+                    println!("agent> {}", content);
+                }
+            }
+        }
         "task" => {
             if args.len() < 2 {
                 eprintln!("Usage: {} agent task <subcommand> [args...]", binary_name());
@@ -6259,8 +6344,11 @@ fn handle_agent_command(args: &[String]) {
         "list" => {
             println!("🤖 Agents\n");
             println!("   Agent state is process-local. Each 'dal' invocation is a new process.");
-            println!("   For multi-agent workflows, use DAL code:");
             println!();
+            println!("   Interactive chat (AI agent, LLM replies):");
+            println!("   {} agent chat [name]", binary_name());
+            println!();
+            println!("   For multi-agent workflows, use DAL code:");
             println!("   import agent from \"@dal/agent\"");
             println!("   let ctx = agent::spawn(agent::create_agent_config(\"w1\", \"worker\", \"Process\").unwrap())");
             println!("   agent::communicate(ctx.agent_id, \"agent_2\", agent::create_agent_message(...))");

@@ -1,0 +1,67 @@
+// Email Answering Agent Example
+// Spawns an agent that drafts replies to incoming emails (static reply; no LLM required).
+// Run: dal run examples/email_answering_agent.dal
+
+service EmailAnsweringDemo {
+    email_agent_id: string;
+
+    fn initialize() {
+        let config = {
+            "name": "EmailAssistant",
+            "type": "ai",
+            "role": "email_responder",
+            "capabilities": ["communication", "analysis", "task_execution"]
+        };
+        self.email_agent_id = agent::spawn(config);
+    }
+
+    // Submit an email to the agent; returns a drafted reply (static template, no LLM).
+    fn answer_email(from: string, subject: string, body: string) -> string {
+        let email = {
+            "from": from,
+            "subject": subject,
+            "body": body,
+            "type": "incoming_email"
+        };
+        let _ = agent::communicate("inbox", self.email_agent_id, email);
+
+        // Static reply (no LLM). Replace with ai::generate_text(prompt) when you have an API key.
+        let reply_draft = "Thank you for your message. We received your inquiry regarding: " + subject + ". We will look into this and respond shortly. Best regards, Support";
+
+        let reply_message = {
+            "type": "email_reply",
+            "to": from,
+            "subject": "Re: " + subject,
+            "body": reply_draft
+        };
+        let _ = agent::communicate(self.email_agent_id, "user", reply_message);
+
+        return reply_draft;
+    }
+
+    fn run_demo() {
+        print("Email answering agent spawned: " + self.email_agent_id);
+
+        let from = "customer@example.com";
+        let subject = "Question about my order";
+        let body = "Hi, I ordered item #4521 last week and haven't received a shipping confirmation. Can you check the status and let me know when it will arrive? Thanks.";
+
+        print("");
+        print("--- Incoming email ---");
+        print("From: " + from);
+        print("Subject: " + subject);
+        print("Body: " + body);
+        print("");
+
+        let reply = self.answer_email(from, subject, body);
+
+        print("--- Agent draft reply ---");
+        print(reply);
+        print("");
+        print("Done. Use agent::receive_messages(\"user\") to read replies in a full inbox flow.");
+    }
+}
+
+let demo = EmailAnsweringDemo::new();
+demo.initialize();
+demo.run_demo();

@@ -9,8 +9,26 @@ mod wasm;
 use crate::lexer::tokens::CompilationTarget;
 use crate::module_resolver::{ModuleResolver, ResolvedImport};
 use crate::parser::ast::{Program, ServiceStatement, Statement};
+use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+thread_local! {
+    static COMPILER_AVAILABLE_OVERRIDE: RefCell<Option<bool>> = RefCell::new(None);
+}
+
+/// Returns the current override if set (used by backend check functions).
+pub(crate) fn get_compiler_available_override() -> Option<bool> {
+    COMPILER_AVAILABLE_OVERRIDE.with(|cell| *cell.borrow())
+}
+
+/// Sets the compiler-available override for the current thread (used by tests to force CompilerNotFound or success).
+/// When set to `Some(b)`, all backend check functions return `b` instead of running the real command.
+/// Restore with `set_compiler_available_override(None)` when done.
+#[doc(hidden)]
+pub fn set_compiler_available_override(available: Option<bool>) {
+    COMPILER_AVAILABLE_OVERRIDE.with(|cell| *cell.borrow_mut() = available);
+}
 
 /// Result of a compile run (stub: manifest of what would be compiled).
 #[derive(Debug, Clone)]
@@ -112,6 +130,9 @@ impl CompileBackend for StubBackend {
 }
 
 fn check_compiler_available(cmd: &str) -> bool {
+    if let Some(available) = get_compiler_available_override() {
+        return available;
+    }
     Command::new(cmd)
         .arg("--version")
         .output()

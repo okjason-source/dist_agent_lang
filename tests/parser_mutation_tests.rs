@@ -793,3 +793,59 @@ fn test_parser_range_expression() {
         }
     }
 }
+
+// ============================================================================
+// PARSE_SOURCE DoS LIMITS (lib.rs mutations: *→+, >→==, >→>=)
+// ============================================================================
+// Catches: replace * with + in MAX_SOURCE_SIZE; replace > with == or >= in size/token checks
+
+const TEN_MB: usize = 10 * 1024 * 1024;
+
+#[test]
+fn test_parse_source_rejects_oversized_source() {
+    let oversized = "x".repeat(TEN_MB + 1);
+    let result = parse_source(&oversized);
+    assert!(result.is_err(), "parse_source should reject source > 10MB");
+    let err = result.unwrap_err();
+    let msg = err.to_string();
+    assert!(
+        msg.contains("Source code too large"),
+        "error should mention source size limit; got: {}",
+        msg
+    );
+    assert!(
+        msg.contains("10485760"),
+        "error should include max size (10485760); got: {}",
+        msg
+    );
+}
+
+#[test]
+fn test_parse_source_accepts_source_under_limit() {
+    let at_limit = "x".repeat(TEN_MB);
+    let result = parse_source(&at_limit);
+    assert!(
+        result.is_ok(),
+        "parse_source should accept source at 10MB; got: {:?}",
+        result.err()
+    );
+}
+
+#[test]
+fn test_parse_source_rejects_too_many_tokens() {
+    // Produce >= 1M tokens so lexer hits MAX_TOKENS (1_000_000). "1 " gives one token per repetition.
+    let many_tokens = "1 ".repeat(1_000_000);
+    let result = parse_source(&many_tokens);
+    let err = result.unwrap_err();
+    let msg = err.to_string();
+    assert!(
+        msg.contains("Too many tokens") || msg.contains("too many tokens"),
+        "error should mention token limit; got: {}",
+        msg
+    );
+    assert!(
+        msg.contains("1000000"),
+        "error should include max token count (1000000); got: {}",
+        msg
+    );
+}
