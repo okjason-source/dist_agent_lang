@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["add_sol","admin","agent","ai","aml","auth","chain","cloudadmin","config","cross_chain_security","crypto","crypto_signatures","database","desktop","iot","key","kyc","log","mobile","mold","oracle","secure_auth","service","sync","test","trust","web"]};
+window.SIDEBAR_ITEMS = {"mod":["add_sol","admin","agent","ai","aml","auth","chain","cloudadmin","config","cross_chain_security","crypto","crypto_signatures","database","desktop","evolve","iot","key","kyc","log","mobile","mold","oracle","secure_auth","service","sh","sync","test","trust","web"]};

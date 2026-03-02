@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["RegistryError"],"fn":["fetch_and_cache","fetch_package","find_package_root","pack_package","publish_package","resolve_and_fetch","resolve_and_fetch_with_meta","resolve_version"],"struct":["ResolvedSource"]};

@@ -1,0 +1,1 @@
+rd_("cdalldal_registryodist_agent_lang")

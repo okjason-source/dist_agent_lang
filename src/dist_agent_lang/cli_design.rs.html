@@ -76,38 +76,43 @@
 <a href=#76 id=76 data-nosnippet>76</a>  chain mint &lt;name&gt;           Mint asset
 <a href=#77 id=77 data-nosnippet>77</a>  chain asset &lt;id&gt;            Get asset info
 <a href=#78 id=78 data-nosnippet>78</a>
-<a href=#79 id=79 data-nosnippet>79</a>DATA &amp; INFRASTRUCTURE
-<a href=#80 id=80 data-nosnippet>80</a>  crypto hash &lt;data&gt; [alg]    Hash (sha256/sha512)
-<a href=#81 id=81 data-nosnippet>81</a>  crypto keygen [alg]         Generate keypair
-<a href=#82 id=82 data-nosnippet>82</a>  db connect &lt;conn&gt;           Test database connection
-<a href=#83 id=83 data-nosnippet>83</a>  db query &lt;conn&gt; "&lt;sql&gt;"     Execute query
-<a href=#84 id=84 data-nosnippet>84</a>  cloud authorize | grant     Cloud RBAC and audit
-<a href=#85 id=85 data-nosnippet>85</a>
-<a href=#86 id=86 data-nosnippet>86</a>DEVICES &amp; IoT
-<a href=#87 id=87 data-nosnippet>87</a>  iot register &lt;name&gt;         Register device
-<a href=#88 id=88 data-nosnippet>88</a>  iot status &lt;device_id&gt;      Device status
-<a href=#89 id=89 data-nosnippet>89</a>  iot ai-predict &lt;device&gt;     Predictive maintenance
+<a href=#79 id=79 data-nosnippet>79</a>ORCHESTRATION (bond, pipe, invoke)
+<a href=#80 id=80 data-nosnippet>80</a>  bond &lt;flow&gt; &lt;args...&gt;       Connect components (iot-to-db, auth-to-web, ...)
+<a href=#81 id=81 data-nosnippet>81</a>  pipe &lt;source&gt; -&gt; &lt;sink&gt;     Pipeline between components
+<a href=#82 id=82 data-nosnippet>82</a>  invoke &lt;workflow&gt; &lt;args...&gt; Multi-step workflows (compliance-check, ai-audit, ...)
+<a href=#83 id=83 data-nosnippet>83</a>
+<a href=#84 id=84 data-nosnippet>84</a>DATA &amp; INFRASTRUCTURE
+<a href=#85 id=85 data-nosnippet>85</a>  crypto hash &lt;data&gt; [alg]    Hash (sha256/sha512)
+<a href=#86 id=86 data-nosnippet>86</a>  crypto keygen [alg]         Generate keypair
+<a href=#87 id=87 data-nosnippet>87</a>  db connect &lt;conn&gt;           Test database connection
+<a href=#88 id=88 data-nosnippet>88</a>  db query &lt;conn&gt; "&lt;sql&gt;"     Execute query
+<a href=#89 id=89 data-nosnippet>89</a>  cloud authorize | grant     Cloud RBAC and audit
 <a href=#90 id=90 data-nosnippet>90</a>
-<a href=#91 id=91 data-nosnippet>91</a>TOOLS
-<a href=#92 id=92 data-nosnippet>92</a>  web &lt;file.dal&gt;              Run web app
-<a href=#93 id=93 data-nosnippet>93</a>  web get &lt;url&gt;               HTTP GET
-<a href=#94 id=94 data-nosnippet>94</a>  convert &lt;input.sol&gt; [-o out] Solidity to DAL
-<a href=#95 id=95 data-nosnippet>95</a>  doc &lt;file.dal&gt; [--open]     Generate documentation
-<a href=#96 id=96 data-nosnippet>96</a>  completions [bash|zsh|fish]  Shell completions
-<a href=#97 id=97 data-nosnippet>97</a>
-<a href=#98 id=98 data-nosnippet>98</a>INFO
-<a href=#99 id=99 data-nosnippet>99</a>  help                        This message
-<a href=#100 id=100 data-nosnippet>100</a>  version                     Version information
-<a href=#101 id=101 data-nosnippet>101</a>
-<a href=#102 id=102 data-nosnippet>102</a>QUICK EXAMPLES
-<a href=#103 id=103 data-nosnippet>103</a>  {0} new my-token --type chain
-<a href=#104 id=104 data-nosnippet>104</a>  {0} ai code "Create an ERC20 token with 1M supply"
-<a href=#105 id=105 data-nosnippet>105</a>  {0} chain gas-price 1
-<a href=#106 id=106 data-nosnippet>106</a>  {0} run app.dal
-<a href=#107 id=107 data-nosnippet>107</a>
-<a href=#108 id=108 data-nosnippet>108</a>For subcommand help: {0} &lt;command&gt; --help
-<a href=#109 id=109 data-nosnippet>109</a>"#</span>,
-<a href=#110 id=110 data-nosnippet>110</a>        bin
-<a href=#111 id=111 data-nosnippet>111</a>    )
-<a href=#112 id=112 data-nosnippet>112</a>}
+<a href=#91 id=91 data-nosnippet>91</a>DEVICES &amp; IoT
+<a href=#92 id=92 data-nosnippet>92</a>  iot register &lt;name&gt;         Register device
+<a href=#93 id=93 data-nosnippet>93</a>  iot status &lt;device_id&gt;      Device status
+<a href=#94 id=94 data-nosnippet>94</a>  iot ai-predict &lt;device&gt;     Predictive maintenance
+<a href=#95 id=95 data-nosnippet>95</a>
+<a href=#96 id=96 data-nosnippet>96</a>TOOLS
+<a href=#97 id=97 data-nosnippet>97</a>  web &lt;file.dal&gt;              Run web app
+<a href=#98 id=98 data-nosnippet>98</a>  web get &lt;url&gt;               HTTP GET
+<a href=#99 id=99 data-nosnippet>99</a>  convert &lt;input.sol&gt; [-o out] Solidity to DAL
+<a href=#100 id=100 data-nosnippet>100</a>  doc &lt;file.dal&gt; [--open]     Generate documentation
+<a href=#101 id=101 data-nosnippet>101</a>  completions [bash|zsh|fish]  Shell completions
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a>INFO
+<a href=#104 id=104 data-nosnippet>104</a>  help                        This message
+<a href=#105 id=105 data-nosnippet>105</a>  version                     Version information
+<a href=#106 id=106 data-nosnippet>106</a>
+<a href=#107 id=107 data-nosnippet>107</a>QUICK EXAMPLES
+<a href=#108 id=108 data-nosnippet>108</a>  {0} bond iot-to-db dev_001 postgres://localhost/db
+<a href=#109 id=109 data-nosnippet>109</a>  {0} pipe oracle fetch x btc -&gt; chain estimate 1 deploy
+<a href=#110 id=110 data-nosnippet>110</a>  {0} invoke compliance-check 0x742d...
+<a href=#111 id=111 data-nosnippet>111</a>  {0} run app.dal
+<a href=#112 id=112 data-nosnippet>112</a>
+<a href=#113 id=113 data-nosnippet>113</a>For subcommand help: {0} &lt;command&gt; --help
+<a href=#114 id=114 data-nosnippet>114</a>"#</span>,
+<a href=#115 id=115 data-nosnippet>115</a>        bin
+<a href=#116 id=116 data-nosnippet>116</a>    )
+<a href=#117 id=117 data-nosnippet>117</a>}
 </code></pre></div></section></main></body></html>
