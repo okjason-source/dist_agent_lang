@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["auth_token","get_package_index","get_tarball","main","name_to_storage_dir","public_url","put_version","sanitize_name","sanitize_version","storage_path"],"struct":["AppState"]};
+window.SIDEBAR_ITEMS = {"fn":["auth_token","get_package_index","get_tarball","main","name_to_storage_dir","path_under_storage","public_url","put_version","sanitize_name","sanitize_version","storage_path"],"struct":["AppState"]};
