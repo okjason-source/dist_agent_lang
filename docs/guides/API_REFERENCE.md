@@ -932,35 +932,49 @@ log::info("web", "Server listening on port 8080");
 
 ## 9. agent:: - Agent Orchestration
 
-Agent lifecycle and coordination functions.
+Agent lifecycle and coordination. For full setup, CLI, and HTTP server, see [AGENT_SETUP_AND_USAGE.md](AGENT_SETUP_AND_USAGE.md).
 
 ### Functions
 
-#### `agent::create(config: map<string, any>) -> Agent`
-Create a new agent.
+#### `agent::spawn(config: map<string, any>) -> string`
+Create and spawn a new agent. Returns the agent ID.
 
 ```dal
 let config = {
     "name": "MyAgent",
     "type": "worker",
+    "role": "Processor",
     "capabilities": ["process", "analyze"]
 };
-let agent = agent::create(config);
-log::info("agent", "Agent created: " + agent.id);
+let agent_id = agent::spawn(config);
+agent::set_serve_agent(agent_id);  // when using dal agent serve with a behavior script
+```
+
+Config: `name`, `type` (ai | system | worker | custom:name), optional `role`, `capabilities`, `trust_level`, `metadata`.
+
+---
+
+#### `agent::set_serve_agent(agent_id: string)`
+Register this agent as the one served via HTTP when using `dal agent serve` with a behavior script.
+
+---
+
+#### `agent::coordinate(agent_id: string, task_description: string, coordination_type: string) -> Result<string, error>`
+Assign a task to an agent. Coordination type e.g. `"task_distribution"`.
+
+```dal
+let _ = agent::coordinate(agent_id, "Process the batch", "task_distribution");
 ```
 
 ---
 
-#### `agent::coordinate(agents: list<Agent>, task: string) -> Result<any, string>`
-Coordinate multiple agents to complete a task.
+#### `agent::communicate(sender_id: string, receiver_id: string, message: any) -> Result<string, error>`
+Send a message between agents. Build the message with `agent::create_message(sender_id, receiver_id, message_type, content)` or use the three-arg form (runtime creates message with generated id).
 
-```dal
-let result = agent::coordinate([agent1, agent2], "process_data");
-if result.is_ok() {
-    let result_data = result.unwrap();
-    log::info("agent", "Task completed");
-}
-```
+---
+
+#### `agent::create_message(sender_id, receiver_id, message_type, content)` / `agent::create_task(description, priority?)`
+Helpers to create message and task values for use with `communicate` and coordination.
 
 ---
 

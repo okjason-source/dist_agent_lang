@@ -1,6 +1,6 @@
 # Agent capabilities: how they’re built and used
 
-This doc describes how agent capabilities are defined, set, validated, and used so you can extend or add new ones.
+This doc describes how agent capabilities are defined, set, validated, and used so you can extend or add new ones. For **setting up and using agents** (project init, CLI, HTTP server, DAL APIs, molds, evolve), see [guides/AGENT_SETUP_AND_USAGE.md](guides/AGENT_SETUP_AND_USAGE.md).
 
 ---
 

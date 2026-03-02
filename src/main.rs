@@ -2818,7 +2818,7 @@ authors = []
     }
 
     if !std::path::Path::new("agent.toml").exists() {
-        let agent_toml = r#"# Agent project config (see AGENT_SHELL_EVOLUTION_PLAN.md)
+        let agent_toml = r#"# Agent project config (see docs/guides/AGENT_SETUP_AND_USAGE.md)
 
 [agent.sh]
 trust = "sandboxed"
@@ -2872,7 +2872,7 @@ DAL agent with evolve context and configurable shell trust.
 - `dal agent serve` — Run agent HTTP API (messages, tasks)
 - `dal agent create worker my-agent` — Create agent in-process
 
-Set env (e.g. `export $(cat .env | xargs)` or use a .env loader). See docs/development/AGENT_SHELL_EVOLUTION_PLAN.md and AGENT_LOCAL_SERVER_DESIGN.md.
+Set env (e.g. `export $(cat .env | xargs)` or use a .env loader). See docs/guides/AGENT_SETUP_AND_USAGE.md.
 "#;
         std::fs::write("README.md", readme).unwrap();
     }

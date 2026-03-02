@@ -163,6 +163,9 @@ match value {
 ```
 
 ### Agent Operations
+
+For full agent setup, CLI, HTTP server, and DAL APIs, see [Agent setup and usage](guides/AGENT_SETUP_AND_USAGE.md).
+
 ```rust
 // Spawn agent
 let agent_id = spawn {
