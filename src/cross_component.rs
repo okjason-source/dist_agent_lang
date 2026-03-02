@@ -1,7 +1,6 @@
 //! Cross-component CLI: bond, pipe, invoke.
 //!
-//! Implementation follows [CROSS_COMPONENT_IMPLEMENTATION_PLAN](../docs/development/implementation/CROSS_COMPONENT_IMPLEMENTATION_PLAN.md).
-//! Phase A: bond flows (auth-to-web, oracle-to-chain); Phase B: pipe; Phase C: invoke.
+//! bond flows (auth-to-web, oracle-to-chain); pipe; invoke.
 
 /// Result of running a cross-component command. CLI uses this to print and set exit code.
 #[derive(Debug)]
