@@ -76,6 +76,8 @@ PHASE*.md
 # Agent / project files (local workspace; do not commit)
 /agent_context.md
 **/agent_context.md
+/evolve.md
+**/evolve.md
 /agent.dal
 **/agent.dal
 /agent.toml

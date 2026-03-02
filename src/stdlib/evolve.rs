@@ -1,12 +1,12 @@
 //! Evolve: dynamic markdown file for conversation history and action log (Phase 3).
-//! Path from DAL_AGENT_CONTEXT_PATH or [agent] context_path in agent.toml / dal.toml; default ./agent_context.md.
+//! Path from DAL_AGENT_CONTEXT_PATH or [agent] context_path in agent.toml / dal.toml; default ./evolve.md.
 
 use std::env;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
 
-const DEFAULT_CONTEXT_PATH: &str = "./agent_context.md";
+const DEFAULT_CONTEXT_PATH: &str = "./evolve.md";
 const DEFAULT_AGENT_NAME: &str = "Agent";
 
 fn get_context_path() -> PathBuf {

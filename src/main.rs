@@ -2803,7 +2803,7 @@ main();
     }
 }
 
-/// Initialize an agent project in current directory: dal.toml (if missing), agent.toml, agent.dal, README.md, agent_context.md (evolve). Additive; never overwrite existing files.
+/// Initialize an agent project in current directory: dal.toml (if missing), agent.toml, agent.dal, README.md, evolve.md (evolve). Additive; never overwrite existing files.
 fn init_project_agent(quiet: bool) {
     // Ensure DAL is present: create minimal dal.toml only if missing (protect existing)
     if !std::path::Path::new("dal.toml").exists() {
@@ -2826,7 +2826,7 @@ trust = "sandboxed"
 # allowed_prefixes = ["npm", "cargo", "git"]
 
 [agent]
-context_path = "./agent_context.md"
+context_path = "./evolve.md"
 "#;
         std::fs::write("agent.toml", agent_toml).unwrap();
     }
@@ -2862,7 +2862,7 @@ DAL agent with evolve context and configurable shell trust.
 
 - `agent.dal` — Agent behavior entry
 - `agent.toml` — [agent.sh] trust, [agent] context_path
-- `agent_context.md` — Evolve context (conversation + action log)
+- `evolve.md` — Evolve context (conversation + action log)
 - `.env.example` — Example env vars (safe to commit)
 - `.env` — Local env (set values; do not commit; add to .gitignore)
 
@@ -2877,7 +2877,7 @@ Set env (e.g. `export $(cat .env | xargs)` or use a .env loader). See docs/devel
         std::fs::write("README.md", readme).unwrap();
     }
 
-    if !std::path::Path::new("agent_context.md").exists() {
+    if !std::path::Path::new("evolve.md").exists() {
         let now = chrono::Utc::now().to_rfc3339();
         let header = format!(
             r#"# Agent context — Agent
@@ -2892,7 +2892,7 @@ Updated: {}
 "#,
             now
         );
-        std::fs::write("agent_context.md", header).unwrap();
+        std::fs::write("evolve.md", header).unwrap();
     }
 
     // .env.example: safe to commit; documents expected env vars
@@ -2900,8 +2900,8 @@ Updated: {}
         let env_example = r#"# Agent project env (copy to .env and set values; do not commit .env)
 # Shell trust: off | sandboxed | confirmed | trusted
 DAL_AGENT_SHELL_TRUST=sandboxed
-# Evolve context file path (default: ./agent_context.md)
-DAL_AGENT_CONTEXT_PATH=./agent_context.md
+# Evolve context file path (default: ./evolve.md)
+DAL_AGENT_CONTEXT_PATH=./evolve.md
 # Optional: for ai:: / assist (leave empty or set your key)
 # OPENAI_API_KEY=
 # ANTHROPIC_API_KEY=
@@ -2913,7 +2913,7 @@ DAL_AGENT_CONTEXT_PATH=./agent_context.md
     if !std::path::Path::new(".env").exists() {
         let env_local = r#"# Local env — set values and do not commit (add .env to .gitignore)
 DAL_AGENT_SHELL_TRUST=sandboxed
-DAL_AGENT_CONTEXT_PATH=./agent_context.md
+DAL_AGENT_CONTEXT_PATH=./evolve.md
 "#;
         std::fs::write(".env", env_local).unwrap();
     }
@@ -2921,7 +2921,7 @@ DAL_AGENT_CONTEXT_PATH=./agent_context.md
     ensure_gitignore_env();
 
     if !quiet {
-        println!("Initialized agent project (agent.dal, agent.toml, README.md, agent_context.md, .env.example, .env).");
+        println!("Initialized agent project (agent.dal, agent.toml, README.md, evolve.md, .env.example, .env).");
     }
 }
 
