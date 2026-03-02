@@ -2818,7 +2818,7 @@
 <a href=#2818 id=2818 data-nosnippet>2818</a>    }
 <a href=#2819 id=2819 data-nosnippet>2819</a>
 <a href=#2820 id=2820 data-nosnippet>2820</a>    <span class="kw">if </span>!std::path::Path::new(<span class="string">"agent.toml"</span>).exists() {
-<a href=#2821 id=2821 data-nosnippet>2821</a>        <span class="kw">let </span>agent_toml = <span class="string">r#"# Agent project config (see AGENT_SHELL_EVOLUTION_PLAN.md)
+<a href=#2821 id=2821 data-nosnippet>2821</a>        <span class="kw">let </span>agent_toml = <span class="string">r#"# Agent project config (see docs/guides/AGENT_SETUP_AND_USAGE.md)
 <a href=#2822 id=2822 data-nosnippet>2822</a>
 <a href=#2823 id=2823 data-nosnippet>2823</a>[agent.sh]
 <a href=#2824 id=2824 data-nosnippet>2824</a>trust = "sandboxed"
@@ -2872,7 +2872,7 @@
 <a href=#2872 id=2872 data-nosnippet>2872</a>- `dal agent serve` — Run agent HTTP API (messages, tasks)
 <a href=#2873 id=2873 data-nosnippet>2873</a>- `dal agent create worker my-agent` — Create agent in-process
 <a href=#2874 id=2874 data-nosnippet>2874</a>
-<a href=#2875 id=2875 data-nosnippet>2875</a>Set env (e.g. `export $(cat .env | xargs)` or use a .env loader). See docs/development/AGENT_SHELL_EVOLUTION_PLAN.md and AGENT_LOCAL_SERVER_DESIGN.md.
+<a href=#2875 id=2875 data-nosnippet>2875</a>Set env (e.g. `export $(cat .env | xargs)` or use a .env loader). See docs/guides/AGENT_SETUP_AND_USAGE.md.
 <a href=#2876 id=2876 data-nosnippet>2876</a>"#</span>;
 <a href=#2877 id=2877 data-nosnippet>2877</a>        std::fs::write(<span class="string">"README.md"</span>, readme).unwrap();
 <a href=#2878 id=2878 data-nosnippet>2878</a>    }
