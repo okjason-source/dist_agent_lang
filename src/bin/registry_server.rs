@@ -45,6 +45,7 @@ struct AppState {
 
 fn sanitize_name(s: &str) -> bool {
     !s.is_empty()
+        && !s.contains("..")
         && s.chars().all(|c| {
             c.is_alphanumeric() || c == '/' || c == '@' || c == '-' || c == '_' || c == '.'
         })
@@ -52,8 +53,29 @@ fn sanitize_name(s: &str) -> bool {
 
 fn sanitize_version(s: &str) -> bool {
     !s.is_empty()
+        && !s.contains("..")
         && s.chars()
             .all(|c| c.is_alphanumeric() || c == '.' || c == '-' || c == '_')
+}
+
+/// Verify path is under storage root (prevents path traversal).
+fn path_under_storage(path: &std::path::Path, storage: &std::path::Path) -> bool {
+    let storage_canon = match storage.canonicalize() {
+        Ok(p) => p,
+        Err(_) => return false,
+    };
+    if let Ok(path_canon) = path.canonicalize() {
+        return path_canon.starts_with(&storage_canon);
+    }
+    // Path may not exist yet; walk up to first existing ancestor and verify it's under storage
+    let mut current = path;
+    while let Some(parent) = current.parent() {
+        if let Ok(parent_canon) = parent.canonicalize() {
+            return parent_canon.starts_with(&storage_canon);
+        }
+        current = parent;
+    }
+    false
 }
 
 /// Map package name to filesystem-safe dir name (e.g. @dal/testing -> _at_dal_slash_testing).
@@ -70,6 +92,9 @@ async fn get_package_index(
     }
     let dir = name_to_storage_dir(&name);
     let index_path = state.storage.join("packages").join(dir).join("index.json");
+    if !path_under_storage(&index_path, &state.storage) {
+        return (StatusCode::BAD_REQUEST, "invalid path").into_response();
+    }
     match tokio::fs::read_to_string(&index_path).await {
         Ok(s) => {
             let v: serde_json::Value = match serde_json::from_str(&s) {
@@ -104,6 +129,9 @@ async fn get_tarball(
         .join(dir)
         .join("versions")
         .join(format!("{}.tgz", version));
+    if !path_under_storage(&tgz_path, &state.storage) {
+        return (StatusCode::BAD_REQUEST, "invalid path").into_response();
+    }
     match tokio::fs::read(&tgz_path).await {
         Ok(bytes) => (
             StatusCode::OK,
@@ -148,6 +176,9 @@ async fn put_version(
     let dir = name_to_storage_dir(&name);
     let pkg_dir = state.storage.join("packages").join(dir);
     let versions_dir = pkg_dir.join("versions");
+    if !path_under_storage(&versions_dir, &state.storage) {
+        return (StatusCode::BAD_REQUEST, "invalid path").into_response();
+    }
     if let Err(e) = tokio::fs::create_dir_all(&versions_dir).await {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -156,10 +187,16 @@ async fn put_version(
             .into_response();
     }
     let tgz_path = versions_dir.join(format!("{}.tgz", version));
+    if !path_under_storage(&tgz_path, &state.storage) {
+        return (StatusCode::BAD_REQUEST, "invalid path").into_response();
+    }
     if let Err(e) = tokio::fs::write(&tgz_path, body.as_ref()).await {
         return (StatusCode::INTERNAL_SERVER_ERROR, format!("write: {}", e)).into_response();
     }
     let index_path = pkg_dir.join("index.json");
+    if !path_under_storage(&index_path, &state.storage) {
+        return (StatusCode::BAD_REQUEST, "invalid path").into_response();
+    }
     let base = state.public_url.trim_end_matches('/');
     let url = format!("{}/v1/packages/{}/versions/{}/tarball", base, name, version);
     let mut index: serde_json::Map<String, serde_json::Value> =
