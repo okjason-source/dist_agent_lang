@@ -1,4 +1,4 @@
-# Agent project config (see AGENT_SHELL_EVOLUTION_PLAN.md)
+# Agent project config
 
 [agent.sh]
 trust = "sandboxed"
@@ -6,4 +6,4 @@ trust = "sandboxed"
 # allowed_prefixes = ["npm", "cargo", "git"]
 
 [agent]
-context_path = "./agent_context.md"
+context_path = "./evolve.md"
