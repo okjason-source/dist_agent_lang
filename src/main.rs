@@ -42,8 +42,8 @@ use testing::{TestCase, TestConfig, TestRunner, TestSuite};
 #[cfg(feature = "lsp")]
 mod lsp;
 
-mod cross_component;
 mod agent_serve;
+mod cross_component;
 
 /// Returns the binary name used to invoke the CLI (e.g. "dal" or "dist_agent_lang")
 fn binary_name() -> String {
@@ -2708,7 +2708,10 @@ fn init_project(template: &str, quiet: bool) {
             std::process::exit(0);
         }
         _ => {
-            eprintln!("Unknown template '{}'. Use: dal, agent, js, rs, sol (e.g. 'dal init agent')", template);
+            eprintln!(
+                "Unknown template '{}'. Use: dal, agent, js, rs, sol (e.g. 'dal init agent')",
+                template
+            );
             std::process::exit(1);
         }
     }
@@ -6225,7 +6228,9 @@ fn handle_agent_command(args: &[String]) {
             let mut mold_path: Option<String> = None;
             let mut behavior_path: Option<String> = None;
             let mut prompt_only = std::env::var("DAL_AGENT_PROMPT_ONLY")
-                .map(|v| v == "1" || v.eq_ignore_ascii_case("true") || v.eq_ignore_ascii_case("yes"))
+                .map(|v| {
+                    v == "1" || v.eq_ignore_ascii_case("true") || v.eq_ignore_ascii_case("yes")
+                })
                 .unwrap_or(false);
             let rest = &args[1..];
             let mut i = 0;

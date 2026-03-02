@@ -12,7 +12,13 @@ fn dal() -> Command {
 #[test]
 fn test_bond_auth_to_web_dry_run() {
     let out = dal()
-        .args(["bond", "auth-to-web", "mytoken", "https://example.com", "--dry-run"])
+        .args([
+            "bond",
+            "auth-to-web",
+            "mytoken",
+            "https://example.com",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -23,7 +29,14 @@ fn test_bond_auth_to_web_dry_run() {
 #[test]
 fn test_bond_oracle_to_chain_dry_run() {
     let out = dal()
-        .args(["bond", "oracle-to-chain", "https://api.example.com", "btc", "1", "--dry-run"])
+        .args([
+            "bond",
+            "oracle-to-chain",
+            "https://api.example.com",
+            "btc",
+            "1",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -34,7 +47,14 @@ fn test_bond_oracle_to_chain_dry_run() {
 #[test]
 fn test_bond_chain_to_sync_dry_run() {
     let out = dal()
-        .args(["bond", "chain-to-sync", "1", "0xabc", "https://sync.example.com", "--dry-run"])
+        .args([
+            "bond",
+            "chain-to-sync",
+            "1",
+            "0xabc",
+            "https://sync.example.com",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -43,7 +63,13 @@ fn test_bond_chain_to_sync_dry_run() {
 #[test]
 fn test_bond_iot_to_db_dry_run() {
     let out = dal()
-        .args(["bond", "iot-to-db", "dev_001", "sqlite://:memory:", "--dry-run"])
+        .args([
+            "bond",
+            "iot-to-db",
+            "dev_001",
+            "sqlite://:memory:",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -52,7 +78,13 @@ fn test_bond_iot_to_db_dry_run() {
 #[test]
 fn test_bond_iot_to_web_dry_run() {
     let out = dal()
-        .args(["bond", "iot-to-web", "dev_001", "https://api.example.com", "--dry-run"])
+        .args([
+            "bond",
+            "iot-to-web",
+            "dev_001",
+            "https://api.example.com",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -61,7 +93,13 @@ fn test_bond_iot_to_web_dry_run() {
 #[test]
 fn test_bond_db_to_sync_dry_run() {
     let out = dal()
-        .args(["bond", "db-to-sync", "sqlite://:memory:", "https://sync.example.com", "--dry-run"])
+        .args([
+            "bond",
+            "db-to-sync",
+            "sqlite://:memory:",
+            "https://sync.example.com",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -70,7 +108,13 @@ fn test_bond_db_to_sync_dry_run() {
 #[test]
 fn test_bond_sync_to_db_dry_run() {
     let out = dal()
-        .args(["bond", "sync-to-db", "https://sync.example.com", "sqlite://:memory:", "--dry-run"])
+        .args([
+            "bond",
+            "sync-to-db",
+            "https://sync.example.com",
+            "sqlite://:memory:",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -79,7 +123,13 @@ fn test_bond_sync_to_db_dry_run() {
 #[test]
 fn test_bond_ai_to_service_dry_run() {
     let out = dal()
-        .args(["bond", "ai-to-service", "analyze", "https://api.example.com", "--dry-run"])
+        .args([
+            "bond",
+            "ai-to-service",
+            "analyze",
+            "https://api.example.com",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -105,7 +155,12 @@ fn test_bond_service_to_chain_dry_run() {
 #[test]
 fn test_bond_log_to_sync_dry_run() {
     let out = dal()
-        .args(["bond", "log-to-sync", "https://sync.example.com", "--dry-run"])
+        .args([
+            "bond",
+            "log-to-sync",
+            "https://sync.example.com",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -148,7 +203,16 @@ fn test_pipe_dry_run() {
 #[test]
 fn test_pipe_chain_log_dry_run() {
     let out = dal()
-        .args(["pipe", "chain", "gas-price", "1", "->", "log", "info", "--dry-run"])
+        .args([
+            "pipe",
+            "chain",
+            "gas-price",
+            "1",
+            "->",
+            "log",
+            "info",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -157,7 +221,14 @@ fn test_pipe_chain_log_dry_run() {
 #[test]
 fn test_invoke_price_to_deploy_dry_run() {
     let out = dal()
-        .args(["invoke", "price-to-deploy", "https://api.example.com", "1", "MyContract", "--dry-run"])
+        .args([
+            "invoke",
+            "price-to-deploy",
+            "https://api.example.com",
+            "1",
+            "MyContract",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -166,7 +237,13 @@ fn test_invoke_price_to_deploy_dry_run() {
 #[test]
 fn test_invoke_iot_ingest_dry_run() {
     let out = dal()
-        .args(["invoke", "iot-ingest", "dev_001", "sqlite://:memory:", "--dry-run"])
+        .args([
+            "invoke",
+            "iot-ingest",
+            "dev_001",
+            "sqlite://:memory:",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -175,7 +252,13 @@ fn test_invoke_iot_ingest_dry_run() {
 #[test]
 fn test_invoke_ai_audit_dry_run() {
     let out = dal()
-        .args(["invoke", "ai-audit", "sqlite://:memory:", "SELECT 1", "--dry-run"])
+        .args([
+            "invoke",
+            "ai-audit",
+            "sqlite://:memory:",
+            "SELECT 1",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());
@@ -184,7 +267,12 @@ fn test_invoke_ai_audit_dry_run() {
 #[test]
 fn test_invoke_compliance_check_dry_run() {
     let out = dal()
-        .args(["invoke", "compliance-check", "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb", "--dry-run"])
+        .args([
+            "invoke",
+            "compliance-check",
+            "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+            "--dry-run",
+        ])
         .output()
         .unwrap();
     assert!(out.status.success());

@@ -62,10 +62,10 @@ pub mod http_server_security_middleware;
 pub mod lexer;
 pub mod manifest;
 pub mod module_resolver;
-pub mod registry;
 pub mod mold;
 pub mod parser;
 pub mod performance;
+pub mod registry;
 pub mod reporting;
 pub mod runtime;
 pub mod solidity_converter;
@@ -171,7 +171,8 @@ pub fn execute_dal_file(path: &str) -> Result<(), String> {
             .parent()
             .unwrap_or_else(|| std::path::Path::new("."));
         let manifest_path = entry_dir.join("dal.toml");
-        let mut resolver = module_resolver::ModuleResolver::new().with_root_dir(entry_dir.to_path_buf());
+        let mut resolver =
+            module_resolver::ModuleResolver::new().with_root_dir(entry_dir.to_path_buf());
         if manifest_path.exists() {
             if let Ok(deps) = manifest::load_resolved_deps(&manifest_path) {
                 resolver = resolver.with_dependencies(deps);

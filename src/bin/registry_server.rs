@@ -44,11 +44,16 @@ struct AppState {
 }
 
 fn sanitize_name(s: &str) -> bool {
-    !s.is_empty() && s.chars().all(|c| c.is_alphanumeric() || c == '/' || c == '@' || c == '-' || c == '_' || c == '.')
+    !s.is_empty()
+        && s.chars().all(|c| {
+            c.is_alphanumeric() || c == '/' || c == '@' || c == '-' || c == '_' || c == '.'
+        })
 }
 
 fn sanitize_version(s: &str) -> bool {
-    !s.is_empty() && s.chars().all(|c| c.is_alphanumeric() || c == '.' || c == '-' || c == '_')
+    !s.is_empty()
+        && s.chars()
+            .all(|c| c.is_alphanumeric() || c == '.' || c == '-' || c == '_')
 }
 
 /// Map package name to filesystem-safe dir name (e.g. @dal/testing -> _at_dal_slash_testing).
@@ -56,7 +61,10 @@ fn name_to_storage_dir(name: &str) -> String {
     name.replace('@', "_at_").replace('/', "_slash_")
 }
 
-async fn get_package_index(State(state): State<Arc<AppState>>, Path(name): Path<String>) -> Response {
+async fn get_package_index(
+    State(state): State<Arc<AppState>>,
+    Path(name): Path<String>,
+) -> Response {
     if !sanitize_name(&name) {
         return (StatusCode::BAD_REQUEST, "invalid package name").into_response();
     }
@@ -66,13 +74,18 @@ async fn get_package_index(State(state): State<Arc<AppState>>, Path(name): Path<
         Ok(s) => {
             let v: serde_json::Value = match serde_json::from_str(&s) {
                 Ok(j) => j,
-                Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, "invalid index.json").into_response(),
+                Err(_) => {
+                    return (StatusCode::INTERNAL_SERVER_ERROR, "invalid index.json")
+                        .into_response()
+                }
             };
             (StatusCode::OK, Json(v)).into_response()
         }
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            (StatusCode::NOT_FOUND, format!("package not found: {}", name)).into_response()
-        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => (
+            StatusCode::NOT_FOUND,
+            format!("package not found: {}", name),
+        )
+            .into_response(),
         Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "read error").into_response(),
     }
 }
@@ -121,7 +134,9 @@ async fn put_version(
             .get("Authorization")
             .and_then(|v| v.to_str().ok())
             .unwrap_or("");
-        if !auth.starts_with("Bearer ") || auth.strip_prefix("Bearer ").unwrap_or("") != token.as_str() {
+        if !auth.starts_with("Bearer ")
+            || auth.strip_prefix("Bearer ").unwrap_or("") != token.as_str()
+        {
             return (StatusCode::UNAUTHORIZED, "invalid or missing token").into_response();
         }
     }
@@ -142,29 +157,26 @@ async fn put_version(
     }
     let tgz_path = versions_dir.join(format!("{}.tgz", version));
     if let Err(e) = tokio::fs::write(&tgz_path, body.as_ref()).await {
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("write: {}", e),
-        )
-            .into_response();
+        return (StatusCode::INTERNAL_SERVER_ERROR, format!("write: {}", e)).into_response();
     }
     let index_path = pkg_dir.join("index.json");
     let base = state.public_url.trim_end_matches('/');
     let url = format!("{}/v1/packages/{}/versions/{}/tarball", base, name, version);
-    let mut index: serde_json::Map<String, serde_json::Value> = match tokio::fs::read_to_string(&index_path).await {
-        Ok(s) => serde_json::from_str(&s).unwrap_or_else(|_| {
-            let mut m = serde_json::Map::new();
-            m.insert("name".to_string(), json!(&name));
-            m.insert("versions".to_string(), json!({}));
-            m
-        }),
-        Err(_) => {
-            let mut m = serde_json::Map::new();
-            m.insert("name".to_string(), json!(&name));
-            m.insert("versions".to_string(), json!({}));
-            m
-        }
-    };
+    let mut index: serde_json::Map<String, serde_json::Value> =
+        match tokio::fs::read_to_string(&index_path).await {
+            Ok(s) => serde_json::from_str(&s).unwrap_or_else(|_| {
+                let mut m = serde_json::Map::new();
+                m.insert("name".to_string(), json!(&name));
+                m.insert("versions".to_string(), json!({}));
+                m
+            }),
+            Err(_) => {
+                let mut m = serde_json::Map::new();
+                m.insert("name".to_string(), json!(&name));
+                m.insert("versions".to_string(), json!({}));
+                m
+            }
+        };
     let versions = index
         .get_mut("versions")
         .and_then(|v| v.as_object_mut())
@@ -178,7 +190,11 @@ async fn put_version(
         )
             .into_response();
     }
-    (StatusCode::CREATED, Json(json!({ "ok": true, "name": name, "version": version }))).into_response()
+    (
+        StatusCode::CREATED,
+        Json(json!({ "ok": true, "name": name, "version": version })),
+    )
+        .into_response()
 }
 
 #[tokio::main]
@@ -187,7 +203,9 @@ async fn main() {
     let public_url = public_url();
     let auth_token = auth_token();
     if auth_token.is_none() {
-        eprintln!("⚠️  REGISTRY_TOKEN (or DAL_REGISTRY_TOKEN) not set; publish is unauthenticated.");
+        eprintln!(
+            "⚠️  REGISTRY_TOKEN (or DAL_REGISTRY_TOKEN) not set; publish is unauthenticated."
+        );
     }
     if let Err(e) = std::fs::create_dir_all(&storage) {
         eprintln!("Failed to create storage dir {:?}: {}", storage, e);
@@ -207,9 +225,16 @@ async fn main() {
         .route("/v1/packages/:name/versions/:version", put(put_version))
         .layer(CorsLayer::permissive())
         .with_state(state);
-    let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(8787);
+    let port: u16 = std::env::var("PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(8787);
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
-    println!("DAL registry listening on http://{} (storage: {:?})", addr, storage_path());
+    println!(
+        "DAL registry listening on http://{} (storage: {:?})",
+        addr,
+        storage_path()
+    );
     let listener = tokio::net::TcpListener::bind(addr).await.expect("bind");
     axum::serve(listener, app).await.expect("serve");
 }

@@ -130,11 +130,7 @@ pub fn load_recent(agent_name: Option<&str>, max_lines: i64) -> Result<String, S
     }
     let lines: Vec<&str> = full.lines().collect();
     let n = max_lines as usize;
-    let start = if lines.len() <= n {
-        0
-    } else {
-        lines.len() - n
-    };
+    let start = if lines.len() <= n { 0 } else { lines.len() - n };
     Ok(lines[start..].join("\n"))
 }
 

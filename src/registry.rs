@@ -131,7 +131,10 @@ pub fn resolve_version(
         .and_then(|v| v.as_object())
         .ok_or_else(|| RegistryError::VersionNotFound(format!("{}@{}", name, version)))?;
 
-    let url = ver_obj.get("url").and_then(|v| v.as_str()).map(String::from);
+    let url = ver_obj
+        .get("url")
+        .and_then(|v| v.as_str())
+        .map(String::from);
     let ipfs_cid = ver_obj
         .get("ipfs_cid")
         .or_else(|| ver_obj.get("ipfsCid"))
@@ -145,10 +148,7 @@ pub fn resolve_version(
         )));
     }
 
-    Ok((
-        version,
-        ResolvedSource { url, ipfs_cid },
-    ))
+    Ok((version, ResolvedSource { url, ipfs_cid }))
 }
 
 #[cfg(not(feature = "http-interface"))]
@@ -245,14 +245,14 @@ pub fn pack_package(
     name: &str,
     version: &str,
 ) -> Result<Vec<u8>, RegistryError> {
-    let root = manifest_path
-        .parent()
-        .unwrap_or_else(|| Path::new("."));
+    let root = manifest_path.parent().unwrap_or_else(|| Path::new("."));
     let mut files = Vec::new();
     collect_package_files(root, root, &mut files)
         .map_err(|e| RegistryError::Unpack(e.to_string()))?;
     if files.is_empty() {
-        return Err(RegistryError::Publish("no dal.toml or *.dal files found".to_string()));
+        return Err(RegistryError::Publish(
+            "no dal.toml or *.dal files found".to_string(),
+        ));
     }
     let prefix = format!("{}-{}/", name, version);
     let mut buf = Vec::new();
@@ -263,13 +263,14 @@ pub fn pack_package(
             let rel = path.strip_prefix(root).unwrap_or(path);
             let arc_name = format!("{}{}", prefix, rel.to_string_lossy().replace('\\', "/"));
             if path.is_file() {
-                let mut f = std::fs::File::open(path)
-                    .map_err(|e| RegistryError::Unpack(e.to_string()))?;
+                let mut f =
+                    std::fs::File::open(path).map_err(|e| RegistryError::Unpack(e.to_string()))?;
                 tar.append_file(&arc_name, &mut f)
                     .map_err(|e| RegistryError::Unpack(e.to_string()))?;
             }
         }
-        tar.finish().map_err(|e| RegistryError::Unpack(e.to_string()))?;
+        tar.finish()
+            .map_err(|e| RegistryError::Unpack(e.to_string()))?;
     }
     Ok(buf)
 }
@@ -284,7 +285,10 @@ pub fn publish_package(manifest_path: &Path) -> Result<(), RegistryError> {
         .map_err(|_| RegistryError::Publish("DAL_REGISTRY_TOKEN not set".to_string()))?;
     let base = registry_url().trim_end_matches('/').to_string();
     let encoded_name = urlencoding::encode(&info.name);
-    let url = format!("{}/v1/packages/{}/versions/{}", base, encoded_name, info.version);
+    let url = format!(
+        "{}/v1/packages/{}/versions/{}",
+        base, encoded_name, info.version
+    );
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(120))
         .build()
@@ -327,7 +331,9 @@ fn fetch_bytes(source: &str) -> Result<Vec<u8>, RegistryError> {
     if source.starts_with("ipfs://") {
         let cid = source.trim_start_matches("ipfs://").trim();
         if cid.is_empty() {
-            return Err(RegistryError::InvalidSource("ipfs:// requires a CID".to_string()));
+            return Err(RegistryError::InvalidSource(
+                "ipfs:// requires a CID".to_string(),
+            ));
         }
         crate::mold::ipfs::download_bytes_from_ipfs(cid)
             .map_err(|e| RegistryError::Fetch(format!("IPFS: {}", e)))
@@ -416,7 +422,10 @@ mod tests {
             ipfs_cid: Some("QmX".to_string()),
         };
         // Without DAL_PREFER_IPFS, prefer url
-        assert_eq!(src.fetch_source().as_deref(), Some("https://example.com/pkg.tgz"));
+        assert_eq!(
+            src.fetch_source().as_deref(),
+            Some("https://example.com/pkg.tgz")
+        );
     }
 
     #[test]
@@ -425,7 +434,10 @@ mod tests {
             url: Some("https://example.com/pkg.tgz".to_string()),
             ipfs_cid: None,
         };
-        assert_eq!(src.fetch_source().as_deref(), Some("https://example.com/pkg.tgz"));
+        assert_eq!(
+            src.fetch_source().as_deref(),
+            Some("https://example.com/pkg.tgz")
+        );
     }
 
     #[test]

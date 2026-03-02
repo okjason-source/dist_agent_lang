@@ -79,7 +79,13 @@ async fn handle_message(
                 tokio::task::spawn_blocking(move || {
                     if let Ok(reply) = dist_agent_lang::stdlib::ai::generate_text(content) {
                         let reply_msg = agent::create_agent_message(
-                            format!("msg_reply_{}", SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis()),
+                            format!(
+                                "msg_reply_{}",
+                                SystemTime::now()
+                                    .duration_since(UNIX_EPOCH)
+                                    .unwrap_or_default()
+                                    .as_millis()
+                            ),
                             agent_id.clone(),
                             user_id.clone(),
                             "assistant".to_string(),
@@ -180,18 +186,31 @@ async fn handle_task(
                         );
                         if let Ok(result) = dist_agent_lang::stdlib::ai::generate_text(prompt) {
                             let reply_msg = agent::create_agent_message(
-                                format!("msg_task_{}", SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis()),
+                                format!(
+                                    "msg_task_{}",
+                                    SystemTime::now()
+                                        .duration_since(UNIX_EPOCH)
+                                        .unwrap_or_default()
+                                        .as_millis()
+                                ),
                                 agent_id.clone(),
                                 requester_id.clone(),
                                 "task_result".to_string(),
                                 dist_agent_lang::runtime::values::Value::String(result),
                             );
-                            let _ = agent::communicate(agent_id.as_str(), requester_id.as_str(), reply_msg);
+                            let _ = agent::communicate(
+                                agent_id.as_str(),
+                                requester_id.as_str(),
+                                reply_msg,
+                            );
                         }
                     }
                 });
             }
-            (StatusCode::OK, Json(serde_json::json!({ "ok": true, "task_id": task_id })))
+            (
+                StatusCode::OK,
+                Json(serde_json::json!({ "ok": true, "task_id": task_id })),
+            )
         }
         None => (
             StatusCode::BAD_REQUEST,
@@ -242,12 +261,9 @@ fn spawn_agent(name: &str, mold_path: Option<&str>) -> Result<AgentContext, Stri
         let base = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
         dist_agent_lang::mold::create_from_mold_source(source, &base, Some(name))
     } else {
-        let config = agent::create_agent_config(
-            name.to_string(),
-            "worker",
-            "Agent serve".to_string(),
-        )
-        .ok_or_else(|| "Invalid agent type".to_string())?;
+        let config =
+            agent::create_agent_config(name.to_string(), "worker", "Agent serve".to_string())
+                .ok_or_else(|| "Invalid agent type".to_string())?;
         agent::spawn(config)
     }
 }
@@ -277,7 +293,11 @@ pub fn run_agent_serve(
     let app = build_router(state);
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
-    println!("Agent \"{}\" listening on http://localhost:{}/", display_name.as_str(), port);
+    println!(
+        "Agent \"{}\" listening on http://localhost:{}/",
+        display_name.as_str(),
+        port
+    );
     println!("  GET  /status   — agent id, name, type, status");
     println!("  POST /message  — send message (body: sender_id, content)");
     println!("  GET  /messages — receive messages");

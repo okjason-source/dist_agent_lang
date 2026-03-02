@@ -71,11 +71,14 @@ fn parse_agent_sh_from_table(table: &toml::Table) -> Option<ShConfig> {
                 .collect()
         })
         .unwrap_or_default();
-    let allowed_prefixes = table.get("allowed_prefixes").and_then(|v| v.as_array()).map(|a| {
-        a.iter()
-            .filter_map(|v| v.as_str().map(String::from))
-            .collect()
-    });
+    let allowed_prefixes = table
+        .get("allowed_prefixes")
+        .and_then(|v| v.as_array())
+        .map(|a| {
+            a.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        });
     Some(ShConfig {
         trust,
         forbidden_patterns,

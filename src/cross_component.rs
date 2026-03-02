@@ -127,7 +127,10 @@ fn run_bond(args: &[String], opts: &RunOptions) -> RunResult {
         "log-to-sync" => run_bond_log_to_sync(&rest, dry_run),
         _ => RunResult {
             success: false,
-            message: format!("bond {}: not yet implemented (stub). Use --dry-run to see planned steps.", flow),
+            message: format!(
+                "bond {}: not yet implemented (stub). Use --dry-run to see planned steps.",
+                flow
+            ),
             exit_code: 0,
         },
     }
@@ -151,20 +154,30 @@ fn run_bond_auth_to_web(args: &[&str], dry_run: bool, opts: &RunOptions) -> RunR
         if args.is_empty() {
             return RunResult {
                 success: false,
-                message: "bond auth-to-web: usage: dal bond auth-to-web <url> [method] (with --token)".to_string(),
+                message:
+                    "bond auth-to-web: usage: dal bond auth-to-web <url> [method] (with --token)"
+                        .to_string(),
                 exit_code: 1,
             };
         }
-        (args[0], args.get(1).copied().unwrap_or("GET").to_uppercase())
+        (
+            args[0],
+            args.get(1).copied().unwrap_or("GET").to_uppercase(),
+        )
     } else {
         if args.len() < 2 {
             return RunResult {
                 success: false,
-                message: "bond auth-to-web: usage: dal bond auth-to-web <token> <url> [GET|POST|...]".to_string(),
+                message:
+                    "bond auth-to-web: usage: dal bond auth-to-web <token> <url> [GET|POST|...]"
+                        .to_string(),
                 exit_code: 1,
             };
         }
-        (args[1], args.get(2).copied().unwrap_or("GET").to_uppercase())
+        (
+            args[1],
+            args.get(2).copied().unwrap_or("GET").to_uppercase(),
+        )
     };
 
     if dry_run {
@@ -251,8 +264,8 @@ fn run_bond_oracle_to_chain(args: &[&str], dry_run: bool) -> RunResult {
 
     #[cfg(feature = "http-interface")]
     {
-        use dist_agent_lang::stdlib::oracle::{self, OracleQuery};
         use dist_agent_lang::stdlib::chain;
+        use dist_agent_lang::stdlib::oracle::{self, OracleQuery};
 
         let query = OracleQuery::new(query_type.to_string()).require_signature(false);
         match oracle::fetch(source, query) {
@@ -260,9 +273,7 @@ fn run_bond_oracle_to_chain(args: &[&str], dry_run: bool) -> RunResult {
                 let gas_price = chain::get_gas_price(chain_id);
                 let msg = format!(
                     "bond oracle-to-chain: oracle data → chain {} (use-as {}); chain gas_price={}",
-                    chain_id,
-                    use_as,
-                    gas_price
+                    chain_id, use_as, gas_price
                 );
                 RunResult {
                     success: true,
@@ -283,7 +294,9 @@ fn run_bond_oracle_to_chain(args: &[&str], dry_run: bool) -> RunResult {
         let _ = (source, query_type, chain_id, use_as);
         RunResult {
             success: false,
-            message: "bond oracle-to-chain requires http-interface feature. Build with default features.".to_string(),
+            message:
+                "bond oracle-to-chain requires http-interface feature. Build with default features."
+                    .to_string(),
             exit_code: 1,
         }
     }
@@ -294,7 +307,9 @@ fn run_bond_chain_to_sync(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 3 {
         return RunResult {
             success: false,
-            message: "bond chain-to-sync: usage: dal bond chain-to-sync <chain_id> <tx_hash> <sync_url>".to_string(),
+            message:
+                "bond chain-to-sync: usage: dal bond chain-to-sync <chain_id> <tx_hash> <sync_url>"
+                    .to_string(),
             exit_code: 1,
         };
     }
@@ -322,9 +337,9 @@ fn run_bond_chain_to_sync(args: &[&str], dry_run: bool) -> RunResult {
         };
     }
 
+    use dist_agent_lang::runtime::values::Value as DalValue;
     use dist_agent_lang::stdlib::chain;
     use dist_agent_lang::stdlib::sync::{self, SyncTarget};
-    use dist_agent_lang::runtime::values::Value as DalValue;
 
     let status = chain::get_transaction_status(chain_id, tx_hash.to_string());
     let mut data = std::collections::HashMap::new();
@@ -340,7 +355,10 @@ fn run_bond_chain_to_sync(args: &[&str], dry_run: bool) -> RunResult {
     match sync::push(data, target) {
         Ok(true) => RunResult {
             success: true,
-            message: format!("bond chain-to-sync: chain {} tx {} status={} → sync ok", chain_id, tx_hash, status),
+            message: format!(
+                "bond chain-to-sync: chain {} tx {} status={} → sync ok",
+                chain_id, tx_hash, status
+            ),
             exit_code: 0,
         },
         Ok(false) => RunResult {
@@ -361,7 +379,9 @@ fn run_bond_iot_to_db(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 2 {
         return RunResult {
             success: false,
-            message: "bond iot-to-db: usage: dal bond iot-to-db <device_id> <conn_str> [--table name]".to_string(),
+            message:
+                "bond iot-to-db: usage: dal bond iot-to-db <device_id> <conn_str> [--table name]"
+                    .to_string(),
             exit_code: 1,
         };
     }
@@ -385,8 +405,8 @@ fn run_bond_iot_to_db(args: &[&str], dry_run: bool) -> RunResult {
         };
     }
 
-    use dist_agent_lang::stdlib::iot;
     use dist_agent_lang::stdlib::database;
+    use dist_agent_lang::stdlib::iot;
 
     let reading = match iot::read_sensor_data(device_id) {
         Ok(r) => r,
@@ -438,21 +458,19 @@ fn run_bond_iot_to_web(args: &[&str], dry_run: bool, opts: &RunOptions) -> RunRe
     if args.len() < 2 {
         return RunResult {
             success: false,
-            message: "bond iot-to-web: usage: dal bond iot-to-web <device_id> <url> [--auth token]".to_string(),
+            message: "bond iot-to-web: usage: dal bond iot-to-web <device_id> <url> [--auth token]"
+                .to_string(),
             exit_code: 1,
         };
     }
     let device_id = args[0];
     let url = args[1];
-    let token = opts
-        .token
-        .as_deref()
-        .or_else(|| {
-            args.windows(2)
-                .find(|w| w[0] == "--auth")
-                .and_then(|w| w.get(1))
-                .copied()
-        });
+    let token = opts.token.as_deref().or_else(|| {
+        args.windows(2)
+            .find(|w| w[0] == "--auth")
+            .and_then(|w| w.get(1))
+            .copied()
+    });
 
     if dry_run {
         return RunResult {
@@ -509,7 +527,10 @@ fn run_bond_iot_to_web(args: &[&str], dry_run: bool, opts: &RunOptions) -> RunRe
                 let status = resp.status();
                 RunResult {
                     success: status.is_success(),
-                    message: format!("bond iot-to-web: iot {} → POST {} → {}", device_id, url, status),
+                    message: format!(
+                        "bond iot-to-web: iot {} → POST {} → {}",
+                        device_id, url, status
+                    ),
                     exit_code: if status.is_success() { 0 } else { 1 },
                 }
             }
@@ -537,7 +558,9 @@ fn run_bond_db_to_sync(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 2 {
         return RunResult {
             success: false,
-            message: "bond db-to-sync: usage: dal bond db-to-sync <conn_str> <sync_url> [--query sql]".to_string(),
+            message:
+                "bond db-to-sync: usage: dal bond db-to-sync <conn_str> <sync_url> [--query sql]"
+                    .to_string(),
             exit_code: 1,
         };
     }
@@ -561,9 +584,9 @@ fn run_bond_db_to_sync(args: &[&str], dry_run: bool) -> RunResult {
         };
     }
 
+    use dist_agent_lang::runtime::values::Value as DalValue;
     use dist_agent_lang::stdlib::database;
     use dist_agent_lang::stdlib::sync::{self, SyncTarget};
-    use dist_agent_lang::runtime::values::Value as DalValue;
 
     let db = match database::connect(conn_str.to_string()) {
         Ok(d) => d,
@@ -587,16 +610,26 @@ fn run_bond_db_to_sync(args: &[&str], dry_run: bool) -> RunResult {
     };
     let mut data = std::collections::HashMap::new();
     data.insert("row_count".to_string(), DalValue::Int(qr.row_count));
-    data.insert("rows".to_string(), DalValue::List(
-        qr.rows.iter().map(|r| {
-            let mut m = std::collections::HashMap::new();
-            for (k, v) in r {
-                m.insert(k.clone(), v.clone());
-            }
-            DalValue::Map(m)
-        }).collect()
-    ));
-    let protocol = if sync_url.starts_with("https://") { "https" } else { "http" };
+    data.insert(
+        "rows".to_string(),
+        DalValue::List(
+            qr.rows
+                .iter()
+                .map(|r| {
+                    let mut m = std::collections::HashMap::new();
+                    for (k, v) in r {
+                        m.insert(k.clone(), v.clone());
+                    }
+                    DalValue::Map(m)
+                })
+                .collect(),
+        ),
+    );
+    let protocol = if sync_url.starts_with("https://") {
+        "https"
+    } else {
+        "http"
+    };
     let target = SyncTarget::new(sync_url.to_string(), protocol.to_string());
     match sync::push(data, target) {
         Ok(true) => RunResult {
@@ -622,7 +655,9 @@ fn run_bond_sync_to_db(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 2 {
         return RunResult {
             success: false,
-            message: "bond sync-to-db: usage: dal bond sync-to-db <sync_url> <conn_str> [--table name]".to_string(),
+            message:
+                "bond sync-to-db: usage: dal bond sync-to-db <sync_url> <conn_str> [--table name]"
+                    .to_string(),
             exit_code: 1,
         };
     }
@@ -646,8 +681,8 @@ fn run_bond_sync_to_db(args: &[&str], dry_run: bool) -> RunResult {
         };
     }
 
-    use dist_agent_lang::stdlib::sync::{self, SyncFilters};
     use dist_agent_lang::stdlib::database;
+    use dist_agent_lang::stdlib::sync::{self, SyncFilters};
 
     let (data, _) = match sync::pull(sync_url, SyncFilters::new()) {
         Ok(r) => r,
@@ -901,9 +936,9 @@ fn run_bond_log_to_sync(args: &[&str], dry_run: bool) -> RunResult {
         };
     }
 
+    use dist_agent_lang::runtime::values::Value as DalValue;
     use dist_agent_lang::stdlib::log::{self, LogLevel};
     use dist_agent_lang::stdlib::sync::{self, SyncTarget};
-    use dist_agent_lang::runtime::values::Value as DalValue;
 
     let entries = if let Some(level_str) = level_filter {
         let lvl = match level_str.to_lowercase().as_str() {
@@ -919,16 +954,30 @@ fn run_bond_log_to_sync(args: &[&str], dry_run: bool) -> RunResult {
     };
     let mut data = std::collections::HashMap::new();
     data.insert("count".to_string(), DalValue::Int(entries.len() as i64));
-    data.insert("entries".to_string(), DalValue::List(
-        entries.iter().take(100).map(|e| {
-            let mut m = std::collections::HashMap::new();
-            m.insert("message".to_string(), DalValue::String(e.message.clone()));
-            m.insert("level".to_string(), DalValue::String(format!("{:?}", e.level)));
-            m.insert("source".to_string(), DalValue::String(e.source.clone()));
-            DalValue::Map(m)
-        }).collect()
-    ));
-    let protocol = if sync_url.starts_with("https://") { "https" } else { "http" };
+    data.insert(
+        "entries".to_string(),
+        DalValue::List(
+            entries
+                .iter()
+                .take(100)
+                .map(|e| {
+                    let mut m = std::collections::HashMap::new();
+                    m.insert("message".to_string(), DalValue::String(e.message.clone()));
+                    m.insert(
+                        "level".to_string(),
+                        DalValue::String(format!("{:?}", e.level)),
+                    );
+                    m.insert("source".to_string(), DalValue::String(e.source.clone()));
+                    DalValue::Map(m)
+                })
+                .collect(),
+        ),
+    );
+    let protocol = if sync_url.starts_with("https://") {
+        "https"
+    } else {
+        "http"
+    };
     let target = SyncTarget::new(sync_url.to_string(), protocol.to_string());
     match sync::push(data, target) {
         Ok(true) => RunResult {
@@ -996,13 +1045,14 @@ fn run_pipe(args: &[String], opts: &RunOptions) -> RunResult {
         };
     }
     if dry_run {
-        let steps_str: Vec<String> = steps
-            .iter()
-            .map(|s| s.join(" "))
-            .collect();
+        let steps_str: Vec<String> = steps.iter().map(|s| s.join(" ")).collect();
         return RunResult {
             success: true,
-            message: format!("pipe (dry-run): {} steps: {}", steps.len(), steps_str.join(" → ")),
+            message: format!(
+                "pipe (dry-run): {} steps: {}",
+                steps.len(),
+                steps_str.join(" → ")
+            ),
             exit_code: 0,
         };
     }
@@ -1110,11 +1160,24 @@ fn execute_pipe_step(step: &[&str], _input: Option<&str>) -> Result<String, Stri
                     .build()
                     .map_err(|e| e.to_string())?;
                 let body = _input.unwrap_or("{}").to_string();
-                let json: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::json!({ "data": body }));
-                let resp = client.post(args[0]).json(&json).send().map_err(|e| e.to_string())?;
+                let json: serde_json::Value =
+                    serde_json::from_str(&body).unwrap_or(serde_json::json!({ "data": body }));
+                let resp = client
+                    .post(args[0])
+                    .json(&json)
+                    .send()
+                    .map_err(|e| e.to_string())?;
                 let status = resp.status();
                 let out = resp.text().unwrap_or_default();
-                Ok(format!("status:{} body:{}", status.as_u16(), if out.len() > 200 { format!("{}...", &out[..200]) } else { out }))
+                Ok(format!(
+                    "status:{} body:{}",
+                    status.as_u16(),
+                    if out.len() > 200 {
+                        format!("{}...", &out[..200])
+                    } else {
+                        out
+                    }
+                ))
             }
             #[cfg(not(feature = "http-interface"))]
             Err("web post requires http-interface feature".to_string())
@@ -1125,18 +1188,26 @@ fn execute_pipe_step(step: &[&str], _input: Option<&str>) -> Result<String, Stri
             }
             use dist_agent_lang::stdlib::database;
             let db = database::connect(args[0].to_string()).map_err(|e| e.to_string())?;
-            let qr = database::query(&db, args[1].to_string(), vec![]).map_err(|e| e.to_string())?;
+            let qr =
+                database::query(&db, args[1].to_string(), vec![]).map_err(|e| e.to_string())?;
             Ok(format!("rows:{}", qr.row_count))
         }
         ("sync", "push") => {
             if args.is_empty() {
                 return Err("sync push requires <url>".to_string());
             }
-            use dist_agent_lang::stdlib::sync::{self, SyncTarget};
             use dist_agent_lang::runtime::values::Value as DalValue;
+            use dist_agent_lang::stdlib::sync::{self, SyncTarget};
             let mut data = std::collections::HashMap::new();
-            data.insert("data".to_string(), DalValue::String(_input.unwrap_or("").to_string()));
-            let protocol = if args[0].starts_with("https://") { "https" } else { "http" };
+            data.insert(
+                "data".to_string(),
+                DalValue::String(_input.unwrap_or("").to_string()),
+            );
+            let protocol = if args[0].starts_with("https://") {
+                "https"
+            } else {
+                "http"
+            };
             let target = SyncTarget::new(args[0].to_string(), protocol.to_string());
             match sync::push(data, target) {
                 Ok(true) => Ok("sync_ok".to_string()),
@@ -1150,12 +1221,15 @@ fn execute_pipe_step(step: &[&str], _input: Option<&str>) -> Result<String, Stri
             }
             use dist_agent_lang::stdlib::iot;
             let reading = iot::read_sensor_data(args[0]).map_err(|e| e.to_string())?;
-            Ok(format!("sensor_ok:{} value:{:?}", reading.timestamp, reading.value))
+            Ok(format!(
+                "sensor_ok:{} value:{:?}",
+                reading.timestamp, reading.value
+            ))
         }
         ("log", "info") => {
+            use dist_agent_lang::runtime::values::Value as DalValue;
             use dist_agent_lang::stdlib::log;
             use std::collections::HashMap;
-            use dist_agent_lang::runtime::values::Value as DalValue;
             let msg = _input.unwrap_or("pipe_log").to_string();
             let mut data = HashMap::new();
             data.insert("message".to_string(), DalValue::String(msg.clone()));
@@ -1166,7 +1240,12 @@ fn execute_pipe_step(step: &[&str], _input: Option<&str>) -> Result<String, Stri
     }
 }
 
-const INVOKE_WORKFLOWS: &[&str] = &["price-to-deploy", "iot-ingest", "ai-audit", "compliance-check"];
+const INVOKE_WORKFLOWS: &[&str] = &[
+    "price-to-deploy",
+    "iot-ingest",
+    "ai-audit",
+    "compliance-check",
+];
 
 /// Run invoke workflow. Args: [workflow, ...rest].
 fn run_invoke(args: &[String], opts: &RunOptions) -> RunResult {
@@ -1175,7 +1254,10 @@ fn run_invoke(args: &[String], opts: &RunOptions) -> RunResult {
     if args.is_empty() {
         return RunResult {
             success: false,
-            message: format!("invoke: missing workflow. Workflows: {}", INVOKE_WORKFLOWS.join(", ")),
+            message: format!(
+                "invoke: missing workflow. Workflows: {}",
+                INVOKE_WORKFLOWS.join(", ")
+            ),
             exit_code: 1,
         };
     }
@@ -1199,7 +1281,10 @@ fn run_invoke(args: &[String], opts: &RunOptions) -> RunResult {
         "compliance-check" => run_invoke_compliance_check(&rest, dry_run),
         _ => RunResult {
             success: true,
-            message: format!("invoke {}: not yet implemented (stub). Args: {:?}", workflow, rest),
+            message: format!(
+                "invoke {}: not yet implemented (stub). Args: {:?}",
+                workflow, rest
+            ),
             exit_code: 0,
         },
     }
@@ -1240,8 +1325,8 @@ fn run_invoke_price_to_deploy(args: &[&str], dry_run: bool) -> RunResult {
 
     #[cfg(feature = "http-interface")]
     {
-        use dist_agent_lang::stdlib::oracle::{self, OracleQuery};
         use dist_agent_lang::stdlib::chain;
+        use dist_agent_lang::stdlib::oracle::{self, OracleQuery};
 
         let query = OracleQuery::new("price".to_string()).require_signature(false);
         match oracle::fetch(source, query) {
@@ -1299,8 +1384,8 @@ fn run_invoke_iot_ingest(args: &[&str], dry_run: bool) -> RunResult {
         };
     }
 
-    use dist_agent_lang::stdlib::iot;
     use dist_agent_lang::stdlib::database;
+    use dist_agent_lang::stdlib::iot;
     use dist_agent_lang::stdlib::sync::{self, SyncTarget};
 
     // 1) IoT read (use device_id as sensor_id for simplicity; read_sensor_data may need a registered sensor)
@@ -1349,7 +1434,8 @@ fn run_invoke_ai_audit(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 2 {
         return RunResult {
             success: false,
-            message: "invoke ai-audit: usage: dal invoke ai-audit <conn_str> \"<query>\"".to_string(),
+            message: "invoke ai-audit: usage: dal invoke ai-audit <conn_str> \"<query>\""
+                .to_string(),
             exit_code: 1,
         };
     }
@@ -1364,11 +1450,11 @@ fn run_invoke_ai_audit(args: &[&str], dry_run: bool) -> RunResult {
         };
     }
 
+    use dist_agent_lang::runtime::values::Value as DalValue;
+    use dist_agent_lang::stdlib::ai;
     use dist_agent_lang::stdlib::database;
     use dist_agent_lang::stdlib::log;
-    use dist_agent_lang::stdlib::ai;
     use std::collections::HashMap;
-    use dist_agent_lang::runtime::values::Value as DalValue;
 
     let db = match database::connect(conn_str.to_string()) {
         Ok(d) => d,
@@ -1390,7 +1476,10 @@ fn run_invoke_ai_audit(args: &[&str], dry_run: bool) -> RunResult {
             };
         }
     };
-    let prompt = format!("Audit summary for query result ({}): brief assessment.", result);
+    let prompt = format!(
+        "Audit summary for query result ({}): brief assessment.",
+        result
+    );
     let analysis = ai::generate_text(prompt).unwrap_or_else(|_| "ai_unavailable".to_string());
     let mut log_data = HashMap::new();
     log_data.insert("query".to_string(), DalValue::String(query.to_string()));
@@ -1399,7 +1488,10 @@ fn run_invoke_ai_audit(args: &[&str], dry_run: bool) -> RunResult {
 
     RunResult {
         success: true,
-        message: format!("invoke ai-audit: db ok → ai → log; analysis_len={}", analysis.len()),
+        message: format!(
+            "invoke ai-audit: db ok → ai → log; analysis_len={}",
+            analysis.len()
+        ),
         exit_code: 0,
     }
 }
@@ -1432,12 +1524,15 @@ fn run_invoke_compliance_check(args: &[&str], dry_run: bool) -> RunResult {
         };
     }
 
-    use dist_agent_lang::stdlib::chain;
     use dist_agent_lang::stdlib::aml;
+    use dist_agent_lang::stdlib::chain;
     use std::collections::HashMap;
 
     let balance = chain::get_balance(chain_id, addr.to_string());
-    let mut report = format!("compliance-check: addr={} chain_id={} balance={}", addr, chain_id, balance);
+    let mut report = format!(
+        "compliance-check: addr={} chain_id={} balance={}",
+        addr, chain_id, balance
+    );
 
     if do_aml {
         let mut user_data = HashMap::new();

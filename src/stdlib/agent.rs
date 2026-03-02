@@ -703,10 +703,7 @@ pub fn evolve(agent_id: &str, evolution_data: HashMap<String, Value>) -> Result<
     if let Some(snippet) = on_evolve {
         let mut vars = HashMap::new();
         vars.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
-        vars.insert(
-            "evolution_data".to_string(),
-            Value::Map(evolution_data),
-        );
+        vars.insert("evolution_data".to_string(), Value::Map(evolution_data));
         if let Err(e) = crate::execute_dal_with_scope(&vars, &snippet) {
             log::warn!(
                 "Mold on_evolve lifecycle hook failed for {}: {}",

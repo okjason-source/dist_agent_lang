@@ -4124,7 +4124,12 @@ impl Runtime {
 
     fn call_kyc_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         // Key gating for sensitive KYC ops (verify_identity, provider choice, document, revoke, report)
-        const KYC_GATED: &[&str] = &["verify_identity", "validate_document", "revoke_verification", "get_compliance_report"];
+        const KYC_GATED: &[&str] = &[
+            "verify_identity",
+            "validate_document",
+            "revoke_verification",
+            "get_compliance_report",
+        ];
         if KYC_GATED.contains(&name) {
             self.check_compliance_key_gate("kyc", name)?;
         }
@@ -4209,7 +4214,12 @@ impl Runtime {
 
     fn call_aml_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         // Key gating for sensitive AML ops (risk assessment, perform check, sanctions, screen)
-        const AML_GATED: &[&str] = &["perform_check", "get_risk_assessment", "screen_transaction", "check_sanctions_list"];
+        const AML_GATED: &[&str] = &[
+            "perform_check",
+            "get_risk_assessment",
+            "screen_transaction",
+            "check_sanctions_list",
+        ];
         if AML_GATED.contains(&name) {
             self.check_compliance_key_gate("aml", name)?;
         }
@@ -4889,9 +4899,7 @@ impl Runtime {
         use crate::stdlib::evolve;
         match name {
             "load" => {
-                let agent_name = args
-                    .first()
-                    .and_then(|v| self.value_to_string(v).ok());
+                let agent_name = args.first().and_then(|v| self.value_to_string(v).ok());
                 evolve::load(agent_name.as_deref())
                     .map(Value::String)
                     .map_err(RuntimeError::General)
@@ -4920,8 +4928,7 @@ impl Runtime {
                 let action = self.value_to_string(&args[0])?;
                 let detail = self.value_to_string(&args[1])?;
                 let result = self.value_to_string(&args[2])?;
-                evolve::append_log(&action, &detail, &result)
-                    .map_err(RuntimeError::General)?;
+                evolve::append_log(&action, &detail, &result).map_err(RuntimeError::General)?;
                 Ok(Value::Null)
             }
             "get_path" => Ok(Value::String(evolve::get_path())),
@@ -4938,7 +4945,10 @@ impl Runtime {
                     }
                     _ => {
                         let name = args.get(0).and_then(|v| self.value_to_string(v).ok());
-                        let n = args.get(1).and_then(|v| self.value_to_int(v).ok()).unwrap_or(0);
+                        let n = args
+                            .get(1)
+                            .and_then(|v| self.value_to_int(v).ok())
+                            .unwrap_or(0);
                         (name, n)
                     }
                 };
@@ -4966,11 +4976,13 @@ impl Runtime {
                 }
                 let text = self.value_to_string(&args[0])?;
                 let title = args.get(1).and_then(|v| self.value_to_string(v).ok());
-                evolve::append_summary(&text, title.as_deref())
-                    .map_err(RuntimeError::General)?;
+                evolve::append_summary(&text, title.as_deref()).map_err(RuntimeError::General)?;
                 Ok(Value::Null)
             }
-            _ => Err(RuntimeError::function_not_found(format!("evolve::{}", name))),
+            _ => Err(RuntimeError::function_not_found(format!(
+                "evolve::{}",
+                name
+            ))),
         }
     }
 
@@ -8620,12 +8632,17 @@ impl Runtime {
 
     /// Compliance key gating: when DAL_COMPLIANCE_KEY_GATE=1, sensitive kyc::/aml:: ops require key::check.
     /// Principal from DAL_COMPLIANCE_PRINCIPAL (default "caller"). Resource is "kyc" or "aml", operation is the function name.
-    fn check_compliance_key_gate(&self, resource: &str, operation: &str) -> Result<(), RuntimeError> {
+    fn check_compliance_key_gate(
+        &self,
+        resource: &str,
+        operation: &str,
+    ) -> Result<(), RuntimeError> {
         let gate = std::env::var("DAL_COMPLIANCE_KEY_GATE").unwrap_or_default();
         if gate != "1" && gate != "true" && !gate.eq_ignore_ascii_case("true") {
             return Ok(());
         }
-        let principal_id = std::env::var("DAL_COMPLIANCE_PRINCIPAL").unwrap_or_else(|_| "caller".to_string());
+        let principal_id =
+            std::env::var("DAL_COMPLIANCE_PRINCIPAL").unwrap_or_else(|_| "caller".to_string());
         let request = crate::stdlib::key::CapabilityRequest {
             resource: resource.to_string(),
             operation: operation.to_string(),
@@ -8637,7 +8654,10 @@ impl Runtime {
                 "compliance key gate denied: {}::{} for principal {}",
                 resource, operation, principal_id
             ))),
-            Err(e) => Err(RuntimeError::PermissionDenied(format!("key::check error: {}", e))),
+            Err(e) => Err(RuntimeError::PermissionDenied(format!(
+                "key::check error: {}",
+                e
+            ))),
         }
     }
 

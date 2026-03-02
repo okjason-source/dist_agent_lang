@@ -73,6 +73,22 @@ PHASE*.md
 /docs/guides/CLI_DESIGN.md
 /docs/guides/KYC_AML_FEATURES.md
 
+# Agent / project files (local workspace; do not commit)
+/agent_context.md
+**/agent_context.md
+/agent.dal
+**/agent.dal
+/agent.toml
+**/agent.toml
+/dal.toml
+**/dal.toml
+
+# DAL error output and pipe artifacts
+/dal_err.txt
+**/dal_err.txt
+/chain
+**/chain
+
 # IDE and OS
 .idea/
 .vscode/

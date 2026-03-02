@@ -226,21 +226,23 @@ pub fn load_resolved_deps(manifest_path: &Path) -> Result<ResolvedDeps, Manifest
                 };
                 if abs.exists() {
                     out.insert(name.clone(), abs);
-                } else if let Some(meta) = metadata.and_then(|t| t.get(name)).and_then(|v| v.as_table()) {
-                    let version = meta
-                        .get("version")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| ManifestError::InvalidDependency {
-                            name: name.clone(),
-                            message: "[metadata] entry missing 'version'".to_string(),
-                        })?;
-                    let source = meta
-                        .get("source")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| ManifestError::InvalidDependency {
+                } else if let Some(meta) = metadata
+                    .and_then(|t| t.get(name))
+                    .and_then(|v| v.as_table())
+                {
+                    let version =
+                        meta.get("version")
+                            .and_then(|v| v.as_str())
+                            .ok_or_else(|| ManifestError::InvalidDependency {
+                                name: name.clone(),
+                                message: "[metadata] entry missing 'version'".to_string(),
+                            })?;
+                    let source = meta.get("source").and_then(|v| v.as_str()).ok_or_else(|| {
+                        ManifestError::InvalidDependency {
                             name: name.clone(),
                             message: "[metadata] entry missing 'source'".to_string(),
-                        })?;
+                        }
+                    })?;
                     let path = crate::registry::fetch_and_cache(name, version, source)
                         .map_err(|e| ManifestError::Registry(e.to_string()))?;
                     out.insert(name.clone(), path);
