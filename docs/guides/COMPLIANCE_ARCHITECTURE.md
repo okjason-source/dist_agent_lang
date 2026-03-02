@@ -1,8 +1,10 @@
 # Compliance Architecture in dist_agent_lang
 
-## 🎯 **What "Built-in Regulatory Compliance" Means**
+**Part of the planned update:** This architecture is part of the same rollout as the **cross-component CLI** (bond, pipe, invoke), **agent/assist**, and **sh/evolution** plans. The **invoke compliance-check** workflow wires compliance into the CLI and into agent-driven use; **ai-audit** can run alongside. See [CROSS_COMPONENT_CLI_PLAN.md](../development/CROSS_COMPONENT_CLI_PLAN.md) for how compliance-check fits and [AGENT_SHELL_EVOLUTION_PLAN.md](../development/AGENT_SHELL_EVOLUTION_PLAN.md) for agent context.
 
-When I say "built-in regulatory compliance," I'm referring to **language-level abstractions** that make compliance operations native to the programming language, not necessarily that all compliance checks happen client-side. Let me break this down:
+---
+
+## 🎯 **Built-in Regulatory Compliance**
 
 ## 🏗️ **Architecture Overview**
 
@@ -261,7 +263,7 @@ let cross_chain_verification = kyc::verify_cross_chain(
 
 ### **3. AI-Powered Compliance**
 ```rust
-// Machine learning-based risk assessment
+// Machine learning-based risk assessment (fits ai:: / assist:: namespace)
 let ai_risk_assessment = aml::assess_risk_ai(
     user_address,
     transaction_history,
@@ -269,6 +271,15 @@ let ai_risk_assessment = aml::assess_risk_ai(
     ai_model_parameters
 );
 ```
+AI-powered compliance uses the same **ai::** / **assist::** stdlib as the rest of the stack; access can be gated via **key::** (e.g. resource `"aml"`, operation `"assess_risk_ai"`) for unified access control.
+
+## 🤖 **Agent, assist, and CLI**
+
+- **invoke compliance-check** — The cross-component CLI workflow that runs the compliance orchestration (kyc::, aml::, audit). A human or an **agent** can run it (e.g. `dal invoke compliance-check` or as an agent task).
+- **ai-audit** — AI-assisted audit (e.g. of a contract) can run before or after compliance-check; both use the same **ai::** / **assist::** namespace where AI is involved.
+- **key::** — Who can run compliance operations (or high-risk aml/kyc actions) can be governed by **key.rs** capability checks, consistent with the rest of the stack.
+
+---
 
 ## 📋 **Summary**
 
@@ -284,3 +295,15 @@ let ai_risk_assessment = aml::assess_risk_ai(
 ❌ **NOT On-Chain Storage**: Personal data is not stored on the blockchain
 
 The architecture provides the **best of both worlds**: developer-friendly language abstractions with enterprise-grade privacy and security! 🚀
+
+---
+
+## 📐 **DAL as Orchestrator**
+
+DAL’s strength is **orchestration**: it coordinates external compliance services (KYC, AML, policy engines, audit sinks) and enforces flow and policy in code. It does **not** implement compliance engines itself — it calls them, branches on results, and produces a single auditable trail.
+
+**Implementation status:** Incorporated into the **cross-component CLI** plan:
+
+- **invoke compliance-check** — ✅ Implemented. Workflow orchestrates **kyc::**, **aml::**, and audit per this architecture. `dal invoke compliance-check <addr> [--chain_id N] [--aml]`. See [CROSS_COMPONENT_IMPLEMENTATION_PLAN.md](../development/implementation/CROSS_COMPONENT_IMPLEMENTATION_PLAN.md).
+- **key::** — Implemented. When `DAL_COMPLIANCE_KEY_GATE=1` (or `true`), sensitive **kyc::** and **aml::** operations are gated via **key::check**: principal from `DAL_COMPLIANCE_PRINCIPAL` (default `caller`), resource `"kyc"` or `"aml"`, operation = function name. Gated KYC: `verify_identity`, `validate_document`, `revoke_verification`, `get_compliance_report`. Gated AML: `perform_check`, `get_risk_assessment`, `screen_transaction`, `check_sanctions_list`. Grant access with `key::create("kyc", ["verify_identity", ...])` and `key::grant(cap, principal)` (or equivalent for `"aml"`).
+- **COMPLIANCE_IMPLEMENTATION_PLAN.md** — Deferred. Audit trail schema, provider wiring, SOC2/HIPAA/GDPR patterns.

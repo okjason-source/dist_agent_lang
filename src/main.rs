@@ -42,6 +42,9 @@ use testing::{TestCase, TestConfig, TestRunner, TestSuite};
 #[cfg(feature = "lsp")]
 mod lsp;
 
+mod cross_component;
+mod agent_serve;
+
 /// Returns the binary name used to invoke the CLI (e.g. "dal" or "dist_agent_lang")
 fn binary_name() -> String {
     std::env::args()
@@ -139,11 +142,12 @@ fn main() {
         Commands::Fmt { file, check } => format_dal_file(&file, *check),
         Commands::Lint { file } => lint_dal_file(&file),
         Commands::New { name, project_type } => create_new_project(&name, project_type.as_deref()),
-        Commands::Init => init_project(),
+        Commands::Init { template } => init_project(template.as_str(), cli.quiet),
         Commands::Repl => run_repl(),
         Commands::Watch { file } => watch_dal_file(&file),
         Commands::Add { package } => add_package(&package),
         Commands::Install => install_dependencies(),
+        Commands::Publish => publish_package(),
         Commands::Bench { file, suite } => run_benchmarks(file.as_deref(), suite.as_deref()),
         Commands::Profile { file, memory } => profile_dal_file(&file, *memory),
         Commands::Optimize {
@@ -283,17 +287,26 @@ fn main() {
         Commands::Bond { subcommand, rest } => {
             let mut a = vec![subcommand.clone()];
             a.extend(rest.iter().cloned());
-            handle_cross_component_command("bond", &a);
+            if cli.dry_run {
+                a.push("--dry-run".to_string());
+            }
+            handle_cross_component_command("bond", &a, &cli);
         }
         Commands::Pipe { subcommand, rest } => {
             let mut a = vec![subcommand.clone()];
             a.extend(rest.iter().cloned());
-            handle_cross_component_command("pipe", &a);
+            if cli.dry_run {
+                a.push("--dry-run".to_string());
+            }
+            handle_cross_component_command("pipe", &a, &cli);
         }
         Commands::Invoke { subcommand, rest } => {
             let mut a = vec![subcommand.clone()];
             a.extend(rest.iter().cloned());
-            handle_cross_component_command("invoke", &a);
+            if cli.dry_run {
+                a.push("--dry-run".to_string());
+            }
+            handle_cross_component_command("invoke", &a, &cli);
         }
     }
 }
@@ -2676,17 +2689,57 @@ For creating new projects, use: `dal new <name> --type <ai|iot|agent|chain|web|c
     println!("   ✅ Created README.md");
 }
 
-/// Initialize a DAL project in current directory
-fn init_project() {
-    println!("📦 Initializing dist_agent_lang project in current directory...");
+/// Initialize a DAL project in current directory (template: dal, js, rs, sol). Minimal prints; respects --quiet.
+fn init_project(template: &str, quiet: bool) {
+    let template = template.trim().to_lowercase();
+    let template = template.as_str();
 
-    // Check if dal.toml already exists
+    match template {
+        "dal" | "" => {
+            init_project_dal(quiet);
+        }
+        "agent" => {
+            init_project_agent(quiet);
+        }
+        "js" | "rs" | "sol" => {
+            if !quiet {
+                eprintln!("Stack template '{}' is planned (see docs/guides/CLI_DESIGN.md). Use 'dal init' for DAL-only.", template);
+            }
+            std::process::exit(0);
+        }
+        _ => {
+            eprintln!("Unknown template '{}'. Use: dal, agent, js, rs, sol (e.g. 'dal init agent')", template);
+            std::process::exit(1);
+        }
+    }
+}
+
+/// Ensure .env is in .gitignore (append or create). Shared by init_project_dal and init_project_agent.
+fn ensure_gitignore_env() {
+    let gitignore_path = std::path::Path::new(".gitignore");
+    if gitignore_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(gitignore_path) {
+            if !content.lines().any(|l| l.trim() == ".env") {
+                let mut f = std::fs::OpenOptions::new()
+                    .append(true)
+                    .open(gitignore_path)
+                    .unwrap();
+                use std::io::Write;
+                let _ = writeln!(f, "\n# Local env (secrets)\n.env");
+            }
+        }
+    } else {
+        std::fs::write(".gitignore", "# Local env (do not commit)\n.env\n").unwrap();
+    }
+}
+
+/// Initialize a DAL-only project in current directory. One summary line unless quiet.
+fn init_project_dal(quiet: bool) {
     if std::path::Path::new("dal.toml").exists() {
-        eprintln!("❌ Project already initialized (dal.toml exists)");
+        eprintln!("Project already initialized (dal.toml exists)");
         std::process::exit(1);
     }
 
-    // Create dal.toml
     let dal_toml = r#"[package]
 name = "my-project"
 version = "0.1.0"
@@ -2697,9 +2750,7 @@ authors = []
 "#;
 
     std::fs::write("dal.toml", dal_toml).unwrap();
-    println!("   ✅ Created dal.toml");
 
-    // Create main.dal if it doesn't exist
     if !std::path::Path::new("main.dal").exists() {
         let main_dal = r#"// Main entry point
 
@@ -2710,20 +2761,165 @@ fn main() {
 main();
 "#;
         std::fs::write("main.dal", main_dal).unwrap();
-        println!("   ✅ Created main.dal");
     }
 
-    // Create README.md if it doesn't exist
     if !std::path::Path::new("README.md").exists() {
         std::fs::write(
             "README.md",
-            "# My DAL Project\n\nA dist_agent_lang project.\n",
+            "# My DAL Project\n\nA dist_agent_lang project.\n\nSet env as needed (e.g. from `.env`); see `.env.example`.\n",
         )
         .unwrap();
-        println!("   ✅ Created README.md");
     }
 
-    println!("\n✅ Project initialized!");
+    if !std::path::Path::new(".env.example").exists() {
+        std::fs::write(
+            ".env.example",
+            r#"# DAL project env (copy to .env and set values; do not commit .env)
+# Optional: logging (LOG_LEVEL, LOG_SINK, LOG_FILE)
+# LOG_LEVEL=info
+# LOG_SINK=console
+# Optional: for ai:: / assist
+# OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=
+"#,
+        )
+        .unwrap();
+    }
+    if !std::path::Path::new(".env").exists() {
+        std::fs::write(
+            ".env",
+            r#"# Local env — set values and do not commit (add .env to .gitignore)
+"#,
+        )
+        .unwrap();
+    }
+    ensure_gitignore_env();
+
+    if !quiet {
+        println!("Initialized DAL project.");
+    }
+}
+
+/// Initialize an agent project in current directory: dal.toml (if missing), agent.toml, agent.dal, README.md, agent_context.md (evolve). Additive; never overwrite existing files.
+fn init_project_agent(quiet: bool) {
+    // Ensure DAL is present: create minimal dal.toml only if missing (protect existing)
+    if !std::path::Path::new("dal.toml").exists() {
+        let dal_toml = r#"[package]
+name = "my-agent"
+version = "0.1.0"
+authors = []
+
+[dependencies]
+"#;
+        std::fs::write("dal.toml", dal_toml).unwrap();
+    }
+
+    if !std::path::Path::new("agent.toml").exists() {
+        let agent_toml = r#"# Agent project config (see AGENT_SHELL_EVOLUTION_PLAN.md)
+
+[agent.sh]
+trust = "sandboxed"
+# forbidden_patterns = ["rm -rf", "sudo"]
+# allowed_prefixes = ["npm", "cargo", "git"]
+
+[agent]
+context_path = "./agent_context.md"
+"#;
+        std::fs::write("agent.toml", agent_toml).unwrap();
+    }
+
+    if !std::path::Path::new("agent.dal").exists() {
+        let agent_dal = r#"// Agent behavior entry (run with: dal run agent.dal or dal agent serve)
+// Use evolve::load(), evolve::append_conversation(), evolve::append_log() for context.
+// Use sh::run(cmd) for shell (respects [agent.sh] trust in agent.toml).
+// When used by `dal agent serve`, this script spawns an agent and calls agent::set_serve_agent(agent_id).
+
+use agent;
+
+fn main() {
+    let agent_id = agent::spawn({
+        "name": "my-agent",
+        "type": "worker",
+        "role": "Agent serve"
+    });
+    agent::set_serve_agent(agent_id);
+}
+
+main();
+"#;
+        std::fs::write("agent.dal", agent_dal).unwrap();
+    }
+
+    if !std::path::Path::new("README.md").exists() {
+        let readme = r#"# Agent project
+
+DAL agent with evolve context and configurable shell trust.
+
+## Files
+
+- `agent.dal` — Agent behavior entry
+- `agent.toml` — [agent.sh] trust, [agent] context_path
+- `agent_context.md` — Evolve context (conversation + action log)
+- `.env.example` — Example env vars (safe to commit)
+- `.env` — Local env (set values; do not commit; add to .gitignore)
+
+## Commands
+
+- `dal run agent.dal` — Run agent script
+- `dal agent serve` — Run agent HTTP API (messages, tasks)
+- `dal agent create worker my-agent` — Create agent in-process
+
+Set env (e.g. `export $(cat .env | xargs)` or use a .env loader). See docs/development/AGENT_SHELL_EVOLUTION_PLAN.md and AGENT_LOCAL_SERVER_DESIGN.md.
+"#;
+        std::fs::write("README.md", readme).unwrap();
+    }
+
+    if !std::path::Path::new("agent_context.md").exists() {
+        let now = chrono::Utc::now().to_rfc3339();
+        let header = format!(
+            r#"# Agent context — Agent
+Updated: {}
+
+## Conversation
+
+## Action log
+
+| Time | Action | Detail | Result |
+|------|--------|--------|--------|
+"#,
+            now
+        );
+        std::fs::write("agent_context.md", header).unwrap();
+    }
+
+    // .env.example: safe to commit; documents expected env vars
+    if !std::path::Path::new(".env.example").exists() {
+        let env_example = r#"# Agent project env (copy to .env and set values; do not commit .env)
+# Shell trust: off | sandboxed | confirmed | trusted
+DAL_AGENT_SHELL_TRUST=sandboxed
+# Evolve context file path (default: ./agent_context.md)
+DAL_AGENT_CONTEXT_PATH=./agent_context.md
+# Optional: for ai:: / assist (leave empty or set your key)
+# OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=
+"#;
+        std::fs::write(".env.example", env_example).unwrap();
+    }
+
+    // .env: local overrides only if missing (never overwrite; user may have secrets)
+    if !std::path::Path::new(".env").exists() {
+        let env_local = r#"# Local env — set values and do not commit (add .env to .gitignore)
+DAL_AGENT_SHELL_TRUST=sandboxed
+DAL_AGENT_CONTEXT_PATH=./agent_context.md
+"#;
+        std::fs::write(".env", env_local).unwrap();
+    }
+
+    ensure_gitignore_env();
+
+    if !quiet {
+        println!("Initialized agent project (agent.dal, agent.toml, README.md, agent_context.md, .env.example, .env).");
+    }
 }
 
 /// Run interactive REPL
@@ -2902,23 +3098,50 @@ fn install_dependencies() {
     }
 
     match dist_agent_lang::manifest::resolve_dependencies(&manifest_path) {
-        Ok(resolved) => {
+        Ok((resolved, version_meta)) => {
             if resolved.is_empty() {
-                println!("   No path dependencies in [dependencies] (version-only deps not fetched yet).");
+                println!("   No dependencies in [dependencies].");
             } else {
-                if let Err(e) = dist_agent_lang::manifest::write_lockfile(&manifest_path, &resolved)
-                {
+                if let Err(e) = dist_agent_lang::manifest::write_lockfile(
+                    &manifest_path,
+                    &resolved,
+                    &version_meta,
+                ) {
                     eprintln!("❌ Failed to write dal.lock: {}", e);
                     std::process::exit(1);
                 }
                 println!(
-                    "   ✅ Resolved {} path dependency(ies), wrote dal.lock",
+                    "   ✅ Resolved {} dependency(ies), wrote dal.lock",
                     resolved.len()
                 );
                 for (name, path) in &resolved {
                     println!("   - {} -> {}", name, path.display());
                 }
             }
+        }
+        Err(e) => {
+            eprintln!("❌ {}", e);
+            std::process::exit(1);
+        }
+    }
+}
+
+/// Publish package to registry (R4). Requires dal.toml with [package] name/version and DAL_REGISTRY_TOKEN.
+fn publish_package() {
+    println!("📤 Publishing package...");
+
+    let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    let manifest_path = cwd.join("dal.toml");
+
+    if !manifest_path.exists() {
+        eprintln!("❌ No dal.toml found. Run '{} init' first.", binary_name());
+        std::process::exit(1);
+    }
+
+    match dist_agent_lang::registry::publish_package(&manifest_path) {
+        Ok(()) => {
+            let info = dist_agent_lang::manifest::parse_package_info(&manifest_path).unwrap();
+            println!("   ✅ Published {}@{}", info.name, info.version);
         }
         Err(e) => {
             eprintln!("❌ {}", e);
@@ -5908,64 +6131,73 @@ fn handle_iot_command(args: &[String]) {
 // Phase 9: Cross-Component (bond, pipe, invoke)
 // ============================================================================
 
-fn handle_cross_component_command(cmd: &str, args: &[String]) {
+/// Resolve auth token from --token, --token-env, or --auth-file (first wins).
+fn resolve_cross_component_token(cli: &Cli) -> Option<String> {
+    if let Some(ref t) = cli.token {
+        return Some(t.clone());
+    }
+    if let Some(ref var) = cli.token_env {
+        if let Ok(t) = std::env::var(var) {
+            return Some(t);
+        }
+    }
+    if let Some(ref path) = cli.auth_file {
+        if let Ok(content) = std::fs::read_to_string(path) {
+            if let Some(line) = content.lines().next() {
+                return Some(line.trim().to_string());
+            }
+        }
+    }
+    None
+}
+
+fn handle_cross_component_command(cmd: &str, args: &[String], cli: &Cli) {
     if args.is_empty() {
         eprintln!("Usage: {} {} <subcommand> [args...]", binary_name(), cmd);
         std::process::exit(1);
     }
-
-    match cmd {
-        "bond" => {
-            let flow = &args[0];
-            match flow.as_str() {
-                "oracle-to-chain" | "chain-to-sync" | "iot-to-db" | "iot-to-web" | "db-to-sync"
-                | "sync-to-db" | "ai-to-service" | "service-to-chain" | "auth-to-web"
-                | "log-to-sync" => {
-                    println!("ℹ️  bond {}", flow);
-                    println!(
-                        "   Connects components. Use: {} bond {} <args...>",
-                        binary_name(),
-                        flow
-                    );
-                    println!(
-                        "   Example: {} bond iot-to-db <device_id> <conn_str> [--table]",
-                        binary_name()
-                    );
-                }
-                _ => {
-                    eprintln!("Unknown bond flow: {}", flow);
-                    eprintln!("Flows: oracle-to-chain, iot-to-db, db-to-sync, auth-to-web, ...");
-                    std::process::exit(1);
-                }
-            }
-        }
-        "pipe" => {
-            println!("ℹ️  pipe");
-            println!(
-                "   Unix-style pipeline: {} pipe <source> -> <sink>",
-                binary_name()
-            );
-            println!(
-                "   Example: {} pipe oracle fetch coingecko btc -> chain estimate 1 deploy",
-                binary_name()
-            );
-        }
-        "invoke" => {
-            let workflow = args.get(0).map(|s| s.as_str()).unwrap_or("");
-            match workflow {
-                "price-to-deploy" | "iot-ingest" | "ai-audit" | "compliance-check" => {
-                    println!("ℹ️  invoke {}", workflow);
-                    println!("   Multi-component workflow. Args: {:?}", &args[1..]);
-                }
-                _ => {
-                    eprintln!("Unknown invoke workflow: {}", workflow);
-                    eprintln!("Workflows: price-to-deploy, iot-ingest, ai-audit, compliance-check");
-                    std::process::exit(1);
-                }
-            }
-        }
-        _ => {}
+    // Flags in rest (e.g. dal bond auth-to-web ... --dry-run) may not be parsed by clap; detect from args
+    let dry_run_in_args = args.iter().any(|a| a == "--dry-run");
+    let format_json_in_args = args
+        .windows(2)
+        .any(|w| w[0] == "--format" && w[1].eq_ignore_ascii_case("json"));
+    let token_in_args = args
+        .windows(2)
+        .find(|w| w[0] == "--token")
+        .and_then(|w| w.get(1))
+        .cloned();
+    let token_env_in_args = args
+        .windows(2)
+        .find(|w| w[0] == "--token-env")
+        .and_then(|w| w.get(1))
+        .and_then(|var| std::env::var(var).ok());
+    let auth_file_in_args = args
+        .windows(2)
+        .find(|w| w[0] == "--auth-file")
+        .and_then(|w| w.get(1))
+        .and_then(|path| std::fs::read_to_string(path).ok())
+        .and_then(|c| c.lines().next().map(|l| l.trim().to_string()));
+    let token = resolve_cross_component_token(cli)
+        .or(token_in_args)
+        .or(token_env_in_args)
+        .or(auth_file_in_args);
+    let opts = cross_component::RunOptions {
+        dry_run: cli.dry_run || dry_run_in_args,
+        format_json: cli
+            .format
+            .as_deref()
+            .map(|f| f.eq_ignore_ascii_case("json"))
+            .unwrap_or(false)
+            || format_json_in_args,
+        token,
+    };
+    let result = cross_component::run(cmd, args, &opts);
+    if result.success {
+        println!("{}", result.message);
+    } else {
+        eprintln!("{}", result.message);
     }
+    std::process::exit(result.exit_code);
 }
 
 // ============================================================================
@@ -5979,11 +6211,74 @@ fn handle_agent_command(args: &[String]) {
 
     if args.is_empty() {
         eprintln!("Usage: {} agent <subcommand> [args...]", binary_name());
-        eprintln!("Subcommands: create, send, messages, chat, task, list, fleet");
+        eprintln!("Subcommands: serve, create, send, messages, chat, task, list, fleet");
         std::process::exit(1);
     }
 
     match args[0].as_str() {
+        "serve" => {
+            // dal agent serve [name] [--port PORT] [--mold path] [--behavior path] [--prompt-only]
+            // Most intuitive: if --behavior not given and agent.dal exists in cwd, use it.
+            // --prompt-only: no behavior script; respond to each message via AI (env DAL_AGENT_PROMPT_ONLY=1 or flag).
+            let mut name = "serve_agent".to_string();
+            let mut port: u16 = 4040;
+            let mut mold_path: Option<String> = None;
+            let mut behavior_path: Option<String> = None;
+            let mut prompt_only = std::env::var("DAL_AGENT_PROMPT_ONLY")
+                .map(|v| v == "1" || v.eq_ignore_ascii_case("true") || v.eq_ignore_ascii_case("yes"))
+                .unwrap_or(false);
+            let rest = &args[1..];
+            let mut i = 0;
+            while i < rest.len() {
+                if rest[i] == "--port" {
+                    if i + 1 < rest.len() {
+                        if let Ok(p) = rest[i + 1].parse::<u16>() {
+                            port = p;
+                        }
+                        i += 2;
+                        continue;
+                    }
+                } else if rest[i] == "--mold" {
+                    if i + 1 < rest.len() {
+                        mold_path = Some(rest[i + 1].clone());
+                        i += 2;
+                        continue;
+                    }
+                } else if rest[i] == "--behavior" {
+                    if i + 1 < rest.len() {
+                        behavior_path = Some(rest[i + 1].clone());
+                        i += 2;
+                        continue;
+                    }
+                } else if rest[i] == "--prompt-only" {
+                    prompt_only = true;
+                    i += 1;
+                    continue;
+                } else if !rest[i].starts_with("--") {
+                    name = rest[i].clone();
+                }
+                i += 1;
+            }
+            // When --prompt-only: no behavior script (user wants AI to respond to prompts only)
+            if prompt_only {
+                behavior_path = None;
+            } else if behavior_path.is_none() {
+                let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+                if cwd.join("agent.dal").exists() {
+                    behavior_path = Some("agent.dal".to_string());
+                }
+            }
+            if let Err(e) = agent_serve::run_agent_serve(
+                &name,
+                port,
+                mold_path.as_deref(),
+                behavior_path.as_deref(),
+                prompt_only,
+            ) {
+                eprintln!("❌ Agent serve failed: {}", e);
+                std::process::exit(1);
+            }
+        }
         "create" => {
             // dal agent create --mold <path|ipfs://cid|moldId> <name>
             if args.len() >= 4 && args[1] == "--mold" {

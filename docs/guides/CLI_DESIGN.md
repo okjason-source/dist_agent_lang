@@ -18,7 +18,7 @@ Commands are grouped by **what users want to do**, not implementation:
 
 | Section | Focus |
 |---------|-------|
-| **Get Started** | new, init, run, test |
+| **Get Started** | new, init, init &lt;stack&gt;, run, test |
 | **Build & Develop** | check, fmt, lint, watch, repl, bench, profile, optimize |
 | **AI & Code Assistance** | ai code, explain, review, audit, test, fix, optimize-gas |
 | **Agents & Automation** | agent create, send, list, mold |
@@ -76,6 +76,25 @@ Quick examples in help cover multiple project types.
 | **Debug** | Stub | `dal debug <file>` prints “planned” features (step, inspect, call stack); runs lex/parse only |
 | **Watch** | Done | File watch, re-run on change, simple console messages |
 
+### Init with stack templates (design)
+
+**Goal:** All `dal init` variants operate in the **current directory** and are **additive**. `dal init` sets up DAL there; `dal init js` (or `rs`, `sol`) **adds** that stack’s template files to the current directory so you can mix stacks in one repo.
+
+- **`dal init`** — Create `dal.toml`, `main.dal`, `README.md`, **`.env.example`** (optional logging/API keys), **`.env`** (if missing), and ensure **`.env`** is in `.gitignore`. Fails if `dal.toml` already exists.
+- **`dal init agent`** — **Add** an agent project: ensures `dal.toml` (minimal if missing), creates `agent.toml`, `agent.dal`, `README.md`, `agent_context.md`, **`.env.example`** (documented env vars, safe to commit), **`.env`** (local overrides, only if missing), and ensures **`.env`** is in `.gitignore` so secrets are not committed. Additive; never overwrites existing files. User can set values in `.env` and start using the agent.
+- **`dal init js`** — **Add** a JS/Node template to the current directory: e.g. `package.json`, optional `dal.config.js` or scripts that call the `dal` CLI, and a minimal DAL hook so the app can use DAL for orchestration/agents/chain. Does not require the directory to be empty; adds or updates only the JS-related files. Can be run after `dal init` to add JS to an existing DAL project.
+- **`dal init rs`** — **Add** a Rust template: e.g. `Cargo.toml`, `src/`, and optional glue to call or embed `dal`. Adds to current directory; safe to run in a repo that already has DAL or JS.
+- **`dal init sol`** — **Add** a Solidity template: e.g. `contracts/` scaffold and optional DAL that uses `chain::` / convert. Adds to current directory.
+- **`dal init <other>`** — Reserve names (e.g. `py`, `go`) for future stacks; unknown template prints available templates and exits.
+
+So: **init = add this template here**. Users can run `dal init` then `dal init js`, or run `dal init js` in an existing project, to get a mixed stack in one directory.
+
+**Always add DAL if not there; protect dal.toml.** When adding a stack template (`dal init js` | `rs` | `sol`), if `dal.toml` does not exist, create a minimal one so the directory is DAL-aware. If `dal.toml` already exists, **do not overwrite it** — leave the user's config and content intact. Same for plain `dal init`: we already fail when `dal.toml` exists (refuse to overwrite). Rule: **ensure dal.toml exists when adding a stack, and never overwrite an existing dal.toml.**
+
+**Minimum template prints for all.** Every init variant (`dal init`, `dal init dal`, `dal init agent`, `js`, `rs`, `sol`) uses minimal console output: one short summary line (e.g. "Initialized DAL project." or "Added js template."). No per-file "Created …" lines. When `--quiet` is set, suppress the summary as well. Same rule for all templates.
+
+**Implementation sketch:** `Init { template }`; for `"dal"` use current behavior (create dal.toml etc., fail if exists). For `"js"` | `"rs"` | `"sol"`, add only that template’s files to the current directory (create dirs like `contracts/` or `src/` if needed, write or merge package.json / Cargo.toml; avoid overwriting existing files without a flag, or document “adds only missing files”).
+
 ### Gaps (design & interactivity)
 
 | Gap | Impact |
@@ -91,7 +110,8 @@ Quick examples in help cover multiple project types.
 ### Reference
 
 - **Implementation:** `src/cli.rs`, `src/cli_design.rs`, `src/main.rs` (dispatch, `print_help`, `print_version`, `run_repl`, `handle_debug_command`).
-- **Plans:** [09_CLI_EXPANSION_PLAN.md](../development/stdlib_implementation_plans/09_CLI_EXPANSION_PLAN.md) (Phases 0–10 done; Phase 11 clap done; design polish remaining).
+- **Plans:** [09_CLI_EXPANSION_PLAN.md](../development/stdlib_implementation_plans/09_CLI_EXPANSION_PLAN.md) (Phases 0–10 done; Phase 11 clap + §21 design implemented; `dal --help` works).
+- **§21 design:** See 09_CLI_EXPANSION_PLAN §21 (Appearance, Options, Help Layout). Banner, option naming, help layout done; `--color` parsed but not yet wired to output (Phase A).
 - **Quick reference:** [CLI_QUICK_REFERENCE.md](../CLI_QUICK_REFERENCE.md).
 
 ---

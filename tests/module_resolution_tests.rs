@@ -31,6 +31,35 @@ fn test_resolve_program_imports_multiple_stdlib() {
 }
 
 #[test]
+fn test_resolve_stdlib_assist_and_interchangeable_with_ai() {
+    // assist is a known stdlib namespace (alias for ai)
+    let program = parse_source("import stdlib::assist as as_mod;").unwrap();
+    let resolved = resolve_imports(&program, None).unwrap();
+    assert_eq!(resolved.len(), 1);
+    assert!(matches!(&resolved[0].resolved, ResolvedImport::Stdlib(s) if s == "assist"));
+    // Both assist:: and ai:: dispatch to the same implementation (call_ai_function).
+    // In tests without AI configured we get PermissionDenied; that confirms the namespace was recognized.
+    let with_assist = parse_source("assist::generate_text(\"hi\")").unwrap();
+    let with_ai = parse_source("ai::generate_text(\"hi\")").unwrap();
+    let mut runtime = Runtime::new();
+    let r_assist = runtime.execute_program(with_assist, None);
+    let mut runtime2 = Runtime::new();
+    let r_ai = runtime2.execute_program(with_ai, None);
+    let err_assist = r_assist.unwrap_err();
+    let err_ai = r_ai.unwrap_err();
+    assert!(
+        err_assist.to_string().contains("AI") || err_assist.to_string().contains("denied"),
+        "assist:: should hit AI path: {}",
+        err_assist
+    );
+    assert!(
+        err_ai.to_string().contains("AI") || err_ai.to_string().contains("denied"),
+        "ai:: should hit AI path: {}",
+        err_ai
+    );
+}
+
+#[test]
 fn test_resolve_relative_file() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
@@ -177,10 +206,10 @@ utils = { path = "utils" }
 "#,
     )
     .unwrap();
-    let resolved = resolve_dependencies(&manifest).unwrap();
+    let (resolved, version_meta) = resolve_dependencies(&manifest).unwrap();
     assert_eq!(resolved.len(), 1);
     assert!(resolved.get("utils").unwrap().ends_with("utils"));
-    write_lockfile(&manifest, &resolved).unwrap();
+    write_lockfile(&manifest, &resolved, &version_meta).unwrap();
     let lock_path = root.join("dal.lock");
     assert!(lock_path.exists());
     let loaded = load_resolved_deps(&manifest).unwrap();
@@ -211,8 +240,8 @@ utils = { path = "../utils" }
     let main_path = app_dir.join("main.dal");
     std::fs::write(&main_path, r#"import "utils" as m; m::foo()"#).unwrap();
     let manifest_path = app_dir.join("dal.toml");
-    let resolved = resolve_dependencies(&manifest_path).unwrap();
-    write_lockfile(&manifest_path, &resolved).unwrap();
+    let (resolved, version_meta) = resolve_dependencies(&manifest_path).unwrap();
+    write_lockfile(&manifest_path, &resolved, &version_meta).unwrap();
     let deps = load_resolved_deps(&manifest_path).unwrap();
     let program = parse_source(&std::fs::read_to_string(&main_path).unwrap()).unwrap();
     let resolver = ModuleResolver::new()

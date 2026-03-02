@@ -154,7 +154,7 @@ lazy_static::lazy_static! {
             is_testnet: false,
         });
 
-        // Arbitrum
+        // Arbitrum One
         m.insert(42161, ChainConfig {
             chain_id: 42161,
             name: "Arbitrum One".to_string(),
@@ -162,6 +162,18 @@ lazy_static::lazy_static! {
             explorer: "https://arbiscan.io".to_string(),
             gas_limit: 21000,
             gas_price: 0.1,
+            confirmations: 1,
+            is_testnet: false,
+        });
+
+        // Avalanche C-Chain
+        m.insert(43114, ChainConfig {
+            chain_id: 43114,
+            name: "Avalanche C-Chain".to_string(),
+            rpc_url: "https://api.avax.network/ext/bc/C/rpc".to_string(),
+            explorer: "https://snowtrace.io".to_string(),
+            gas_limit: 21000,
+            gas_price: 25.0,
             confirmations: 1,
             is_testnet: false,
         });

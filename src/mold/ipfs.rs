@@ -46,6 +46,27 @@ pub fn upload_file(api_base: &str, path: &Path) -> Result<String, String> {
     Ok(hash.to_string())
 }
 
+/// Download content from IPFS by CID as raw bytes (POST /api/v0/cat?arg=<cid>).
+/// Use for binary content (e.g. tarballs). For text, use `cat` instead.
+pub fn cat_bytes(api_base: &str, cid: &str) -> Result<Vec<u8>, String> {
+    let url = format!("{}/api/v0/cat?arg={}", api_base.trim_end_matches('/'), cid);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()
+        .map_err(|e| format!("http client: {}", e))?;
+    let resp = client
+        .post(&url)
+        .send()
+        .map_err(|e| format!("IPFS cat request: {}", e))?;
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let body = resp.text().unwrap_or_default();
+        return Err(format!("IPFS cat failed {}: {}", status, body));
+    }
+    let bytes = resp.bytes().map_err(|e| format!("IPFS cat body: {}", e))?;
+    Ok(bytes.to_vec())
+}
+
 /// Download content from IPFS by CID (POST /api/v0/cat?arg=<cid>).
 pub fn cat(api_base: &str, cid: &str) -> Result<String, String> {
     let url = format!("{}/api/v0/cat?arg={}", api_base.trim_end_matches('/'), cid);
@@ -76,4 +97,10 @@ pub fn upload_mold_to_ipfs(path: &Path) -> Result<String, String> {
 pub fn download_mold_from_ipfs(cid: &str) -> Result<String, String> {
     let base = api_base();
     cat(&base, cid)
+}
+
+/// Download binary content from IPFS by CID (e.g. tarballs).
+pub fn download_bytes_from_ipfs(cid: &str) -> Result<Vec<u8>, String> {
+    let base = api_base();
+    cat_bytes(&base, cid)
 }

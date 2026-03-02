@@ -76,6 +76,11 @@ BLOCKCHAIN
   chain mint <name>           Mint asset
   chain asset <id>            Get asset info
 
+ORCHESTRATION (bond, pipe, invoke)
+  bond <flow> <args...>       Connect components (iot-to-db, auth-to-web, ...)
+  pipe <source> -> <sink>     Pipeline between components
+  invoke <workflow> <args...> Multi-step workflows (compliance-check, ai-audit, ...)
+
 DATA & INFRASTRUCTURE
   crypto hash <data> [alg]    Hash (sha256/sha512)
   crypto keygen [alg]         Generate keypair
@@ -100,9 +105,9 @@ INFO
   version                     Version information
 
 QUICK EXAMPLES
-  {0} new my-token --type chain
-  {0} ai code "Create an ERC20 token with 1M supply"
-  {0} chain gas-price 1
+  {0} bond iot-to-db dev_001 postgres://localhost/db
+  {0} pipe oracle fetch x btc -> chain estimate 1 deploy
+  {0} invoke compliance-check 0x742d...
   {0} run app.dal
 
 For subcommand help: {0} <command> --help

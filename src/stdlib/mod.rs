@@ -1,6 +1,7 @@
 pub mod add_sol;
 pub mod admin;
 pub mod agent;
+pub mod evolve;
 pub mod ai;
 pub mod aml;
 pub mod auth;
@@ -21,6 +22,7 @@ pub mod mold;
 pub mod oracle;
 pub mod secure_auth;
 pub mod service;
+pub mod sh;
 pub mod sync;
 pub mod test;
 pub mod trust;

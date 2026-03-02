@@ -163,7 +163,7 @@ impl Backend {
     fn stdlib_doc(module: &str) -> Option<&'static str> {
         Some(match module {
             "chain" => "Blockchain operations: deploy, call, balance, gas, etc.",
-            "ai" => "AI/LLM: generate_text, spawn_agent, send_message, etc.",
+            "ai" | "assist" => "AI/LLM: generate_text, spawn_agent, send_message, etc.",
             "log" => "Logging: info, error, warning, audit.",
             "auth" => "Authentication and authorization.",
             "config" => "Configuration and environment.",
@@ -521,7 +521,7 @@ impl LanguageServer for Backend {
 
         // Stdlib modules
         let modules = [
-            "chain", "ai", "log", "auth", "config", "db", "crypto", "oracle", "agent",
+            "chain", "ai", "assist", "log", "auth", "config", "db", "crypto", "oracle", "agent",
         ];
         for m in modules {
             if prefix.is_empty() || m.starts_with(&prefix) {

@@ -41,6 +41,26 @@ pub struct Cli {
     /// Print version information
     #[arg(short = 'V', long = "version", global = true)]
     pub version_flag: bool,
+
+    /// Cross-component (bond, pipe, invoke): print planned steps only, do not execute
+    #[arg(long, global = true)]
+    pub dry_run: bool,
+
+    /// Cross-component output format: text (default) or json
+    #[arg(long, value_name = "FORMAT", global = true)]
+    pub format: Option<String>,
+
+    /// Auth token for HTTP flows (bond auth-to-web, iot-to-web, ai-to-service, etc.)
+    #[arg(long, value_name = "TOKEN", global = true)]
+    pub token: Option<String>,
+
+    /// Read auth token from environment variable
+    #[arg(long, value_name = "VAR", global = true)]
+    pub token_env: Option<String>,
+
+    /// Read auth token from file (first line)
+    #[arg(long, value_name = "PATH", global = true)]
+    pub auth_file: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, ValueEnum)]
@@ -121,8 +141,12 @@ pub enum Commands {
         project_type: Option<String>,
     },
 
-    /// Initialize project in current directory
-    Init,
+    /// Initialize project in current directory (optionally with a stack template: dal, agent, js, rs, sol)
+    Init {
+        /// Stack template: dal (default), agent, js, rs, sol
+        #[arg(default_value = "dal")]
+        template: String,
+    },
 
     /// Interactive REPL
     Repl,
@@ -135,6 +159,9 @@ pub enum Commands {
 
     /// Install dependencies
     Install,
+
+    /// Publish package to registry (requires DAL_REGISTRY_TOKEN)
+    Publish,
 
     /// Run benchmarks
     Bench {

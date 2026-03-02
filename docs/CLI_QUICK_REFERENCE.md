@@ -59,6 +59,9 @@
 | `dal init` | Initialize in current dir | `dal init` |
 | `dal add <package>` | Add dependency | `dal add @dal/testing` |
 | `dal install` | Install dependencies | `dal install` |
+| `dal publish` | Publish package to registry (requires `DAL_REGISTRY_TOKEN`) | `dal publish` |
+
+**Registry server:** Run `dal-registry` (build with `cargo build --bin dal-registry`). Env: `REGISTRY_STORAGE_PATH`, `REGISTRY_TOKEN`, `REGISTRY_PUBLIC_URL`, `PORT`. See [PACKAGE_REGISTRY_PLAN.md](development/PACKAGE_REGISTRY_PLAN.md).
 
 **Project Types:**
 - `ai` - AI/ML application
@@ -408,8 +411,15 @@ dal ai code "hello world"
 | `dal pipe <source> -> <sink>` | Pipeline between components | `dal pipe oracle fetch x -> chain estimate 1` |
 | `dal invoke <workflow> <args...>` | Multi-component workflows | `dal invoke iot-ingest dev_001 postgres://...` |
 
-**Flows:** oracle-to-chain, iot-to-db, db-to-sync, auth-to-web, ...  
+**Flows:** auth-to-web, oracle-to-chain, chain-to-sync, iot-to-db, iot-to-web, db-to-sync, sync-to-db, ai-to-service, service-to-chain, log-to-sync  
 **Workflows:** price-to-deploy, iot-ingest, ai-audit, compliance-check
+
+**Flags (bond, pipe, invoke):**
+- `--dry-run` — Print planned steps only, do not execute
+- `--format json` — Machine-readable JSON output
+- `--token <value>` — Auth token for HTTP flows (auth-to-web, iot-to-web, ai-to-service, service-to-chain)
+- `--token-env <VAR>` — Read token from environment variable
+- `--auth-file <path>` — Read token from file (first line)
 
 ---
 
@@ -602,7 +612,7 @@ All commands support human-readable output by default:
 - ⚠️  Warnings in yellow
 - Emojis for visual clarity
 
-**Future:** JSON output mode (`--json`) for scripting and automation.
+**JSON output:** Use `--format json` with bond, pipe, or invoke for machine-readable output.
 
 ---
 

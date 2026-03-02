@@ -15,6 +15,8 @@ pub enum ManifestError {
     Toml(#[from] toml::de::Error),
     #[error("invalid dependency spec for '{name}': {message}")]
     InvalidDependency { name: String, message: String },
+    #[error("registry: {0}")]
+    Registry(String),
 }
 
 /// Dependency spec from dal.toml: version string or path.
@@ -29,6 +31,49 @@ pub type DependenciesMap = HashMap<String, DependencySpec>;
 
 /// Resolved dependencies: package name -> absolute package root directory.
 pub type ResolvedDeps = HashMap<String, PathBuf>;
+
+/// Version metadata for lockfile: name -> (version, source). Only for version deps.
+pub type LockfileVersionMeta = HashMap<String, (String, String)>;
+
+/// Package identity from [package] section (for publish).
+#[derive(Debug, Clone)]
+pub struct PackageInfo {
+    pub name: String,
+    pub version: String,
+}
+
+/// Parse [package] name and version from dal.toml.
+pub fn parse_package_info(manifest_path: &Path) -> Result<PackageInfo, ManifestError> {
+    let content = std::fs::read_to_string(manifest_path)
+        .map_err(|_| ManifestError::NotFound(manifest_path.to_path_buf()))?;
+    let table: toml::Table = toml::from_str(&content)?;
+    let package = match table.get("package") {
+        Some(toml::Value::Table(t)) => t,
+        _ => {
+            return Err(ManifestError::InvalidDependency {
+                name: "package".to_string(),
+                message: "missing [package] section".to_string(),
+            })
+        }
+    };
+    let name = package
+        .get("name")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| ManifestError::InvalidDependency {
+            name: "package.name".to_string(),
+            message: "missing or invalid".to_string(),
+        })?
+        .to_string();
+    let version = package
+        .get("version")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| ManifestError::InvalidDependency {
+            name: "package.version".to_string(),
+            message: "missing or invalid".to_string(),
+        })?
+        .to_string();
+    Ok(PackageInfo { name, version })
+}
 
 /// Parse dal.toml and return [dependencies] (path or version).
 pub fn parse_dependencies(manifest_path: &Path) -> Result<DependenciesMap, ManifestError> {
@@ -74,10 +119,14 @@ pub fn parse_dependencies(manifest_path: &Path) -> Result<DependenciesMap, Manif
     Ok(out)
 }
 
-/// Resolve path dependencies to canonical absolute paths. Version-only deps are skipped (no registry).
-pub fn resolve_dependencies(manifest_path: &Path) -> Result<ResolvedDeps, ManifestError> {
+/// Resolve dependencies: path deps canonicalized; version deps fetched from registry and cached.
+/// Returns (resolved deps, version metadata for lockfile).
+pub fn resolve_dependencies(
+    manifest_path: &Path,
+) -> Result<(ResolvedDeps, LockfileVersionMeta), ManifestError> {
     let deps = parse_dependencies(manifest_path)?;
     let mut resolved = HashMap::new();
+    let mut version_meta = HashMap::new();
     for (name, spec) in deps {
         match spec {
             DependencySpec::Path(p) => {
@@ -95,33 +144,66 @@ pub fn resolve_dependencies(manifest_path: &Path) -> Result<ResolvedDeps, Manife
                 }
                 resolved.insert(name, canonical);
             }
-            DependencySpec::Version(_) => {
-                // M3: no registry; skip or optional: leave unresolved and warn
+            DependencySpec::Version(version_request) => {
+                let (path, version, source) =
+                    crate::registry::resolve_and_fetch_with_meta(&name, &version_request)
+                        .map_err(|e| ManifestError::Registry(e.to_string()))?;
+                version_meta.insert(name.clone(), (version, source));
+                resolved.insert(name, path);
             }
         }
     }
-    Ok(resolved)
+    Ok((resolved, version_meta))
 }
 
 /// Lockfile format: [dependencies] name = "absolute_path"
 const LOCKFILE_SECTION: &str = "[dependencies]\n";
 
-/// Write dal.lock next to manifest_path with resolved paths.
-pub fn write_lockfile(manifest_path: &Path, resolved: &ResolvedDeps) -> Result<(), ManifestError> {
+/// Write dal.lock next to manifest_path with resolved paths and optional version metadata.
+pub fn write_lockfile(
+    manifest_path: &Path,
+    resolved: &ResolvedDeps,
+    version_meta: &LockfileVersionMeta,
+) -> Result<(), ManifestError> {
     let lock_path = manifest_path
         .parent()
         .unwrap_or_else(|| Path::new("."))
         .join("dal.lock");
+    let quote_key = |k: &str| -> String {
+        if k.chars().any(|c| c == '@' || c == '/' || c == '.') {
+            format!("\"{}\"", k.replace('\\', "\\\\").replace('"', "\\\""))
+        } else {
+            k.to_string()
+        }
+    };
     let mut content = String::from(LOCKFILE_SECTION);
     for (name, path) in resolved {
         let path_str = path.to_string_lossy();
-        content.push_str(&format!("{} = \"{}\"\n", name, path_str.replace('\\', "/")));
+        content.push_str(&format!(
+            "{} = \"{}\"\n",
+            quote_key(name),
+            path_str.replace('\\', "/")
+        ));
+    }
+    if !version_meta.is_empty() {
+        content.push_str("\n[metadata]\n");
+        for (name, (version, source)) in version_meta {
+            let v_esc = version.replace('\\', "\\\\").replace('"', "\\\"");
+            let s_esc = source.replace('\\', "\\\\").replace('"', "\\\"");
+            content.push_str(&format!(
+                "{} = {{ version = \"{}\", source = \"{}\" }}\n",
+                quote_key(name),
+                v_esc,
+                s_esc
+            ));
+        }
     }
     std::fs::write(lock_path, content)?;
     Ok(())
 }
 
 /// Read dal.lock and return name -> path. If lockfile missing, resolve from manifest and return.
+/// When a cached path is missing, re-fetches from [metadata] source if available.
 pub fn load_resolved_deps(manifest_path: &Path) -> Result<ResolvedDeps, ManifestError> {
     let project_dir = manifest_path.parent().unwrap_or_else(|| Path::new("."));
     let lock_path = project_dir.join("dal.lock");
@@ -132,6 +214,7 @@ pub fn load_resolved_deps(manifest_path: &Path) -> Result<ResolvedDeps, Manifest
             Some(toml::Value::Table(t)) => t,
             _ => return Ok(HashMap::new()),
         };
+        let metadata = table.get("metadata").and_then(|v| v.as_table());
         let mut out = HashMap::new();
         for (name, val) in deps {
             if let toml::Value::String(p) = val {
@@ -141,11 +224,40 @@ pub fn load_resolved_deps(manifest_path: &Path) -> Result<ResolvedDeps, Manifest
                 } else {
                     project_dir.join(p)
                 };
-                out.insert(name.clone(), abs);
+                if abs.exists() {
+                    out.insert(name.clone(), abs);
+                } else if let Some(meta) = metadata.and_then(|t| t.get(name)).and_then(|v| v.as_table()) {
+                    let version = meta
+                        .get("version")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| ManifestError::InvalidDependency {
+                            name: name.clone(),
+                            message: "[metadata] entry missing 'version'".to_string(),
+                        })?;
+                    let source = meta
+                        .get("source")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| ManifestError::InvalidDependency {
+                            name: name.clone(),
+                            message: "[metadata] entry missing 'source'".to_string(),
+                        })?;
+                    let path = crate::registry::fetch_and_cache(name, version, source)
+                        .map_err(|e| ManifestError::Registry(e.to_string()))?;
+                    out.insert(name.clone(), path);
+                } else {
+                    return Err(ManifestError::InvalidDependency {
+                        name: name.clone(),
+                        message: format!(
+                            "cached path {} does not exist and no [metadata] to re-fetch",
+                            abs.display()
+                        ),
+                    });
+                }
             }
         }
         return Ok(out);
     }
-    // No lockfile: resolve from manifest (path deps only)
-    resolve_dependencies(manifest_path)
+    // No lockfile: resolve from manifest
+    let (resolved, _) = resolve_dependencies(manifest_path)?;
+    Ok(resolved)
 }

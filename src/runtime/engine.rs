@@ -1303,7 +1303,7 @@ impl Runtime {
             "web" => self.call_web_function(function_name, args),
             "database" => self.call_database_function(function_name, args),
             "agent" => self.call_agent_function(function_name, args),
-            "ai" => self.call_ai_function(function_name, args),
+            "ai" | "assist" => self.call_ai_function(function_name, args),
             "mold" => self.call_mold_function(function_name, args),
             "desktop" => self.call_desktop_function(function_name, args),
             "mobile" => self.call_mobile_function(function_name, args),
@@ -1313,6 +1313,8 @@ impl Runtime {
             "test" => self.call_test_function(function_name, args),
             "json" => self.call_json_function(function_name, args),
             "config" => self.call_config_function(function_name, args),
+            "sh" => self.call_sh_function(function_name, args),
+            "evolve" => self.call_evolve_function(function_name, args),
             _ => {
                 // Check if namespace is a registered service name (e.g., TestNFT::new())
                 if self.services.contains_key(namespace) {
@@ -4121,6 +4123,11 @@ impl Runtime {
     }
 
     fn call_kyc_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        // Key gating for sensitive KYC ops (verify_identity, provider choice, document, revoke, report)
+        const KYC_GATED: &[&str] = &["verify_identity", "validate_document", "revoke_verification", "get_compliance_report"];
+        if KYC_GATED.contains(&name) {
+            self.check_compliance_key_gate("kyc", name)?;
+        }
         match name {
             "verify_identity" => {
                 if args.len() != 4 {
@@ -4201,6 +4208,11 @@ impl Runtime {
     }
 
     fn call_aml_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        // Key gating for sensitive AML ops (risk assessment, perform check, sanctions, screen)
+        const AML_GATED: &[&str] = &["perform_check", "get_risk_assessment", "screen_transaction", "check_sanctions_list"];
+        if AML_GATED.contains(&name) {
+            self.check_compliance_key_gate("aml", name)?;
+        }
         match name {
             "perform_check" => {
                 if args.len() != 4 {
@@ -4853,6 +4865,112 @@ impl Runtime {
                 "config::{}",
                 name
             ))),
+        }
+    }
+
+    fn call_sh_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::sh;
+        match name {
+            "run" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let cmd = self.value_to_string(&args[0])?;
+                sh::run(&cmd).map_err(RuntimeError::General)
+            }
+            _ => Err(RuntimeError::function_not_found(format!("sh::{}", name))),
+        }
+    }
+
+    fn call_evolve_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::evolve;
+        match name {
+            "load" => {
+                let agent_name = args
+                    .first()
+                    .and_then(|v| self.value_to_string(v).ok());
+                evolve::load(agent_name.as_deref())
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "append_conversation" => {
+                if args.len() < 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let user = self.value_to_string(&args[0])?;
+                let agent = self.value_to_string(&args[1])?;
+                let agent_name = args.get(2).and_then(|v| self.value_to_string(v).ok());
+                evolve::append_conversation(&user, &agent, agent_name.as_deref())
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Null)
+            }
+            "append_log" => {
+                if args.len() < 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let action = self.value_to_string(&args[0])?;
+                let detail = self.value_to_string(&args[1])?;
+                let result = self.value_to_string(&args[2])?;
+                evolve::append_log(&action, &detail, &result)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Null)
+            }
+            "get_path" => Ok(Value::String(evolve::get_path())),
+            "load_recent" => {
+                let (agent_name, max_lines) = match args.len() {
+                    0 => (None, 0i64),
+                    1 => {
+                        let v = &args[0];
+                        if let Ok(n) = self.value_to_int(v) {
+                            (None, n)
+                        } else {
+                            (self.value_to_string(v).ok(), 0)
+                        }
+                    }
+                    _ => {
+                        let name = args.get(0).and_then(|v| self.value_to_string(v).ok());
+                        let n = args.get(1).and_then(|v| self.value_to_int(v).ok()).unwrap_or(0);
+                        (name, n)
+                    }
+                };
+                evolve::load_recent(agent_name.as_deref(), max_lines)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "trim_retention" => {
+                if args.len() < 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let keep = self.value_to_int(&args[0])?;
+                evolve::trim_retention(keep).map_err(RuntimeError::General)?;
+                Ok(Value::Null)
+            }
+            "append_summary" => {
+                if args.len() < 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let text = self.value_to_string(&args[0])?;
+                let title = args.get(1).and_then(|v| self.value_to_string(v).ok());
+                evolve::append_summary(&text, title.as_deref())
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Null)
+            }
+            _ => Err(RuntimeError::function_not_found(format!("evolve::{}", name))),
         }
     }
 
@@ -6330,6 +6448,18 @@ impl Runtime {
                         got: args.len(),
                     })
                 }
+            }
+
+            "set_serve_agent" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let agent_id = self.value_to_string(&args[0])?;
+                crate::stdlib::agent::set_serve_agent(&agent_id);
+                Ok(Value::Bool(true))
             }
 
             _ => Err(RuntimeError::function_not_found(format!("agent::{}", name))),
@@ -8485,6 +8615,29 @@ impl Runtime {
             }
         } else {
             false
+        }
+    }
+
+    /// Compliance key gating: when DAL_COMPLIANCE_KEY_GATE=1, sensitive kyc::/aml:: ops require key::check.
+    /// Principal from DAL_COMPLIANCE_PRINCIPAL (default "caller"). Resource is "kyc" or "aml", operation is the function name.
+    fn check_compliance_key_gate(&self, resource: &str, operation: &str) -> Result<(), RuntimeError> {
+        let gate = std::env::var("DAL_COMPLIANCE_KEY_GATE").unwrap_or_default();
+        if gate != "1" && gate != "true" && !gate.eq_ignore_ascii_case("true") {
+            return Ok(());
+        }
+        let principal_id = std::env::var("DAL_COMPLIANCE_PRINCIPAL").unwrap_or_else(|_| "caller".to_string());
+        let request = crate::stdlib::key::CapabilityRequest {
+            resource: resource.to_string(),
+            operation: operation.to_string(),
+            principal_id: principal_id.clone(),
+        };
+        match crate::stdlib::key::check(request) {
+            Ok(true) => Ok(()),
+            Ok(false) => Err(RuntimeError::PermissionDenied(format!(
+                "compliance key gate denied: {}::{} for principal {}",
+                resource, operation, principal_id
+            ))),
+            Err(e) => Err(RuntimeError::PermissionDenied(format!("key::check error: {}", e))),
         }
     }
 

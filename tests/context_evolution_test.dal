@@ -1,0 +1,5 @@
+// Phase 3 + 4: evolve::load, append_conversation, append_log, load_recent, append_summary
+evolve::append_conversation("Hello", "Hi, how can I help?", "TestAgent");
+evolve::append_log("sh::run", "echo ok", "exit 0");
+evolve::append_summary("Session went well.", "Phase 4 test");
+evolve::load_recent(5)

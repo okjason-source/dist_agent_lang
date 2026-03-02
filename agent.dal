@@ -1,0 +1,17 @@
+// Agent behavior entry (run with: dal run agent.dal or dal agent serve)
+// Use evolve::load(), evolve::append_conversation(), evolve::append_log() for context.
+// Use sh::run(cmd) for shell (respects [agent.sh] trust in agent.toml).
+// When used by `dal agent serve`, this script spawns an agent and calls agent::set_serve_agent(agent_id).
+
+use agent;
+
+fn main() {
+    let agent_id = agent::spawn({
+        "name": "my-agent",
+        "type": "worker",
+        "role": "Agent serve"
+    });
+    agent::set_serve_agent(agent_id);
+}
+
+main();

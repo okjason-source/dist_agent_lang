@@ -498,14 +498,23 @@ pub fn spawn(config: AgentConfig) -> Result<AgentContext, String> {
         data
     });
 
+    {
+        let mut r = get_runtime();
+        r.agent_contexts
+            .insert(agent_context.agent_id.clone(), agent_context.clone());
+    }
     Ok(agent_context)
 }
 
-/// In-memory coordination runtime: task queue and message bus for coordinate/communicate.
+/// In-memory coordination runtime: task queue, message bus, and registry of spawned agents for serve/behavior.
 struct AgentRuntime {
     task_queue: Vec<(String, AgentTask)>,
     message_bus: Vec<(String, AgentMessage)>,
     evolution_store: HashMap<String, HashMap<String, Value>>,
+    /// Registry of spawned agents by agent_id (so behavior script can set_serve_agent and we look up context).
+    agent_contexts: HashMap<String, AgentContext>,
+    /// When set (e.g. by behavior script), the agent to serve via HTTP.
+    serve_agent_id: Option<String>,
 }
 
 fn get_runtime() -> std::sync::MutexGuard<'static, AgentRuntime> {
@@ -516,10 +525,25 @@ fn get_runtime() -> std::sync::MutexGuard<'static, AgentRuntime> {
                 task_queue: Vec::new(),
                 message_bus: Vec::new(),
                 evolution_store: HashMap::new(),
+                agent_contexts: HashMap::new(),
+                serve_agent_id: None,
             })
         })
         .lock()
         .unwrap()
+}
+
+/// Register the agent as the one to serve (used by behavior script before server starts). Call agent::set_serve_agent(agent_id) from DAL.
+pub fn set_serve_agent(agent_id: &str) {
+    let mut r = get_runtime();
+    r.serve_agent_id = Some(agent_id.to_string());
+}
+
+/// Get the agent context for the current serve agent, if the behavior script set one. Used by dal agent serve --behavior.
+pub fn get_serve_agent_context() -> Option<AgentContext> {
+    let r = get_runtime();
+    let id = r.serve_agent_id.clone()?;
+    r.agent_contexts.get(&id).cloned()
 }
 
 /// Coordinate agent activities. Uses in-memory task queue; tasks are routed to agent_id.
@@ -651,10 +675,17 @@ pub fn receive_messages(receiver_id: &str) -> Vec<AgentMessage> {
 }
 
 /// Evolve agent through learning. Persists evolution_data in in-memory store; use get_evolution_data() to retrieve.
+/// If the agent was spawned from a mold with lifecycle.on_evolve, that DAL snippet is run with `agent_id` and `evolution_data` in scope (so the mold can e.g. call evolve::append_summary to keep file and in-memory evolution aligned).
 pub fn evolve(agent_id: &str, evolution_data: HashMap<String, Value>) -> Result<bool, String> {
-    get_runtime()
-        .evolution_store
-        .insert(agent_id.to_string(), evolution_data.clone());
+    let on_evolve = {
+        let mut r = get_runtime();
+        r.evolution_store
+            .insert(agent_id.to_string(), evolution_data.clone());
+        r.agent_contexts
+            .get(agent_id)
+            .and_then(|ctx| ctx.config.lifecycle.as_ref())
+            .and_then(|l| l.on_evolve.clone())
+    };
     log::info!("agent_evolution: {:?}", {
         let mut data = HashMap::new();
         data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
@@ -668,6 +699,22 @@ pub fn evolve(agent_id: &str, evolution_data: HashMap<String, Value>) -> Result<
         );
         data
     });
+
+    if let Some(snippet) = on_evolve {
+        let mut vars = HashMap::new();
+        vars.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
+        vars.insert(
+            "evolution_data".to_string(),
+            Value::Map(evolution_data),
+        );
+        if let Err(e) = crate::execute_dal_with_scope(&vars, &snippet) {
+            log::warn!(
+                "Mold on_evolve lifecycle hook failed for {}: {}",
+                agent_id,
+                e
+            );
+        }
+    }
 
     Ok(true)
 }

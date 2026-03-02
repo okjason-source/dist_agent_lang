@@ -1,0 +1,2 @@
+// Quick test: sh::run(cmd) returns { stdout, stderr, exit_code }
+sh::run("echo hello")
