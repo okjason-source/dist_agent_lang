@@ -3091,7 +3091,9 @@ fn add_package(package: &str) {
 
 /// Collect paths of *.dal files under dir (recursive; skips .git, target, node_modules, .dal).
 fn collect_dal_files_under(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
-    let Ok(entries) = std::fs::read_dir(dir) else { return };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         let path = entry.path();
         let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
@@ -3124,15 +3126,25 @@ fn install_dependencies(sync: bool) {
         collect_dal_files_under(&cwd, &mut dal_files);
         let mut all_names: std::collections::HashSet<String> = std::collections::HashSet::new();
         for path in &dal_files {
-            let Ok(source) = std::fs::read_to_string(path) else { continue };
-            let Ok(program) = dist_agent_lang::parse_source(&source) else { continue };
-            for name in dist_agent_lang::module_resolver::package_import_names_from_program(&program) {
+            let Ok(source) = std::fs::read_to_string(path) else {
+                continue;
+            };
+            let Ok(program) = dist_agent_lang::parse_source(&source) else {
+                continue;
+            };
+            for name in
+                dist_agent_lang::module_resolver::package_import_names_from_program(&program)
+            {
                 all_names.insert(name);
             }
         }
         let names: Vec<String> = all_names.into_iter().collect();
         if !names.is_empty() {
-            match dist_agent_lang::manifest::add_dependencies_if_missing(&manifest_path, &names, "latest") {
+            match dist_agent_lang::manifest::add_dependencies_if_missing(
+                &manifest_path,
+                &names,
+                "latest",
+            ) {
                 Ok(added) => {
                     if added > 0 {
                         println!("   Added {} dependency(ies) from usage to dal.toml.", added);
@@ -3181,7 +3193,10 @@ fn handle_venv_command(subcommand: &str, rest: &[String]) {
     match subcommand {
         "create" => {
             if rest.is_empty() {
-                eprintln!("Usage: {} venv create <name> [--dir <path>] [--profile strict|relaxed]", binary_name());
+                eprintln!(
+                    "Usage: {} venv create <name> [--dir <path>] [--profile strict|relaxed]",
+                    binary_name()
+                );
                 std::process::exit(1);
             }
             let name = &rest[0];
@@ -3206,7 +3221,12 @@ fn handle_venv_command(subcommand: &str, rest: &[String]) {
                     if !dir.join("dal.toml").exists() {
                         eprintln!("   ⚠ No dal.toml in {}; run 'dal init' or add one. Dependency resolution may fail at run time.", dir.display());
                     }
-                    println!("✅ Venv '{}' created (root: {}, profile: {})", name, dir.display(), profile.as_str());
+                    println!(
+                        "✅ Venv '{}' created (root: {}, profile: {})",
+                        name,
+                        dir.display(),
+                        profile.as_str()
+                    );
                 }
                 Err(e) => {
                     eprintln!("❌ {}", e);
@@ -3300,7 +3320,12 @@ fn handle_venv_command(subcommand: &str, rest: &[String]) {
 /// Run a DAL script inside a venv (venv root + deps + profile). Script path is absolute.
 fn run_dal_file_with_venv(script_path: &std::path::Path, venv: &dist_agent_lang::venv::Venv) {
     let filename = script_path.to_string_lossy();
-    println!("🪩  Running in venv '{}' (profile: {}): {}", venv.name, venv.profile.as_str(), filename);
+    println!(
+        "🪩  Running in venv '{}' (profile: {}): {}",
+        venv.name,
+        venv.profile.as_str(),
+        filename
+    );
 
     let source_code = match std::fs::read_to_string(script_path) {
         Ok(c) => c,
@@ -3316,7 +3341,10 @@ fn run_dal_file_with_venv(script_path: &std::path::Path, venv: &dist_agent_lang:
             tokens
         }
         Err(e) => {
-            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(&filename), Some(&source_code)));
+            eprintln!(
+                "❌ Lexer error:\n{}",
+                format_lexer_error(&e, Some(&filename), Some(&source_code))
+            );
             std::process::exit(1);
         }
     };
@@ -3324,17 +3352,26 @@ fn run_dal_file_with_venv(script_path: &std::path::Path, venv: &dist_agent_lang:
     let ast = match Parser::new_with_positions(tokens_with_pos).parse() {
         Ok(ast) => ast,
         Err(e) => {
-            eprintln!("❌ Parsing failed:\n{}", format_parser_error(&e, Some(&filename), Some(&source_code)));
+            eprintln!(
+                "❌ Parsing failed:\n{}",
+                format_parser_error(&e, Some(&filename), Some(&source_code))
+            );
             std::process::exit(1);
         }
     };
 
     let warnings = parser::collect_warnings(&ast);
     if !warnings.is_empty() {
-        eprintln!("\n{}", format_parse_warnings(&warnings, Some(&filename), Some(&source_code)));
+        eprintln!(
+            "\n{}",
+            format_parse_warnings(&warnings, Some(&filename), Some(&source_code))
+        );
     }
 
-    let has_imports = ast.statements.iter().any(|s| matches!(s, Statement::Import(_)));
+    let has_imports = ast
+        .statements
+        .iter()
+        .any(|s| matches!(s, Statement::Import(_)));
     let manifest_path = venv.root.join("dal.toml");
     let mut resolver = dist_agent_lang::ModuleResolver::new().with_root_dir(venv.root.clone());
     if manifest_path.exists() {
@@ -3354,7 +3391,8 @@ fn run_dal_file_with_venv(script_path: &std::path::Path, venv: &dist_agent_lang:
 
     let exec_result = if has_imports {
         let parse_fn = |s: &str| dist_agent_lang::parse_source(s).map_err(|e| e.to_string());
-        let resolved = match resolver.resolve_program_with_cycles(&ast, Some(script_path), parse_fn) {
+        let resolved = match resolver.resolve_program_with_cycles(&ast, Some(script_path), parse_fn)
+        {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("❌ Import resolution failed: {}", e);
@@ -3374,12 +3412,18 @@ fn run_dal_file_with_venv(script_path: &std::path::Path, venv: &dist_agent_lang:
             }
             if let Err(e) = runtime.run_registered_tests() {
                 let with_ctx = dist_agent_lang::runtime::RuntimeErrorWithContext::from_error(e);
-                eprintln!("❌ Test(s) failed:\n{}", format_runtime_error(&with_ctx, Some(&filename), Some(&source_code)));
+                eprintln!(
+                    "❌ Test(s) failed:\n{}",
+                    format_runtime_error(&with_ctx, Some(&filename), Some(&source_code))
+                );
                 std::process::exit(1);
             }
         }
         Err(e) => {
-            eprintln!("❌ Execution failed:\n{}", format_runtime_error(&e, Some(&filename), Some(&source_code)));
+            eprintln!(
+                "❌ Execution failed:\n{}",
+                format_runtime_error(&e, Some(&filename), Some(&source_code))
+            );
             std::process::exit(1);
         }
     }
@@ -6994,14 +7038,13 @@ fn handle_agent_command(args: &[String]) {
                         (Some(mold_path), n_opt) => {
                             let n = n_opt.unwrap_or(1);
                             match dist_agent_lang::fleet::create_from_mold(
-                                name,
-                                mold_path,
-                                n,
-                                &cwd,
-                                params_ref,
+                                name, mold_path, n, &cwd, params_ref,
                             ) {
                                 Ok(()) => {
-                                    println!("✅ Fleet '{}' created with {} agents from mold {}", name, n, mold_path);
+                                    println!(
+                                        "✅ Fleet '{}' created with {} agents from mold {}",
+                                        name, n, mold_path
+                                    );
                                 }
                                 Err(e) => {
                                     eprintln!("❌ {}", e);
@@ -7009,15 +7052,13 @@ fn handle_agent_command(args: &[String]) {
                                 }
                             }
                         }
-                        (None, _) => {
-                            match dist_agent_lang::fleet::create(name, Some(&cwd)) {
-                                Ok(()) => println!("✅ Fleet '{}' created (empty)", name),
-                                Err(e) => {
-                                    eprintln!("❌ {}", e);
-                                    std::process::exit(1);
-                                }
+                        (None, _) => match dist_agent_lang::fleet::create(name, Some(&cwd)) {
+                            Ok(()) => println!("✅ Fleet '{}' created (empty)", name),
+                            Err(e) => {
+                                eprintln!("❌ {}", e);
+                                std::process::exit(1);
                             }
-                        }
+                        },
                     }
                 }
                 "list" => {

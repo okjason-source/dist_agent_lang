@@ -92,7 +92,11 @@ pub fn resolve_venv(name: &str, project_base: &Path) -> Result<(Venv, PathBuf), 
         let profile = VenvProfile::from_str(&rec.profile).unwrap_or(VenvProfile::Relaxed);
         let root = PathBuf::from(&rec.root);
         if !root.exists() {
-            return Err(format!("venv '{}' root does not exist: {}", name, root.display()));
+            return Err(format!(
+                "venv '{}' root does not exist: {}",
+                name,
+                root.display()
+            ));
         }
         return Ok((
             Venv {
@@ -109,7 +113,11 @@ pub fn resolve_venv(name: &str, project_base: &Path) -> Result<(Venv, PathBuf), 
             let profile = VenvProfile::from_str(&rec.profile).unwrap_or(VenvProfile::Relaxed);
             let root = PathBuf::from(&rec.root);
             if !root.exists() {
-                return Err(format!("venv '{}' root does not exist: {}", name, root.display()));
+                return Err(format!(
+                    "venv '{}' root does not exist: {}",
+                    name,
+                    root.display()
+                ));
             }
             return Ok((
                 Venv {
@@ -212,14 +220,5 @@ pub fn delete_venv(name: &str, project_base: &Path) -> Result<bool, String> {
 
 /// Namespaces allowed when profile is Strict (no sh, no service; chain, crypto, log, config, etc.).
 pub const STRICT_ALLOWED_NAMESPACES: &[&str] = &[
-    "chain",
-    "crypto",
-    "log",
-    "config",
-    "key",
-    "auth",
-    "evolve",
-    "sync",
-    "json",
-    "test",
+    "chain", "crypto", "log", "config", "key", "auth", "evolve", "sync", "json", "test",
 ];

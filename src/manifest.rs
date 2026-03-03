@@ -149,7 +149,8 @@ pub fn add_dependencies_if_missing(
         }
     }
     if added > 0 {
-        let out = toml::to_string_pretty(&table).map_err(|e| ManifestError::Registry(e.to_string()))?;
+        let out =
+            toml::to_string_pretty(&table).map_err(|e| ManifestError::Registry(e.to_string()))?;
         std::fs::write(manifest_path, out)?;
     }
     Ok(added)

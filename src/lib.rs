@@ -49,11 +49,12 @@
 #![allow(clippy::wildcard_in_or_patterns)]
 
 pub mod agent_context_schema;
-pub mod dal_summary;
 pub mod cli;
 pub mod cli_design;
 pub mod compile;
+pub mod dal_summary;
 pub mod ffi;
+pub mod fleet;
 pub mod http_server;
 pub mod http_server_converters;
 pub mod http_server_handlers;
@@ -64,8 +65,6 @@ pub mod http_server_security_middleware;
 pub mod lexer;
 pub mod manifest;
 pub mod module_resolver;
-pub mod fleet;
-pub mod venv;
 pub mod mold;
 pub mod parser;
 pub mod performance;
@@ -75,6 +74,7 @@ pub mod runtime;
 pub mod solidity_converter;
 pub mod stdlib;
 pub mod testing;
+pub mod venv;
 
 // Re-export security modules for easier access
 pub use ffi::security::{FFIInputValidator, FFIResourceLimits};

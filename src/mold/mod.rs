@@ -172,8 +172,7 @@ pub fn create_from_mold_path(
 ) -> Result<crate::stdlib::agent::AgentContext, String> {
     let mold = load_mold_from_path(path)?;
     let principal = load_principal_overrides();
-    let config =
-        mold_config_to_agent_config(&mold, name_override, Some(&principal), params)?;
+    let config = mold_config_to_agent_config(&mold, name_override, Some(&principal), params)?;
     spawn(config)
 }
 
@@ -209,8 +208,7 @@ pub fn create_from_mold_source(
 ) -> Result<crate::stdlib::agent::AgentContext, String> {
     let mold = load_mold_from_source(source, base)?;
     let principal = load_principal_overrides();
-    let config =
-        mold_config_to_agent_config(&mold, name_override, Some(&principal), params)?;
+    let config = mold_config_to_agent_config(&mold, name_override, Some(&principal), params)?;
     spawn(config)
 }
 
@@ -325,7 +323,10 @@ mod tests {
         };
         let config =
             mold_config_to_agent_config(&mold, None, Some(&principal), None).expect("merge ok");
-        assert_eq!(config.trust_level, "sandboxed", "principal trust must override mold");
+        assert_eq!(
+            config.trust_level, "sandboxed",
+            "principal trust must override mold"
+        );
     }
 
     #[test]
@@ -335,7 +336,10 @@ mod tests {
         )
         .expect("valid json");
         let config = mold_config_to_agent_config(&mold, None, None, None).expect("merge ok");
-        assert_eq!(config.trust_level, "sandboxed", "no principal => default sandboxed");
+        assert_eq!(
+            config.trust_level, "sandboxed",
+            "no principal => default sandboxed"
+        );
     }
 
     #[test]

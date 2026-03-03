@@ -251,7 +251,10 @@ mod tests {
         let prompt = build_prompt_for_llm(&schema);
         let obj_pos = prompt.find("## Objective").unwrap_or(0);
         let tools_pos = prompt.find("## Tools").unwrap_or(0);
-        assert!(obj_pos < tools_pos, "objective should appear before tools when objective_first");
+        assert!(
+            obj_pos < tools_pos,
+            "objective should appear before tools when objective_first"
+        );
         assert!(prompt.contains("What is 2+2?"));
     }
 
@@ -320,7 +323,9 @@ mod tests {
             context_blocks: Vec::new(),
             objective_first: false,
             sub_tasks: None,
-            completion_and_ask_guidance: Some("When done, reply with the outcome. Ask user when stuck.".to_string()),
+            completion_and_ask_guidance: Some(
+                "When done, reply with the outcome. Ask user when stuck.".to_string(),
+            ),
         };
         let prompt = build_prompt_for_llm(&schema);
         assert!(prompt.contains("## Completion and when to ask human"));

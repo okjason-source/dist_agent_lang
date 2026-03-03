@@ -51,7 +51,10 @@ fn parse_mold_dal(content: &str) -> Result<MoldConfig, String> {
     }
     let mold_line = lines[i];
     if !mold_line.starts_with("mold ") && !mold_line.eq_ignore_ascii_case("mold") {
-        return Err(format!("mold: expected 'mold \"name\" \"version\"', got '{}'", mold_line));
+        return Err(format!(
+            "mold: expected 'mold \"name\" \"version\"', got '{}'",
+            mold_line
+        ));
     }
     let rest = mold_line["mold".len()..].trim();
     let (n, v) = parse_two_tokens(rest)?;
@@ -296,6 +299,10 @@ lifecycle
         assert_eq!(mold.agent.memory_limit, "256MB");
         let lc = mold.lifecycle.as_ref().unwrap();
         assert!(lc.on_create.as_deref().unwrap_or("").contains("append_log"));
-        assert!(lc.on_evolve.as_deref().unwrap_or("").contains("append_summary"));
+        assert!(lc
+            .on_evolve
+            .as_deref()
+            .unwrap_or("")
+            .contains("append_summary"));
     }
 }

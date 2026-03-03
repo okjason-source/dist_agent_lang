@@ -1187,10 +1187,8 @@ fn search_web(_query: &str) -> Result<String, String> {
 /// Agent that can reply, run shell commands, or search the web. Parses LLM JSON and executes one action.
 /// Uses the canonical agent context schema (P0) so the LLM receives a consistent shape.
 pub fn respond_with_tools(user_message: &str) -> Result<String, String> {
-    let schema = crate::agent_context_schema::AgentContextSchema::minimal(
-        user_message,
-        TOOLS_SYSTEM,
-    );
+    let schema =
+        crate::agent_context_schema::AgentContextSchema::minimal(user_message, TOOLS_SYSTEM);
     let prompt = crate::agent_context_schema::build_prompt_for_llm(&schema);
     let response = generate_text(prompt).map_err(|e| e.to_string())?;
     let response = response.trim();
@@ -1355,14 +1353,22 @@ pub fn parse_tool_response(response: &str) -> ToolOutcome {
                 .and_then(|m| m.as_str())
                 .unwrap_or("")
                 .trim();
-            ToolOutcome::AskUser(if msg.is_empty() { response.to_string() } else { msg.to_string() })
+            ToolOutcome::AskUser(if msg.is_empty() {
+                response.to_string()
+            } else {
+                msg.to_string()
+            })
         }
         "run" => {
             let cmd = obj.get("cmd").and_then(|c| c.as_str()).unwrap_or("").trim();
             ToolOutcome::Run(cmd.to_string())
         }
         "search" => {
-            let query = obj.get("query").and_then(|q| q.as_str()).unwrap_or("").trim();
+            let query = obj
+                .get("query")
+                .and_then(|q| q.as_str())
+                .unwrap_or("")
+                .trim();
             ToolOutcome::Search(query.to_string())
         }
         _ => {
@@ -1371,7 +1377,11 @@ pub fn parse_tool_response(response: &str) -> ToolOutcome {
                 .and_then(|t| t.as_str())
                 .unwrap_or("")
                 .trim();
-            ToolOutcome::Reply(if text.is_empty() { response.to_string() } else { text.to_string() })
+            ToolOutcome::Reply(if text.is_empty() {
+                response.to_string()
+            } else {
+                text.to_string()
+            })
         }
     }
 }
@@ -1529,7 +1539,9 @@ pub fn run_multi_step_tool_loop(
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached. Please summarize what you have so far.".to_string(),
+                        final_text:
+                            "Max tool steps reached. Please summarize what you have so far."
+                                .to_string(),
                         is_ask_user: false,
                         steps_used,
                     });
@@ -1551,7 +1563,9 @@ pub fn run_multi_step_tool_loop(
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached. Please summarize what you have so far.".to_string(),
+                        final_text:
+                            "Max tool steps reached. Please summarize what you have so far."
+                                .to_string(),
                         is_ask_user: false,
                         steps_used,
                     });

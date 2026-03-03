@@ -16,7 +16,11 @@ fn fleet_create_empty_and_list() {
         .current_dir(temp.path())
         .output()
         .unwrap();
-    assert!(out.status.success(), "fleet create should succeed: {:?}", out);
+    assert!(
+        out.status.success(),
+        "fleet create should succeed: {:?}",
+        out
+    );
     let out = dal()
         .args(["agent", "fleet", "list"])
         .current_dir(temp.path())
@@ -76,7 +80,11 @@ agent
         .current_dir(temp.path())
         .output()
         .unwrap();
-    assert!(out.status.success(), "fleet create --from-mold should succeed: {:?}", out);
+    assert!(
+        out.status.success(),
+        "fleet create --from-mold should succeed: {:?}",
+        out
+    );
     let s = String::from_utf8_lossy(&out.stdout);
     assert!(s.contains("2 agents") && s.contains("from mold"));
     let out = dal()
@@ -103,8 +111,14 @@ agent
     fs::write(temp.path().join("scale_mold.mold.dal"), mold_dal).unwrap();
     let _ = dal()
         .args([
-            "agent", "fleet", "create", "scale_fleet",
-            "--from-mold", "scale_mold", "--count", "2",
+            "agent",
+            "fleet",
+            "create",
+            "scale_fleet",
+            "--from-mold",
+            "scale_mold",
+            "--count",
+            "2",
         ])
         .current_dir(temp.path())
         .output()

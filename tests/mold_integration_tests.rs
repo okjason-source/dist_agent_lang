@@ -28,7 +28,11 @@ fn mold_create_writes_dal_file() {
         .current_dir(temp.path())
         .output()
         .unwrap();
-    assert!(out.status.success(), "mold create should succeed: {:?}", out);
+    assert!(
+        out.status.success(),
+        "mold create should succeed: {:?}",
+        out
+    );
     let path = temp.path().join("test_mold.mold.dal");
     assert!(path.exists(), "test_mold.mold.dal should exist");
     let content = fs::read_to_string(&path).unwrap();
@@ -88,11 +92,22 @@ agent
     fs::write(temp.path().join("create_agent_mold.mold.dal"), mold_dal).unwrap();
     // Use -- so clap passes --mold through to agent create (avoids top-level flag parse)
     let out = dal()
-        .args(["agent", "create", "--", "--mold", "create_agent_mold", "my_agent"])
+        .args([
+            "agent",
+            "create",
+            "--",
+            "--mold",
+            "create_agent_mold",
+            "my_agent",
+        ])
         .current_dir(temp.path())
         .output()
         .unwrap();
-    assert!(out.status.success(), "agent create --mold should succeed: {:?}", out);
+    assert!(
+        out.status.success(),
+        "agent create --mold should succeed: {:?}",
+        out
+    );
     let s = String::from_utf8_lossy(&out.stdout);
     assert!(s.contains("Agent created") || s.contains("✅"));
 }

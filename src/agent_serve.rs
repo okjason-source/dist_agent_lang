@@ -96,9 +96,11 @@ fn build_serve_schema(
         trust_level: ctx.config.agent_type.to_string(),
         working_context: None,
     });
-    let constraints = Some(dist_agent_lang::stdlib::sh::constraints_description_for_prompt(
-        &dist_agent_lang::stdlib::sh::load_sh_config(),
-    ));
+    let constraints = Some(
+        dist_agent_lang::stdlib::sh::constraints_description_for_prompt(
+            &dist_agent_lang::stdlib::sh::load_sh_config(),
+        ),
+    );
     AgentContextSchema {
         objective: objective.to_string(),
         conversation: Vec::new(),
@@ -183,8 +185,13 @@ async fn handle_message(
                     .as_deref()
                     .filter(|s| !s.trim().is_empty())
                     .unwrap_or(&content_for_reply);
-                let include_dal = body.include_dal_summary.unwrap_or_else(|| objective_seems_code_related(objective));
-                context_blocks.extend(dal_summary_context_blocks(include_dal, body.dal_file.as_deref()));
+                let include_dal = body
+                    .include_dal_summary
+                    .unwrap_or_else(|| objective_seems_code_related(objective));
+                context_blocks.extend(dal_summary_context_blocks(
+                    include_dal,
+                    body.dal_file.as_deref(),
+                ));
                 let sub_tasks = body.sub_tasks.clone();
                 let schema = build_serve_schema(
                     &state.ctx,
@@ -223,7 +230,8 @@ async fn handle_message(
                                 "assistant".to_string(),
                                 dist_agent_lang::runtime::values::Value::String(result.final_text),
                             );
-                            let _ = agent::communicate(agent_id.as_str(), user_id.as_str(), reply_msg);
+                            let _ =
+                                agent::communicate(agent_id.as_str(), user_id.as_str(), reply_msg);
                         }
                         Err(e) => {
                             let _ = dist_agent_lang::stdlib::evolve::append_conversation(
@@ -242,9 +250,13 @@ async fn handle_message(
                                 agent_id.clone(),
                                 user_id.clone(),
                                 "assistant".to_string(),
-                                dist_agent_lang::runtime::values::Value::String(format!("Error: {}", e)),
+                                dist_agent_lang::runtime::values::Value::String(format!(
+                                    "Error: {}",
+                                    e
+                                )),
                             );
-                            let _ = agent::communicate(agent_id.as_str(), user_id.as_str(), reply_msg);
+                            let _ =
+                                agent::communicate(agent_id.as_str(), user_id.as_str(), reply_msg);
                         }
                     }
                 });
@@ -342,8 +354,13 @@ async fn handle_task(
                 };
                 let task_description = body.description.clone();
                 let mut context_blocks = evolve_context_block(state.ctx.config.name.as_str());
-                let include_dal = body.include_dal_summary.unwrap_or_else(|| objective_seems_code_related(&task_description));
-                context_blocks.extend(dal_summary_context_blocks(include_dal, body.dal_file.as_deref()));
+                let include_dal = body
+                    .include_dal_summary
+                    .unwrap_or_else(|| objective_seems_code_related(&task_description));
+                context_blocks.extend(dal_summary_context_blocks(
+                    include_dal,
+                    body.dal_file.as_deref(),
+                ));
                 let objective = format!(
                     "Complete the following task. Reply with the result or answer only.\n\nTask: {}",
                     task_description
@@ -386,7 +403,9 @@ async fn handle_task(
                                     agent_id.clone(),
                                     requester_id.clone(),
                                     "task_result".to_string(),
-                                    dist_agent_lang::runtime::values::Value::String(result.final_text),
+                                    dist_agent_lang::runtime::values::Value::String(
+                                        result.final_text,
+                                    ),
                                 );
                                 let _ = agent::communicate(
                                     agent_id.as_str(),
@@ -412,7 +431,10 @@ async fn handle_task(
                                     agent_id.clone(),
                                     requester_id.clone(),
                                     "task_result".to_string(),
-                                    dist_agent_lang::runtime::values::Value::String(format!("Error: {}", e)),
+                                    dist_agent_lang::runtime::values::Value::String(format!(
+                                        "Error: {}",
+                                        e
+                                    )),
                                 );
                                 let _ = agent::communicate(
                                     agent_id.as_str(),

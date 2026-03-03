@@ -181,7 +181,10 @@ pub fn scale(name: &str, n: u32, base: Option<&Path>) -> Result<(), String> {
     let base_path = base.ok_or("scale requires a base path for persistence")?;
 
     let mut f = fleets();
-    let fleet = f.get(name).cloned().ok_or_else(|| format!("fleet '{}' not found", name))?;
+    let fleet = f
+        .get(name)
+        .cloned()
+        .ok_or_else(|| format!("fleet '{}' not found", name))?;
     let current = fleet.member_ids.len() as u32;
 
     if n == current {
@@ -198,10 +201,12 @@ pub fn scale(name: &str, n: u32, base: Option<&Path>) -> Result<(), String> {
     }
 
     // n > current: scale up
-    let mold_source = fleet
-        .mold_source
-        .as_deref()
-        .ok_or_else(|| format!("fleet '{}' has no mold; cannot scale up (create from mold first)", name))?;
+    let mold_source = fleet.mold_source.as_deref().ok_or_else(|| {
+        format!(
+            "fleet '{}' has no mold; cannot scale up (create from mold first)",
+            name
+        )
+    })?;
 
     let mut member_ids = fleet.member_ids;
     drop(f);
@@ -232,7 +237,13 @@ mod tests {
 
     #[test]
     fn create_and_list_empty_fleet() {
-        let name = format!("test_fleet_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
+        let name = format!(
+            "test_fleet_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
         assert!(create(&name, None).is_ok());
         let names = list(None);
         assert!(names.contains(&name));
@@ -243,7 +254,13 @@ mod tests {
 
     #[test]
     fn create_duplicate_fails() {
-        let name = format!("dup_fleet_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
+        let name = format!(
+            "dup_fleet_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
         assert!(create(&name, None).is_ok());
         assert!(create(&name, None).is_err());
         let _ = delete(&name, None);
@@ -251,7 +268,13 @@ mod tests {
 
     #[test]
     fn scale_requires_base() {
-        let name = format!("scale_no_base_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
+        let name = format!(
+            "scale_no_base_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
         assert!(create(&name, None).is_ok());
         assert!(scale(&name, 0, None).is_err());
         let _ = delete(&name, None);

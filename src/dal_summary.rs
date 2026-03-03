@@ -63,7 +63,8 @@ pub fn summary_from_source(source: &str) -> Result<DalSummary, String> {
 
 /// Build a DalSummary from a file path. Reads the file and parses it.
 pub fn summary_from_path(path: &Path) -> Result<DalSummary, String> {
-    let source = std::fs::read_to_string(path).map_err(|e| format!("Read {}: {}", path.display(), e))?;
+    let source =
+        std::fs::read_to_string(path).map_err(|e| format!("Read {}: {}", path.display(), e))?;
     let mut summary = summary_from_source(&source)?;
     summary.entry_file = Some(path.display().to_string());
     if let Some(parent) = path.parent() {
@@ -84,7 +85,11 @@ pub fn to_context_string(summary: &DalSummary) -> String {
     if !summary.services.is_empty() {
         out.push_str("\nServices:\n");
         for s in &summary.services {
-            out.push_str(&format!("- {} (methods: {})\n", s.name, s.methods.join(", ")));
+            out.push_str(&format!(
+                "- {} (methods: {})\n",
+                s.name,
+                s.methods.join(", ")
+            ));
         }
     }
     if !summary.top_level_functions.is_empty() {
