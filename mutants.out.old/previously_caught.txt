@@ -1,3 +1,45 @@
+src/lib.rs:98:39: replace * with + in parse_source
+src/lib.rs:99:21: replace > with == in parse_source
+src/lib.rs:99:21: replace > with >= in parse_source
+src/cli.rs:431:5: replace chain_subcommand_to_args -> Vec<String> with vec![]
+src/cli.rs:431:5: replace chain_subcommand_to_args -> Vec<String> with vec![String::new()]
+src/cli.rs:431:5: replace chain_subcommand_to_args -> Vec<String> with vec!["xyzzy".into()]
+src/compile/mod.rs:22:5: replace get_compiler_available_override -> Option<bool> with None
+src/compile/mod.rs:22:5: replace get_compiler_available_override -> Option<bool> with Some(true)
+src/compile/mod.rs:22:5: replace get_compiler_available_override -> Option<bool> with Some(false)
+src/compile/mod.rs:30:5: replace set_compiler_available_override with ()
+src/compile/mod.rs:113:12: delete ! in <impl CompileBackend for StubBackend>::compile
+src/compile/mod.rs:133:5: replace check_compiler_available -> bool with true
+src/compile/mod.rs:133:5: replace check_compiler_available -> bool with false
+src/compile/mod.rs:145:5: replace get_backend -> Option<Box<dyn CompileBackend>> with None
+src/compile/mod.rs:163:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![]
+src/compile/mod.rs:169:36: replace == with != in select_services_for_target
+src/reporting.rs:14:5: replace format_lexer_error -> String with String::new()
+src/reporting.rs:14:5: replace format_lexer_error -> String with "xyzzy".into()
+src/reporting.rs:16:12: delete ! in format_lexer_error
+src/reporting.rs:23:17: replace > with == in format_lexer_error
+src/reporting.rs:23:17: replace > with < in format_lexer_error
+src/reporting.rs:23:29: replace <= with > in format_lexer_error
+src/reporting.rs:24:43: replace - with + in format_lexer_error
+src/reporting.rs:62:5: replace format_runtime_error -> String with String::new()
+src/reporting.rs:62:5: replace format_runtime_error -> String with "xyzzy".into()
+src/reporting.rs:71:5: replace format_parse_warnings -> String with String::new()
+src/reporting.rs:71:5: replace format_parse_warnings -> String with "xyzzy".into()
+src/reporting.rs:76:12: delete ! in format_parse_warnings
+src/reporting.rs:82:19: replace > with == in format_parse_warnings
+src/reporting.rs:82:19: replace > with < in format_parse_warnings
+src/reporting.rs:86:27: replace <= with > in format_parse_warnings
+src/compile/native.rs:95:5: replace check_rust_available -> bool with true
+src/compile/native.rs:115:12: delete ! in <impl CompileBackend for NativeBackend>::compile
+src/compile/native.rs:148:12: delete ! in <impl CompileBackend for NativeBackend>::compile
+src/compile/wasm.rs:146:12: delete ! in <impl CompileBackend for WasmBackend>::compile
+src/compile/mod.rs:113:9: replace <impl CompileBackend for StubBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/mod.rs:145:5: replace get_backend -> Option<Box<dyn CompileBackend>> with Some(Box::new(Default::default()))
+src/compile/mod.rs:163:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![Box::leak(Box::new(Default::default()))]
+src/compile/mod.rs:199:5: replace run_compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/blockchain.rs:120:9: replace <impl CompileBackend for BlockchainBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/native.rs:115:9: replace <impl CompileBackend for NativeBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/wasm.rs:113:9: replace <impl CompileBackend for WasmBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
 src/lib.rs:98:46: replace * with + in parse_source
 src/lib.rs:98:46: replace * with / in parse_source
 src/lib.rs:98:39: replace * with / in parse_source

@@ -1,7 +1,0 @@
-src/compile/wasm.rs:11:26: replace == with != in dal_type_to_rust
-src/compile/wasm.rs:14:10: replace == with != in dal_type_to_rust
-src/compile/wasm.rs:17:10: replace == with != in dal_type_to_rust
-src/compile/wasm.rs:20:31: replace || with && in dal_type_to_rust
-src/ffi/interface.rs:204:50: replace + with - in FFIInterface::estimate_value_size
-src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::from_iter([String::new()])
-src/ffi/python.rs:73:5: replace hash_data -> PyResult<String> with PyResult::new(String::new())

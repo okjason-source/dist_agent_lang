@@ -184,6 +184,51 @@ fn test_m4_relative_module_import_then_call() {
 
 // --- M3: dal.toml and package resolution tests ---
 
+/// Catches: delete match arm None in parse_dependencies (manifest with no [dependencies]).
+#[test]
+fn test_m3_parse_dependencies_empty_when_no_dependencies_section() {
+    let dir = tempfile::tempdir().unwrap();
+    let manifest = dir.path().join("dal.toml");
+    std::fs::write(
+        &manifest,
+        r#"[package]
+name = "app"
+version = "0.1.0"
+"#,
+    )
+    .unwrap();
+    let deps = parse_dependencies(&manifest).unwrap();
+    assert!(
+        deps.is_empty(),
+        "no [dependencies] should yield empty map; got {:?}",
+        deps
+    );
+}
+
+/// Catches: delete match arm toml::Value::String(s) in parse_dependencies.
+#[test]
+fn test_m3_parse_dependencies_string_version() {
+    let dir = tempfile::tempdir().unwrap();
+    let manifest = dir.path().join("dal.toml");
+    std::fs::write(
+        &manifest,
+        r#"[package]
+name = "app"
+version = "0.1.0"
+
+[dependencies]
+foo = "1.0.0"
+"#,
+    )
+    .unwrap();
+    let deps = parse_dependencies(&manifest).unwrap();
+    assert_eq!(deps.len(), 1);
+    match deps.get("foo").unwrap() {
+        dist_agent_lang::manifest::DependencySpec::Version(s) => assert_eq!(s, "1.0.0"),
+        _ => panic!("expected Version dependency"),
+    }
+}
+
 #[test]
 fn test_m3_parse_dependencies_path() {
     let dir = tempfile::tempdir().unwrap();

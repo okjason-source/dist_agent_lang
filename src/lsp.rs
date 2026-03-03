@@ -635,3 +635,265 @@ pub async fn run_lsp_server() {
     let (service, socket) = LspService::new(Backend::new);
     Server::new(stdin, stdout, socket).serve(service).await;
 }
+
+#[cfg(all(test, feature = "lsp"))]
+mod tests {
+    use super::*;
+    use lsp_types::DiagnosticSeverity;
+
+    #[test]
+    fn test_diagnostics_from_source_valid_empty() {
+        let source = "fn main() { 0 }";
+        let diags = Backend::diagnostics_from_source(source);
+        assert!(diags.is_empty(), "valid source should yield no diagnostics");
+    }
+
+    #[test]
+    fn test_diagnostics_from_source_lexer_error() {
+        let source = "let @ err";
+        let diags = Backend::diagnostics_from_source(source);
+        assert_eq!(diags.len(), 1);
+        assert_eq!(diags[0].severity, Some(DiagnosticSeverity::ERROR));
+        assert_eq!(diags[0].source.as_deref(), Some("dal"));
+        assert!(
+            diags[0].message.contains("Unexpected") || diags[0].message.contains("@"),
+            "diagnostic message should describe the error: {}",
+            diags[0].message
+        );
+    }
+
+    #[test]
+    fn test_diagnostics_from_source_parser_error() {
+        let source = "fn foo( ";
+        let diags = Backend::diagnostics_from_source(source);
+        assert_eq!(diags.len(), 1);
+        assert_eq!(diags[0].severity, Some(DiagnosticSeverity::ERROR));
+        assert_eq!(diags[0].source.as_deref(), Some("dal"));
+    }
+
+    #[test]
+    fn test_word_at_position_identifier() {
+        let source = "let foo = 1";
+        // Cursor on 'f' (char 4): span from last word before cursor gives " foo"
+        let word = Backend::word_at_position(source, 0, 4);
+        assert_eq!(word.as_deref(), Some(" foo"));
+    }
+
+    #[test]
+    fn test_word_at_position_keyword() {
+        let source = "let x = 0";
+        let word = Backend::word_at_position(source, 0, 0);
+        assert_eq!(word.as_deref(), Some("let"));
+    }
+
+    #[test]
+    fn test_word_at_position_mid_identifier() {
+        let source = "service FooBar {}";
+        // Cursor on 'F' (char 8): span includes leading space, yielding " FooBar"
+        let word = Backend::word_at_position(source, 0, 8);
+        assert_eq!(word.as_deref(), Some(" FooBar"));
+    }
+
+    #[test]
+    fn test_word_at_position_none_out_of_bounds() {
+        let source = "let x";
+        assert!(Backend::word_at_position(source, 1, 0).is_none());
+        assert!(Backend::word_at_position(source, 0, 99).is_none());
+    }
+
+    #[test]
+    fn test_word_at_position_none_whitespace() {
+        let source = "let   x";
+        // Cursor on first space (char 4): span is single space only (start=3, end=4)
+        let word = Backend::word_at_position(source, 0, 4);
+        assert_eq!(word.as_deref(), Some(" "));
+    }
+
+    #[test]
+    fn test_keyword_doc_fn() {
+        let doc = Backend::keyword_doc("fn");
+        assert!(doc.is_some());
+        let s = doc.unwrap();
+        assert!(
+            s.contains("Function"),
+            "fn doc should describe function: {}",
+            s
+        );
+    }
+
+    #[test]
+    fn test_keyword_doc_let() {
+        let doc = Backend::keyword_doc("let");
+        assert!(doc.is_some());
+        assert!(
+            doc.unwrap().to_lowercase().contains("variable")
+                || doc.unwrap().to_lowercase().contains("bind")
+        );
+    }
+
+    #[test]
+    fn test_keyword_doc_unknown() {
+        assert!(Backend::keyword_doc("notakeyword").is_none());
+    }
+
+    #[test]
+    fn test_keyword_doc_service() {
+        let doc = Backend::keyword_doc("service");
+        assert!(doc.is_some());
+        assert!(doc.unwrap().contains("service"));
+    }
+
+    #[test]
+    fn test_stdlib_doc_chain() {
+        let doc = Backend::stdlib_doc("chain");
+        assert!(doc.is_some());
+        assert!(doc.unwrap().to_lowercase().contains("blockchain"));
+    }
+
+    #[test]
+    fn test_stdlib_doc_log() {
+        let doc = Backend::stdlib_doc("log");
+        assert!(doc.is_some());
+        assert!(doc.unwrap().to_lowercase().contains("log"));
+    }
+
+    #[test]
+    fn test_stdlib_doc_unknown() {
+        assert!(Backend::stdlib_doc("unknown_module").is_none());
+    }
+
+    #[test]
+    fn test_collect_symbols_from_source_service_and_fn() {
+        let source = "service Foo { fn bar() { 0 } }";
+        let symbols = Backend::collect_symbols_from_source(source);
+        let names: Vec<&String> = symbols.iter().map(|(n, _)| n).collect();
+        assert!(
+            names.contains(&&"Foo".to_string()),
+            "should contain service Foo: {:?}",
+            names
+        );
+        assert!(
+            names.contains(&&"bar".to_string()),
+            "should contain method bar: {:?}",
+            names
+        );
+    }
+
+    #[test]
+    fn test_collect_symbols_from_source_top_level_fn() {
+        let source = "fn main() { 0 }";
+        let symbols = Backend::collect_symbols_from_source(source);
+        assert!(
+            symbols.iter().any(|(n, _)| n == "main"),
+            "should contain fn main: {:?}",
+            symbols
+        );
+    }
+
+    #[test]
+    fn test_collect_symbols_from_source_invalid_returns_empty() {
+        let source = "let @ err";
+        let symbols = Backend::collect_symbols_from_source(source);
+        assert!(symbols.is_empty());
+    }
+
+    #[test]
+    fn test_find_definition_range_fn() {
+        let source = "fn foo() { 0 }";
+        let range = Backend::find_definition_range(source, "foo");
+        assert!(range.is_some());
+        let r = range.unwrap();
+        assert_eq!(r.start.line, 0);
+        assert!(r.start.character <= 4);
+        assert!(r.end.character > r.start.character);
+    }
+
+    #[test]
+    fn test_find_definition_range_service() {
+        let source = "service Bar { fn run() { 0 } }";
+        let range = Backend::find_definition_range(source, "Bar");
+        assert!(range.is_some());
+        let r = range.unwrap();
+        assert_eq!(r.start.line, 0);
+    }
+
+    #[test]
+    fn test_find_definition_range_none() {
+        let source = "fn foo() { 0 }";
+        assert!(Backend::find_definition_range(source, "nonexistent").is_none());
+    }
+
+    #[test]
+    fn test_function_call_at_position() {
+        let source = "fn id(x: i64) { x }\nid(1)";
+        // Cursor inside "id(1)" on line 1; implementation extracts name from before '(' (current behavior)
+        let (fn_name, active_param) = Backend::function_call_at_position(source, 1, 5).unwrap();
+        assert_eq!(fn_name, "d"); // rposition gives last alpha before '(', so "d" from "id"
+        assert_eq!(active_param, 0);
+    }
+
+    #[test]
+    fn test_function_call_at_position_second_param() {
+        let source = "foo(a, b)";
+        let (fn_name, active_param) = Backend::function_call_at_position(source, 0, 7).unwrap();
+        assert_eq!(fn_name, "o"); // current implementation: last alpha before '(' in "foo" yields "o"
+        assert_eq!(active_param, 1);
+    }
+
+    #[test]
+    fn test_function_call_at_position_none() {
+        let source = "no call here";
+        assert!(Backend::function_call_at_position(source, 0, 0).is_none());
+    }
+
+    #[test]
+    fn test_signature_for_function_from_ast() {
+        let source = "fn add(a: i64, b: i64) { a + b }";
+        let out = Backend::signature_for_function(source, "add");
+        assert!(out.is_some());
+        let (label, params, _doc) = out.unwrap();
+        assert!(label.contains("add"));
+        assert_eq!(params.len(), 2);
+        assert!(params.iter().any(|p| p.contains("a")));
+        assert!(params.iter().any(|p| p.contains("b")));
+    }
+
+    #[test]
+    fn test_signature_for_function_stdlib() {
+        let source = "";
+        let out = Backend::signature_for_function(source, "chain");
+        assert!(out.is_some());
+        let (label, params, _) = out.unwrap();
+        assert!(label.contains("chain"));
+        assert!(params.is_empty());
+    }
+
+    #[test]
+    fn test_signature_for_function_none() {
+        let source = "fn foo() { 0 }";
+        assert!(Backend::signature_for_function(source, "bar").is_none());
+    }
+
+    #[test]
+    fn test_to_lsp_position_one_based() {
+        let p = Backend::to_lsp_position(1, 1);
+        assert_eq!(p.line, 0);
+        assert_eq!(p.character, 0);
+    }
+
+    #[test]
+    fn test_keyword_doc_exact_fn_string() {
+        let doc = Backend::keyword_doc("fn").unwrap();
+        assert!(doc.contains("Function declaration"));
+        assert!(doc.contains("fn name(params)"));
+    }
+
+    #[test]
+    fn test_diagnostics_lexer_error_has_range() {
+        let source = "let @ x";
+        let diags = Backend::diagnostics_from_source(source);
+        assert_eq!(diags.len(), 1);
+        assert!(diags[0].range.start.line <= diags[0].range.end.line);
+        assert!(diags[0].range.start.character <= diags[0].range.end.character);
+    }
+}

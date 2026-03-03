@@ -4,6 +4,7 @@ use dist_agent_lang::compile::{
     run_compile, select_services_for_target, set_compiler_available_override, CompileError,
 };
 use dist_agent_lang::lexer::tokens::{get_target_constraints, CompilationTarget, TargetConstraint};
+use dist_agent_lang::manifest::{resolve_dependencies, write_lockfile};
 use dist_agent_lang::parser::ast::{CompilationTargetInfo, Program, ServiceStatement, Statement};
 
 /// Build a minimal program with one service that has compilation_target set (no parser validation).
@@ -142,6 +143,55 @@ service App @compile_target("native") {
     assert!(
         result.is_ok(),
         "build with imports should resolve and compile: {:?}",
+        result.err()
+    );
+    let artifacts = result.unwrap();
+    assert_eq!(artifacts.service_names, vec!["App"]);
+}
+
+/// Catches: replace package_entry_path -> None/Some(Default). Dep with only lib.dal (no main.dal) must be found.
+#[test]
+fn test_run_compile_resolves_package_with_only_lib_dal() {
+    let dir = tempfile::tempdir().unwrap();
+    let app_dir = dir.path().join("app");
+    let mylib_dir = dir.path().join("mylib");
+    std::fs::create_dir_all(&app_dir).unwrap();
+    std::fs::create_dir_all(&mylib_dir).unwrap();
+    std::fs::write(mylib_dir.join("lib.dal"), "fn foo() { 42 }").unwrap();
+    std::fs::write(
+        app_dir.join("dal.toml"),
+        r#"[package]
+name = "app"
+version = "0.1.0"
+
+[dependencies]
+mylib = { path = "../mylib" }
+"#,
+    )
+    .unwrap();
+    let (resolved, version_meta) = resolve_dependencies(&app_dir.join("dal.toml")).unwrap();
+    write_lockfile(&app_dir.join("dal.toml"), &resolved, &version_meta).unwrap();
+    let main_source = r#"
+import "mylib" as m;
+@native
+service App @compile_target("native") {
+    fn run() { m::foo() }
+}
+"#;
+    std::fs::write(app_dir.join("main.dal"), main_source).unwrap();
+    let out = dir.path().join("out");
+    std::fs::create_dir_all(&out).unwrap();
+
+    let result = run_compile(
+        app_dir.join("main.dal"),
+        CompilationTarget::Native,
+        out.clone(),
+        main_source,
+    );
+
+    assert!(
+        result.is_ok(),
+        "compile with package (only lib.dal) should resolve and compile: {:?}",
         result.err()
     );
     let artifacts = result.unwrap();

@@ -175,3 +175,46 @@ fn test_format_parse_warnings_empty_returns_empty_string() {
         out
     );
 }
+
+/// Catches: replace > with >= in format_lexer_error (line > 0). With line 0 we must not add "Line 0:".
+#[test]
+fn test_format_lexer_error_line_zero_omits_source_line() {
+    let err = LexerError::UnexpectedCharacter('@', 0, 0);
+    let source = "bad @ here";
+    let out = format_lexer_error(&err, Some("f.dal"), Some(source));
+    assert!(
+        out.contains("@"),
+        "output should include error; got:\n{}",
+        out
+    );
+    assert!(
+        !out.contains("Line 0:"),
+        "line 0 should not produce 'Line 0:' (catches > vs >=); got:\n{}",
+        out
+    );
+}
+
+/// Catches: replace > with >= in format_parse_warnings (w.line > 0). Warning at line 0 uses message-only format.
+#[test]
+fn test_format_parse_warnings_line_zero_uses_message_only() {
+    let warnings = vec![ParseWarning {
+        message: "unknown directive".to_string(),
+        line: 0,
+    }];
+    let out = format_parse_warnings(&warnings, Some("f.dal"), Some("let x = 1;"));
+    assert!(
+        out.contains("unknown directive"),
+        "output should include message; got:\n{}",
+        out
+    );
+    assert!(
+        out.contains("  --> "),
+        "output should include marker; got:\n{}",
+        out
+    );
+    assert!(
+        !out.contains("Line 0:"),
+        "warning at line 0 should not produce 'Line 0:' (catches > vs >=); got:\n{}",
+        out
+    );
+}

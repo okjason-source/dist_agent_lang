@@ -74,8 +74,8 @@ PHASE*.md
 /docs/guides/KYC_AML_FEATURES.md
 
 # Agent / project files (local workspace; do not commit)
-/Agent Assistant/
-**/Agent Assistant/
+/test_agent_init/
+**/test_agent_init/
 /agent_context.md
 **/agent_context.md
 /evolve.md

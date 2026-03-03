@@ -1043,3 +1043,23 @@ fn test_error_recovery_pattern() {
         assert!(result.is_ok() || result.is_err());
     }
 }
+
+/// Catches: replace execute_dal_file -> Result<(), String> with Ok(()). File with parse error must return Err.
+#[test]
+fn test_execute_dal_file_returns_err_on_parse_error() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("bad.dal");
+    std::fs::write(&path, "let = 1;").unwrap();
+    let result = dist_agent_lang::execute_dal_file(path.to_str().unwrap());
+    assert!(
+        result.is_err(),
+        "execute_dal_file on invalid syntax should return Err; got: {:?}",
+        result
+    );
+    let err = result.unwrap_err();
+    assert!(
+        err.contains("Parse error") || err.contains("parse"),
+        "error message should mention parse; got: {}",
+        err
+    );
+}
