@@ -27,7 +27,7 @@ Download from [GitHub Releases](https://github.com/okjason-source/dist_agent_lan
 
 **From Cargo:**
 ```bash
-cargo install --git https://github.com/okjason-source/dist_agent_lang.git --bin dal
+cargo install --git https://github.com/okjason-source/dist_agent_lang.git dist_agent_lang --bin dal
 ```
 
 ### Your First Program
