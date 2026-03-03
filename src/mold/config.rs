@@ -1,11 +1,11 @@
-// Mold config: in-memory representation of a .mold.dal (or JSON) mold.
-// Maps to mold/DEFINITION.md §3.
+// Mold config: in-memory representation of a mold (canonical format: .mold.dal).
+// See docs/MOLD_FORMAT.md.
 
 use serde::Deserialize;
 use std::collections::HashMap;
 
 /// Lifecycle hooks: DAL code strings executed at agent events.
-/// See mold/DEFINITION.md §3 lifecycle block.
+/// onCreate, onEvolve run today; onMessage, onDestroy are reserved (docs/MOLD_FORMAT.md).
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MoldLifecycle {

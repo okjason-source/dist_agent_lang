@@ -8,6 +8,33 @@ use crate::parser::ast::{ImportStatement, Program, Statement};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
+/// Collect import paths from a program that look like package names (not stdlib, not relative paths).
+/// Used by `dal install --sync` to add missing [dependencies] from usage.
+pub fn package_import_names_from_program(program: &Program) -> Vec<String> {
+    let mut out = Vec::new();
+    for stmt in &program.statements {
+        if let Statement::Import(imp) = stmt {
+            let p = imp.path.trim();
+            if p.is_empty() {
+                continue;
+            }
+            if p.starts_with("stdlib::")
+                || p.starts_with("./")
+                || p.starts_with("../")
+                || p.contains('/')
+                || p.ends_with(".dal")
+            {
+                continue;
+            }
+            if KNOWN_STDLIB.iter().any(|s| *s == p) {
+                continue;
+            }
+            out.push(p.to_string());
+        }
+    }
+    out
+}
+
 /// Known stdlib namespaces (must match engine's `call_namespace_function` and stdlib modules).
 const KNOWN_STDLIB: &[&str] = &[
     "add_sol",

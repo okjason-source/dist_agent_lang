@@ -2,7 +2,7 @@
 //
 // Aligns with mold/STDLIB_PROPOSAL.md and mold/DEFINITION.md.
 // - mold::load(source) — Load mold from path or name, return config map
-// - mold::spawn_from(source, name_override?) — Load mold + spawn agent, return agent_id
+// - mold::spawn_from(source, name_override?, params?) — Load mold + spawn agent, return agent_id; params optional map for create-time overrides
 // - mold::list() — List local mold paths
 // - mold::get_info(mold_id) — Query on-chain mold info (requires web3)
 // - mold::use_mold(mold_id, name_override?) — Pay + spawn from on-chain mold (requires web3)
@@ -19,14 +19,36 @@ pub fn load(source: &str, base: &Path) -> Result<Value, String> {
     Ok(mold_config_to_value(&mold))
 }
 
-/// Create agent from mold source. Returns agent_id. Name override optional.
+/// Create agent from mold source. Returns agent_id. Name override and params optional.
+/// Params: optional map of string keys to string values; merged into metadata and substituted in role/capabilities ({{key}}).
 pub fn spawn_from(
     source: &str,
     base: &Path,
     name_override: Option<&str>,
+    params: Option<Value>,
 ) -> Result<String, String> {
-    let ctx = create_from_mold_source(source, base, name_override)?;
+    let params_map = value_map_to_string_params(params.as_ref());
+    let ctx = create_from_mold_source(source, base, name_override, params_map.as_ref())?;
     Ok(ctx.agent_id)
+}
+
+/// Convert Value::Map with string values to HashMap<String, String>. Non-map or non-string values are skipped.
+fn value_map_to_string_params(v: Option<&Value>) -> Option<HashMap<String, String>> {
+    let map = match v {
+        Some(Value::Map(m)) => m,
+        _ => return None,
+    };
+    let mut out = HashMap::new();
+    for (k, val) in map {
+        if let Value::String(s) = val {
+            out.insert(k.clone(), s.clone());
+        }
+    }
+    if out.is_empty() {
+        None
+    } else {
+        Some(out)
+    }
 }
 
 /// List local mold file paths (base, mold/, mold/samples). Returns list of path strings.

@@ -147,6 +147,8 @@ pub struct Runtime {
     resolved_imports: Option<Vec<crate::module_resolver::ResolvedImportEntry>>,
     /// M4: Index into resolved_imports for the next import to process.
     current_import_index: usize,
+    /// Venv strict profile: when set, only these stdlib namespaces are allowed (e.g. chain, crypto, log).
+    allowed_namespaces: Option<Vec<String>>,
 }
 
 // NEW: Service instance structure
@@ -255,6 +257,7 @@ impl Runtime {
             module_exports: HashMap::new(),
             resolved_imports: None,
             current_import_index: 0,
+            allowed_namespaces: None,
         };
 
         // Register built-in functions
@@ -296,11 +299,17 @@ impl Runtime {
             module_exports: HashMap::new(),
             resolved_imports: None,
             current_import_index: 0,
+            allowed_namespaces: None,
         };
 
         // Register built-in functions
         runtime.register_builtins();
         runtime
+    }
+
+    /// Set allowed stdlib namespaces for venv strict profile (Option A). When set, only these namespaces may be called.
+    pub fn set_allowed_namespaces(&mut self, names: Vec<String>) {
+        self.allowed_namespaces = Some(names);
     }
 
     pub fn push(&mut self, value: Value) {
@@ -1243,6 +1252,18 @@ impl Runtime {
             .cloned()
             .unwrap_or_else(|| namespace.to_string());
         let namespace = namespace_resolved.as_str();
+
+        // Venv strict profile: only allowed stdlib namespaces (or user-defined services) may be called (Option A).
+        if let Some(ref allowed) = self.allowed_namespaces {
+            let allowed_stdlib = allowed.iter().any(|s| s.as_str() == namespace);
+            let is_user_service = self.services.contains_key(namespace);
+            if !allowed_stdlib && !is_user_service {
+                return Err(RuntimeError::General(format!(
+                    "namespace '{}' not allowed in this venv profile (strict)",
+                    namespace
+                )));
+            }
+        }
 
         // Check for mock interception first (before any other logic)
         // The mutable borrow is scoped to this block and released before normal execution
@@ -3305,6 +3326,7 @@ impl Runtime {
                                 module_exports: HashMap::new(),
                                 resolved_imports: None,
                                 current_import_index: 0,
+                                allowed_namespaces: None,
                             };
 
                             match catch_runtime.execute_statement_internal(
@@ -6125,7 +6147,7 @@ impl Runtime {
                 }
             }
             "spawn_from" => {
-                if args.len() < 1 || args.len() > 2 {
+                if args.len() < 1 || args.len() > 3 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 1,
                         got: args.len(),
@@ -6143,7 +6165,17 @@ impl Runtime {
                     None
                 };
                 let name_override = name_override_str.as_deref();
-                match crate::stdlib::mold::spawn_from(&source, &base, name_override) {
+                let params = if args.len() >= 3 {
+                    let p = &args[2];
+                    if matches!(p, Value::Map(_)) {
+                        Some(p.clone())
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+                match crate::stdlib::mold::spawn_from(&source, &base, name_override, params) {
                     Ok(agent_id) => {
                         self.agent_states.insert(
                             agent_id.clone(),

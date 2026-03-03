@@ -99,6 +99,9 @@ TOOLS
   convert <input.sol> [-o out] Solidity to DAL
   doc <file.dal> [--open]     Generate documentation
   completions [bash|zsh|fish]  Shell completions
+  add <package>               Add dependency to dal.toml
+  install [--sync]            Install dependencies (--sync: add from .dal usage)
+  venv create|list|show|run|delete  Virtual environments (root + profile)
 
 INFO
   help                        This message

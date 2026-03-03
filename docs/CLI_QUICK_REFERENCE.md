@@ -58,7 +58,8 @@
 | `dal new <name> --type <type>` | Create typed project | `dal new my-ai --type ai` |
 | `dal init` | Initialize in current dir | `dal init` |
 | `dal add <package>` | Add dependency | `dal add @dal/testing` |
-| `dal install` | Install dependencies | `dal install` |
+| `dal install` | Install dependencies from dal.toml | `dal install` |
+| `dal install --sync` | Add missing [dependencies] from import usage in .dal files, then install | `dal install --sync` |
 | `dal publish` | Publish package to registry (requires `DAL_REGISTRY_TOKEN`) | `dal publish` |
 
 **Registry server:** Run `dal-registry` (build with `cargo build --bin dal-registry`). Env: `REGISTRY_STORAGE_PATH`, `REGISTRY_TOKEN`, `REGISTRY_PUBLIC_URL`, `PORT`. See [PACKAGE_REGISTRY_PLAN.md](development/PACKAGE_REGISTRY_PLAN.md).
@@ -260,27 +261,6 @@
 |---------|-------------|---------|
 | `dal ai audit <file>` | Security audit for smart contracts | `dal ai audit token.dal` |
 
-**API Key Configuration:**
-```bash
-# OpenAI
-export OPENAI_API_KEY="sk-..."
-
-# Anthropic Claude
-export ANTHROPIC_API_KEY="sk-ant-..."
-
-# Works without API key (basic mode)
-dal ai code "hello world"
-```
-
-**Features:**
-- 🤖 AI-powered or basic mode (no API key needed)
-- 📝 Natural language code generation
-- 🔍 Intelligent code analysis
-- 🛡️ Security auditing
-- 🧪 Automatic test generation
-- ⛽ Gas optimization for contracts
-
----
 
 ## Cloud & Enterprise (Phase 4)
 
@@ -436,6 +416,12 @@ dal ai code "hello world"
 ## Common Workflows
 
 ### 1. Start New Project
+
+```bash
+dal new my-agent
+dal init agent
+# write code with @hybrid(centralized) @chain(blockchain)
+dal run agent.dal
 
 ```bash
 dal new my-token --type chain

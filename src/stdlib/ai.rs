@@ -1185,8 +1185,13 @@ fn search_web(_query: &str) -> Result<String, String> {
 }
 
 /// Agent that can reply, run shell commands, or search the web. Parses LLM JSON and executes one action.
+/// Uses the canonical agent context schema (P0) so the LLM receives a consistent shape.
 pub fn respond_with_tools(user_message: &str) -> Result<String, String> {
-    let prompt = format!("{}\n\nUser: {}", TOOLS_SYSTEM, user_message);
+    let schema = crate::agent_context_schema::AgentContextSchema::minimal(
+        user_message,
+        TOOLS_SYSTEM,
+    );
+    let prompt = crate::agent_context_schema::build_prompt_for_llm(&schema);
     let response = generate_text(prompt).map_err(|e| e.to_string())?;
     let response = response.trim();
     let json_str = match extract_json_object(response) {
@@ -1303,6 +1308,305 @@ pub fn respond_with_tools(user_message: &str) -> Result<String, String> {
             } else {
                 Ok(text.to_string())
             }
+        }
+    }
+}
+
+// --- Multi-step tool loop (production) ---
+
+/// Result of parsing one LLM response as a tool call.
+#[derive(Debug, Clone)]
+pub enum ToolOutcome {
+    /// Final reply to the user.
+    Reply(String),
+    /// Agent is asking for human input.
+    AskUser(String),
+    /// Execute shell command.
+    Run(String),
+    /// Execute web search.
+    Search(String),
+    /// Response was not valid JSON or unknown action; treat as reply with raw text.
+    ParseFail(String),
+}
+
+/// Parse LLM response into a tool outcome. Uses same JSON shape as SERVE_*_TOOLS.
+pub fn parse_tool_response(response: &str) -> ToolOutcome {
+    let response = response.trim();
+    let json_str = match extract_json_object(response) {
+        Some(s) => s,
+        None => return ToolOutcome::ParseFail(response.to_string()),
+    };
+    let v: serde_json::Value = match serde_json::from_str(json_str) {
+        Ok(x) => x,
+        Err(_) => return ToolOutcome::ParseFail(response.to_string()),
+    };
+    let obj = match v.as_object() {
+        Some(o) => o,
+        None => return ToolOutcome::ParseFail(response.to_string()),
+    };
+    let action = obj
+        .get("action")
+        .and_then(|a| a.as_str())
+        .unwrap_or("reply");
+    match action {
+        "ask_user" => {
+            let msg = obj
+                .get("message")
+                .and_then(|m| m.as_str())
+                .unwrap_or("")
+                .trim();
+            ToolOutcome::AskUser(if msg.is_empty() { response.to_string() } else { msg.to_string() })
+        }
+        "run" => {
+            let cmd = obj.get("cmd").and_then(|c| c.as_str()).unwrap_or("").trim();
+            ToolOutcome::Run(cmd.to_string())
+        }
+        "search" => {
+            let query = obj.get("query").and_then(|q| q.as_str()).unwrap_or("").trim();
+            ToolOutcome::Search(query.to_string())
+        }
+        _ => {
+            let text = obj
+                .get("text")
+                .and_then(|t| t.as_str())
+                .unwrap_or("")
+                .trim();
+            ToolOutcome::Reply(if text.is_empty() { response.to_string() } else { text.to_string() })
+        }
+    }
+}
+
+const MAX_TOOL_RESULT_LEN: usize = 4000;
+
+fn execute_run_result(cmd: &str) -> String {
+    if cmd.is_empty() {
+        return "No command provided.".to_string();
+    }
+    match crate::stdlib::sh::run(cmd) {
+        Ok(Value::Map(m)) => {
+            let stdout = m
+                .get("stdout")
+                .and_then(|v| {
+                    if let Value::String(s) = v {
+                        Some(s.as_str())
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or("");
+            let stderr = m
+                .get("stderr")
+                .and_then(|v| {
+                    if let Value::String(s) = v {
+                        Some(s.as_str())
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or("");
+            let code = m
+                .get("exit_code")
+                .and_then(|v| {
+                    if let Value::Int(n) = v {
+                        Some(*n)
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or(-1);
+            let mut out = format!("Exit code: {}\n", code);
+            if !stdout.is_empty() {
+                out.push_str("stdout:\n");
+                out.push_str(stdout);
+            }
+            if !stderr.is_empty() {
+                out.push_str("\nstderr:\n");
+                out.push_str(stderr);
+            }
+            if stdout.is_empty() && stderr.is_empty() {
+                out.push_str("(no output)");
+            }
+            if out.len() > MAX_TOOL_RESULT_LEN {
+                out.truncate(MAX_TOOL_RESULT_LEN);
+                out.push_str("\n... (truncated)");
+            }
+            out
+        }
+        Ok(_) => "Command completed.".to_string(),
+        Err(e) => format!("Command failed: {}", e),
+    }
+}
+
+fn execute_search_result(query: &str) -> String {
+    if query.is_empty() {
+        return "No search query provided.".to_string();
+    }
+    match search_web(query) {
+        Ok(summary) => {
+            if summary.len() > MAX_TOOL_RESULT_LEN {
+                format!("{}\n... (truncated)", &summary[..MAX_TOOL_RESULT_LEN])
+            } else {
+                summary
+            }
+        }
+        Err(e) => format!("Search failed: {}", e),
+    }
+}
+
+/// Result of the multi-step tool loop.
+#[derive(Debug, Clone)]
+pub struct MultiStepResult {
+    /// Final text to send to the user (reply or ask_user message).
+    pub final_text: String,
+    /// True if the agent requested human input (ask_user).
+    pub is_ask_user: bool,
+    /// Number of tool steps executed (0 = immediate reply).
+    pub steps_used: u32,
+}
+
+/// Default max tool steps when env DAL_AGENT_MAX_TOOL_STEPS is not set.
+pub const DEFAULT_MAX_TOOL_STEPS: u32 = 20;
+
+/// Read max tool steps from env DAL_AGENT_MAX_TOOL_STEPS (default DEFAULT_MAX_TOOL_STEPS, clamped 1..=50).
+pub fn max_tool_steps_from_env() -> u32 {
+    std::env::var("DAL_AGENT_MAX_TOOL_STEPS")
+        .ok()
+        .and_then(|s| s.trim().parse().ok())
+        .unwrap_or(DEFAULT_MAX_TOOL_STEPS)
+        .clamp(1, 50)
+}
+
+/// Run the tool loop until the LLM returns reply or ask_user, or max_steps is reached.
+/// Appends each run/search to evolve action log when agent_name is Some.
+/// Caller should append_conversation(user_msg, result.final_text) when done.
+pub fn run_multi_step_tool_loop(
+    schema: &mut crate::agent_context_schema::AgentContextSchema,
+    max_steps: u32,
+    agent_name: Option<&str>,
+) -> Result<MultiStepResult, String> {
+    use crate::agent_context_schema::{build_prompt_for_llm, ConversationTurn};
+    let mut steps_used: u32 = 0;
+    loop {
+        let prompt = build_prompt_for_llm(schema);
+        let response = generate_text(prompt).map_err(|e| e.to_string())?;
+        let response = response.trim().to_string();
+        let outcome = parse_tool_response(&response);
+        match outcome {
+            ToolOutcome::Reply(text) => {
+                return Ok(MultiStepResult {
+                    final_text: text,
+                    is_ask_user: false,
+                    steps_used,
+                });
+            }
+            ToolOutcome::AskUser(message) => {
+                return Ok(MultiStepResult {
+                    final_text: message,
+                    is_ask_user: true,
+                    steps_used,
+                });
+            }
+            ToolOutcome::ParseFail(raw) => {
+                return Ok(MultiStepResult {
+                    final_text: raw,
+                    is_ask_user: false,
+                    steps_used,
+                });
+            }
+            ToolOutcome::Run(cmd) => {
+                let result = execute_run_result(&cmd);
+                if agent_name.is_some() {
+                    let _ = crate::stdlib::evolve::append_log("run", &cmd, &result);
+                }
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: response.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text: "Max tool steps reached. Please summarize what you have so far.".to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                    });
+                }
+            }
+            ToolOutcome::Search(query) => {
+                let result = execute_search_result(&query);
+                if agent_name.is_some() {
+                    let _ = crate::stdlib::evolve::append_log("search", &query, &result);
+                }
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: response.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text: "Max tool steps reached. Please summarize what you have so far.".to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                    });
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod multi_step_loop_tests {
+    use super::{parse_tool_response, ToolOutcome};
+
+    #[test]
+    fn parse_tool_response_reply() {
+        let out = parse_tool_response(r#"{"action":"reply","text":"Hello"}"#);
+        match out {
+            ToolOutcome::Reply(s) => assert_eq!(s, "Hello"),
+            _ => panic!("expected Reply"),
+        }
+    }
+
+    #[test]
+    fn parse_tool_response_ask_user() {
+        let out = parse_tool_response(r#"{"action":"ask_user","message":"Need confirmation"}"#);
+        match out {
+            ToolOutcome::AskUser(s) => assert_eq!(s, "Need confirmation"),
+            _ => panic!("expected AskUser"),
+        }
+    }
+
+    #[test]
+    fn parse_tool_response_run() {
+        let out = parse_tool_response(r#"{"action":"run","cmd":"ls -la"}"#);
+        match out {
+            ToolOutcome::Run(s) => assert_eq!(s, "ls -la"),
+            _ => panic!("expected Run"),
+        }
+    }
+
+    #[test]
+    fn parse_tool_response_search() {
+        let out = parse_tool_response(r#"{"action":"search","query":"rust lang"}"#);
+        match out {
+            ToolOutcome::Search(s) => assert_eq!(s, "rust lang"),
+            _ => panic!("expected Search"),
+        }
+    }
+
+    #[test]
+    fn parse_tool_response_no_json_is_parse_fail() {
+        let out = parse_tool_response("Just plain text");
+        match out {
+            ToolOutcome::ParseFail(s) => assert_eq!(s, "Just plain text"),
+            _ => panic!("expected ParseFail"),
         }
     }
 }

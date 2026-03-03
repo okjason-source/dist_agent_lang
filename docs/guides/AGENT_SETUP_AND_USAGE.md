@@ -197,11 +197,19 @@ Prints how to run chat, serve, and multi-agent DAL patterns (agent state is proc
 
 ### dal agent fleet
 
-Fleet subcommands (`create`, `scale`, `deploy`, `health`) are planned; use `agent::spawn` in a loop in DAL for multiple agents today.
+Off-chain fleet: named set of agents, optionally created from a mold.
+
+- **create** &lt;name&gt; — Create an empty fleet. Use `--from-mold <path> [--count N] [--param k=v ...]` to create a fleet of N agents from a mold (default count 1).
+- **list** — List fleet names and agent counts (from current directory’s `.dal/fleets.json`).
+- **show** &lt;name&gt; — Show fleet details: mold path (if any), member count, agent IDs.
+- **scale** &lt;name&gt; &lt;N&gt; — Resize fleet to N members. Scale down truncates the member list; scale up only works for fleets created from a mold (spawns more agents from the same mold).
+- **delete** &lt;name&gt; — Remove the fleet (metadata only; agent contexts remain).
+
+Fleet state is stored in `base/.dal/fleets.json` when using the CLI (current working directory as base). Optional future subcommands: `deploy`, `health`.
 
 ### dal agent mold
 
-- **list** — List local mold paths (`.`, `mold/`, `mold/samples`; `*.mold.json`, `*.mold.dal`).
+- **list** — List local mold paths (`.`, `mold/`, `mold/samples`; `*.mold.dal`, `*.mold.json`).
 - **show &lt;path-or-name&gt;** — Print mold name, version, agent type, role, capabilities, trust, memory, flags.
 - **create &lt;name&gt;** — Create a new mold file (scaffold).
 - **publish &lt;file&gt;** — Publish mold (implementation-specific).
@@ -317,28 +325,32 @@ Use `evolve::append_log` after `sh::run` to record the action in the evolve file
 
 Molds are reusable agent configs (type, role, capabilities, trust, memory, lifecycle hooks). They can be local files or IPFS/on-chain.
 
-### Mold file locations
+### Mold format (canonical)
 
-- Current directory, `mold/`, `mold/samples`
-- Filenames: `*.mold.json`, `*.mold.dal`
+- **Format:** .mold.dal only (canonical). File naming: `*.mold.dal`. DAL-native block syntax; not plain JSON. See docs/MOLD_FORMAT.md.
+- **Discovery:** Current directory, `mold/`, `mold/samples`. Legacy `*.mold.json` still loads but prefer `.mold.dal`.
 
-### Mold structure (e.g. JSON)
+### Mold structure (.mold.dal)
 
 - **name**, **version**
 - **agent**: type, role, capabilities, trust_level, learning, communication, coordination, memory_limit
-- **lifecycle** (optional): on_create, on_message, on_evolve, on_destroy (DAL code snippets)
+- **lifecycle** (optional): onCreate, onEvolve run at spawn/evolve; onMessage, onDestroy are reserved (see MOLD_FORMAT.md)
 - **parameters**, **dependencies**, **metadata** (optional)
 
 ### CLI
 
 - `dal agent mold list` — List local mold paths.
 - `dal agent mold show <path-or-name>` — Show mold details.
-- `dal agent create --mold <path|ipfs://cid> <name>` — Create agent from mold.
+- `dal agent create --mold <path|ipfs://cid> <name> [--param k=v ...]` — Create agent from mold; optional params merged into metadata and substituted in role/capabilities (`{{key}}`). If the CLI reports "unexpected argument '--mold'", use: `dal agent create -- --mold <source> <name> [--param k=v ...]`.
 - `dal agent serve --mold <path> [name]` — Serve an agent spawned from that mold.
+
+### Principal vs mold: trust and evolve path
+
+When you create or serve an agent from a mold, **trust** (shell execution) and **evolve path** (context file) always come from the **process** (agent.toml, dal.toml, or env), not from the mold. The mold can set role, capabilities, lifecycle, etc., but the operator controls trust and where evolution is stored. See COMPREHENSIVE_AGENT_AND_MOLD_PLANS.md §3–4.
 
 ### From DAL
 
-- `mold::spawn_from(source, name_override?)` — Load mold from path/name or `ipfs://<cid>`, spawn agent, return agent_id. `source` is a string; second argument optional name override.
+- `mold::spawn_from(source, name_override?, params?)` — Load mold from path/name or `ipfs://<cid>`, spawn agent, return agent_id. Optional name override; optional params map (string keys/values) merged into metadata and substituted in role/capabilities (`{{key}}`).
 
 ---
 
@@ -358,6 +370,10 @@ If key-based gating is used and the check denies, config falls back to `[agent.s
 1. `DAL_AGENT_CONTEXT_PATH` — explicit path
 2. `[agent] context_path` in `agent.toml` or `dal.toml`
 3. Default: `./evolve.md`
+
+### Multi-step tool loop (agent serve)
+
+- **`DAL_AGENT_MAX_TOOL_STEPS`** — max tool steps (run/search) per message or task before the agent is asked to summarize. Default **20**, clamped 1–50. Used when `dal agent serve` runs in prompt_only mode with the multi-step loop.
 
 ---
 

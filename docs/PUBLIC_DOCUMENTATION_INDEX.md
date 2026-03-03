@@ -81,6 +81,8 @@ dal run hello.dal
 
 **➡️ [Packaging & Distribution Guide (PACKAGING.md)](./PACKAGING.md)**
 
+**➡️ [DAL Venv — User Guide (VENV.md)](./VENV.md)** — Named execution environments with a fixed project root, dependency set, and security profile. Create venvs with `dal venv create`, run scripts with `dal venv run <name> <script.dal>`. Use **strict** profile for CI or untrusted code.
+
 Learn about:
 - Installation methods (curl, direct download, package managers)
 - Edition comparison (Community, Professional, Enterprise)

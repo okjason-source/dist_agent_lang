@@ -48,6 +48,8 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::wildcard_in_or_patterns)]
 
+pub mod agent_context_schema;
+pub mod dal_summary;
 pub mod cli;
 pub mod cli_design;
 pub mod compile;
@@ -62,6 +64,8 @@ pub mod http_server_security_middleware;
 pub mod lexer;
 pub mod manifest;
 pub mod module_resolver;
+pub mod fleet;
+pub mod venv;
 pub mod mold;
 pub mod parser;
 pub mod performance;

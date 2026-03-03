@@ -57,6 +57,8 @@ cd dist_agent_lang
 ./scripts/install.sh
 ```
 
+This installs Rust and Node if needed, runs `cargo build --release`, copies the `dal` binary to `/usr/local/bin` or `~/.local/bin`, and adds it to your shell PATH. To only build the binary without installing, run `cargo build --release` and use `./target/release/dal` or add `target/release` to PATH.
+
 #### Windows
 ```bash
 # Download dist_agent_lang-v1.0.5-windows-x64.zip from GitHub Releases
@@ -66,8 +68,8 @@ cd dist_agent_lang
 
 ### Verify Installation
 ```bash
-dist_agent_lang --version
-# Should output: dist_agent_lang v1.0.5 (or latest version)
+dal --version
+# Should output: dal 1.0.8 (or latest version)
 ```
 
 ## 🚀 Quick Start

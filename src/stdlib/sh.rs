@@ -31,6 +31,17 @@ impl TrustLevel {
     }
 }
 
+impl std::fmt::Display for TrustLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TrustLevel::Off => write!(f, "off"),
+            TrustLevel::Sandboxed => write!(f, "sandboxed"),
+            TrustLevel::Confirmed => write!(f, "confirmed"),
+            TrustLevel::Trusted => write!(f, "trusted"),
+        }
+    }
+}
+
 /// Config for [agent.sh]. Loaded from agent.toml or dal.toml or env.
 #[derive(Debug, Clone)]
 pub struct ShConfig {
@@ -110,6 +121,18 @@ pub fn load_sh_config() -> ShConfig {
         config.trust = TrustLevel::from_str(&trust_env);
     }
     config
+}
+
+/// Human-readable constraints description for agent prompt context (P4). Shell trust and forbidden patterns from [agent.sh].
+pub fn constraints_description_for_prompt(config: &ShConfig) -> String {
+    let mut lines = vec![format!("Shell: {}.", config.trust)];
+    if !config.forbidden_patterns.is_empty() {
+        lines.push(format!(
+            "Forbidden command patterns: {}.",
+            config.forbidden_patterns.join(", ")
+        ));
+    }
+    lines.join(" ")
 }
 
 /// Load owner principal ID for key::check. Precedence: DAL_AGENT_OWNER_PRINCIPAL → agent.toml [agent] owner_principal_id → dal.toml [agent] owner_principal_id.

@@ -158,7 +158,19 @@ pub enum Commands {
     Add { package: String },
 
     /// Install dependencies
-    Install,
+    Install {
+        /// Add missing [dependencies] from import usage in .dal files under current dir
+        #[arg(long)]
+        sync: bool,
+    },
+
+    /// Virtual environments (create, list, show, run, delete)
+    Venv {
+        #[arg(required = true)]
+        subcommand: String,
+        #[arg(trailing_var_arg = true)]
+        rest: Vec<String>,
+    },
 
     /// Publish package to registry (requires DAL_REGISTRY_TOKEN)
     Publish,

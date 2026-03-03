@@ -119,6 +119,42 @@ pub fn parse_dependencies(manifest_path: &Path) -> Result<DependenciesMap, Manif
     Ok(out)
 }
 
+/// Add package names to [dependencies] in dal.toml if not already present (with given version).
+/// Returns the number of entries added. Preserves existing keys; new keys use version (e.g. "latest").
+pub fn add_dependencies_if_missing(
+    manifest_path: &Path,
+    names: &[String],
+    version: &str,
+) -> Result<usize, ManifestError> {
+    if names.is_empty() {
+        return Ok(0);
+    }
+    let content = std::fs::read_to_string(manifest_path)
+        .map_err(|_| ManifestError::NotFound(manifest_path.to_path_buf()))?;
+    let mut table: toml::Table = toml::from_str(&content)?;
+    let deps = table
+        .entry("dependencies")
+        .or_insert_with(|| toml::Value::Table(toml::map::Map::new()));
+    let deps_table = deps
+        .as_table_mut()
+        .ok_or_else(|| ManifestError::InvalidDependency {
+            name: "dependencies".to_string(),
+            message: "must be a table".to_string(),
+        })?;
+    let mut added = 0usize;
+    for name in names {
+        if !deps_table.contains_key(name) {
+            deps_table.insert(name.clone(), toml::Value::String(version.to_string()));
+            added += 1;
+        }
+    }
+    if added > 0 {
+        let out = toml::to_string_pretty(&table).map_err(|e| ManifestError::Registry(e.to_string()))?;
+        std::fs::write(manifest_path, out)?;
+    }
+    Ok(added)
+}
+
 /// Resolve dependencies: path deps canonicalized; version deps fetched from registry and cached.
 /// Returns (resolved deps, version metadata for lockfile).
 pub fn resolve_dependencies(

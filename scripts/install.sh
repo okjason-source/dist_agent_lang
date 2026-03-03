@@ -164,11 +164,11 @@ install_dist_agent_lang() {
         mkdir -p "$INSTALL_DIR"
     fi
     
-    # Copy binary
-    cp target/release/dist_agent_lang "$INSTALL_DIR/"
-    chmod +x "$INSTALL_DIR/dist_agent_lang"
+    # Copy binary (CLI is built as 'dal' from Cargo.toml [[bin]])
+    cp target/release/dal "$INSTALL_DIR/"
+    chmod +x "$INSTALL_DIR/dal"
     
-    print_success "dist_agent_lang installed to $INSTALL_DIR/dist_agent_lang"
+    print_success "dal installed to $INSTALL_DIR/dal"
     
     # Add to PATH if not already there
     if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
@@ -277,11 +277,11 @@ create_examples() {
 verify_installation() {
     print_status "Verifying installation..."
     
-    if command_exists dist_agent_lang; then
-        VERSION=$(dist_agent_lang --version 2>/dev/null || echo "1.0.2")
-        print_success "dist_agent_lang $VERSION is installed and working"
+    if command_exists dal; then
+        VERSION=$(dal --version 2>/dev/null || echo "1.0.8")
+        print_success "dal $VERSION is installed and working"
     else
-        print_error "dist_agent_lang not found in PATH"
+        print_error "dal not found in PATH"
         exit 1
     fi
 }
@@ -298,8 +298,8 @@ show_next_steps() {
     echo "4. Join the community: https://github.com/dist_agent_lang/dist_agent_lang"
     echo ""
     echo "Quick start:"
-    echo "  dist_agent_lang --help"
-    echo "  dist_agent_lang run examples/hello_world.dal"
+    echo "  dal --help"
+    echo "  dal run examples/hello_world.dal"
     echo ""
 }
 

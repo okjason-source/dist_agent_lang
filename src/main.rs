@@ -146,7 +146,8 @@ fn main() {
         Commands::Repl => run_repl(),
         Commands::Watch { file } => watch_dal_file(&file),
         Commands::Add { package } => add_package(&package),
-        Commands::Install => install_dependencies(),
+        Commands::Install { sync } => install_dependencies(*sync),
+        Commands::Venv { subcommand, rest } => handle_venv_command(&subcommand, &rest),
         Commands::Publish => publish_package(),
         Commands::Bench { file, suite } => run_benchmarks(file.as_deref(), suite.as_deref()),
         Commands::Profile { file, memory } => profile_dal_file(&file, *memory),
@@ -3088,8 +3089,26 @@ fn add_package(package: &str) {
     }
 }
 
-/// Install dependencies from dal.toml (M3: resolve path deps, write dal.lock)
-fn install_dependencies() {
+/// Collect paths of *.dal files under dir (recursive; skips .git, target, node_modules, .dal).
+fn collect_dal_files_under(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+    let Ok(entries) = std::fs::read_dir(dir) else { return };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        if path.is_dir() {
+            if name.starts_with('.') || name == "target" || name == "node_modules" {
+                continue;
+            }
+            collect_dal_files_under(&path, out);
+        } else if path.extension().map_or(false, |e| e == "dal") {
+            out.push(path);
+        }
+    }
+}
+
+/// Install dependencies from dal.toml (M3: resolve path deps, write dal.lock).
+/// If sync is true, adds missing [dependencies] from import usage in .dal files first.
+fn install_dependencies(sync: bool) {
     println!("📦 Installing dependencies...");
 
     let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
@@ -3098,6 +3117,33 @@ fn install_dependencies() {
     if !manifest_path.exists() {
         eprintln!("❌ No dal.toml found. Run '{} init' first.", binary_name());
         std::process::exit(1);
+    }
+
+    if sync {
+        let mut dal_files = Vec::new();
+        collect_dal_files_under(&cwd, &mut dal_files);
+        let mut all_names: std::collections::HashSet<String> = std::collections::HashSet::new();
+        for path in &dal_files {
+            let Ok(source) = std::fs::read_to_string(path) else { continue };
+            let Ok(program) = dist_agent_lang::parse_source(&source) else { continue };
+            for name in dist_agent_lang::module_resolver::package_import_names_from_program(&program) {
+                all_names.insert(name);
+            }
+        }
+        let names: Vec<String> = all_names.into_iter().collect();
+        if !names.is_empty() {
+            match dist_agent_lang::manifest::add_dependencies_if_missing(&manifest_path, &names, "latest") {
+                Ok(added) => {
+                    if added > 0 {
+                        println!("   Added {} dependency(ies) from usage to dal.toml.", added);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("❌ Failed to add dependencies from usage: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
     }
 
     match dist_agent_lang::manifest::resolve_dependencies(&manifest_path) {
@@ -3124,6 +3170,216 @@ fn install_dependencies() {
         }
         Err(e) => {
             eprintln!("❌ {}", e);
+            std::process::exit(1);
+        }
+    }
+}
+
+/// Handle dal venv create | list | show | run | delete.
+fn handle_venv_command(subcommand: &str, rest: &[String]) {
+    let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    match subcommand {
+        "create" => {
+            if rest.is_empty() {
+                eprintln!("Usage: {} venv create <name> [--dir <path>] [--profile strict|relaxed]", binary_name());
+                std::process::exit(1);
+            }
+            let name = &rest[0];
+            let mut dir = cwd.clone();
+            let mut profile = dist_agent_lang::venv::VenvProfile::Relaxed;
+            let mut i = 1usize;
+            while i < rest.len() {
+                if rest[i] == "--dir" && i + 1 < rest.len() {
+                    dir = cwd.join(&rest[i + 1]);
+                    i += 2;
+                } else if rest[i] == "--profile" && i + 1 < rest.len() {
+                    profile = dist_agent_lang::venv::VenvProfile::from_str(&rest[i + 1])
+                        .unwrap_or(dist_agent_lang::venv::VenvProfile::Relaxed);
+                    i += 2;
+                } else {
+                    i += 1;
+                }
+            }
+            let registry_path = dist_agent_lang::venv::project_registry_path(&cwd);
+            match dist_agent_lang::venv::create_venv(name, &dir, profile, &registry_path) {
+                Ok(()) => {
+                    if !dir.join("dal.toml").exists() {
+                        eprintln!("   ⚠ No dal.toml in {}; run 'dal init' or add one. Dependency resolution may fail at run time.", dir.display());
+                    }
+                    println!("✅ Venv '{}' created (root: {}, profile: {})", name, dir.display(), profile.as_str());
+                }
+                Err(e) => {
+                    eprintln!("❌ {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        "list" => {
+            let venvs = dist_agent_lang::venv::list_venvs(&cwd);
+            if venvs.is_empty() {
+                println!("No venvs. Create with: {} venv create <name> [--dir <path>] [--profile strict|relaxed]", binary_name());
+            } else {
+                println!("Venvs:");
+                for (name, rec) in venvs {
+                    println!("  {}  root={}  profile={}", name, rec.root, rec.profile);
+                }
+            }
+        }
+        "show" => {
+            if rest.is_empty() {
+                eprintln!("Usage: {} venv show <name>", binary_name());
+                std::process::exit(1);
+            }
+            let name = &rest[0];
+            match dist_agent_lang::venv::show_venv(name, &cwd) {
+                Ok((rec, _path)) => {
+                    println!("Venv: {}", name);
+                    println!("  root: {}", rec.root);
+                    println!("  profile: {}", rec.profile);
+                }
+                Err(e) => {
+                    eprintln!("❌ {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        "run" => {
+            if rest.len() < 2 {
+                eprintln!("Usage: {} venv run <name> <script.dal>", binary_name());
+                std::process::exit(1);
+            }
+            let name = &rest[0];
+            let script_arg = &rest[1];
+            let script_path = if script_arg.starts_with('/') {
+                std::path::PathBuf::from(script_arg)
+            } else {
+                cwd.join(script_arg)
+            };
+            let script_path = match script_path.canonicalize() {
+                Ok(p) => p,
+                Err(_) => {
+                    eprintln!("❌ Script not found: {}", script_path.display());
+                    std::process::exit(1);
+                }
+            };
+            let (venv, _) = match dist_agent_lang::venv::resolve_venv(name, &cwd) {
+                Ok(v) => v,
+                Err(e) => {
+                    eprintln!("❌ {}", e);
+                    std::process::exit(1);
+                }
+            };
+            run_dal_file_with_venv(&script_path, &venv);
+        }
+        "delete" => {
+            if rest.is_empty() {
+                eprintln!("Usage: {} venv delete <name>", binary_name());
+                std::process::exit(1);
+            }
+            let name = &rest[0];
+            match dist_agent_lang::venv::delete_venv(name, &cwd) {
+                Ok(true) => println!("✅ Venv '{}' deleted", name),
+                Ok(false) => {
+                    eprintln!("❌ Venv '{}' not found", name);
+                    std::process::exit(1);
+                }
+                Err(e) => {
+                    eprintln!("❌ {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        _ => {
+            eprintln!("Unknown venv subcommand: {}", subcommand);
+            eprintln!("Subcommands: create, list, show, run, delete");
+            std::process::exit(1);
+        }
+    }
+}
+
+/// Run a DAL script inside a venv (venv root + deps + profile). Script path is absolute.
+fn run_dal_file_with_venv(script_path: &std::path::Path, venv: &dist_agent_lang::venv::Venv) {
+    let filename = script_path.to_string_lossy();
+    println!("🪩  Running in venv '{}' (profile: {}): {}", venv.name, venv.profile.as_str(), filename);
+
+    let source_code = match std::fs::read_to_string(script_path) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("❌ Error reading file {}: {}", filename, e);
+            std::process::exit(1);
+        }
+    };
+
+    let tokens_with_pos = match Lexer::new(&source_code).tokenize_with_positions_immutable() {
+        Ok(tokens) => {
+            println!("✅ Lexer scanning... {} tokens", tokens.len());
+            tokens
+        }
+        Err(e) => {
+            eprintln!("❌ Lexer error:\n{}", format_lexer_error(&e, Some(&filename), Some(&source_code)));
+            std::process::exit(1);
+        }
+    };
+
+    let ast = match Parser::new_with_positions(tokens_with_pos).parse() {
+        Ok(ast) => ast,
+        Err(e) => {
+            eprintln!("❌ Parsing failed:\n{}", format_parser_error(&e, Some(&filename), Some(&source_code)));
+            std::process::exit(1);
+        }
+    };
+
+    let warnings = parser::collect_warnings(&ast);
+    if !warnings.is_empty() {
+        eprintln!("\n{}", format_parse_warnings(&warnings, Some(&filename), Some(&source_code)));
+    }
+
+    let has_imports = ast.statements.iter().any(|s| matches!(s, Statement::Import(_)));
+    let manifest_path = venv.root.join("dal.toml");
+    let mut resolver = dist_agent_lang::ModuleResolver::new().with_root_dir(venv.root.clone());
+    if manifest_path.exists() {
+        if let Ok(deps) = dist_agent_lang::manifest::load_resolved_deps(&manifest_path) {
+            resolver = resolver.with_dependencies(deps);
+        }
+    }
+
+    let mut runtime = Runtime::new();
+    if matches!(venv.profile, dist_agent_lang::venv::VenvProfile::Strict) {
+        let allowed: Vec<String> = dist_agent_lang::venv::STRICT_ALLOWED_NAMESPACES
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect();
+        runtime.set_allowed_namespaces(allowed);
+    }
+
+    let exec_result = if has_imports {
+        let parse_fn = |s: &str| dist_agent_lang::parse_source(s).map_err(|e| e.to_string());
+        let resolved = match resolver.resolve_program_with_cycles(&ast, Some(script_path), parse_fn) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("❌ Import resolution failed: {}", e);
+                std::process::exit(1);
+            }
+        };
+        runtime.execute_program(ast, Some(&resolved))
+    } else {
+        runtime.execute_program(ast, None)
+    };
+
+    match exec_result {
+        Ok(result) => {
+            println!("✅ Execution successful!");
+            if let Some(value) = result {
+                println!("   Result: {}", value);
+            }
+            if let Err(e) = runtime.run_registered_tests() {
+                let with_ctx = dist_agent_lang::runtime::RuntimeErrorWithContext::from_error(e);
+                eprintln!("❌ Test(s) failed:\n{}", format_runtime_error(&with_ctx, Some(&filename), Some(&source_code)));
+                std::process::exit(1);
+            }
+        }
+        Err(e) => {
+            eprintln!("❌ Execution failed:\n{}", format_runtime_error(&e, Some(&filename), Some(&source_code)));
             std::process::exit(1);
         }
     }
@@ -6285,11 +6541,37 @@ fn handle_agent_command(args: &[String]) {
             }
         }
         "create" => {
-            // dal agent create --mold <path|ipfs://cid|moldId> <name>
-            if args.len() >= 4 && args[1] == "--mold" {
+            // dal agent create --mold <path|ipfs://cid|moldId> <name> [--param k=v ...]
+            // If clap passes rest after "--", args may be ["create", "--", "--mold", source, name, ...]
+            let create_args = if args.len() > 1 && args[1] == "--" {
+                &args[2..]
+            } else {
+                &args[1..]
+            };
+            if create_args.len() >= 3 && create_args[0] == "--mold" {
                 let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
-                let source = &args[2];
-                let name_override = Some(args[3].as_str());
+                let source = &create_args[1];
+                let name_override = Some(create_args[2].as_str());
+                let mut create_params = std::collections::HashMap::new();
+                let mut i = 3usize;
+                while i < create_args.len() {
+                    if create_args[i] == "--param" && i + 1 < create_args.len() {
+                        let kv = &create_args[i + 1];
+                        if let Some(eq) = kv.find('=') {
+                            let k = kv[..eq].to_string();
+                            let v = kv[eq + 1..].to_string();
+                            create_params.insert(k, v);
+                        }
+                        i += 2;
+                    } else {
+                        i += 1;
+                    }
+                }
+                let params_ref = if create_params.is_empty() {
+                    None
+                } else {
+                    Some(&create_params)
+                };
                 // On-chain mold ID (numeric): useMold then load from IPFS
                 #[cfg(feature = "web3")]
                 if let Ok(mold_id) = source.parse::<u64>() {
@@ -6321,6 +6603,7 @@ fn handle_agent_command(args: &[String]) {
                                             &ipfs_source,
                                             &cwd,
                                             name_override,
+                                            params_ref,
                                         ) {
                                             Ok(ctx) => {
                                                 println!(
@@ -6353,7 +6636,7 @@ fn handle_agent_command(args: &[String]) {
                     }
                 }
                 // Local path or ipfs://cid
-                match mold::create_from_mold_source(source, &cwd, name_override) {
+                match mold::create_from_mold_source(source, &cwd, name_override, params_ref) {
                     Ok(ctx) => {
                         println!("✅ Agent created from mold: {}", ctx.agent_id);
                         println!("   Name: {}", ctx.config.name);
@@ -6381,7 +6664,7 @@ fn handle_agent_command(args: &[String]) {
                     binary_name()
                 );
                 eprintln!(
-                    "       {} agent create --mold <path|ipfs://cid> <name>",
+                    "       {} agent create --mold <path|ipfs://cid> <name> [--param k=v ...]",
                     binary_name()
                 );
                 eprintln!("Types: ai, system, worker, custom:<name>");
@@ -6661,23 +6944,163 @@ fn handle_agent_command(args: &[String]) {
                     "Usage: {} agent fleet <subcommand> [args...]",
                     binary_name()
                 );
-                eprintln!(
-                    "Subcommands: create <name> [--type X] [--agents N], scale, deploy, health"
-                );
+                eprintln!("Subcommands: create <name> [--from-mold <path> --count N] [--param k=v ...], list, show <name>, scale <name> <N>, delete <name>");
                 std::process::exit(1);
             }
+            let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
             match args[1].as_str() {
                 "create" => {
-                    let name = if args.len() >= 3 { &args[2] } else { "fleet_1" };
-                    println!("🪩 Fleet '{}'\n", name);
-                    println!("   Fleet orchestration backend not yet implemented.");
-                    println!("   Use agent::spawn in a loop in DAL code for multiple agents.");
+                    if args.len() < 3 {
+                        eprintln!(
+                            "Usage: {} agent fleet create <name> [--from-mold <path> --count N] [--param k=v ...]",
+                            binary_name()
+                        );
+                        std::process::exit(1);
+                    }
+                    let name = &args[2];
+                    let mut from_mold: Option<String> = None;
+                    let mut count: Option<u32> = None;
+                    let mut fleet_params = std::collections::HashMap::new();
+                    let mut i = 3usize;
+                    while i < args.len() {
+                        if args[i] == "--from-mold" && i + 1 < args.len() {
+                            from_mold = Some(args[i + 1].clone());
+                            i += 2;
+                        } else if args[i] == "--count" && i + 1 < args.len() {
+                            if let Ok(n) = args[i + 1].parse::<u32>() {
+                                count = Some(n);
+                            }
+                            i += 2;
+                        } else if args[i] == "--param" && i + 1 < args.len() {
+                            let kv = &args[i + 1];
+                            if let Some(eq) = kv.find('=') {
+                                fleet_params.insert(kv[..eq].to_string(), kv[eq + 1..].to_string());
+                            }
+                            i += 2;
+                        } else {
+                            i += 1;
+                        }
+                    }
+                    let params_ref = if fleet_params.is_empty() {
+                        None
+                    } else {
+                        Some(&fleet_params)
+                    };
+                    match (from_mold.as_deref(), count) {
+                        (Some(_mold_path), Some(0)) => {
+                            eprintln!("❌ --count must be >= 1");
+                            std::process::exit(1);
+                        }
+                        (Some(mold_path), n_opt) => {
+                            let n = n_opt.unwrap_or(1);
+                            match dist_agent_lang::fleet::create_from_mold(
+                                name,
+                                mold_path,
+                                n,
+                                &cwd,
+                                params_ref,
+                            ) {
+                                Ok(()) => {
+                                    println!("✅ Fleet '{}' created with {} agents from mold {}", name, n, mold_path);
+                                }
+                                Err(e) => {
+                                    eprintln!("❌ {}", e);
+                                    std::process::exit(1);
+                                }
+                            }
+                        }
+                        (None, _) => {
+                            match dist_agent_lang::fleet::create(name, Some(&cwd)) {
+                                Ok(()) => println!("✅ Fleet '{}' created (empty)", name),
+                                Err(e) => {
+                                    eprintln!("❌ {}", e);
+                                    std::process::exit(1);
+                                }
+                            }
+                        }
+                    }
+                }
+                "list" => {
+                    let names = dist_agent_lang::fleet::list(Some(&cwd));
+                    if names.is_empty() {
+                        println!("No fleets (create with: {} agent fleet create <name> [--from-mold <path> --count N])", binary_name());
+                    } else {
+                        println!("Fleets:");
+                        for n in &names {
+                            if let Some(f) = dist_agent_lang::fleet::show(n, Some(&cwd)) {
+                                println!("  {}  ({} agents)", n, f.member_ids.len());
+                            } else {
+                                println!("  {}", n);
+                            }
+                        }
+                    }
+                }
+                "show" => {
+                    if args.len() < 3 {
+                        eprintln!("Usage: {} agent fleet show <name>", binary_name());
+                        std::process::exit(1);
+                    }
+                    let name = &args[2];
+                    match dist_agent_lang::fleet::show(name, Some(&cwd)) {
+                        Some(f) => {
+                            println!("Fleet: {}", f.name);
+                            if let Some(ref src) = f.mold_source {
+                                println!("  From mold: {}", src);
+                            }
+                            println!("  Members: {}", f.member_ids.len());
+                            for id in &f.member_ids {
+                                println!("    {}", id);
+                            }
+                        }
+                        None => {
+                            eprintln!("❌ Fleet '{}' not found", name);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                "scale" => {
+                    if args.len() < 4 {
+                        eprintln!("Usage: {} agent fleet scale <name> <N>", binary_name());
+                        std::process::exit(1);
+                    }
+                    let name = &args[2];
+                    let n: u32 = match args[3].parse() {
+                        Ok(v) => v,
+                        Err(_) => {
+                            eprintln!("❌ Invalid count (must be 0–1000)");
+                            std::process::exit(1);
+                        }
+                    };
+                    match dist_agent_lang::fleet::scale(name, n, Some(&cwd)) {
+                        Ok(()) => println!("✅ Fleet '{}' scaled to {} agents", name, n),
+                        Err(e) => {
+                            eprintln!("❌ {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                "delete" => {
+                    if args.len() < 3 {
+                        eprintln!("Usage: {} agent fleet delete <name>", binary_name());
+                        std::process::exit(1);
+                    }
+                    let name = &args[2];
+                    match dist_agent_lang::fleet::delete(name, Some(&cwd)) {
+                        Ok(true) => println!("✅ Fleet '{}' deleted", name),
+                        Ok(false) => {
+                            eprintln!("❌ Fleet '{}' not found", name);
+                            std::process::exit(1);
+                        }
+                        Err(e) => {
+                            eprintln!("❌ {}", e);
+                            std::process::exit(1);
+                        }
+                    }
                 }
                 _ => {
-                    println!("🤖 Fleet\n");
-                    println!(
-                        "   Fleet subcommands (scale, deploy, health) coming in a future release."
-                    );
+                    eprintln!("Unknown fleet subcommand: {}", args[1]);
+                    eprintln!("Subcommands: create, list, show, scale, delete");
+                    std::process::exit(1);
                 }
             }
         }
@@ -6692,7 +7115,7 @@ fn handle_agent_command(args: &[String]) {
                 "list" => {
                     let paths = dist_agent_lang::mold::list_local_paths(&cwd);
                     if paths.is_empty() {
-                        println!("No local molds found (looked in ., mold/, mold/samples for *.mold.json, *.mold.dal)");
+                        println!("No local molds found (looked in ., mold/, mold/samples for *.mold.dal, *.mold.json)");
                     } else {
                         println!("Local molds:");
                         for p in &paths {
@@ -6739,7 +7162,7 @@ fn handle_agent_command(args: &[String]) {
                         std::process::exit(1);
                     }
                     let name = &args[2];
-                    let out_path = cwd.join(format!("{}.mold.json", name));
+                    let out_path = cwd.join(format!("{}.mold.dal", name));
                     match dist_agent_lang::mold::scaffold_mold(name, &out_path) {
                         Ok(()) => println!("✅ Created mold template: {}", out_path.display()),
                         Err(e) => {
