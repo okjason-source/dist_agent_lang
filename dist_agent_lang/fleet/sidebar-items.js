@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["create","create_from_mold","delete","list","scale","show"],"struct":["Fleet"]};

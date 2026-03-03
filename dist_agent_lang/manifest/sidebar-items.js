@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["DependencySpec","ManifestError"],"fn":["load_resolved_deps","parse_dependencies","parse_package_info","resolve_dependencies","write_lockfile"],"struct":["PackageInfo"],"type":["DependenciesMap","LockfileVersionMeta","ResolvedDeps"]};
+window.SIDEBAR_ITEMS = {"enum":["DependencySpec","ManifestError"],"fn":["add_dependencies_if_missing","load_resolved_deps","parse_dependencies","parse_package_info","resolve_dependencies","write_lockfile"],"struct":["PackageInfo"],"type":["DependenciesMap","LockfileVersionMeta","ResolvedDeps"]};

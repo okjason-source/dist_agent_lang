@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ResolveError","ResolvedImport"],"fn":["resolve_imports"],"struct":["ModuleResolver","ResolvedImportEntry"]};
+window.SIDEBAR_ITEMS = {"enum":["ResolveError","ResolvedImport"],"fn":["package_import_names_from_program","resolve_imports"],"struct":["ModuleResolver","ResolvedImportEntry"]};

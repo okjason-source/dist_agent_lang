@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["TrustLevel"],"fn":["load_owner_principal_id","load_sh_config","run"],"struct":["ShConfig"]};
+window.SIDEBAR_ITEMS = {"enum":["TrustLevel"],"fn":["constraints_description_for_prompt","load_owner_principal_id","load_sh_config","run"],"struct":["ShConfig"]};

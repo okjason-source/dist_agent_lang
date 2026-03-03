@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["STRICT_ALLOWED_NAMESPACES"],"enum":["VenvProfile"],"fn":["create_venv","delete_venv","global_registry_path","list_venvs","load_venvs","project_registry_path","resolve_venv","save_venvs","show_venv"],"struct":["Venv","VenvRecord"]};
