@@ -1,0 +1,7 @@
+src/compile/mod.rs:113:9: replace <impl CompileBackend for StubBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/mod.rs:145:5: replace get_backend -> Option<Box<dyn CompileBackend>> with Some(Box::new(Default::default()))
+src/compile/mod.rs:163:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![Box::leak(Box::new(Default::default()))]
+src/compile/mod.rs:199:5: replace run_compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/blockchain.rs:120:9: replace <impl CompileBackend for BlockchainBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/native.rs:115:9: replace <impl CompileBackend for NativeBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/wasm.rs:113:9: replace <impl CompileBackend for WasmBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())

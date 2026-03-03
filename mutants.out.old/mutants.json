@@ -393,26 +393,146 @@
     "package": "dist_agent_lang",
     "file": "src/compile/mod.rs",
     "function": {
+      "function_name": "get_compiler_available_override",
+      "return_type": "-> Option<bool>",
+      "span": {
+        "start": {
+          "line": 20,
+          "column": 1
+        },
+        "end": {
+          "line": 23,
+          "column": 2
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 5
+      },
+      "end": {
+        "line": 22,
+        "column": 60
+      }
+    },
+    "replacement": "None",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
+      "function_name": "get_compiler_available_override",
+      "return_type": "-> Option<bool>",
+      "span": {
+        "start": {
+          "line": 20,
+          "column": 1
+        },
+        "end": {
+          "line": 23,
+          "column": 2
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 5
+      },
+      "end": {
+        "line": 22,
+        "column": 60
+      }
+    },
+    "replacement": "Some(true)",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
+      "function_name": "get_compiler_available_override",
+      "return_type": "-> Option<bool>",
+      "span": {
+        "start": {
+          "line": 20,
+          "column": 1
+        },
+        "end": {
+          "line": 23,
+          "column": 2
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 5
+      },
+      "end": {
+        "line": 22,
+        "column": 60
+      }
+    },
+    "replacement": "Some(false)",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
+      "function_name": "set_compiler_available_override",
+      "return_type": "",
+      "span": {
+        "start": {
+          "line": 25,
+          "column": 1
+        },
+        "end": {
+          "line": 31,
+          "column": 2
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 5
+      },
+      "end": {
+        "line": 30,
+        "column": 77
+      }
+    },
+    "replacement": "()",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
       "function_name": "<impl std::fmt::Display for CompileError>::fmt",
       "return_type": "-> std::fmt::Result",
       "span": {
         "start": {
-          "line": 52,
+          "line": 70,
           "column": 5
         },
         "end": {
-          "line": 65,
+          "line": 83,
           "column": 6
         }
       }
     },
     "span": {
       "start": {
-        "line": 53,
+        "line": 71,
         "column": 9
       },
       "end": {
-        "line": 64,
+        "line": 82,
         "column": 10
       }
     },
@@ -427,22 +547,52 @@
       "return_type": "-> Result<CompileArtifacts, CompileError>",
       "span": {
         "start": {
-          "line": 89,
+          "line": 107,
           "column": 5
         },
         "end": {
-          "line": 111,
+          "line": 129,
           "column": 6
         }
       }
     },
     "span": {
       "start": {
-        "line": 95,
+        "line": 113,
+        "column": 9
+      },
+      "end": {
+        "line": 128,
+        "column": 11
+      }
+    },
+    "replacement": "Ok(Default::default())",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
+      "function_name": "<impl CompileBackend for StubBackend>::compile",
+      "return_type": "-> Result<CompileArtifacts, CompileError>",
+      "span": {
+        "start": {
+          "line": 107,
+          "column": 5
+        },
+        "end": {
+          "line": 129,
+          "column": 6
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 113,
         "column": 12
       },
       "end": {
-        "line": 95,
+        "line": 113,
         "column": 13
       }
     },
@@ -457,22 +607,22 @@
       "return_type": "-> bool",
       "span": {
         "start": {
-          "line": 114,
+          "line": 132,
           "column": 1
         },
         "end": {
-          "line": 120,
+          "line": 141,
           "column": 2
         }
       }
     },
     "span": {
       "start": {
-        "line": 115,
+        "line": 133,
         "column": 5
       },
       "end": {
-        "line": 119,
+        "line": 140,
         "column": 26
       }
     },
@@ -487,22 +637,22 @@
       "return_type": "-> bool",
       "span": {
         "start": {
-          "line": 114,
+          "line": 132,
           "column": 1
         },
         "end": {
-          "line": 120,
+          "line": 141,
           "column": 2
         }
       }
     },
     "span": {
       "start": {
-        "line": 115,
+        "line": 133,
         "column": 5
       },
       "end": {
-        "line": 119,
+        "line": 140,
         "column": 26
       }
     },
@@ -513,26 +663,176 @@
     "package": "dist_agent_lang",
     "file": "src/compile/mod.rs",
     "function": {
-      "function_name": "package_entry_path",
-      "return_type": "-> Option<PathBuf>",
+      "function_name": "get_backend",
+      "return_type": "-> Option<Box<dyn CompileBackend>>",
       "span": {
         "start": {
-          "line": 158,
+          "line": 143,
           "column": 1
         },
         "end": {
-          "line": 169,
+          "line": 156,
           "column": 2
         }
       }
     },
     "span": {
       "start": {
-        "line": 160,
+        "line": 145,
         "column": 5
       },
       "end": {
-        "line": 168,
+        "line": 155,
+        "column": 12
+      }
+    },
+    "replacement": "None",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
+      "function_name": "get_backend",
+      "return_type": "-> Option<Box<dyn CompileBackend>>",
+      "span": {
+        "start": {
+          "line": 143,
+          "column": 1
+        },
+        "end": {
+          "line": 156,
+          "column": 2
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 145,
+        "column": 5
+      },
+      "end": {
+        "line": 155,
+        "column": 12
+      }
+    },
+    "replacement": "Some(Box::new(Default::default()))",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
+      "function_name": "select_services_for_target",
+      "return_type": "-> Vec<&'a ServiceStatement>",
+      "span": {
+        "start": {
+          "line": 158,
+          "column": 1
+        },
+        "end": {
+          "line": 177,
+          "column": 2
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 163,
+        "column": 5
+      },
+      "end": {
+        "line": 176,
+        "column": 19
+      }
+    },
+    "replacement": "vec![]",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
+      "function_name": "select_services_for_target",
+      "return_type": "-> Vec<&'a ServiceStatement>",
+      "span": {
+        "start": {
+          "line": 158,
+          "column": 1
+        },
+        "end": {
+          "line": 177,
+          "column": 2
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 163,
+        "column": 5
+      },
+      "end": {
+        "line": 176,
+        "column": 19
+      }
+    },
+    "replacement": "vec![Box::leak(Box::new(Default::default()))]",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
+      "function_name": "select_services_for_target",
+      "return_type": "-> Vec<&'a ServiceStatement>",
+      "span": {
+        "start": {
+          "line": 158,
+          "column": 1
+        },
+        "end": {
+          "line": 177,
+          "column": 2
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 169,
+        "column": 36
+      },
+      "end": {
+        "line": 169,
+        "column": 38
+      }
+    },
+    "replacement": "!=",
+    "genre": "BinaryOperator"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
+      "function_name": "package_entry_path",
+      "return_type": "-> Option<PathBuf>",
+      "span": {
+        "start": {
+          "line": 179,
+          "column": 1
+        },
+        "end": {
+          "line": 190,
+          "column": 2
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 181,
+        "column": 5
+      },
+      "end": {
+        "line": 189,
         "column": 6
       }
     },
@@ -547,26 +847,56 @@
       "return_type": "-> Option<PathBuf>",
       "span": {
         "start": {
-          "line": 158,
+          "line": 179,
           "column": 1
         },
         "end": {
-          "line": 169,
+          "line": 190,
           "column": 2
         }
       }
     },
     "span": {
       "start": {
-        "line": 160,
+        "line": 181,
         "column": 5
       },
       "end": {
-        "line": 168,
+        "line": 189,
         "column": 6
       }
     },
     "replacement": "Some(Default::default())",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/mod.rs",
+    "function": {
+      "function_name": "run_compile",
+      "return_type": "-> Result<CompileArtifacts, CompileError>",
+      "span": {
+        "start": {
+          "line": 192,
+          "column": 1
+        },
+        "end": {
+          "line": 265,
+          "column": 2
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 199,
+        "column": 5
+      },
+      "end": {
+        "line": 264,
+        "column": 18
+      }
+    },
+    "replacement": "Ok(Default::default())",
     "genre": "FnValue"
   },
   {
@@ -7931,7 +8261,7 @@
           "column": 1
         },
         "end": {
-          "line": 105,
+          "line": 108,
           "column": 2
         }
       }
@@ -7942,7 +8272,7 @@
         "column": 5
       },
       "end": {
-        "line": 104,
+        "line": 107,
         "column": 26
       }
     },
@@ -7961,7 +8291,7 @@
           "column": 1
         },
         "end": {
-          "line": 105,
+          "line": 108,
           "column": 2
         }
       }
@@ -7972,7 +8302,7 @@
         "column": 5
       },
       "end": {
-        "line": 104,
+        "line": 107,
         "column": 26
       }
     },
@@ -7987,22 +8317,52 @@
       "return_type": "-> Result<CompileArtifacts, CompileError>",
       "span": {
         "start": {
-          "line": 111,
+          "line": 114,
           "column": 5
         },
         "end": {
-          "line": 169,
+          "line": 172,
           "column": 6
         }
       }
     },
     "span": {
       "start": {
-        "line": 117,
+        "line": 120,
+        "column": 9
+      },
+      "end": {
+        "line": 171,
+        "column": 11
+      }
+    },
+    "replacement": "Ok(Default::default())",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/blockchain.rs",
+    "function": {
+      "function_name": "<impl CompileBackend for BlockchainBackend>::compile",
+      "return_type": "-> Result<CompileArtifacts, CompileError>",
+      "span": {
+        "start": {
+          "line": 114,
+          "column": 5
+        },
+        "end": {
+          "line": 172,
+          "column": 6
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 120,
         "column": 12
       },
       "end": {
-        "line": 117,
+        "line": 120,
         "column": 13
       }
     },
@@ -8017,22 +8377,22 @@
       "return_type": "-> Result<CompileArtifacts, CompileError>",
       "span": {
         "start": {
-          "line": 111,
+          "line": 114,
           "column": 5
         },
         "end": {
-          "line": 169,
+          "line": 172,
           "column": 6
         }
       }
     },
     "span": {
       "start": {
-        "line": 144,
+        "line": 147,
         "column": 16
       },
       "end": {
-        "line": 144,
+        "line": 147,
         "column": 17
       }
     },
@@ -8381,7 +8741,7 @@
           "column": 1
         },
         "end": {
-          "line": 100,
+          "line": 103,
           "column": 2
         }
       }
@@ -8392,12 +8752,102 @@
         "column": 5
       },
       "end": {
-        "line": 99,
+        "line": 102,
         "column": 26
       }
     },
     "replacement": "true",
     "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/native.rs",
+    "function": {
+      "function_name": "<impl CompileBackend for NativeBackend>::compile",
+      "return_type": "-> Result<CompileArtifacts, CompileError>",
+      "span": {
+        "start": {
+          "line": 109,
+          "column": 5
+        },
+        "end": {
+          "line": 173,
+          "column": 6
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 115,
+        "column": 9
+      },
+      "end": {
+        "line": 172,
+        "column": 11
+      }
+    },
+    "replacement": "Ok(Default::default())",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/native.rs",
+    "function": {
+      "function_name": "<impl CompileBackend for NativeBackend>::compile",
+      "return_type": "-> Result<CompileArtifacts, CompileError>",
+      "span": {
+        "start": {
+          "line": 109,
+          "column": 5
+        },
+        "end": {
+          "line": 173,
+          "column": 6
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 115,
+        "column": 12
+      },
+      "end": {
+        "line": 115,
+        "column": 13
+      }
+    },
+    "replacement": "",
+    "genre": "UnaryOperator"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/native.rs",
+    "function": {
+      "function_name": "<impl CompileBackend for NativeBackend>::compile",
+      "return_type": "-> Result<CompileArtifacts, CompileError>",
+      "span": {
+        "start": {
+          "line": 109,
+          "column": 5
+        },
+        "end": {
+          "line": 173,
+          "column": 6
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 148,
+        "column": 12
+      },
+      "end": {
+        "line": 148,
+        "column": 13
+      }
+    },
+    "replacement": "",
+    "genre": "UnaryOperator"
   },
   {
     "package": "dist_agent_lang",
@@ -8771,7 +9221,7 @@
           "column": 1
         },
         "end": {
-          "line": 98,
+          "line": 101,
           "column": 2
         }
       }
@@ -8782,7 +9232,7 @@
         "column": 5
       },
       "end": {
-        "line": 97,
+        "line": 100,
         "column": 6
       }
     },
@@ -8801,7 +9251,7 @@
           "column": 1
         },
         "end": {
-          "line": 98,
+          "line": 101,
           "column": 2
         }
       }
@@ -8812,7 +9262,7 @@
         "column": 5
       },
       "end": {
-        "line": 97,
+        "line": 100,
         "column": 6
       }
     },
@@ -8831,18 +9281,18 @@
           "column": 1
         },
         "end": {
-          "line": 98,
+          "line": 101,
           "column": 2
         }
       }
     },
     "span": {
       "start": {
-        "line": 92,
+        "line": 95,
         "column": 18
       },
       "end": {
-        "line": 92,
+        "line": 95,
         "column": 36
       }
     },
@@ -8861,18 +9311,18 @@
           "column": 1
         },
         "end": {
-          "line": 98,
+          "line": 101,
           "column": 2
         }
       }
     },
     "span": {
       "start": {
-        "line": 92,
+        "line": 95,
         "column": 18
       },
       "end": {
-        "line": 92,
+        "line": 95,
         "column": 36
       }
     },
@@ -8887,22 +9337,82 @@
       "return_type": "-> Result<CompileArtifacts, CompileError>",
       "span": {
         "start": {
-          "line": 104,
+          "line": 107,
           "column": 5
         },
         "end": {
-          "line": 172,
+          "line": 175,
           "column": 6
         }
       }
     },
     "span": {
       "start": {
-        "line": 110,
+        "line": 113,
+        "column": 9
+      },
+      "end": {
+        "line": 174,
+        "column": 11
+      }
+    },
+    "replacement": "Ok(Default::default())",
+    "genre": "FnValue"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/wasm.rs",
+    "function": {
+      "function_name": "<impl CompileBackend for WasmBackend>::compile",
+      "return_type": "-> Result<CompileArtifacts, CompileError>",
+      "span": {
+        "start": {
+          "line": 107,
+          "column": 5
+        },
+        "end": {
+          "line": 175,
+          "column": 6
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 113,
         "column": 12
       },
       "end": {
-        "line": 110,
+        "line": 113,
+        "column": 13
+      }
+    },
+    "replacement": "",
+    "genre": "UnaryOperator"
+  },
+  {
+    "package": "dist_agent_lang",
+    "file": "src/compile/wasm.rs",
+    "function": {
+      "function_name": "<impl CompileBackend for WasmBackend>::compile",
+      "return_type": "-> Result<CompileArtifacts, CompileError>",
+      "span": {
+        "start": {
+          "line": 107,
+          "column": 5
+        },
+        "end": {
+          "line": 175,
+          "column": 6
+        }
+      }
+    },
+    "span": {
+      "start": {
+        "line": 146,
+        "column": 12
+      },
+      "end": {
+        "line": 146,
         "column": 13
       }
     },

@@ -57,6 +57,27 @@ impl Default for AIConfig {
 // Global AI configuration cache
 static AI_CONFIG: OnceLock<Mutex<AIConfig>> = OnceLock::new();
 
+/// Effective OpenAI API key: OPENAI_API_KEY or DAL_OPENAI_API_KEY (for agents/tools that set only DAL_*).
+fn effective_openai_api_key() -> Option<String> {
+    env::var("OPENAI_API_KEY")
+        .or_else(|_| env::var("DAL_OPENAI_API_KEY"))
+        .ok()
+        .filter(|k| !k.is_empty() && k != "none")
+}
+
+/// Effective Anthropic API key: ANTHROPIC_API_KEY or DAL_ANTHROPIC_API_KEY (same pattern as OpenAI).
+fn effective_anthropic_api_key() -> Option<String> {
+    env::var("ANTHROPIC_API_KEY")
+        .or_else(|_| env::var("DAL_ANTHROPIC_API_KEY"))
+        .ok()
+        .filter(|k| !k.is_empty() && k != "none")
+}
+
+/// Effective local AI endpoint: DAL_AI_ENDPOINT (Local provider is already DAL-namespaced; no standard env).
+fn effective_local_ai_endpoint() -> Option<String> {
+    env::var("DAL_AI_ENDPOINT").ok().filter(|k| !k.is_empty())
+}
+
 /// Initialize AI configuration from multiple sources (priority order):
 /// 1. Runtime configuration (if set)
 /// 2. Environment variables
@@ -76,23 +97,25 @@ fn load_ai_config() -> AIConfig {
     }
 
     // Step 2: Override with environment variables (higher priority)
-    if let Ok(key) = env::var("OPENAI_API_KEY") {
+    // Support both OPENAI_API_KEY and DAL_OPENAI_API_KEY so agents/tools that set only DAL_* work.
+    let openai_key = env::var("OPENAI_API_KEY").or_else(|_| env::var("DAL_OPENAI_API_KEY"));
+    if let Ok(key) = openai_key {
         if !key.is_empty() && key != "none" {
             config.provider = AIProvider::OpenAI;
             config.api_key = Some(key);
-            if let Ok(model) = env::var("OPENAI_MODEL") {
+            let model = env::var("OPENAI_MODEL").or_else(|_| env::var("DAL_OPENAI_MODEL"));
+            if let Ok(model) = model {
                 config.model = Some(model);
             }
         }
-    } else if let Ok(key) = env::var("ANTHROPIC_API_KEY") {
-        if !key.is_empty() && key != "none" {
-            config.provider = AIProvider::Anthropic;
-            config.api_key = Some(key);
-            if let Ok(model) = env::var("ANTHROPIC_MODEL") {
-                config.model = Some(model);
-            }
+    } else if let Some(key) = effective_anthropic_api_key() {
+        config.provider = AIProvider::Anthropic;
+        config.api_key = Some(key);
+        let model = env::var("ANTHROPIC_MODEL").or_else(|_| env::var("DAL_ANTHROPIC_MODEL"));
+        if let Ok(model) = model {
+            config.model = Some(model);
         }
-    } else if let Ok(endpoint) = env::var("DAL_AI_ENDPOINT") {
+    } else if let Some(endpoint) = effective_local_ai_endpoint() {
         if !endpoint.is_empty() {
             config.provider = AIProvider::Local;
             config.endpoint = Some(endpoint);
@@ -924,9 +947,10 @@ pub fn analyze_image(image_data: Vec<u8>) -> Result<ImageAnalysis, String> {
     );
 
     #[cfg(feature = "http-interface")]
-    if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base =
-            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+    if let Some(api_key) = effective_openai_api_key() {
+        let base = env::var("OPENAI_BASE_URL")
+            .or_else(|_| env::var("DAL_OPENAI_BASE_URL"))
+            .unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let svc = crate::stdlib::service::AIService::new("gpt-4o".to_string())
             .with_api_key(api_key)
             .with_base_url(base);
@@ -1056,35 +1080,29 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
     // Automatic provider detection (backward compatibility)
     // Priority: OpenAI > Anthropic > Local > Fallback
 
-    if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        if !api_key.is_empty() && api_key != "none" {
-            match call_openai_api(&prompt, &api_key, &config) {
-                Ok(response) => return Ok(response),
-                Err(e) => {
-                    eprintln!("OpenAI failed: {}. Trying next provider...", e);
-                }
+    if let Some(api_key) = effective_openai_api_key() {
+        match call_openai_api(&prompt, &api_key, &config) {
+            Ok(response) => return Ok(response),
+            Err(e) => {
+                eprintln!("OpenAI failed: {}. Trying next provider...", e);
             }
         }
     }
 
-    if let Ok(api_key) = env::var("ANTHROPIC_API_KEY") {
-        if !api_key.is_empty() && api_key != "none" {
-            match call_anthropic_api(&prompt, &api_key, &config) {
-                Ok(response) => return Ok(response),
-                Err(e) => {
-                    eprintln!("Anthropic failed: {}. Trying next provider...", e);
-                }
+    if let Some(api_key) = effective_anthropic_api_key() {
+        match call_anthropic_api(&prompt, &api_key, &config) {
+            Ok(response) => return Ok(response),
+            Err(e) => {
+                eprintln!("Anthropic failed: {}. Trying next provider...", e);
             }
         }
     }
 
-    if let Ok(endpoint) = env::var("DAL_AI_ENDPOINT") {
-        if !endpoint.is_empty() {
-            match call_local_model(&prompt, &endpoint, &config) {
-                Ok(response) => return Ok(response),
-                Err(e) => {
-                    eprintln!("Local model failed: {}. Using fallback...", e);
-                }
+    if let Some(endpoint) = effective_local_ai_endpoint() {
+        match call_local_model(&prompt, &endpoint, &config) {
+            Ok(response) => return Ok(response),
+            Err(e) => {
+                eprintln!("Local model failed: {}. Using fallback...", e);
             }
         }
     }
@@ -1107,6 +1125,7 @@ fn call_openai_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<Str
         .model
         .clone()
         .or_else(|| env::var("OPENAI_MODEL").ok())
+        .or_else(|| env::var("DAL_OPENAI_MODEL").ok())
         .unwrap_or_else(|| "gpt-4".to_string());
 
     let body = json!({
@@ -1163,6 +1182,7 @@ fn call_anthropic_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<
         .model
         .clone()
         .or_else(|| env::var("ANTHROPIC_MODEL").ok())
+        .or_else(|| env::var("DAL_ANTHROPIC_MODEL").ok())
         .unwrap_or_else(|| "claude-3-5-sonnet-20241022".to_string());
 
     let body = json!({
@@ -1992,11 +2012,12 @@ pub fn classify(model: &str, input: &str) -> Result<String, String> {
         Some("ai"),
     );
 
-    // Optional real API path when OPENAI_API_KEY (and optionally OPENAI_BASE_URL) are set
+    // Optional real API path when API key is set (OPENAI_API_KEY or DAL_OPENAI_API_KEY)
     #[cfg(feature = "http-interface")]
-    if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base =
-            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+    if let Some(api_key) = effective_openai_api_key() {
+        let base = env::var("OPENAI_BASE_URL")
+            .or_else(|_| env::var("DAL_OPENAI_BASE_URL"))
+            .unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let svc = crate::stdlib::service::AIService::new(model.to_string())
             .with_api_key(api_key)
             .with_base_url(base);
@@ -2107,11 +2128,12 @@ pub fn generate(model: &str, prompt: &str) -> Result<String, String> {
         Some("ai"),
     );
 
-    // Optional real API path when OPENAI_API_KEY (and optionally OPENAI_BASE_URL) are set
+    // Optional real API path when API key is set (OPENAI_API_KEY or DAL_OPENAI_API_KEY)
     #[cfg(feature = "http-interface")]
-    if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base =
-            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+    if let Some(api_key) = effective_openai_api_key() {
+        let base = env::var("OPENAI_BASE_URL")
+            .or_else(|_| env::var("DAL_OPENAI_BASE_URL"))
+            .unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let svc = crate::stdlib::service::AIService::new(model.to_string())
             .with_api_key(api_key)
             .with_base_url(base);
@@ -2161,11 +2183,12 @@ pub fn embed(text: &str) -> Result<Vec<f64>, String> {
         Some("ai"),
     );
 
-    // Optional real API path when OPENAI_API_KEY (and optionally OPENAI_BASE_URL) are set
+    // Optional real API path when API key is set (OPENAI_API_KEY or DAL_OPENAI_API_KEY)
     #[cfg(feature = "http-interface")]
-    if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base =
-            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+    if let Some(api_key) = effective_openai_api_key() {
+        let base = env::var("OPENAI_BASE_URL")
+            .or_else(|_| env::var("DAL_OPENAI_BASE_URL"))
+            .unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let svc = crate::stdlib::service::AIService::new("text-embedding-3-small".to_string())
             .with_api_key(api_key)
             .with_base_url(base);
@@ -2324,9 +2347,10 @@ pub fn analyze_image_url(url: &str) -> Result<ImageAnalysis, String> {
     );
 
     #[cfg(feature = "http-interface")]
-    if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base =
-            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+    if let Some(api_key) = effective_openai_api_key() {
+        let base = env::var("OPENAI_BASE_URL")
+            .or_else(|_| env::var("DAL_OPENAI_BASE_URL"))
+            .unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let svc = crate::stdlib::service::AIService::new("gpt-4o".to_string())
             .with_api_key(api_key)
             .with_base_url(base);
@@ -2370,9 +2394,10 @@ pub fn generate_image(model: &str, prompt: &str) -> Result<String, String> {
     );
 
     #[cfg(feature = "http-interface")]
-    if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-        let base =
-            env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+    if let Some(api_key) = effective_openai_api_key() {
+        let base = env::var("OPENAI_BASE_URL")
+            .or_else(|_| env::var("DAL_OPENAI_BASE_URL"))
+            .unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
         let image_model = if model.is_empty() || model == "default" {
             "dall-e-2"
         } else {
