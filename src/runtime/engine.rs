@@ -5934,7 +5934,21 @@ impl Runtime {
                     });
                 }
                 let prompt = self.value_to_string(&args[0])?;
-                Ok(Value::String(format!("generated_response_for_{}", prompt)))
+                crate::stdlib::ai::generate_text(prompt)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "respond_with_tools" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let message = self.value_to_string(&args[0])?;
+                crate::stdlib::ai::respond_with_tools(&message)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
             }
             "train_model" => {
                 if args.len() != 1 {
@@ -8596,7 +8610,8 @@ impl Runtime {
                 _ => false,
             }
         } else {
-            false
+            // No service context (e.g. route handlers in dal serve): allow web so agents can search/fetch
+            true
         }
     }
 
@@ -8611,7 +8626,9 @@ impl Runtime {
                 _ => false,
             }
         } else {
-            false
+            // No service context (e.g. top-level route handlers in dal serve, or script): allow AI
+            // so that Agent Assistant and similar apps work without wrapping in a @service.
+            true
         }
     }
 

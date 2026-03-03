@@ -1111,6 +1111,202 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
     Ok(format!("Generated response to: {}", prompt))
 }
 
+/// System prompt for tool-using agent: reply, run shell, or search.
+const TOOLS_SYSTEM: &str = "You are a helpful assistant. You can run shell commands, search the web, or just reply. \
+Respond with JSON only, no markdown or extra text. Use exactly one of: \
+{\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"}. \
+For run and search the tool will execute; keep cmd/query concise. If the user just wants to chat, use action reply.";
+
+/// Extract the first JSON object from a string (between first { and matching }).
+fn extract_json_object(s: &str) -> Option<&str> {
+    let start = s.find('{')?;
+    let mut depth = 0u32;
+    let bytes = s.as_bytes();
+    for (i, &b) in bytes.iter().enumerate().skip(start) {
+        match b {
+            b'{' => depth += 1,
+            b'}' => {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return Some(std::str::from_utf8(&bytes[start..=i]).ok()?);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+/// Run a web search via DuckDuckGo Instant Answer API and return a short summary string.
+#[cfg(feature = "http-interface")]
+fn search_web(query: &str) -> Result<String, String> {
+    let encoded = urlencoding::encode(query).to_string();
+    let url = format!("https://api.duckduckgo.com/?q={}&format=json", encoded);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| e.to_string())?;
+    let resp = client.get(&url).send().map_err(|e| e.to_string())?;
+    if !resp.status().is_success() {
+        return Err(format!("Search API error: {}", resp.status()));
+    }
+    let json: serde_json::Value = resp.json().map_err(|e| e.to_string())?;
+    let abstract_text = json["AbstractText"].as_str().unwrap_or("");
+    let abstract_url = json["AbstractURL"].as_str().unwrap_or("");
+    let mut out = String::new();
+    if !abstract_text.is_empty() {
+        out.push_str(abstract_text);
+        if !abstract_url.is_empty() {
+            out.push_str(" (");
+            out.push_str(abstract_url);
+            out.push(')');
+        }
+    }
+    if let Some(related) = json["RelatedTopics"].as_array() {
+        for (_, topic) in related.iter().take(3).enumerate() {
+            let text = topic["Text"].as_str().unwrap_or("");
+            if !text.is_empty() {
+                if !out.is_empty() {
+                    out.push_str("\n");
+                }
+                out.push_str(text);
+            }
+        }
+    }
+    if out.is_empty() {
+        out = "No summary found for that query.".to_string();
+    }
+    Ok(out)
+}
+
+#[cfg(not(feature = "http-interface"))]
+fn search_web(_query: &str) -> Result<String, String> {
+    Err("Web search requires the http-interface feature.".to_string())
+}
+
+/// Agent that can reply, run shell commands, or search the web. Parses LLM JSON and executes one action.
+pub fn respond_with_tools(user_message: &str) -> Result<String, String> {
+    let prompt = format!("{}\n\nUser: {}", TOOLS_SYSTEM, user_message);
+    let response = generate_text(prompt).map_err(|e| e.to_string())?;
+    let response = response.trim();
+    let json_str = match extract_json_object(response) {
+        Some(s) => s,
+        None => return Ok(response.to_string()),
+    };
+    let v: serde_json::Value = serde_json::from_str(json_str).unwrap_or(serde_json::Value::Null);
+    let obj = match v.as_object() {
+        Some(o) => o,
+        None => return Ok(response.to_string()),
+    };
+    let action = obj
+        .get("action")
+        .and_then(|a| a.as_str())
+        .unwrap_or("reply");
+    match action {
+        "run" => {
+            let cmd = obj.get("cmd").and_then(|c| c.as_str()).unwrap_or("").trim();
+            if cmd.is_empty() {
+                return Ok("No command provided.".to_string());
+            }
+            use crate::runtime::values::Value;
+            match crate::stdlib::sh::run(cmd) {
+                Ok(Value::Map(m)) => {
+                    let stdout = m
+                        .get("stdout")
+                        .and_then(|v| {
+                            if let Value::String(s) = v {
+                                Some(s.as_str())
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or("");
+                    let stderr = m
+                        .get("stderr")
+                        .and_then(|v| {
+                            if let Value::String(s) = v {
+                                Some(s.as_str())
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or("");
+                    let code = m
+                        .get("exit_code")
+                        .and_then(|v| {
+                            if let Value::Int(n) = v {
+                                Some(*n)
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or(-1);
+                    let mut out = format!("Exit code: {}\n", code);
+                    if !stdout.is_empty() {
+                        out.push_str("stdout:\n");
+                        out.push_str(stdout);
+                    }
+                    if !stderr.is_empty() {
+                        out.push_str("\nstderr:\n");
+                        out.push_str(stderr);
+                    }
+                    if stdout.is_empty() && stderr.is_empty() {
+                        out.push_str("(no output)");
+                    }
+                    // Optional: ask LLM to summarize if output is long
+                    if out.len() > 500 {
+                        let summary_prompt =
+                            format!("Summarize this command output in 1-3 sentences:\n\n{}", out);
+                        if let Ok(s) = generate_text(summary_prompt) {
+                            return Ok(format!("{}\n\n---\nFull output:\n{}", s.trim(), out));
+                        }
+                    }
+                    Ok(out)
+                }
+                Ok(_) => Ok("Command completed.".to_string()),
+                Err(e) => Ok(format!("Command failed: {}", e)),
+            }
+        }
+        "search" => {
+            let query = obj
+                .get("query")
+                .and_then(|q| q.as_str())
+                .unwrap_or("")
+                .trim();
+            if query.is_empty() {
+                return Ok("No search query provided.".to_string());
+            }
+            match search_web(query) {
+                Ok(summary) => {
+                    if summary.len() > 400 {
+                        let summary_prompt = format!(
+                            "Summarize this search result in 1-3 sentences:\n\n{}",
+                            summary
+                        );
+                        if let Ok(s) = generate_text(summary_prompt) {
+                            return Ok(s.trim().to_string());
+                        }
+                    }
+                    Ok(summary)
+                }
+                Err(e) => Ok(format!("Search failed: {}", e)),
+            }
+        }
+        _ => {
+            let text = obj
+                .get("text")
+                .and_then(|t| t.as_str())
+                .unwrap_or("")
+                .trim();
+            if text.is_empty() {
+                Ok(response.to_string())
+            } else {
+                Ok(text.to_string())
+            }
+        }
+    }
+}
+
 #[cfg(feature = "http-interface")]
 fn call_openai_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<String, String> {
     use serde_json::json;
