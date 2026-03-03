@@ -38,24 +38,45 @@ fn test_resolve_stdlib_assist_and_interchangeable_with_ai() {
     assert_eq!(resolved.len(), 1);
     assert!(matches!(&resolved[0].resolved, ResolvedImport::Stdlib(s) if s == "assist"));
     // Both assist:: and ai:: dispatch to the same implementation (call_ai_function).
-    // In tests without AI configured we get PermissionDenied; that confirms the namespace was recognized.
+    // With no AI configured we get the fallback string; that confirms the namespace was recognized.
     let with_assist = parse_source("assist::generate_text(\"hi\")").unwrap();
     let with_ai = parse_source("ai::generate_text(\"hi\")").unwrap();
     let mut runtime = Runtime::new();
     let r_assist = runtime.execute_program(with_assist, None);
     let mut runtime2 = Runtime::new();
     let r_ai = runtime2.execute_program(with_ai, None);
-    let err_assist = r_assist.unwrap_err();
-    let err_ai = r_ai.unwrap_err();
+    let out_assist =
+        r_assist.expect("assist::generate_text should succeed (fallback when no AI key)");
+    let out_ai = r_ai.expect("ai::generate_text should succeed (fallback when no AI key)");
+    let s_assist = out_assist
+        .as_ref()
+        .and_then(|v| {
+            if let Value::String(s) = v {
+                Some(s.as_str())
+            } else {
+                None
+            }
+        })
+        .unwrap_or("");
+    let s_ai = out_ai
+        .as_ref()
+        .and_then(|v| {
+            if let Value::String(s) = v {
+                Some(s.as_str())
+            } else {
+                None
+            }
+        })
+        .unwrap_or("");
     assert!(
-        err_assist.to_string().contains("AI") || err_assist.to_string().contains("denied"),
-        "assist:: should hit AI path: {}",
-        err_assist
+        s_assist.contains("hi") || s_assist.contains("Generated"),
+        "assist:: should hit AI path and return string: {:?}",
+        s_assist
     );
     assert!(
-        err_ai.to_string().contains("AI") || err_ai.to_string().contains("denied"),
-        "ai:: should hit AI path: {}",
-        err_ai
+        s_ai.contains("hi") || s_ai.contains("Generated"),
+        "ai:: should hit AI path and return string: {:?}",
+        s_ai
     );
 }
 
