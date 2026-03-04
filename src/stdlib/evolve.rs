@@ -70,6 +70,24 @@ pub fn load(agent_name: Option<&str>) -> Result<String, String> {
     std::fs::read_to_string(&path).map_err(|e| e.to_string())
 }
 
+/// Max length of user/agent content written to the conversation log (log injection / DoS).
+const MAX_CONVERSATION_LOG_LEN: usize = 32_768;
+
+/// Sanitize content for safe inclusion in the conversation log (prevents log injection).
+pub fn sanitize_for_conversation(s: &str) -> String {
+    let truncated = if s.len() > MAX_CONVERSATION_LOG_LEN {
+        &s[..MAX_CONVERSATION_LOG_LEN]
+    } else {
+        s
+    };
+    let with_newlines = truncated.replace("\n", "\n  ");
+    // Prevent injection of our own **User:** / **Agent:** structure
+    let safe = with_newlines
+        .replace("**User:**", "[User]:")
+        .replace("**Agent:**", "[Agent]:");
+    safe
+}
+
 /// Append a conversation turn (user message + agent response) to the context file.
 pub fn append_conversation(
     user_message: &str,
@@ -82,11 +100,11 @@ pub fn append_conversation(
 
     let now = chrono::Utc::now();
     let ts = now.format("%Y-%m-%dT%H:%M");
+    let user_safe = sanitize_for_conversation(user_message);
+    let agent_safe = sanitize_for_conversation(agent_response);
     let block = format!(
         "\n### {}\n**User:** {}\n\n**Agent:** {}\n\n",
-        ts,
-        user_message.replace("\n", "\n  "),
-        agent_response.replace("\n", "\n  ")
+        ts, user_safe, agent_safe
     );
 
     let mut f = OpenOptions::new()

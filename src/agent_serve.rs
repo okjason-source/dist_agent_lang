@@ -26,6 +26,9 @@ struct AgentServeState {
 /// Max lines of evolve content to include in prompt (P1: evolve in context).
 const EVOLVE_RECENT_LINES: i64 = 300;
 
+/// Max length for working_root path (CodeQL: prevent uncontrolled allocation from request body).
+const MAX_WORKING_ROOT_LEN: usize = 4096;
+
 /// Load recent evolve content as a context block when available (P1).
 fn evolve_context_block(agent_name: &str) -> Vec<ContextBlock> {
     match dist_agent_lang::stdlib::evolve::load_recent(Some(agent_name), EVOLVE_RECENT_LINES) {
@@ -176,6 +179,19 @@ async fn handle_message(
     match agent::communicate(sender.as_str(), agent_id.as_str(), msg) {
         Ok(_) => {
             if state.prompt_only {
+                if body
+                    .working_root
+                    .as_ref()
+                    .map(|s| s.len() > MAX_WORKING_ROOT_LEN)
+                    .unwrap_or(false)
+                {
+                    return (
+                        StatusCode::BAD_REQUEST,
+                        Json(serde_json::json!({
+                            "error": "working_root too long (max 4096 bytes)"
+                        })),
+                    );
+                }
                 let agent_id = state.ctx.agent_id.clone();
                 let user_id = user_id_for_reply;
                 let mut context_blocks = evolve_context_block(state.ctx.config.name.as_str());
@@ -202,7 +218,8 @@ async fn handle_message(
                     sub_tasks,
                     body.working_root.as_deref(),
                 );
-                let content_for_evolve = content_for_reply.clone();
+                let content_for_evolve =
+                    dist_agent_lang::stdlib::evolve::sanitize_for_conversation(&content_for_reply);
                 let agent_name = state.ctx.config.name.clone();
                 let max_steps = dist_agent_lang::stdlib::ai::max_tool_steps_from_env();
                 let working_root = body.working_root.clone().map(std::path::PathBuf::from);
@@ -353,6 +370,19 @@ async fn handle_task(
                 );
             }
             if state.prompt_only {
+                if body
+                    .working_root
+                    .as_ref()
+                    .map(|s| s.len() > MAX_WORKING_ROOT_LEN)
+                    .unwrap_or(false)
+                {
+                    return (
+                        StatusCode::BAD_REQUEST,
+                        Json(serde_json::json!({
+                            "error": "working_root too long (max 4096 bytes)"
+                        })),
+                    );
+                }
                 let agent_id = state.ctx.agent_id.clone();
                 let requester_id = if body.requester_id.trim().is_empty() {
                     "task_requester".to_string()
@@ -398,7 +428,10 @@ async fn handle_task(
                         ) {
                             Ok(result) => {
                                 let result_trimmed = result.final_text.trim();
-                                let user_turn = format!("Task: {}", task_for_evolve);
+                                let user_turn =
+                                    dist_agent_lang::stdlib::evolve::sanitize_for_conversation(
+                                        &format!("Task: {}", task_for_evolve),
+                                    );
                                 let _ = dist_agent_lang::stdlib::evolve::append_conversation(
                                     &user_turn,
                                     result_trimmed,
@@ -426,7 +459,10 @@ async fn handle_task(
                                 );
                             }
                             Err(e) => {
-                                let user_turn = format!("Task: {}", task_for_evolve);
+                                let user_turn =
+                                    dist_agent_lang::stdlib::evolve::sanitize_for_conversation(
+                                        &format!("Task: {}", task_for_evolve),
+                                    );
                                 let _ = dist_agent_lang::stdlib::evolve::append_conversation(
                                     &user_turn,
                                     &format!("Error: {}", e),
