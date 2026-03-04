@@ -29,6 +29,14 @@ const EVOLVE_RECENT_LINES: i64 = 300;
 /// Max length for working_root path (CodeQL: prevent uncontrolled allocation from request body).
 const MAX_WORKING_ROOT_LEN: usize = 4096;
 
+/// Build PathBuf from request working_root with length capped to satisfy CodeQL rust/uncontrolled-allocation-size.
+fn capped_working_root_path(s: Option<&String>) -> Option<std::path::PathBuf> {
+    s.map(|raw| {
+        let bounded: String = raw.chars().take(MAX_WORKING_ROOT_LEN).collect();
+        std::path::PathBuf::from(bounded)
+    })
+}
+
 /// Load recent evolve content as a context block when available (P1).
 fn evolve_context_block(agent_name: &str) -> Vec<ContextBlock> {
     match dist_agent_lang::stdlib::evolve::load_recent(Some(agent_name), EVOLVE_RECENT_LINES) {
@@ -222,7 +230,7 @@ async fn handle_message(
                     dist_agent_lang::stdlib::evolve::sanitize_for_conversation(&content_for_reply);
                 let agent_name = state.ctx.config.name.clone();
                 let max_steps = dist_agent_lang::stdlib::ai::max_tool_steps_from_env();
-                let working_root = body.working_root.clone().map(std::path::PathBuf::from);
+                let working_root = capped_working_root_path(body.working_root.as_ref());
                 tokio::task::spawn_blocking(move || {
                     let mut schema = schema;
                     match dist_agent_lang::stdlib::ai::run_multi_step_tool_loop(
@@ -415,7 +423,7 @@ async fn handle_task(
                 let task_for_evolve = task_description.clone();
                 let agent_name = state.ctx.config.name.clone();
                 let max_steps = dist_agent_lang::stdlib::ai::max_tool_steps_from_env();
-                let working_root = body.working_root.clone().map(std::path::PathBuf::from);
+                let working_root = capped_working_root_path(body.working_root.as_ref());
                 tokio::task::spawn_blocking(move || {
                     let pending = agent::receive_pending_tasks(agent_id.as_str());
                     if let Some(_t) = pending.into_iter().next() {
