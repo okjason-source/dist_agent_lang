@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_LEARNING_PATH_SKILLS","PROJECT_INIT_SKILL"],"fn":["tools_description_for_skills"]};
