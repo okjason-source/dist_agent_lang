@@ -107,7 +107,7 @@ DAL is a **Rust-hosted interpreted language** with a tree-walking runtime. The i
 | Category | What you get |
 |----------|-------------|
 | **AI agents** | Spawn, coordinate, communicate, evolve. Persistent memory, skills, molds, lifecycle hooks. HTTP serve with multi-step tool loop. |
-| **Skills registry** | Built-in skills (development, creative, office, home) + user-defined `.skill.dal`. Programmatic encouragement for tool discovery. |
+| **Skills registry** | Built-in skills (development, creative, office, home) + user-defined `.skill.dal`. |
 | **Persistent memory** | Agent state survives restarts. File or SQLite backend. Schema versioning. On by default. |
 | **Blockchain** | Multi-chain (Ethereum, Polygon, Solana, Arbitrum). Deploy, call, events. Solidity converter. |
 | **Security** | Reentrancy protection, safe math, cross-chain security, oracle validation, shell trust controls, ACID transactions. |
