@@ -128,7 +128,7 @@ The end-state goal is a single DAL codebase that compiles to server (native), br
 
 ## Who DAL is for today
 
-- **Agent system builders** who want first-class agent primitives rather than bolting orchestration onto a general-purpose language.
+- **Agent system builders** who want first-class agent primitives.
 - **Blockchain developers** who need integrated on-chain/off-chain logic with Solidity output.
 - **Rapid prototypers** who benefit from a concise syntax with a large stdlib and built-in HTTP serving.
 
