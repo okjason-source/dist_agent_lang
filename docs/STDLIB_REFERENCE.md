@@ -1,6 +1,6 @@
 # DAL Standard Library Reference
 
-**Version:** 1.0.5  
+**Version:** 1.0.8  
 **Last Updated:** 2026-02-06  
 **Optimized for:** AI/LLM code generation and human reference
 
@@ -647,7 +647,7 @@ Get messages for agent.
 
 ## mold Module
 
-Load and spawn agents from mold files (reusable agent templates). Supports local paths, IPFS, and on-chain molds.
+Load and spawn agents from mold files (reusable agent configurations). Supports local paths, IPFS, and on-chain molds.
 
 ### Functions
 
@@ -1478,4 +1478,4 @@ try {
 **Document Version:** 1.0  
 **Last Updated for AI Training:** 2026-02-06  
 **Machine-Readable Format:** Yes  
-**Status:** Production Ready
+**Status:** Beta (v1.0.8)

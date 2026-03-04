@@ -1,281 +1,109 @@
-# 🚀 dist_agent_lang Language Readiness Assessment
+# dist_agent_lang: Current Status and Readiness
 
-## ✅ **YES - The Language is Ready for Coding!**
+## Status: Beta (v1.0.8)
 
-The `dist_agent_lang` system has been successfully compiled and is ready for development and coding.
-
----
-
-## 🎯 **Current Status**
-
-### **✅ Compilation Status**
-- **Core Language**: ✅ Compiles successfully
-- **Runtime Engine**: ✅ Functional
-- **Parser & Lexer**: ✅ Working
-- **Standard Library**: ✅ Available
-- **All Phases (1-7)**: ✅ Implemented and integrated
+dist_agent_lang (DAL) is a domain-specific language for building distributed AI agent systems.
+The runtime is a tree-walking interpreter written in Rust. You run DAL programs with `dal run <file>.dal`.
 
 ---
 
-## 🏗️ **Language Architecture Status**
+## What Works Today
 
-### **✅ Core Components**
-1. **Lexer**: Recognizes all `@` attributes and language tokens
-2. **Parser**: Builds AST with service declarations and attributes
-3. **Runtime**: Executes `dist_agent_lang` code with full feature support
-4. **Standard Library**: Comprehensive library with AI, blockchain, IoT, etc.
+### Core Language
 
-### **✅ Implemented Features**
-1. **Service Declarations**: `@compile_target`, `@trust`, `@chain`, `@interface`
-2. **Multi-Chain Support**: Ethereum, Polygon, Binance, Solana, etc.
-3. **AI Integration**: Agent systems, workflows, predictions
-4. **Interface Generation**: TypeScript, Python, Rust, JavaScript, etc.
-5. **Security Models**: Decentralized, hybrid, centralized trust
-6. **Compilation Targets**: Blockchain, WebAssembly, Native, Mobile, Edge
+- **Lexer and parser** -- full coverage of DAL syntax including `@` attributes, service declarations, spawn expressions, and message passing
+- **Tree-walking interpreter** -- executes DAL files directly via `dal run`
+- **CLI** -- `dal run`, `dal test`, `dal repl`, `dal serve`, `dal convert`
+- **Testing framework** -- built-in test runner with assertions
 
----
+### Standard Library (30+ modules)
 
-## 🔧 **How to Use the Language**
+Includes: `ai`, `agent`, `chain`, `oracle`, `web`, `bridge`, `math`, `string`, `array`, `map`, `io`, `json`, `crypto`, `http`, `time`, `env`, `fs`, `log`, `regex`, `uuid`, `hash`, `base64`, `url`, `net`, `async`, `stream`, `buffer`, `event`, `error`, `config`, and others.
 
-### **1. Create dist_agent_lang Files**
-```rust
-// my_service.dal
-@compile_target("blockchain")
-@trust("decentralized")
-@chain("ethereum")
-@interface("typescript")
+### Agent Framework
 
-service MyDeFiService {
-    field balance: int = 1000;
-    field owner: address;
-    
-    fn transfer(to: address, amount: int) -> string {
-        if amount > balance {
-            return "insufficient_funds";
-        }
-        balance = balance - amount;
-        emit Transfer(owner, to, amount);
-        return "success";
-    }
-    
-    event Transfer(from: address, to: address, amount: int);
-}
-```
+- **Agent spawning** -- `spawn name:ai { ... }` for creating autonomous agents
+- **Message passing** -- `msg agent method(args)` for inter-agent communication
+- **Persistent memory** -- agents store and recall state across sessions
+- **Skills registry** -- agents register, discover, and invoke shared skills
 
-### **2. Execute with Runtime**
-```rust
-use dist_agent_lang::runtime::Runtime;
+### Infrastructure
 
-fn main() {
-    let mut runtime = Runtime::new();
-    
-    let code = std::fs::read_to_string("my_service.dal").unwrap();
-    let result = runtime.execute(&code);
-    
-    match result {
-        Ok(_) => println!("Service executed successfully!"),
-        Err(e) => println!("Error: {:?}", e),
-    }
-}
-```
-
-### **3. Multi-Chain Services**
-```rust
-@compile_target("blockchain")
-@trust("hybrid")
-@chain("ethereum")
-@chain("polygon")
-@chain("binance")
-@interface("typescript")
-@interface("python")
-
-service CrossChainBridge {
-    field bridge_fees: map<string, float>;
-    
-    fn bridge_tokens(from_chain: string, to_chain: string, amount: int) {
-        bridge::transfer(from_chain, to_chain, amount);
-        oracle::verify_bridge_completion(from_chain, to_chain);
-        emit BridgeCompleted(from_chain, to_chain, amount);
-    }
-    
-    event BridgeCompleted(from: string, to: string, amount: int);
-}
-```
-
-### **4. AI-Powered Services**
-```rust
-@compile_target("blockchain")
-@trust("hybrid")
-@ai
-@interface("typescript")
-
-service AITradingBot {
-    field trading_strategy: any;
-    
-    fn initialize() {
-        this.trading_strategy = ai::create_strategy({
-            "type": "momentum",
-            "risk_level": "medium"
-        });
-    }
-    
-    fn analyze_market() {
-        let market_data = oracle::get_price_data("BTC");
-        let analysis = ai::analyze_market_conditions(market_data);
-        
-        if analysis.opportunity_detected {
-            this.execute_trade(analysis.recommendation);
-        }
-    }
-}
-```
+- **HTTP server** -- `dal serve` runs an agent-serving HTTP endpoint
+- **Molds** -- reusable service templates for common patterns
+- **Solidity converter** -- `dal convert` transpiles DAL services to Solidity contracts
 
 ---
 
-## 📚 **Available Features**
+## Experimental / Transpilation Backends
 
-### **🎯 Compilation Targets**
-- `@compile_target("blockchain")` - Deploy to blockchain
-- `@compile_target("wasm")` - Compile to WebAssembly
-- `@compile_target("native")` - Compile to native code
-- `@compile_target("mobile")` - Compile for mobile
-- `@compile_target("edge")` - Compile for edge computing
+These compile targets exist as experimental code-generation backends, not the primary execution path.
 
-### **🔗 Chain Support**
-- `@chain("ethereum")` - Ethereum mainnet
-- `@chain("polygon")` - Polygon network
-- `@chain("binance")` - Binance Smart Chain
-- `@chain("solana")` - Solana network
-- `@chain("avalanche")` - Avalanche network
-- `@chain("arbitrum")` - Arbitrum network
-- `@chain("optimism")` - Optimism network
+| Target | Status | Notes |
+|--------|--------|-------|
+| `blockchain` | Experimental | Generates Solidity via `dal convert` |
+| `wasm` | Experimental | WebAssembly code generation, limited coverage |
+| `native` | Experimental | Stub for native compilation |
+| `mobile` | Experimental | Stub for mobile targets |
+| `edge` | Experimental | Stub for edge deployment |
 
-### **🤖 AI Integration**
-- `@ai` - Enable AI features
-- Agent systems and workflows
-- Machine learning predictions
-- Natural language processing
-- Automated decision making
-
-### **🔒 Security & Trust**
-- `@trust("decentralized")` - Fully decentralized
-- `@trust("hybrid")` - Hybrid trust model
-- `@trust("centralized")` - Centralized trust
-- `@secure` - Enable security features
-- `@audit` - Enable audit features
-
-### **📱 Interface Generation**
-- `@interface("typescript")` - Generate TypeScript interface
-- `@interface("python")` - Generate Python interface
-- `@interface("rust")` - Generate Rust interface
-- `@interface("javascript")` - Generate JavaScript interface
-- `@interface("java")` - Generate Java interface
-- `@interface("go")` - Generate Go interface
+The supported way to run DAL programs is through the interpreter: `dal run`.
 
 ---
 
-## 🚀 **Getting Started**
+## How to Use
 
-### **1. Install the Language**
+### Install and Build
+
 ```bash
 git clone <repository>
 cd dist_agent_lang
-cargo build
+cargo build --release
 ```
 
-### **2. Create Your First Service**
-```rust
-// hello_world.dal
-@compile_target("blockchain")
-@trust("decentralized")
-@chain("ethereum")
+### Write a DAL Program
 
-service HelloWorld {
-    field message: string = "Hello, World!";
-    
+```
+service Greeter {
+    field greeting: string = "Hello";
+
     fn greet(name: string) -> string {
-        return format!("Hello, {}! {}", name, message);
-    }
-    
-    fn update_message(new_message: string) {
-        message = new_message;
-        emit MessageUpdated(new_message);
-    }
-    
-    event MessageUpdated(message: string);
-}
-```
-
-### **3. Run Your Service**
-```rust
-use dist_agent_lang::runtime::Runtime;
-
-fn main() {
-    let mut runtime = Runtime::new();
-    
-    let code = std::fs::read_to_string("hello_world.dal").unwrap();
-    let result = runtime.execute(&code);
-    
-    match result {
-        Ok(_) => println!("✅ Service executed successfully!"),
-        Err(e) => println!("❌ Error: {:?}", e),
+        return greeting + ", " + name + "!";
     }
 }
 ```
 
----
+### Run, Test, Serve
 
-## 🎯 **Production Readiness**
-
-### **✅ Ready for Development**
-- **Core Language**: Fully functional
-- **Runtime**: Stable and performant
-- **Features**: All major features implemented
-- **Documentation**: Comprehensive guides available
-- **Examples**: Extensive example library
-
-### **✅ Ready for Production**
-- **Compilation**: Zero critical errors
-- **Memory Safety**: Rust's memory safety guarantees
-- **Performance**: Optimized for production use
-- **Security**: Built-in security features
-- **Scalability**: Designed for large-scale deployment
-
-### **🔧 Development Workflow**
-1. **Write**: Create `.dal` files with `@` attributes
-2. **Test**: Use the runtime to execute and test
-3. **Deploy**: Compile to target platforms
-4. **Monitor**: Use built-in logging and monitoring
+```bash
+dal run hello.dal
+dal test tests/
+dal serve --port 8080
+```
 
 ---
 
-## 📖 **Next Steps**
+## Known Limitations
 
-### **For Developers**
-1. **Explore Examples**: Study the `examples/` directory
-2. **Build Services**: Create your own services with attributes
-3. **Multi-Chain**: Experiment with cross-chain operations
-4. **AI Integration**: Try AI-powered services
-5. **Interface Generation**: Generate client interfaces
-
-### **For Production**
-1. **Deploy Services**: Use compilation targets for deployment
-2. **Monitor Performance**: Use built-in monitoring
-3. **Scale Applications**: Leverage multi-chain capabilities
-4. **Security Audits**: Use built-in audit features
+- No JIT or AOT compilation -- all execution is interpreted
+- Single-threaded runtime
+- Transpilation backends are experimental, not production-ready
+- Error messages are improving but not yet on par with mature toolchains
+- Small community; limited third-party libraries
 
 ---
 
-## 🎉 **Conclusion**
+## Development Workflow
 
-**The `dist_agent_lang` language is fully ready for coding and development!**
+1. Write `.dal` files using `@` attributes and service declarations
+2. Run and iterate with `dal run` and `dal test`
+3. Use `dal serve` to expose agents over HTTP
+4. Use `dal convert` to generate Solidity when targeting blockchain deployment
 
-- ✅ **Compiles successfully** with zero critical errors
-- ✅ **All features implemented** and functional
-- ✅ **Comprehensive documentation** available
-- ✅ **Production-ready** architecture
-- ✅ **Extensive example library** for learning
+---
 
-**Start coding with `dist_agent_lang` today!** 🚀✨
+## Summary
 
-The `@` attributes are core features that make the language powerful for blockchain development, AI integration, and multi-chain operations. Use them to define how your services behave and interact with different platforms.
+DAL is a working beta-stage language with a functional interpreter, a broad standard library,
+and a focused toolset for AI agent development. It is suitable for prototyping, experimentation,
+and early-stage agent applications. Production use should account for the limitations above.

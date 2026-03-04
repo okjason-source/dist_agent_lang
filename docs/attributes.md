@@ -51,11 +51,11 @@ service MultiChainService {
 Specifies the compilation target for the service.
 
 **Values:**
-- `"blockchain"` - Compile for blockchain deployment
-- `"webassembly"` - Compile to WebAssembly (also accepted: `"wasm"`)
-- `"native"` - Native binary compilation
-- `"mobile"` - Mobile app compilation
-- `"edge"` - Edge computing devices
+- `"blockchain"` - Transpile to Solidity for blockchain deployment
+- `"webassembly"` - Transpile to Rust, build as WebAssembly (also accepted: `"wasm"`) (experimental)
+- `"native"` - Transpile to Rust, build as native library (experimental)
+- `"mobile"` - Mobile target (stub — not yet implemented)
+- `"edge"` - Edge computing target (stub — not yet implemented)
 
 When `@compile_target` is present, the parser enforces **required attributes** and **forbidden operations** for that target. See [Compile targets (constraints)](#compile-targets-constraints) below.
 

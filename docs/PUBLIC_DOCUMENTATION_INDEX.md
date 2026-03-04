@@ -1,633 +1,308 @@
-# DAL (Distributed Agent Language) - Public Documentation Index
+# dist_agent_lang — Documentation index
 
-**Version:** 1.0.5  
-**Last Updated:** 2026-02-18  
-**Optimized for:** Human developers and AI/LLM assistants
+**Version:** 1.0.8 (Beta)
+**Last updated:** 2026-03-03
+**License:** Apache 2.0
 
 ---
 
-## 📋 Quick Navigation
+## Quick navigation
 
-| Section | Description | Target Audience |
+| Section | Description | Start here if... |
 |---------|-------------|-----------------|
-| [Getting Started](#getting-started) | Installation, first program | New users, AI assistants |
-| [Language Reference](#language-reference) | Syntax, types, operators | All developers, LLMs |
-| [Standard Library](#standard-library-stdlib) | All stdlib modules | Developers, AI code generation |
-| [Package Management](#package-management) | Installing, dependencies | Developers, DevOps |
-| [CLI Reference](#cli-reference) | Command-line tools | Developers, automation |
-| [IDE and Agent Integration](#ide-and-agent-integration) | LSP setup, editor extension, agent tools | Editors, agent integrators |
-| [Examples](#examples) | Code samples | Learning, AI training data |
-| [API Reference](#api-reference) | Programmatic access | Integrations, tools |
+| [Getting started](#getting-started) | Install, first program, first agent | You're new to DAL |
+| [Agent development](#agent-development) | Agent setup, skills, persistent memory, molds | You're building agents |
+| [Language reference](#language-reference) | Syntax, types, attributes | You need syntax details |
+| [Standard library](#standard-library) | All 30 stdlib modules | You need API docs |
+| [CLI reference](#cli-reference) | All commands | You need CLI help |
+| [Blockchain and hybrid](#blockchain-and-hybrid-trust) | Multi-chain, trust models, security | You're integrating blockchain |
+| [IDE and agent integration](#ide-and-agent-integration) | LSP, editor setup, agent tools | You're setting up an editor |
+| [Examples](#examples) | Code samples and tutorials | You learn by example |
 
 ---
 
-## 🚀 Getting Started
+## Getting started
 
 ### Installation
 
-**Quick Install - Github Releases - (Recommended):**
+```bash
+# From Cargo (recommended)
+cargo install --git https://github.com/okjason-source/dist_agent_lang.git dist_agent_lang --bin dal
 
-### Your First DAL Program
+# From source
+git clone https://github.com/okjason-source/dist_agent_lang.git
+cd dist_agent_lang && cargo build --release
 
-**hello.dal:**
+# From binary
+# Download from GitHub Releases: https://github.com/okjason-source/dist_agent_lang/releases/latest
+```
+
+**Requirements:** Rust 1.70+ ([Install Rust](https://rustup.rs/))
+
+### First program
+
 ```dal
-function main() {
-    log::info("Hello, DAL!");
+@trust("hybrid")
+service HelloWorld {
+    fn main() {
+        print("Hello, dist_agent_lang!");
+    }
 }
 ```
 
-**Run it:**
 ```bash
 dal run hello.dal
 ```
 
-**Output:**
+### First agent
+
+```bash
+mkdir my-agent && cd my-agent
+dal init agent
+dal agent serve
+# Agent running at http://localhost:4040
 ```
-🚀 Running dist_agent_lang file: hello.dal
-✅ Tokenization successful! Generated 10 tokens
-✅ Parsing successful! Generated 1 statements
-[INFO] "Hello, DAL!"
-✅ Execution successful!
-```
+
+**Guides:**
+- [Quick Start](guides/QUICK_START.md) — Up and running in 5 minutes
+- [Agent Setup and Usage](guides/AGENT_SETUP_AND_USAGE.md) — Complete agent development guide
 
 ---
 
-## 📚 Language Reference
+## Agent development
 
-### Core Concepts
+DAL is agent-first. Agents are native language constructs with lifecycle operations (spawn, coordinate, communicate, evolve), persistent memory, composable skills, and HTTP serving.
 
-**DAL is:**
-- **Multi-paradigm:** Services, functions, imperative
-- **Strongly-typed:** Type safety at runtime
-- **Blockchain-native:** Built-in chain, crypto, auth
-- **AI-first:** Native agent and AI support
-- **Web-friendly:** HTTP, templates, middleware
+| Guide | What it covers |
+|-------|---------------|
+| [Agent Setup and Usage](guides/AGENT_SETUP_AND_USAGE.md) | Project setup, CLI, HTTP server, DAL APIs, molds, evolve context |
+| [Skills and Registry](guides/SKILLS_AND_REGISTRY.md) | Built-in and custom skills, `.skill.dal` format, programmatic encouragement, runtime registration |
+| [Persistent Agent Memory](guides/PERSISTENT_AGENT_MEMORY.md) | Runtime persistence, backends (file/SQLite), configuration, schema versioning |
+| [Agent Capabilities](AGENT_CAPABILITIES.md) | Capability definition, validation, and per-type/per-agent configuration |
+| [Mold Format](MOLD_FORMAT.md) | `.mold.dal` syntax, lifecycle hooks, principal vs mold trust |
+| [Comprehensive Agent Plans](COMPREHENSIVE_AGENT_AND_MOLD_PLANS.md) | Agent reasoning, fleet, mold config, off-chain implementation |
 
-### File: [docs/syntax.md](./syntax.md)
+### Key concepts
 
----
-
-## 🔌 IDE and Agent Integration
-
-**➡️ [IDE and Agent Integration (IDE_AND_AGENT_INTEGRATION.md)](./IDE_AND_AGENT_INTEGRATION.md)**
-
-- **LSP:** How to build DAL with `--features lsp` and configure the language server in VS Code/Cursor (extension or manual).
-- **Editor agents:** Recommended tool schema (OpenAI-style JSON) for `dal_check`, `dal_run`, `dal_ai_code`, `dal_ai_explain`, `dal_build_blockchain`.
-- **DAL assistant plan:** [Agents as DAL Assistants (AGENT_ASSISTANT_PLAN.md)](./AGENT_ASSISTANT_PLAN.md) — skills, molds, code-editor/app-builder tools, DAL as toolchain.
-- **Documentation context:** Pointers to this index, syntax, and STDLIB for agent context.
+- **Agent types**: `ai`, `system`, `worker`, `custom:<name>`
+- **Skills**: Named bundles of capabilities (tools + description). Built-in categories: development, creative, office, home. Users define custom skills in `.skill.dal` files.
+- **Molds**: Reusable agent configurations (`.mold.dal`). User-built, user-owned. Future licensing via on-chain smart registry.
+- **Persistent memory**: Agent state (memory, tasks, messages, evolution, skills) persists across restarts. On by default.
+- **Evolve**: File-based conversation and action history. Loaded into the agent prompt each turn.
 
 ---
 
-## 📦 Package Management
+## Language reference
 
-**➡️ [Packaging & Distribution Guide (PACKAGING.md)](./PACKAGING.md)**
+### Core concepts
 
-**➡️ [DAL Venv — User Guide (VENV.md)](./VENV.md)** — Named execution environments with a fixed project root, dependency set, and security profile. Create venvs with `dal venv create`, run scripts with `dal venv run <name> <script.dal>`. Use **strict** profile for CI or untrusted code.
+DAL is a multi-paradigm, dynamically-typed language hosted in a Rust interpreter. Programs are executed with `dal run`.
 
-Learn about:
-- Installation methods (curl, direct download, package managers)
-- Updates and versioning
-- System requirements
-- Configuration
-- Troubleshooting
+- **Services**: Stateful constructs with attributes (`@trust`, `@chain`, `@secure`, `@txn`, `@limit`)
+- **Functions**: Named, closures, async
+- **Types**: int, float, string, bool, null, list, map, set, struct, result, option, closure
+- **Error handling**: try-catch-finally, Result types
+- **Modules**: import/export, stdlib namespaces
+
+### Files
+
+- [Syntax Reference](syntax.md) — Complete grammar and syntax
+- [Attributes Reference](attributes.md) — Service and function attributes
+- [Documentation.md](Documentation.md) — Architecture, type system, and internals
 
 ---
 
-## 📦 Standard Library (stdlib)
+## Standard library
 
-### Overview
+30 modules covering agents, AI, blockchain, data, web, IoT, security, and administration.
 
-DAL's standard library provides built-in functionality across multiple domains:
-
-| Module | Purpose | Key Functions |
+| Module | Purpose | Key functions |
 |--------|---------|---------------|
-| **chain** | Blockchain operations | `deploy()`, `call()`, `get_balance()` |
+| **agent** | Agent lifecycle | `spawn()`, `coordinate()`, `communicate()`, `evolve()` |
+| **ai** | AI/ML operations | `generate_text()`, `classify()`, `embed()`, `analyze_text()` |
+| **chain** | Blockchain | `deploy()`, `call()`, `get_balance()`, `transfer()` |
 | **crypto** | Cryptography | `hash()`, `sign()`, `verify()`, `encrypt()` |
 | **auth** | Authentication | `create_user()`, `login()`, `validate_token()` |
-| **db** | Database operations | `query()`, `connect()`, `migrate()` |
-| **ai** | AI/ML operations | `generate_text()`, `classify()`, `embed()` |
-| **agent** | Agent orchestration | `create()`, `coordinate()`, `communicate()` |
-| **iot** | IoT device management | `connect_device()`, `read_sensor()` |
-| **oracle** | Oracle data feeds | `fetch()`, `stream()`, `verify()` |
-| **web** | HTTP operations | `get_request()`, `post_request()` |
+| **database** | Database ops | `query()`, `connect()`, `migrate()` |
+| **evolve** | Context management | `load()`, `append_conversation()`, `append_log()` |
+| **mold** | Agent molds | `load()`, `spawn_from()`, `list()` |
+| **trust** | Trust models | `validate_hybrid_trust()`, `authorize()` |
+| **oracle** | Data feeds | `fetch()`, `stream()`, `verify()` |
+| **web** | HTTP | `get_request()`, `post_request()` |
 | **log** | Logging | `info()`, `warn()`, `error()` |
+| **cloudadmin** | Cloud admin | `authorize()`, `grant()`, `audit_log()` |
+| **iot** | IoT devices | `connect_device()`, `read_sensor()` |
+| **mobile** | Mobile integration | Platform-specific APIs |
+| **desktop** | Desktop integration | System-level APIs |
 | **config** | Configuration | `get_env()`, `get_database_config()` |
-| **cloudadmin** | Cloud management | `authorize()`, `grant()`, `audit_log()` |
-| **trust** | Trust & permissions | `validate_hybrid_trust()`, `authorize()` |
 | **aml** | Anti-money laundering | `perform_check()`, `get_status()` |
 | **kyc** | Know Your Customer | `verify()`, `get_verification()` |
-| **mold** | Agent molds & templates | `load()`, `spawn_from()`, `list()`, `get_info()`, `use_mold()` |
+| **sh** | Shell execution | `run()` with trust controls |
 
-### Detailed References
+**Full reference:** [STDLIB_REFERENCE.md](STDLIB_REFERENCE.md) — Machine-readable with complete signatures, parameters, return types, and examples.
 
-**📘 [Complete Standard Library Reference (STDLIB_REFERENCE.md)](./STDLIB_REFERENCE.md)**
-
-This comprehensive, machine-readable reference includes:
-- All stdlib modules with complete function signatures
-- Parameter types and return types
-- Usage examples for every function
-- Error handling patterns
-- Best practices for AI code generation
-
-**Individual Module Guides:**
-- [Chain Module](./guides/API_REFERENCE.md#chain-module)
-- [Crypto Module](./guides/API_REFERENCE.md#crypto-module)
-- [Auth Module](./guides/API_REFERENCE.md#auth-module)
-- [Agent Module](./guides/API_REFERENCE.md#agent-module)
-- [AI Module](./guides/AI_FEATURES_GUIDE.md)
-- [CloudAdmin Module](./guides/CLOUDADMIN_GUIDE.md)
-- [Mold Module](./STDLIB_REFERENCE.md#mold-module)
+**Module guides:**
+- [API Reference](guides/API_REFERENCE.md) — Grouped by module
+- [AI Features Guide](guides/AI_FEATURES_GUIDE.md) — AI module details
+- [CloudAdmin Guide](guides/CLOUDADMIN_GUIDE.md) — Hybrid trust and admin control
 
 ---
 
-## 🎯 Package Management
+## CLI reference
 
-### Binary Distribution
-
-**Current Model:**
-- DAL is distributed as compiled binaries
-- Includes full standard library
-- No source code access (proprietary)
-
-### Installing DAL
-
-**System Requirements:**
-- Linux: x86_64, kernel 3.2+
-- macOS: 10.15+ (Catalina or later)
-- Windows: Windows 10+ (64-bit)
-
-**Install Locations:**
-```
-Linux/macOS:
-/usr/local/bin/dal              # Binary executable
-/usr/local/lib/dal/             # Runtime libraries
-/usr/local/share/dal/docs/      # Documentation
-
-Windows:
-C:\Program Files\DAL\dal.exe
-C:\Program Files\DAL\lib\
-C:\Program Files\DAL\docs\
-```
-
-### Updating DAL
-
-```bash
-# Check for updates
-dal version --check
-
-# Update to latest version
-dal upgrade
-
-# Update to specific version
-dal upgrade --version 1.0.5
-```
+| Command | Description |
+|---------|-------------|
+| `dal run <file>` | Execute a DAL file |
+| `dal agent serve` | Start agent HTTP server |
+| `dal agent create <type> <name>` | Create an agent |
+| `dal agent chat [name]` | Interactive agent chat |
+| `dal agent send <from> <to> "<msg>"` | Send message between agents |
+| `dal agent task assign <id> "<desc>"` | Assign task to agent |
+| `dal agent mold list` | List local molds |
+| `dal init agent` | Initialize agent project |
+| `dal check <file>` | Syntax check |
+| `dal fmt <file>` | Format code |
+| `dal lint <file>` | Lint code |
+| `dal test` | Run tests |
+| `dal parse <file>` | Show AST |
+| `dal repl` | Interactive REPL |
+| `dal watch <file>` | Watch for changes |
+| `dal new <name>` | Create new project |
+| `dal convert <file>` | Solidity to DAL |
 
 ---
 
-## 🔧 CLI Reference
+## Blockchain and hybrid trust
 
-### Core Commands
+DAL provides multi-chain blockchain integration through its trust model and chain module.
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `run <file>` | Execute DAL file | `dal run app.dal` |
-| `parse <file>` | Parse and validate | `dal parse app.dal` |
-| `test <file>` | Run tests | `dal test app.test.dal` |
-| `web <file>` | Run web app | `dal web server.dal` |
-| `convert <file>` | Solidity to DAL | `dal convert Token.sol` |
-| `analyze <file>` | Analyze Solidity | `dal analyze Token.sol` |
-| `help` | Show help | `dal help` |
-| `version` | Show version | `dal version` |
+| Guide | What it covers |
+|-------|---------------|
+| [Hybrid Integration Guide](guides/HYBRID_INTEGRATION_GUIDE.md) | On-chain/off-chain patterns, trust model, sync, security |
+| [AI Best Practices](guides/AI_BEST_PRACTICES.md) | Security and optimization for AI + blockchain |
+| [Architecture Separation](guides/ARCHITECTURE_SEPARATION.md) | Separating DAL contracts from frontend |
 
-### Planned Commands (Future)
+**Supported chains:** Ethereum, Polygon, Solana, Arbitrum (and others via chain module).
 
-See [CLI Expansion Plan](./development/stdlib_implementation_plans/09_CLI_EXPANSION_PLAN.md) for upcoming features:
-- `dal fmt` - Code formatting
-- `dal lint` - Code linting
-- `dal new` - Project scaffolding
-- `dal agent create` - Agent creation
-- `dal cloud` - Cloud management
-- And many more...
+**Trust levels:**
+- `@trust("decentralized")` — On-chain only
+- `@trust("hybrid")` — On-chain + off-chain
+- `@trust("centralized")` — Off-chain only
 
 ---
 
-## 🤖 Templates & Marketplace
+## IDE and agent integration
 
-### Agent Templates
+- [IDE and Agent Integration](IDE_AND_AGENT_INTEGRATION.md) — LSP setup, editor agents, tool schema
+- [DAL Assistant Plan](AGENT_ASSISTANT_PLAN.md) — How agents work as DAL assistants: skills, molds, code-editor tools
 
-Reusable configurations for AI agents that can be shared, sold, and instantiated at scale.
+**File extensions:**
+- `.dal` — Source files
+- `.test.dal` — Test files
+- `.mold.dal` — Mold definitions
+- `.skill.dal` — Skill definitions
 
-**Example:**
-```bash
-# Install template from marketplace
-dal agent template install username/fraud_detector
-
-# Create agent from template
-dal agent create --template username/fraud_detector my_detector
-
-# Create fleet from template
-dal agent fleet create --template username/fraud_detector fraud_team --agents 50
-```
-
-**See:** [Agent Template Marketplace Guide](../dist_agent_lang/docs/development/AGENT_TEMPLATE_MARKETPLACE.md)
+**Syntax highlighting:** Use Rust syntax as a base. DAL-specific keywords: `service`, `@chain`, `@trust`, `@ai`, `@secure`, `@txn`.
 
 ---
 
-## 💡 Examples
+## Examples
 
-### Complete Examples
+### In the repo
 
-1. **[DeFi Token](./tutorials/01_defi_token.md)**
-   - ERC20-compatible token
-   - Minting, burning, transfers
-   - Blockchain integration
+27+ example programs in the [examples/](../examples/) directory:
 
-2. **[AI Trading Agent](./tutorials/02_ai_trading_agent.md)**
-   - AI-powered trading
-   - Market analysis
-   - Risk management
+- `01_hello_world.dal` — Basic language features
+- `02_nft_marketplace.dal` — Blockchain operations and attributes
+- `03_trading_bot.dal` — Async and agent system
+- `04_error_handling.dal` — Error management patterns
 
-3. **[Hybrid Marketplace](./tutorials/03_hybrid_marketplace_cloudadmin.md)**
-   - Centralized + decentralized
-   - Cloud admin integration
-   - Payment processing
+### Tutorials
 
-### Code Snippets Library
+- [DeFi Token](tutorials/01_defi_token.md)
+- [AI Trading Agent](tutorials/02_ai_trading_agent.md)
+- [Hybrid Marketplace](tutorials/03_hybrid_marketplace_cloudadmin.md)
 
-**Blockchain Operations:**
+### Quick snippets
+
+**Agent with persistent memory and skills:**
 ```dal
+let agent_id = agent::spawn({
+    "name": "office-bot",
+    "type": "ai",
+    "role": "Office assistant with calendar and email skills"
+});
+agent::set_serve_agent(agent_id);
+```
+
+**Blockchain operation:**
+```dal
+@trust("hybrid")
 @chain("ethereum")
 service Token {
-    function deploy() {
+    fn deploy() {
         let result = chain::deploy("MyToken", "{}");
         log::info("Deployed: " + result.address);
     }
 }
 ```
 
-**AI Agent Creation:**
+**Agent coordination:**
 ```dal
-import stdlib::agent;
-
-function create_fraud_detector() {
-    let config = {
-        "name": "FraudDetector",
-        "type": "ai",
-        "role": "Detect fraudulent transactions"
-    };
-    
-    let agent_ctx = agent::spawn(config);
-    log::info("Agent created: " + agent_ctx.agent_id);
-}
-```
-
-**Database Query:**
-```dal
-import stdlib::db;
-
-function get_users() {
-    let conn = db::connect("postgresql://localhost/mydb");
-    let result = db::query(conn, "SELECT * FROM users");
-    return result;
-}
-```
-
-**Cloud Admin:**
-```dal
-import stdlib::cloudadmin;
-
-function check_access() {
-    let authorized = cloudadmin::authorize("user_123", "write", "resource_456");
-    if !authorized {
-        log::error("Access denied");
-    }
-}
+let task = agent::create_task("Process batch 42", "high");
+agent::coordinate(agent_id, task, "task_distribution");
 ```
 
 ---
 
-## 🔌 API Reference
+## Package management
 
-### For AI/LLM Assistants
-
-**When generating DAL code, reference:**
-
-1. **Syntax:** [docs/syntax.md](./syntax.md)
-2. **Attributes:** [docs/attributes.md](./attributes.md)
-3. **Stdlib API:** [docs/guides/API_REFERENCE.md](./guides/API_REFERENCE.md)
-4. **Best Practices:** [docs/guides/BEST_PRACTICES.md](./guides/BEST_PRACTICES.md)
-5. **Examples:** [docs/examples/](../examples/)
-
-### Common Patterns
-
-**Service Definition:**
-```dal
-@trust("hybrid")
-@chain("ethereum")
-service MyService {
-    var state: String = "initial";
-    
-    function initialize() {
-        state = "ready";
-    }
-    
-    function process(data: String) -> String {
-        return "Processed: " + data;
-    }
-}
-```
-
-**Error Handling:**
-```dal
-function safe_operation() {
-    try {
-        let result = risky_function();
-        log::info("Success");
-    } catch error {
-        log::error("Failed: " + error);
-    } finally {
-        cleanup();
-    }
-}
-```
-
-**Agent Communication:**
-```dal
-function coordinate_agents() {
-    let agent1 = agent::create("ai", "Analyzer");
-    let agent2 = agent::create("worker", "Processor");
-    
-    agent::communicate(agent1.agent_id, agent2.agent_id, {
-        "message_type": "task",
-        "content": "Process batch 42"
-    });
-}
-```
+- [Packaging and Distribution](PACKAGING.md) — Install methods, versioning, configuration
+- [DAL Venv](VENV.md) — Named execution environments with security profiles
 
 ---
 
-## 📖 Comprehensive Documentation Links
+## Project status
 
-### For Humans
+**Current:** Beta (v1.0.8). Actively maintained with consistent updates.
 
-- [Quick Start Guide](./guides/QUICK_START.md)
-- [Installation Guide](./getting_started/INSTALLATION.md)
-- [Usage Guide](./USAGE_GUIDE.md)
-- [Best Practices](./guides/BEST_PRACTICES.md)
-- [Deployment Guide](./guides/DEPLOYMENT_GUIDE.md)
+| What works | Status |
+|-----------|--------|
+| Interpreter runtime (`dal run`) | Stable |
+| Agent framework (spawn, serve, persist, skills) | Stable |
+| 30-module stdlib | Stable |
+| CLI toolchain | Stable |
+| Mold system | Stable |
+| HTTP agent server | Stable |
+| Solidity converter | Stable |
+| Testing framework | Stable |
+| Blockchain transpilation | Experimental |
+| WASM/native compile targets | Experimental |
 
-### For AI/LLM Tools
-
-**When assisting with DAL development:**
-
-1. **Language Syntax:** Parse [syntax.md](./syntax.md) for grammar rules
-2. **Type System:** Reference [attributes.md](./attributes.md) for types
-3. **Stdlib Functions:** Index [API_REFERENCE.md](./guides/API_REFERENCE.md)
-4. **Code Examples:** Learn from [examples/](../examples/) directory
-5. **Common Patterns:** Extract from [tutorials/](./tutorials/)
-
-**Optimization Hints:**
-- DAL is blockchain-native: Prefer `chain::` functions over manual HTTP
-- Services are stateful: Use `var` for mutable state
-- Agent orchestration: Use `agent::` module for multi-agent systems
-- Trust models: Always specify `@trust` attribute for services
+For the roadmap, see [Language Vision](guides/GENERAL_PURPOSE_LANGUAGE_ANALYSIS.md) and [Beta Release Summary](guides/BETA_RELEASE_SUMMARY.md).
 
 ---
 
-## 🛠 Development Resources
-
-### GitHub Repositories
-
-- **Main Repository:** (Private - contact for access)
-- **Examples:** https://github.com/dist_agent_lang/examples
-- **Templates:** https://github.com/dist_agent_lang/templates
-- **Documentation:** https://github.com/dist_agent_lang/docs
-
-
-### Support
-
-- **Enterprise Support:** 
-- **Training:** 
-- **Consulting:** 
-
-jason.dinh.developer@gmail.com
-
----
-
-## 🔍 AI/LLM Integration Guide
-
-### For Code Assistants (GitHub Copilot, Cursor, etc.)
-
-**DAL File Extensions:**
-- `.dal` - Standard DAL source files
-- `.test.dal` - Test files
-
-**Syntax Highlighting:**
-- Use Rust syntax as base (similar structure)
-- Add DAL-specific keywords: `service`, `@chain`, `@trust`, `@ai`
-
-**Code Generation Tips:**
-
-1. **Always import stdlib modules:**
-   ```dal
-   import stdlib::chain;
-   import stdlib::agent;
-   ```
-
-2. **Use attributes for services:**
-   ```dal
-   @trust("hybrid")
-   @chain("ethereum")
-   service MyService { }
-   ```
-
-3. **Leverage built-in functions:**
-   - Don't reinvent crypto: use `crypto::hash()`
-   - Don't write HTTP clients: use `web::get_request()`
-   - Don't implement auth: use `auth::create_user()`
-
-4. **Agent orchestration patterns:**
-   ```dal
-   // Create → Configure → Communicate → Coordinate
-   let agent = agent::create("ai", "name");
-   let task = agent::create_agent_task("task_1", "description", "high");
-   agent::coordinate(agent.agent_id, task, "task_distribution");
-   ```
-
-### For Documentation Tools
-
-**Indexed Sections:**
-- Language: [syntax.md](./syntax.md)
-- Standard Library: [API_REFERENCE.md](./guides/API_REFERENCE.md)
-- Tutorials: [tutorials/](./tutorials/)
-- Examples: [examples/](../examples/)
-- CLI: [CLI_EXPANSION_PLAN.md](./development/stdlib_implementation_plans/09_CLI_EXPANSION_PLAN.md)
-
-**Machine-Readable Format:**
-- All stdlib functions documented with signatures
-- Type information included
-- Return types specified
-- Error conditions listed
-
----
-
-## 📊 Version History
+## Version history
 
 | Version | Date | Highlights |
-|---------|------|------------|
-| **1.0.5** | 2026-02-08 | Mutation testing hardening, HTTP middleware tests, version bump |
-| **1.0.3** | 2026-02-06 | mold:: stdlib, agent molds, CLI mold commands |
-| **1.0.2** | 2026-01-15 | CloudAdmin module, improved stdlib |
-| **1.0.1** | 2025-12-01 | Bug fixes, performance improvements |
-| **1.0.0** | 2025-11-01 | Initial release |
+|---------|------|-----------|
+| 1.0.8 | 2026-03 | Persistent agent memory, extensible skills registry, documentation overhaul |
+| 1.0.5 | 2026-02 | Mutation testing hardening, HTTP middleware tests |
+| 1.0.3 | 2026-02 | mold:: stdlib, agent molds, CLI mold commands |
+| 1.0.2 | 2026-01 | CloudAdmin module, improved stdlib |
+| 1.0.0 | 2025-11 | Initial release |
 
 ---
 
-## 🚦 Status & Roadmap
+## License
 
-### Current Status
-
-✅ **Production Ready:**
-- Core runtime
-- Basic stdlib (chain, crypto, auth, db)
-- CLI tools (run, parse, test, web)
-- Solidity conversion
-
-🚧 **In Development:**
-- Agent development contracts
-- Advanced CLI commands
-- Plugin system
-- LSP support
-
-📋 **Planned:**
-- Cloud-native deployment
-- Advanced AI integrations
-- Enterprise features
-- Mobile runtime
-
-### Release Schedule
-
-- **1.1.0** (Q2 2026) - Agent marketplace, CLI expansion
-- **1.2.0** (Q3 2026) - Plugin system, LSP
-- **2.0.0** (Q4 2026) - Major stdlib expansion, enterprise features
+**Apache License 2.0** — see [LICENSE](../LICENSE).
 
 ---
 
-## ⚖️ License & Usage
+## Contact and community
 
-### Language License
-
-**DAL Runtime:** Proprietary
-- Binary distribution only
-- No source code access
-- Commercial use allowed with license
-
-**Documentation:** CC BY 4.0
-- Free to read and share
-- Attribution required
-- Can be used for AI training
-
-### Usage Terms
-
-**You can:**
-- ✅ Use DAL for commercial projects
-- ✅ Deploy DAL applications to production
-- ✅ Generate revenue from DAL-powered services
-- ✅ Use documentation for learning
-- ✅ Train AI models on public documentation
-
-**You cannot:**
-- ❌ Redistribute DAL binaries without license
-- ❌ Reverse engineer the runtime
-- ❌ Remove attribution from documentation
-- ❌ Create competing languages from DAL
-
-### Mold System
-
-Agent configurations in the marketplace can have individual licenses (MIT, Apache, Commercial, etc.)built purposefully on chain.
-
----
-
-## 📞 Support & Contact
-
-### Free Support
-
-- **Documentation:** https://docs.dist_agent_lang.org
-- **Community Forum:** https://forum.dist_agent_lang.org
-- **GitHub Issues:** https://github.com/dist_agent_lang/issues
-- **Stack Overflow:** Tag `dal` or `dist-agent-lang`
-
-### Paid Support
-
-- **Professional:** $99/month - Email support, 48h response
-- **Enterprise:** $999/month - Priority support, SLA, dedicated engineer
-- **Contact:** support@dist_agent_lang.org
-
----
-
-## 🎓 Training & Certification
-
-### Self-Paced Learning
-
-- **Free Courses:** https://learn.dist_agent_lang.org
-- **Video Tutorials:** https://youtube.com/dist-agent-lang
-- **Interactive Playground:** https://play.dist_agent_lang.org
-
-### Professional Training
-
-- **DAL Fundamentals:** 2-day workshop, $15,000
-- **Advanced DAL Development:** 3-day workshop, $25,000
-- **Enterprise Deployment:** Custom, contact for requests
-
----
-
-**Document Version:** 1.0  
-**Maintained by:** DAL Language Team  
-**Contributions:** Welcome via GitHub  
-**Last Review:** 2026-02-05
-
----
-
-## 🔖 Quick Reference Card
-
-```
-# Installation
-curl -sSf https://dist_agent_lang.org/install.sh | sh
-
-# Hello World
-echo 'function main() { log::info("Hello!"); }' > hello.dal
-dal run hello.dal
-
-# Create service
-@chain("ethereum")
-service MyContract {
-    function deploy() { chain::deploy("MyContract", "{}"); }
-}
-
-# Run tests
-dal test myapp.test.dal
-
-# Get help
-dal help
-dal help run
-
-# Version
-dal version
-```
-
----
-
-**For AI/LLM Assistants:**
-
-This documentation is optimized for machine parsing and code generation. When assisting with DAL development:
-
-1. Reference stdlib modules by their exact names (chain, crypto, agent, database, web, etc.)
-2. Follow attribute syntax precisely (@trust, @chain, @ai, @transaction, @secure)
-3. Use type annotations where specified
-4. Leverage built-in functions before implementing custom logic
-5. Consider agent orchestration for multi-step workflows
-6. Always handle errors with try-catch-finally
-7. Use services for stateful components
-8. Reference examples for common patterns
-
-**Last Updated:** 2026-02-18
+- **GitHub:** [okjason-source/dist_agent_lang](https://github.com/okjason-source/dist_agent_lang)
+- **Discord:** [discord.gg/tu7tg9eN](https://discord.gg/tu7tg9eN)
+- **Email:** jason.dinh.developer@gmail.com

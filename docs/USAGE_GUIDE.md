@@ -38,11 +38,11 @@ service DeFiService {
 
 #### **Compilation Targets**
 ```rust
-@compile_target("blockchain")    // Deploy to blockchain
-@compile_target("wasm")          // Compile to WebAssembly
-@compile_target("native")        // Compile to native code
-@compile_target("mobile")        // Compile for mobile
-@compile_target("edge")          // Compile for edge computing
+@compile_target("blockchain")    // Transpile to Solidity for blockchain deployment
+@compile_target("wasm")          // Transpile to Rust and build as WebAssembly (experimental)
+@compile_target("native")        // Transpile to Rust and build as native library (experimental)
+@compile_target("mobile")        // Mobile target (stub — not yet implemented)
+@compile_target("edge")          // Edge target (stub — not yet implemented)
 ```
 
 #### **Trust Models**

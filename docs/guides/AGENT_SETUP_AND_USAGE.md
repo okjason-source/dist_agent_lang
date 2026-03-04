@@ -14,8 +14,10 @@ This guide describes how to set up and use agents in dist_agent_lang: project se
 6. [DAL: agent and evolve APIs](#6-dal-agent-and-evolve-apis)
 7. [Molds](#7-molds)
 8. [Shell trust and evolve context](#8-shell-trust-and-evolve-context)
-9. [Capabilities and types](#9-capabilities-and-types)
-10. [References](#10-references)
+9. [Persistent memory](#9-persistent-memory)
+10. [Skills and registry](#10-skills-and-registry)
+11. [Capabilities and types](#11-capabilities-and-types)
+12. [References](#12-references)
 
 ---
 
@@ -379,7 +381,115 @@ If key-based gating is used and the check denies, config falls back to `[agent.s
 
 ---
 
-## 9. Capabilities and types
+## 9. Persistent memory
+
+Agent runtime state persists across restarts by default. No configuration is required — when you run `dal agent serve`, the runtime automatically saves and restores agent memory, tasks, messages, evolution data, and registered skills.
+
+### What persists
+
+- **Agent contexts**: Key-value memory, config, tasks, messages, metrics, lifecycle hooks
+- **Task queue**: Pending tasks across all agents
+- **Message bus**: Undelivered messages
+- **Evolution store**: Per-agent evolution data
+- **Registered skills**: Skills registered at runtime (not built-ins, which are always loaded)
+- **Serve agent ID**: Which agent is served over HTTP
+
+### Backends
+
+| Backend | Default? | Config | Notes |
+|---------|----------|--------|-------|
+| **File** (JSON) | Yes | `DAL_AGENT_RUNTIME_PATH=./agent_runtime.json` | Atomic writes, human-readable |
+| **SQLite** | No | `DAL_AGENT_RUNTIME_BACKEND=sqlite` | WAL mode, higher throughput, requires `sqlite-storage` feature |
+| **Disabled** | No | `DAL_AGENT_RUNTIME_PERSIST=0` | In-memory only, state lost on exit |
+
+### Configuration
+
+Set via environment variables or `agent.toml` / `dal.toml`:
+
+```bash
+# Environment variables
+DAL_AGENT_RUNTIME_PERSIST=1          # 1 (default) or 0
+DAL_AGENT_RUNTIME_BACKEND=file       # file (default) or sqlite
+DAL_AGENT_RUNTIME_PATH=./my_state.json  # Custom path
+```
+
+```toml
+# agent.toml
+[agent.persistence]
+enabled = true
+backend = "file"
+path = "./agent_runtime.json"
+```
+
+### Behavior
+
+- On first access (e.g. `dal agent serve`), the runtime checks for a saved snapshot and restores state.
+- After every state-mutating operation (spawn, coordinate, communicate, evolve, register skills), the runtime writes the snapshot.
+- Queues are capped at 10,000 entries per type to prevent unbounded growth.
+- Schema versioning (`version` field) enables forward-compatible migrations.
+
+For full details, see [Persistent Agent Memory](PERSISTENT_AGENT_MEMORY.md).
+
+---
+
+## 10. Skills and registry
+
+Skills define what an agent can do. Each skill is a named bundle of tools and a description that gets included in the agent prompt at serve time.
+
+### Built-in skills
+
+Four categories ship with every DAL install:
+
+| Category | Skill name | Tools |
+|----------|-----------|-------|
+| Development | `development` | read, write, search, run, lint, test, debug |
+| Creative | `creative` | read, write, search, generate, transform |
+| Office | `office` | read, write, search, run, schedule, email |
+| Home | `home` | read, search, run, control, monitor |
+
+### User-defined skills
+
+Create `.skill.dal` files in your project's `.dal/` directory (or set `DAL_SKILLS_PATH`):
+
+```
+// .dal/calendar.skill.dal
+skill "my_calendar" {
+  category "office"
+  description "Manage my custom calendar app via CLI and API calls."
+  tools "run" "search" "read" "write"
+}
+```
+
+Skills are loaded at startup and included in the agent prompt when the agent's config references them by name.
+
+### Runtime skill registration
+
+From DAL or Rust, register skills programmatically:
+
+```dal
+let skills = [{
+    "name": "data_pipeline",
+    "category": "development",
+    "description": "Run ETL pipelines and data transformations.",
+    "tools": ["run", "read", "write", "search"]
+}];
+agent::register_runtime_skills(skills);
+```
+
+Runtime-registered skills persist across restarts (stored in the agent runtime snapshot).
+
+### Programmatic encouragement
+
+The skills system includes built-in guidance that helps agents discover and use tools effectively:
+
+- **Encouragement block**: Always included in the prompt — reminds the agent to search for tools, try commands, and learn from results.
+- **Meta-from-memory**: If the agent's evolve history shows past tool usage (e.g. searching, running commands), the prompt includes reinforcement ("You have successfully used search before...").
+
+For full details, see [Skills and Registry](SKILLS_AND_REGISTRY.md).
+
+---
+
+## 11. Capabilities and types
 
 Agent **types**: `ai`, `system`, `worker`, `custom:<name>`.
 
@@ -389,9 +499,12 @@ For how capabilities are defined, set, and validated, see [AGENT_CAPABILITIES.md
 
 ---
 
-## 10. References
+## 12. References
 
+- [Persistent Agent Memory](PERSISTENT_AGENT_MEMORY.md) — Runtime persistence, backends, configuration, schema versioning.
+- [Skills and Registry](SKILLS_AND_REGISTRY.md) — Custom skills, `.skill.dal` format, programmatic encouragement, runtime registration.
 - [AGENT_CAPABILITIES.md](../AGENT_CAPABILITIES.md) — How capabilities are defined, set, and validated.
+- [MOLD_FORMAT.md](../MOLD_FORMAT.md) — Canonical `.mold.dal` syntax and lifecycle hooks.
 - [API_REFERENCE.md](API_REFERENCE.md) — Full stdlib reference (agent, ai, mold, etc.).
 - [CLI_DESIGN.md](CLI_DESIGN.md) — CLI structure and init templates.
 - [AI_FEATURES_GUIDE.md](AI_FEATURES_GUIDE.md) — AI module and LLM integration.

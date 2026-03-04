@@ -1,6 +1,7 @@
 pub mod add_sol;
 pub mod admin;
 pub mod agent;
+pub mod agent_persist;
 pub mod ai;
 pub mod aml;
 pub mod auth;

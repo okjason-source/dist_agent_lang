@@ -1,6 +1,6 @@
 # 🚀 Quick Start Guide - Get Started in 5 Minutes
 
-> **📢 Beta Release v1.0.5:** dist_agent_lang is actively developed with consistent updates. This is a beta release — test thoroughly before production use. **Beta testing contributions appreciated!** 🙏
+> **Beta Release v1.0.8:** dist_agent_lang is actively developed with consistent updates. This is a beta release — test thoroughly before production use. **Beta testing contributions appreciated!**
 
 Welcome to **dist_agent_lang** (DAL) - the hybrid language for decentralized smart contracts and centralized services!
 
@@ -29,7 +29,7 @@ Download from [GitHub Releases](https://github.com/okjason-source/dist_agent_lan
 ### Verify Installation
 ```bash
 dal --version
-# Expected: dist_agent_lang v1.0.5
+# Expected: dist_agent_lang v1.0.8
 ```
 
 ---

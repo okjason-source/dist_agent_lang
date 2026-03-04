@@ -1,6 +1,6 @@
-# 🤖 AI Features Guide - dist_agent_lang (v1.0.5)
+# AI Features Guide - dist_agent_lang (v1.0.8)
 
-> **📢 Beta Release v1.0.5:** Includes comprehensive AI agent framework. Actively maintained with consistent updates. Test AI features thoroughly. **Beta testing feedback appreciated!** 🙏
+> **Beta Release v1.0.8:** Includes comprehensive AI agent framework with persistent memory and extensible skills. Actively maintained. Test AI features thoroughly. **Beta testing feedback appreciated!**
 
 Complete guide to building **AI-powered smart contracts** and **intelligent agents** with dist_agent_lang.
 

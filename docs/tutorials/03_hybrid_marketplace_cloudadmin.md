@@ -722,7 +722,7 @@ dal call spawn_moderation_agent \
 
 ---
 
-**You've built a production-ready hybrid marketplace! 🎉**
+**You've built a hybrid marketplace with on-chain and off-chain integration!**
 
 The marketplace combines the best of both worlds:
 - **Admin oversight** for safety and compliance

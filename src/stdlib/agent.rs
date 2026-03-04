@@ -510,41 +510,126 @@ pub fn spawn(config: AgentConfig) -> Result<AgentContext, String> {
         let mut r = get_runtime();
         r.agent_contexts
             .insert(agent_context.agent_id.clone(), agent_context.clone());
+        r.persist();
     }
     Ok(agent_context)
 }
 
-/// In-memory coordination runtime: task queue, message bus, and registry of spawned agents for serve/behavior.
+/// Coordination runtime with integrated persistence.
+/// Persistence is ON by default; set DAL_AGENT_RUNTIME_PERSIST=0 to disable.
 struct AgentRuntime {
     task_queue: Vec<(String, AgentTask)>,
     message_bus: Vec<(String, AgentMessage)>,
     evolution_store: HashMap<String, HashMap<String, Value>>,
-    /// Registry of spawned agents by agent_id (so behavior script can set_serve_agent and we look up context).
     agent_contexts: HashMap<String, AgentContext>,
-    /// When set (e.g. by behavior script), the agent to serve via HTTP.
     serve_agent_id: Option<String>,
+    /// Non-builtin skills registered at runtime (persisted alongside agent state).
+    registered_skills: Vec<crate::skills::SkillDefinition>,
+    persistence: Box<dyn crate::stdlib::agent_persist::RuntimePersistence>,
+}
+
+impl AgentRuntime {
+    /// Persist current state. Best-effort: logs on failure but does not panic.
+    fn persist(&self) {
+        let snapshot = crate::stdlib::agent_persist::AgentRuntimeSnapshot::from_runtime(
+            &self.agent_contexts,
+            &self.task_queue,
+            &self.message_bus,
+            &self.evolution_store,
+            &self.serve_agent_id,
+            &self.registered_skills,
+        );
+        if let Err(e) = self.persistence.save(&snapshot) {
+            log::warn!("Agent runtime persistence save failed: {}", e);
+        }
+    }
 }
 
 fn get_runtime() -> std::sync::MutexGuard<'static, AgentRuntime> {
     static RUNTIME: OnceLock<Mutex<AgentRuntime>> = OnceLock::new();
     RUNTIME
         .get_or_init(|| {
+            use crate::stdlib::agent_persist::{create_persistence, PersistConfig};
+            let mut config = PersistConfig::from_env();
+            if config.is_disabled_by_toml() {
+                config.backend = crate::stdlib::agent_persist::PersistBackend::Disabled;
+            }
+            let persistence = create_persistence(&config).unwrap_or_else(|e| {
+                log::warn!(
+                    "Failed to create agent persistence ({}). Running without persistence.",
+                    e
+                );
+                Box::new(crate::stdlib::agent_persist::NullPersistence)
+            });
+            let snapshot = persistence.load().unwrap_or_else(|e| {
+                log::warn!(
+                    "Failed to load agent runtime snapshot ({}). Starting empty.",
+                    e
+                );
+                crate::stdlib::agent_persist::AgentRuntimeSnapshot::empty()
+            });
+            let agent_contexts: HashMap<String, AgentContext> = snapshot
+                .agent_contexts
+                .iter()
+                .map(|(k, v)| (k.clone(), v.to_domain()))
+                .collect();
+            let task_queue: Vec<(String, AgentTask)> = snapshot
+                .task_queue
+                .iter()
+                .map(|(k, v)| (k.clone(), v.to_domain()))
+                .collect();
+            let message_bus: Vec<(String, AgentMessage)> = snapshot
+                .message_bus
+                .iter()
+                .map(|(k, v)| (k.clone(), v.to_domain()))
+                .collect();
+            let registered_skills: Vec<crate::skills::SkillDefinition> = snapshot
+                .registered_skills
+                .iter()
+                .map(|dto| dto.to_domain())
+                .collect();
+            if !registered_skills.is_empty() {
+                crate::skills::register_global_skills(registered_skills.clone());
+                log::info!(
+                    "Restored {} runtime-registered skill(s) from snapshot.",
+                    registered_skills.len()
+                );
+            }
             Mutex::new(AgentRuntime {
-                task_queue: Vec::new(),
-                message_bus: Vec::new(),
-                evolution_store: HashMap::new(),
-                agent_contexts: HashMap::new(),
-                serve_agent_id: None,
+                task_queue,
+                message_bus,
+                evolution_store: snapshot.evolution_store,
+                agent_contexts,
+                serve_agent_id: snapshot.serve_agent_id,
+                registered_skills,
+                persistence,
             })
         })
         .lock()
         .unwrap()
 }
 
+/// Register skills at runtime. Persisted in the agent runtime snapshot so they survive restarts.
+/// Also merges into the global skill registry for immediate use in prompt building.
+pub fn register_runtime_skills(skills: Vec<crate::skills::SkillDefinition>) {
+    if skills.is_empty() {
+        return;
+    }
+    crate::skills::register_global_skills(skills.clone());
+    let mut r = get_runtime();
+    for skill in skills {
+        if !skill.builtin && !r.registered_skills.iter().any(|s| s.name == skill.name) {
+            r.registered_skills.push(skill);
+        }
+    }
+    r.persist();
+}
+
 /// Register the agent as the one to serve (used by behavior script before server starts). Call agent::set_serve_agent(agent_id) from DAL.
 pub fn set_serve_agent(agent_id: &str) {
     let mut r = get_runtime();
     r.serve_agent_id = Some(agent_id.to_string());
+    r.persist();
 }
 
 /// Get the agent context for the current serve agent, if the behavior script set one. Used by dal agent serve --behavior.
@@ -561,10 +646,10 @@ pub fn coordinate(
     coordination_type: &str,
 ) -> Result<bool, String> {
     match coordination_type {
-        "task_distribution" => {
-            get_runtime()
-                .task_queue
-                .push((agent_id.to_string(), task.clone()));
+        "task_distribution" | "resource_sharing" | "conflict_resolution" => {
+            let mut r = get_runtime();
+            r.task_queue.push((agent_id.to_string(), task.clone()));
+            r.persist();
             log::info!("agent_coordination: {:?}", {
                 let mut data = HashMap::new();
                 data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
@@ -575,47 +660,7 @@ pub fn coordinate(
                 );
                 data.insert(
                     "message".to_string(),
-                    Value::String("Task distributed successfully".to_string()),
-                );
-                data
-            });
-            Ok(true)
-        }
-        "resource_sharing" => {
-            get_runtime()
-                .task_queue
-                .push((agent_id.to_string(), task.clone()));
-            log::info!("agent_coordination: {:?}", {
-                let mut data = HashMap::new();
-                data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
-                data.insert("task_id".to_string(), Value::String(task.task_id.clone()));
-                data.insert(
-                    "coordination_type".to_string(),
-                    Value::String(coordination_type.to_string()),
-                );
-                data.insert(
-                    "message".to_string(),
-                    Value::String("Resources shared successfully".to_string()),
-                );
-                data
-            });
-            Ok(true)
-        }
-        "conflict_resolution" => {
-            get_runtime()
-                .task_queue
-                .push((agent_id.to_string(), task.clone()));
-            log::info!("agent_coordination: {:?}", {
-                let mut data = HashMap::new();
-                data.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
-                data.insert("task_id".to_string(), Value::String(task.task_id.clone()));
-                data.insert(
-                    "coordination_type".to_string(),
-                    Value::String(coordination_type.to_string()),
-                );
-                data.insert(
-                    "message".to_string(),
-                    Value::String("Conflict resolved successfully".to_string()),
+                    Value::String(format!("{} completed successfully", coordination_type)),
                 );
                 data
             });
@@ -632,6 +677,7 @@ pub fn receive_pending_tasks(agent_id: &str) -> Vec<AgentTask> {
         .into_iter()
         .partition(|(id, _)| id == agent_id);
     runtime.task_queue = rest;
+    runtime.persist();
     mine.into_iter().map(|(_, t)| t).collect()
 }
 
@@ -641,9 +687,12 @@ pub fn communicate(
     receiver_id: &str,
     message: AgentMessage,
 ) -> Result<bool, String> {
-    get_runtime()
-        .message_bus
-        .push((receiver_id.to_string(), message.clone()));
+    {
+        let mut r = get_runtime();
+        r.message_bus
+            .push((receiver_id.to_string(), message.clone()));
+        r.persist();
+    }
     log::info!("agent_communication: {:?}", {
         let mut data = HashMap::new();
         data.insert(
@@ -679,20 +728,24 @@ pub fn receive_messages(receiver_id: &str) -> Vec<AgentMessage> {
         .into_iter()
         .partition(|(id, _)| id == receiver_id);
     runtime.message_bus = rest;
+    runtime.persist();
     mine.into_iter().map(|(_, m)| m).collect()
 }
 
-/// Evolve agent through learning. Persists evolution_data in in-memory store; use get_evolution_data() to retrieve.
-/// If the agent was spawned from a mold with lifecycle.on_evolve, that DAL snippet is run with `agent_id` and `evolution_data` in scope (so the mold can e.g. call evolve::append_summary to keep file and in-memory evolution aligned).
+/// Evolve agent through learning. Persists evolution_data to disk; use get_evolution_data() to retrieve.
+/// If the agent was spawned from a mold with lifecycle.on_evolve, that DAL snippet is run with `agent_id` and `evolution_data` in scope.
 pub fn evolve(agent_id: &str, evolution_data: HashMap<String, Value>) -> Result<bool, String> {
     let on_evolve = {
         let mut r = get_runtime();
         r.evolution_store
             .insert(agent_id.to_string(), evolution_data.clone());
-        r.agent_contexts
+        let hook = r
+            .agent_contexts
             .get(agent_id)
             .and_then(|ctx| ctx.config.lifecycle.as_ref())
-            .and_then(|l| l.on_evolve.clone())
+            .and_then(|l| l.on_evolve.clone());
+        r.persist();
+        hook
     };
     log::info!("agent_evolution: {:?}", {
         let mut data = HashMap::new();

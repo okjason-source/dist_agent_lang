@@ -484,7 +484,7 @@ fn hybrid_function() {
 // Compilation target attribute
 @compile_target(blockchain)
 fn blockchain_function() {
-    // This function is compiled for blockchain execution
+    // This function targets blockchain deployment (transpiled to Solidity)
 }
 
 // Chain specification attribute

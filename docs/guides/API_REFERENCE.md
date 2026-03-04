@@ -1,6 +1,6 @@
-# 📚 API Reference - Standard Library (v1.0.5)
+# API Reference - Standard Library (v1.0.8)
 
-> **📢 Beta Release v1.0.5:** Actively maintained with consistent updates. Test thoroughly before production use. **Beta testing contributions appreciated!** 🙏
+> **Beta Release v1.0.8:** Actively maintained with consistent updates. Test thoroughly before production use. **Beta testing contributions appreciated!**
 
 Complete reference for all **standard library modules** in dist_agent_lang.
 
@@ -20,7 +20,7 @@ Complete reference for all **standard library modules** in dist_agent_lang.
 7. [database:: - Database Operations](#7-database-database-operations)
 8. [web:: - HTTP Server](#8-web-http-server)
 9. [agent:: - Agent Orchestration](#9-agent-agent-orchestration)
-10. [mold:: - Agent Molds & Templates](#10-mold-agent-molds--templates)
+10. [mold:: - Agent Molds](#10-mold-agent-molds)
 
 ### Security & Trust
 11. [cloudadmin:: - CloudAdmin Security](#11-cloudadmin-cloudadmin-security)
@@ -978,7 +978,7 @@ Helpers to create message and task values for use with `communicate` and coordin
 
 ---
 
-## 10. mold:: - Agent Molds & Templates
+## 10. mold:: - Agent Molds
 
 Load and spawn agents from mold configurations.
 
@@ -1476,5 +1476,5 @@ See complete examples in:
 
 ---
 
-**Version**: v1.0.5 (Beta Release)  
+**Version**: v1.0.8 (Beta)  
 **Last Updated**: 2026-02-17

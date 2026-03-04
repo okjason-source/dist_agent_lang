@@ -216,8 +216,17 @@ async fn handle_message(
                     body.dal_file.as_deref(),
                 ));
                 let sub_tasks = body.sub_tasks.clone();
+                let evolve_text = context_blocks
+                    .iter()
+                    .find(|b| b.source == "evolve")
+                    .map(|b| b.content.as_str());
+                let registry = dist_agent_lang::skills::global_registry();
                 let tools_description =
-                    dist_agent_lang::skills::tools_description_for_skills(&state.ctx.config.skills);
+                    dist_agent_lang::skills::tools_description_for_skills_with_registry(
+                        &state.ctx.config.skills,
+                        &registry,
+                        evolve_text,
+                    );
                 let schema = build_serve_schema(
                     &state.ctx,
                     objective,
@@ -410,8 +419,17 @@ async fn handle_task(
                     "Complete the following task. Reply with the result or answer only.\n\nTask: {}",
                     task_description
                 );
+                let evolve_text = context_blocks
+                    .iter()
+                    .find(|b| b.source == "evolve")
+                    .map(|b| b.content.as_str());
+                let registry = dist_agent_lang::skills::global_registry();
                 let tools_description =
-                    dist_agent_lang::skills::tools_description_for_skills(&state.ctx.config.skills);
+                    dist_agent_lang::skills::tools_description_for_skills_with_registry(
+                        &state.ctx.config.skills,
+                        &registry,
+                        evolve_text,
+                    );
                 let schema = build_serve_schema(
                     &state.ctx,
                     &objective,

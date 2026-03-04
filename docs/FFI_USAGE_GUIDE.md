@@ -70,7 +70,7 @@ is_valid = dist_agent_lang.verify_signature(b"data", signature, public_key)
 
 - **FFI**: ~1-5µs per call
 - **HTTP**: ~500-2000µs per call
-- **Speedup**: 100-1000x faster with FFI
+- **Speedup**: Significantly faster than HTTP for local calls (avoids network overhead)
 
 ## Rust FFI Integration
 

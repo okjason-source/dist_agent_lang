@@ -536,7 +536,7 @@ EOF
 git add .dal/ai_config.toml.template
 ```
 
-### "I want production-ready"
+### "I want production-grade configuration"
 Use **Method 5: Hybrid** with:
 - Config file for defaults
 - Environment variables for secrets
@@ -597,7 +597,7 @@ export OPENAI_API_KEY="sk-..."
 - ✅ **Priority system** - Runtime > Env > File > Default
 - ✅ **Multiple providers** - OpenAI, Anthropic, Local, Custom
 - ✅ **Team-friendly** - Share templates, respect overrides
-- ✅ **Production-ready** - Secrets management, environment-specific configs
+- ✅ **Production-grade patterns** - Secrets management, environment-specific configs
 
 **Recommendation:**
 - Development: Config file + local models
