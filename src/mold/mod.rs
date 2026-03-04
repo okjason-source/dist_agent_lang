@@ -125,9 +125,19 @@ pub fn mold_config_to_agent_config(
         on_destroy: l.on_destroy.clone(),
     });
 
+    let skills: Vec<String> = if mold.agent.skills.is_empty() {
+        crate::skills::DEFAULT_LEARNING_PATH_SKILLS
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect()
+    } else {
+        mold.agent.skills.clone()
+    };
+
     Ok(AgentConfig::new(name, agent_type)
         .with_role(role)
         .with_capabilities(capabilities)
+        .with_skills(skills)
         .with_trust_level(trust_level)
         .with_max_memory(max_memory)
         .with_learning_enabled(mold.agent.learning)
@@ -289,6 +299,7 @@ pub fn resolve_mold_path(base: &Path, path_or_name: &str) -> Result<PathBuf, Str
 }
 
 /// Scaffold a new .mold.dal file at `out_path` (canonical format).
+/// Includes default learning-path skills (development, creative, office, home) per AGENT_ASSISTANT_PLAN.
 pub fn scaffold_mold(name: &str, out_path: &Path) -> Result<(), String> {
     let content = format!(
         r#"mold "{}" "1.0"
@@ -296,6 +307,7 @@ agent
   type AI
   role ""
   capabilities
+  skills "development" "creative" "office" "home"
   memory_limit "256MB"
   learning true
   communication true

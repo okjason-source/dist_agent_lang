@@ -2690,239 +2690,36 @@ For creating new projects, use: `dal new <name> --type <ai|iot|agent|chain|web|c
     println!("   ✅ Created README.md");
 }
 
-/// Initialize a DAL project in current directory (template: dal, js, rs, sol). Minimal prints; respects --quiet.
+/// Initialize a DAL project in current directory. Template: general (main.dal), chain (chain.dal), iot (iot.dal), agent, or dal (alias for general). Respects --quiet.
 fn init_project(template: &str, quiet: bool) {
     let template = template.trim().to_lowercase();
     let template = template.as_str();
 
-    match template {
-        "dal" | "" => {
-            init_project_dal(quiet);
-        }
-        "agent" => {
-            init_project_agent(quiet);
-        }
-        "js" | "rs" | "sol" => {
-            if !quiet {
-                eprintln!("Stack template '{}' is planned (see docs/guides/CLI_DESIGN.md). Use 'dal init' for DAL-only.", template);
-            }
-            std::process::exit(0);
-        }
-        _ => {
+    if matches!(template, "js" | "rs" | "sol") {
+        if !quiet {
             eprintln!(
-                "Unknown template '{}'. Use: dal, agent, js, rs, sol (e.g. 'dal init agent')",
+                "Stack template '{}' is planned (see docs/guides/CLI_DESIGN.md). Use: dal init [general|chain|iot|agent].",
                 template
             );
-            std::process::exit(1);
         }
+        std::process::exit(0);
     }
-}
 
-/// Ensure .env is in .gitignore (append or create). Shared by init_project_dal and init_project_agent.
-fn ensure_gitignore_env() {
-    let gitignore_path = std::path::Path::new(".gitignore");
-    if gitignore_path.exists() {
-        if let Ok(content) = std::fs::read_to_string(gitignore_path) {
-            if !content.lines().any(|l| l.trim() == ".env") {
-                let mut f = std::fs::OpenOptions::new()
-                    .append(true)
-                    .open(gitignore_path)
-                    .unwrap();
-                use std::io::Write;
-                let _ = writeln!(f, "\n# Local env (secrets)\n.env");
+    let run_template = match template {
+        "dal" | "" => "general",
+        _ => template,
+    };
+    let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    match dist_agent_lang::project_init::run_init(run_template, &cwd) {
+        Ok(msg) => {
+            if !quiet {
+                println!("{}", msg);
             }
         }
-    } else {
-        std::fs::write(".gitignore", "# Local env (do not commit)\n.env\n").unwrap();
-    }
-}
-
-/// Initialize a DAL-only project in current directory. One summary line unless quiet.
-fn init_project_dal(quiet: bool) {
-    if std::path::Path::new("dal.toml").exists() {
-        eprintln!("Project already initialized (dal.toml exists)");
-        std::process::exit(1);
-    }
-
-    let dal_toml = r#"[package]
-name = "my-project"
-version = "0.1.0"
-authors = []
-
-[dependencies]
-# Add dependencies here
-"#;
-
-    std::fs::write("dal.toml", dal_toml).unwrap();
-
-    if !std::path::Path::new("main.dal").exists() {
-        let main_dal = r#"// Main entry point
-
-fn main() {
-    print("Hello from dist_agent_lang!");
-}
-
-main();
-"#;
-        std::fs::write("main.dal", main_dal).unwrap();
-    }
-
-    if !std::path::Path::new("README.md").exists() {
-        std::fs::write(
-            "README.md",
-            "# My DAL Project\n\nA dist_agent_lang project.\n\nSet env as needed (e.g. from `.env`); see `.env.example`.\n",
-        )
-        .unwrap();
-    }
-
-    if !std::path::Path::new(".env.example").exists() {
-        std::fs::write(
-            ".env.example",
-            r#"# DAL project env (copy to .env and set values; do not commit .env)
-# Optional: logging (LOG_LEVEL, LOG_SINK, LOG_FILE)
-# LOG_LEVEL=info
-# LOG_SINK=console
-# Optional: for ai:: / assist
-# OPENAI_API_KEY=
-# ANTHROPIC_API_KEY=
-"#,
-        )
-        .unwrap();
-    }
-    if !std::path::Path::new(".env").exists() {
-        std::fs::write(
-            ".env",
-            r#"# Local env — set values and do not commit (add .env to .gitignore)
-"#,
-        )
-        .unwrap();
-    }
-    ensure_gitignore_env();
-
-    if !quiet {
-        println!("Initialized DAL project.");
-    }
-}
-
-/// Initialize an agent project in current directory: dal.toml (if missing), agent.toml, agent.dal, README.md, evolve.md (evolve). Additive; never overwrite existing files.
-fn init_project_agent(quiet: bool) {
-    // Ensure DAL is present: create minimal dal.toml only if missing (protect existing)
-    if !std::path::Path::new("dal.toml").exists() {
-        let dal_toml = r#"[package]
-name = "my-agent"
-version = "0.1.0"
-authors = []
-
-[dependencies]
-"#;
-        std::fs::write("dal.toml", dal_toml).unwrap();
-    }
-
-    if !std::path::Path::new("agent.toml").exists() {
-        let agent_toml = r#"# Agent project config (see docs/guides/AGENT_SETUP_AND_USAGE.md)
-
-[agent.sh]
-trust = "sandboxed"
-# forbidden_patterns = ["rm -rf", "sudo"]
-# allowed_prefixes = ["npm", "cargo", "git"]
-
-[agent]
-context_path = "./evolve.md"
-"#;
-        std::fs::write("agent.toml", agent_toml).unwrap();
-    }
-
-    if !std::path::Path::new("agent.dal").exists() {
-        let agent_dal = r#"// Agent behavior entry (run with: dal run agent.dal or dal agent serve)
-// Use evolve::load(), evolve::append_conversation(), evolve::append_log() for context.
-// Use sh::run(cmd) for shell (respects [agent.sh] trust in agent.toml).
-// When used by `dal agent serve`, this script spawns an agent and calls agent::set_serve_agent(agent_id).
-
-use agent;
-
-fn main() {
-    let agent_id = agent::spawn({
-        "name": "my-agent",
-        "type": "worker",
-        "role": "Agent serve"
-    });
-    agent::set_serve_agent(agent_id);
-}
-
-main();
-"#;
-        std::fs::write("agent.dal", agent_dal).unwrap();
-    }
-
-    if !std::path::Path::new("README.md").exists() {
-        let readme = r#"# Agent project
-
-DAL agent with evolve context and configurable shell trust.
-
-## Files
-
-- `agent.dal` — Agent behavior entry
-- `agent.toml` — [agent.sh] trust, [agent] context_path
-- `evolve.md` — Evolve context (conversation + action log)
-- `.env.example` — Example env vars (safe to commit)
-- `.env` — Local env (set values; do not commit; add to .gitignore)
-
-## Commands
-
-- `dal run agent.dal` — Run agent script
-- `dal agent serve` — Run agent HTTP API (messages, tasks)
-- `dal agent create worker my-agent` — Create agent in-process
-
-Set env (e.g. `export $(cat .env | xargs)` or use a .env loader). See docs/guides/AGENT_SETUP_AND_USAGE.md.
-"#;
-        std::fs::write("README.md", readme).unwrap();
-    }
-
-    if !std::path::Path::new("evolve.md").exists() {
-        let now = chrono::Utc::now().to_rfc3339();
-        let header = format!(
-            r#"# Agent context — Agent
-Updated: {}
-
-## Conversation
-
-## Action log
-
-| Time | Action | Detail | Result |
-|------|--------|--------|--------|
-"#,
-            now
-        );
-        std::fs::write("evolve.md", header).unwrap();
-    }
-
-    // .env.example: safe to commit; documents expected env vars
-    if !std::path::Path::new(".env.example").exists() {
-        let env_example = r#"# Agent project env (copy to .env and set values; do not commit .env)
-# Shell trust: off | sandboxed | confirmed | trusted
-DAL_AGENT_SHELL_TRUST=sandboxed
-# Evolve context file path (default: ./evolve.md)
-DAL_AGENT_CONTEXT_PATH=./evolve.md
-# Optional: for ai:: / assist (leave empty or set your key)
-# OPENAI_API_KEY=
-# ANTHROPIC_API_KEY=
-"#;
-        std::fs::write(".env.example", env_example).unwrap();
-    }
-
-    // .env: local overrides only if missing (never overwrite; user may have secrets)
-    if !std::path::Path::new(".env").exists() {
-        let env_local = r#"# Local env — set values and do not commit (add .env to .gitignore)
-DAL_AGENT_SHELL_TRUST=sandboxed
-DAL_AGENT_CONTEXT_PATH=./evolve.md
-"#;
-        std::fs::write(".env", env_local).unwrap();
-    }
-
-    ensure_gitignore_env();
-
-    if !quiet {
-        println!("Initialized agent project (agent.dal, agent.toml, README.md, evolve.md, .env.example, .env).");
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        }
     }
 }
 

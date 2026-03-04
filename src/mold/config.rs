@@ -33,6 +33,8 @@ pub struct MoldAgentBlock {
     #[serde(rename = "type")]
     pub agent_type: String,
     pub capabilities: Vec<String>,
+    /// Optional skill names (e.g. development, creative, office, home). Empty = use default learning path.
+    pub skills: Vec<String>,
     pub trust_level: String,
     pub learning: bool,
     pub communication: bool,

@@ -101,6 +101,8 @@ fn parse_mold_dal(content: &str) -> Result<MoldConfig, String> {
             agent.coordination = false;
         } else if line.starts_with("trust_level ") {
             agent.trust_level = line["trust_level".len()..].trim().to_string();
+        } else if line.starts_with("skills ") {
+            agent.skills = parse_quoted_list(line, "skills")?;
         }
         i += 1;
     }
@@ -304,5 +306,22 @@ lifecycle
             .as_deref()
             .unwrap_or("")
             .contains("append_summary"));
+    }
+
+    #[test]
+    fn parse_mold_dal_with_skills() {
+        let dal = r#"
+mold "WholeAssistant" "1.0"
+agent
+  type AI
+  role "Assistant"
+  skills "development" "creative" "office" "home"
+"#;
+        let mold = parse_mold_content(dal).unwrap();
+        assert_eq!(mold.name, "WholeAssistant");
+        assert_eq!(
+            mold.agent.skills,
+            &["development", "creative", "office", "home"]
+        );
     }
 }

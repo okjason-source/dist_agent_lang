@@ -1,35 +1,5 @@
-src/lib.rs:99:46: replace * with + in parse_source
-src/lib.rs:99:46: replace * with / in parse_source
-src/lib.rs:99:39: replace * with + in parse_source
-src/lib.rs:99:39: replace * with / in parse_source
-src/lib.rs:100:21: replace > with == in parse_source
-src/lib.rs:100:21: replace > with < in parse_source
-src/lib.rs:100:21: replace > with >= in parse_source
-src/lib.rs:116:30: replace > with < in parse_source
-src/cli.rs:458:5: replace chain_subcommand_to_args -> Vec<String> with vec![]
-src/cli.rs:458:5: replace chain_subcommand_to_args -> Vec<String> with vec![String::new()]
-src/cli.rs:458:5: replace chain_subcommand_to_args -> Vec<String> with vec!["xyzzy".into()]
-src/manifest.rs:80:5: replace parse_dependencies -> Result<DependenciesMap, ManifestError> with Ok(Default::default())
-src/manifest.rs:98:13: delete match arm toml::Value::Table(t) in parse_dependencies
-src/manifest.rs:127:5: replace resolve_dependencies -> Result<(ResolvedDeps, LockfileVersionMeta), ManifestError> with Ok((Default::default(), Default::default()))
-src/manifest.rs:139:20: delete ! in resolve_dependencies
-src/manifest.rs:168:5: replace write_lockfile -> Result<(), ManifestError> with Ok(())
-src/manifest.rs:208:5: replace load_resolved_deps -> Result<ResolvedDeps, ManifestError> with Ok(Default::default())
-src/module_resolver.rs:112:9: replace ModuleResolver::with_dependencies -> Self with Default::default()
-src/module_resolver.rs:150:16: delete ! in ModuleResolver::resolve
-src/module_resolver.rs:192:9: replace ModuleResolver::resolve_program_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
-src/module_resolver.rs:214:9: replace ModuleResolver::resolve_program_with_cycles -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
-src/module_resolver.rs:228:9: replace ModuleResolver::resolve_program_recursive -> Result<(), ResolveError> with Ok(())
-src/module_resolver.rs:305:5: replace package_entry_path -> Option<PathBuf> with None
-src/module_resolver.rs:305:5: replace package_entry_path -> Option<PathBuf> with Some(Default::default())
-src/module_resolver.rs:321:5: replace resolve_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
-src/registry.rs:19:9: replace ResolvedSource::fetch_source -> Option<String> with None
-src/registry.rs:19:9: replace ResolvedSource::fetch_source -> Option<String> with Some(String::new())
-src/registry.rs:19:9: replace ResolvedSource::fetch_source -> Option<String> with Some("xyzzy".into())
-src/registry.rs:19:71: replace == with != in ResolvedSource::fetch_source
-src/registry.rs:323:5: replace fetch_package -> Result<PathBuf, RegistryError> with Ok(Default::default())
-src/registry.rs:330:5: replace fetch_bytes -> Result<Vec<u8>, RegistryError> with Ok(vec![])
-src/registry.rs:330:5: replace fetch_bytes -> Result<Vec<u8>, RegistryError> with Ok(vec![0])
-src/registry.rs:330:5: replace fetch_bytes -> Result<Vec<u8>, RegistryError> with Ok(vec![1])
-src/registry.rs:456:5: replace find_package_root -> Option<PathBuf> with None
-src/registry.rs:456:5: replace find_package_root -> Option<PathBuf> with Some(Default::default())
+src/lib.rs:159:5: replace execute_dal_file -> Result<(), String> with Ok(())
+src/cli_design.rs:16:5: replace version -> &'static str with "xyzzy"
+src/compile/mod.rs:181:5: replace package_entry_path -> Option<PathBuf> with Some(Default::default())
+src/manifest.rs:85:9: delete match arm None in parse_dependencies
+src/manifest.rs:97:13: delete match arm toml::Value::String(s) in parse_dependencies

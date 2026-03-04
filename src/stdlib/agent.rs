@@ -92,6 +92,8 @@ pub struct AgentConfig {
     pub agent_type: AgentType,
     pub role: String,
     pub capabilities: Vec<String>,
+    /// Skill names (e.g. development, creative, office, home). Empty = use default learning path at serve time.
+    pub skills: Vec<String>,
     pub trust_level: String,
     pub max_memory: usize,
     pub learning_enabled: bool,
@@ -108,6 +110,7 @@ impl AgentConfig {
             agent_type,
             role: String::new(),
             capabilities: Vec::new(),
+            skills: Vec::new(),
             trust_level: "standard".to_string(),
             max_memory: 1000,
             learning_enabled: true,
@@ -116,6 +119,11 @@ impl AgentConfig {
             metadata: HashMap::new(),
             lifecycle: None,
         }
+    }
+
+    pub fn with_skills(mut self, skills: Vec<String>) -> Self {
+        self.skills = skills;
+        self
     }
 
     pub fn with_lifecycle(mut self, lifecycle: Option<LifecycleHooks>) -> Self {

@@ -1323,6 +1323,18 @@ pub enum ToolOutcome {
     Run(String),
     /// Execute web search.
     Search(String),
+    /// Initialize DAL project (optional template: general, chain, iot, agent). Hard skill: project_init.
+    DalInit(Option<String>),
+    /// Read file (path relative to working dir). Development skill.
+    ReadFile(String),
+    /// Write file (path, contents). Development skill.
+    WriteFile(String, String),
+    /// List directory (path relative to working dir). Development skill / project_init.
+    ListDir(String),
+    /// Run `dal check <file>`. Development skill.
+    DalCheck(String),
+    /// Run `dal run <file>`. Development skill.
+    DalRun(String),
     /// Response was not valid JSON or unknown action; treat as reply with raw text.
     ParseFail(String),
 }
@@ -1370,6 +1382,64 @@ pub fn parse_tool_response(response: &str) -> ToolOutcome {
                 .unwrap_or("")
                 .trim();
             ToolOutcome::Search(query.to_string())
+        }
+        "dal_init" => {
+            let template = obj
+                .get("template")
+                .and_then(|t| t.as_str())
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty());
+            ToolOutcome::DalInit(template)
+        }
+        "read_file" => {
+            let path = obj
+                .get("path")
+                .and_then(|p| p.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::ReadFile(path)
+        }
+        "write_file" => {
+            let path = obj
+                .get("path")
+                .and_then(|p| p.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            let contents = obj
+                .get("contents")
+                .and_then(|c| c.as_str())
+                .unwrap_or("")
+                .to_string();
+            ToolOutcome::WriteFile(path, contents)
+        }
+        "list_dir" => {
+            let path = obj
+                .get("path")
+                .and_then(|p| p.as_str())
+                .unwrap_or(".")
+                .trim()
+                .to_string();
+            ToolOutcome::ListDir(path)
+        }
+        "dal_check" => {
+            let path = obj
+                .get("path")
+                .and_then(|p| p.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::DalCheck(path)
+        }
+        "dal_run" => {
+            let path = obj
+                .get("path")
+                .and_then(|p| p.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::DalRun(path)
         }
         _ => {
             let text = obj
@@ -1463,6 +1533,174 @@ fn execute_search_result(query: &str) -> String {
     }
 }
 
+/// Execute dal_init (project_init hard skill). Template: general, chain, iot, agent.
+fn execute_dal_init_result(template: Option<&str>, root: &std::path::Path) -> String {
+    let t = template.unwrap_or("general");
+    match crate::project_init::run_init(t, root) {
+        Ok(msg) => msg,
+        Err(e) => format!("dal_init failed: {}", e),
+    }
+}
+
+/// Resolve path relative to root; reject path traversal. Returns Err if path escapes root.
+fn resolve_path_under_root(
+    root: &std::path::Path,
+    path: &str,
+) -> Result<std::path::PathBuf, String> {
+    let path = path.trim();
+    if path.is_empty() {
+        return Ok(root.to_path_buf());
+    }
+    if path.contains("..") {
+        return Err("Path traversal (..) not allowed".to_string());
+    }
+    if path.starts_with('/') || (path.len() >= 2 && path.get(..2) == Some("\\\\")) {
+        return Err("Absolute paths not allowed".to_string());
+    }
+    let root_canonical = match root.canonicalize() {
+        Ok(p) => p,
+        Err(_) => root.to_path_buf(),
+    };
+    let joined = root_canonical.join(path);
+    if joined.exists() {
+        let canonical = joined.canonicalize().map_err(|e| e.to_string())?;
+        if !canonical.starts_with(&root_canonical) {
+            return Err("Path escapes working directory".to_string());
+        }
+        Ok(canonical)
+    } else {
+        if !joined.starts_with(&root_canonical) {
+            return Err("Path escapes working directory".to_string());
+        }
+        Ok(joined)
+    }
+}
+
+fn execute_read_file_result(path: &str, root: &std::path::Path) -> String {
+    match resolve_path_under_root(root, path) {
+        Err(e) => format!("read_file failed: {}", e),
+        Ok(p) => {
+            if !p.is_file() {
+                return "read_file failed: not a file".to_string();
+            }
+            match std::fs::read_to_string(&p) {
+                Ok(s) => {
+                    if s.len() > MAX_TOOL_RESULT_LEN {
+                        format!("{}\n... (truncated)", &s[..MAX_TOOL_RESULT_LEN])
+                    } else {
+                        s
+                    }
+                }
+                Err(e) => format!("read_file failed: {}", e),
+            }
+        }
+    }
+}
+
+fn execute_write_file_result(path: &str, contents: &str, root: &std::path::Path) -> String {
+    match resolve_path_under_root(root, path) {
+        Err(e) => format!("write_file failed: {}", e),
+        Ok(p) => {
+            if let Some(parent) = p.parent() {
+                let _ = std::fs::create_dir_all(parent);
+            }
+            match std::fs::write(&p, contents) {
+                Ok(()) => format!("Wrote {} ({} bytes).", p.display(), contents.len()),
+                Err(e) => format!("write_file failed: {}", e),
+            }
+        }
+    }
+}
+
+fn execute_list_dir_result(path: &str, root: &std::path::Path) -> String {
+    match resolve_path_under_root(root, path) {
+        Err(e) => format!("list_dir failed: {}", e),
+        Ok(p) => {
+            if !p.is_dir() {
+                return "list_dir failed: not a directory".to_string();
+            }
+            match std::fs::read_dir(&p) {
+                Ok(entries) => {
+                    let mut names: Vec<String> = entries
+                        .filter_map(|e| e.ok())
+                        .map(|e| {
+                            let name = e.file_name().to_string_lossy().into_owned();
+                            if e.path().is_dir() {
+                                format!("{}/", name)
+                            } else {
+                                name
+                            }
+                        })
+                        .collect();
+                    names.sort();
+                    names.join("\n")
+                }
+                Err(e) => format!("list_dir failed: {}", e),
+            }
+        }
+    }
+}
+
+fn execute_dal_check_result(path: &str, root: &std::path::Path) -> String {
+    match resolve_path_under_root(root, path) {
+        Err(e) => format!("dal_check failed: {}", e),
+        Ok(p) => {
+            if !p.is_file() {
+                return "dal_check failed: path is not a file".to_string();
+            }
+            let path_str = p.to_string_lossy().into_owned();
+            run_dal_subcommand("check", &[&path_str], root)
+        }
+    }
+}
+
+fn execute_dal_run_result(path: &str, root: &std::path::Path) -> String {
+    match resolve_path_under_root(root, path) {
+        Err(e) => format!("dal_run failed: {}", e),
+        Ok(p) => {
+            if !p.is_file() {
+                return "dal_run failed: path is not a file".to_string();
+            }
+            let path_str = p.to_string_lossy().into_owned();
+            run_dal_subcommand("run", &[&path_str], root)
+        }
+    }
+}
+
+/// Run `dal <subcommand> <args...>` from root. Uses current binary so it works without PATH.
+fn run_dal_subcommand(subcommand: &str, args: &[&str], root: &std::path::Path) -> String {
+    let cwd = root;
+    let exe = match std::env::current_exe() {
+        Ok(p) => p,
+        Err(_) => {
+            return "dal_run/dal_check failed: could not get current executable".to_string();
+        }
+    };
+    let mut cmd = std::process::Command::new(&exe);
+    cmd.arg(subcommand).args(args).current_dir(&cwd);
+    match cmd.output() {
+        Ok(out) => {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            let mut s = format!("Exit code: {}\n", out.status.code().unwrap_or(-1));
+            if !stdout.is_empty() {
+                s.push_str("stdout:\n");
+                s.push_str(&stdout);
+            }
+            if !stderr.is_empty() {
+                s.push_str("\nstderr:\n");
+                s.push_str(&stderr);
+            }
+            if s.len() > MAX_TOOL_RESULT_LEN {
+                s.truncate(MAX_TOOL_RESULT_LEN);
+                s.push_str("\n... (truncated)");
+            }
+            s
+        }
+        Err(e) => format!("dal {} failed: {}", subcommand, e),
+    }
+}
+
 /// Result of the multi-step tool loop.
 #[derive(Debug, Clone)]
 pub struct MultiStepResult {
@@ -1488,13 +1726,18 @@ pub fn max_tool_steps_from_env() -> u32 {
 
 /// Run the tool loop until the LLM returns reply or ask_user, or max_steps is reached.
 /// Appends each run/search to evolve action log when agent_name is Some.
+/// working_root: if Some, file tools (read_file, write_file, list_dir, dal_check, dal_run, dal_init) use this path; else process current_dir (Phase D).
 /// Caller should append_conversation(user_msg, result.final_text) when done.
 pub fn run_multi_step_tool_loop(
     schema: &mut crate::agent_context_schema::AgentContextSchema,
     max_steps: u32,
     agent_name: Option<&str>,
+    working_root: Option<&std::path::Path>,
 ) -> Result<MultiStepResult, String> {
     use crate::agent_context_schema::{build_prompt_for_llm, ConversationTurn};
+    let root = working_root.map(|p| p.to_path_buf()).unwrap_or_else(|| {
+        std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."))
+    });
     let mut steps_used: u32 = 0;
     loop {
         let prompt = build_prompt_for_llm(schema);
@@ -1571,6 +1814,155 @@ pub fn run_multi_step_tool_loop(
                     });
                 }
             }
+            ToolOutcome::DalInit(template) => {
+                let t = template.as_deref();
+                let result = execute_dal_init_result(t, &root);
+                if agent_name.is_some() {
+                    let _ = crate::stdlib::evolve::append_log(
+                        "dal_init",
+                        &template.unwrap_or_else(|| "general".to_string()),
+                        &result,
+                    );
+                }
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: response.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text:
+                            "Max tool steps reached. Please summarize what you have so far."
+                                .to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                    });
+                }
+            }
+            ToolOutcome::ReadFile(path) => {
+                let result = execute_read_file_result(&path, &root);
+                if agent_name.is_some() {
+                    let _ = crate::stdlib::evolve::append_log("read_file", &path, &result);
+                }
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: response.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text:
+                            "Max tool steps reached. Please summarize what you have so far."
+                                .to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                    });
+                }
+            }
+            ToolOutcome::WriteFile(path, contents) => {
+                let result = execute_write_file_result(&path, &contents, &root);
+                if agent_name.is_some() {
+                    let _ = crate::stdlib::evolve::append_log("write_file", &path, &result);
+                }
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: response.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text:
+                            "Max tool steps reached. Please summarize what you have so far."
+                                .to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                    });
+                }
+            }
+            ToolOutcome::ListDir(path) => {
+                let result = execute_list_dir_result(&path, &root);
+                if agent_name.is_some() {
+                    let _ = crate::stdlib::evolve::append_log("list_dir", &path, &result);
+                }
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: response.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text:
+                            "Max tool steps reached. Please summarize what you have so far."
+                                .to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                    });
+                }
+            }
+            ToolOutcome::DalCheck(path) => {
+                let result = execute_dal_check_result(&path, &root);
+                if agent_name.is_some() {
+                    let _ = crate::stdlib::evolve::append_log("dal_check", &path, &result);
+                }
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: response.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text:
+                            "Max tool steps reached. Please summarize what you have so far."
+                                .to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                    });
+                }
+            }
+            ToolOutcome::DalRun(path) => {
+                let result = execute_dal_run_result(&path, &root);
+                if agent_name.is_some() {
+                    let _ = crate::stdlib::evolve::append_log("dal_run", &path, &result);
+                }
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: response.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text:
+                            "Max tool steps reached. Please summarize what you have so far."
+                                .to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                    });
+                }
+            }
         }
     }
 }
@@ -1612,6 +2004,34 @@ mod multi_step_loop_tests {
         match out {
             ToolOutcome::Search(s) => assert_eq!(s, "rust lang"),
             _ => panic!("expected Search"),
+        }
+    }
+
+    #[test]
+    fn parse_tool_response_dal_init() {
+        let out = parse_tool_response(r#"{"action":"dal_init"}"#);
+        match &out {
+            ToolOutcome::DalInit(None) => {}
+            _ => panic!("expected DalInit(None), got {:?}", out),
+        }
+        let out2 = parse_tool_response(r#"{"action":"dal_init","template":"chain"}"#);
+        match &out2 {
+            ToolOutcome::DalInit(Some(t)) => assert_eq!(t, "chain"),
+            _ => panic!("expected DalInit(Some(\"chain\")), got {:?}", out2),
+        }
+    }
+
+    #[test]
+    fn parse_tool_response_read_file_and_dal_check() {
+        let out = parse_tool_response(r#"{"action":"read_file","path":"main.dal"}"#);
+        match &out {
+            ToolOutcome::ReadFile(p) => assert_eq!(p, "main.dal"),
+            _ => panic!("expected ReadFile, got {:?}", out),
+        }
+        let out2 = parse_tool_response(r#"{"action":"dal_check","path":"main.dal"}"#);
+        match &out2 {
+            ToolOutcome::DalCheck(p) => assert_eq!(p, "main.dal"),
+            _ => panic!("expected DalCheck, got {:?}", out2),
         }
     }
 

@@ -141,9 +141,9 @@ pub enum Commands {
         project_type: Option<String>,
     },
 
-    /// Initialize project in current directory (optionally with a stack template: dal, agent, js, rs, sol)
+    /// Initialize project in current directory (template: general/main.dal, chain, iot, agent)
     Init {
-        /// Stack template: dal (default), agent, js, rs, sol
+        /// Template: dal|general (main.dal), chain (chain.dal), iot (iot.dal), agent (agent.dal + evolve)
         #[arg(default_value = "dal")]
         template: String,
     },

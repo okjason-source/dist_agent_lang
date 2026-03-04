@@ -1,7 +1,11 @@
 // Agent behavior entry (run with: dal run agent.dal or dal agent serve)
-// Use evolve::load(), evolve::append_conversation(), evolve::append_log() for context.
-// Use sh::run(cmd) for shell (respects [agent.sh] trust in agent.toml).
 // When used by `dal agent serve`, this script spawns an agent and calls agent::set_serve_agent(agent_id).
+//
+// Evolve (wired at init): context_path in agent.toml points to evolve.md.
+// - Serve loads: evolve::load_recent(agent_name?, max_lines) into the prompt each turn.
+// - Optional in DAL: evolve::load(agent_name?), evolve::append_conversation(...), evolve::append_log(...), evolve::append_summary(...).
+// To disable evolve: comment out [agent] context_path in agent.toml; opt-in by uncommenting.
+// Use sh::run(cmd) for shell (respects [agent.sh] trust in agent.toml).
 
 use agent;
 

@@ -75,11 +75,6 @@ fn dal_summary_context_blocks(include: bool, dal_file_override: Option<&str>) ->
     Vec::new()
 }
 
-/// Tools description for message handler (P4 + P5: explicit tool list, ask_user).
-const SERVE_MESSAGE_TOOLS: &str = "You are a helpful assistant. Available tools: reply, run (shell), search, ask_user. Reply with JSON: {\"action\":\"reply\",\"text\":\"...\"} or {\"action\":\"run\",\"cmd\":\"...\"} or {\"action\":\"search\",\"query\":\"...\"} or {\"action\":\"ask_user\",\"message\":\"...\"} when you need human input. When the objective is satisfied, use reply with your final answer. Respect the constraints below.";
-/// Tools description for task handler (P4 + P5).
-const SERVE_TASK_TOOLS: &str = "You are a helpful assistant. Available tools: reply, run (shell), search, ask_user. Complete the task and use reply with the result when done; use ask_user only when you need human input. Respect the constraints below.";
-
 /// P5: Completion criteria and when to involve the user. Shown in prompt so the agent knows task done vs need user.
 const COMPLETION_AND_ASK_GUIDANCE: &str = "Completion: When the objective is met, reply with a clear final answer or outcome; do not ask \"what next?\". When to involve the user: You must ask for confirmation before sensitive actions (e.g. if shell trust is confirmed). You should ask when stuck (ambiguous goal, retries exhausted). Otherwise proceed and only reply when done or with one concrete question. On tool failure, consider one retry or alternative before asking the user.";
 
@@ -90,11 +85,12 @@ fn build_serve_schema(
     tools_description: &str,
     context_blocks: Vec<ContextBlock>,
     sub_tasks: Option<Vec<String>>,
+    working_root: Option<&str>,
 ) -> AgentContextSchema {
     let agent_state = Some(AgentStateBlock {
         capabilities: ctx.config.capabilities.clone(),
         trust_level: ctx.config.agent_type.to_string(),
-        working_context: None,
+        working_context: working_root.map(String::from),
     });
     let constraints = Some(
         dist_agent_lang::stdlib::sh::constraints_description_for_prompt(
@@ -126,7 +122,7 @@ async fn handle_status(State(state): State<Arc<AgentServeState>>) -> impl IntoRe
     (StatusCode::OK, Json(body))
 }
 
-/// POST /message — body: { sender_id, content } or { sender_id?, message_type?, content }; optional objective, sub_tasks (P2), include_dal_summary (P3).
+/// POST /message — body: { sender_id, content } or { sender_id?, message_type?, content }; optional objective, sub_tasks (P2), include_dal_summary (P3), working_root (Phase D).
 #[derive(Deserialize)]
 struct MessageBody {
     sender_id: String,
@@ -145,6 +141,9 @@ struct MessageBody {
     /// Optional path to DAL file (relative to cwd); default main.dal / agent.dal (P3).
     #[serde(default)]
     dal_file: Option<String>,
+    /// Working root for file tools (read_file, write_file, list_dir, dal_check, dal_run). Default: process cwd (Phase D).
+    #[serde(default)]
+    working_root: Option<String>,
 }
 
 async fn handle_message(
@@ -193,22 +192,27 @@ async fn handle_message(
                     body.dal_file.as_deref(),
                 ));
                 let sub_tasks = body.sub_tasks.clone();
+                let tools_description =
+                    dist_agent_lang::skills::tools_description_for_skills(&state.ctx.config.skills);
                 let schema = build_serve_schema(
                     &state.ctx,
                     objective,
-                    SERVE_MESSAGE_TOOLS,
+                    &tools_description,
                     context_blocks,
                     sub_tasks,
+                    body.working_root.as_deref(),
                 );
                 let content_for_evolve = content_for_reply.clone();
                 let agent_name = state.ctx.config.name.clone();
                 let max_steps = dist_agent_lang::stdlib::ai::max_tool_steps_from_env();
+                let working_root = body.working_root.clone().map(std::path::PathBuf::from);
                 tokio::task::spawn_blocking(move || {
                     let mut schema = schema;
                     match dist_agent_lang::stdlib::ai::run_multi_step_tool_loop(
                         &mut schema,
                         max_steps,
                         Some(agent_name.as_str()),
+                        working_root.as_deref(),
                     ) {
                         Ok(result) => {
                             let reply_trimmed = result.final_text.trim();
@@ -307,6 +311,9 @@ struct TaskBody {
     /// Optional path to DAL file for summary (P3).
     #[serde(default)]
     dal_file: Option<String>,
+    /// Working root for file tools (Phase D).
+    #[serde(default)]
+    working_root: Option<String>,
 }
 
 fn task_priority_from_str(s: &str) -> &'static str {
@@ -365,16 +372,20 @@ async fn handle_task(
                     "Complete the following task. Reply with the result or answer only.\n\nTask: {}",
                     task_description
                 );
+                let tools_description =
+                    dist_agent_lang::skills::tools_description_for_skills(&state.ctx.config.skills);
                 let schema = build_serve_schema(
                     &state.ctx,
                     &objective,
-                    SERVE_TASK_TOOLS,
+                    &tools_description,
                     context_blocks,
                     body.sub_tasks.clone(),
+                    body.working_root.as_deref(),
                 );
                 let task_for_evolve = task_description.clone();
                 let agent_name = state.ctx.config.name.clone();
                 let max_steps = dist_agent_lang::stdlib::ai::max_tool_steps_from_env();
+                let working_root = body.working_root.clone().map(std::path::PathBuf::from);
                 tokio::task::spawn_blocking(move || {
                     let pending = agent::receive_pending_tasks(agent_id.as_str());
                     if let Some(_t) = pending.into_iter().next() {
@@ -383,6 +394,7 @@ async fn handle_task(
                             &mut schema,
                             max_steps,
                             Some(agent_name.as_str()),
+                            working_root.as_deref(),
                         ) {
                             Ok(result) => {
                                 let result_trimmed = result.final_text.trim();
@@ -500,9 +512,14 @@ fn spawn_agent(name: &str, mold_path: Option<&str>) -> Result<AgentContext, Stri
         let base = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
         dist_agent_lang::mold::create_from_mold_source(source, &base, Some(name), None)
     } else {
+        let default_skills: Vec<String> = dist_agent_lang::skills::DEFAULT_LEARNING_PATH_SKILLS
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect();
         let config =
             agent::create_agent_config(name.to_string(), "worker", "Agent serve".to_string())
-                .ok_or_else(|| "Invalid agent type".to_string())?;
+                .ok_or_else(|| "Invalid agent type".to_string())?
+                .with_skills(default_skills);
         agent::spawn(config)
     }
 }

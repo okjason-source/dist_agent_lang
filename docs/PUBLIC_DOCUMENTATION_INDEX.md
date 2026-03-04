@@ -73,6 +73,7 @@ dal run hello.dal
 
 - **LSP:** How to build DAL with `--features lsp` and configure the language server in VS Code/Cursor (extension or manual).
 - **Editor agents:** Recommended tool schema (OpenAI-style JSON) for `dal_check`, `dal_run`, `dal_ai_code`, `dal_ai_explain`, `dal_build_blockchain`.
+- **DAL assistant plan:** [Agents as DAL Assistants (AGENT_ASSISTANT_PLAN.md)](./AGENT_ASSISTANT_PLAN.md) — skills, molds, code-editor/app-builder tools, DAL as toolchain.
 - **Documentation context:** Pointers to this index, syntax, and STDLIB for agent context.
 
 ---
@@ -85,7 +86,6 @@ dal run hello.dal
 
 Learn about:
 - Installation methods (curl, direct download, package managers)
-- Edition comparison (Community, Professional, Enterprise)
 - Updates and versioning
 - System requirements
 - Configuration
@@ -403,18 +403,14 @@ function coordinate_agents() {
 - **Templates:** https://github.com/dist_agent_lang/templates
 - **Documentation:** https://github.com/dist_agent_lang/docs
 
-### Community
 
-- **Discord:** https://discord.gg/dist-agent-lang
-- **Forum:** https://forum.dist_agent_lang.org
-- **Stack Overflow:** Tag `dist-agent-lang` or `dal`
-- **Twitter:** @dal_lang
+### Support
 
-### Commercial Support
+- **Enterprise Support:** 
+- **Training:** 
+- **Consulting:** 
 
-- **Enterprise Support:** support@dist_agent_lang.org
-- **Training:** training@dist_agent_lang.org
-- **Consulting:** consulting@dist_agent_lang.org
+jason.dinh.developer@gmail.com
 
 ---
 

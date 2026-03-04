@@ -109,6 +109,8 @@ context_path = "./evolve.md"
 
 Context path can be overridden with `DAL_AGENT_CONTEXT_PATH`.
 
+**Evolve wired at init:** When you run `dal init agent`, evolve is wired by default: `agent.toml` gets `context_path = "./evolve.md"` and `evolve.md` is created. The serve path loads evolve into the prompt each turn; lifecycle hooks (e.g. in molds) can use `evolve::append_log`, `evolve::append_summary`, `evolve::append_conversation`. To **disable** evolve, comment out or remove the `context_path` line in `agent.toml` (and optionally remove `evolve.md`). To **opt in** again, uncomment `context_path` and ensure the evolve file exists.
+
 ---
 
 ## 4. CLI: agent commands
