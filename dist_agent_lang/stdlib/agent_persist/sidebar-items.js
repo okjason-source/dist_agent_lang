@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["SNAPSHOT_VERSION"],"enum":["PersistBackend"],"fn":["create_persistence"],"struct":["AgentConfigDto","AgentContextDto","AgentMessageDto","AgentMetricsDto","AgentRuntimeSnapshot","AgentTaskDto","FileBackedPersistence","LifecycleHooksDto","NullPersistence","PersistConfig","SkillDefinitionDto"],"trait":["RuntimePersistence"]};

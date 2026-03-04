@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["DEFAULT_LEARNING_PATH_SKILLS","PROJECT_INIT_SKILL"],"fn":["tools_description_for_skills"]};
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_LEARNING_PATH_SKILLS","ENCOURAGEMENT_BLOCK","PROJECT_INIT_SKILL"],"enum":["SkillCategory"],"fn":["global_registry","load_skill_file","load_skills_from_path","meta_from_memory","parse_skill_dal","register_global_skills","reinforcement_note","resolve_skills_path","tools_description_for_skills","tools_description_for_skills_with_registry"],"struct":["SkillDefinition","SkillRegistry"]};

@@ -510,434 +510,487 @@
 <a href=#510 id=510 data-nosnippet>510</a>        <span class="kw">let </span><span class="kw-2">mut </span>r = get_runtime();
 <a href=#511 id=511 data-nosnippet>511</a>        r.agent_contexts
 <a href=#512 id=512 data-nosnippet>512</a>            .insert(agent_context.agent_id.clone(), agent_context.clone());
-<a href=#513 id=513 data-nosnippet>513</a>    }
-<a href=#514 id=514 data-nosnippet>514</a>    <span class="prelude-val">Ok</span>(agent_context)
-<a href=#515 id=515 data-nosnippet>515</a>}
-<a href=#516 id=516 data-nosnippet>516</a>
-<a href=#517 id=517 data-nosnippet>517</a><span class="doccomment">/// In-memory coordination runtime: task queue, message bus, and registry of spawned agents for serve/behavior.
-<a href=#518 id=518 data-nosnippet>518</a></span><span class="kw">struct </span>AgentRuntime {
-<a href=#519 id=519 data-nosnippet>519</a>    task_queue: Vec&lt;(String, AgentTask)&gt;,
-<a href=#520 id=520 data-nosnippet>520</a>    message_bus: Vec&lt;(String, AgentMessage)&gt;,
-<a href=#521 id=521 data-nosnippet>521</a>    evolution_store: HashMap&lt;String, HashMap&lt;String, Value&gt;&gt;,
-<a href=#522 id=522 data-nosnippet>522</a>    <span class="doccomment">/// Registry of spawned agents by agent_id (so behavior script can set_serve_agent and we look up context).
-<a href=#523 id=523 data-nosnippet>523</a>    </span>agent_contexts: HashMap&lt;String, AgentContext&gt;,
-<a href=#524 id=524 data-nosnippet>524</a>    <span class="doccomment">/// When set (e.g. by behavior script), the agent to serve via HTTP.
-<a href=#525 id=525 data-nosnippet>525</a>    </span>serve_agent_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#526 id=526 data-nosnippet>526</a>}
-<a href=#527 id=527 data-nosnippet>527</a>
-<a href=#528 id=528 data-nosnippet>528</a><span class="kw">fn </span>get_runtime() -&gt; std::sync::MutexGuard&lt;<span class="lifetime">'static</span>, AgentRuntime&gt; {
-<a href=#529 id=529 data-nosnippet>529</a>    <span class="kw">static </span>RUNTIME: OnceLock&lt;Mutex&lt;AgentRuntime&gt;&gt; = OnceLock::new();
-<a href=#530 id=530 data-nosnippet>530</a>    RUNTIME
-<a href=#531 id=531 data-nosnippet>531</a>        .get_or_init(|| {
-<a href=#532 id=532 data-nosnippet>532</a>            Mutex::new(AgentRuntime {
-<a href=#533 id=533 data-nosnippet>533</a>                task_queue: Vec::new(),
-<a href=#534 id=534 data-nosnippet>534</a>                message_bus: Vec::new(),
-<a href=#535 id=535 data-nosnippet>535</a>                evolution_store: HashMap::new(),
-<a href=#536 id=536 data-nosnippet>536</a>                agent_contexts: HashMap::new(),
-<a href=#537 id=537 data-nosnippet>537</a>                serve_agent_id: <span class="prelude-val">None</span>,
-<a href=#538 id=538 data-nosnippet>538</a>            })
-<a href=#539 id=539 data-nosnippet>539</a>        })
-<a href=#540 id=540 data-nosnippet>540</a>        .lock()
-<a href=#541 id=541 data-nosnippet>541</a>        .unwrap()
-<a href=#542 id=542 data-nosnippet>542</a>}
-<a href=#543 id=543 data-nosnippet>543</a>
-<a href=#544 id=544 data-nosnippet>544</a><span class="doccomment">/// Register the agent as the one to serve (used by behavior script before server starts). Call agent::set_serve_agent(agent_id) from DAL.
-<a href=#545 id=545 data-nosnippet>545</a></span><span class="kw">pub fn </span>set_serve_agent(agent_id: <span class="kw-2">&amp;</span>str) {
-<a href=#546 id=546 data-nosnippet>546</a>    <span class="kw">let </span><span class="kw-2">mut </span>r = get_runtime();
-<a href=#547 id=547 data-nosnippet>547</a>    r.serve_agent_id = <span class="prelude-val">Some</span>(agent_id.to_string());
-<a href=#548 id=548 data-nosnippet>548</a>}
-<a href=#549 id=549 data-nosnippet>549</a>
-<a href=#550 id=550 data-nosnippet>550</a><span class="doccomment">/// Get the agent context for the current serve agent, if the behavior script set one. Used by dal agent serve --behavior.
-<a href=#551 id=551 data-nosnippet>551</a></span><span class="kw">pub fn </span>get_serve_agent_context() -&gt; <span class="prelude-ty">Option</span>&lt;AgentContext&gt; {
-<a href=#552 id=552 data-nosnippet>552</a>    <span class="kw">let </span>r = get_runtime();
-<a href=#553 id=553 data-nosnippet>553</a>    <span class="kw">let </span>id = r.serve_agent_id.clone()<span class="question-mark">?</span>;
-<a href=#554 id=554 data-nosnippet>554</a>    r.agent_contexts.get(<span class="kw-2">&amp;</span>id).cloned()
-<a href=#555 id=555 data-nosnippet>555</a>}
-<a href=#556 id=556 data-nosnippet>556</a>
-<a href=#557 id=557 data-nosnippet>557</a><span class="doccomment">/// Coordinate agent activities. Uses in-memory task queue; tasks are routed to agent_id.
-<a href=#558 id=558 data-nosnippet>558</a></span><span class="kw">pub fn </span>coordinate(
-<a href=#559 id=559 data-nosnippet>559</a>    agent_id: <span class="kw-2">&amp;</span>str,
-<a href=#560 id=560 data-nosnippet>560</a>    task: AgentTask,
-<a href=#561 id=561 data-nosnippet>561</a>    coordination_type: <span class="kw-2">&amp;</span>str,
-<a href=#562 id=562 data-nosnippet>562</a>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, String&gt; {
-<a href=#563 id=563 data-nosnippet>563</a>    <span class="kw">match </span>coordination_type {
-<a href=#564 id=564 data-nosnippet>564</a>        <span class="string">"task_distribution" </span>=&gt; {
-<a href=#565 id=565 data-nosnippet>565</a>            get_runtime()
-<a href=#566 id=566 data-nosnippet>566</a>                .task_queue
-<a href=#567 id=567 data-nosnippet>567</a>                .push((agent_id.to_string(), task.clone()));
-<a href=#568 id=568 data-nosnippet>568</a>            <span class="macro">log::info!</span>(<span class="string">"agent_coordination: {:?}"</span>, {
-<a href=#569 id=569 data-nosnippet>569</a>                <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
-<a href=#570 id=570 data-nosnippet>570</a>                data.insert(<span class="string">"agent_id"</span>.to_string(), Value::String(agent_id.to_string()));
-<a href=#571 id=571 data-nosnippet>571</a>                data.insert(<span class="string">"task_id"</span>.to_string(), Value::String(task.task_id.clone()));
-<a href=#572 id=572 data-nosnippet>572</a>                data.insert(
-<a href=#573 id=573 data-nosnippet>573</a>                    <span class="string">"coordination_type"</span>.to_string(),
-<a href=#574 id=574 data-nosnippet>574</a>                    Value::String(coordination_type.to_string()),
-<a href=#575 id=575 data-nosnippet>575</a>                );
-<a href=#576 id=576 data-nosnippet>576</a>                data.insert(
-<a href=#577 id=577 data-nosnippet>577</a>                    <span class="string">"message"</span>.to_string(),
-<a href=#578 id=578 data-nosnippet>578</a>                    Value::String(<span class="string">"Task distributed successfully"</span>.to_string()),
-<a href=#579 id=579 data-nosnippet>579</a>                );
-<a href=#580 id=580 data-nosnippet>580</a>                data
-<a href=#581 id=581 data-nosnippet>581</a>            });
-<a href=#582 id=582 data-nosnippet>582</a>            <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-<a href=#583 id=583 data-nosnippet>583</a>        }
-<a href=#584 id=584 data-nosnippet>584</a>        <span class="string">"resource_sharing" </span>=&gt; {
-<a href=#585 id=585 data-nosnippet>585</a>            get_runtime()
-<a href=#586 id=586 data-nosnippet>586</a>                .task_queue
-<a href=#587 id=587 data-nosnippet>587</a>                .push((agent_id.to_string(), task.clone()));
-<a href=#588 id=588 data-nosnippet>588</a>            <span class="macro">log::info!</span>(<span class="string">"agent_coordination: {:?}"</span>, {
-<a href=#589 id=589 data-nosnippet>589</a>                <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
-<a href=#590 id=590 data-nosnippet>590</a>                data.insert(<span class="string">"agent_id"</span>.to_string(), Value::String(agent_id.to_string()));
-<a href=#591 id=591 data-nosnippet>591</a>                data.insert(<span class="string">"task_id"</span>.to_string(), Value::String(task.task_id.clone()));
-<a href=#592 id=592 data-nosnippet>592</a>                data.insert(
-<a href=#593 id=593 data-nosnippet>593</a>                    <span class="string">"coordination_type"</span>.to_string(),
-<a href=#594 id=594 data-nosnippet>594</a>                    Value::String(coordination_type.to_string()),
-<a href=#595 id=595 data-nosnippet>595</a>                );
-<a href=#596 id=596 data-nosnippet>596</a>                data.insert(
-<a href=#597 id=597 data-nosnippet>597</a>                    <span class="string">"message"</span>.to_string(),
-<a href=#598 id=598 data-nosnippet>598</a>                    Value::String(<span class="string">"Resources shared successfully"</span>.to_string()),
-<a href=#599 id=599 data-nosnippet>599</a>                );
-<a href=#600 id=600 data-nosnippet>600</a>                data
-<a href=#601 id=601 data-nosnippet>601</a>            });
-<a href=#602 id=602 data-nosnippet>602</a>            <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-<a href=#603 id=603 data-nosnippet>603</a>        }
-<a href=#604 id=604 data-nosnippet>604</a>        <span class="string">"conflict_resolution" </span>=&gt; {
-<a href=#605 id=605 data-nosnippet>605</a>            get_runtime()
-<a href=#606 id=606 data-nosnippet>606</a>                .task_queue
-<a href=#607 id=607 data-nosnippet>607</a>                .push((agent_id.to_string(), task.clone()));
-<a href=#608 id=608 data-nosnippet>608</a>            <span class="macro">log::info!</span>(<span class="string">"agent_coordination: {:?}"</span>, {
-<a href=#609 id=609 data-nosnippet>609</a>                <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
-<a href=#610 id=610 data-nosnippet>610</a>                data.insert(<span class="string">"agent_id"</span>.to_string(), Value::String(agent_id.to_string()));
-<a href=#611 id=611 data-nosnippet>611</a>                data.insert(<span class="string">"task_id"</span>.to_string(), Value::String(task.task_id.clone()));
-<a href=#612 id=612 data-nosnippet>612</a>                data.insert(
-<a href=#613 id=613 data-nosnippet>613</a>                    <span class="string">"coordination_type"</span>.to_string(),
-<a href=#614 id=614 data-nosnippet>614</a>                    Value::String(coordination_type.to_string()),
-<a href=#615 id=615 data-nosnippet>615</a>                );
-<a href=#616 id=616 data-nosnippet>616</a>                data.insert(
-<a href=#617 id=617 data-nosnippet>617</a>                    <span class="string">"message"</span>.to_string(),
-<a href=#618 id=618 data-nosnippet>618</a>                    Value::String(<span class="string">"Conflict resolved successfully"</span>.to_string()),
-<a href=#619 id=619 data-nosnippet>619</a>                );
-<a href=#620 id=620 data-nosnippet>620</a>                data
-<a href=#621 id=621 data-nosnippet>621</a>            });
-<a href=#622 id=622 data-nosnippet>622</a>            <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+<a href=#513 id=513 data-nosnippet>513</a>        r.persist();
+<a href=#514 id=514 data-nosnippet>514</a>    }
+<a href=#515 id=515 data-nosnippet>515</a>    <span class="prelude-val">Ok</span>(agent_context)
+<a href=#516 id=516 data-nosnippet>516</a>}
+<a href=#517 id=517 data-nosnippet>517</a>
+<a href=#518 id=518 data-nosnippet>518</a><span class="doccomment">/// Coordination runtime with integrated persistence.
+<a href=#519 id=519 data-nosnippet>519</a>/// Persistence is ON by default; set DAL_AGENT_RUNTIME_PERSIST=0 to disable.
+<a href=#520 id=520 data-nosnippet>520</a></span><span class="kw">struct </span>AgentRuntime {
+<a href=#521 id=521 data-nosnippet>521</a>    task_queue: Vec&lt;(String, AgentTask)&gt;,
+<a href=#522 id=522 data-nosnippet>522</a>    message_bus: Vec&lt;(String, AgentMessage)&gt;,
+<a href=#523 id=523 data-nosnippet>523</a>    evolution_store: HashMap&lt;String, HashMap&lt;String, Value&gt;&gt;,
+<a href=#524 id=524 data-nosnippet>524</a>    agent_contexts: HashMap&lt;String, AgentContext&gt;,
+<a href=#525 id=525 data-nosnippet>525</a>    serve_agent_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#526 id=526 data-nosnippet>526</a>    <span class="doccomment">/// Non-builtin skills registered at runtime (persisted alongside agent state).
+<a href=#527 id=527 data-nosnippet>527</a>    </span>registered_skills: Vec&lt;<span class="kw">crate</span>::skills::SkillDefinition&gt;,
+<a href=#528 id=528 data-nosnippet>528</a>    persistence: Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::stdlib::agent_persist::RuntimePersistence&gt;,
+<a href=#529 id=529 data-nosnippet>529</a>}
+<a href=#530 id=530 data-nosnippet>530</a>
+<a href=#531 id=531 data-nosnippet>531</a><span class="kw">impl </span>AgentRuntime {
+<a href=#532 id=532 data-nosnippet>532</a>    <span class="doccomment">/// Persist current state. Best-effort: logs on failure but does not panic.
+<a href=#533 id=533 data-nosnippet>533</a>    </span><span class="kw">fn </span>persist(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+<a href=#534 id=534 data-nosnippet>534</a>        <span class="kw">let </span>snapshot = <span class="kw">crate</span>::stdlib::agent_persist::AgentRuntimeSnapshot::from_runtime(
+<a href=#535 id=535 data-nosnippet>535</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.agent_contexts,
+<a href=#536 id=536 data-nosnippet>536</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.task_queue,
+<a href=#537 id=537 data-nosnippet>537</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.message_bus,
+<a href=#538 id=538 data-nosnippet>538</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.evolution_store,
+<a href=#539 id=539 data-nosnippet>539</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.serve_agent_id,
+<a href=#540 id=540 data-nosnippet>540</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.registered_skills,
+<a href=#541 id=541 data-nosnippet>541</a>        );
+<a href=#542 id=542 data-nosnippet>542</a>        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.persistence.save(<span class="kw-2">&amp;</span>snapshot) {
+<a href=#543 id=543 data-nosnippet>543</a>            <span class="macro">log::warn!</span>(<span class="string">"Agent runtime persistence save failed: {}"</span>, e);
+<a href=#544 id=544 data-nosnippet>544</a>        }
+<a href=#545 id=545 data-nosnippet>545</a>    }
+<a href=#546 id=546 data-nosnippet>546</a>}
+<a href=#547 id=547 data-nosnippet>547</a>
+<a href=#548 id=548 data-nosnippet>548</a><span class="kw">fn </span>get_runtime() -&gt; std::sync::MutexGuard&lt;<span class="lifetime">'static</span>, AgentRuntime&gt; {
+<a href=#549 id=549 data-nosnippet>549</a>    <span class="kw">static </span>RUNTIME: OnceLock&lt;Mutex&lt;AgentRuntime&gt;&gt; = OnceLock::new();
+<a href=#550 id=550 data-nosnippet>550</a>    RUNTIME
+<a href=#551 id=551 data-nosnippet>551</a>        .get_or_init(|| {
+<a href=#552 id=552 data-nosnippet>552</a>            <span class="kw">use </span><span class="kw">crate</span>::stdlib::agent_persist::{create_persistence, PersistConfig};
+<a href=#553 id=553 data-nosnippet>553</a>            <span class="kw">let </span><span class="kw-2">mut </span>config = PersistConfig::from_env();
+<a href=#554 id=554 data-nosnippet>554</a>            <span class="kw">if </span>config.is_disabled_by_toml() {
+<a href=#555 id=555 data-nosnippet>555</a>                config.backend = <span class="kw">crate</span>::stdlib::agent_persist::PersistBackend::Disabled;
+<a href=#556 id=556 data-nosnippet>556</a>            }
+<a href=#557 id=557 data-nosnippet>557</a>            <span class="kw">let </span>persistence = create_persistence(<span class="kw-2">&amp;</span>config).unwrap_or_else(|e| {
+<a href=#558 id=558 data-nosnippet>558</a>                <span class="macro">log::warn!</span>(
+<a href=#559 id=559 data-nosnippet>559</a>                    <span class="string">"Failed to create agent persistence ({}). Running without persistence."</span>,
+<a href=#560 id=560 data-nosnippet>560</a>                    e
+<a href=#561 id=561 data-nosnippet>561</a>                );
+<a href=#562 id=562 data-nosnippet>562</a>                Box::new(<span class="kw">crate</span>::stdlib::agent_persist::NullPersistence)
+<a href=#563 id=563 data-nosnippet>563</a>            });
+<a href=#564 id=564 data-nosnippet>564</a>            <span class="kw">let </span>snapshot = persistence.load().unwrap_or_else(|e| {
+<a href=#565 id=565 data-nosnippet>565</a>                <span class="macro">log::warn!</span>(
+<a href=#566 id=566 data-nosnippet>566</a>                    <span class="string">"Failed to load agent runtime snapshot ({}). Starting empty."</span>,
+<a href=#567 id=567 data-nosnippet>567</a>                    e
+<a href=#568 id=568 data-nosnippet>568</a>                );
+<a href=#569 id=569 data-nosnippet>569</a>                <span class="kw">crate</span>::stdlib::agent_persist::AgentRuntimeSnapshot::empty()
+<a href=#570 id=570 data-nosnippet>570</a>            });
+<a href=#571 id=571 data-nosnippet>571</a>            <span class="kw">let </span>agent_contexts: HashMap&lt;String, AgentContext&gt; = snapshot
+<a href=#572 id=572 data-nosnippet>572</a>                .agent_contexts
+<a href=#573 id=573 data-nosnippet>573</a>                .iter()
+<a href=#574 id=574 data-nosnippet>574</a>                .map(|(k, v)| (k.clone(), v.to_domain()))
+<a href=#575 id=575 data-nosnippet>575</a>                .collect();
+<a href=#576 id=576 data-nosnippet>576</a>            <span class="kw">let </span>task_queue: Vec&lt;(String, AgentTask)&gt; = snapshot
+<a href=#577 id=577 data-nosnippet>577</a>                .task_queue
+<a href=#578 id=578 data-nosnippet>578</a>                .iter()
+<a href=#579 id=579 data-nosnippet>579</a>                .map(|(k, v)| (k.clone(), v.to_domain()))
+<a href=#580 id=580 data-nosnippet>580</a>                .collect();
+<a href=#581 id=581 data-nosnippet>581</a>            <span class="kw">let </span>message_bus: Vec&lt;(String, AgentMessage)&gt; = snapshot
+<a href=#582 id=582 data-nosnippet>582</a>                .message_bus
+<a href=#583 id=583 data-nosnippet>583</a>                .iter()
+<a href=#584 id=584 data-nosnippet>584</a>                .map(|(k, v)| (k.clone(), v.to_domain()))
+<a href=#585 id=585 data-nosnippet>585</a>                .collect();
+<a href=#586 id=586 data-nosnippet>586</a>            <span class="kw">let </span>registered_skills: Vec&lt;<span class="kw">crate</span>::skills::SkillDefinition&gt; = snapshot
+<a href=#587 id=587 data-nosnippet>587</a>                .registered_skills
+<a href=#588 id=588 data-nosnippet>588</a>                .iter()
+<a href=#589 id=589 data-nosnippet>589</a>                .map(|dto| dto.to_domain())
+<a href=#590 id=590 data-nosnippet>590</a>                .collect();
+<a href=#591 id=591 data-nosnippet>591</a>            <span class="kw">if </span>!registered_skills.is_empty() {
+<a href=#592 id=592 data-nosnippet>592</a>                <span class="kw">crate</span>::skills::register_global_skills(registered_skills.clone());
+<a href=#593 id=593 data-nosnippet>593</a>                <span class="macro">log::info!</span>(
+<a href=#594 id=594 data-nosnippet>594</a>                    <span class="string">"Restored {} runtime-registered skill(s) from snapshot."</span>,
+<a href=#595 id=595 data-nosnippet>595</a>                    registered_skills.len()
+<a href=#596 id=596 data-nosnippet>596</a>                );
+<a href=#597 id=597 data-nosnippet>597</a>            }
+<a href=#598 id=598 data-nosnippet>598</a>            Mutex::new(AgentRuntime {
+<a href=#599 id=599 data-nosnippet>599</a>                task_queue,
+<a href=#600 id=600 data-nosnippet>600</a>                message_bus,
+<a href=#601 id=601 data-nosnippet>601</a>                evolution_store: snapshot.evolution_store,
+<a href=#602 id=602 data-nosnippet>602</a>                agent_contexts,
+<a href=#603 id=603 data-nosnippet>603</a>                serve_agent_id: snapshot.serve_agent_id,
+<a href=#604 id=604 data-nosnippet>604</a>                registered_skills,
+<a href=#605 id=605 data-nosnippet>605</a>                persistence,
+<a href=#606 id=606 data-nosnippet>606</a>            })
+<a href=#607 id=607 data-nosnippet>607</a>        })
+<a href=#608 id=608 data-nosnippet>608</a>        .lock()
+<a href=#609 id=609 data-nosnippet>609</a>        .unwrap()
+<a href=#610 id=610 data-nosnippet>610</a>}
+<a href=#611 id=611 data-nosnippet>611</a>
+<a href=#612 id=612 data-nosnippet>612</a><span class="doccomment">/// Register skills at runtime. Persisted in the agent runtime snapshot so they survive restarts.
+<a href=#613 id=613 data-nosnippet>613</a>/// Also merges into the global skill registry for immediate use in prompt building.
+<a href=#614 id=614 data-nosnippet>614</a></span><span class="kw">pub fn </span>register_runtime_skills(skills: Vec&lt;<span class="kw">crate</span>::skills::SkillDefinition&gt;) {
+<a href=#615 id=615 data-nosnippet>615</a>    <span class="kw">if </span>skills.is_empty() {
+<a href=#616 id=616 data-nosnippet>616</a>        <span class="kw">return</span>;
+<a href=#617 id=617 data-nosnippet>617</a>    }
+<a href=#618 id=618 data-nosnippet>618</a>    <span class="kw">crate</span>::skills::register_global_skills(skills.clone());
+<a href=#619 id=619 data-nosnippet>619</a>    <span class="kw">let </span><span class="kw-2">mut </span>r = get_runtime();
+<a href=#620 id=620 data-nosnippet>620</a>    <span class="kw">for </span>skill <span class="kw">in </span>skills {
+<a href=#621 id=621 data-nosnippet>621</a>        <span class="kw">if </span>!skill.builtin &amp;&amp; !r.registered_skills.iter().any(|s| s.name == skill.name) {
+<a href=#622 id=622 data-nosnippet>622</a>            r.registered_skills.push(skill);
 <a href=#623 id=623 data-nosnippet>623</a>        }
-<a href=#624 id=624 data-nosnippet>624</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Unknown coordination type: {}"</span>, coordination_type)),
-<a href=#625 id=625 data-nosnippet>625</a>    }
+<a href=#624 id=624 data-nosnippet>624</a>    }
+<a href=#625 id=625 data-nosnippet>625</a>    r.persist();
 <a href=#626 id=626 data-nosnippet>626</a>}
 <a href=#627 id=627 data-nosnippet>627</a>
-<a href=#628 id=628 data-nosnippet>628</a><span class="doccomment">/// Returns pending tasks assigned to this agent (and removes them from the queue).
-<a href=#629 id=629 data-nosnippet>629</a></span><span class="kw">pub fn </span>receive_pending_tasks(agent_id: <span class="kw-2">&amp;</span>str) -&gt; Vec&lt;AgentTask&gt; {
-<a href=#630 id=630 data-nosnippet>630</a>    <span class="kw">let </span><span class="kw-2">mut </span>runtime = get_runtime();
-<a href=#631 id=631 data-nosnippet>631</a>    <span class="kw">let </span>(mine, rest): (Vec&lt;<span class="kw">_</span>&gt;, Vec&lt;<span class="kw">_</span>&gt;) = std::mem::take(<span class="kw-2">&amp;mut </span>runtime.task_queue)
-<a href=#632 id=632 data-nosnippet>632</a>        .into_iter()
-<a href=#633 id=633 data-nosnippet>633</a>        .partition(|(id, <span class="kw">_</span>)| id == agent_id);
-<a href=#634 id=634 data-nosnippet>634</a>    runtime.task_queue = rest;
-<a href=#635 id=635 data-nosnippet>635</a>    mine.into_iter().map(|(<span class="kw">_</span>, t)| t).collect()
-<a href=#636 id=636 data-nosnippet>636</a>}
-<a href=#637 id=637 data-nosnippet>637</a>
-<a href=#638 id=638 data-nosnippet>638</a><span class="doccomment">/// Send message between agents. Routes via in-memory message bus; receiver can call receive_messages().
-<a href=#639 id=639 data-nosnippet>639</a></span><span class="kw">pub fn </span>communicate(
-<a href=#640 id=640 data-nosnippet>640</a>    sender_id: <span class="kw-2">&amp;</span>str,
-<a href=#641 id=641 data-nosnippet>641</a>    receiver_id: <span class="kw-2">&amp;</span>str,
-<a href=#642 id=642 data-nosnippet>642</a>    message: AgentMessage,
-<a href=#643 id=643 data-nosnippet>643</a>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, String&gt; {
-<a href=#644 id=644 data-nosnippet>644</a>    get_runtime()
-<a href=#645 id=645 data-nosnippet>645</a>        .message_bus
-<a href=#646 id=646 data-nosnippet>646</a>        .push((receiver_id.to_string(), message.clone()));
-<a href=#647 id=647 data-nosnippet>647</a>    <span class="macro">log::info!</span>(<span class="string">"agent_communication: {:?}"</span>, {
-<a href=#648 id=648 data-nosnippet>648</a>        <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
-<a href=#649 id=649 data-nosnippet>649</a>        data.insert(
-<a href=#650 id=650 data-nosnippet>650</a>            <span class="string">"sender_id"</span>.to_string(),
-<a href=#651 id=651 data-nosnippet>651</a>            Value::String(sender_id.to_string()),
-<a href=#652 id=652 data-nosnippet>652</a>        );
-<a href=#653 id=653 data-nosnippet>653</a>        data.insert(
-<a href=#654 id=654 data-nosnippet>654</a>            <span class="string">"receiver_id"</span>.to_string(),
-<a href=#655 id=655 data-nosnippet>655</a>            Value::String(receiver_id.to_string()),
-<a href=#656 id=656 data-nosnippet>656</a>        );
-<a href=#657 id=657 data-nosnippet>657</a>        data.insert(
-<a href=#658 id=658 data-nosnippet>658</a>            <span class="string">"message_id"</span>.to_string(),
-<a href=#659 id=659 data-nosnippet>659</a>            Value::String(message.message_id.clone()),
-<a href=#660 id=660 data-nosnippet>660</a>        );
-<a href=#661 id=661 data-nosnippet>661</a>        data.insert(
-<a href=#662 id=662 data-nosnippet>662</a>            <span class="string">"message_type"</span>.to_string(),
-<a href=#663 id=663 data-nosnippet>663</a>            Value::String(message.message_type.clone()),
-<a href=#664 id=664 data-nosnippet>664</a>        );
-<a href=#665 id=665 data-nosnippet>665</a>        data.insert(
-<a href=#666 id=666 data-nosnippet>666</a>            <span class="string">"message"</span>.to_string(),
-<a href=#667 id=667 data-nosnippet>667</a>            Value::String(<span class="string">"Message sent successfully"</span>.to_string()),
-<a href=#668 id=668 data-nosnippet>668</a>        );
-<a href=#669 id=669 data-nosnippet>669</a>        data
-<a href=#670 id=670 data-nosnippet>670</a>    });
-<a href=#671 id=671 data-nosnippet>671</a>
-<a href=#672 id=672 data-nosnippet>672</a>    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-<a href=#673 id=673 data-nosnippet>673</a>}
-<a href=#674 id=674 data-nosnippet>674</a>
-<a href=#675 id=675 data-nosnippet>675</a><span class="doccomment">/// Returns messages for this agent (and removes them from the bus).
-<a href=#676 id=676 data-nosnippet>676</a></span><span class="kw">pub fn </span>receive_messages(receiver_id: <span class="kw-2">&amp;</span>str) -&gt; Vec&lt;AgentMessage&gt; {
-<a href=#677 id=677 data-nosnippet>677</a>    <span class="kw">let </span><span class="kw-2">mut </span>runtime = get_runtime();
-<a href=#678 id=678 data-nosnippet>678</a>    <span class="kw">let </span>(mine, rest): (Vec&lt;<span class="kw">_</span>&gt;, Vec&lt;<span class="kw">_</span>&gt;) = std::mem::take(<span class="kw-2">&amp;mut </span>runtime.message_bus)
-<a href=#679 id=679 data-nosnippet>679</a>        .into_iter()
-<a href=#680 id=680 data-nosnippet>680</a>        .partition(|(id, <span class="kw">_</span>)| id == receiver_id);
-<a href=#681 id=681 data-nosnippet>681</a>    runtime.message_bus = rest;
-<a href=#682 id=682 data-nosnippet>682</a>    mine.into_iter().map(|(<span class="kw">_</span>, m)| m).collect()
-<a href=#683 id=683 data-nosnippet>683</a>}
-<a href=#684 id=684 data-nosnippet>684</a>
-<a href=#685 id=685 data-nosnippet>685</a><span class="doccomment">/// Evolve agent through learning. Persists evolution_data in in-memory store; use get_evolution_data() to retrieve.
-<a href=#686 id=686 data-nosnippet>686</a>/// If the agent was spawned from a mold with lifecycle.on_evolve, that DAL snippet is run with `agent_id` and `evolution_data` in scope (so the mold can e.g. call evolve::append_summary to keep file and in-memory evolution aligned).
-<a href=#687 id=687 data-nosnippet>687</a></span><span class="kw">pub fn </span>evolve(agent_id: <span class="kw-2">&amp;</span>str, evolution_data: HashMap&lt;String, Value&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;bool, String&gt; {
-<a href=#688 id=688 data-nosnippet>688</a>    <span class="kw">let </span>on_evolve = {
-<a href=#689 id=689 data-nosnippet>689</a>        <span class="kw">let </span><span class="kw-2">mut </span>r = get_runtime();
-<a href=#690 id=690 data-nosnippet>690</a>        r.evolution_store
-<a href=#691 id=691 data-nosnippet>691</a>            .insert(agent_id.to_string(), evolution_data.clone());
-<a href=#692 id=692 data-nosnippet>692</a>        r.agent_contexts
-<a href=#693 id=693 data-nosnippet>693</a>            .get(agent_id)
-<a href=#694 id=694 data-nosnippet>694</a>            .and_then(|ctx| ctx.config.lifecycle.as_ref())
-<a href=#695 id=695 data-nosnippet>695</a>            .and_then(|l| l.on_evolve.clone())
-<a href=#696 id=696 data-nosnippet>696</a>    };
-<a href=#697 id=697 data-nosnippet>697</a>    <span class="macro">log::info!</span>(<span class="string">"agent_evolution: {:?}"</span>, {
-<a href=#698 id=698 data-nosnippet>698</a>        <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
-<a href=#699 id=699 data-nosnippet>699</a>        data.insert(<span class="string">"agent_id"</span>.to_string(), Value::String(agent_id.to_string()));
-<a href=#700 id=700 data-nosnippet>700</a>        data.insert(
-<a href=#701 id=701 data-nosnippet>701</a>            <span class="string">"evolution_data_keys"</span>.to_string(),
-<a href=#702 id=702 data-nosnippet>702</a>            Value::Int(evolution_data.len() <span class="kw">as </span>i64),
-<a href=#703 id=703 data-nosnippet>703</a>        );
-<a href=#704 id=704 data-nosnippet>704</a>        data.insert(
-<a href=#705 id=705 data-nosnippet>705</a>            <span class="string">"message"</span>.to_string(),
-<a href=#706 id=706 data-nosnippet>706</a>            Value::String(<span class="string">"Agent evolved successfully"</span>.to_string()),
-<a href=#707 id=707 data-nosnippet>707</a>        );
-<a href=#708 id=708 data-nosnippet>708</a>        data
-<a href=#709 id=709 data-nosnippet>709</a>    });
-<a href=#710 id=710 data-nosnippet>710</a>
-<a href=#711 id=711 data-nosnippet>711</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(snippet) = on_evolve {
-<a href=#712 id=712 data-nosnippet>712</a>        <span class="kw">let </span><span class="kw-2">mut </span>vars = HashMap::new();
-<a href=#713 id=713 data-nosnippet>713</a>        vars.insert(<span class="string">"agent_id"</span>.to_string(), Value::String(agent_id.to_string()));
-<a href=#714 id=714 data-nosnippet>714</a>        vars.insert(<span class="string">"evolution_data"</span>.to_string(), Value::Map(evolution_data));
-<a href=#715 id=715 data-nosnippet>715</a>        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">crate</span>::execute_dal_with_scope(<span class="kw-2">&amp;</span>vars, <span class="kw-2">&amp;</span>snippet) {
-<a href=#716 id=716 data-nosnippet>716</a>            <span class="macro">log::warn!</span>(
-<a href=#717 id=717 data-nosnippet>717</a>                <span class="string">"Mold on_evolve lifecycle hook failed for {}: {}"</span>,
-<a href=#718 id=718 data-nosnippet>718</a>                agent_id,
-<a href=#719 id=719 data-nosnippet>719</a>                e
-<a href=#720 id=720 data-nosnippet>720</a>            );
-<a href=#721 id=721 data-nosnippet>721</a>        }
-<a href=#722 id=722 data-nosnippet>722</a>    }
+<a href=#628 id=628 data-nosnippet>628</a><span class="doccomment">/// Register the agent as the one to serve (used by behavior script before server starts). Call agent::set_serve_agent(agent_id) from DAL.
+<a href=#629 id=629 data-nosnippet>629</a></span><span class="kw">pub fn </span>set_serve_agent(agent_id: <span class="kw-2">&amp;</span>str) {
+<a href=#630 id=630 data-nosnippet>630</a>    <span class="kw">let </span><span class="kw-2">mut </span>r = get_runtime();
+<a href=#631 id=631 data-nosnippet>631</a>    r.serve_agent_id = <span class="prelude-val">Some</span>(agent_id.to_string());
+<a href=#632 id=632 data-nosnippet>632</a>    r.persist();
+<a href=#633 id=633 data-nosnippet>633</a>}
+<a href=#634 id=634 data-nosnippet>634</a>
+<a href=#635 id=635 data-nosnippet>635</a><span class="doccomment">/// Get the agent context for the current serve agent, if the behavior script set one. Used by dal agent serve --behavior.
+<a href=#636 id=636 data-nosnippet>636</a></span><span class="kw">pub fn </span>get_serve_agent_context() -&gt; <span class="prelude-ty">Option</span>&lt;AgentContext&gt; {
+<a href=#637 id=637 data-nosnippet>637</a>    <span class="kw">let </span>r = get_runtime();
+<a href=#638 id=638 data-nosnippet>638</a>    <span class="kw">let </span>id = r.serve_agent_id.clone()<span class="question-mark">?</span>;
+<a href=#639 id=639 data-nosnippet>639</a>    r.agent_contexts.get(<span class="kw-2">&amp;</span>id).cloned()
+<a href=#640 id=640 data-nosnippet>640</a>}
+<a href=#641 id=641 data-nosnippet>641</a>
+<a href=#642 id=642 data-nosnippet>642</a><span class="doccomment">/// Coordinate agent activities. Uses in-memory task queue; tasks are routed to agent_id.
+<a href=#643 id=643 data-nosnippet>643</a></span><span class="kw">pub fn </span>coordinate(
+<a href=#644 id=644 data-nosnippet>644</a>    agent_id: <span class="kw-2">&amp;</span>str,
+<a href=#645 id=645 data-nosnippet>645</a>    task: AgentTask,
+<a href=#646 id=646 data-nosnippet>646</a>    coordination_type: <span class="kw-2">&amp;</span>str,
+<a href=#647 id=647 data-nosnippet>647</a>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, String&gt; {
+<a href=#648 id=648 data-nosnippet>648</a>    <span class="kw">match </span>coordination_type {
+<a href=#649 id=649 data-nosnippet>649</a>        <span class="string">"task_distribution" </span>| <span class="string">"resource_sharing" </span>| <span class="string">"conflict_resolution" </span>=&gt; {
+<a href=#650 id=650 data-nosnippet>650</a>            <span class="kw">let </span><span class="kw-2">mut </span>r = get_runtime();
+<a href=#651 id=651 data-nosnippet>651</a>            r.task_queue.push((agent_id.to_string(), task.clone()));
+<a href=#652 id=652 data-nosnippet>652</a>            r.persist();
+<a href=#653 id=653 data-nosnippet>653</a>            <span class="macro">log::info!</span>(<span class="string">"agent_coordination: {:?}"</span>, {
+<a href=#654 id=654 data-nosnippet>654</a>                <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
+<a href=#655 id=655 data-nosnippet>655</a>                data.insert(<span class="string">"agent_id"</span>.to_string(), Value::String(agent_id.to_string()));
+<a href=#656 id=656 data-nosnippet>656</a>                data.insert(<span class="string">"task_id"</span>.to_string(), Value::String(task.task_id.clone()));
+<a href=#657 id=657 data-nosnippet>657</a>                data.insert(
+<a href=#658 id=658 data-nosnippet>658</a>                    <span class="string">"coordination_type"</span>.to_string(),
+<a href=#659 id=659 data-nosnippet>659</a>                    Value::String(coordination_type.to_string()),
+<a href=#660 id=660 data-nosnippet>660</a>                );
+<a href=#661 id=661 data-nosnippet>661</a>                data.insert(
+<a href=#662 id=662 data-nosnippet>662</a>                    <span class="string">"message"</span>.to_string(),
+<a href=#663 id=663 data-nosnippet>663</a>                    Value::String(<span class="macro">format!</span>(<span class="string">"{} completed successfully"</span>, coordination_type)),
+<a href=#664 id=664 data-nosnippet>664</a>                );
+<a href=#665 id=665 data-nosnippet>665</a>                data
+<a href=#666 id=666 data-nosnippet>666</a>            });
+<a href=#667 id=667 data-nosnippet>667</a>            <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+<a href=#668 id=668 data-nosnippet>668</a>        }
+<a href=#669 id=669 data-nosnippet>669</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Unknown coordination type: {}"</span>, coordination_type)),
+<a href=#670 id=670 data-nosnippet>670</a>    }
+<a href=#671 id=671 data-nosnippet>671</a>}
+<a href=#672 id=672 data-nosnippet>672</a>
+<a href=#673 id=673 data-nosnippet>673</a><span class="doccomment">/// Returns pending tasks assigned to this agent (and removes them from the queue).
+<a href=#674 id=674 data-nosnippet>674</a></span><span class="kw">pub fn </span>receive_pending_tasks(agent_id: <span class="kw-2">&amp;</span>str) -&gt; Vec&lt;AgentTask&gt; {
+<a href=#675 id=675 data-nosnippet>675</a>    <span class="kw">let </span><span class="kw-2">mut </span>runtime = get_runtime();
+<a href=#676 id=676 data-nosnippet>676</a>    <span class="kw">let </span>(mine, rest): (Vec&lt;<span class="kw">_</span>&gt;, Vec&lt;<span class="kw">_</span>&gt;) = std::mem::take(<span class="kw-2">&amp;mut </span>runtime.task_queue)
+<a href=#677 id=677 data-nosnippet>677</a>        .into_iter()
+<a href=#678 id=678 data-nosnippet>678</a>        .partition(|(id, <span class="kw">_</span>)| id == agent_id);
+<a href=#679 id=679 data-nosnippet>679</a>    runtime.task_queue = rest;
+<a href=#680 id=680 data-nosnippet>680</a>    runtime.persist();
+<a href=#681 id=681 data-nosnippet>681</a>    mine.into_iter().map(|(<span class="kw">_</span>, t)| t).collect()
+<a href=#682 id=682 data-nosnippet>682</a>}
+<a href=#683 id=683 data-nosnippet>683</a>
+<a href=#684 id=684 data-nosnippet>684</a><span class="doccomment">/// Send message between agents. Routes via in-memory message bus; receiver can call receive_messages().
+<a href=#685 id=685 data-nosnippet>685</a></span><span class="kw">pub fn </span>communicate(
+<a href=#686 id=686 data-nosnippet>686</a>    sender_id: <span class="kw-2">&amp;</span>str,
+<a href=#687 id=687 data-nosnippet>687</a>    receiver_id: <span class="kw-2">&amp;</span>str,
+<a href=#688 id=688 data-nosnippet>688</a>    message: AgentMessage,
+<a href=#689 id=689 data-nosnippet>689</a>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, String&gt; {
+<a href=#690 id=690 data-nosnippet>690</a>    {
+<a href=#691 id=691 data-nosnippet>691</a>        <span class="kw">let </span><span class="kw-2">mut </span>r = get_runtime();
+<a href=#692 id=692 data-nosnippet>692</a>        r.message_bus
+<a href=#693 id=693 data-nosnippet>693</a>            .push((receiver_id.to_string(), message.clone()));
+<a href=#694 id=694 data-nosnippet>694</a>        r.persist();
+<a href=#695 id=695 data-nosnippet>695</a>    }
+<a href=#696 id=696 data-nosnippet>696</a>    <span class="macro">log::info!</span>(<span class="string">"agent_communication: {:?}"</span>, {
+<a href=#697 id=697 data-nosnippet>697</a>        <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
+<a href=#698 id=698 data-nosnippet>698</a>        data.insert(
+<a href=#699 id=699 data-nosnippet>699</a>            <span class="string">"sender_id"</span>.to_string(),
+<a href=#700 id=700 data-nosnippet>700</a>            Value::String(sender_id.to_string()),
+<a href=#701 id=701 data-nosnippet>701</a>        );
+<a href=#702 id=702 data-nosnippet>702</a>        data.insert(
+<a href=#703 id=703 data-nosnippet>703</a>            <span class="string">"receiver_id"</span>.to_string(),
+<a href=#704 id=704 data-nosnippet>704</a>            Value::String(receiver_id.to_string()),
+<a href=#705 id=705 data-nosnippet>705</a>        );
+<a href=#706 id=706 data-nosnippet>706</a>        data.insert(
+<a href=#707 id=707 data-nosnippet>707</a>            <span class="string">"message_id"</span>.to_string(),
+<a href=#708 id=708 data-nosnippet>708</a>            Value::String(message.message_id.clone()),
+<a href=#709 id=709 data-nosnippet>709</a>        );
+<a href=#710 id=710 data-nosnippet>710</a>        data.insert(
+<a href=#711 id=711 data-nosnippet>711</a>            <span class="string">"message_type"</span>.to_string(),
+<a href=#712 id=712 data-nosnippet>712</a>            Value::String(message.message_type.clone()),
+<a href=#713 id=713 data-nosnippet>713</a>        );
+<a href=#714 id=714 data-nosnippet>714</a>        data.insert(
+<a href=#715 id=715 data-nosnippet>715</a>            <span class="string">"message"</span>.to_string(),
+<a href=#716 id=716 data-nosnippet>716</a>            Value::String(<span class="string">"Message sent successfully"</span>.to_string()),
+<a href=#717 id=717 data-nosnippet>717</a>        );
+<a href=#718 id=718 data-nosnippet>718</a>        data
+<a href=#719 id=719 data-nosnippet>719</a>    });
+<a href=#720 id=720 data-nosnippet>720</a>
+<a href=#721 id=721 data-nosnippet>721</a>    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+<a href=#722 id=722 data-nosnippet>722</a>}
 <a href=#723 id=723 data-nosnippet>723</a>
-<a href=#724 id=724 data-nosnippet>724</a>    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-<a href=#725 id=725 data-nosnippet>725</a>}
-<a href=#726 id=726 data-nosnippet>726</a>
-<a href=#727 id=727 data-nosnippet>727</a><span class="doccomment">/// Returns stored evolution data for an agent, if any.
-<a href=#728 id=728 data-nosnippet>728</a></span><span class="kw">pub fn </span>get_evolution_data(agent_id: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, Value&gt;&gt; {
-<a href=#729 id=729 data-nosnippet>729</a>    get_runtime().evolution_store.get(agent_id).cloned()
-<a href=#730 id=730 data-nosnippet>730</a>}
-<a href=#731 id=731 data-nosnippet>731</a>
-<a href=#732 id=732 data-nosnippet>732</a><span class="doccomment">/// Capability registry: when set via register_capabilities(), validation uses it; otherwise built-in defaults.
-<a href=#733 id=733 data-nosnippet>733</a></span><span class="kw">static </span>CAPABILITY_REGISTRY: Mutex&lt;<span class="prelude-ty">Option</span>&lt;HashMap&lt;String, Vec&lt;String&gt;&gt;&gt;&gt; = Mutex::new(<span class="prelude-val">None</span>);
+<a href=#724 id=724 data-nosnippet>724</a><span class="doccomment">/// Returns messages for this agent (and removes them from the bus).
+<a href=#725 id=725 data-nosnippet>725</a></span><span class="kw">pub fn </span>receive_messages(receiver_id: <span class="kw-2">&amp;</span>str) -&gt; Vec&lt;AgentMessage&gt; {
+<a href=#726 id=726 data-nosnippet>726</a>    <span class="kw">let </span><span class="kw-2">mut </span>runtime = get_runtime();
+<a href=#727 id=727 data-nosnippet>727</a>    <span class="kw">let </span>(mine, rest): (Vec&lt;<span class="kw">_</span>&gt;, Vec&lt;<span class="kw">_</span>&gt;) = std::mem::take(<span class="kw-2">&amp;mut </span>runtime.message_bus)
+<a href=#728 id=728 data-nosnippet>728</a>        .into_iter()
+<a href=#729 id=729 data-nosnippet>729</a>        .partition(|(id, <span class="kw">_</span>)| id == receiver_id);
+<a href=#730 id=730 data-nosnippet>730</a>    runtime.message_bus = rest;
+<a href=#731 id=731 data-nosnippet>731</a>    runtime.persist();
+<a href=#732 id=732 data-nosnippet>732</a>    mine.into_iter().map(|(<span class="kw">_</span>, m)| m).collect()
+<a href=#733 id=733 data-nosnippet>733</a>}
 <a href=#734 id=734 data-nosnippet>734</a>
-<a href=#735 id=735 data-nosnippet>735</a><span class="doccomment">/// Register capabilities per agent type (e.g. from config/DB). Overrides built-in defaults for validation.
-<a href=#736 id=736 data-nosnippet>736</a></span><span class="kw">pub fn </span>register_capabilities(agent_type: String, capabilities: Vec&lt;String&gt;) {
-<a href=#737 id=737 data-nosnippet>737</a>    <span class="kw">let </span><span class="kw-2">mut </span>reg = CAPABILITY_REGISTRY.lock().unwrap();
-<a href=#738 id=738 data-nosnippet>738</a>    <span class="kw">if </span>reg.is_none() {
-<a href=#739 id=739 data-nosnippet>739</a>        <span class="kw-2">*</span>reg = <span class="prelude-val">Some</span>(HashMap::new());
-<a href=#740 id=740 data-nosnippet>740</a>    }
-<a href=#741 id=741 data-nosnippet>741</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>m) = <span class="kw-2">*</span>reg {
-<a href=#742 id=742 data-nosnippet>742</a>        m.insert(agent_type, capabilities);
-<a href=#743 id=743 data-nosnippet>743</a>    }
-<a href=#744 id=744 data-nosnippet>744</a>}
-<a href=#745 id=745 data-nosnippet>745</a>
-<a href=#746 id=746 data-nosnippet>746</a><span class="doccomment">/// Validate agent capabilities. Uses registry if set (e.g. from config); otherwise built-in per agent type.
-<a href=#747 id=747 data-nosnippet>747</a></span><span class="kw">pub fn </span>validate_capabilities(
-<a href=#748 id=748 data-nosnippet>748</a>    agent_type: <span class="kw-2">&amp;</span>str,
-<a href=#749 id=749 data-nosnippet>749</a>    required_capabilities: Vec&lt;String&gt;,
-<a href=#750 id=750 data-nosnippet>750</a>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, String&gt; {
-<a href=#751 id=751 data-nosnippet>751</a>    <span class="kw">let </span>agent_type_enum = AgentType::from_string(agent_type)
-<a href=#752 id=752 data-nosnippet>752</a>        .ok_or_else(|| <span class="macro">format!</span>(<span class="string">"Invalid agent type: {}"</span>, agent_type))<span class="question-mark">?</span>;
-<a href=#753 id=753 data-nosnippet>753</a>
-<a href=#754 id=754 data-nosnippet>754</a>    <span class="kw">let </span>capabilities: Vec&lt;String&gt; = {
-<a href=#755 id=755 data-nosnippet>755</a>        <span class="kw">let </span>reg = CAPABILITY_REGISTRY.lock().unwrap();
-<a href=#756 id=756 data-nosnippet>756</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>m) = <span class="kw-2">*</span>reg {
-<a href=#757 id=757 data-nosnippet>757</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(caps) = m.get(agent_type) {
-<a href=#758 id=758 data-nosnippet>758</a>                caps.clone()
-<a href=#759 id=759 data-nosnippet>759</a>            } <span class="kw">else </span>{
-<a href=#760 id=760 data-nosnippet>760</a>                builtin_capabilities(<span class="kw-2">&amp;</span>agent_type_enum)
-<a href=#761 id=761 data-nosnippet>761</a>                    .into_iter()
-<a href=#762 id=762 data-nosnippet>762</a>                    .map(String::from)
-<a href=#763 id=763 data-nosnippet>763</a>                    .collect()
-<a href=#764 id=764 data-nosnippet>764</a>            }
-<a href=#765 id=765 data-nosnippet>765</a>        } <span class="kw">else </span>{
-<a href=#766 id=766 data-nosnippet>766</a>            builtin_capabilities(<span class="kw-2">&amp;</span>agent_type_enum)
-<a href=#767 id=767 data-nosnippet>767</a>                .into_iter()
-<a href=#768 id=768 data-nosnippet>768</a>                .map(String::from)
-<a href=#769 id=769 data-nosnippet>769</a>                .collect()
-<a href=#770 id=770 data-nosnippet>770</a>        }
-<a href=#771 id=771 data-nosnippet>771</a>    };
-<a href=#772 id=772 data-nosnippet>772</a>
-<a href=#773 id=773 data-nosnippet>773</a>    <span class="kw">let </span><span class="kw-2">mut </span>missing_capabilities = Vec::new();
-<a href=#774 id=774 data-nosnippet>774</a>    <span class="kw">for </span>required_cap <span class="kw">in </span><span class="kw-2">&amp;</span>required_capabilities {
-<a href=#775 id=775 data-nosnippet>775</a>        <span class="kw">if </span>!capabilities.contains(required_cap) {
-<a href=#776 id=776 data-nosnippet>776</a>            missing_capabilities.push(required_cap);
-<a href=#777 id=777 data-nosnippet>777</a>        }
-<a href=#778 id=778 data-nosnippet>778</a>    }
+<a href=#735 id=735 data-nosnippet>735</a><span class="doccomment">/// Evolve agent through learning. Persists evolution_data to disk; use get_evolution_data() to retrieve.
+<a href=#736 id=736 data-nosnippet>736</a>/// If the agent was spawned from a mold with lifecycle.on_evolve, that DAL snippet is run with `agent_id` and `evolution_data` in scope.
+<a href=#737 id=737 data-nosnippet>737</a></span><span class="kw">pub fn </span>evolve(agent_id: <span class="kw-2">&amp;</span>str, evolution_data: HashMap&lt;String, Value&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;bool, String&gt; {
+<a href=#738 id=738 data-nosnippet>738</a>    <span class="kw">let </span>on_evolve = {
+<a href=#739 id=739 data-nosnippet>739</a>        <span class="kw">let </span><span class="kw-2">mut </span>r = get_runtime();
+<a href=#740 id=740 data-nosnippet>740</a>        r.evolution_store
+<a href=#741 id=741 data-nosnippet>741</a>            .insert(agent_id.to_string(), evolution_data.clone());
+<a href=#742 id=742 data-nosnippet>742</a>        <span class="kw">let </span>hook = r
+<a href=#743 id=743 data-nosnippet>743</a>            .agent_contexts
+<a href=#744 id=744 data-nosnippet>744</a>            .get(agent_id)
+<a href=#745 id=745 data-nosnippet>745</a>            .and_then(|ctx| ctx.config.lifecycle.as_ref())
+<a href=#746 id=746 data-nosnippet>746</a>            .and_then(|l| l.on_evolve.clone());
+<a href=#747 id=747 data-nosnippet>747</a>        r.persist();
+<a href=#748 id=748 data-nosnippet>748</a>        hook
+<a href=#749 id=749 data-nosnippet>749</a>    };
+<a href=#750 id=750 data-nosnippet>750</a>    <span class="macro">log::info!</span>(<span class="string">"agent_evolution: {:?}"</span>, {
+<a href=#751 id=751 data-nosnippet>751</a>        <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
+<a href=#752 id=752 data-nosnippet>752</a>        data.insert(<span class="string">"agent_id"</span>.to_string(), Value::String(agent_id.to_string()));
+<a href=#753 id=753 data-nosnippet>753</a>        data.insert(
+<a href=#754 id=754 data-nosnippet>754</a>            <span class="string">"evolution_data_keys"</span>.to_string(),
+<a href=#755 id=755 data-nosnippet>755</a>            Value::Int(evolution_data.len() <span class="kw">as </span>i64),
+<a href=#756 id=756 data-nosnippet>756</a>        );
+<a href=#757 id=757 data-nosnippet>757</a>        data.insert(
+<a href=#758 id=758 data-nosnippet>758</a>            <span class="string">"message"</span>.to_string(),
+<a href=#759 id=759 data-nosnippet>759</a>            Value::String(<span class="string">"Agent evolved successfully"</span>.to_string()),
+<a href=#760 id=760 data-nosnippet>760</a>        );
+<a href=#761 id=761 data-nosnippet>761</a>        data
+<a href=#762 id=762 data-nosnippet>762</a>    });
+<a href=#763 id=763 data-nosnippet>763</a>
+<a href=#764 id=764 data-nosnippet>764</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(snippet) = on_evolve {
+<a href=#765 id=765 data-nosnippet>765</a>        <span class="kw">let </span><span class="kw-2">mut </span>vars = HashMap::new();
+<a href=#766 id=766 data-nosnippet>766</a>        vars.insert(<span class="string">"agent_id"</span>.to_string(), Value::String(agent_id.to_string()));
+<a href=#767 id=767 data-nosnippet>767</a>        vars.insert(<span class="string">"evolution_data"</span>.to_string(), Value::Map(evolution_data));
+<a href=#768 id=768 data-nosnippet>768</a>        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">crate</span>::execute_dal_with_scope(<span class="kw-2">&amp;</span>vars, <span class="kw-2">&amp;</span>snippet) {
+<a href=#769 id=769 data-nosnippet>769</a>            <span class="macro">log::warn!</span>(
+<a href=#770 id=770 data-nosnippet>770</a>                <span class="string">"Mold on_evolve lifecycle hook failed for {}: {}"</span>,
+<a href=#771 id=771 data-nosnippet>771</a>                agent_id,
+<a href=#772 id=772 data-nosnippet>772</a>                e
+<a href=#773 id=773 data-nosnippet>773</a>            );
+<a href=#774 id=774 data-nosnippet>774</a>        }
+<a href=#775 id=775 data-nosnippet>775</a>    }
+<a href=#776 id=776 data-nosnippet>776</a>
+<a href=#777 id=777 data-nosnippet>777</a>    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+<a href=#778 id=778 data-nosnippet>778</a>}
 <a href=#779 id=779 data-nosnippet>779</a>
-<a href=#780 id=780 data-nosnippet>780</a>    <span class="kw">if </span>missing_capabilities.is_empty() {
-<a href=#781 id=781 data-nosnippet>781</a>        <span class="macro">log::info!</span>(<span class="string">"capability_validation: {:?}"</span>, {
-<a href=#782 id=782 data-nosnippet>782</a>            <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
-<a href=#783 id=783 data-nosnippet>783</a>            data.insert(
-<a href=#784 id=784 data-nosnippet>784</a>                <span class="string">"agent_type"</span>.to_string(),
-<a href=#785 id=785 data-nosnippet>785</a>                Value::String(agent_type.to_string()),
-<a href=#786 id=786 data-nosnippet>786</a>            );
-<a href=#787 id=787 data-nosnippet>787</a>            data.insert(
-<a href=#788 id=788 data-nosnippet>788</a>                <span class="string">"required_capabilities"</span>.to_string(),
-<a href=#789 id=789 data-nosnippet>789</a>                Value::Int(required_capabilities.len() <span class="kw">as </span>i64),
-<a href=#790 id=790 data-nosnippet>790</a>            );
-<a href=#791 id=791 data-nosnippet>791</a>            data.insert(
-<a href=#792 id=792 data-nosnippet>792</a>                <span class="string">"message"</span>.to_string(),
-<a href=#793 id=793 data-nosnippet>793</a>                Value::String(<span class="string">"All capabilities validated"</span>.to_string()),
-<a href=#794 id=794 data-nosnippet>794</a>            );
-<a href=#795 id=795 data-nosnippet>795</a>            data
-<a href=#796 id=796 data-nosnippet>796</a>        });
-<a href=#797 id=797 data-nosnippet>797</a>        <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-<a href=#798 id=798 data-nosnippet>798</a>    } <span class="kw">else </span>{
-<a href=#799 id=799 data-nosnippet>799</a>        <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Missing capabilities: {:?}"</span>, missing_capabilities))
-<a href=#800 id=800 data-nosnippet>800</a>    }
-<a href=#801 id=801 data-nosnippet>801</a>}
-<a href=#802 id=802 data-nosnippet>802</a>
-<a href=#803 id=803 data-nosnippet>803</a><span class="doccomment">/// Create agent configuration
-<a href=#804 id=804 data-nosnippet>804</a></span><span class="kw">pub fn </span>create_agent_config(name: String, agent_type: <span class="kw-2">&amp;</span>str, role: String) -&gt; <span class="prelude-ty">Option</span>&lt;AgentConfig&gt; {
-<a href=#805 id=805 data-nosnippet>805</a>    <span class="kw">let </span>agent_type_enum = AgentType::from_string(agent_type)<span class="question-mark">?</span>;
-<a href=#806 id=806 data-nosnippet>806</a>    <span class="prelude-val">Some</span>(AgentConfig::new(name, agent_type_enum).with_role(role))
-<a href=#807 id=807 data-nosnippet>807</a>}
-<a href=#808 id=808 data-nosnippet>808</a>
-<a href=#809 id=809 data-nosnippet>809</a><span class="doccomment">/// Create agent task
-<a href=#810 id=810 data-nosnippet>810</a></span><span class="kw">pub fn </span>create_agent_task(
-<a href=#811 id=811 data-nosnippet>811</a>    task_id: String,
-<a href=#812 id=812 data-nosnippet>812</a>    description: String,
-<a href=#813 id=813 data-nosnippet>813</a>    priority: <span class="kw-2">&amp;</span>str,
-<a href=#814 id=814 data-nosnippet>814</a>) -&gt; <span class="prelude-ty">Option</span>&lt;AgentTask&gt; {
-<a href=#815 id=815 data-nosnippet>815</a>    <span class="kw">let </span>priority_enum = TaskPriority::from_string(priority)<span class="question-mark">?</span>;
-<a href=#816 id=816 data-nosnippet>816</a>    <span class="prelude-val">Some</span>(AgentTask {
-<a href=#817 id=817 data-nosnippet>817</a>        task_id,
-<a href=#818 id=818 data-nosnippet>818</a>        description,
-<a href=#819 id=819 data-nosnippet>819</a>        priority: priority_enum,
-<a href=#820 id=820 data-nosnippet>820</a>        status: TaskStatus::Pending,
-<a href=#821 id=821 data-nosnippet>821</a>        assigned_at: chrono::Utc::now().to_rfc3339(),
-<a href=#822 id=822 data-nosnippet>822</a>        completed_at: <span class="prelude-val">None</span>,
-<a href=#823 id=823 data-nosnippet>823</a>        dependencies: Vec::new(),
-<a href=#824 id=824 data-nosnippet>824</a>        metadata: HashMap::new(),
-<a href=#825 id=825 data-nosnippet>825</a>    })
-<a href=#826 id=826 data-nosnippet>826</a>}
-<a href=#827 id=827 data-nosnippet>827</a>
-<a href=#828 id=828 data-nosnippet>828</a><span class="doccomment">/// Create agent message
-<a href=#829 id=829 data-nosnippet>829</a></span><span class="kw">pub fn </span>create_agent_message(
-<a href=#830 id=830 data-nosnippet>830</a>    message_id: String,
-<a href=#831 id=831 data-nosnippet>831</a>    sender_id: String,
-<a href=#832 id=832 data-nosnippet>832</a>    receiver_id: String,
-<a href=#833 id=833 data-nosnippet>833</a>    message_type: String,
-<a href=#834 id=834 data-nosnippet>834</a>    content: Value,
-<a href=#835 id=835 data-nosnippet>835</a>) -&gt; AgentMessage {
-<a href=#836 id=836 data-nosnippet>836</a>    AgentMessage {
-<a href=#837 id=837 data-nosnippet>837</a>        message_id,
-<a href=#838 id=838 data-nosnippet>838</a>        sender_id,
-<a href=#839 id=839 data-nosnippet>839</a>        receiver_id,
-<a href=#840 id=840 data-nosnippet>840</a>        message_type,
-<a href=#841 id=841 data-nosnippet>841</a>        content,
-<a href=#842 id=842 data-nosnippet>842</a>        timestamp: chrono::Utc::now().to_rfc3339(),
-<a href=#843 id=843 data-nosnippet>843</a>        priority: MessagePriority::Normal,
-<a href=#844 id=844 data-nosnippet>844</a>        requires_response: <span class="bool-val">false</span>,
-<a href=#845 id=845 data-nosnippet>845</a>    }
-<a href=#846 id=846 data-nosnippet>846</a>}
-<a href=#847 id=847 data-nosnippet>847</a>
-<a href=#848 id=848 data-nosnippet>848</a><span class="comment">// Helper functions
-<a href=#849 id=849 data-nosnippet>849</a>
-<a href=#850 id=850 data-nosnippet>850</a></span><span class="kw">fn </span>builtin_capabilities(agent_type: <span class="kw-2">&amp;</span>AgentType) -&gt; Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
-<a href=#851 id=851 data-nosnippet>851</a>    <span class="kw">match </span>agent_type {
-<a href=#852 id=852 data-nosnippet>852</a>        AgentType::AI =&gt; <span class="macro">vec!</span>[<span class="string">"analysis"</span>, <span class="string">"learning"</span>, <span class="string">"communication"</span>, <span class="string">"task_execution"</span>],
-<a href=#853 id=853 data-nosnippet>853</a>        AgentType::System =&gt; <span class="macro">vec!</span>[<span class="string">"monitoring"</span>, <span class="string">"coordination"</span>, <span class="string">"resource_management"</span>],
-<a href=#854 id=854 data-nosnippet>854</a>        AgentType::Worker =&gt; <span class="macro">vec!</span>[<span class="string">"task_execution"</span>, <span class="string">"data_processing"</span>, <span class="string">"automation"</span>],
-<a href=#855 id=855 data-nosnippet>855</a>        AgentType::Custom(<span class="kw">_</span>) =&gt; <span class="macro">vec!</span>[<span class="string">"custom_processing"</span>],
-<a href=#856 id=856 data-nosnippet>856</a>    }
-<a href=#857 id=857 data-nosnippet>857</a>}
-<a href=#858 id=858 data-nosnippet>858</a>
-<a href=#859 id=859 data-nosnippet>859</a><span class="kw">fn </span>generate_id() -&gt; u64 {
-<a href=#860 id=860 data-nosnippet>860</a>    <span class="kw">use </span>std::time::{SystemTime, UNIX_EPOCH};
-<a href=#861 id=861 data-nosnippet>861</a>    SystemTime::now()
-<a href=#862 id=862 data-nosnippet>862</a>        .duration_since(UNIX_EPOCH)
-<a href=#863 id=863 data-nosnippet>863</a>        .unwrap()
-<a href=#864 id=864 data-nosnippet>864</a>        .as_nanos() <span class="kw">as </span>u64
-<a href=#865 id=865 data-nosnippet>865</a>}
-<a href=#866 id=866 data-nosnippet>866</a>
-<a href=#867 id=867 data-nosnippet>867</a><span class="kw">fn </span>initialize_ai_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
-<a href=#868 id=868 data-nosnippet>868</a>    <span class="comment">// Initialize AI-specific capabilities
-<a href=#869 id=869 data-nosnippet>869</a>    </span>agent_context.store_memory(<span class="string">"ai_model"</span>.to_string(), Value::String(<span class="string">"gpt-4"</span>.to_string()));
-<a href=#870 id=870 data-nosnippet>870</a>    agent_context.store_memory(
-<a href=#871 id=871 data-nosnippet>871</a>        <span class="string">"learning_algorithm"</span>.to_string(),
-<a href=#872 id=872 data-nosnippet>872</a>        Value::String(<span class="string">"reinforcement"</span>.to_string()),
-<a href=#873 id=873 data-nosnippet>873</a>    );
-<a href=#874 id=874 data-nosnippet>874</a>    agent_context.store_memory(
-<a href=#875 id=875 data-nosnippet>875</a>        <span class="string">"communication_protocol"</span>.to_string(),
-<a href=#876 id=876 data-nosnippet>876</a>        Value::String(<span class="string">"natural_language"</span>.to_string()),
-<a href=#877 id=877 data-nosnippet>877</a>    );
-<a href=#878 id=878 data-nosnippet>878</a>
-<a href=#879 id=879 data-nosnippet>879</a>    <span class="comment">// Set initial capabilities
-<a href=#880 id=880 data-nosnippet>880</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
-<a href=#881 id=881 data-nosnippet>881</a>        <span class="string">"analysis"</span>.to_string(),
-<a href=#882 id=882 data-nosnippet>882</a>        <span class="string">"learning"</span>.to_string(),
-<a href=#883 id=883 data-nosnippet>883</a>        <span class="string">"communication"</span>.to_string(),
-<a href=#884 id=884 data-nosnippet>884</a>        <span class="string">"task_execution"</span>.to_string(),
-<a href=#885 id=885 data-nosnippet>885</a>        <span class="string">"problem_solving"</span>.to_string(),
-<a href=#886 id=886 data-nosnippet>886</a>    ];
-<a href=#887 id=887 data-nosnippet>887</a>}
-<a href=#888 id=888 data-nosnippet>888</a>
-<a href=#889 id=889 data-nosnippet>889</a><span class="kw">fn </span>initialize_system_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
-<a href=#890 id=890 data-nosnippet>890</a>    <span class="comment">// Initialize system-specific capabilities
-<a href=#891 id=891 data-nosnippet>891</a>    </span>agent_context.store_memory(
-<a href=#892 id=892 data-nosnippet>892</a>        <span class="string">"system_role"</span>.to_string(),
-<a href=#893 id=893 data-nosnippet>893</a>        Value::String(<span class="string">"coordinator"</span>.to_string()),
-<a href=#894 id=894 data-nosnippet>894</a>    );
-<a href=#895 id=895 data-nosnippet>895</a>    agent_context.store_memory(<span class="string">"monitoring_enabled"</span>.to_string(), Value::Bool(<span class="bool-val">true</span>));
-<a href=#896 id=896 data-nosnippet>896</a>    agent_context.store_memory(<span class="string">"resource_tracking"</span>.to_string(), Value::Bool(<span class="bool-val">true</span>));
-<a href=#897 id=897 data-nosnippet>897</a>
-<a href=#898 id=898 data-nosnippet>898</a>    <span class="comment">// Set initial capabilities
-<a href=#899 id=899 data-nosnippet>899</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
-<a href=#900 id=900 data-nosnippet>900</a>        <span class="string">"monitoring"</span>.to_string(),
-<a href=#901 id=901 data-nosnippet>901</a>        <span class="string">"coordination"</span>.to_string(),
-<a href=#902 id=902 data-nosnippet>902</a>        <span class="string">"resource_management"</span>.to_string(),
-<a href=#903 id=903 data-nosnippet>903</a>        <span class="string">"system_optimization"</span>.to_string(),
-<a href=#904 id=904 data-nosnippet>904</a>    ];
-<a href=#905 id=905 data-nosnippet>905</a>}
-<a href=#906 id=906 data-nosnippet>906</a>
-<a href=#907 id=907 data-nosnippet>907</a><span class="kw">fn </span>initialize_worker_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
-<a href=#908 id=908 data-nosnippet>908</a>    <span class="comment">// Initialize worker-specific capabilities
-<a href=#909 id=909 data-nosnippet>909</a>    </span>agent_context.store_memory(
-<a href=#910 id=910 data-nosnippet>910</a>        <span class="string">"worker_type"</span>.to_string(),
-<a href=#911 id=911 data-nosnippet>911</a>        Value::String(<span class="string">"general"</span>.to_string()),
-<a href=#912 id=912 data-nosnippet>912</a>    );
-<a href=#913 id=913 data-nosnippet>913</a>    agent_context.store_memory(
-<a href=#914 id=914 data-nosnippet>914</a>        <span class="string">"automation_level"</span>.to_string(),
-<a href=#915 id=915 data-nosnippet>915</a>        Value::String(<span class="string">"high"</span>.to_string()),
-<a href=#916 id=916 data-nosnippet>916</a>    );
-<a href=#917 id=917 data-nosnippet>917</a>    agent_context.store_memory(<span class="string">"task_queue_size"</span>.to_string(), Value::Int(<span class="number">100</span>));
-<a href=#918 id=918 data-nosnippet>918</a>
-<a href=#919 id=919 data-nosnippet>919</a>    <span class="comment">// Set initial capabilities
-<a href=#920 id=920 data-nosnippet>920</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
-<a href=#921 id=921 data-nosnippet>921</a>        <span class="string">"task_execution"</span>.to_string(),
-<a href=#922 id=922 data-nosnippet>922</a>        <span class="string">"data_processing"</span>.to_string(),
-<a href=#923 id=923 data-nosnippet>923</a>        <span class="string">"automation"</span>.to_string(),
-<a href=#924 id=924 data-nosnippet>924</a>        <span class="string">"workflow_management"</span>.to_string(),
-<a href=#925 id=925 data-nosnippet>925</a>    ];
-<a href=#926 id=926 data-nosnippet>926</a>}
-<a href=#927 id=927 data-nosnippet>927</a>
-<a href=#928 id=928 data-nosnippet>928</a><span class="kw">fn </span>initialize_custom_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
-<a href=#929 id=929 data-nosnippet>929</a>    <span class="comment">// Initialize custom agent with basic capabilities
-<a href=#930 id=930 data-nosnippet>930</a>    </span>agent_context.store_memory(
-<a href=#931 id=931 data-nosnippet>931</a>        <span class="string">"custom_type"</span>.to_string(),
-<a href=#932 id=932 data-nosnippet>932</a>        Value::String(agent_context.config.agent_type.to_string()),
-<a href=#933 id=933 data-nosnippet>933</a>    );
-<a href=#934 id=934 data-nosnippet>934</a>    agent_context.store_memory(<span class="string">"flexibility"</span>.to_string(), Value::String(<span class="string">"high"</span>.to_string()));
-<a href=#935 id=935 data-nosnippet>935</a>
-<a href=#936 id=936 data-nosnippet>936</a>    <span class="comment">// Set initial capabilities
-<a href=#937 id=937 data-nosnippet>937</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
-<a href=#938 id=938 data-nosnippet>938</a>        <span class="string">"custom_processing"</span>.to_string(),
-<a href=#939 id=939 data-nosnippet>939</a>        <span class="string">"adaptation"</span>.to_string(),
-<a href=#940 id=940 data-nosnippet>940</a>        <span class="string">"flexibility"</span>.to_string(),
-<a href=#941 id=941 data-nosnippet>941</a>    ];
-<a href=#942 id=942 data-nosnippet>942</a>}
+<a href=#780 id=780 data-nosnippet>780</a><span class="doccomment">/// Returns stored evolution data for an agent, if any.
+<a href=#781 id=781 data-nosnippet>781</a></span><span class="kw">pub fn </span>get_evolution_data(agent_id: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, Value&gt;&gt; {
+<a href=#782 id=782 data-nosnippet>782</a>    get_runtime().evolution_store.get(agent_id).cloned()
+<a href=#783 id=783 data-nosnippet>783</a>}
+<a href=#784 id=784 data-nosnippet>784</a>
+<a href=#785 id=785 data-nosnippet>785</a><span class="doccomment">/// Capability registry: when set via register_capabilities(), validation uses it; otherwise built-in defaults.
+<a href=#786 id=786 data-nosnippet>786</a></span><span class="kw">static </span>CAPABILITY_REGISTRY: Mutex&lt;<span class="prelude-ty">Option</span>&lt;HashMap&lt;String, Vec&lt;String&gt;&gt;&gt;&gt; = Mutex::new(<span class="prelude-val">None</span>);
+<a href=#787 id=787 data-nosnippet>787</a>
+<a href=#788 id=788 data-nosnippet>788</a><span class="doccomment">/// Register capabilities per agent type (e.g. from config/DB). Overrides built-in defaults for validation.
+<a href=#789 id=789 data-nosnippet>789</a></span><span class="kw">pub fn </span>register_capabilities(agent_type: String, capabilities: Vec&lt;String&gt;) {
+<a href=#790 id=790 data-nosnippet>790</a>    <span class="kw">let </span><span class="kw-2">mut </span>reg = CAPABILITY_REGISTRY.lock().unwrap();
+<a href=#791 id=791 data-nosnippet>791</a>    <span class="kw">if </span>reg.is_none() {
+<a href=#792 id=792 data-nosnippet>792</a>        <span class="kw-2">*</span>reg = <span class="prelude-val">Some</span>(HashMap::new());
+<a href=#793 id=793 data-nosnippet>793</a>    }
+<a href=#794 id=794 data-nosnippet>794</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>m) = <span class="kw-2">*</span>reg {
+<a href=#795 id=795 data-nosnippet>795</a>        m.insert(agent_type, capabilities);
+<a href=#796 id=796 data-nosnippet>796</a>    }
+<a href=#797 id=797 data-nosnippet>797</a>}
+<a href=#798 id=798 data-nosnippet>798</a>
+<a href=#799 id=799 data-nosnippet>799</a><span class="doccomment">/// Validate agent capabilities. Uses registry if set (e.g. from config); otherwise built-in per agent type.
+<a href=#800 id=800 data-nosnippet>800</a></span><span class="kw">pub fn </span>validate_capabilities(
+<a href=#801 id=801 data-nosnippet>801</a>    agent_type: <span class="kw-2">&amp;</span>str,
+<a href=#802 id=802 data-nosnippet>802</a>    required_capabilities: Vec&lt;String&gt;,
+<a href=#803 id=803 data-nosnippet>803</a>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, String&gt; {
+<a href=#804 id=804 data-nosnippet>804</a>    <span class="kw">let </span>agent_type_enum = AgentType::from_string(agent_type)
+<a href=#805 id=805 data-nosnippet>805</a>        .ok_or_else(|| <span class="macro">format!</span>(<span class="string">"Invalid agent type: {}"</span>, agent_type))<span class="question-mark">?</span>;
+<a href=#806 id=806 data-nosnippet>806</a>
+<a href=#807 id=807 data-nosnippet>807</a>    <span class="kw">let </span>capabilities: Vec&lt;String&gt; = {
+<a href=#808 id=808 data-nosnippet>808</a>        <span class="kw">let </span>reg = CAPABILITY_REGISTRY.lock().unwrap();
+<a href=#809 id=809 data-nosnippet>809</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>m) = <span class="kw-2">*</span>reg {
+<a href=#810 id=810 data-nosnippet>810</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(caps) = m.get(agent_type) {
+<a href=#811 id=811 data-nosnippet>811</a>                caps.clone()
+<a href=#812 id=812 data-nosnippet>812</a>            } <span class="kw">else </span>{
+<a href=#813 id=813 data-nosnippet>813</a>                builtin_capabilities(<span class="kw-2">&amp;</span>agent_type_enum)
+<a href=#814 id=814 data-nosnippet>814</a>                    .into_iter()
+<a href=#815 id=815 data-nosnippet>815</a>                    .map(String::from)
+<a href=#816 id=816 data-nosnippet>816</a>                    .collect()
+<a href=#817 id=817 data-nosnippet>817</a>            }
+<a href=#818 id=818 data-nosnippet>818</a>        } <span class="kw">else </span>{
+<a href=#819 id=819 data-nosnippet>819</a>            builtin_capabilities(<span class="kw-2">&amp;</span>agent_type_enum)
+<a href=#820 id=820 data-nosnippet>820</a>                .into_iter()
+<a href=#821 id=821 data-nosnippet>821</a>                .map(String::from)
+<a href=#822 id=822 data-nosnippet>822</a>                .collect()
+<a href=#823 id=823 data-nosnippet>823</a>        }
+<a href=#824 id=824 data-nosnippet>824</a>    };
+<a href=#825 id=825 data-nosnippet>825</a>
+<a href=#826 id=826 data-nosnippet>826</a>    <span class="kw">let </span><span class="kw-2">mut </span>missing_capabilities = Vec::new();
+<a href=#827 id=827 data-nosnippet>827</a>    <span class="kw">for </span>required_cap <span class="kw">in </span><span class="kw-2">&amp;</span>required_capabilities {
+<a href=#828 id=828 data-nosnippet>828</a>        <span class="kw">if </span>!capabilities.contains(required_cap) {
+<a href=#829 id=829 data-nosnippet>829</a>            missing_capabilities.push(required_cap);
+<a href=#830 id=830 data-nosnippet>830</a>        }
+<a href=#831 id=831 data-nosnippet>831</a>    }
+<a href=#832 id=832 data-nosnippet>832</a>
+<a href=#833 id=833 data-nosnippet>833</a>    <span class="kw">if </span>missing_capabilities.is_empty() {
+<a href=#834 id=834 data-nosnippet>834</a>        <span class="macro">log::info!</span>(<span class="string">"capability_validation: {:?}"</span>, {
+<a href=#835 id=835 data-nosnippet>835</a>            <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
+<a href=#836 id=836 data-nosnippet>836</a>            data.insert(
+<a href=#837 id=837 data-nosnippet>837</a>                <span class="string">"agent_type"</span>.to_string(),
+<a href=#838 id=838 data-nosnippet>838</a>                Value::String(agent_type.to_string()),
+<a href=#839 id=839 data-nosnippet>839</a>            );
+<a href=#840 id=840 data-nosnippet>840</a>            data.insert(
+<a href=#841 id=841 data-nosnippet>841</a>                <span class="string">"required_capabilities"</span>.to_string(),
+<a href=#842 id=842 data-nosnippet>842</a>                Value::Int(required_capabilities.len() <span class="kw">as </span>i64),
+<a href=#843 id=843 data-nosnippet>843</a>            );
+<a href=#844 id=844 data-nosnippet>844</a>            data.insert(
+<a href=#845 id=845 data-nosnippet>845</a>                <span class="string">"message"</span>.to_string(),
+<a href=#846 id=846 data-nosnippet>846</a>                Value::String(<span class="string">"All capabilities validated"</span>.to_string()),
+<a href=#847 id=847 data-nosnippet>847</a>            );
+<a href=#848 id=848 data-nosnippet>848</a>            data
+<a href=#849 id=849 data-nosnippet>849</a>        });
+<a href=#850 id=850 data-nosnippet>850</a>        <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+<a href=#851 id=851 data-nosnippet>851</a>    } <span class="kw">else </span>{
+<a href=#852 id=852 data-nosnippet>852</a>        <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Missing capabilities: {:?}"</span>, missing_capabilities))
+<a href=#853 id=853 data-nosnippet>853</a>    }
+<a href=#854 id=854 data-nosnippet>854</a>}
+<a href=#855 id=855 data-nosnippet>855</a>
+<a href=#856 id=856 data-nosnippet>856</a><span class="doccomment">/// Create agent configuration
+<a href=#857 id=857 data-nosnippet>857</a></span><span class="kw">pub fn </span>create_agent_config(name: String, agent_type: <span class="kw-2">&amp;</span>str, role: String) -&gt; <span class="prelude-ty">Option</span>&lt;AgentConfig&gt; {
+<a href=#858 id=858 data-nosnippet>858</a>    <span class="kw">let </span>agent_type_enum = AgentType::from_string(agent_type)<span class="question-mark">?</span>;
+<a href=#859 id=859 data-nosnippet>859</a>    <span class="prelude-val">Some</span>(AgentConfig::new(name, agent_type_enum).with_role(role))
+<a href=#860 id=860 data-nosnippet>860</a>}
+<a href=#861 id=861 data-nosnippet>861</a>
+<a href=#862 id=862 data-nosnippet>862</a><span class="doccomment">/// Create agent task
+<a href=#863 id=863 data-nosnippet>863</a></span><span class="kw">pub fn </span>create_agent_task(
+<a href=#864 id=864 data-nosnippet>864</a>    task_id: String,
+<a href=#865 id=865 data-nosnippet>865</a>    description: String,
+<a href=#866 id=866 data-nosnippet>866</a>    priority: <span class="kw-2">&amp;</span>str,
+<a href=#867 id=867 data-nosnippet>867</a>) -&gt; <span class="prelude-ty">Option</span>&lt;AgentTask&gt; {
+<a href=#868 id=868 data-nosnippet>868</a>    <span class="kw">let </span>priority_enum = TaskPriority::from_string(priority)<span class="question-mark">?</span>;
+<a href=#869 id=869 data-nosnippet>869</a>    <span class="prelude-val">Some</span>(AgentTask {
+<a href=#870 id=870 data-nosnippet>870</a>        task_id,
+<a href=#871 id=871 data-nosnippet>871</a>        description,
+<a href=#872 id=872 data-nosnippet>872</a>        priority: priority_enum,
+<a href=#873 id=873 data-nosnippet>873</a>        status: TaskStatus::Pending,
+<a href=#874 id=874 data-nosnippet>874</a>        assigned_at: chrono::Utc::now().to_rfc3339(),
+<a href=#875 id=875 data-nosnippet>875</a>        completed_at: <span class="prelude-val">None</span>,
+<a href=#876 id=876 data-nosnippet>876</a>        dependencies: Vec::new(),
+<a href=#877 id=877 data-nosnippet>877</a>        metadata: HashMap::new(),
+<a href=#878 id=878 data-nosnippet>878</a>    })
+<a href=#879 id=879 data-nosnippet>879</a>}
+<a href=#880 id=880 data-nosnippet>880</a>
+<a href=#881 id=881 data-nosnippet>881</a><span class="doccomment">/// Create agent message
+<a href=#882 id=882 data-nosnippet>882</a></span><span class="kw">pub fn </span>create_agent_message(
+<a href=#883 id=883 data-nosnippet>883</a>    message_id: String,
+<a href=#884 id=884 data-nosnippet>884</a>    sender_id: String,
+<a href=#885 id=885 data-nosnippet>885</a>    receiver_id: String,
+<a href=#886 id=886 data-nosnippet>886</a>    message_type: String,
+<a href=#887 id=887 data-nosnippet>887</a>    content: Value,
+<a href=#888 id=888 data-nosnippet>888</a>) -&gt; AgentMessage {
+<a href=#889 id=889 data-nosnippet>889</a>    AgentMessage {
+<a href=#890 id=890 data-nosnippet>890</a>        message_id,
+<a href=#891 id=891 data-nosnippet>891</a>        sender_id,
+<a href=#892 id=892 data-nosnippet>892</a>        receiver_id,
+<a href=#893 id=893 data-nosnippet>893</a>        message_type,
+<a href=#894 id=894 data-nosnippet>894</a>        content,
+<a href=#895 id=895 data-nosnippet>895</a>        timestamp: chrono::Utc::now().to_rfc3339(),
+<a href=#896 id=896 data-nosnippet>896</a>        priority: MessagePriority::Normal,
+<a href=#897 id=897 data-nosnippet>897</a>        requires_response: <span class="bool-val">false</span>,
+<a href=#898 id=898 data-nosnippet>898</a>    }
+<a href=#899 id=899 data-nosnippet>899</a>}
+<a href=#900 id=900 data-nosnippet>900</a>
+<a href=#901 id=901 data-nosnippet>901</a><span class="comment">// Helper functions
+<a href=#902 id=902 data-nosnippet>902</a>
+<a href=#903 id=903 data-nosnippet>903</a></span><span class="kw">fn </span>builtin_capabilities(agent_type: <span class="kw-2">&amp;</span>AgentType) -&gt; Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
+<a href=#904 id=904 data-nosnippet>904</a>    <span class="kw">match </span>agent_type {
+<a href=#905 id=905 data-nosnippet>905</a>        AgentType::AI =&gt; <span class="macro">vec!</span>[<span class="string">"analysis"</span>, <span class="string">"learning"</span>, <span class="string">"communication"</span>, <span class="string">"task_execution"</span>],
+<a href=#906 id=906 data-nosnippet>906</a>        AgentType::System =&gt; <span class="macro">vec!</span>[<span class="string">"monitoring"</span>, <span class="string">"coordination"</span>, <span class="string">"resource_management"</span>],
+<a href=#907 id=907 data-nosnippet>907</a>        AgentType::Worker =&gt; <span class="macro">vec!</span>[<span class="string">"task_execution"</span>, <span class="string">"data_processing"</span>, <span class="string">"automation"</span>],
+<a href=#908 id=908 data-nosnippet>908</a>        AgentType::Custom(<span class="kw">_</span>) =&gt; <span class="macro">vec!</span>[<span class="string">"custom_processing"</span>],
+<a href=#909 id=909 data-nosnippet>909</a>    }
+<a href=#910 id=910 data-nosnippet>910</a>}
+<a href=#911 id=911 data-nosnippet>911</a>
+<a href=#912 id=912 data-nosnippet>912</a><span class="kw">fn </span>generate_id() -&gt; u64 {
+<a href=#913 id=913 data-nosnippet>913</a>    <span class="kw">use </span>std::time::{SystemTime, UNIX_EPOCH};
+<a href=#914 id=914 data-nosnippet>914</a>    SystemTime::now()
+<a href=#915 id=915 data-nosnippet>915</a>        .duration_since(UNIX_EPOCH)
+<a href=#916 id=916 data-nosnippet>916</a>        .unwrap()
+<a href=#917 id=917 data-nosnippet>917</a>        .as_nanos() <span class="kw">as </span>u64
+<a href=#918 id=918 data-nosnippet>918</a>}
+<a href=#919 id=919 data-nosnippet>919</a>
+<a href=#920 id=920 data-nosnippet>920</a><span class="kw">fn </span>initialize_ai_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
+<a href=#921 id=921 data-nosnippet>921</a>    <span class="comment">// Initialize AI-specific capabilities
+<a href=#922 id=922 data-nosnippet>922</a>    </span>agent_context.store_memory(<span class="string">"ai_model"</span>.to_string(), Value::String(<span class="string">"gpt-4"</span>.to_string()));
+<a href=#923 id=923 data-nosnippet>923</a>    agent_context.store_memory(
+<a href=#924 id=924 data-nosnippet>924</a>        <span class="string">"learning_algorithm"</span>.to_string(),
+<a href=#925 id=925 data-nosnippet>925</a>        Value::String(<span class="string">"reinforcement"</span>.to_string()),
+<a href=#926 id=926 data-nosnippet>926</a>    );
+<a href=#927 id=927 data-nosnippet>927</a>    agent_context.store_memory(
+<a href=#928 id=928 data-nosnippet>928</a>        <span class="string">"communication_protocol"</span>.to_string(),
+<a href=#929 id=929 data-nosnippet>929</a>        Value::String(<span class="string">"natural_language"</span>.to_string()),
+<a href=#930 id=930 data-nosnippet>930</a>    );
+<a href=#931 id=931 data-nosnippet>931</a>
+<a href=#932 id=932 data-nosnippet>932</a>    <span class="comment">// Set initial capabilities
+<a href=#933 id=933 data-nosnippet>933</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
+<a href=#934 id=934 data-nosnippet>934</a>        <span class="string">"analysis"</span>.to_string(),
+<a href=#935 id=935 data-nosnippet>935</a>        <span class="string">"learning"</span>.to_string(),
+<a href=#936 id=936 data-nosnippet>936</a>        <span class="string">"communication"</span>.to_string(),
+<a href=#937 id=937 data-nosnippet>937</a>        <span class="string">"task_execution"</span>.to_string(),
+<a href=#938 id=938 data-nosnippet>938</a>        <span class="string">"problem_solving"</span>.to_string(),
+<a href=#939 id=939 data-nosnippet>939</a>    ];
+<a href=#940 id=940 data-nosnippet>940</a>}
+<a href=#941 id=941 data-nosnippet>941</a>
+<a href=#942 id=942 data-nosnippet>942</a><span class="kw">fn </span>initialize_system_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
+<a href=#943 id=943 data-nosnippet>943</a>    <span class="comment">// Initialize system-specific capabilities
+<a href=#944 id=944 data-nosnippet>944</a>    </span>agent_context.store_memory(
+<a href=#945 id=945 data-nosnippet>945</a>        <span class="string">"system_role"</span>.to_string(),
+<a href=#946 id=946 data-nosnippet>946</a>        Value::String(<span class="string">"coordinator"</span>.to_string()),
+<a href=#947 id=947 data-nosnippet>947</a>    );
+<a href=#948 id=948 data-nosnippet>948</a>    agent_context.store_memory(<span class="string">"monitoring_enabled"</span>.to_string(), Value::Bool(<span class="bool-val">true</span>));
+<a href=#949 id=949 data-nosnippet>949</a>    agent_context.store_memory(<span class="string">"resource_tracking"</span>.to_string(), Value::Bool(<span class="bool-val">true</span>));
+<a href=#950 id=950 data-nosnippet>950</a>
+<a href=#951 id=951 data-nosnippet>951</a>    <span class="comment">// Set initial capabilities
+<a href=#952 id=952 data-nosnippet>952</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
+<a href=#953 id=953 data-nosnippet>953</a>        <span class="string">"monitoring"</span>.to_string(),
+<a href=#954 id=954 data-nosnippet>954</a>        <span class="string">"coordination"</span>.to_string(),
+<a href=#955 id=955 data-nosnippet>955</a>        <span class="string">"resource_management"</span>.to_string(),
+<a href=#956 id=956 data-nosnippet>956</a>        <span class="string">"system_optimization"</span>.to_string(),
+<a href=#957 id=957 data-nosnippet>957</a>    ];
+<a href=#958 id=958 data-nosnippet>958</a>}
+<a href=#959 id=959 data-nosnippet>959</a>
+<a href=#960 id=960 data-nosnippet>960</a><span class="kw">fn </span>initialize_worker_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
+<a href=#961 id=961 data-nosnippet>961</a>    <span class="comment">// Initialize worker-specific capabilities
+<a href=#962 id=962 data-nosnippet>962</a>    </span>agent_context.store_memory(
+<a href=#963 id=963 data-nosnippet>963</a>        <span class="string">"worker_type"</span>.to_string(),
+<a href=#964 id=964 data-nosnippet>964</a>        Value::String(<span class="string">"general"</span>.to_string()),
+<a href=#965 id=965 data-nosnippet>965</a>    );
+<a href=#966 id=966 data-nosnippet>966</a>    agent_context.store_memory(
+<a href=#967 id=967 data-nosnippet>967</a>        <span class="string">"automation_level"</span>.to_string(),
+<a href=#968 id=968 data-nosnippet>968</a>        Value::String(<span class="string">"high"</span>.to_string()),
+<a href=#969 id=969 data-nosnippet>969</a>    );
+<a href=#970 id=970 data-nosnippet>970</a>    agent_context.store_memory(<span class="string">"task_queue_size"</span>.to_string(), Value::Int(<span class="number">100</span>));
+<a href=#971 id=971 data-nosnippet>971</a>
+<a href=#972 id=972 data-nosnippet>972</a>    <span class="comment">// Set initial capabilities
+<a href=#973 id=973 data-nosnippet>973</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
+<a href=#974 id=974 data-nosnippet>974</a>        <span class="string">"task_execution"</span>.to_string(),
+<a href=#975 id=975 data-nosnippet>975</a>        <span class="string">"data_processing"</span>.to_string(),
+<a href=#976 id=976 data-nosnippet>976</a>        <span class="string">"automation"</span>.to_string(),
+<a href=#977 id=977 data-nosnippet>977</a>        <span class="string">"workflow_management"</span>.to_string(),
+<a href=#978 id=978 data-nosnippet>978</a>    ];
+<a href=#979 id=979 data-nosnippet>979</a>}
+<a href=#980 id=980 data-nosnippet>980</a>
+<a href=#981 id=981 data-nosnippet>981</a><span class="kw">fn </span>initialize_custom_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
+<a href=#982 id=982 data-nosnippet>982</a>    <span class="comment">// Initialize custom agent with basic capabilities
+<a href=#983 id=983 data-nosnippet>983</a>    </span>agent_context.store_memory(
+<a href=#984 id=984 data-nosnippet>984</a>        <span class="string">"custom_type"</span>.to_string(),
+<a href=#985 id=985 data-nosnippet>985</a>        Value::String(agent_context.config.agent_type.to_string()),
+<a href=#986 id=986 data-nosnippet>986</a>    );
+<a href=#987 id=987 data-nosnippet>987</a>    agent_context.store_memory(<span class="string">"flexibility"</span>.to_string(), Value::String(<span class="string">"high"</span>.to_string()));
+<a href=#988 id=988 data-nosnippet>988</a>
+<a href=#989 id=989 data-nosnippet>989</a>    <span class="comment">// Set initial capabilities
+<a href=#990 id=990 data-nosnippet>990</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
+<a href=#991 id=991 data-nosnippet>991</a>        <span class="string">"custom_processing"</span>.to_string(),
+<a href=#992 id=992 data-nosnippet>992</a>        <span class="string">"adaptation"</span>.to_string(),
+<a href=#993 id=993 data-nosnippet>993</a>        <span class="string">"flexibility"</span>.to_string(),
+<a href=#994 id=994 data-nosnippet>994</a>    ];
+<a href=#995 id=995 data-nosnippet>995</a>}
 </code></pre></div></section></main></body></html>
