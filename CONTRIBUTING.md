@@ -14,6 +14,7 @@ This document provides guidelines and instructions for contributing to the proje
 - [Code Style](#code-style)
 - [Submitting Changes](#submitting-changes)
 - [Areas Needing Help](#areas-needing-help)
+- [Contributor License Agreement (CLA)](#contributor-license-agreement-cla)
 
 ## Code of Conduct
 
@@ -431,9 +432,11 @@ Contributors will be:
 - Credited in release notes
 - Appreciated by the community! 🙏
 
-## License
+## Contributor License Agreement (CLA)
 
-By contributing, you agree that your contributions will be licensed under the Apache License 2.0.
+By contributing, you agree to the terms in **[CONTRIBUTOR_LICENSE_AGREEMENT.md](CONTRIBUTOR_LICENSE_AGREEMENT.md)** (CLA).
+
+In short: you grant the project owner the right to use your contribution under the Apache License 2.0 (so the project stays open) and under other licenses (e.g. a commercial license), so the project can dual-license if it chooses. You keep copyright in your work. Submitting a pull request or other contribution means you accept the CLA.
 
 ---
 

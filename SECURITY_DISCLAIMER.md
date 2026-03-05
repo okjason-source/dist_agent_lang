@@ -1,218 +1,119 @@
-# Security & Production Readiness Disclaimer
+# Security Disclaimer
 
-## ⚠️ Important Notice
+## Important notice
 
-**dist_agent_lang v1.0.0** is currently in **beta/early release** stage. This document outlines the current security status and recommendations for safe usage.
-
----
-
-## 🔒 Current Security Status
-
-### ✅ Implemented Security Features
-
-1. **Reentrancy Protection**
-   - `ReentrancyGuard` prevents re-entrancy attacks
-   - `@nonreentrant` attribute for function-level protection
-
-2. **Safe Math Operations**
-   - Overflow/underflow protection
-   - `SafeMath` utilities for arithmetic operations
-   - `@SafeMath` attribute support
-
-3. **State Isolation**
-   - `StateIsolationManager` for contract state separation
-   - Prevents unauthorized state access
-
-4. **Cross-Chain Security**
-   - `CrossChainSecurityManager` for secure cross-chain operations
-   - Signature verification and validator consensus
-
-5. **Advanced Security**
-   - MEV protection mechanisms
-   - Time-lock support
-   - Formal verification hooks
-
-6. **Authentication & Authorization**
-   - Secure authentication system
-   - Capability-based access control
-   - Session management
-
-### ✅ Testing Status
-
-- **Library Tests**: 21/21 passing ✅
-- **Core Language Tests**: 22/22 passing ✅
-- **Standard Library Tests**: 29/29 passing ✅
-- **Integration Tests**: 15/15 passing ✅
-- **Security Tests**: 5/5 passing ✅
-- **Solidity Integration Tests**: 4/4 passing ✅
-- **Total Tests**: 95/95 passing ✅
-- **Dependency Audit**: No vulnerabilities found in 176 crates ✅
-- **Code Quality**: Passes with non-blocking warnings ⚠️
-- **Performance Benchmarks**: 17 benchmarks configured ✅
+**dist_agent_lang v1.0.9** is in **beta**. This document describes the current security posture and how to use the software safely. The software is not production-ready for high-value or safety-critical use.
 
 ---
 
-## ⚠️ Known Limitations
+## Current security status
 
-### 1. **Limited Production Testing**
-- Language is relatively new (v1.0.0)
-- Limited real-world deployment data
-- Edge cases may not be fully covered
+### Implemented security features
 
-### 2. **New Features**
-- Solidity adapter recently added (4 tests passing ✅)
-- Some features may need additional validation
-- Integration testing ongoing (15 tests passing ✅)
+1. **Reentrancy protection**
+   - `ReentrancyGuard` in the runtime prevents re-entry into the same method/contract combination.
+   - The `@secure` attribute enforces reentrancy protection plus authentication and audit logging for decorated services/methods.
 
-### 3. **Code Quality**
-- Non-critical warnings (cleanup needed)
-- Some TODO/FIXME comments indicate incomplete areas
-- Documentation gaps in some areas
+2. **Safe math**
+   - `SafeMath` in the runtime (overflow/underflow, division by zero) for arithmetic in DAL execution.
+   - Used by the interpreter for arithmetic operations.
 
-### 4. **No Formal Verification**
-- Critical smart contracts should undergo formal verification
-- No third-party security audit completed yet
-- Penetration testing recommended
+3. **State isolation**
+   - State isolation support in the runtime for contract/service state separation.
 
-### ✅ **Recent Improvements**
-- All known bugs fixed (including `chain::get_balance` overflow) ✅
-- Comprehensive test suite: 95 tests passing ✅
-- Performance benchmarks configured ✅
-- Integration tests covering end-to-end workflows ✅
+4. **Cross-chain security**
+   - Cross-chain security utilities and signature/validator handling where applicable.
 
----
+5. **Advanced security / MEV awareness**
+   - `@advanced_security` attribute for MEV-related detection and blocking of unprotected execution patterns where configured.
 
-## 📋 Usage Recommendations
+6. **Authentication and authorization**
+   - Auth and capability-based access control in the stdlib.
+   - Session and caller context; `@secure` enforces authenticated caller.
 
-### ✅ Safe For:
+7. **Agent and server security**
+   - **Shell trust**: Agent shell execution (`sh::run`) is gated by `[agent.sh]` config and `DAL_AGENT_SHELL_TRUST` (off / sandboxed / confirmed / trusted).
+   - **Capabilities**: Agent capabilities and types constrain what agents can do.
+   - **Working root**: Request path length capped to mitigate allocation abuse (e.g. `working_root` in agent serve).
+   - **Persistence**: Agent runtime persistence (file/SQLite) is local; no built-in encryption at rest — protect the host and storage.
 
-1. **Development & Prototyping**
-   - Building and testing applications
-   - Learning the language
-   - Experimenting with features
+### Testing and audits
 
-2. **Non-Critical Applications**
-   - Applications not handling significant value
-   - Educational projects
-   - Proof-of-concept demonstrations
+- **Tests**: 140+ tests across lexer, parser, runtime, stdlib, agent, fleet, mold, security, integration, and HTTP server.
+- **Dependency audit**: Run `cargo audit` (or your usual process) for third-party crate vulnerabilities.
+- **No formal verification**: Critical smart contracts should undergo formal verification before high-value use.
+- **No third-party security audit**: The codebase has not yet had an independent security audit.
 
-3. **Testing & Validation**
-   - Validating concepts
-   - Testing workflows
-   - Performance benchmarking
+### Execution model
 
-### ⚠️ Use Caution For:
-
-1. **Production Financial Applications**
-   - Applications handling real money
-   - Payment processing systems
-   - Financial trading platforms
-
-2. **High-Value Smart Contracts**
-   - Contracts managing significant assets
-   - DeFi protocols with large TVL
-   - Token contracts with high supply
-
-3. **Critical Infrastructure**
-   - Systems requiring high reliability
-   - Mission-critical applications
-   - Systems affecting many users
-
-4. **Applications Handling Sensitive Data**
-   - Personal information
-   - Medical records
-   - Financial data
+DAL runs on a **tree-walking interpreter** (Rust host). There is no JIT or AOT compilation of DAL code. Transpilation backends (blockchain, WASM, native) produce scaffolding or separate artifacts; the primary execution path is interpreted. Security guarantees are those of the runtime and stdlib as implemented, plus the Rust host.
 
 ---
 
-## 🔐 Security Best Practices
+## Known limitations
 
-### For Development:
+1. **Beta status**
+   - Limited real-world deployment and edge-case coverage.
+   - Some areas may have TODOs or incomplete behavior; review the code for your use case.
 
-1. **Always Test Thoroughly**
-   ```bash
-   cargo test --all-features
-   cargo clippy
-   ```
+2. **Agent server**
+   - One agent per process for the HTTP serve path. Shell execution is configurable but must be locked down (e.g. sandboxed/confirmed) for untrusted input.
+   - Protect API keys and credentials (e.g. LLM, chain) via environment or secure config; do not commit them.
 
-2. **Use Security Features**
-   ```rust
-   @nonreentrant
-   @safe_math
-   @secure
-   ```
+3. **Smart contracts and chain**
+   - Transpilation to Solidity and on-chain deployment are supported; the resulting contracts should be audited and tested on testnets before mainnet or high-value use.
+   - Reentrancy and safe-math protections apply in the DAL runtime; on-chain behavior depends on the compiled contract and chain.
 
-3. **Enable Audit Logging**
-   ```rust
-   log::audit("operation", {...});
-   ```
-
-4. **Validate Inputs**
-   ```rust
-   if amount <= 0 {
-       throw "Invalid amount";
-   }
-   ```
-
-### For Production Deployment:
-
-1. **Conduct Security Audit**
-   - Third-party security review
-   - Penetration testing
-   - Code review by security experts
-
-2. **Formal Verification**
-   - For critical smart contracts
-   - Mathematical proof of correctness
-   - Property-based testing
-
-3. **Gradual Rollout**
-   - Start with testnet deployment
-   - Limited mainnet testing
-   - Monitor closely before full deployment
-
-4. **Additional Testing**
-   - Fuzzing
-   - Integration testing
-   - Load testing
-   - Edge case testing
+4. **Formal verification and penetration testing**
+   - Not performed. Recommended for critical or high-value applications.
 
 ---
 
-## 🚀 Path to Production Readiness
+## Usage recommendations
 
-### Version 1.1.0 Goals:
-- [ ] More comprehensive test coverage
-- [ ] Third-party security audit
-- [ ] Real-world deployment validation
-- [ ] Performance optimization
-- [ ] Documentation improvements
+### Generally acceptable for
 
-### Version 1.2.0 Goals:
-- [ ] Formal verification tools
-- [ ] Additional security features
-- [ ] Production deployment guidelines
-- [ ] Community validation
+- Development and prototyping
+- Learning and experimentation
+- Non-critical applications
+- Testing and validation (including agent and chain workflows)
+
+### Use with caution
+
+- **Production financial applications** — Prefer after 1.1.0+ and additional validation.
+- **High-value smart contracts** — Third-party audit and testnet validation recommended.
+- **Critical infrastructure** — Additional hardening and review required.
+- **Sensitive data** — Ensure compliance, encryption, and access control (e.g. credentials, PII) at the application and host level.
 
 ---
 
-## 📞 Reporting Security Issues
+## Security best practices
 
-If you discover a security vulnerability, please report it responsibly:
+- Run the test suite: `cargo test`, and where applicable `cargo test --all-features`.
+- Use `@secure` (and, where relevant, `@advanced_security`) for services that need reentrancy protection and access control.
+- Configure agent shell trust explicitly (`[agent.sh]` / `DAL_AGENT_SHELL_TRUST`); avoid `trusted` for untrusted or open inputs.
+- Validate and bound inputs (e.g. path lengths, sizes) where they affect allocation or behavior.
+- Keep dependencies and the Rust toolchain updated; run `cargo audit` and address known vulnerabilities.
+- For production or high-value use: third-party audit, formal verification of critical contracts, and penetration testing as appropriate.
+
+---
+
+## Reporting security issues
+
+If you find a security vulnerability, please report it responsibly:
 
 - **Email**: jason.dinh.developer@gmail.com
-- **GitHub Issues**: [Security Issues](https://github.com/okjason-source/dist_agent_lang/issues)
-- **Do NOT** disclose publicly until fixed
+- **GitHub**: [Security / issues](https://github.com/okjason-source/dist_agent_lang/issues) (prefer private disclosure until a fix or advisory is ready)
+- **Do not** disclose the issue publicly before coordination.
 
 ---
 
-## 📄 License
+## License
 
-This software is provided "as is" without warranty of any kind. See [LICENSE](LICENSE) for details.
+This software is provided “as is” without warranty of any kind. See [LICENSE](LICENSE) for full terms. The project is under the Apache License 2.0 and may also be offered under a commercial license; see LICENSE for the dual-licensing notice.
 
 ---
 
-**Last Updated**: 2024-12-19  
-**Version**: 1.0.0  
-**Status**: Beta Release
-
+**Last updated**: 2026-03  
+**Version**: 1.0.9  
+**Status**: Beta

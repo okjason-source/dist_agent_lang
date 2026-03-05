@@ -109,6 +109,7 @@ PHASE*.md
 .cargoignore
 Dockerfile*
 Makefile
+CONTRIBUTOR_LICENSE_AGREEMENT.md
 *.swp
 *~
 /syntax-highlighting/
