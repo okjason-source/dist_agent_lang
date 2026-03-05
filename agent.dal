@@ -7,7 +7,7 @@
 // To disable evolve: comment out [agent] context_path in agent.toml; opt-in by uncommenting.
 // Use sh::run(cmd) for shell (respects [agent.sh] trust in agent.toml).
 
-use agent;
+import stdlib::agent;
 
 fn main() {
     let agent_id = agent::spawn({

@@ -837,11 +837,17 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
             let inferred = infer_routes_from_handlers(&handler_names);
             if inferred.is_empty() {
                 eprintln!("❌ No HTTP handlers found in {}.", filename);
-                eprintln!(
-                    "   Add @route(\"METHOD\", \"/path\") annotations to your functions, e.g.:"
-                );
-                eprintln!("   @route(\"GET\", \"/api/items\")");
-                eprintln!("   fn get_items(request) {{ ... }}");
+                if source_code.contains("set_serve_agent") || source_code.contains("agent::spawn") {
+                    eprintln!(
+                        "   This file looks like an agent behavior script. Use: dal agent serve"
+                    );
+                } else {
+                    eprintln!(
+                        "   Add @route(\"METHOD\", \"/path\") annotations to your functions, e.g.:"
+                    );
+                    eprintln!("   @route(\"GET\", \"/api/items\")");
+                    eprintln!("   fn get_items(request) {{ ... }}");
+                }
                 std::process::exit(1);
             }
             println!("    (routes inferred from handler names)");

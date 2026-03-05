@@ -198,7 +198,7 @@ context_path = "./evolve.md"
     let agent_dal = r#"// Agent behavior entry (run with: dal run agent.dal or dal agent serve)
 // Evolve: context_path in agent.toml. Use sh::run(cmd) for shell (respects [agent.sh] trust).
 
-use agent;
+import stdlib::agent;
 
 fn main() {
     let agent_id = agent::spawn({
