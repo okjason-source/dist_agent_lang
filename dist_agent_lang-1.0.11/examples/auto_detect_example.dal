@@ -1,0 +1,172 @@
+// Example: Auto-Detection When @api Not Specified
+// Demonstrates how the system automatically chooses HTTP or FFI
+
+// ============================================
+// EXAMPLE 1: No @api attribute - Auto-detection
+// ============================================
+@trust("centralized")
+@secure
+@chain("ethereum")
+service AutoDetectedService {
+    // No @api attribute - system will auto-detect based on:
+    // 1. Function name patterns
+    // 2. Operation type (network vs compute)
+    // 3. Call frequency
+    // 4. Argument size
+    
+    // This will auto-select FFI (compute-intensive pattern)
+    fn hash_data(data: string) -> string {
+        return crypto::hash(data, "SHA256");
+    }
+    
+    // This will auto-select FFI (batch operation pattern)
+    fn batch_process(data_list: vector<string>) -> vector<string> {
+        let results = [];
+        for data in data_list  {
+            results.push(self.hash_data(data));
+        }
+        return results;
+    }
+    
+    // This will auto-select HTTP (network operation pattern)
+    fn fetch_chain_data(chain_id: int, address: string) -> map<string, any> {
+        return chain::get(chain_id, address);
+    }
+    
+    // This will auto-select HTTP (database operation)
+    fn query_database(query: string) -> vector<map<string, any>> {
+        return database::query(query);
+    }
+    
+    // Mixed operation - will use "both" and auto-select per call
+    fn process_and_store(data: string) -> map<string, any> {
+        // Hash (compute) - will use FFI
+        let hash = self.hash_data(data);
+        
+        // Store (network) - will use HTTP
+        let stored = database::store("hashes", {"hash": hash});
+        
+        return stored;
+    }
+}
+
+// ============================================
+// EXAMPLE 2: Explicit Choice Overrides Auto-Detection
+// ============================================
+@api("http")  // Explicitly choose HTTP
+@trust("hybrid")
+@secure
+@chain("ethereum")
+service ExplicitHTTPService {
+    // Even though this is compute-intensive, HTTP is forced
+    fn hash_data(data: string) -> string {
+        return crypto::hash(data, "SHA256");
+    }
+}
+
+@api("ffi")  // Explicitly choose FFI
+@trust("hybrid")
+@secure
+@chain("ethereum")
+service ExplicitFFIService {
+    // Even though this uses chain (network), FFI is forced
+    // Note: This might fail if (chain operations require network
+    fn get_chain_info(chain_id: int) -> map<string, any> {
+        return chain::get_info(chain_id);
+    }
+}
+
+// ============================================
+// EXAMPLE 3: Function-Level Override
+// ============================================
+@trust("hybrid")
+@secure
+@chain("ethereum")
+// No service-level @api - defaults to auto-detect
+service MixedService {
+    // Auto-detects FFI (compute pattern)
+    fn compute_hash(data: string) -> string {
+        return crypto::hash(data, "SHA256");
+    }
+    
+    // Explicitly override to HTTP for this function
+    @api("http")
+    fn network_operation(data: string) -> map<string, any> {
+        return chain::call(1, "Contract", "method", {"data": data});
+    }
+    
+    // Explicitly override to FFI for this function
+    @api("ffi")
+    fn high_performance(data: string) -> string {
+        // Force FFI even if (auto-detection would choose HTTP
+        return self.compute_hash(data);
+    }
+}
+
+// ============================================
+// EXAMPLE 4: Smart Auto-Detection Examples
+// ============================================
+@trust("hybrid")
+@secure
+@chain("ethereum")
+service SmartService {
+    // Pattern: "hash" -> Auto-selects FFI
+    fn hash(data: string) -> string {
+        return crypto::hash(data, "SHA256");
+    }
+    
+    // Pattern: "sign" -> Auto-selects FFI
+    fn sign(data: string, key: string) -> string {
+        return crypto::sign(data, key);
+    }
+    
+    // Pattern: "batch_" -> Auto-selects FFI
+    fn batch_hash(data_list: vector<string>) -> vector<string> {
+        let results = [];
+        for data in data_list  {
+            results.push(self.hash(data));
+        }
+        return results;
+    }
+    
+    // Pattern: "chain::" -> Auto-selects HTTP
+    fn get_balance(chain_id: int, address: string) -> int {
+        return chain::get_balance(chain_id, address);
+    }
+    
+    // Pattern: "database::" -> Auto-selects HTTP
+    fn get_user(user_id: string) -> map<string, any> {
+        return database::query("SELECT * FROM users WHERE id = ?", [user_id]);
+    }
+    
+    // Pattern: "fetch" -> Auto-selects HTTP
+    fn fetch_data(url: string) -> map<string, any> {
+        return web::get_request(url);
+    }
+    
+    // No clear pattern -> Uses "both" and auto-selects per call
+    fn process_data(data: string) -> string {
+        // System will analyze the function body and choose appropriately
+        let processed = data + "_processed";
+        return processed;
+    }
+}
+
+// ============================================
+// EXAMPLE 5: Runtime Selection
+// ============================================
+@trust("hybrid")
+@secure
+@chain("ethereum")
+service RuntimeSelectableService {
+    // No @api attribute
+    // Runtime can choose based on:
+    // - Call frequency (high frequency -> FFI)
+    // - Argument size (small -> FFI, large -> HTTP)
+    // - Context (local -> FFI, remote -> HTTP)
+    
+    fn flexible_operation(data: string) -> string {
+        // System automatically chooses best interface
+        return process(data);
+    }
+}

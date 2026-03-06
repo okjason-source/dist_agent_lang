@@ -1,0 +1,1426 @@
+// Phase 5: Desktop & Mobile Frameworks Examples
+// Demonstrates comprehensive mobile application development with:
+// - Native device integrations
+// - Cross-platform mobile UI
+// - Mobile-specific features and sensors
+// - App store integrations
+
+// Example 1: Advanced Mobile Shopping App
+@mobile
+@trust("hybrid")
+@chain("ethereum")
+service AdvancedMobileShoppingApp {
+    app: any;
+    user_profile: any;
+    cart: any;
+    location: any;
+    payment_methods: list<any>;
+
+    fn initialize_app() -> Result<Unit, Error> {
+        // Create cross-platform mobile app
+        let app_config = {
+            "name": "ShopSmart Mobile",
+            "bundle_id": "com.shopsmart.mobile",
+            "version": "2.1.0",
+            "supported_orientations": ["portrait", "landscape"],
+            "background_modes": ["location", "remote-notification"]
+        };
+
+        let app = mobile::create_app("ShopSmart Mobile", "com.shopsmart.mobile", "cross_platform");
+
+        // Create main screens
+        let home_screen = mobile::create_screen("Home");
+        let products_screen = mobile::create_screen("Products");
+        let cart_screen = mobile::create_screen("Cart");
+        let profile_screen = mobile::create_screen("Profile");
+        let search_screen = mobile::create_screen("Search");
+
+        // Add screens to app
+        mobile::add_screen_to_app(app, home_screen);
+        mobile::add_screen_to_app(app, products_screen);
+        mobile::add_screen_to_app(app, cart_screen);
+        mobile::add_screen_to_app(app, profile_screen);
+        mobile::add_screen_to_app(app, search_screen);
+
+        // Set root screen
+        mobile::set_root_screen(app, "home");
+
+        // Create navigation structure
+        self.setup_navigation(app);
+
+        // Initialize user data
+        self.initialize_user_data();
+
+        // Setup device permissions
+        self.request_initial_permissions();
+
+        // Initialize location services
+        self.setup_location_services();
+
+        // Setup payment methods
+        self.initialize_payment_methods();
+
+        // Setup push notifications
+        self.setup_push_notifications();
+
+        self.app = app;
+
+        log::info("mobile", {
+            "service": "AdvancedMobileShoppingApp",
+            "app_name": "ShopSmart Mobile",
+            "screens_count": 5,
+            "message": "Advanced mobile shopping app initialized"
+        });
+
+        return Ok(Unit);
+    }
+
+    fn setup_navigation(app: any) -> Result<Unit, Error> {
+        // Create tab bar navigation
+        let tab_bar = {
+            "home": { "title": "Home", "icon": "home_icon", "screen_id": "home" },
+            "products": { "title": "Products", "icon": "products_icon", "screen_id": "products" },
+            "cart": { "title": "Cart", "icon": "cart_icon", "screen_id": "cart", "badge": "0" },
+            "profile": { "title": "Profile", "icon": "profile_icon", "screen_id": "profile" }
+        };
+
+        // Setup navigation bar for each screen
+        let navigation_config = {
+            "home": {
+                "title": "ShopSmart",
+                "right_items": [
+                    { "title": "Search", "icon": "search_icon", "action": "show_search" }
+                ]
+            },
+            "products": {
+                "title": "Products",
+                "left_items": [
+                    { "title": "Menu", "icon": "menu_icon", "action": "show_menu" }
+                ],
+                "right_items": [
+                    { "title": "Filter", "icon": "filter_icon", "action": "show_filters" },
+                    { "title": "Search", "icon": "search_icon", "action": "show_search" }
+                ]
+            },
+            "cart": {
+                "title": "Shopping Cart",
+                "right_items": [
+                    { "title": "Checkout", "icon": "checkout_icon", "action": "start_checkout" }
+                ]
+            },
+            "profile": {
+                "title": "My Profile",
+                "right_items": [
+                    { "title": "Settings", "icon": "settings_icon", "action": "show_settings" }
+                ]
+            }
+        };
+
+        return Ok(Unit);
+    }
+
+    fn create_home_screen() -> any {
+        let screen = mobile::create_screen("Home");
+
+        // Create hero banner
+        let hero_banner = mobile::create_image_view(0, 0, 375, 200);
+        mobile::add_component_to_screen(screen, hero_banner);
+
+        // Create featured categories
+        let categories_title = mobile::create_mobile_label(
+            "Shop by Category",
+            20, 220, 335, 30
+        );
+        mobile::add_component_to_screen(screen, categories_title);
+
+        // Category grid (simplified)
+        let category_buttons = [
+            self.create_category_button("Electronics", 20, 260, 165, 100),
+            self.create_category_button("Clothing", 195, 260, 165, 100),
+            self.create_category_button("Home & Garden", 20, 370, 165, 100),
+            self.create_category_button("Sports", 195, 370, 165, 100)
+        ];
+
+        for button in category_buttons  {
+            mobile::add_component_to_screen(screen, button);
+        }
+
+        // Recent products section
+        let recent_title = mobile::create_mobile_label(
+            "Recently Viewed",
+            20, 490, 335, 30
+        );
+        mobile::add_component_to_screen(screen, recent_title);
+
+        // Recent products horizontal scroll
+        let recent_scroll = mobile::create_mobile_scroll_view(20, 530, 335, 120);
+        mobile::add_component_to_screen(screen, recent_scroll);
+
+        return screen;
+    }
+
+    fn create_category_button(title: string, x: int, y: int, width: int, height: int) -> any {
+        // Create category button with image and title
+        let container = mobile::create_container("vertical", x, y, width, height);
+
+        let image_view = mobile::create_mobile_image_view(x + 10, y + 10, width - 20, height - 50);
+        let title_label = mobile::create_mobile_label(
+            title,
+            x + 10, y + height - 35, width - 20, 25
+        );
+
+        return container;
+    }
+
+    fn create_products_screen() -> any {
+        let screen = mobile::create_screen("Products");
+
+        // Search bar
+        let search_bar = mobile::create_mobile_search_bar(20, 20, 335, 50);
+        mobile::add_component_to_screen(screen, search_bar);
+
+        // Product categories filter
+        let category_scroll = mobile::create_mobile_scroll_view(0, 80, 375, 60);
+        mobile::add_component_to_screen(screen, category_scroll);
+
+        // Products grid/list
+        let products_list = mobile::create_mobile_list_view(20, 150, 335, 500);
+        mobile::add_component_to_screen(screen, products_list);
+
+        return screen;
+    }
+
+    fn create_product_detail_view(product_id: string) -> any {
+        // Create product detail modal/screen
+        let detail_view = mobile::create_screen("Product Detail");
+
+        // Product image
+        let product_image = mobile::create_mobile_image_view(20, 20, 335, 250);
+        mobile::add_component_to_screen(detail_view, product_image);
+
+        // Product title
+        let title_label = mobile::create_mobile_label(
+            "Product Title",
+            20, 280, 335, 30
+        );
+        mobile::add_component_to_screen(detail_view, title_label);
+
+        // Price
+        let price_label = mobile::create_mobile_label(
+            "$99.99",
+            20, 320, 100, 25
+        );
+        mobile::add_component_to_screen(detail_view, price_label);
+
+        // Rating
+        let rating_label = mobile::create_mobile_label(
+            "⭐⭐⭐⭐☆ (4.5)",
+            250, 320, 105, 25
+        );
+        mobile::add_component_to_screen(detail_view, rating_label);
+
+        // Description
+        let description_view = mobile::create_mobile_text_view(
+            "Product description goes here...",
+            20, 360, 335, 80
+        );
+        mobile::add_component_to_screen(detail_view, description_view);
+
+        // Add to cart button
+        let add_to_cart_button = mobile::create_mobile_button(
+            "Add to Cart",
+            20, 460, 335, 50
+        );
+        mobile::add_component_to_screen(detail_view, add_to_cart_button);
+
+        // Buy now button
+        let buy_now_button = mobile::create_mobile_button(
+            "Buy Now",
+            20, 520, 335, 50
+        );
+        mobile::add_component_to_screen(detail_view, buy_now_button);
+
+        return detail_view;
+    }
+
+    fn create_cart_screen() -> any {
+        let screen = mobile::create_screen("Cart");
+
+        // Cart items list
+        let cart_list = mobile::create_mobile_list_view(20, 20, 335, 400);
+        mobile::add_component_to_screen(screen, cart_list);
+
+        // Order summary
+        let summary_container = mobile::create_container(
+            "vertical",
+            20, 430, 335, 150
+        );
+
+        let subtotal_label = mobile::create_mobile_label(
+            "Subtotal: $99.99",
+            20, 440, 315, 25
+        );
+
+        let tax_label = mobile::create_mobile_label(
+            "Tax: $8.00",
+            20, 470, 315, 25
+        );
+
+        let shipping_label = mobile::create_mobile_label(
+            "Shipping: $5.99",
+            20, 500, 315, 25
+        );
+
+        let total_label = mobile::create_mobile_label(
+            "Total: $113.98",
+            20, 530, 315, 30
+        );
+
+        // Checkout button
+        let checkout_button = mobile::create_mobile_button(
+            "Proceed to Checkout",
+            20, 590, 335, 50
+        );
+
+        return screen;
+    }
+
+    fn initialize_user_data() -> Result<Unit, Error> {
+        // Load or create user profile
+        self.user_profile = {
+            "user_id": "user_12345",
+            "name": "John Doe",
+            "email": "john.doe@email.com",
+            "phone": "+1-555-0123",
+            "addresses": [
+                {
+                    "type": "home",
+                    "street": "123 Main St",
+                    "city": "Anytown",
+                    "state": "CA",
+                    "zip": "12345",
+                    "country": "USA"
+                }
+            ],
+            "preferences": {
+                "notifications": true,
+                "location_services": true,
+                "analytics": false
+            },
+            "loyalty_points": 1250,
+            "membership_tier": "Gold"
+        };
+
+        // Initialize shopping cart
+        self.cart = {
+            "items": [],
+            "subtotal": 0.0,
+            "tax": 0.0,
+            "shipping": 0.0,
+            "total": 0.0,
+            "item_count": 0
+        };
+
+        return Ok(Unit);
+    }
+
+    fn request_initial_permissions() -> Result<Unit, Error> {
+        // Request necessary permissions
+        let permissions = [
+            "location",
+            "camera",
+            "notifications",
+            "contacts",
+            "storage"
+        ];
+
+        for permission in permissions  {
+            let granted = mobile::request_permission(permission);
+            if (!granted) {
+                log::info("mobile", {
+                    "action": "permission_denied",
+                    "permission": permission,
+                    "message": "User denied permission request"
+                });
+            }
+        }
+
+        return Ok(Unit);
+    }
+
+    fn setup_location_services() -> Result<Unit, Error> {
+        // Initialize location services
+        self.location = mobile::get_gps_location();
+
+        log::info("mobile", {
+            "action": "location_services_initialized",
+            "latitude": self.location["coordinate"]["latitude"],
+            "longitude": self.location["coordinate"]["longitude"],
+            "accuracy": self.location["horizontal_accuracy"]
+        });
+
+        return Ok(Unit);
+    }
+
+    fn initialize_payment_methods() -> Result<Unit, Error> {
+        // Initialize available payment methods
+        self.payment_methods = [
+            {
+                "type": "credit_card",
+                "last_four": "4242",
+                "brand": "Visa",
+                "is_default": true
+            },
+            {
+                "type": "paypal",
+                "email": "john.doe@email.com",
+                "is_default": false
+            },
+            {
+                "type": "apple_pay",
+                "is_available": true,
+                "is_default": false
+            }
+        ];
+
+        log::info("mobile", {
+            "action": "payment_methods_initialized",
+            "methods_count": self.payment_methods.length
+        });
+
+        return Ok(Unit);
+    }
+
+    fn setup_push_notifications() -> Result<Unit, Error> {
+        // Setup push notification handling
+        let notification_settings = {
+            "order_updates": true,
+            "promotional_offers": true,
+            "new_arrivals": false,
+            "price_drops": true,
+            "delivery_updates": true
+        };
+
+        log::info("mobile", {
+            "action": "push_notifications_setup",
+            "settings": notification_settings
+        });
+
+        return Ok(Unit);
+    }
+
+    // Product and Cart Management
+    fn search_products(query: string, category: string) -> any {
+        // Search products based on query and category
+        let search_results = {
+            "query": query,
+            "category": category,
+            "total_results": 25,
+            "products": [
+                {
+                    "id": "prod_001",
+                    "name": "Wireless Headphones",
+                    "price": 79.99,
+                    "rating": 4.5,
+                    "image_url": "/products/headphones.jpg",
+                    "in_stock": true,
+                    "category": "Electronics"
+                },
+                {
+                    "id": "prod_002",
+                    "name": "Smart Watch",
+                    "price": 299.99,
+                    "rating": 4.7,
+                    "image_url": "/products/smartwatch.jpg",
+                    "in_stock": true,
+                    "category": "Electronics"
+                }
+            ],
+            "filters": {
+                "price_range": { "min": 0, "max": 500 },
+                "rating_min": 4.0,
+                "in_stock_only": true
+            }
+        };
+
+        return search_results;
+    }
+
+    fn add_to_cart(product_id: string, quantity: int) -> Result<Unit, Error> {
+        // Add product to cart
+        let product = {
+            "id": product_id,
+            "name": "Sample Product",
+            "price": 49.99,
+            "quantity": quantity,
+            "image_url": "/products/sample.jpg"
+        };
+
+        self.cart["items"].push(product);
+        self.update_cart_totals();
+
+        // Update cart badge in tab bar
+        self.update_cart_badge();
+
+        // Send push notification
+        mobile::send_push_notification({
+            "title": "Added to Cart",
+            "body": product["name"] + " added to your cart",
+            "user_info": { "product_id": product_id, "action": "cart_add" }
+        });
+
+        log::info("mobile", {
+            "action": "product_added_to_cart",
+            "product_id": product_id,
+            "quantity": quantity,
+            "cart_total": self.cart["total"]
+        });
+
+        return Ok(Unit);
+    }
+
+    fn remove_from_cart(product_id: string) -> Result<Unit, Error> {
+        // Remove product from cart
+//         self.cart["items"] = self.cart["items"].filter(
+        self.update_cart_totals();
+        self.update_cart_badge();
+
+        log::info("mobile", {
+            "action": "product_removed_from_cart",
+            "product_id": product_id,
+            "cart_total": self.cart["total"]
+        });
+
+        return Ok(Unit);
+    }
+
+    fn update_cart_totals() -> Result<Unit, Error> {
+        // Calculate cart totals
+//         let subtotal = self.cart["items"].reduce(
+        let tax_rate = 0.08; // 8% tax
+        let tax = subtotal * tax_rate;
+        let shipping = 5.99;
+        if (subtotal > 50.0) {
+            shipping = 0.0;
+        }
+        let total = subtotal + tax + shipping;
+
+        self.cart["subtotal"] = subtotal;
+        self.cart["tax"] = tax;
+        self.cart["shipping"] = shipping;
+        self.cart["total"] = total;
+        self.cart["item_count"] = self.cart["items"].length;
+
+        return Ok(Unit);
+    }
+
+    fn update_cart_badge() -> Result<Unit, Error> {
+        // Update cart tab bar badge
+        let badge_value = "";
+        if (self.cart["item_count"] > 0) {
+            badge_value = self.cart["item_count"].to_string();
+        }
+
+        // In real implementation, this would update the tab bar badge
+        return Ok(Unit);
+    }
+
+    // Checkout and Payment
+    fn start_checkout() -> Result<Unit, Error> {
+        // Validate cart
+        if (self.cart["items"].is_empty()) {
+            mobile::show_message_dialog({
+                "title": "Empty Cart",
+                "message": "Your cart is empty. Add some products before checkout.",
+                "dialog_type": "warning",
+                "buttons": ["OK"]
+            });
+            return Ok(Unit);
+        }
+
+        // Navigate to checkout screen
+        mobile::push_screen(self.app, "checkout");
+
+        // Pre-fill checkout information
+        self.prefill_checkout_info();
+
+        log::info("mobile", {
+            "action": "checkout_started",
+            "cart_total": self.cart["total"],
+            "item_count": self.cart["item_count"]
+        });
+
+        return Ok(Unit);
+    }
+
+    fn prefill_checkout_info() -> Result<Unit, Error> {
+        // Pre-fill checkout form with user data
+        let checkout_info = {
+            "shipping_address": self.user_profile["addresses"][0],
+            "billing_address": self.user_profile["addresses"][0],
+//             "payment_method": self.payment_methods.find(
+            "contact_info": {
+                "email": self.user_profile["email"],
+                "phone": self.user_profile["phone"]
+            }
+        };
+
+        return Ok(Unit);
+    }
+
+    fn process_payment(payment_info: any) -> Result<any, Error> {
+        // Process payment (simplified)
+        log::info("mobile", {
+            "action": "payment_processing_started",
+            "amount": self.cart["total"],
+            "payment_method": payment_info["method"]
+        });
+
+        // Simulate payment processing
+        let payment_result = {
+            "success": true,
+            "transaction_id": "txn_" + generate_id(),
+            "amount": self.cart["total"],
+            "timestamp": chain::get_block_timestamp(1),
+            "status": "completed"
+        };
+
+        if (payment_result["success"]) {
+            // Create order
+            let order = self.create_order(payment_result);
+
+            // Clear cart
+            self.cart = {
+                "items": [],
+                "subtotal": 0.0,
+                "tax": 0.0,
+                "shipping": 0.0,
+                "total": 0.0,
+                "item_count": 0
+            };
+            self.update_cart_badge();
+
+            // Send order confirmation
+            mobile::send_push_notification({
+                "title": "Order Confirmed",
+                "body": "Your order #" + order["order_id"] + " has been placed successfully!",
+                "user_info": { "order_id": order["order_id"], "action": "order_confirmation" }
+            });
+
+            log::info("mobile", {
+                "action": "payment_completed",
+                "transaction_id": payment_result["transaction_id"],
+                "order_id": order["order_id"],
+                "amount": payment_result["amount"]
+            });
+        }
+
+        return Ok(payment_result);
+    }
+
+    fn create_order(payment_result: any) -> any {
+        // Create order record
+        let order = {
+            "order_id": "order_" + generate_id(),
+            "user_id": self.user_profile["user_id"],
+            "items": self.cart["items"],
+            "subtotal": self.cart["subtotal"],
+            "tax": self.cart["tax"],
+            "shipping": self.cart["shipping"],
+            "total": self.cart["total"],
+            "status": "confirmed",
+            "payment_transaction": payment_result["transaction_id"],
+            "shipping_address": self.user_profile["addresses"][0],
+            "created_at": chain::get_block_timestamp(1),
+            "estimated_delivery": chain::get_block_timestamp(1) + 604800 // 7 days
+        };
+
+        return order;
+    }
+
+    // Location and Mapping Features
+    fn find_nearby_stores() -> any {
+        // Find stores near current location
+        let nearby_stores = [
+            {
+                "id": "store_001",
+                "name": "Downtown Store",
+                "address": "123 Main St, Anytown, CA 12345",
+                "distance": 0.8,
+                "phone": "+1-555-0123",
+                "hours": "9 AM - 9 PM",
+                "coordinates": {
+                    "latitude": self.location["coordinate"]["latitude"] + 0.01,
+                    "longitude": self.location["coordinate"]["longitude"] - 0.01
+                }
+            },
+            {
+                "id": "store_002",
+                "name": "Mall Location",
+                "address": "456 Shopping Center, Anytown, CA 12345",
+                "distance": 2.3,
+                "phone": "+1-555-0456",
+                "hours": "10 AM - 8 PM",
+                "coordinates": {
+                    "latitude": self.location["coordinate"]["latitude"] - 0.02,
+                    "longitude": self.location["coordinate"]["longitude"] + 0.015
+                }
+            }
+        ];
+
+        return nearby_stores;
+    }
+
+    fn show_store_on_map(store_id: string) -> Result<Unit, Error> {
+        // Show store location on map
+        let stores = self.find_nearby_stores();
+//         let store = stores.find(
+
+        if (store.is_none()) {
+            return Err(Error::new("Store Not Found", "Store " + store_id + " not found"));
+        }
+
+        // In real implementation, this would open a map view
+        log::info("mobile", {
+            "action": "store_map_opened",
+            "store_id": store_id,
+            "store_name": store["name"]
+        });
+
+        return Ok(Unit);
+    }
+
+    // QR Code and NFC Features
+    fn scan_product_qr() -> Result<any, Error> {
+        // Scan QR code for product information
+        let scanned_data = mobile::scan_qr_code();
+
+        if (scanned_data.is_empty()) {
+            return Err(Error::new("Scan Failed", "Failed to scan QR code"));
+        }
+
+        // Parse QR code data (assuming it contains product ID)
+        let product_id = scanned_data.split("/").pop();
+
+        // Look up product information
+        let product_info = {
+            "id": product_id,
+            "name": "Scanned Product",
+            "price": 29.99,
+            "description": "Product scanned via QR code",
+            "scanned_at": chain::get_block_timestamp(1),
+            "location": self.location
+        };
+
+        log::info("mobile", {
+            "action": "product_qr_scanned",
+            "product_id": product_id,
+            "scanned_data": scanned_data
+        });
+
+        return Ok(product_info);
+    }
+
+    fn handle_nfc_payment() -> Result<any, Error> {
+        // Handle NFC payment
+        let nfc_data = mobile::perform_nfc_scan();
+
+        if (nfc_data.is_empty()) {
+            return Err(Error::new("NFC Scan Failed", "Failed to read NFC data"));
+        }
+
+        // Process NFC payment data
+        let payment_result = {
+            "success": true,
+            "method": "nfc",
+            "device_id": nfc_data,
+            "amount": self.cart["total"],
+            "timestamp": chain::get_block_timestamp(1)
+        };
+
+        log::info("mobile", {
+            "action": "nfc_payment_processed",
+            "device_id": nfc_data,
+            "amount": payment_result["amount"]
+        });
+
+        return Ok(payment_result);
+    }
+
+    // Camera and Photo Features
+    fn take_product_photo() -> Result<any, Error> {
+        // Take photo of product for identification or review
+        let camera = mobile::get_camera();
+        let photo = mobile::capture_photo(camera);
+
+        // Analyze photo with AI
+        let analysis = ai::analyze_image(photo);
+
+        let photo_info = {
+            "photo_data": photo,
+            "analysis": analysis,
+            "timestamp": chain::get_block_timestamp(1),
+            "location": self.location
+        };
+
+        log::info("mobile", {
+            "action": "product_photo_taken",
+            "objects_detected": analysis["objects"].length,
+            "faces_detected": analysis["faces"].length
+        });
+
+        return Ok(photo_info);
+    }
+
+    // Push Notification Handlers
+    fn handle_push_notification(notification: any) -> Result<Unit, Error> {
+        // Handle incoming push notification
+        if (notification["user_info"]["action"] == "order_update") {
+            self.handle_order_update(notification);
+        } else if (notification["user_info"]["action"] == "promotional_offer" ) {
+            self.handle_promotional_offer(notification);
+        } else if (notification["user_info"]["action"] == "delivery_update" ) {
+            self.handle_delivery_update(notification);
+        }
+
+        return Ok(Unit);
+    }
+
+    fn handle_order_update(notification: any) -> Result<Unit, Error> {
+        // Handle order status update
+        log::info("mobile", {
+            "action": "order_update_received",
+            "order_id": notification["user_info"]["order_id"],
+            "status": notification["user_info"]["status"]
+        });
+
+        return Ok(Unit);
+    }
+
+    fn handle_promotional_offer(notification: any) -> Result<Unit, Error> {
+        // Handle promotional offer
+        log::info("mobile", {
+            "action": "promotional_offer_received",
+            "offer_id": notification["user_info"]["offer_id"],
+            "discount": notification["user_info"]["discount"]
+        });
+
+        return Ok(Unit);
+    }
+
+    fn handle_delivery_update(notification: any) -> Result<Unit, Error> {
+        // Handle delivery status update
+        log::info("mobile", {
+            "action": "delivery_update_received",
+            "order_id": notification["user_info"]["order_id"],
+            "status": notification["user_info"]["delivery_status"]
+        });
+
+        return Ok(Unit);
+    }
+
+    // App Lifecycle Events
+    fn handle_app_background() -> Result<Unit, Error> {
+        // App moved to background
+        log::info("mobile", {
+            "action": "app_backgrounded",
+            "timestamp": chain::get_block_timestamp(1)
+        });
+
+        return Ok(Unit);
+    }
+
+    fn handle_app_foreground() -> Result<Unit, Error> {
+        // App moved to foreground
+        log::info("mobile", {
+            "action": "app_foregrounded",
+            "timestamp": chain::get_block_timestamp(1)
+        });
+
+        // Refresh data if (needed
+        self.refresh_app_data();
+
+        return Ok(Unit);
+    }
+
+    fn refresh_app_data() -> Result<Unit, Error> {
+        // Refresh user data, cart, etc.
+        log::info("mobile", {
+            "action": "app_data_refreshed",
+            "timestamp": chain::get_block_timestamp(1)
+        });
+
+        return Ok(Unit);
+    }
+
+    // Rating and Review System
+    fn rate_app(rating: int, review: string) -> Result<Unit, Error> {
+        // Submit app rating and review
+        let rating_data = {
+            "user_id": self.user_profile["user_id"],
+            "rating": rating,
+            "review": review,
+            "platform": "mobile",
+            "app_version": "2.1.0",
+            "timestamp": chain::get_block_timestamp(1)
+        };
+
+        let success = mobile::rate_app(rating, review);
+
+        if (success) {
+            log::info("mobile", {
+                "action": "app_rated",
+                "rating": rating,
+                "has_review": !review.is_empty()
+            });
+        }
+
+        return Ok(Unit);
+    }
+
+    // Utility Functions
+    fn format_currency(amount: float) -> string {
+        return "$" + amount.to_string();
+    }
+
+    fn calculate_distance(coord1: any, coord2: any) -> float {
+        // Calculate distance between two coordinates (simplified)
+        let lat_diff = coord1["latitude"] - coord2["latitude"];
+        let lon_diff = coord1["longitude"] - coord2["longitude"];
+        return (lat_diff * lat_diff + lon_diff * lon_diff).sqrt() * 111; // Rough km conversion
+    }
+}
+
+// Example 2: Fitness Tracking Mobile App
+// @mobile
+// @trust("hybrid")
+service FitnessTrackerMobileApp {
+    app: any;
+    user_profile: any;
+    current_workout: any;
+    health_data: any;
+    goals: any;
+
+    fn initialize_app() -> Result<Unit, Error> {
+        // Create fitness tracking app
+        let app = mobile::create_app("FitTracker", "com.fittracker.mobile", "cross_platform");
+
+        // Create main screens
+        let dashboard_screen = mobile::create_screen("Dashboard");
+        let workout_screen = mobile::create_screen("Workouts");
+        let progress_screen = mobile::create_screen("Progress");
+        let social_screen = mobile::create_screen("Social");
+
+        // Add screens to app
+        mobile::add_screen_to_app(app, dashboard_screen);
+        mobile::add_screen_to_app(app, workout_screen);
+        mobile::add_screen_to_app(app, progress_screen);
+        mobile::add_screen_to_app(app, social_screen);
+
+        // Set root screen
+        mobile::set_root_screen(app, "dashboard");
+
+        // Initialize health and fitness data
+        self.initialize_health_data();
+
+        // Setup motion sensors
+        self.setup_motion_sensors();
+
+        // Setup health permissions
+        self.request_health_permissions();
+
+        // Initialize workout goals
+        self.initialize_fitness_goals();
+
+        self.app = app;
+
+        log::info("mobile", {
+            "service": "FitnessTrackerMobileApp",
+            "app_name": "FitTracker",
+            "message": "Fitness tracking mobile app initialized"
+        });
+
+        return Ok(Unit);
+    }
+
+    fn initialize_health_data() -> Result<Unit, Error> {
+        // Initialize user's health and fitness data
+        self.user_profile = {
+            "user_id": "user_67890",
+            "name": "Jane Smith",
+            "age": 28,
+            "height": 165, // cm
+            "weight": 65, // kg
+            "gender": "female",
+            "activity_level": "moderately_active",
+            "fitness_goals": {
+                "daily_steps": 10000,
+                "weekly_workouts": 4,
+                "monthly_distance": 50 // km
+            }
+        };
+
+        self.health_data = {
+            "today_steps": 0,
+            "today_distance": 0.0,
+            "today_calories": 0,
+            "today_active_minutes": 0,
+            "heart_rate_zones": {
+                "fat_burn": { "min": 120, "max": 150 },
+                "cardio": { "min": 150, "max": 180 },
+                "peak": { "min": 180, "max": 200 }
+            },
+            "last_updated": chain::get_block_timestamp(1)
+        };
+
+        return Ok(Unit);
+    }
+
+    fn setup_motion_sensors() -> Result<Unit, Error> {
+        // Setup accelerometer and gyroscope for activity tracking
+        let accelerometer = mobile::get_accelerometer_data();
+        let gyroscope = mobile::get_gyroscope_data();
+
+        log::info("mobile", {
+            "action": "motion_sensors_setup",
+            "accelerometer": accelerometer,
+            "gyroscope": gyroscope
+        });
+
+        return Ok(Unit);
+    }
+
+    fn request_health_permissions() -> Result<Unit, Error> {
+        // Request health and fitness related permissions
+        let permissions = [
+            "motion",
+            "health_kit",
+            "location",
+            "notifications"
+        ];
+
+        for permission in permissions  {
+            mobile::request_permission(permission);
+        }
+
+        return Ok(Unit);
+    }
+
+    fn initialize_fitness_goals() -> Result<Unit, Error> {
+        // Set up user's fitness goals
+        self.goals = {
+            "daily": {
+                "steps": 10000,
+                "calories": 500,
+                "active_minutes": 30,
+                "distance": 5.0 // km
+            },
+            "weekly": {
+                "workouts": 4,
+                "total_distance": 25.0,
+                "strength_sessions": 2,
+                "cardio_sessions": 2
+            },
+            "monthly": {
+                "weight_loss": 1.0, // kg
+                "muscle_gain": 0.5, // kg
+                "improvement_percentage": 10
+            }
+        };
+
+        return Ok(Unit);
+    }
+
+    // Dashboard Screen
+    fn create_dashboard_screen() -> any {
+        let screen = mobile::create_screen("Dashboard");
+
+        // Today's stats header
+        let today_label = mobile::create_mobile_label(
+            "Today's Progress",
+            20, 20, 335, 30
+        );
+        mobile::add_component_to_screen(screen, today_label);
+
+        // Steps progress circle
+        let steps_progress = self.create_progress_circle(
+            "Steps",
+            self.health_data["today_steps"],
+            self.goals["daily"]["steps"],
+            20, 60, 150, 150
+        );
+        mobile::add_component_to_screen(screen, steps_progress);
+
+        // Calories progress circle
+        let calories_progress = self.create_progress_circle(
+            "Calories",
+            self.health_data["today_calories"],
+            self.goals["daily"]["calories"],
+            190, 60, 150, 150
+        );
+        mobile::add_component_to_screen(screen, calories_progress);
+
+        // Active minutes
+        let active_minutes_text = "Active Minutes: " + self.health_data["today_active_minutes"].to_string() + "/" + self.goals["daily"]["active_minutes"].to_string();
+        let active_minutes_label = mobile::create_mobile_label(
+            active_minutes_text,
+            20, 230, 335, 25
+        );
+        mobile::add_component_to_screen(screen, active_minutes_label);
+
+        // Distance
+        let distance_text = "Distance: " + self.health_data["today_distance"].to_string() + "/" + self.goals["daily"]["distance"].to_string() + " km";
+        let distance_label = mobile::create_mobile_label(
+            distance_text,
+            20, 265, 335, 25
+        );
+        mobile::add_component_to_screen(screen, distance_label);
+
+        // Quick actions
+        let start_workout_button = mobile::create_mobile_button(
+            "Start Workout",
+            20, 310, 335, 50
+        );
+        mobile::add_component_to_screen(screen, start_workout_button);
+
+        let log_water_button = mobile::create_mobile_button(
+            "Log Water",
+            20, 370, 335, 50
+        );
+        mobile::add_component_to_screen(screen, log_water_button);
+
+        return screen;
+    }
+
+    fn create_progress_circle(title: string, current: int, target: int, x: int, y: int, width: int, height: int) -> any {
+        // Create circular progress indicator (simplified as container)
+        let container = mobile::create_container("vertical", x, y, width, height);
+
+        let title_label = mobile::create_mobile_label(
+            title,
+            x + 10, y + 10, width - 20, 25
+        );
+
+        let progress_text_str = current.to_string() + "/" + target.to_string();
+        let progress_text = mobile::create_mobile_label(
+            progress_text_str,
+            x + 10, y + height - 35, width - 20, 25
+        );
+
+        let percentage = 0;
+        if (target > 0) {
+            percentage = (current * 100) / target;
+        }
+        let percentage_text = percentage.to_string() + "%";
+        let progress_label = mobile::create_mobile_label(
+            percentage_text,
+            x + 10, y + height - 60, width - 20, 25
+        );
+
+        return container;
+    }
+
+    // Workout Features
+    fn start_workout(workout_type: string) -> Result<any, Error> {
+        // Start a new workout session
+        let workout_id = "workout_" + generate_id();
+
+        self.current_workout = {
+            "id": workout_id,
+            "type": workout_type,
+            "start_time": chain::get_block_timestamp(1),
+            "duration": 0,
+            "exercises": [],
+            "heart_rate_zones": {
+                "fat_burn": 0,
+                "cardio": 0,
+                "peak": 0
+            },
+            "calories_burned": 0,
+            "distance": 0.0,
+            "status": "active"
+        };
+
+        // Start heart rate monitoring
+        self.start_heart_rate_monitoring();
+
+        // Send push notification
+        mobile::send_push_notification({
+            "title": "Workout Started",
+            "body": workout_type + " workout in progress",
+            "user_info": { "workout_id": workout_id, "action": "workout_started" }
+        });
+
+        log::info("mobile", {
+            "action": "workout_started",
+            "workout_id": workout_id,
+            "workout_type": workout_type
+        });
+
+        return Ok(self.current_workout);
+    }
+
+    fn end_workout() -> Result<any, Error> {
+        if (self.current_workout.is_none()) {
+            return Err(Error::new("No Active Workout", "No active workout to end"));
+        }
+
+        // Calculate final statistics
+        let end_time = chain::get_block_timestamp(1);
+        let duration = end_time - self.current_workout["start_time"];
+
+        self.current_workout["end_time"] = end_time;
+        self.current_workout["duration"] = duration;
+        self.current_workout["status"] = "completed";
+
+        // Stop heart rate monitoring
+        self.stop_heart_rate_monitoring();
+
+        // Save workout data
+        self.save_workout_data(self.current_workout);
+
+        // Send completion notification
+        mobile::send_push_notification({
+            "title": "Workout Completed",
+            "body": "Great job! " + to_string(duration / 60) + " minutes completed",
+            "user_info": { "workout_id": self.current_workout["id"], "action": "workout_completed" }
+        });
+
+        let completed_workout = self.current_workout;
+        self.current_workout = null;
+
+        log::info("mobile", {
+            "action": "workout_completed",
+            "workout_id": completed_workout["id"],
+            "duration": duration,
+            "calories_burned": completed_workout["calories_burned"]
+        });
+
+        return Ok(completed_workout);
+    }
+
+    fn start_heart_rate_monitoring() -> Result<Unit, Error> {
+        // Start monitoring heart rate during workout
+        log::info("mobile", {
+            "action": "heart_rate_monitoring_started",
+            "workout_id": self.current_workout["id"]
+        });
+
+        return Ok(Unit);
+    }
+
+    fn stop_heart_rate_monitoring() -> Result<Unit, Error> {
+        // Stop heart rate monitoring
+        log::info("mobile", {
+            "action": "heart_rate_monitoring_stopped",
+            "workout_id": self.current_workout["id"]
+        });
+
+        return Ok(Unit);
+    }
+
+    fn save_workout_data(workout: any) -> Result<Unit, Error> {
+        // Save workout data to persistent storage
+        log::info("mobile", {
+            "action": "workout_data_saved",
+            "workout_id": workout["id"],
+            "duration": workout["duration"],
+            "calories": workout["calories_burned"]
+        });
+
+        return Ok(Unit);
+    }
+
+    // Health Data Tracking
+    fn update_step_count(new_steps: int) -> Result<Unit, Error> {
+        // Update daily step count
+        let previous_steps = self.health_data["today_steps"];
+        self.health_data["today_steps"] = new_steps;
+        self.health_data["last_updated"] = chain::get_block_timestamp(1);
+
+        // Check if (daily goal reached
+        if (previous_steps < self.goals["daily"]["steps"] && new_steps >= self.goals["daily"]["steps"]) {
+            mobile::send_push_notification({
+                "title": "Goal Achieved! 🎉",
+                "body": "Congratulations! You've reached your daily step goal.",
+                "user_info": { "goal_type": "daily_steps", "action": "goal_achieved" }
+            });
+        }
+
+        return Ok(Unit);
+    }
+
+    fn update_calories_burned(calories: int) -> Result<Unit, Error> {
+        // Update daily calories burned
+        self.health_data["today_calories"] = calories;
+        self.health_data["last_updated"] = chain::get_block_timestamp(1);
+
+        return Ok(Unit);
+    }
+
+    fn track_location_for_distance(coordinate: any) -> Result<Unit, Error> {
+        // Track location changes for distance calculation
+        // In real implementation, this would calculate distance between points
+        self.health_data["today_distance"] = self.health_data["today_distance"] + 0.1; // Simplified
+
+        return Ok(Unit);
+    }
+
+    // Progress Tracking
+    fn get_weekly_progress() -> any {
+        // Get weekly fitness progress
+        let weekly_data = {
+            "workouts_completed": 3,
+            "total_calories": 1250,
+            "total_distance": 15.5,
+            "average_heart_rate": 145,
+            "goals_achieved": 2,
+            "personal_records": 1
+        };
+
+        return weekly_data;
+    }
+
+    fn get_monthly_progress() -> any {
+        // Get monthly fitness progress
+        let monthly_data = {
+            "workouts_completed": 12,
+            "total_calories": 5200,
+            "total_distance": 68.3,
+            "weight_change": -0.8,
+            "goals_achieved": 8,
+            "consistency_score": 85
+        };
+
+        return monthly_data;
+    }
+
+    // Social Features
+    fn share_workout(workout: any, social_platform: string) -> Result<Unit, Error> {
+        // Share workout on social media
+        let share_text = "Just completed a " + workout["type"] + " workout! " + 
+            (workout["duration"] / 60).to_string() + " minutes, " + 
+            workout["calories_burned"].to_string() + " calories burned. #FitTracker #Fitness";
+
+        log::info("mobile", {
+            "action": "workout_shared",
+            "workout_id": workout["id"],
+            "platform": social_platform,
+            "share_text": share_text
+        });
+
+        return Ok(Unit);
+    }
+
+    fn get_friends_activity() -> any {
+        // Get activity from friends/followers
+        let friends_activity = [
+            {
+                "friend_id": "friend_001",
+                "name": "Mike Johnson",
+                "activity": "Completed 5K run",
+                "timestamp": chain::get_block_timestamp(1) - 3600,
+                "likes": 3,
+                "comments": 1
+            },
+            {
+                "friend_id": "friend_002",
+                "name": "Sarah Wilson",
+                "activity": "Hit daily step goal",
+                "timestamp": chain::get_block_timestamp(1) - 7200,
+                "likes": 5,
+                "comments": 2
+            }
+        ];
+
+        return friends_activity;
+    }
+
+    // Push Notification Handlers
+    fn handle_workout_reminder() -> Result<Unit, Error> {
+        // Handle workout reminder notification
+        if (!self.current_workout.is_none()) {
+            return Ok(Unit); // Already in workout
+        }
+
+        mobile::send_push_notification({
+            "title": "Time for a Workout!",
+            "body": "Don't forget to stay active today. Let's crush those fitness goals!",
+            "user_info": { "action": "workout_reminder" }
+        });
+
+        return Ok(Unit);
+    }
+
+    fn handle_goal_celebration(goal_type: string) -> Result<Unit, Error> {
+        // Handle goal achievement celebration
+        let celebration_messages = {
+            "daily_steps": "Amazing! You've conquered your daily step goal! 🌟",
+            "weekly_workouts": "Week warrior! All workouts completed! 💪",
+            "monthly_distance": "Distance dominator! Monthly goal smashed! 🏃‍♀️"
+        };
+
+//         let message = celebration_messages[goal_type] 
+
+        mobile::send_push_notification({
+            "title": "Goal Achieved! 🎉",
+            "body": message,
+            "user_info": { "goal_type": goal_type, "action": "goal_celebration" }
+        });
+
+        return Ok(Unit);
+    }
+
+    // Utility Functions
+    fn format_duration(seconds: int) -> string {
+        let minutes = seconds / 60;
+        let remaining_seconds = seconds % 60;
+        let minutes_str = minutes.to_string();
+        let seconds_str = remaining_seconds.to_string();
+        if (remaining_seconds < 10) {
+            seconds_str = "0" + remaining_seconds.to_string();
+        }
+        return minutes_str + ":" + seconds_str;
+    }
+
+    fn calculate_bmi(height_cm: int, weight_kg: int) -> float {
+        let height_m = height_cm / 100.0;
+        return weight_kg / (height_m * height_m);
+    }
+
+    fn get_bmi_category(bmi: float) -> string {
+        if (bmi < 18.5) {
+            return "Underweight";
+        } else if (bmi < 25.0 ) {
+            return "Normal weight";
+        } else if (bmi < 30.0 ) {
+            return "Overweight";
+        } else {
+            return "Obese";
+        }
+    }
+}
+
+// Main demonstration
+fn main() {
+    log::info("main", { "message": "Starting Phase 5: Desktop & Mobile Frameworks Examples" });
+
+    // Initialize all mobile applications
+    let shopping_app = AdvancedMobileShoppingApp::new();
+    shopping_app.initialize_app();
+
+    let fitness_app = FitnessTrackerMobileApp::new();
+    fitness_app.initialize_app();
+
+    // Demonstrate shopping app features
+    shopping_app.add_to_cart("prod_001", 2);
+    shopping_app.add_to_cart("prod_002", 1);
+    shopping_app.start_checkout();
+
+    // Demonstrate fitness app features
+    fitness_app.start_workout("running");
+    fitness_app.update_step_count(8500);
+    fitness_app.end_workout();
+
+    log::info("main", { "message": "Phase 5 Desktop & Mobile Framework examples completed successfully!" });
+}

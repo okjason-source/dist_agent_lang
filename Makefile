@@ -1,7 +1,10 @@
 # dist_agent_lang Makefile
 # Common development tasks and build automation
 
-.PHONY: help build test clean install uninstall fmt clippy bench docs package release
+# Version from Cargo.toml (single source of truth)
+VERSION := $(shell grep '^version' Cargo.toml | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/')
+
+.PHONY: help build test clean install uninstall fmt clippy bench docs docs-bundle package release
 
 # Default target
 help: ## Show this help message
@@ -80,26 +83,49 @@ clean-all: ## Clean everything including target and node_modules
 	rm -rf dist_agent_lang-*.zip
 	rm -rf dist_agent_lang-*
 
+# Documentation bundle (per docs/RELEASE_DOCS_BUNDLE.md)
+# Essential: 8 files. Recommended: +10 files.
+DOCS_ROOT = docs/PUBLIC_DOCUMENTATION_INDEX.md docs/syntax.md docs/attributes.md docs/CLI_QUICK_REFERENCE.md docs/STDLIB_REFERENCE.md docs/Documentation.md docs/MOLD_FORMAT.md docs/AGENT_CAPABILITIES.md docs/AI_PROVIDERS_QUICK_REF.md docs/VENV.md
+DOCS_GUIDES = docs/guides/QUICK_START.md docs/guides/AGENT_SETUP_AND_USAGE.md docs/guides/SKILLS_AND_REGISTRY.md docs/guides/PERSISTENT_AGENT_MEMORY.md docs/guides/API_REFERENCE.md docs/guides/AI_FEATURES_GUIDE.md
+DOCS_GETTING_STARTED = docs/getting_started/INSTALLATION.md docs/getting_started/USAGE.md
+
+docs-bundle: ## Create docs-only tarball for release (Essential + Recommended)
+	@echo "Creating docs bundle for $(VERSION)..."
+	@mkdir -p dist_agent_lang-$(VERSION)-docs/share/doc/dist_agent_lang/guides
+	@mkdir -p dist_agent_lang-$(VERSION)-docs/share/doc/dist_agent_lang/getting_started
+	@for f in $(DOCS_ROOT); do [ -f "$$f" ] && cp "$$f" dist_agent_lang-$(VERSION)-docs/share/doc/dist_agent_lang/; done
+	@for f in $(DOCS_GUIDES); do [ -f "$$f" ] && cp "$$f" dist_agent_lang-$(VERSION)-docs/share/doc/dist_agent_lang/guides/; done
+	@for f in $(DOCS_GETTING_STARTED); do [ -f "$$f" ] && cp "$$f" dist_agent_lang-$(VERSION)-docs/share/doc/dist_agent_lang/getting_started/; done
+	@tar -czf dist_agent_lang-$(VERSION)-docs.tar.gz dist_agent_lang-$(VERSION)-docs/
+	@rm -rf dist_agent_lang-$(VERSION)-docs
+	@echo "Docs bundle created: dist_agent_lang-$(VERSION)-docs.tar.gz"
+
 # Packaging targets
-package: build-release ## Create release package (minimal - only essential files)
-	@echo "Creating minimal release package..."
-	@mkdir -p dist_agent_lang-1.0.0/bin
-	@cp target/release/dist_agent_lang dist_agent_lang-1.0.0/bin/
-	@mkdir -p dist_agent_lang-1.0.0/examples
+package: build-release ## Create release package (binary + examples + docs in share/doc)
+	@echo "Creating release package for $(VERSION)..."
+	@mkdir -p dist_agent_lang-$(VERSION)/bin
+	@mkdir -p dist_agent_lang-$(VERSION)/share/doc/dist_agent_lang/guides
+	@mkdir -p dist_agent_lang-$(VERSION)/share/doc/dist_agent_lang/getting_started
+	@cp target/release/dal dist_agent_lang-$(VERSION)/bin/
+	@chmod +x dist_agent_lang-$(VERSION)/bin/dal
+	@mkdir -p dist_agent_lang-$(VERSION)/examples
 	@for file in examples/*.dal; do \
 		if [ -f "$$file" ] && ! echo "$$file" | grep -q "test_"; then \
-			cp "$$file" dist_agent_lang-1.0.0/examples/; \
+			cp "$$file" dist_agent_lang-$(VERSION)/examples/; \
 		fi \
 	done
-	@cp README.md LICENSE CHANGELOG.md dist_agent_lang-1.0.0/
-	@cp scripts/install.sh dist_agent_lang-1.0.0/
-	@chmod +x dist_agent_lang-1.0.0/install.sh
-	@tar -czf dist_agent_lang-1.0.0.tar.gz dist_agent_lang-1.0.0/
-	@zip -r dist_agent_lang-1.0.0.zip dist_agent_lang-1.0.0/
-	@echo "Minimal release packages created:"
-	@echo "  - dist_agent_lang-1.0.0.tar.gz"
-	@echo "  - dist_agent_lang-1.0.0.zip"
-	@echo "Contents: binary, examples (.dal files only), README, LICENSE, CHANGELOG, install script"
+	@cp README.md LICENSE CHANGELOG.md dist_agent_lang-$(VERSION)/
+	@cp scripts/install.sh dist_agent_lang-$(VERSION)/
+	@chmod +x dist_agent_lang-$(VERSION)/install.sh
+	@for f in $(DOCS_ROOT); do [ -f "$$f" ] && cp "$$f" dist_agent_lang-$(VERSION)/share/doc/dist_agent_lang/; done
+	@for f in $(DOCS_GUIDES); do [ -f "$$f" ] && cp "$$f" dist_agent_lang-$(VERSION)/share/doc/dist_agent_lang/guides/; done
+	@for f in $(DOCS_GETTING_STARTED); do [ -f "$$f" ] && cp "$$f" dist_agent_lang-$(VERSION)/share/doc/dist_agent_lang/getting_started/; done
+	@tar -czf dist_agent_lang-$(VERSION).tar.gz dist_agent_lang-$(VERSION)/
+	@zip -r dist_agent_lang-$(VERSION).zip dist_agent_lang-$(VERSION)/
+	@echo "Release packages created:"
+	@echo "  - dist_agent_lang-$(VERSION).tar.gz"
+	@echo "  - dist_agent_lang-$(VERSION).zip"
+	@echo "Contents: dal binary, examples, docs in share/doc/, README, LICENSE, CHANGELOG, install script"
 
 release: test-all clippy package ## Create release (test, lint, package)
 	@echo "Release created successfully!"
@@ -150,7 +176,7 @@ ci: test-all clippy audit ## Run CI pipeline
 
 # Utility targets
 version: ## Show version information
-	@echo "dist_agent_lang version: 1.0.0"
+	@echo "dist_agent_lang version: $(VERSION)"
 	@echo "Rust version: $(shell rustc --version)"
 	@echo "Cargo version: $(shell cargo --version)"
 

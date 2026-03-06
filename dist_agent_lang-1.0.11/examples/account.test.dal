@@ -1,0 +1,38 @@
+// Example test file for account functionality
+// Run with: dal test examples/account.test.dal
+//        or: dal test examples/
+
+@test
+fn test_create_account() {
+    let account_id = "user_123";
+    let initial_balance = 0;
+    
+    assert(account_id != "");
+    assert(initial_balance == 0);
+}
+
+@test
+fn test_deposit_funds() {
+    let balance = 100;
+    let deposit_amount = 50;
+    let expected_balance = 150;
+    
+    assert(balance + deposit_amount == expected_balance);
+}
+
+fn test_withdraw_funds() {
+    // This function uses test_ prefix, so it's also recognized as a test
+    let balance = 100;
+    let withdraw_amount = 30;
+    let expected_balance = 70;
+    
+    assert(balance - withdraw_amount == expected_balance);
+}
+
+@test
+fn test_insufficient_funds() {
+    let balance = 50;
+    let withdraw_amount = 100;
+    
+    assert(withdraw_amount > balance);
+}

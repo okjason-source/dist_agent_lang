@@ -1,0 +1,334 @@
+// Secure Configuration Management Example
+// Uses cloudadmin::authorize and trust levels (validate_hybrid_trust, bridge_trusts)
+// instead of logging for access control and audit
+
+// =====================================================
+// PATTERN 1: Environment Variable Management
+// =====================================================
+
+@trust("hybrid")
+@cloudadmin
+service SecureConfigurationService {
+    config_manager: map<string, string>;
+    secrets_vault: map<string, string>;
+
+    fn initialize(admin_id: string) {
+        let ok = cloudadmin::validate_hybrid_trust("valid", "valid");
+        if (!ok) {
+            return;
+        }
+
+        self.config_manager = {};
+        self.secrets_vault = {};
+        self.load_environment_configurations(admin_id);
+        self.setup_encrypted_secrets(admin_id);
+    }
+
+    fn load_environment_configurations(admin_id: string) {
+        if (!cloudadmin::authorize(admin_id, "read", "config")) {
+            return;
+        }
+        
+        let db_config = {
+            "host": "localhost",
+            "port": "5432",
+            "database": "db"
+        };
+        let api_config = {
+            "base_url": "https://api.example.com",
+            "timeout": "5000"
+        };
+        let blockchain_config = {
+            "chain_id": "1",
+            "rpc_url": "https://eth.llamarpc.com"
+        };
+        let ai_config = {
+            "model": "gpt-4",
+            "temperature": "0.7"
+        };
+    }
+
+    fn setup_encrypted_secrets(admin_id: string) {
+        if (!cloudadmin::authorize(admin_id, "write", "secrets")) {
+            return;
+        }
+    }
+
+    fn get_database_connection(admin_id: string) -> string {
+        if (!cloudadmin::authorize(admin_id, "read", "config")) {
+            return "";
+        }
+        let conn_str = "postgresql://localhost:5432/db";
+        let connection = database::connect(conn_str);
+        return connection;
+    }
+
+    fn get_api_client(admin_id: string, service_name: string) -> string {
+        if (!cloudadmin::authorize(admin_id, "read", "api_config")) {
+            return "";
+        }
+        let client = web::get_request("https://api.example.com");
+        return client;
+    }
+
+    fn run_demo() {
+        let admin_id = "admin";
+        let ok_trust = cloudadmin::validate_hybrid_trust("valid", "valid");
+        let ok_bridge = cloudadmin::bridge_trusts("admin", "user");
+        let can_read_config = cloudadmin::authorize(admin_id, "read", "config");
+        let can_write_secrets = cloudadmin::authorize(admin_id, "write", "secrets");
+        let can_read_secrets = cloudadmin::authorize(admin_id, "read", "secrets");
+        print("Trust validated: " + to_string(ok_trust));
+        print("Trust bridged: " + to_string(ok_bridge));
+        print("Can read config: " + to_string(can_read_config));
+        print("Can write secrets: " + to_string(can_write_secrets));
+        print("Can read secrets: " + to_string(can_read_secrets));
+    }
+}
+
+// =====================================================
+// PATTERN 2: Configuration Validation
+// =====================================================
+
+@trust("hybrid")
+@cloudadmin
+service ConfigurationValidationService {
+    validation_rules: map<string, map<string, string>>;
+
+    fn initialize(admin_id: string) {
+        if (!cloudadmin::authorize(admin_id, "write", "validation_rules")) {
+            return;
+        }
+        self.validation_rules = {};
+        self.setup_validation_rules(admin_id);
+    }
+
+    fn setup_validation_rules(admin_id: string) {
+        if (!cloudadmin::authorize(admin_id, "write", "validation_rules")) {
+            return;
+        }
+
+        self.validation_rules["DB_HOST"] = {
+            "required": "true",
+            "validation_type": "URL",
+            "min_length": "1",
+            "max_length": "255"
+        };
+
+        self.validation_rules["DB_PORT"] = {
+            "required": "false",
+            "validation_type": "Integer",
+            "default_value": "5432",
+            "min_value": "1",
+            "max_value": "65535"
+        };
+
+        self.validation_rules["DB_PASSWORD"] = {
+            "required": "true",
+            "validation_type": "String",
+            "min_length": "8",
+            "max_length": "128"
+        };
+
+        self.validation_rules["API_BASE_URL"] = {
+            "required": "true",
+            "validation_type": "URL",
+            "allowed_protocols": "https"
+        };
+
+        self.validation_rules["API_KEY"] = {
+            "required": "true",
+            "validation_type": "String",
+            "min_length": "32",
+            "max_length": "256"
+        };
+
+        self.validation_rules["BLOCKCHAIN_PRIVATE_KEY"] = {
+            "required": "true",
+            "validation_type": "PrivateKey",
+            "min_length": "66",
+            "max_length": "66"
+        };
+
+        self.validation_rules["BLOCKCHAIN_CHAIN_ID"] = {
+            "required": "true",
+            "validation_type": "Integer",
+            "allowed_values": "1"
+        };
+    }
+
+    fn validate_configuration(admin_id: string) -> map<string, string> {
+        if (!cloudadmin::authorize(admin_id, "read", "config")) {
+            return {};
+        }
+        let validation_results = {};
+        return validation_results;
+    }
+
+    fn validate_environment_variable(admin_id: string, key: string, rule: map<string, string>) -> map<string, string> {
+        if (!cloudadmin::authorize(admin_id, "read", "config")) {
+            return { "valid": false, "error": "unauthorized" };
+        }
+        let result = {
+            "valid": true,
+            "key": key,
+            "error": ""
+        };
+        return result;
+    }
+}
+
+// =====================================================
+// PATTERN 3: Secrets Management
+// =====================================================
+
+@trust("hybrid")
+@secure
+@cloudadmin
+service SecretsManagementService {
+    secrets_vault: map<string, string>;
+    access_log: list<string>;
+
+    fn initialize(admin_id: string) {
+        if (!cloudadmin::authorize(admin_id, "write", "secrets")) {
+            return;
+        }
+        self.secrets_vault = {};
+        self.access_log = [];
+    }
+
+    fn store_secret(admin_id: string, secret_name: string, secret_value: string, encryption_key: string) {
+        if (!cloudadmin::authorize(admin_id, "write", "secrets")) {
+            return;
+        }
+        if (len(encryption_key) < 32) {
+            return;
+        }
+
+        let hashed = crypto::hash(secret_value, "sha256");
+        self.secrets_vault[secret_name] = hashed;
+    }
+
+    fn retrieve_secret(admin_id: string, secret_name: string, encryption_key: string) -> string {
+        if (!cloudadmin::authorize(admin_id, "read", "secrets")) {
+            return "";
+        }
+        let stored_value = self.secrets_vault[secret_name];
+        return stored_value;
+    }
+
+    fn rotate_secret(admin_id: string, secret_name: string, new_value: string, encryption_key: string) {
+        if (!cloudadmin::authorize(admin_id, "write", "secrets")) {
+            return;
+        }
+        let stored_value = self.secrets_vault[secret_name];
+        if (stored_value == "") {
+            return;
+        }
+
+        let hashed = crypto::hash(new_value, "sha256");
+        self.secrets_vault[secret_name] = hashed;
+    }
+
+    fn list_secrets(admin_id: string) -> list<string> {
+        if (!cloudadmin::authorize(admin_id, "read", "secrets")) {
+            return [];
+        }
+        let keys = [];
+        return keys;
+    }
+
+    fn get_secret_metadata(admin_id: string, secret_name: string) -> map<string, string> {
+        if (!cloudadmin::authorize(admin_id, "read", "secrets")) {
+            return {};
+        }
+        let metadata = {
+            "name": secret_name,
+            "created_at": chain::get_block_timestamp(1),
+            "last_accessed": chain::get_block_timestamp(1),
+            "access_count": "0",
+            "encryption_algorithm": "AES-256-GCM"
+        };
+        return metadata;
+    }
+
+    fn get_access_log(admin_id: string) -> list<string> {
+        if (!cloudadmin::authorize(admin_id, "read", "secrets")) {
+            return [];
+        }
+        return self.access_log;
+    }
+}
+
+// =====================================================
+// PATTERN 4: Environment-Specific Configuration
+// =====================================================
+
+@trust("hybrid")
+@cloudadmin
+service EnvironmentConfigurationService {
+    environment_configs: map<string, map<string, string>>;
+
+    fn initialize(admin_id: string) {
+        if (!cloudadmin::authorize(admin_id, "write", "config")) {
+            return;
+        }
+        self.environment_configs = {};
+        self.setup_environment_configs(admin_id);
+    }
+
+    fn setup_environment_configs(admin_id: string) {
+        if (!cloudadmin::authorize(admin_id, "write", "config")) {
+            return;
+        }
+
+        let bridged = cloudadmin::bridge_trusts("admin", "user");
+        if (!bridged) {
+            return;
+        }
+
+        self.environment_configs["development"] = {
+            "database_host": "localhost",
+            "database_port": "5432",
+            "api_timeout": "5000",
+            "retry_count": "1",
+            "logging_level": "debug",
+            "encryption_enabled": "false"
+        };
+
+        self.environment_configs["staging"] = {
+            "database_host": "staging-db.example.com",
+            "database_port": "5432",
+            "api_timeout": "15000",
+            "retry_count": "2",
+            "logging_level": "info",
+            "encryption_enabled": "true"
+        };
+
+        self.environment_configs["production"] = {
+            "database_host": "prod-db.example.com",
+            "database_port": "5432",
+            "api_timeout": "30000",
+            "retry_count": "3",
+            "logging_level": "warn",
+            "encryption_enabled": "true"
+        };
+    }
+
+    fn get_environment_config(admin_id: string, env_name: string) -> map<string, string> {
+        if (!cloudadmin::authorize(admin_id, "read", "config")) {
+            return {};
+        }
+        let base_config = self.environment_configs[env_name];
+        if (base_config == "") {
+            return self.environment_configs["development"];
+        }
+        return base_config;
+    }
+}
+
+// =====================================================
+// USAGE - run demo (uses cloudadmin + trust, not log)
+// =====================================================
+
+SecureConfigurationService::run_demo()

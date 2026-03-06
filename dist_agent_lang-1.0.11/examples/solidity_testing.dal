@@ -1,0 +1,203 @@
+// Solidity Contract Testing Utilities
+// Easy testing of Solidity integrations
+
+@trust("hybrid")
+service SolidityTesting {
+    // Mock contract for testing
+    mock_contracts: map<string, map<string, any>>,
+    
+    fn initialize() {
+        // Setup mock contracts for testing
+        self.mock_contracts["MockERC20"] = {
+            "address": "0xMockERC20",
+            "functions": {
+                "balanceOf": fn(account: string) -> int {
+                    return 1000000;  // Mock balance
+                },
+                "transfer": fn(to: string, amount: int) -> bool {
+                    return true;  // Mock success
+                },
+                "approve": fn(spender: string, amount: int) -> bool {
+                    return true;  // Mock success
+                }
+            }
+        };
+        
+        log::info("testing", "Mock contracts initialized");
+    }
+    
+    // Test contract call without deploying
+    fn test_contract_call(
+        contract_name: string,
+        function_name: string,
+        args: map<string, any>
+    ) -> map<string, any> {
+        let mock = self.mock_contracts[contract_name];
+        
+        if (mock == null {
+            return {"success": false, "error": "Contract not found"};
+        }
+        
+        let function = mock["functions"][function_name];
+        
+        if (function == null {
+            return {"success": false, "error": "Function not found"};
+        }
+        
+        // Execute mock function
+        let result = function(args);
+        
+        return {
+            "success": true,
+            "result": result,
+            "contract": contract_name,
+            "function": function_name
+        };
+    }
+    
+    // Test multi-step operation
+    fn test_multi_step_operation() -> map<string, any> {
+        let results = {};
+        
+        // Step 1: Check balance
+        let balance_result = self.test_contract_call(
+            "MockERC20",
+            "balanceOf",
+            {"account": "0xTestAccount"}
+        );
+        results["balance"] = balance_result;
+        
+        // Step 2: Approve
+        let approve_result = self.test_contract_call(
+            "MockERC20",
+            "approve",
+            {
+                "spender": "0xSpender",
+                "amount": 1000
+            }
+        );
+        results["approve"] = approve_result;
+        
+        // Step 3: Transfer
+        let transfer_result = self.test_contract_call(
+            "MockERC20",
+            "transfer",
+            {
+                "to": "0xRecipient",
+                "amount": 1000
+            }
+        );
+        results["transfer"] = transfer_result;
+        
+        return {
+            "success": balance_result["success"] && approve_result["success"] && transfer_result["success"],
+            "steps": results
+        };
+    }
+    
+    // Assert helper
+    fn assert(condition: bool, message: string) -> bool {
+        if (!condition {
+            log::error("test", "Assertion failed: " + message);
+            return false;
+        }
+        return true;
+    }
+    
+    // Run test suite
+    fn run_tests() -> map<string, any> {
+        log::info("testing", "Running Solidity integration tests...");
+        
+        let test_results = {};
+        
+        // Test 1: Basic contract call
+        let test1 = self.test_contract_call(
+            "MockERC20",
+            "balanceOf",
+            {"account": "0xTest"}
+        );
+        test_results["test_basic_call"] = self.assert(
+            test1["success"],
+            "Basic contract call failed"
+        );
+        
+        // Test 2: Multi-step operation
+        let test2 = self.test_multi_step_operation();
+        test_results["test_multi_step"] = self.assert(
+            test2["success"],
+            "Multi-step operation failed"
+        );
+        
+        // Test 3: Error handling
+        let test3 = self.test_contract_call(
+            "NonExistentContract",
+            "someFunction",
+            {}
+        );
+        test_results["test_error_handling"] = self.assert(
+            !test3["success"],
+            "Error handling test failed"
+        );
+        
+        let all_passed = true;
+        for (test_name in test_results.keys() ) {
+            if (!test_results[test_name] {
+                all_passed = false;
+                break;
+            }
+        }
+        
+        return {
+            "all_passed": all_passed,
+            "results": test_results,
+            "total_tests": test_results.size(),
+//             "passed": test_results.values().filter(
+        };
+    }
+}
+
+// Integration test example
+@trust("hybrid")
+service IntegrationTests {
+    fn test_uniswap_integration() -> bool {
+        // Test Uniswap integration without real deployment
+        let test_orchestrator = SolidityOrchestrator::new();
+        test_orchestrator.initialize();
+        
+        // Mock the chain::call to avoid real blockchain calls
+        let result = test_orchestrator.call_solidity_contract(
+            "UniswapRouter",
+            1,
+            "getAmountsOut",
+            {
+                "amountIn": 1000000,
+                "path": ["0xTokenA", "0xTokenB"]
+            }
+        );
+        
+        return result != null && result != "error";
+    }
+    
+    fn test_aave_integration() -> bool {
+        // Test Aave integration
+        let test_orchestrator = SolidityOrchestrator::new();
+        test_orchestrator.initialize();
+        
+        let result = test_orchestrator.call_solidity_contract(
+            "AaveLendingPool",
+            1,
+            "getUserAccountData",
+            {"user": "0xTestUser"}
+        );
+        
+        return result != null && result != "error";
+    }
+    
+    fn run_all_integration_tests() -> map<string, bool> {
+        return {
+            "uniswap": self.test_uniswap_integration(),
+            "aave": self.test_aave_integration()
+        };
+    }
+}
+
