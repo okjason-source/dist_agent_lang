@@ -18,9 +18,7 @@ service MultiChainKEYS {
     event ChainDeployed(chain_id: int, address: string);
     event GasEstimated(chain_id: int, operation: string, gas: int);
     event BalanceChecked(chain_id: int, address: string, balance: int);
-}
-
-impl MultiChainKEYS {
+    
     // Deploy KEYS token to multiple chains
     @txn
     fn deploy_to_all_chains() -> bool {

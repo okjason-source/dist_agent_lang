@@ -12,38 +12,44 @@ use dist_agent_lang::{execute_source, parse_source};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// Run with: cargo test check_skipped_examples -- --ignored --nocapture
+/// Use output to trim SKIP_EXAMPLES to only files that actually fail.
+#[test]
+#[ignore]
+fn check_skipped_examples() {
+    for path in SKIP_EXAMPLES {
+        let p = Path::new(path);
+        if p.exists() {
+            let source = fs::read_to_string(p).unwrap_or_default();
+            match parse_source(&source) {
+                Ok(_) => println!("PASS (parse): {}", path),
+                Err(e) => println!("FAIL: {} - {}", path, e),
+            }
+        } else {
+            println!("MISS: {}", path);
+        }
+    }
+}
+
 /// Examples skipped from parse/semantic checks (syntax or validator not yet aligned).
 /// Only include examples that are known to have issues that can't be easily fixed.
-/// Keep this list minimal - only add examples that are actually broken.
+/// Run `cargo test check_skipped_examples -- --ignored --nocapture` to audit.
 const SKIP_EXAMPLES: &[&str] = &[
-    // These are currently broken and need fixes:
-    "examples/ai_agent_examples.dal",
-    "examples/database_examples.dal",
-    "examples/desktop_examples.dal",
-    "examples/mobile_examples.dal",
+    // Syntax errors:
     "examples/dynamic_rwa_examples.dal",
-    "examples/oracle_quick_start.dal",
     "examples/general_purpose_demo.dal",
-    "examples/oracle_development_setup.dal",
     "examples/practical_backend_example.dal",
     "examples/real_time_backend_example.dal",
     "examples/xnft_implementation.dal",
     "examples/todo_backend_service.dal",
-    "examples/llm_motivations_demo.dal",
-    // Parse failures:
-    "examples/auto_detect_example.dal",
-    "examples/chain_selection_example.dal",
     "examples/enhanced_language_features.dal",
-    "examples/http_vs_ffi_example.dal",
     "examples/integrated_spawn_ai_examples.dal",
     "examples/solidity_testing.dal",
-    // Semantic validation failures:
-    "examples/backend_connectivity_patterns.dal",
-    "examples/cross_chain_patterns.dal",
-    "examples/llm_integration_examples.dal",
+    // Semantic: @trust requires @chain
+    "examples/oracle_quick_start.dal",
+    "examples/oracle_development_setup.dal",
+    "examples/http_vs_ffi_example.dal",
     "examples/secure_configuration_example.dal",
-    "examples/simple_web_api_example.dal",
-    "examples/smart_contract.dal",
     "examples/solidity_abi_integration.dal",
 ];
 

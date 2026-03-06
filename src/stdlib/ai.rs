@@ -1117,6 +1117,15 @@ Respond with JSON only, no markdown or extra text. Use exactly one of: \
 {\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"}. \
 For run and search the tool will execute and you will see the result; then reply once to complete the task. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
 
+/// Extended tools with file and DAL scripting: write_file, read_file, list_dir, dal_run, dal_check.
+/// Use when AGENT_ASSISTANT_SCRIPTING=1 or AGENT_ASSISTANT_ROOT is set.
+const TOOLS_SYSTEM_WITH_SCRIPTING: &str = "You are a helpful assistant. You can run shell commands, search the web, reply, ask the user, or use file/DAL tools. \
+Respond with JSON only, no markdown or extra text. Use exactly one of: \
+{\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"} \
+or {\"action\":\"write_file\",\"path\":\"path/to/file\",\"contents\":\"file contents\"} or {\"action\":\"read_file\",\"path\":\"path/to/file\"} or {\"action\":\"list_dir\",\"path\":\".\"} \
+or {\"action\":\"dal_run\",\"path\":\"file.dal\"} or {\"action\":\"dal_check\",\"path\":\"file.dal\"}. \
+For run and search the tool will execute and you will see the result. For write_file, read_file, list_dir, dal_run, dal_check: paths are relative to the scripts root. Use write_file to create .dal or .sh scripts, then dal_run for DAL or run with bash for shell. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
+
 /// Completion and when to ask: try to finish; if you need input or must stop, keep the user in the loop.
 const COMPLETION_AND_ASK_GUIDANCE: &str = "Complete in few steps: when a run succeeds (e.g. curl to post), use action reply right away with the outcome. Do not run extra checks or steps after success. If you need user input use ask_user; if something failed use reply to say what happened. Do not leave the user without a reply.";
 
@@ -1187,15 +1196,44 @@ fn search_web(_query: &str) -> Result<String, String> {
     Err("Web search requires the http-interface feature.".to_string())
 }
 
+/// Resolve working root for scripting: if AGENT_ASSISTANT_ROOT is set, use that/scripts (create if needed).
+/// Returns None if env is unset or path cannot be resolved.
+fn scripting_working_root() -> Option<std::path::PathBuf> {
+    let root = std::env::var("AGENT_ASSISTANT_ROOT").ok()?;
+    let root = std::path::Path::new(&root);
+    let root = root.canonicalize().ok().or_else(|| {
+        if root.exists() {
+            Some(root.to_path_buf())
+        } else {
+            None
+        }
+    })?;
+    let scripts = root.join("scripts");
+    if !scripts.exists() {
+        let _ = std::fs::create_dir_all(&scripts);
+    }
+    Some(scripts)
+}
+
 /// Agent that can reply, run shell commands, or search the web. Runs a multi-step loop until the
 /// LLM returns a final reply (or ask_user / parse_fail / max steps). So after a "run" (e.g. curl
 /// to post a tweet), the agent gets the tool result and continues until it sends a user-facing reply.
+/// When AGENT_ASSISTANT_SCRIPTING=1 or AGENT_ASSISTANT_ROOT is set, exposes write_file, read_file,
+/// list_dir, dal_run, dal_check and uses scripts/ under AGENT_ASSISTANT_ROOT as working root.
 pub fn respond_with_tools(user_message: &str) -> Result<String, String> {
     let max_steps = max_tool_steps_from_env();
+    let scripting_enabled = std::env::var("AGENT_ASSISTANT_SCRIPTING").as_deref() == Ok("1")
+        || std::env::var("AGENT_ASSISTANT_ROOT").is_ok();
+    let (tools_system, working_root) = if scripting_enabled {
+        let root = scripting_working_root();
+        (TOOLS_SYSTEM_WITH_SCRIPTING, root)
+    } else {
+        (TOOLS_SYSTEM, None)
+    };
     let mut schema =
-        crate::agent_context_schema::AgentContextSchema::minimal(user_message, TOOLS_SYSTEM);
+        crate::agent_context_schema::AgentContextSchema::minimal(user_message, tools_system);
     schema.completion_and_ask_guidance = Some(COMPLETION_AND_ASK_GUIDANCE.to_string());
-    let result = run_multi_step_tool_loop(&mut schema, max_steps, None, None)?;
+    let result = run_multi_step_tool_loop(&mut schema, max_steps, None, working_root.as_deref())?;
     Ok(result.final_text)
 }
 

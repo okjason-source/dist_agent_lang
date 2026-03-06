@@ -2,6 +2,7 @@
 // Get up and running with oracles in 5 minutes
 
 @trust("hybrid")
+@chain("ethereum")
 service OracleQuickStart {
     fn get_started() -> Result<Unit, Error> {
         // // println!("🚀 Oracle Quick Start for dist_agent_lang");
@@ -201,6 +202,7 @@ fn quick_oracle_setup() -> Result<any, Error> {
 // =====================================================
 
 @trust("hybrid")
+@chain("ethereum")
 service QuickStartWeatherNFT {
     nft_id: String;
     weather_oracle: any;
@@ -380,12 +382,14 @@ service QuickStartWeatherNFT {
 
     // Update every 2 minutes for quick feedback during development
     schedule_execution("every_2_minutes", update_nft_state);
-}
+};
 
 // =====================================================
 // DEVELOPMENT UTILITIES
 // =====================================================
 
+@trust("hybrid")
+@chain("ethereum")
 fn check_oracle_setup() -> Result<any, Error> {
     // // println!("🔍 Checking Oracle Development Setup");
     // // println!("=====================================");
@@ -441,6 +445,8 @@ fn check_oracle_setup() -> Result<any, Error> {
     return Ok(checks);
 }
 
+@trust("hybrid")
+@chain("ethereum")
 fn reset_oracle_environment() -> Result<Unit, Error> {
     // // println!("🔄 Resetting Oracle Development Environment");
     // // println!("===========================================");
@@ -467,6 +473,8 @@ fn reset_oracle_environment() -> Result<Unit, Error> {
 // COMPLETE DEVELOPMENT WORKFLOW
 // =====================================================
 
+@trust("hybrid")
+@chain("ethereum")
 fn oracle_development_workflow() -> Result<Unit, Error> {
     // // println!("🔄 Complete Oracle Development Workflow");
     // // println!("=======================================");

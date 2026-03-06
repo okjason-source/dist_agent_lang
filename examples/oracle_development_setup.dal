@@ -2,6 +2,8 @@
 // Complete setup and configuration for oracle networks in development environments
 
 @trust("hybrid")
+@chain("ethereum")
+@secure
 @ai
 service OracleDevelopmentSetup {
     // Oracle configuration management
@@ -43,6 +45,7 @@ service OracleDevelopmentSetup {
     // MOCK ORACLES FOR LOCAL DEVELOPMENT
     // ================================================
 
+    @secure
     fn setup_mock_oracles() -> Result<Unit, Error> {
         log::info("oracle_setup", {
             "phase": "setting_up_mock_oracles"
