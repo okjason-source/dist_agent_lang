@@ -154,6 +154,8 @@ dal mold list                # List available molds
 - **[Mold Format](docs/MOLD_FORMAT.md)** — `.mold.dal` syntax and lifecycle
 - **[AI Features Guide](docs/guides/AI_FEATURES_GUIDE.md)** — AI capabilities and integration
 
+**Release:** [docs/RELEASE_DOCS_BUNDLE.md](docs/RELEASE_DOCS_BUNDLE.md) lists which docs to include with the language install so users and LLMs have access to the most important documentation.
+
 ---
 
 ## Beta notice

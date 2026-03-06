@@ -77,6 +77,7 @@ PHASE*.md
 /docs/COMPREHENSIVE_AGENT_AND_MOLD_PLANS.md
 /docs/VENV_FIRST_CLASS_DESIGN.md
 /docs/VENV_CONCEPT.md
+/docs/RELEASE_DOCS_BUNDLE.md
 
 
 # Agent / project files (local workspace; do not commit)
@@ -94,6 +95,10 @@ PHASE*.md
 **/agent.toml
 /dal.toml
 **/dal.toml
+/agent_assistant/
+**/agent_assistant/
+Vibes_Job/
+**/Vibes_Job/
 
 # DAL error output and pipe artifacts
 /dal_err.txt

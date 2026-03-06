@@ -338,6 +338,46 @@ impl Parser {
         if let Some(Token::Keyword(Keyword::Let)) = self.tokens.get(position) {
             self.parse_let_statement(position)
         } else if let Some(Token::Keyword(Keyword::Fn)) = self.tokens.get(position) {
+            // Workaround: sometimes we land on Fn when @route(...) precedes it. Scan back for @route.
+            if position >= 2 {
+                let mut attr_pos = position;
+                for back in 1..=100.min(position) {
+                    let p = position - back;
+                    if matches!(
+                        self.tokens.get(p),
+                        Some(Token::Punctuation(Punctuation::At))
+                    ) && matches!(
+                        self.tokens.get(p + 1),
+                        Some(Token::Identifier(s)) if s == "route"
+                    ) {
+                        attr_pos = p;
+                        break;
+                    }
+                }
+                if attr_pos < position {
+                    let mut attributes = Vec::new();
+                    let mut current_position = attr_pos;
+                    while current_position < self.tokens.len() {
+                        if let Some(Token::Punctuation(Punctuation::At)) =
+                            self.tokens.get(current_position)
+                        {
+                            let (new_pos, attr) = self.parse_attribute(current_position)?;
+                            attributes.push(attr);
+                            current_position = new_pos;
+                        } else {
+                            break;
+                        }
+                    }
+                    if let Some(Token::Keyword(Keyword::Fn)) = self.tokens.get(current_position) {
+                        let (new_pos, mut func_stmt) =
+                            self.parse_function_statement(current_position)?;
+                        if let Statement::Function(ref mut func) = func_stmt {
+                            func.attributes = attributes;
+                        }
+                        return Ok((new_pos, func_stmt));
+                    }
+                }
+            }
             self.parse_function_statement(position)
         } else if let Some(Token::Keyword(Keyword::Spawn)) = self.tokens.get(position) {
             self.parse_spawn_statement(position)
@@ -352,7 +392,7 @@ impl Parser {
         } else if let Some(Token::Keyword(Keyword::While)) = self.tokens.get(position) {
             self.parse_while_statement(position)
         } else if let Some(Token::Keyword(Keyword::Try)) = self.tokens.get(position) {
-            self.parse_try_statement(position)
+            self.parse_try_statement(position, depth)
         } else if let Some(Token::Keyword(Keyword::For)) = self.tokens.get(position) {
             self.parse_for_in_statement(position)
         } else if let Some(Token::Keyword(Keyword::Break)) = self.tokens.get(position) {
@@ -2214,11 +2254,15 @@ impl Parser {
         ))
     }
 
-    fn parse_try_statement(&mut self, position: usize) -> Result<(usize, Statement), ParserError> {
+    fn parse_try_statement(
+        &mut self,
+        position: usize,
+        depth: usize,
+    ) -> Result<(usize, Statement), ParserError> {
         let mut current_position = position + 1; // consume 'try'
 
-        // Parse try block
-        let (new_position, try_block) = self.parse_block_statement(current_position, 0)?;
+        // Parse try block (pass depth so nested try/catch/finally respect MAX_RECURSION_DEPTH)
+        let (new_position, try_block) = self.parse_block_statement(current_position, depth)?;
         current_position = new_position;
 
         let mut catch_blocks = Vec::new();
@@ -2226,14 +2270,14 @@ impl Parser {
 
         // Parse catch blocks
         while let Some(Token::Keyword(Keyword::Catch)) = self.tokens.get(current_position) {
-            let (new_position, catch_block) = self.parse_catch_block(current_position)?;
+            let (new_position, catch_block) = self.parse_catch_block(current_position, depth)?;
             current_position = new_position;
             catch_blocks.push(catch_block);
         }
 
         // Parse finally block if present
         if let Some(Token::Keyword(Keyword::Finally)) = self.tokens.get(current_position) {
-            let (new_position, finally) = self.parse_finally_block(current_position)?;
+            let (new_position, finally) = self.parse_finally_block(current_position, depth)?;
             current_position = new_position;
             finally_block = Some(finally);
         }
@@ -2248,7 +2292,11 @@ impl Parser {
         ))
     }
 
-    fn parse_catch_block(&mut self, position: usize) -> Result<(usize, CatchBlock), ParserError> {
+    fn parse_catch_block(
+        &mut self,
+        position: usize,
+        depth: usize,
+    ) -> Result<(usize, CatchBlock), ParserError> {
         let mut current_position = position + 1; // consume 'catch'
 
         let mut error_type = None;
@@ -2284,8 +2332,8 @@ impl Parser {
             current_position = new_position;
         }
 
-        // Parse catch body
-        let (new_position, body) = self.parse_block_statement(current_position, 0)?;
+        // Parse catch body (pass depth for recursion limit)
+        let (new_position, body) = self.parse_block_statement(current_position, depth)?;
         current_position = new_position;
 
         Ok((
@@ -2301,11 +2349,12 @@ impl Parser {
     fn parse_finally_block(
         &mut self,
         position: usize,
+        depth: usize,
     ) -> Result<(usize, BlockStatement), ParserError> {
         let mut current_position = position + 1; // consume 'finally'
 
-        // Parse finally body
-        let (new_position, body) = self.parse_block_statement(current_position, 0)?;
+        // Parse finally body (pass depth for recursion limit)
+        let (new_position, body) = self.parse_block_statement(current_position, depth)?;
         current_position = new_position;
 
         Ok((current_position, body))

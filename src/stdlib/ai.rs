@@ -1112,10 +1112,13 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
 }
 
 /// System prompt for tool-using agent: reply, run shell, or search.
-const TOOLS_SYSTEM: &str = "You are a helpful assistant. You can run shell commands, search the web, or just reply. \
+const TOOLS_SYSTEM: &str = "You are a helpful assistant. You can run shell commands, search the web, reply, or ask the user. \
 Respond with JSON only, no markdown or extra text. Use exactly one of: \
-{\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"}. \
-For run and search the tool will execute; keep cmd/query concise. If the user just wants to chat, use action reply.";
+{\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"}. \
+For run and search the tool will execute and you will see the result; then reply once to complete the task. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
+
+/// Completion and when to ask: try to finish; if you need input or must stop, keep the user in the loop.
+const COMPLETION_AND_ASK_GUIDANCE: &str = "Complete in few steps: when a run succeeds (e.g. curl to post), use action reply right away with the outcome. Do not run extra checks or steps after success. If you need user input use ask_user; if something failed use reply to say what happened. Do not leave the user without a reply.";
 
 /// Extract the first JSON object from a string (between first { and matching }).
 fn extract_json_object(s: &str) -> Option<&str> {
@@ -1184,130 +1187,16 @@ fn search_web(_query: &str) -> Result<String, String> {
     Err("Web search requires the http-interface feature.".to_string())
 }
 
-/// Agent that can reply, run shell commands, or search the web. Parses LLM JSON and executes one action.
-/// Uses the canonical agent context schema (P0) so the LLM receives a consistent shape.
+/// Agent that can reply, run shell commands, or search the web. Runs a multi-step loop until the
+/// LLM returns a final reply (or ask_user / parse_fail / max steps). So after a "run" (e.g. curl
+/// to post a tweet), the agent gets the tool result and continues until it sends a user-facing reply.
 pub fn respond_with_tools(user_message: &str) -> Result<String, String> {
-    let schema =
+    let max_steps = max_tool_steps_from_env();
+    let mut schema =
         crate::agent_context_schema::AgentContextSchema::minimal(user_message, TOOLS_SYSTEM);
-    let prompt = crate::agent_context_schema::build_prompt_for_llm(&schema);
-    let response = generate_text(prompt).map_err(|e| e.to_string())?;
-    let response = response.trim();
-    let json_str = match extract_json_object(response) {
-        Some(s) => s,
-        None => return Ok(response.to_string()),
-    };
-    let v: serde_json::Value = serde_json::from_str(json_str).unwrap_or(serde_json::Value::Null);
-    let obj = match v.as_object() {
-        Some(o) => o,
-        None => return Ok(response.to_string()),
-    };
-    let action = obj
-        .get("action")
-        .and_then(|a| a.as_str())
-        .unwrap_or("reply");
-    match action {
-        "run" => {
-            let cmd = obj.get("cmd").and_then(|c| c.as_str()).unwrap_or("").trim();
-            if cmd.is_empty() {
-                return Ok("No command provided.".to_string());
-            }
-            use crate::runtime::values::Value;
-            match crate::stdlib::sh::run(cmd) {
-                Ok(Value::Map(m)) => {
-                    let stdout = m
-                        .get("stdout")
-                        .and_then(|v| {
-                            if let Value::String(s) = v {
-                                Some(s.as_str())
-                            } else {
-                                None
-                            }
-                        })
-                        .unwrap_or("");
-                    let stderr = m
-                        .get("stderr")
-                        .and_then(|v| {
-                            if let Value::String(s) = v {
-                                Some(s.as_str())
-                            } else {
-                                None
-                            }
-                        })
-                        .unwrap_or("");
-                    let code = m
-                        .get("exit_code")
-                        .and_then(|v| {
-                            if let Value::Int(n) = v {
-                                Some(*n)
-                            } else {
-                                None
-                            }
-                        })
-                        .unwrap_or(-1);
-                    let mut out = format!("Exit code: {}\n", code);
-                    if !stdout.is_empty() {
-                        out.push_str("stdout:\n");
-                        out.push_str(stdout);
-                    }
-                    if !stderr.is_empty() {
-                        out.push_str("\nstderr:\n");
-                        out.push_str(stderr);
-                    }
-                    if stdout.is_empty() && stderr.is_empty() {
-                        out.push_str("(no output)");
-                    }
-                    // Optional: ask LLM to summarize if output is long
-                    if out.len() > 500 {
-                        let summary_prompt =
-                            format!("Summarize this command output in 1-3 sentences:\n\n{}", out);
-                        if let Ok(s) = generate_text(summary_prompt) {
-                            return Ok(format!("{}\n\n---\nFull output:\n{}", s.trim(), out));
-                        }
-                    }
-                    Ok(out)
-                }
-                Ok(_) => Ok("Command completed.".to_string()),
-                Err(e) => Ok(format!("Command failed: {}", e)),
-            }
-        }
-        "search" => {
-            let query = obj
-                .get("query")
-                .and_then(|q| q.as_str())
-                .unwrap_or("")
-                .trim();
-            if query.is_empty() {
-                return Ok("No search query provided.".to_string());
-            }
-            match search_web(query) {
-                Ok(summary) => {
-                    if summary.len() > 400 {
-                        let summary_prompt = format!(
-                            "Summarize this search result in 1-3 sentences:\n\n{}",
-                            summary
-                        );
-                        if let Ok(s) = generate_text(summary_prompt) {
-                            return Ok(s.trim().to_string());
-                        }
-                    }
-                    Ok(summary)
-                }
-                Err(e) => Ok(format!("Search failed: {}", e)),
-            }
-        }
-        _ => {
-            let text = obj
-                .get("text")
-                .and_then(|t| t.as_str())
-                .unwrap_or("")
-                .trim();
-            if text.is_empty() {
-                Ok(response.to_string())
-            } else {
-                Ok(text.to_string())
-            }
-        }
-    }
+    schema.completion_and_ask_guidance = Some(COMPLETION_AND_ASK_GUIDANCE.to_string());
+    let result = run_multi_step_tool_loop(&mut schema, max_steps, None, None)?;
+    Ok(result.final_text)
 }
 
 // --- Multi-step tool loop (production) ---
@@ -1340,9 +1229,16 @@ pub enum ToolOutcome {
 }
 
 /// Parse LLM response into a tool outcome. Uses same JSON shape as SERVE_*_TOOLS.
+/// Accepts "command" as alias for "cmd", and matches action case-insensitively.
 pub fn parse_tool_response(response: &str) -> ToolOutcome {
     let response = response.trim();
-    let json_str = match extract_json_object(response) {
+    // Strip markdown code fences if present (e.g. ```json ... ```)
+    let cleaned = response
+        .strip_prefix("```json")
+        .or_else(|| response.strip_prefix("```"))
+        .and_then(|s| s.strip_suffix("```").map(|s| s.trim()))
+        .unwrap_or(response);
+    let json_str = match extract_json_object(cleaned) {
         Some(s) => s,
         None => return ToolOutcome::ParseFail(response.to_string()),
     };
@@ -1357,7 +1253,9 @@ pub fn parse_tool_response(response: &str) -> ToolOutcome {
     let action = obj
         .get("action")
         .and_then(|a| a.as_str())
-        .unwrap_or("reply");
+        .unwrap_or("reply")
+        .to_lowercase();
+    let action = action.as_str();
     match action {
         "ask_user" => {
             let msg = obj
@@ -1372,7 +1270,12 @@ pub fn parse_tool_response(response: &str) -> ToolOutcome {
             })
         }
         "run" => {
-            let cmd = obj.get("cmd").and_then(|c| c.as_str()).unwrap_or("").trim();
+            let cmd = obj
+                .get("cmd")
+                .or_else(|| obj.get("command"))
+                .and_then(|c| c.as_str())
+                .unwrap_or("")
+                .trim();
             ToolOutcome::Run(cmd.to_string())
         }
         "search" => {
@@ -1458,6 +1361,55 @@ pub fn parse_tool_response(response: &str) -> ToolOutcome {
 
 const MAX_TOOL_RESULT_LEN: usize = 4000;
 
+/// Strip curl progress meter from stderr so agent replies stay clean (exit 0, progress in stderr).
+fn strip_curl_progress(stderr: &str) -> &str {
+    let t = stderr.trim();
+    if t.is_empty() {
+        return stderr;
+    }
+    // Single line: entire stderr is often one line (header + stats space-separated)
+    if !t.contains('\n') {
+        let looks_like_progress = t.starts_with('%')
+            || (t.contains("Total")
+                && (t.contains("Received") || t.contains("Dload") || t.contains("Upload"))
+                && (t.contains("Speed") || t.chars().any(|c| c.is_ascii_digit())));
+        if looks_like_progress {
+            return "";
+        }
+    }
+    let mut all_progress = true;
+    for line in t.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        // Curl progress: starts with % or is a line of numbers/colons (e.g. "  0 100 160 0 ... 156k")
+        let looks_like_progress = line.starts_with('%')
+            || (line.contains("Total")
+                && (line.contains("Received")
+                    || line.contains("Dload")
+                    || line.contains("Upload")))
+            || line.chars().all(|c| {
+                c.is_ascii_digit()
+                    || c == ' '
+                    || c == '\t'
+                    || c == 'k'
+                    || c == 'M'
+                    || c == '-'
+                    || c == ':'
+            });
+        if !looks_like_progress {
+            all_progress = false;
+            break;
+        }
+    }
+    if all_progress {
+        ""
+    } else {
+        stderr
+    }
+}
+
 fn execute_run_result(cmd: &str) -> String {
     if cmd.is_empty() {
         return "No command provided.".to_string();
@@ -1474,7 +1426,7 @@ fn execute_run_result(cmd: &str) -> String {
                     }
                 })
                 .unwrap_or("");
-            let stderr = m
+            let stderr_raw = m
                 .get("stderr")
                 .and_then(|v| {
                     if let Value::String(s) = v {
@@ -1484,6 +1436,7 @@ fn execute_run_result(cmd: &str) -> String {
                     }
                 })
                 .unwrap_or("");
+            let stderr = strip_curl_progress(stderr_raw);
             let code = m
                 .get("exit_code")
                 .and_then(|v| {
@@ -1713,15 +1666,15 @@ pub struct MultiStepResult {
 }
 
 /// Default max tool steps when env DAL_AGENT_MAX_TOOL_STEPS is not set.
-pub const DEFAULT_MAX_TOOL_STEPS: u32 = 20;
+pub const DEFAULT_MAX_TOOL_STEPS: u32 = 40;
 
-/// Read max tool steps from env DAL_AGENT_MAX_TOOL_STEPS (default DEFAULT_MAX_TOOL_STEPS, clamped 1..=50).
+/// Read max tool steps from env DAL_AGENT_MAX_TOOL_STEPS (default DEFAULT_MAX_TOOL_STEPS, clamped 1..=80).
 pub fn max_tool_steps_from_env() -> u32 {
     std::env::var("DAL_AGENT_MAX_TOOL_STEPS")
         .ok()
         .and_then(|s| s.trim().parse().ok())
         .unwrap_or(DEFAULT_MAX_TOOL_STEPS)
-        .clamp(1, 50)
+        .clamp(1, 80)
 }
 
 /// Run the tool loop until the LLM returns reply or ask_user, or max_steps is reached.
@@ -1782,9 +1735,7 @@ pub fn run_multi_step_tool_loop(
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
-                        final_text:
-                            "Max tool steps reached. Please summarize what you have so far."
-                                .to_string(),
+                        final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
                     });
@@ -1806,9 +1757,7 @@ pub fn run_multi_step_tool_loop(
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
-                        final_text:
-                            "Max tool steps reached. Please summarize what you have so far."
-                                .to_string(),
+                        final_text: "Max tool steps reached".to_string(),
                         is_ask_user: false,
                         steps_used,
                     });
@@ -1835,9 +1784,7 @@ pub fn run_multi_step_tool_loop(
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
-                        final_text:
-                            "Max tool steps reached. Please summarize what you have so far."
-                                .to_string(),
+                        final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
                     });
@@ -1859,9 +1806,7 @@ pub fn run_multi_step_tool_loop(
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
-                        final_text:
-                            "Max tool steps reached. Please summarize what you have so far."
-                                .to_string(),
+                        final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
                     });
@@ -1883,9 +1828,7 @@ pub fn run_multi_step_tool_loop(
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
-                        final_text:
-                            "Max tool steps reached. Please summarize what you have so far."
-                                .to_string(),
+                        final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
                     });
@@ -1907,9 +1850,7 @@ pub fn run_multi_step_tool_loop(
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
-                        final_text:
-                            "Max tool steps reached. Please summarize what you have so far."
-                                .to_string(),
+                        final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
                     });
@@ -1931,9 +1872,7 @@ pub fn run_multi_step_tool_loop(
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
-                        final_text:
-                            "Max tool steps reached. Please summarize what you have so far."
-                                .to_string(),
+                        final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
                     });
@@ -1955,9 +1894,7 @@ pub fn run_multi_step_tool_loop(
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
-                        final_text:
-                            "Max tool steps reached. Please summarize what you have so far."
-                                .to_string(),
+                        final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
                     });

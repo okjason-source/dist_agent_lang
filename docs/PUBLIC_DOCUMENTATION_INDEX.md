@@ -260,6 +260,8 @@ agent::coordinate(agent_id, task, "task_distribution");
 - [Packaging and Distribution](PACKAGING.md) — Install methods, versioning, configuration
 - [DAL Venv](VENV.md) — Named execution environments with security profiles
 
+**Release maintainers:** [RELEASE_DOCS_BUNDLE.md](RELEASE_DOCS_BUNDLE.md) lists which docs and guides to include with the language release so installs (and LLMs) have access to the most important documentation.
+
 ---
 
 ## Project status

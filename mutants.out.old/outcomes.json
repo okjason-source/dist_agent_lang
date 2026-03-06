@@ -8,25 +8,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 93.429174213,
+          "duration": 88.592537692,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 52.799964801,
+          "duration": 58.03170722,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -71,25 +71,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.830438512,
+          "duration": 1.9312432400000001,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 35.8545875,
+          "duration": 32.573209623,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -134,25 +134,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.737970927,
+          "duration": 1.774373172,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 40.751295147,
+          "duration": 32.719370387,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -197,25 +197,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.828660161,
+          "duration": 1.526296605,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 36.439457284,
+          "duration": 35.218004922,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -260,25 +260,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.946268331,
+          "duration": 1.642721329,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 35.532881278,
+          "duration": 36.294965694,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -323,25 +323,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 2.06460159,
+          "duration": 1.801839179,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.992365199,
+          "duration": 39.10807014,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -386,25 +386,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.916739296,
+          "duration": 2.448118002,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.970139371,
+          "duration": 37.16169716,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -449,25 +449,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 2.072052825,
+          "duration": 1.81205277,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 36.978955869,
+          "duration": 34.203954231,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -512,25 +512,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.877638867,
+          "duration": 1.617242144,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 36.130119698,
+          "duration": 34.98835018,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -575,25 +575,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.983707409,
+          "duration": 2.34329752,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.510360927,
+          "duration": 35.908890539,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -638,25 +638,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.350098352,
+          "duration": 2.357813436,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 47.093124783,
+          "duration": 34.531549432,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -701,25 +701,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 2.037246034,
+          "duration": 1.771236721,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 46.084821504,
+          "duration": 33.800424401,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -764,25 +764,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.383569885,
+          "duration": 1.2157930829999999,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.657930828,
+          "duration": 33.260039849,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -827,25 +827,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.637636555,
+          "duration": 1.563996776,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 42.537787807,
+          "duration": 34.506976224,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -890,25 +890,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.4183639590000001,
+          "duration": 1.219101839,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.73559471,
+          "duration": 33.256675457,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -953,25 +953,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.369362524,
+          "duration": 1.20973895,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 39.078299164,
+          "duration": 33.060953491,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1016,25 +1016,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.41559871,
+          "duration": 1.515633687,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 45.126298292,
+          "duration": 33.144724663,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1079,25 +1079,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.6753903540000001,
+          "duration": 1.155063522,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 54.651821189,
+          "duration": 32.698386925,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1142,25 +1142,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 4.836584932,
+          "duration": 1.401111224,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 50.496894384,
+          "duration": 35.869164191,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1205,25 +1205,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 2.890999907,
+          "duration": 1.313155971,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 41.422290176,
+          "duration": 36.983850698,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1268,25 +1268,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.43601997,
+          "duration": 1.326391508,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 38.391658927,
+          "duration": 35.016382074,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1331,25 +1331,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.3565931949999999,
+          "duration": 1.376944488,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 38.624523914,
+          "duration": 49.77947234,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1394,25 +1394,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.476948359,
+          "duration": 2.546950915,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.102174965,
+          "duration": 36.269956785,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1457,25 +1457,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 2.164476787,
+          "duration": 2.108287616,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 40.431761762,
+          "duration": 35.531745069,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1520,25 +1520,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.748156363,
+          "duration": 1.781884335,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 46.280295002,
+          "duration": 35.319404455,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1583,25 +1583,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 2.092423967,
+          "duration": 1.780831997,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 36.900325098,
+          "duration": 36.379932654,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1646,25 +1646,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.377238266,
+          "duration": 1.312900235,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 44.77604841,
+          "duration": 50.359380801,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1709,25 +1709,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.8787840660000001,
+          "duration": 1.728901929,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.400118575,
+          "duration": 35.95474873,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1772,25 +1772,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.289953208,
+          "duration": 1.271058549,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 36.132856313,
+          "duration": 37.070522314,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1835,25 +1835,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.744144757,
+          "duration": 1.6447571650000001,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 41.230215264,
+          "duration": 34.667534006,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1898,25 +1898,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.377221238,
+          "duration": 1.323273616,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 40.385254944,
+          "duration": 36.265344869,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -1961,25 +1961,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.569855484,
+          "duration": 1.406202557,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.783600275,
+          "duration": 46.875105001,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -2024,25 +2024,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.3713643549999999,
+          "duration": 1.365488782,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.992521249,
+          "duration": 39.381235328,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -2087,25 +2087,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.426244114,
+          "duration": 1.506734293,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 41.763214022,
+          "duration": 36.762941357,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -2150,25 +2150,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.9371833010000001,
+          "duration": 1.26651326,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 41.796421363,
+          "duration": 34.612149832,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -2213,25 +2213,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.9175674470000001,
+          "duration": 1.7828963770000001,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.176536195,
+          "duration": 33.920486062,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -2276,25 +2276,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.7499803900000002,
+          "duration": 1.651162121,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 43.570280193,
+          "duration": 33.642699745,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -2339,25 +2339,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 2.819359785,
+          "duration": 2.029786631,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 44.25597566,
+          "duration": 36.200417813,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -2402,25 +2402,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 2.038048751,
+          "duration": 1.714949398,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 38.066072494,
+          "duration": 35.512612518,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -2465,25 +2465,25 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 2.004927994,
+          "duration": 1.9870516120000001,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 36.988436172,
+          "duration": 35.842458267,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
@@ -2528,3072 +2528,38 @@
       "phase_results": [
         {
           "phase": "Build",
-          "duration": 1.899760383,
+          "duration": 1.881349019,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--no-run",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8"
+            "--package=dist_agent_lang@1.0.10"
           ]
         },
         {
           "phase": "Test",
-          "duration": 37.16031412,
+          "duration": 40.538221094,
           "process_status": "Success",
           "argv": [
             "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
             "test",
             "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_package_index",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 86,
-                "column": 1
-              },
-              "end": {
-                "line": 116,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 95,
-              "column": 8
-            },
-            "end": {
-              "line": 95,
-              "column": 9
-            }
-          },
-          "replacement": "",
-          "genre": "UnaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_95_col_8.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_95_col_8.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.6969795109999999,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 36.836939872,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_package_index",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 86,
-                "column": 1
-              },
-              "end": {
-                "line": 116,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 109,
-              "column": 19
-            },
-            "end": {
-              "line": 109,
-              "column": 59
-            }
-          },
-          "replacement": "true",
-          "genre": "MatchArmGuard"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_109_col_19.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_109_col_19.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.831921617,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 39.763358926,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_package_index",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 86,
-                "column": 1
-              },
-              "end": {
-                "line": 116,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 109,
-              "column": 19
-            },
-            "end": {
-              "line": 109,
-              "column": 59
-            }
-          },
-          "replacement": "false",
-          "genre": "MatchArmGuard"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_109_col_19_001.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_109_col_19_001.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 2.18314673,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 44.677883363,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_package_index",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 86,
-                "column": 1
-              },
-              "end": {
-                "line": 116,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 109,
-              "column": 28
-            },
-            "end": {
-              "line": 109,
-              "column": 30
-            }
-          },
-          "replacement": "!=",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_109_col_28.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_109_col_28.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 2.5839108189999997,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 43.451217399,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_tarball",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 118,
-                "column": 1
-              },
-              "end": {
-                "line": 149,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 122,
-              "column": 5
-            },
-            "end": {
-              "line": 148,
-              "column": 6
-            }
-          },
-          "replacement": "Default::default()",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_122_col_5.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_122_col_5.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 2.5126646519999998,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 42.012307696,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_tarball",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 118,
-                "column": 1
-              },
-              "end": {
-                "line": 149,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 122,
-              "column": 30
-            },
-            "end": {
-              "line": 122,
-              "column": 32
-            }
-          },
-          "replacement": "&&",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_122_col_30.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_122_col_30.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 2.410406936,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 48.745739197,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_tarball",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 118,
-                "column": 1
-              },
-              "end": {
-                "line": 149,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 122,
-              "column": 8
-            },
-            "end": {
-              "line": 122,
-              "column": 9
-            }
-          },
-          "replacement": "",
-          "genre": "UnaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_122_col_8.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_122_col_8.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 2.047599586,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 37.854357197,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_tarball",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 118,
-                "column": 1
-              },
-              "end": {
-                "line": 149,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 122,
-              "column": 33
-            },
-            "end": {
-              "line": 122,
-              "column": 34
-            }
-          },
-          "replacement": "",
-          "genre": "UnaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_122_col_33.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_122_col_33.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.989728462,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 59.9706244,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_tarball",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 118,
-                "column": 1
-              },
-              "end": {
-                "line": 149,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 132,
-              "column": 8
-            },
-            "end": {
-              "line": 132,
-              "column": 9
-            }
-          },
-          "replacement": "",
-          "genre": "UnaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_132_col_8.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_132_col_8.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 3.141598266,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 38.10580244,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_tarball",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 118,
-                "column": 1
-              },
-              "end": {
-                "line": 149,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 142,
-              "column": 19
-            },
-            "end": {
-              "line": 142,
-              "column": 59
-            }
-          },
-          "replacement": "true",
-          "genre": "MatchArmGuard"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_142_col_19.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_142_col_19.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.9589444299999998,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 37.57207271,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_tarball",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 118,
-                "column": 1
-              },
-              "end": {
-                "line": 149,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 142,
-              "column": 19
-            },
-            "end": {
-              "line": 142,
-              "column": 59
-            }
-          },
-          "replacement": "false",
-          "genre": "MatchArmGuard"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_142_col_19_001.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_142_col_19_001.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.9524686180000002,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 40.973758659,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "get_tarball",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 118,
-                "column": 1
-              },
-              "end": {
-                "line": 149,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 142,
-              "column": 28
-            },
-            "end": {
-              "line": 142,
-              "column": 30
-            }
-          },
-          "replacement": "!=",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_142_col_28.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_142_col_28.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 2.140968259,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 36.753697175,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 156,
-              "column": 5
-            },
-            "end": {
-              "line": 234,
-              "column": 25
-            }
-          },
-          "replacement": "Default::default()",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_156_col_5.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_156_col_5.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 2.195101074,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 37.499994934,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 156,
-              "column": 30
-            },
-            "end": {
-              "line": 156,
-              "column": 32
-            }
-          },
-          "replacement": "&&",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_156_col_30.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_156_col_30.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 2.259362746,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 35.381703352,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 156,
-              "column": 8
-            },
-            "end": {
-              "line": 156,
-              "column": 9
-            }
-          },
-          "replacement": "",
-          "genre": "UnaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_156_col_8.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_156_col_8.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.798270016,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 34.799266371,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 156,
-              "column": 33
-            },
-            "end": {
-              "line": 156,
-              "column": 34
-            }
-          },
-          "replacement": "",
-          "genre": "UnaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_156_col_33.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_156_col_33.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.633255364,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 36.97582178,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 166,
-              "column": 13
-            },
-            "end": {
-              "line": 166,
-              "column": 15
-            }
-          },
-          "replacement": "&&",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_166_col_13.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_166_col_13.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.8383757219999999,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 34.502151404,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 165,
-              "column": 12
-            },
-            "end": {
-              "line": 165,
-              "column": 13
-            }
-          },
-          "replacement": "",
-          "genre": "UnaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_165_col_12.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_165_col_12.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.779772371,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 33.414352592,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 166,
-              "column": 59
-            },
-            "end": {
-              "line": 166,
-              "column": 61
-            }
-          },
-          "replacement": "==",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_166_col_59.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_166_col_59.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.7994946490000001,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 39.367554106,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 171,
-              "column": 42
-            },
-            "end": {
-              "line": 171,
-              "column": 43
-            }
-          },
-          "replacement": "+",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_171_col_42.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_171_col_42.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.470004312,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 41.018480873,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 171,
-              "column": 42
-            },
-            "end": {
-              "line": 171,
-              "column": 43
-            }
-          },
-          "replacement": "/",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_171_col_42_001.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_171_col_42_001.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.211385078,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 32.911793783,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 171,
-              "column": 35
-            },
-            "end": {
-              "line": 171,
-              "column": 36
-            }
-          },
-          "replacement": "+",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_171_col_35.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_171_col_35.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.275726119,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 33.417940153,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 171,
-              "column": 35
-            },
-            "end": {
-              "line": 171,
-              "column": 36
-            }
-          },
-          "replacement": "/",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_171_col_35_001.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_171_col_35_001.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.227870571,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 33.697997244,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 179,
-              "column": 8
-            },
-            "end": {
-              "line": 179,
-              "column": 9
-            }
-          },
-          "replacement": "",
-          "genre": "UnaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_179_col_8.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_179_col_8.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.803630882,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 33.263970611,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 190,
-              "column": 8
-            },
-            "end": {
-              "line": 190,
-              "column": 9
-            }
-          },
-          "replacement": "",
-          "genre": "UnaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_190_col_8.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_190_col_8.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.619791201,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 33.187694339,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "put_version",
-            "return_type": "-> Response",
-            "span": {
-              "start": {
-                "line": 151,
-                "column": 1
-              },
-              "end": {
-                "line": 235,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 197,
-              "column": 8
-            },
-            "end": {
-              "line": 197,
-              "column": 9
-            }
-          },
-          "replacement": "",
-          "genre": "UnaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_197_col_8.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_197_col_8.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.473839167,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 33.035407775,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/bin/registry_server.rs",
-          "function": {
-            "function_name": "main",
-            "return_type": "",
-            "span": {
-              "start": {
-                "line": 237,
-                "column": 1
-              },
-              "end": {
-                "line": 277,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 239,
-              "column": 5
-            },
-            "end": {
-              "line": 276,
-              "column": 54
-            }
-          },
-          "replacement": "()",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__bin__registry_server.rs_line_239_col_5.log",
-      "diff_path": "diff/src__bin__registry_server.rs_line_239_col_5.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 1.183133957,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 33.111227211,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/lib.rs",
-          "function": {
-            "function_name": "parse_source",
-            "return_type": "-> Result<ast::Program, Box<dyn std::error::Error>>",
-            "span": {
-              "start": {
-                "line": 97,
-                "column": 1
-              },
-              "end": {
-                "line": 129,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 116,
-              "column": 30
-            },
-            "end": {
-              "line": 116,
-              "column": 31
-            }
-          },
-          "replacement": "==",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__lib.rs_line_116_col_30.log",
-      "diff_path": "diff/src__lib.rs_line_116_col_30.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 14.664963457,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 52.078743357,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/lib.rs",
-          "function": {
-            "function_name": "parse_source",
-            "return_type": "-> Result<ast::Program, Box<dyn std::error::Error>>",
-            "span": {
-              "start": {
-                "line": 97,
-                "column": 1
-              },
-              "end": {
-                "line": 129,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 116,
-              "column": 30
-            },
-            "end": {
-              "line": 116,
-              "column": 31
-            }
-          },
-          "replacement": ">=",
-          "genre": "BinaryOperator"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__lib.rs_line_116_col_30_001.log",
-      "diff_path": "diff/src__lib.rs_line_116_col_30_001.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 12.502697287,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 55.56751541,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/lib.rs",
-          "function": {
-            "function_name": "execute_dal_file",
-            "return_type": "-> Result<(), String>",
-            "span": {
-              "start": {
-                "line": 156,
-                "column": 1
-              },
-              "end": {
-                "line": 194,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 159,
-              "column": 5
-            },
-            "end": {
-              "line": 193,
-              "column": 11
-            }
-          },
-          "replacement": "Ok(())",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "CaughtMutant",
-      "log_path": "log/src__lib.rs_line_159_col_5.log",
-      "diff_path": "diff/src__lib.rs_line_159_col_5.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 37.733386924,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 51.953321484,
-          "process_status": {
-            "Failure": 101
-          },
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/cli_design.rs",
-          "function": {
-            "function_name": "version",
-            "return_type": "-> &'static str",
-            "span": {
-              "start": {
-                "line": 14,
-                "column": 1
-              },
-              "end": {
-                "line": 17,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 16,
-              "column": 5
-            },
-            "end": {
-              "line": 16,
-              "column": 30
-            }
-          },
-          "replacement": "\"\"",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__cli_design.rs_line_16_col_5.log",
-      "diff_path": "diff/src__cli_design.rs_line_16_col_5.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 64.940687914,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 168.340638841,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/cli_design.rs",
-          "function": {
-            "function_name": "version",
-            "return_type": "-> &'static str",
-            "span": {
-              "start": {
-                "line": 14,
-                "column": 1
-              },
-              "end": {
-                "line": 17,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 16,
-              "column": 5
-            },
-            "end": {
-              "line": 16,
-              "column": 30
-            }
-          },
-          "replacement": "\"xyzzy\"",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "CaughtMutant",
-      "log_path": "log/src__cli_design.rs_line_16_col_5_001.log",
-      "diff_path": "diff/src__cli_design.rs_line_16_col_5_001.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 35.982063675,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 97.098876773,
-          "process_status": {
-            "Failure": 101
-          },
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/cli_design.rs",
-          "function": {
-            "function_name": "print_banner",
-            "return_type": "",
-            "span": {
-              "start": {
-                "line": 19,
-                "column": 1
-              },
-              "end": {
-                "line": 33,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 21,
-              "column": 5
-            },
-            "end": {
-              "line": 32,
-              "column": 16
-            }
-          },
-          "replacement": "()",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__cli_design.rs_line_21_col_5.log",
-      "diff_path": "diff/src__cli_design.rs_line_21_col_5.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 27.916333281,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 166.331926621,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/cli_design.rs",
-          "function": {
-            "function_name": "help_content",
-            "return_type": "-> String",
-            "span": {
-              "start": {
-                "line": 35,
-                "column": 1
-              },
-              "end": {
-                "line": 117,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 37,
-              "column": 5
-            },
-            "end": {
-              "line": 116,
-              "column": 6
-            }
-          },
-          "replacement": "String::new()",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__cli_design.rs_line_37_col_5.log",
-      "diff_path": "diff/src__cli_design.rs_line_37_col_5.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 33.715730697,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 229.975736932,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/cli_design.rs",
-          "function": {
-            "function_name": "help_content",
-            "return_type": "-> String",
-            "span": {
-              "start": {
-                "line": 35,
-                "column": 1
-              },
-              "end": {
-                "line": 117,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 37,
-              "column": 5
-            },
-            "end": {
-              "line": 116,
-              "column": 6
-            }
-          },
-          "replacement": "\"xyzzy\".into()",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__cli_design.rs_line_37_col_5_001.log",
-      "diff_path": "diff/src__cli_design.rs_line_37_col_5_001.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 48.415325833,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 167.317613328,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/compile/mod.rs",
-          "function": {
-            "function_name": "<impl std::fmt::Display for CompileError>::fmt",
-            "return_type": "-> std::fmt::Result",
-            "span": {
-              "start": {
-                "line": 70,
-                "column": 5
-              },
-              "end": {
-                "line": 83,
-                "column": 6
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 71,
-              "column": 9
-            },
-            "end": {
-              "line": 82,
-              "column": 10
-            }
-          },
-          "replacement": "Ok(Default::default())",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__compile__mod.rs_line_71_col_9.log",
-      "diff_path": "diff/src__compile__mod.rs_line_71_col_9.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 43.276690473,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 164.370739087,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/compile/mod.rs",
-          "function": {
-            "function_name": "package_entry_path",
-            "return_type": "-> Option<PathBuf>",
-            "span": {
-              "start": {
-                "line": 179,
-                "column": 1
-              },
-              "end": {
-                "line": 190,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 181,
-              "column": 5
-            },
-            "end": {
-              "line": 189,
-              "column": 6
-            }
-          },
-          "replacement": "None",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__compile__mod.rs_line_181_col_5.log",
-      "diff_path": "diff/src__compile__mod.rs_line_181_col_5.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 40.067728011,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 166.895713745,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/compile/mod.rs",
-          "function": {
-            "function_name": "package_entry_path",
-            "return_type": "-> Option<PathBuf>",
-            "span": {
-              "start": {
-                "line": 179,
-                "column": 1
-              },
-              "end": {
-                "line": 190,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 181,
-              "column": 5
-            },
-            "end": {
-              "line": 189,
-              "column": 6
-            }
-          },
-          "replacement": "Some(Default::default())",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "CaughtMutant",
-      "log_path": "log/src__compile__mod.rs_line_181_col_5_001.log",
-      "diff_path": "diff/src__compile__mod.rs_line_181_col_5_001.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 38.006919727,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 27.174968422,
-          "process_status": {
-            "Failure": 101
-          },
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/ffi/mod.rs",
-          "function": {
-            "function_name": "FFIConfig::both",
-            "return_type": "-> Self",
-            "span": {
-              "start": {
-                "line": 62,
-                "column": 5
-              },
-              "end": {
-                "line": 64,
-                "column": 6
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 63,
-              "column": 9
-            },
-            "end": {
-              "line": 63,
-              "column": 24
-            }
-          },
-          "replacement": "Default::default()",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__ffi__mod.rs_line_63_col_9.log",
-      "diff_path": "diff/src__ffi__mod.rs_line_63_col_9.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 46.646612361,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 185.397133836,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/ffi/mod.rs",
-          "function": {
-            "function_name": "FFIConfig::auto_detect",
-            "return_type": "-> Self",
-            "span": {
-              "start": {
-                "line": 66,
-                "column": 5
-              },
-              "end": {
-                "line": 78,
-                "column": 6
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 70,
-              "column": 9
-            },
-            "end": {
-              "line": 77,
-              "column": 10
-            }
-          },
-          "replacement": "Default::default()",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__ffi__mod.rs_line_70_col_9.log",
-      "diff_path": "diff/src__ffi__mod.rs_line_70_col_9.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 33.182289761,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 191.41745163,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/http_server.rs",
-          "function": {
-            "function_name": "start_http_server",
-            "return_type": "-> Result<(), Box<dyn std::error::Error>>",
-            "span": {
-              "start": {
-                "line": 45,
-                "column": 1
-              },
-              "end": {
-                "line": 136,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 47,
-              "column": 5
-            },
-            "end": {
-              "line": 135,
-              "column": 11
-            }
-          },
-          "replacement": "Ok(())",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__http_server.rs_line_47_col_5.log",
-      "diff_path": "diff/src__http_server.rs_line_47_col_5.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 55.585112171,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 205.99245784,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/http_server.rs",
-          "function": {
-            "function_name": "start_http_server",
-            "return_type": "-> Result<(), Box<dyn std::error::Error>>",
-            "span": {
-              "start": {
-                "line": 45,
-                "column": 1
-              },
-              "end": {
-                "line": 136,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 97,
-              "column": 17
-            },
-            "end": {
-              "line": 97,
-              "column": 83
-            }
-          },
-          "replacement": "",
-          "genre": "MatchArm"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__http_server.rs_line_97_col_17.log",
-      "diff_path": "diff/src__http_server.rs_line_97_col_17.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 56.746881392,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 182.881730629,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/http_server.rs",
-          "function": {
-            "function_name": "start_http_server",
-            "return_type": "-> Result<(), Box<dyn std::error::Error>>",
-            "span": {
-              "start": {
-                "line": 45,
-                "column": 1
-              },
-              "end": {
-                "line": 136,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 98,
-              "column": 17
-            },
-            "end": {
-              "line": 98,
-              "column": 85
-            }
-          },
-          "replacement": "",
-          "genre": "MatchArm"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__http_server.rs_line_98_col_17.log",
-      "diff_path": "diff/src__http_server.rs_line_98_col_17.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 36.745343332,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 196.779131333,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/http_server.rs",
-          "function": {
-            "function_name": "start_http_server",
-            "return_type": "-> Result<(), Box<dyn std::error::Error>>",
-            "span": {
-              "start": {
-                "line": 45,
-                "column": 1
-              },
-              "end": {
-                "line": 136,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 99,
-              "column": 17
-            },
-            "end": {
-              "line": 99,
-              "column": 83
-            }
-          },
-          "replacement": "",
-          "genre": "MatchArm"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__http_server.rs_line_99_col_17.log",
-      "diff_path": "diff/src__http_server.rs_line_99_col_17.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 48.868932879,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 180.553363939,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/http_server.rs",
-          "function": {
-            "function_name": "start_http_server",
-            "return_type": "-> Result<(), Box<dyn std::error::Error>>",
-            "span": {
-              "start": {
-                "line": 45,
-                "column": 1
-              },
-              "end": {
-                "line": 136,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 100,
-              "column": 17
-            },
-            "end": {
-              "line": 100,
-              "column": 89
-            }
-          },
-          "replacement": "",
-          "genre": "MatchArm"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__http_server.rs_line_100_col_17.log",
-      "diff_path": "diff/src__http_server.rs_line_100_col_17.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 41.743714378,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 196.582379144,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/http_server.rs",
-          "function": {
-            "function_name": "home_handler",
-            "return_type": "-> Html<String>",
-            "span": {
-              "start": {
-                "line": 138,
-                "column": 1
-              },
-              "end": {
-                "line": 483,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 139,
-              "column": 5
-            },
-            "end": {
-              "line": 482,
-              "column": 27
-            }
-          },
-          "replacement": "Html::from(String::new())",
-          "genre": "FnValue"
-        }
-      },
-      "summary": "MissedMutant",
-      "log_path": "log/src__http_server.rs_line_139_col_5.log",
-      "diff_path": "diff/src__http_server.rs_line_139_col_5.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 48.647009396,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 183.874053746,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/manifest.rs",
-          "function": {
-            "function_name": "parse_dependencies",
-            "return_type": "-> Result<DependenciesMap, ManifestError>",
-            "span": {
-              "start": {
-                "line": 78,
-                "column": 1
-              },
-              "end": {
-                "line": 120,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 85,
-              "column": 9
-            },
-            "end": {
-              "line": 85,
-              "column": 43
-            }
-          },
-          "replacement": "",
-          "genre": "MatchArm"
-        }
-      },
-      "summary": "CaughtMutant",
-      "log_path": "log/src__manifest.rs_line_85_col_9.log",
-      "diff_path": "diff/src__manifest.rs_line_85_col_9.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 50.79508047,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 128.460543709,
-          "process_status": {
-            "Failure": 101
-          },
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
-            "--tests"
-          ]
-        }
-      ]
-    },
-    {
-      "scenario": {
-        "Mutant": {
-          "package": "dist_agent_lang",
-          "file": "src/manifest.rs",
-          "function": {
-            "function_name": "parse_dependencies",
-            "return_type": "-> Result<DependenciesMap, ManifestError>",
-            "span": {
-              "start": {
-                "line": 78,
-                "column": 1
-              },
-              "end": {
-                "line": 120,
-                "column": 2
-              }
-            }
-          },
-          "span": {
-            "start": {
-              "line": 97,
-              "column": 13
-            },
-            "end": {
-              "line": 97,
-              "column": 74
-            }
-          },
-          "replacement": "",
-          "genre": "MatchArm"
-        }
-      },
-      "summary": "CaughtMutant",
-      "log_path": "log/src__manifest.rs_line_97_col_13.log",
-      "diff_path": "diff/src__manifest.rs_line_97_col_13.diff",
-      "phase_results": [
-        {
-          "phase": "Build",
-          "duration": 39.909350134,
-          "process_status": "Success",
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--no-run",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8"
-          ]
-        },
-        {
-          "phase": "Test",
-          "duration": 78.933672371,
-          "process_status": {
-            "Failure": 101
-          },
-          "argv": [
-            "/Users/jason/.rustup/toolchains/stable-x86_64-apple-darwin/bin/cargo",
-            "test",
-            "--verbose",
-            "--package=dist_agent_lang@1.0.8",
+            "--package=dist_agent_lang@1.0.10",
             "--tests"
           ]
         }
       ]
     }
   ],
-  "total_mutants": 88,
-  "missed": 83,
-  "caught": 5,
+  "total_mutants": 40,
+  "missed": 40,
+  "caught": 0,
   "timeout": 0,
   "unviable": 0,
   "success": 0,
-  "start_time": "2026-03-03T07:13:00.08534Z",
+  "start_time": "2026-03-05T05:12:24.053485Z",
   "end_time": null,
   "cargo_mutants_version": "26.0.0"
 }

@@ -805,12 +805,35 @@ fn infer_routes_from_handlers(
 
 fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &str) {
     use axum::response::Html;
-    use dist_agent_lang::execute_dal_and_extract_handlers;
+    use dist_agent_lang::execute_dal_and_extract_handlers_with_path;
     use dist_agent_lang::http_server_integration::create_router_with_options;
     use std::sync::Arc;
 
     println!("🪩  Serving DAL handlers from: {}", filename);
     println!("    Port: {}", port);
+
+    // Load .env from the entry file's directory so X_API_KEY, OPENAI_API_KEY, etc. are set
+    // when not started via ./start.sh (e.g. IDE run or `dal serve agent_assistant/server.dal`).
+    // Preserves existing env vars (e.g. from start.sh).
+    let entry_path_for_env = std::path::Path::new(filename)
+        .canonicalize()
+        .unwrap_or_else(|_| std::path::Path::new(filename).to_path_buf());
+    if let Some(parent) = entry_path_for_env.parent() {
+        let env_path = parent.join(".env");
+        if env_path.exists() {
+            if dotenvy::from_path(&env_path).is_ok() {
+                println!("    Loaded .env from {}", env_path.display());
+            }
+        }
+    }
+    if std::env::var("X_API_KEY").is_err() {
+        if let Ok(cwd) = std::env::current_dir() {
+            let cwd_env = cwd.join(".env");
+            if cwd_env.exists() {
+                let _ = dotenvy::from_path(&cwd_env);
+            }
+        }
+    }
 
     let source_code = match std::fs::read_to_string(filename) {
         Ok(c) => c,
@@ -820,15 +843,19 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
         }
     };
 
-    let (user_functions, scope) = match execute_dal_and_extract_handlers(&source_code) {
-        Ok(extracted) => extracted,
-        Err(e) => {
-            eprintln!("❌ Failed to load DAL: {}", e);
-            std::process::exit(1);
-        }
+    let entry_path = match std::path::Path::new(filename).canonicalize() {
+        Ok(p) => p,
+        Err(_) => std::path::Path::new(filename).to_path_buf(),
     };
+    let (user_functions, scope) =
+        match execute_dal_and_extract_handlers_with_path(&source_code, &entry_path) {
+            Ok(extracted) => extracted,
+            Err(e) => {
+                eprintln!("❌ Failed to load DAL: {}", e);
+                std::process::exit(1);
+            }
+        };
 
-    // Try @route annotations first, fall back to name-based inference
     let routes = {
         let annotated = extract_routes_from_annotations(&user_functions);
         if annotated.is_empty() {

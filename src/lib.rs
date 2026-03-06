@@ -218,3 +218,52 @@ pub fn execute_dal_and_extract_handlers(
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
     Ok((runtime.user_functions.clone(), runtime.scope.clone()))
 }
+
+/// Like execute_dal_and_extract_handlers but resolves imports using entry_path.
+/// Use this for `dal serve <file>` so that handlers and their imports (e.g. workflows.dal) load correctly and all @route handlers are registered.
+pub fn execute_dal_and_extract_handlers_with_path(
+    source: &str,
+    entry_path: &std::path::Path,
+) -> Result<
+    (
+        std::collections::HashMap<String, runtime::engine::UserFunction>,
+        runtime::scope::Scope,
+    ),
+    Box<dyn std::error::Error>,
+> {
+    use parser::ast::Statement;
+    let program = parse_source(source)?;
+    let has_imports = program
+        .statements
+        .iter()
+        .any(|s| matches!(s, Statement::Import(_)));
+    let mut runtime = Runtime::new();
+    if has_imports {
+        let entry_dir = entry_path
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("."));
+        let manifest_path = entry_dir.join("dal.toml");
+        let mut resolver =
+            module_resolver::ModuleResolver::new().with_root_dir(entry_dir.to_path_buf());
+        if manifest_path.exists() {
+            if let Ok(deps) = manifest::load_resolved_deps(&manifest_path) {
+                resolver = resolver.with_dependencies(deps);
+            }
+        }
+        let parse_fn = |s: &str| parse_source(s).map_err(|e| e.to_string());
+        let resolved = resolver
+            .resolve_program_with_cycles(&program, Some(entry_path), parse_fn)
+            .map_err(|e| {
+                Box::new(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+                    as Box<dyn std::error::Error>
+            })?;
+        runtime
+            .execute_program(program, Some(&resolved))
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+    } else {
+        runtime
+            .execute_program(program, None)
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+    }
+    Ok((runtime.user_functions.clone(), runtime.scope.clone()))
+}

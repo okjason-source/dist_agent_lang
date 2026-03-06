@@ -9,6 +9,10 @@ use std::time::Duration;
 /// Per-input timeout so a single slow unit doesn't dominate fuzzing (e.g. 897s).
 const FUZZ_TIMEOUT_SECS: u64 = 5;
 
+/// Stack size for the parser thread. Large enough that MAX_RECURSION_DEPTH (100)
+/// is hit before stack overflow, so we return Err instead of aborting and fuzzing continues.
+const PARSER_THREAD_STACK_SIZE: usize = 8 * 1024 * 1024; // 8 MiB
+
 fuzz_target!(|data: &[u8]| {
     // Cap input size to avoid parser blow-up and 15-minute slow units
     if data.len() > 65536 {
@@ -17,14 +21,16 @@ fuzz_target!(|data: &[u8]| {
     if let Ok(input) = std::str::from_utf8(data) {
         let (tx, rx) = mpsc::channel();
         let input = input.to_string();
-        let _ = std::thread::spawn(move || {
-            let lexer = Lexer::new(&input);
-            if let Ok(tokens_with_pos) = lexer.tokenize_with_positions_immutable() {
-                let mut parser = Parser::new_with_positions(tokens_with_pos);
-                let _ = parser.parse();
-            }
-            let _ = tx.send(());
-        });
+        let _ = std::thread::Builder::new()
+            .stack_size(PARSER_THREAD_STACK_SIZE)
+            .spawn(move || {
+                let lexer = Lexer::new(&input);
+                if let Ok(tokens_with_pos) = lexer.tokenize_with_positions_immutable() {
+                    let mut parser = Parser::new_with_positions(tokens_with_pos);
+                    let _ = parser.parse();
+                }
+                let _ = tx.send(());
+            });
         let _ = rx.recv_timeout(Duration::from_secs(FUZZ_TIMEOUT_SECS));
         // On timeout we return; fuzzer moves on without waiting for the thread
     }

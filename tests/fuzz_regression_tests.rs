@@ -63,6 +63,84 @@ fn test_fuzz_parser_crash_deep_nesting_y_no_panic() {
         .unwrap();
 }
 
+/// Run parser on a crash artifact file to reproduce the failure (for debugging).
+/// Run with: cargo test --test fuzz_regression_tests test_fuzz_parser_crash_artifact_repro -- --ignored --nocapture
+/// Uses 8MB stack so recursion limit triggers before stack overflow.
+#[test]
+#[ignore] // run manually to reproduce
+fn test_fuzz_parser_crash_artifact_repro() {
+    let path = "fuzz/artifacts/fuzz_parser/crash-4a6efcfc0987cd7ded43c9b78bb300e7e63953c4";
+    let input = match std::fs::read_to_string(path) {
+        Ok(s) => s,
+        Err(_) => {
+            eprintln!("Crash file not found, skipping");
+            return;
+        }
+    };
+    std::thread::Builder::new()
+        .stack_size(8 * 1024 * 1024)
+        .spawn(move || {
+            eprintln!("Input length: {} bytes", input.len());
+            let lexer = Lexer::new(&input);
+            let tokens_with_pos = match lexer.tokenize_with_positions_immutable() {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("Lexer error: {:?}", e);
+                    return;
+                }
+            };
+            eprintln!("Tokens: {}", tokens_with_pos.len());
+            let mut parser = Parser::new_with_positions(tokens_with_pos);
+            let result = parser.parse();
+            eprintln!("Parse result: {:?}", result);
+            // Should get recursion error, not panic/overflow
+            if let Err(e) = &result {
+                assert!(
+                    format!("{:?}", e).contains("recursion")
+                        || format!("{:?}", e).contains("depth"),
+                    "Expected recursion/depth error, got: {:?}",
+                    e
+                );
+            }
+        })
+        .unwrap()
+        .join()
+        .unwrap();
+}
+
+/// Parser try/catch crash artifacts: deeply nested try { } c try { } ... caused stack overflow
+/// because try/catch/finally did not pass depth. Fixed by passing depth through parse_try_statement.
+/// Fuzz harness now uses 8 MiB stack so recursion limit triggers before overflow; fuzzing continues.
+const CRASH_PARSER_TRY_ARTIFACTS: &[&str] = &[
+    "fuzz/artifacts/fuzz_parser/crash-4a6efcfc0987cd7ded43c9b78bb300e7e63953c4",
+    "fuzz/artifacts/fuzz_parser/crash-75ad520854a1f0522321a704c515aade7e269873",
+    "fuzz/artifacts/fuzz_parser/crash-541fa01af4770f0262e5ffd79658ddef7217fd1e",
+    "fuzz/artifacts/fuzz_parser/crash-161522ed7f1f2ac04d9aa2e317697ce14c287338",
+    "fuzz/artifacts/fuzz_parser/crash-b22fc9faf4e213ffe3bf83783270629b51d824c5",
+];
+
+#[test]
+fn test_fuzz_parser_try_crash_artifacts_no_panic() {
+    for path in CRASH_PARSER_TRY_ARTIFACTS {
+        let input = match std::fs::read_to_string(path) {
+            Ok(s) => s,
+            Err(_) => continue, // artifact not in tree (e.g. CI)
+        };
+        std::thread::Builder::new()
+            .stack_size(8 * 1024 * 1024)
+            .spawn(move || {
+                let lexer = Lexer::new(&input);
+                if let Ok(tokens_with_pos) = lexer.tokenize_with_positions_immutable() {
+                    let mut parser = Parser::new_with_positions(tokens_with_pos);
+                    let _ = parser.parse(); // must not panic; returns Err(recursion) or other
+                }
+            })
+            .unwrap()
+            .join()
+            .unwrap();
+    }
+}
+
 #[test]
 fn test_fuzz_parser_crash_deep_nesting_braces_no_panic() {
     // Regression: crash-cce88937ec81990273e1024f5b0fe147325c8f15
@@ -366,5 +444,96 @@ fn test_fuzz_runtime_slow_unit_a36a588e_no_panic() {
         err_msg.to_lowercase().contains("timeout"),
         "Expected timeout error, got: {}",
         err_msg
+    );
+}
+
+/// Server registers all 28 @route handlers (runtime workaround for nested functions).
+#[test]
+fn test_server_registers_all_routes() {
+    use dist_agent_lang::execute_dal_and_extract_handlers_with_path;
+    let path = std::path::Path::new("agent_assistant/server.dal");
+    let source = match std::fs::read_to_string(path) {
+        Ok(s) => s,
+        Err(_) => return,
+    };
+    let (user_functions, _) = match execute_dal_and_extract_handlers_with_path(&source, path) {
+        Ok(x) => x,
+        Err(e) => panic!("execute failed: {}", e),
+    };
+    let route_count = user_functions
+        .values()
+        .filter(|f| f.attributes.iter().any(|a| a.name == "@route"))
+        .count();
+    assert!(
+        route_count >= 28,
+        "Expected >=28 route handlers registered, got {:?}",
+        route_count
+    );
+}
+
+/// Parse server.dal and count functions with @route (top-level and nested). Expect 28.
+#[test]
+fn test_route_attributes_count() {
+    use dist_agent_lang::parser::ast::{BlockStatement, Statement};
+    let path = "agent_assistant/server.dal";
+    let source = match std::fs::read_to_string(path) {
+        Ok(s) => s,
+        Err(_) => return, // skip if not in agent_assistant
+    };
+    let program = match dist_agent_lang::parse_source(&source) {
+        Ok(p) => p,
+        Err(e) => panic!("parse failed: {}", e),
+    };
+    fn count_route_in_block(block: &BlockStatement) -> usize {
+        let mut n = 0;
+        for stmt in &block.statements {
+            n += count_route_in_stmt(stmt);
+        }
+        n
+    }
+    fn count_route_in_stmt(stmt: &Statement) -> usize {
+        match stmt {
+            Statement::Function(f) => {
+                let has = f.attributes.iter().any(|a| a.name == "@route");
+                let mut n = if has { 1 } else { 0 };
+                n += count_route_in_block(&f.body);
+                n
+            }
+            Statement::Try(t) => {
+                let mut n = count_route_in_block(&t.try_block);
+                for c in &t.catch_blocks {
+                    n += count_route_in_block(&c.body);
+                }
+                if let Some(ref fin) = t.finally_block {
+                    n += count_route_in_block(fin);
+                }
+                n
+            }
+            Statement::Block(b) => count_route_in_block(b),
+            Statement::If(i) => {
+                count_route_in_block(&i.consequence)
+                    + i.alternative
+                        .as_ref()
+                        .map(|a| count_route_in_block(a))
+                        .unwrap_or(0)
+            }
+            Statement::While(w) => count_route_in_block(&w.body),
+            Statement::ForIn(f) => count_route_in_block(&f.body),
+            Statement::Match(m) => m
+                .cases
+                .iter()
+                .map(|c| count_route_in_block(&c.body))
+                .sum::<usize>(),
+            _ => 0,
+        }
+    }
+    let mut with_route = 0;
+    for stmt in &program.statements {
+        with_route += count_route_in_stmt(stmt);
+    }
+    assert!(
+        with_route >= 28,
+        "Expected >=28 functions with @route, got {}. Parser may drop attributes after first 14.",
+        with_route
     );
 }

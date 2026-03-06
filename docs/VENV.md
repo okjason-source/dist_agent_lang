@@ -51,6 +51,12 @@ All venv commands live under `dal venv`:
 | `dal venv run <name> <script.dal>` | Run a script inside the venv. |
 | `dal venv delete <name>` | Remove the venv from the registry (no files are deleted). |
 
+**Serve with a venv:** You can run the HTTP server in a venv so that the served DAL file and its imports use the venv’s root and profile:
+
+| Command | Description |
+|---------|-------------|
+| `dal serve <file.dal> [--port N] --venv <name>` | Serve the DAL file’s HTTP handlers using the named venv (root for imports, profile for runtime). |
+
 ### Create
 
 - **&lt;name&gt;** is a unique label (e.g. `myapp`, `ci`).
@@ -117,6 +123,12 @@ dal venv show myvenv
 **Delete a venv:**
 ```bash
 dal venv delete myvenv
+```
+
+**Serve an HTTP app in a venv:**
+```bash
+dal venv create myapp
+dal serve server.dal --port 4040 --venv myapp
 ```
 
 ---

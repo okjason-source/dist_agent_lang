@@ -116,7 +116,6 @@ service DatabaseConnectivity {
             let update2 = database::query(db, "UPDATE accounts SET balance = balance + 100 WHERE id = 'user2'", []);
 
             if (update1.success && update2.success ) {
-                let commit_result = database::commit_transaction(transaction);
                 return {
                     "success": true,
                     "transaction_id": transaction.id,
@@ -939,7 +938,6 @@ fn demonstrate_database_connectivity() {
     print("🗄️  Database Connectivity Demo");
     print("===============================");
 
-    let db_service = DatabaseConnectivity::new();
     db_service.initialize();
 
     // Test complex query
@@ -959,7 +957,6 @@ fn demonstrate_api_connectivity() {
     print("🌐 API Backend Connectivity Demo");
     print("================================");
 
-    let api_service = APIBackendConnectivity::new();
     api_service.initialize();
 
     // Test REST API
@@ -979,7 +976,6 @@ fn demonstrate_microservices_connectivity() {
     print("🔗 Microservices Connectivity Demo");
     print("===================================");
 
-    let microservice = MicroservicesConnectivity::new();
     microservice.initialize();
 
     // Test service call
@@ -995,7 +991,6 @@ fn demonstrate_cloud_connectivity() {
     print("☁️  Cloud Services Connectivity Demo");
     print("====================================");
 
-    let cloud_service = CloudServicesConnectivity::new();
     cloud_service.initialize();
 
     // Test multi-cloud storage

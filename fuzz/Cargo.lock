@@ -496,7 +496,7 @@ dependencies = [
 
 [[package]]
 name = "dist_agent_lang"
-version = "1.0.8"
+version = "1.0.10"
 dependencies = [
  "aes-gcm",
  "axum",

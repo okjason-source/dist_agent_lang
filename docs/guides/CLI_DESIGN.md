@@ -25,7 +25,7 @@ Commands are grouped by **what users want to do**, not implementation:
 | **Blockchain** | chain list, gas-price, balance, mint, asset |
 | **Data & Infrastructure** | crypto, db, cloud |
 | **Devices & IoT** | iot register, status, ai-predict |
-| **Tools** | web, convert, doc, completions |
+| **Tools** | web, convert, doc, completions, **serve** (with optional `--venv <name>`) |
 
 ---
 

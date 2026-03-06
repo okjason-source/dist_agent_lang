@@ -2894,6 +2894,51 @@ impl Runtime {
         })
     }
 
+    /// Register any nested functions from a block (parser may nest @route fn inside try/catch).
+    fn register_functions_from_block(&mut self, block: &BlockStatement) {
+        for stmt in &block.statements {
+            match stmt {
+                Statement::Function(f) => {
+                    let parameters: Vec<String> =
+                        f.parameters.iter().map(|p| p.name.clone()).collect();
+                    let user_func = UserFunction {
+                        name: f.name.clone(),
+                        parameters: parameters.clone(),
+                        body: f.body.clone(),
+                        attributes: f.attributes.clone(),
+                        exported: f.exported,
+                    };
+                    self.user_functions.insert(f.name.clone(), user_func);
+                    self.register_functions_from_block(&f.body);
+                }
+                Statement::Try(t) => {
+                    self.register_functions_from_block(&t.try_block);
+                    for c in &t.catch_blocks {
+                        self.register_functions_from_block(&c.body);
+                    }
+                    if let Some(ref fin) = t.finally_block {
+                        self.register_functions_from_block(fin);
+                    }
+                }
+                Statement::Block(b) => self.register_functions_from_block(b),
+                Statement::If(i) => {
+                    self.register_functions_from_block(&i.consequence);
+                    if let Some(ref a) = i.alternative {
+                        self.register_functions_from_block(a);
+                    }
+                }
+                Statement::While(w) => self.register_functions_from_block(&w.body),
+                Statement::ForIn(f) => self.register_functions_from_block(&f.body),
+                Statement::Match(m) => {
+                    for c in &m.cases {
+                        self.register_functions_from_block(&c.body);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
     /// Internal method that properly handles control flow
     fn execute_statement_internal(
         &mut self,
@@ -2966,6 +3011,8 @@ impl Runtime {
                 };
                 self.user_functions
                     .insert(func_stmt.name.clone(), user_func);
+                // Also register nested functions (parser may nest @route fn inside try/catch blocks)
+                self.register_functions_from_block(&func_stmt.body);
                 Ok(StatementOutcome::value(Value::Null))
             }
             crate::parser::ast::Statement::Import(imp) => {
@@ -3973,7 +4020,7 @@ impl Runtime {
         );
         self.register_function(add_fn);
 
-        // Built-in len function
+        // Built-in len function: string (char count), list/array (element count). Supports parsed JSON arrays (Value::List).
         let len_fn = Function::new("len".to_string(), vec!["value".to_string()], |args, _| {
             if args.len() != 1 {
                 return Err(RuntimeError::ArgumentCountMismatch {
@@ -3984,8 +4031,10 @@ impl Runtime {
 
             match &args[0] {
                 Value::String(s) => Ok(Value::Int(s.len() as i64)),
+                Value::List(list) => Ok(Value::Int(list.len() as i64)),
+                Value::Array(arr) => Ok(Value::Int(arr.len() as i64)),
                 _ => Err(RuntimeError::TypeError {
-                    expected: "string".to_string(),
+                    expected: "string, list, or array".to_string(),
                     got: args[0].type_name().to_string(),
                 }),
             }

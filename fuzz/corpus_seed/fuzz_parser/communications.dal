@@ -1,0 +1,158 @@
+// Communications module — outbound messaging for Agent Assistant.
+//
+// Sends messages to Telegram, Discord, or iMessage using sh::run.
+// Telegram/Discord: curl against their HTTP APIs.
+// iMessage: osascript (macOS only).
+//
+// Env vars (set in .env):
+//   TELEGRAM_BOT_TOKEN   — required for Telegram sends
+//   DISCORD_WEBHOOK_URL  — Discord webhook for outbound (simpler than bot API)
+//
+// Usage from server.dal:
+//   import "./communications.dal" as comms;
+//   comms::send("telegram", chat_id, "Hello from the agent");
+
+fn send(channel, recipient, message) {
+ if (channel == "telegram") {
+  return send_telegram(recipient, message);
+ }
+ if (channel == "discord") {
+  return send_discord(recipient, message);
+ }
+ if (channel == "imessage") {
+  return send_imessage(recipient, message);
+ }
+ return {"ok": false, "error": "Unknown channel: " + channel};
+}
+
+fn send_telegram(chat_id, message) {
+ let token = "";
+ try {
+  token = config::get_env("TELEGRAM_BOT_TOKEN");
+ } catch {
+  return {"ok": false, "error": "TELEGRAM_BOT_TOKEN not set"};
+ }
+ if (token == null || len(token) == 0) {
+  return {"ok": false, "error": "TELEGRAM_BOT_TOKEN not set"};
+ }
+ let escaped = escape_json(message);
+ let cmd = "curl -s -X POST 'https://api.telegram.org/bot" + token + "/sendMessage' -H 'Content-Type: application/json' -d '{\"chat_id\":\"" + chat_id + "\",\"text\":\"" + escaped + "\"}'";
+ let result = "";
+ try {
+  result = sh::run(cmd);
+ } catch {
+  return {"ok": false, "error": "sh::run failed"};
+ }
+ log::audit("comms:telegram", "sent to:" + chat_id);
+ return {"ok": true, "channel": "telegram", "recipient": chat_id, "result": result};
+}
+
+fn send_discord(message) {
+ let webhook = "";
+ try {
+  webhook = config::get_env("DISCORD_WEBHOOK_URL");
+ } catch {
+  return {"ok": false, "error": "DISCORD_WEBHOOK_URL not set"};
+ }
+ if (webhook == null || len(webhook) == 0) {
+  return {"ok": false, "error": "DISCORD_WEBHOOK_URL not set"};
+ }
+ let escaped = escape_json(message);
+ let cmd = "curl -s -X POST '" + webhook + "' -H 'Content-Type: application/json' -d '{\"content\":\"" + escaped + "\"}'";
+ let result = "";
+ try {
+  result = sh::run(cmd);
+ } catch {
+  return {"ok": false, "error": "sh::run failed"};
+ }
+ log::audit("comms:discord", "sent via webhook");
+ return {"ok": true, "channel": "discord", "result": result};
+}
+
+fn send_imessage(recipient, message) {
+ let escaped_msg = escape_applescript(message);
+ let escaped_rcpt = escape_applescript(recipient);
+ let cmd = "osascript -e 'tell application \"Messages\" to send \"" + escaped_msg + "\" to buddy \"" + escaped_rcpt + "\" of (first account whose service type is iMessage)'";
+ let result = "";
+ try {
+  result = sh::run(cmd);
+ } catch {
+  return {"ok": false, "error": "iMessage send failed (macOS only)"};
+ }
+ log::audit("comms:imessage", "sent to:" + recipient);
+ return {"ok": true, "channel": "imessage", "recipient": recipient, "result": result};
+}
+
+fn parse_sender_channel(sender_id) {
+ if (len(sender_id) > 9) {
+  // Extract prefix before first underscore
+  // telegram_123 -> channel=telegram, id=123
+  // discord_456  -> channel=discord, id=456
+  // imessage_+1  -> channel=imessage, id=+1...
+  if (sender_id == "web") {
+   return {"channel": "web", "id": "web"};
+  }
+ }
+ // Fallback: check known prefixes
+ try {
+  let tg_prefix = "telegram_";
+  let dc_prefix = "discord_";
+  let im_prefix = "imessage_";
+  // Use string length checks as a proxy for starts-with
+  if (len(sender_id) > len(tg_prefix)) {
+   let check = sh::run("echo '" + sender_id + "' | grep -o '^telegram_'");
+   if (check != null && len(check) > 0) {
+    let id_part = sh::run("echo '" + sender_id + "' | sed 's/^telegram_//'");
+    return {"channel": "telegram", "id": id_part};
+   }
+  }
+  if (len(sender_id) > len(dc_prefix)) {
+   let check = sh::run("echo '" + sender_id + "' | grep -o '^discord_'");
+   if (check != null && len(check) > 0) {
+    let id_part = sh::run("echo '" + sender_id + "' | sed 's/^discord_//'");
+    return {"channel": "discord", "id": id_part};
+   }
+  }
+  if (len(sender_id) > len(im_prefix)) {
+   let check = sh::run("echo '" + sender_id + "' | grep -o '^imessage_'");
+   if (check != null && len(check) > 0) {
+    let id_part = sh::run("echo '" + sender_id + "' | sed 's/^imessage_//'");
+    return {"channel": "imessage", "id": id_part};
+   }
+  }
+ } catch {
+  // parse failed
+ }
+ return {"channel": "web", "id": sender_id};
+}
+
+fn reply_to_sender(sender_id, message) {
+ let parsed = parse_sender_channel(sender_id);
+ let channel = parsed["channel"];
+ let id = parsed["id"];
+ if (channel == "web") {
+  return {"ok": true, "channel": "web", "note": "Web replies go through HTTP response"};
+ }
+ return send(channel, id, message);
+}
+
+fn escape_json(text) {
+ // Minimal JSON escaping for curl payloads
+ let result = "";
+ try {
+  result = sh::run("printf '%s' '" + text + "' | sed 's/\\\\/\\\\\\\\/g; s/\"/\\\\\"/g; s/\\n/\\\\n/g'");
+ } catch {
+  result = text;
+ }
+ return result;
+}
+
+fn escape_applescript(text) {
+ let result = "";
+ try {
+  result = sh::run("printf '%s' '" + text + "' | sed \"s/\\\\\\\\/\\\\\\\\\\\\\\\\/g; s/\\\"/\\\\\\\\\\\"/g\"");
+ } catch {
+  result = text;
+ }
+ return result;
+}
