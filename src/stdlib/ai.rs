@@ -4,7 +4,9 @@ use base64::Engine;
 use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 // AI Agent Framework - Phase 4
 // Comprehensive AI capabilities including:
@@ -996,20 +998,32 @@ pub fn analyze_image(image_data: Vec<u8>) -> Result<ImageAnalysis, String> {
     Ok(analysis)
 }
 
+/// Throttle "Generating text response" logs to at most once per 2 seconds.
+static LAST_GENERATE_TEXT_LOG_MS: AtomicU64 = AtomicU64::new(0);
+const GENERATE_TEXT_LOG_INTERVAL_MS: u64 = 2000;
+
 pub fn generate_text(prompt: String) -> Result<String, String> {
-    crate::stdlib::log::info(
-        "Generating text response",
-        {
-            let mut data = std::collections::HashMap::new();
-            data.insert("prompt_length".to_string(), Value::Int(prompt.len() as i64));
-            data.insert(
-                "message".to_string(),
-                Value::String("Generating text response".to_string()),
-            );
-            data
-        },
-        Some("ai"),
-    );
+    let now_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0);
+    let last = LAST_GENERATE_TEXT_LOG_MS.load(Ordering::Relaxed);
+    if last == 0 || now_ms.saturating_sub(last) >= GENERATE_TEXT_LOG_INTERVAL_MS {
+        LAST_GENERATE_TEXT_LOG_MS.store(now_ms, Ordering::Relaxed);
+        crate::stdlib::log::info(
+            "Generating text response",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert("prompt_length".to_string(), Value::Int(prompt.len() as i64));
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Generating text response".to_string()),
+                );
+                data
+            },
+            Some("ai"),
+        );
+    }
 
     // Load configuration (from env, file, or runtime)
     let config = get_ai_config();
@@ -1112,14 +1126,14 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
 }
 
 /// System prompt for tool-using agent: reply, run shell, or search.
-const TOOLS_SYSTEM: &str = "You are a helpful assistant. You can run shell commands, search the web, reply, or ask the user. \
+const TOOLS_SYSTEM: &str = "You are an intelligent assistant. You can run shell commands, search the web, reply, or ask the user. \
 Respond with JSON only, no markdown or extra text. Use exactly one of: \
 {\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"}. \
 For run and search the tool will execute and you will see the result; then reply once to complete the task. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
 
 /// Extended tools with file and DAL scripting: write_file, read_file, list_dir, dal_run, dal_check.
 /// Use when AGENT_ASSISTANT_SCRIPTING=1 or AGENT_ASSISTANT_ROOT is set.
-const TOOLS_SYSTEM_WITH_SCRIPTING: &str = "You are a helpful assistant. You can run shell commands, search the web, reply, ask the user, or use file/DAL tools. \
+const TOOLS_SYSTEM_WITH_SCRIPTING: &str = "You are an intelligent assistant. You can run shell commands, search the web, reply, ask the user, or use file/DAL tools. \
 Respond with JSON only, no markdown or extra text. Use exactly one of: \
 {\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"} \
 or {\"action\":\"write_file\",\"path\":\"path/to/file\",\"contents\":\"file contents\"} or {\"action\":\"read_file\",\"path\":\"path/to/file\"} or {\"action\":\"list_dir\",\"path\":\".\"} \

@@ -210,6 +210,14 @@ impl SkillRegistry {
             .map(|d| format!("- {}: {}", d.name, d.description))
             .collect()
     }
+
+    /// List all registered skills as (name, description). For DAL skills::list().
+    pub fn list_names_and_descriptions(&self) -> Vec<(String, String)> {
+        self.skills
+            .iter()
+            .map(|(name, def)| (name.clone(), def.description.clone()))
+            .collect()
+    }
 }
 
 // ── .skill.dal loader ───────────────────────────────────────────────
@@ -539,6 +547,17 @@ fn get_global_registry() -> &'static Mutex<SkillRegistry> {
 /// Get a clone of the global skill registry.
 pub fn global_registry() -> SkillRegistry {
     get_global_registry().lock().unwrap().clone()
+}
+
+/// List skill names and descriptions. If path is None, uses the global registry (built-ins + resolved skills_path). If path is Some(p), loads from that directory only.
+pub fn list_skills(path: Option<&Path>) -> Result<Vec<(String, String)>, String> {
+    let list = if let Some(p) = path {
+        let defs = load_skills_from_path(p)?;
+        defs.into_iter().map(|d| (d.name, d.description)).collect()
+    } else {
+        global_registry().list_names_and_descriptions()
+    };
+    Ok(list)
 }
 
 /// Register additional skills into the global registry (e.g. from runtime or tests).

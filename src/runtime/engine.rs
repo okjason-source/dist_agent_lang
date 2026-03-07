@@ -1336,6 +1336,8 @@ impl Runtime {
             "config" => self.call_config_function(function_name, args),
             "sh" => self.call_sh_function(function_name, args),
             "evolve" => self.call_evolve_function(function_name, args),
+            "workflow" => self.call_workflow_function(function_name, args),
+            "skills" => self.call_skills_function(function_name, args),
             _ => {
                 // Check if namespace is a registered service name (e.g., TestNFT::new())
                 if self.services.contains_key(namespace) {
@@ -5052,6 +5054,103 @@ impl Runtime {
             }
             _ => Err(RuntimeError::function_not_found(format!(
                 "evolve::{}",
+                name
+            ))),
+        }
+    }
+
+    fn call_workflow_function(
+        &mut self,
+        name: &str,
+        args: &[Value],
+    ) -> Result<Value, RuntimeError> {
+        match name {
+            "run_steps" => {
+                if args.len() < 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let steps_val = &args[0];
+                let input = self.value_to_string(&args[1])?;
+                let steps_arr = match steps_val {
+                    Value::Array(a) => a,
+                    Value::List(a) => a,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "workflow::run_steps first argument must be an array of {role, prompt}"
+                                .to_string(),
+                        ));
+                    }
+                };
+                let mut step_results: Vec<Value> = Vec::new();
+                let mut prev_output = String::new();
+                for step_val in steps_arr.iter() {
+                    let step_map = match step_val {
+                        Value::Map(m) => m,
+                        _ => continue,
+                    };
+                    let role = step_map
+                        .get("role")
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_else(|| "researcher".to_string());
+                    let prompt = step_map
+                        .get("prompt")
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_else(|| "{input}".to_string());
+                    let resolved = prompt
+                        .replace("{input}", &input)
+                        .replace("{prev}", &prev_output);
+                    let full_prompt = format!("You are a {} agent.\n\nTask: {}", role, resolved);
+                    let result = match crate::stdlib::ai::respond_with_tools(&full_prompt) {
+                        Ok(r) => r,
+                        Err(e) => format!("Error: {}", e),
+                    };
+                    prev_output = result.clone();
+                    let mut step_map_out = HashMap::new();
+                    step_map_out.insert("role".to_string(), Value::String(role));
+                    step_map_out.insert("result".to_string(), Value::String(result));
+                    step_results.push(Value::Map(step_map_out));
+                }
+                let final_result = prev_output;
+                let mut out = HashMap::new();
+                out.insert("ok".to_string(), Value::Bool(true));
+                out.insert("steps".to_string(), Value::Array(step_results));
+                out.insert("final_result".to_string(), Value::String(final_result));
+                Ok(Value::Map(out))
+            }
+            _ => Err(RuntimeError::function_not_found(format!(
+                "workflow::{}",
+                name
+            ))),
+        }
+    }
+
+    fn call_skills_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        match name {
+            "list" => {
+                let path_opt = if args.is_empty() {
+                    None
+                } else {
+                    let p = self.value_to_string(&args[0]).ok();
+                    p.filter(|s| !s.is_empty()).map(std::path::PathBuf::from)
+                };
+                let path_ref = path_opt.as_deref();
+                let list = crate::skills::list_skills(path_ref).map_err(RuntimeError::General)?;
+                let arr: Vec<Value> = list
+                    .into_iter()
+                    .map(|(name, desc)| {
+                        let mut m = HashMap::new();
+                        m.insert("name".to_string(), Value::String(name));
+                        m.insert("description".to_string(), Value::String(desc));
+                        Value::Map(m)
+                    })
+                    .collect();
+                Ok(Value::Array(arr))
+            }
+            _ => Err(RuntimeError::function_not_found(format!(
+                "skills::{}",
                 name
             ))),
         }
