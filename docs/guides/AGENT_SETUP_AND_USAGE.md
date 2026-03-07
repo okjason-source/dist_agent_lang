@@ -201,15 +201,21 @@ Prints how to run chat, serve, and multi-agent DAL patterns (agent state is proc
 
 ### dal agent fleet
 
-Off-chain fleet: named set of agents, optionally created from a mold.
+Off-chain fleet: named set of agents, optionally created from a mold. See [FLEET_DEPLOYMENT.md](../FLEET_DEPLOYMENT.md) for full deployment flow.
 
 - **create** &lt;name&gt; — Create an empty fleet. Use `--from-mold <path> [--count N] [--param k=v ...]` to create a fleet of N agents from a mold (default count 1).
-- **list** — List fleet names and agent counts (from current directory’s `.dal/fleets.json`).
-- **show** &lt;name&gt; — Show fleet details: mold path (if any), member count, agent IDs.
-- **scale** &lt;name&gt; &lt;N&gt; — Resize fleet to N members. Scale down truncates the member list; scale up only works for fleets created from a mold (spawns more agents from the same mold).
+- **list** [**-v** \| **--verbose**] — List fleet names and agent counts; with `-v` also shows last_deployed_task and last_deployed_at.
+- **show** &lt;name&gt; — Show fleet details: mold path (if any), member count, agent IDs, last deployed task (if set).
+- **scale** &lt;name&gt; &lt;N&gt; — Resize fleet to N members. Scale down truncates the member list; scale up spawns more from the same mold (uses stored `last_create_params` if set).
 - **delete** &lt;name&gt; — Remove the fleet (metadata only; agent contexts remain).
+- **deploy** &lt;name&gt; &lt;task&gt; — Record the task as the fleet’s last deployment. Use **run** to dispatch it to members.
+- **add-from-mold** &lt;name&gt; &lt;mold_source&gt; &lt;count&gt; [--param k=v ...] — Add N agents from a mold to an existing fleet (sets mold_source if fleet was empty).
+- **add-member** &lt;name&gt; &lt;agent_id&gt; — Register an existing agent as a fleet member.
+- **run** [&lt;name&gt;] — For each fleet with a deployed task (optionally filter by name), ensure members (add from mold if empty), then dispatch last_deployed_task to each member via agent coordination.
+- **health** &lt;name&gt; — Report member count, has_mold, last_deployed_task/at, status (ok/empty).
+- **export** [&lt;name&gt;] [**--format** k8s\|docker-compose] — Emit YAML (Kubernetes JobList or docker-compose services) for the fleet(s).
 
-Fleet state is stored in `base/.dal/fleets.json` when using the CLI (current working directory as base). Optional future subcommands: `deploy`, `health`.
+Fleet state is stored in `base/.dal/fleets.json` when using the CLI (current working directory as base).
 
 ### dal agent mold
 

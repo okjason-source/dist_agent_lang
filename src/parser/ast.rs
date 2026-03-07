@@ -306,6 +306,12 @@ pub enum Expression {
     },
     /// Range expression: start..end for for-loops
     Range(Box<Expression>, Box<Expression>),
+    /// Method call: receiver.method_name(args) — dispatch by receiver type (service or value)
+    MethodCall {
+        receiver: Box<Expression>,
+        method_name: String,
+        arguments: Vec<Expression>,
+    },
 }
 
 impl Program {

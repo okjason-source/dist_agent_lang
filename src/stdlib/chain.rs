@@ -463,13 +463,59 @@ pub fn get_gas_price(chain_id: i64) -> f64 {
 /// let timestamp = chain::get_block_timestamp(1);
 /// ```
 pub fn get_block_timestamp(chain_id: i64) -> i64 {
-    let _chain_config = get_chain_config(chain_id);
+    #[cfg(feature = "http-interface")]
+    if let Some(config) = get_chain_config(chain_id) {
+        use serde_json::json;
+        if let Ok(result) = rpc::rpc_request(
+            &config.rpc_url,
+            "eth_getBlockByNumber",
+            vec![json!("latest"), json!(false)],
+        ) {
+            if let Some(hex_ts) = result.get("timestamp").and_then(|v| v.as_str()) {
+                let ts = rpc::hex_to_i64(hex_ts);
+                if ts > 0 {
+                    return ts;
+                }
+            }
+        }
+    }
 
-    // Return current timestamp
+    // Fallback: system time when RPC unavailable or not configured
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs() as i64
+}
+
+/// Get latest block hash for a chain (example-only API).
+///
+/// # Arguments
+/// * `chain_id` - The target chain ID
+///
+/// # Returns
+/// * `String` - Block hash (0x-prefixed hex), or a placeholder when RPC unavailable
+pub fn get_block_hash(chain_id: i64) -> String {
+    #[cfg(feature = "http-interface")]
+    if let Some(config) = get_chain_config(chain_id) {
+        use serde_json::json;
+        if let Ok(result) = rpc::rpc_request(
+            &config.rpc_url,
+            "eth_getBlockByNumber",
+            vec![json!("latest"), json!(false)],
+        ) {
+            if let Some(hash) = result.get("hash").and_then(|v| v.as_str()) {
+                return hash.to_string();
+            }
+        }
+    }
+    // Placeholder when RPC unavailable
+    format!(
+        "0x{:064x}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+    )
 }
 
 /// Get transaction status
@@ -578,6 +624,73 @@ pub fn get_balance(chain_id: i64, address: String) -> i64 {
             let limited_sum = hash_sum % 1000;
             let wei_per_unit: i64 = 1000000000000000;
             return limited_sum.checked_mul(wei_per_unit).unwrap_or(0);
+        }
+    }
+    0
+}
+
+/// Known ERC20 contract addresses by symbol (mainnet chain_id 1). Used when token_symbol is not 0x.
+fn erc20_contract_for_symbol(chain_id: i64, symbol: &str) -> Option<String> {
+    if chain_id != 1 {
+        return None;
+    }
+    let s = symbol.to_uppercase();
+    let addr = match s.as_str() {
+        "USDC" => "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "USDT" => "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "WETH" => "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "DAI" => "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "WBTC" => "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+        _ => return None,
+    };
+    Some(format!("0x{}", addr))
+}
+
+/// Get ERC20 token balance (example-only API).
+///
+/// # Arguments
+/// * `chain_id` - The target chain ID
+/// * `token_symbol_or_contract` - Token symbol (e.g. "USDC") or contract address (0x...)
+/// * `address` - Account address to query
+///
+/// # Returns
+/// * `i64` - Token balance (raw units, e.g. 6 decimals for USDC)
+pub fn get_token_balance(chain_id: i64, token_symbol_or_contract: String, address: String) -> i64 {
+    let contract = if token_symbol_or_contract.starts_with("0x") {
+        token_symbol_or_contract.clone()
+    } else if let Some(addr) = erc20_contract_for_symbol(chain_id, &token_symbol_or_contract) {
+        addr
+    } else {
+        return 0;
+    };
+
+    let chain_config = match get_chain_config(chain_id) {
+        Some(c) => c,
+        None => return 0,
+    };
+
+    #[cfg(feature = "http-interface")]
+    {
+        use serde_json::json;
+        let addr_hex = address
+            .strip_prefix("0x")
+            .unwrap_or(&address)
+            .to_lowercase();
+        let padded = format!("{:0>64}", addr_hex);
+        // balanceOf(address) selector 0x70a08231
+        let data = format!("0x70a08231{}", padded);
+        let to = if contract.starts_with("0x") {
+            contract
+        } else {
+            format!("0x{}", contract)
+        };
+        let tx = json!({ "to": to, "data": data });
+        if let Ok(result) =
+            rpc::rpc_request(&chain_config.rpc_url, "eth_call", vec![tx, json!("latest")])
+        {
+            if let Some(hex_str) = result.as_str() {
+                return rpc::hex_to_i64(hex_str);
+            }
         }
     }
     0

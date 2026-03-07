@@ -7,12 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Chain namespace (example-only APIs):** Implemented in `chain.rs` + engine so examples work without changing example files:
+  - `chain::get(chain_id, address)` — 2-arg overload returns map with `balance`, `chain_id`, `address`
+  - `chain::get_info(chain_id)` — alias for `get_chain_config`
+  - `chain::deploy_contract(...)` — alias for `deploy(chain_id, contract_name, constructor_args)`
+  - `chain::get_current_gas_price(chain_id)` — alias for `get_gas_price`
+  - `chain::get_token_balance(chain_id, token_symbol_or_contract, address)` — ERC20 `balanceOf` via RPC when `http-interface` enabled; known symbols (USDC, USDT, WETH, DAI, WBTC) on chain_id 1
+  - `chain::get_block_hash()` / `get_block_hash(chain_id)` — latest block hash via RPC or placeholder
+- **Pre-signed deployment:** New guide and example:
+  - [docs/guides/PRESIGNED_DEPLOYMENT_GUIDE.md](docs/guides/PRESIGNED_DEPLOYMENT_GUIDE.md) — how to build a pre-signed deploy tx (Foundry/Hardhat/Node), pass hex to DAL, use cases (CI/CD, multi-chain, governance, agent-driven)
+  - [examples/deploy_presigned_example.dal](examples/deploy_presigned_example.dal) — `deploy_with_presigned`, `deploy_demo_only`, multi-chain pattern
+  - Guide clarifies DAL → EVM pipeline (`dal build --target blockchain` → Solidity skeleton → solc → bytecode), hybrid use case, and practical stub uses (oracle/NFT placeholders, interface validation)
+- **Documentation:** PUBLIC_DOCUMENTATION_INDEX links to Pre-signed Deployment Guide and Solidity Integration; CHAIN_NAMESPACE_GAPS_AND_FIXES §5 and pre-signed pointer
+
 ### Changed
 - **BREAKING:** Renamed `cap` module to `key` — capability-based access control
   - `stdlib::cap` → `stdlib::key`
   - CLI: `dal cap` → `dal key create|check|principal`
   - DAL code: `cap::create()` → `key::create()`, etc.
   - Capability IDs now use `key_` prefix instead of `cap_`
+- **Best Practices guide:** [docs/guides/BEST_PRACTICES.md](docs/guides/BEST_PRACTICES.md) rewritten to use real DAL syntax and stdlib throughout (services with `@trust`/`@chain`/`@secure`, `fn`, `chain::`/`oracle::` APIs, `throw`/Result/try-catch, `test::expect_*`, describe/it); removed Solidity-style examples
 
 ## [1.0.5] - 2026-02-08
 

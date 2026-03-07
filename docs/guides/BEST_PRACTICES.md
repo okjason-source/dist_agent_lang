@@ -1,6 +1,6 @@
-# 📘 Best Practices Guide (v1.0.1)
+# 📘 Best Practices Guide
 
-> **📢 Beta Release v1.0.1:** Follow these best practices and test thoroughly. Actively updated with improvements. **Beta testing contributions appreciated!** 🙏
+> **dist_agent_lang (DAL)** — This guide uses **DAL syntax and stdlib**. Services use `@trust`, `@chain`, `@secure`; functions use `fn`; chain and oracle calls use the actual `chain::` and `oracle::` APIs. See [syntax.md](../syntax.md), [attributes.md](../attributes.md), and [STDLIB_REFERENCE.md](../STDLIB_REFERENCE.md).
 
 Comprehensive guide to writing secure, efficient, and maintainable **dist_agent_lang** code.
 
@@ -9,368 +9,192 @@ Comprehensive guide to writing secure, efficient, and maintainable **dist_agent_
 ## 📋 Table of Contents
 
 1. [Security Best Practices](#security-best-practices)
-2. [Performance Optimization](#performance-optimization)
-3. [Code Organization](#code-organization)
-4. [Error Handling](#error-handling)
-5. [Testing Strategies](#testing-strategies)
-6. [Gas Optimization](#gas-optimization)
-7. [Oracle Integration](#oracle-integration)
-8. [Multi-Chain Development](#multi-chain-development)
-9. [Common Patterns](#common-patterns)
-10. [Anti-Patterns (What to Avoid)](#anti-patterns-what-to-avoid)
+2. [Performance and Code Organization](#performance-and-code-organization)
+3. [Error Handling](#error-handling)
+4. [Testing Strategies](#testing-strategies)
+5. [Chain and Gas Usage](#chain-and-gas-usage)
+6. [Oracle Integration](#oracle-integration)
+7. [Multi-Chain Development](#multi-chain-development)
+8. [Common Patterns](#common-patterns)
+9. [Anti-Patterns (What to Avoid)](#anti-patterns-what-to-avoid)
 
 ---
 
 ## 🔒 Security Best Practices
 
-### 1. Always Enable Security Features
+### 1. Use service attributes for chain and trust
 
 **✅ DO:**
 ```dal
-@contract
-@reentrancy_guard        // Automatic reentrancy protection
-@safe_math               // Automatic overflow/underflow protection
-@access_control          // Role-based access control
-contract Secure {
-    // Your code is protected
+@trust("hybrid")
+@chain("ethereum")
+@secure
+service SecureService {
+    balances: map<string, int> = {};
+    fn transfer(to: string, amount: int) -> bool {
+        let caller = chain::caller();
+        if (amount <= 0 || !self.balances.contains_key(caller)) { throw "Invalid transfer"; }
+        if (self.balances[caller] < amount) { throw "Insufficient balance"; }
+        self.balances[caller] = self.balances[caller] - amount;
+        if (!self.balances.contains_key(to)) { self.balances[to] = 0; }
+        self.balances[to] = self.balances[to] + amount;
+        return true;
+    }
 }
 ```
 
 **❌ DON'T:**
 ```dal
-@contract
-contract Vulnerable {
-    // No security attributes - vulnerable to attacks!
+service Vulnerable {
+    // No @trust, @chain, @secure — chain access and auth not enforced
 }
 ```
 
-### 2. Input Validation
+`@secure` enables authentication (caller must be set), reentrancy guard, and audit logging. Use `@public` only for read-only or unauthenticated endpoints; do not combine `@secure` and `@public` on the same service or function.
+
+### 2. Validate inputs before state changes
 
 **✅ DO:**
 ```dal
-@public
-function transfer(address to, uint256 amount) {
-    // Validate inputs
-    require(to != address(0), "Invalid address");
-    require(amount > 0, "Amount must be positive");
-    require(amount <= balances[msg.sender], "Insufficient balance");
-    
-    // Perform transfer
-    balances[msg.sender] -= amount;
-    balances[to] += amount;
+@trust("hybrid")
+@chain("ethereum")
+@secure
+service Token {
+    balances: map<string, int> = {};
+    fn transfer(to: string, amount: int) -> bool {
+        if (to == "" || to == "0x0000000000000000000000000000000000000000") {
+            throw "Invalid address";
+        }
+        if (amount <= 0) { throw "Amount must be positive"; }
+        let caller = chain::caller();
+        if (!self.balances.contains_key(caller) || self.balances[caller] < amount) {
+            throw "Insufficient balance";
+        }
+        self.balances[caller] = self.balances[caller] - amount;
+        if (!self.balances.contains_key(to)) { self.balances[to] = 0; }
+        self.balances[to] = self.balances[to] + amount;
+        return true;
+    }
 }
 ```
 
 **❌ DON'T:**
 ```dal
-@public
-function transfer(address to, uint256 amount) {
-    // No validation - dangerous!
-    balances[msg.sender] -= amount;
-    balances[to] += amount;
+fn transfer(to: string, amount: int) {
+    self.balances[caller] = self.balances[caller] - amount;
+    self.balances[to] = self.balances[to] + amount;
 }
 ```
 
-### 3. State Changes After External Calls
-
-**✅ DO (Checks-Effects-Interactions Pattern):**
-```dal
-@public
-function withdraw(uint256 amount) {
-    // 1. Checks
-    require(balances[msg.sender] >= amount, "Insufficient balance");
-    
-    // 2. Effects (update state BEFORE external call)
-    balances[msg.sender] -= amount;
-    
-    // 3. Interactions (external calls last)
-    msg.sender.transfer(amount);
-}
-```
-
-**❌ DON'T:**
-```dal
-@public
-function withdraw(uint256 amount) {
-    require(balances[msg.sender] >= amount);
-    
-    // External call BEFORE state update - reentrancy risk!
-    msg.sender.transfer(amount);
-    balances[msg.sender] -= amount;
-}
-```
-
-### 4. Use Events for Important State Changes
+### 3. Update state before external chain calls (checks–effects–interactions)
 
 **✅ DO:**
 ```dal
-event Transfer(address indexed from, address indexed to, uint256 amount);
-event Approval(address indexed owner, address indexed spender, uint256 amount);
+@txn
+@secure
+fn withdraw(amount: int) {
+    let caller = chain::caller();
+    if (!self.pending.contains_key(caller) || self.pending[caller] < amount) {
+        throw "Insufficient pending";
+    }
+    self.pending[caller] = self.pending[caller] - amount;
+    let result = chain::call(chain_id, self.vault_address, "withdraw", { "amount": amount.to_string() });
+    if (!result.contains("success")) { throw "Withdraw failed"; }
+}
+```
 
-@public
-function transfer(address to, uint256 amount) {
+**❌ DON'T:** Call `chain::call` (or any external interaction) before updating service state; that can create reentrancy risk.
+
+### 4. Use events and logging for important actions
+
+**✅ DO:**
+```dal
+event Transfer { from: string, to: string, amount: int };
+
+fn transfer(to: string, amount: int) {
     // ... transfer logic ...
-    
-    emit Transfer(msg.sender, to, amount);  // Always emit events
+    event Transfer { from: chain::caller(), to: to, amount: amount };
+    log::info("transfer", { "to": to, "amount": amount });
+    return true;
 }
 ```
 
-### 5. Secure Oracle Usage
+### 5. Secure oracle usage
 
 **✅ DO:**
 ```dal
-@public
-function updatePrice() {
-    // Multi-source validation with consensus
-    let price = oracle::fetch_with_consensus(
-        ["chainlink", "uniswap", "band"],
-        oracle::create_query("BTC/USD"),
-        0.66  // 66% consensus threshold
-    );
-    
-    // Validate freshness
-    require(price.timestamp > block.timestamp - 300, "Price too old");
-    
-    btcPrice = price.data;
+let query = oracle::create_query("BTC/USD");
+let result = oracle::fetch_with_consensus(
+    ["source1", "source2", "source3"],
+    query,
+    0.66
+);
+if (result == null) { throw "Oracle consensus failed"; }
+let price = result.data;
+let ts = chain::get_block_timestamp(1);
+if (result.timestamp != null && ts - result.timestamp > 300) {
+    throw "Price too old";
 }
 ```
 
-**❌ DON'T:**
-```dal
-@public
-function updatePrice() {
-    // Single source, no validation - risky!
-    let price = oracle::fetch("chainlink", "BTC/USD");
-    btcPrice = price.data;
-}
-```
+**❌ DON'T:** Rely on a single oracle source without consensus or freshness checks when handling value or critical decisions.
 
 ---
 
-## ⚡ Performance Optimization
+## ⚡ Performance and Code Organization
 
-### 1. Minimize Storage Operations
+### 1. Batch work and limit chain calls
 
-**✅ DO:**
-```dal
-@public
-function batchTransfer(address[] memory recipients, uint256[] memory amounts) {
-    uint256 totalAmount = 0;
-    
-    // Calculate total in memory
-    for (uint i = 0; i < amounts.length; i++) {
-        totalAmount += amounts[i];
-    }
-    
-    // Single storage read
-    require(balances[msg.sender] >= totalAmount);
-    
-    // Single storage write
-    balances[msg.sender] -= totalAmount;
-    
-    // Update recipients
-    for (uint i = 0; i < recipients.length; i++) {
-        balances[recipients[i]] += amounts[i];
-    }
-}
-```
+Prefer computing totals or payloads in memory, then one or few `chain::call` / `chain::deploy` invocations. Use `@limit(n)` on services or functions to cap resource use.
 
-**❌ DON'T:**
-```dal
-@public
-function batchTransfer(address[] memory recipients, uint256[] memory amounts) {
-    for (uint i = 0; i < recipients.length; i++) {
-        // Multiple storage reads/writes - expensive!
-        require(balances[msg.sender] >= amounts[i]);
-        balances[msg.sender] -= amounts[i];
-        balances[recipients[i]] += amounts[i];
-    }
-}
-```
+### 2. Cache expensive or remote data
 
-### 2. Use Appropriate Data Types
+Use service fields to cache oracle or chain data when validity windows allow (e.g. block timestamp or TTL). Use `chain::get_block_timestamp(chain_id)` for time; avoid calling oracle or RPC in a tight loop.
 
-**✅ DO:**
-```dal
-// Pack variables to save storage slots
-contract Optimized {
-    uint128 public price;      // 16 bytes
-    uint64 public timestamp;   // 8 bytes
-    uint32 public count;       // 4 bytes
-    uint32 public flags;       // 4 bytes
-    // Total: 32 bytes = 1 storage slot
-}
-```
+### 3. Project structure
 
-**❌ DON'T:**
-```dal
-contract Wasteful {
-    uint256 public price;      // 32 bytes = 1 slot
-    uint256 public timestamp;  // 32 bytes = 1 slot
-    uint256 public count;      // 32 bytes = 1 slot
-    uint256 public flags;      // 32 bytes = 1 slot
-    // Total: 128 bytes = 4 storage slots (4x cost!)
-}
-```
-
-### 3. Cache Expensive Computations
-
-**✅ DO:**
-```dal
-@public
-@view
-function getComplexValue() -> uint256 {
-    // Cache result
-    if (cachedValue != 0 && block.timestamp - cacheTime < 3600) {
-        return cachedValue;
-    }
-    
-    // Expensive computation
-    uint256 result = expensiveCalculation();
-    
-    // Update cache
-    cachedValue = result;
-    cacheTime = block.timestamp;
-    
-    return result;
-}
-```
-
-### 4. Use Async for Non-Critical Operations
-
-**✅ DO:**
-```dal
-@public
-@async
-async function processData() {
-    // Non-blocking async operation
-    let result = await externalService::fetchData();
-    
-    // Process in background
-    await processInBackground(result);
-}
-```
-
----
-
-## 📁 Code Organization
-
-### 1. Project Structure
-
-**✅ Recommended Structure:**
 ```
 my-project/
-├── contracts/
-│   ├── core/              # Core business logic
-│   │   ├── Token.dal
-│   │   └── Marketplace.dal
-│   ├── interfaces/        # Contract interfaces
-│   │   ├── IERC20.dal
-│   │   └── IMarketplace.dal
-│   ├── libraries/         # Reusable libraries
-│   │   ├── Math.dal
-│   │   └── SafeTransfer.dal
-│   └── utils/             # Utility contracts
-│       └── Ownable.dal
+├── main.dal or lib.dal    # Entry; services and top-level fns
+├── core/                  # Core services (e.g. token.dal, marketplace.dal)
 ├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── fixtures/
+│   └── *.test.dal        # describe/it, test::expect_*, expect_throws
 ├── scripts/
-│   ├── deploy.sh
-│   └── verify.sh
+│   └── deploy.sh         # Build + sign tx; see PRESIGNED_DEPLOYMENT_GUIDE.md
 ├── docs/
-│   └── architecture.md
 ├── .env.example
-├── deployment-order.yaml
 └── README.md
 ```
 
-### 2. Contract Organization
+### 4. Service layout
 
-**✅ DO:**
+Use `@trust`, `@chain`, `@secure` (or `@public`) consistently. Put fields first, then methods; use events and `log::` for important state changes. Caller identity: `chain::caller()`.
+
 ```dal
-@contract
-@version("1.0.0")
-@author("Your Name")
-contract WellOrganized {
-    // 1. State variables (grouped by visibility)
-    // Public state
-    uint256 public totalSupply;
-    mapping(address => uint256) public balances;
-    
-    // Private state
-    uint256 private _adminFee;
-    address private _owner;
-    
-    // 2. Events
-    event Transfer(address indexed from, address indexed to, uint256 amount);
-    event FeeUpdated(uint256 oldFee, uint256 newFee);
-    
-    // 3. Modifiers
-    @modifier
-    modifier onlyOwner() {
-        require(msg.sender == _owner, "Not owner");
-        _;
-    }
-    
-    // 4. Constructor
-    constructor(uint256 initialSupply) {
-        _owner = msg.sender;
-        totalSupply = initialSupply;
-        balances[msg.sender] = initialSupply;
-    }
-    
-    // 5. External functions
-    @public
-    function transfer(address to, uint256 amount) {
-        // ...
-    }
-    
-    // 6. Public functions
-    @public
-    @view
-    function balanceOf(address account) -> uint256 {
-        return balances[account];
-    }
-    
-    // 7. Internal functions
-    @private
-    function _transfer(address from, address to, uint256 amount) {
-        // ...
-    }
-    
-    // 8. Private functions
-    @private
-    function _calculateFee(uint256 amount) -> uint256 {
-        // ...
-    }
-}
-```
+@trust("hybrid")
+@chain("ethereum", "polygon")
+@secure
+service WellOrganized {
+    total_supply: int = 0;
+    balances: map<string, int> = {};
+    event Transfer { from: string, to: string, amount: int };
 
-### 3. Use Interfaces
-
-**✅ DO:**
-```dal
-// interfaces/IERC20.dal
-@interface
-interface IERC20 {
-    function transfer(address to, uint256 amount) -> bool;
-    function balanceOf(address account) -> uint256;
-}
-
-// contracts/MyContract.dal
-@contract
-contract MyContract {
-    IERC20 private token;
-    
-    constructor(address tokenAddress) {
-        token = IERC20(tokenAddress);
+    fn transfer(to: string, amount: int) -> bool {
+        if (amount <= 0) { throw "Invalid amount"; }
+        let from = chain::caller();
+        if (!self.balances.contains_key(from) || self.balances[from] < amount) {
+            throw "Insufficient balance";
+        }
+        self.balances[from] = self.balances[from] - amount;
+        if (!self.balances.contains_key(to)) { self.balances[to] = 0; }
+        self.balances[to] = self.balances[to] + amount;
+        event Transfer { from: from, to: to, amount: amount };
+        return true;
     }
-    
-    @public
-    function interact() {
-        token.transfer(msg.sender, 100);
+
+    fn balance_of(account: string) -> int {
+        if (self.balances.contains_key(account)) { return self.balances[account]; }
+        return 0;
     }
 }
 ```
@@ -379,79 +203,59 @@ contract MyContract {
 
 ## 🚨 Error Handling
 
-### 1. Use Descriptive Error Messages
+### 1. Use descriptive messages with throw
 
 **✅ DO:**
 ```dal
-@public
-function withdraw(uint256 amount) {
-    require(amount > 0, "Withdrawal amount must be greater than zero");
-    require(balances[msg.sender] >= amount, "Insufficient balance");
-    require(!paused, "Contract is paused");
-    
-    // ... withdrawal logic ...
-}
-```
-
-**❌ DON'T:**
-```dal
-@public
-function withdraw(uint256 amount) {
-    require(amount > 0);  // No message!
-    require(balances[msg.sender] >= amount, "Error");  // Too vague!
-    
-    // ... withdrawal logic ...
-}
-```
-
-### 2. Use Custom Error Types
-
-**✅ DO:**
-```dal
-// Define custom errors
-error InsufficientBalance(uint256 available, uint256 requested);
-error Unauthorized(address caller);
-error InvalidAmount(uint256 amount);
-
-@contract
-contract ModernErrors {
-    @public
-    function transfer(address to, uint256 amount) {
-        if (balances[msg.sender] < amount) {
-            revert InsufficientBalance(balances[msg.sender], amount);
-        }
-        
-        if (amount == 0) {
-            revert InvalidAmount(amount);
-        }
-        
-        // ... transfer logic ...
+fn withdraw(amount: int) {
+    if (amount <= 0) { throw "Withdrawal amount must be greater than zero"; }
+    let caller = chain::caller();
+    if (!self.balances.contains_key(caller) || self.balances[caller] < amount) {
+        throw "Insufficient balance";
     }
+    if (self.paused) { throw "Contract is paused"; }
+    self.balances[caller] = self.balances[caller] - amount;
+    // ... complete withdrawal ...
 }
 ```
 
-### 3. Handle External Call Failures
+**❌ DON'T:** Use empty or vague messages: `throw "Error";` — be specific so callers and logs are actionable.
 
-**✅ DO:**
+### 2. Use Result for recoverable failures
+
+**✅ DO:** Return `Result<T, string>` and use `Ok`/`Err` when the caller should handle failure without aborting.
 ```dal
-@public
-function callExternal(address target, bytes memory data) {
-    (bool success, bytes memory result) = target.call(data);
-    
-    if (!success) {
-        // Handle failure appropriately
-        if (result.length > 0) {
-            // Revert with the error message from the external call
-            assembly {
-                revert(add(result, 32), mload(result))
-            }
-        } else {
-            revert("External call failed");
-        }
+fn try_transfer(to: string, amount: int) -> Result<bool, string> {
+    if (to == "") { return Err("Invalid address"); }
+    if (amount <= 0) { return Err("Invalid amount"); }
+    let from = chain::caller();
+    if (!self.balances.contains_key(from) || self.balances[from] < amount) {
+        return Err("Insufficient balance");
     }
-    
-    // Process successful result
-    processResult(result);
+    self.balances[from] = self.balances[from] - amount;
+    if (!self.balances.contains_key(to)) { self.balances[to] = 0; }
+    self.balances[to] = self.balances[to] + amount;
+    return Ok(true);
+}
+```
+
+### 3. Handle chain and external call results
+
+**✅ DO:** Check return values from `chain::call` and other stdlib calls; throw or return Err on failure.
+```dal
+let result = chain::call(chain_id, contract_address, "withdraw", { "amount": amount.to_string() });
+if (result == null || !result.contains("success")) {
+    throw "External call failed: " + (result ?? "null");
+}
+```
+
+Use **try/catch** when you want to handle thrown errors and continue:
+```dal
+try {
+    self.do_risky_operation();
+} catch (e) {
+    log::error("operation", { "error": e });
+    return false;
 }
 ```
 
@@ -459,223 +263,123 @@ function callExternal(address target, bytes memory data) {
 
 ## 🧪 Testing Strategies
 
-### 1. Comprehensive Test Coverage
+Use the **three-layer** approach: (1) Rust unit tests for parsing/syntax, (2) semantic validators in `test::`, (3) DAL test files (`.test.dal`) for behavior. See [TESTING_QUICK_REFERENCE.md](../TESTING_QUICK_REFERENCE.md).
+
+### 1. DAL test files: describe / it / expect
 
 **✅ DO:**
 ```dal
-// tests/token_tests.dal
-@test_suite("Token Tests")
-suite TokenTests {
-    @test("Should transfer tokens correctly")
-    async function testTransfer() {
-        let token = await deploy("Token", [1000000]);
-        let recipient = getTestAddress(1);
-        
-        await token.transfer(recipient, 1000);
-        
-        assert_eq(await token.balanceOf(recipient), 1000);
-        assert_eq(await token.balanceOf(deployer), 999000);
-    }
-    
-    @test("Should fail on insufficient balance")
-    async function testInsufficientBalance() {
-        let token = await deploy("Token", [1000]);
-        
-        await assert_reverts(
-            token.transfer(recipient, 2000),
-            "Insufficient balance"
-        );
-    }
-    
-    @test("Should fail on zero address")
-    async function testZeroAddress() {
-        let token = await deploy("Token", [1000]);
-        
-        await assert_reverts(
-            token.transfer(address(0), 100),
-            "Invalid address"
-        );
-    }
-}
+// tests/token.test.dal
+describe("Token", fn() {
+    let token;
+    beforeEach(fn() {
+        token = MyToken::new();
+        token.deposit(chain::caller(), 1000000);
+    });
+    it("transfers correctly", fn() {
+        token.transfer("0xRecipient", 1000);
+        expect(token.balance_of("0xRecipient")).to_equal(1000);
+    });
+    it("fails on insufficient balance", fn() {
+        expect_throws(fn() { token.transfer("0xRecipient", 2000000); }, "Insufficient balance");
+    });
+});
 ```
 
-### 2. Property-Based Testing
+### 2. Semantic validation (test::)
 
-**✅ DO:**
+**✅ DO:** Use `test::expect_*` for types, ranges, and structure in DAL tests or validators.
 ```dal
-@property_test("Token balance invariant")
-function prop_totalSupplyInvariant(
-    address[] memory accounts,
-    uint256[] memory amounts
-) {
-    // Property: Total supply should never change
-    uint256 totalBefore = token.totalSupply();
-    
-    // Perform random transfers
-    for (uint i = 0; i < accounts.length; i++) {
-        if (token.balanceOf(accounts[i]) >= amounts[i]) {
-            token.transfer(accounts[i], amounts[i]);
-        }
-    }
-    
-    uint256 totalAfter = token.totalSupply();
-    assert_eq(totalBefore, totalAfter);
-}
+test::expect_type(&result, "number");
+test::expect_in_range(price, 0.0, 1000000.0);
+test::expect_has_key(config, "chain_id");
+test::expect_valid_trust_model("hybrid");
+test::expect_valid_chain("ethereum");
 ```
 
-### 3. Integration Testing
+### 3. Integration and Rust tests
 
-**✅ DO:**
-```dal
-@integration_test("Full marketplace flow")
-async function testMarketplaceFlow() {
-    // Deploy entire system
-    let token = await deploy("Token", [1000000]);
-    let nft = await deploy("NFT");
-    let marketplace = await deploy("Marketplace", [token.address, nft.address]);
-    
-    // Setup
-    await token.approve(marketplace.address, 10000);
-    await nft.mint(seller, 1);
-    await nft.approve(marketplace.address, 1);
-    
-    // Test full flow
-    await marketplace.listItem(1, 1000);
-    await marketplace.buyItem(1);
-    
-    // Verify final state
-    assert_eq(await nft.ownerOf(1), buyer);
-    assert_eq(await token.balanceOf(seller), 1000);
-}
-```
+Run full flows with `dal run file.test.dal`. For parser/AST and example-file validation, use `cargo test` (e.g. `cargo test --test example_tests`).
 
 ---
 
-## ⛽ Gas Optimization
+## ⛽ Chain and Gas Usage
 
-### 1. Batch Operations
+### 1. Use chain stdlib for gas and cost
 
-**✅ DO:**
+**✅ DO:** Use `chain::estimate_gas(chain_id, operation)` and `chain::get_gas_price(chain_id)` (or `chain::get_current_gas_price(chain_id)`) to compare chains or warn users.
 ```dal
-@public
-function batchMint(address[] memory recipients, uint256[] memory amounts) {
-    uint256 length = recipients.length;
-    require(length == amounts.length, "Array length mismatch");
-    
-    for (uint256 i = 0; i < length; i++) {
-        _mint(recipients[i], amounts[i]);
-    }
+let eth_gas = chain::estimate_gas(1, "transfer");
+let poly_gas = chain::estimate_gas(137, "transfer");
+let eth_price = chain::get_gas_price(1);
+let poly_price = chain::get_gas_price(137);
+if (poly_gas * poly_price < eth_gas * eth_price) {
+    log::info("gas", "Polygon is cheaper for this operation");
 }
 ```
 
-### 2. Use `unchecked` for Safe Operations
+### 2. Batch chain operations
 
-**✅ DO:**
-```dal
-@public
-function optimizedLoop() {
-    uint256 length = items.length;
-    
-    for (uint256 i = 0; i < length;) {
-        processItem(items[i]);
-        
-        unchecked {
-            ++i;  // i can never overflow in this context
-        }
-    }
-}
-```
+Prefer one `chain::call` with batched args (or a contract that batches on-chain) over many small calls. Use `chain::get_chain_config(chain_id)` and `chain::get_supported_chains()` when building multi-chain flows.
 
-### 3. Short-Circuit Evaluation
+### 3. Pre-signed deployment
 
-**✅ DO:**
-```dal
-// Put cheaper checks first
-require(amount > 0 && balances[msg.sender] >= amount);
-```
+For real contract deployment, use pre-signed transactions (see [PRESIGNED_DEPLOYMENT_GUIDE.md](PRESIGNED_DEPLOYMENT_GUIDE.md)); avoid putting private keys in DAL.
 
 ---
 
 ## 🔮 Oracle Integration
 
-### 1. Multi-Source Validation
+### 1. Multi-source consensus
 
-**✅ DO:**
+**✅ DO:** Use `oracle::create_query` and `oracle::fetch_with_consensus` with multiple sources and a threshold.
 ```dal
-@public
-function updatePriceWithConsensus() {
-    let price = oracle::fetch_with_consensus(
-        ["chainlink", "uniswap_v3", "band_protocol"],
-        oracle::create_query("ETH/USD")
-            .require_signature(true)
-            .with_confirmations(2),
-        0.66  // 66% agreement required
-    );
-    
-    require(price.verified, "Oracle signature verification failed");
-    require(price.confidence_score >= 0.66, "Insufficient consensus");
-    
-    ethPrice = price.data;
-    lastUpdate = block.timestamp;
-}
+let query = oracle::create_query("ETH/USD");
+let result = oracle::fetch_with_consensus(
+    ["source1", "source2", "source3"],
+    query,
+    0.66
+);
+if (result == null) { throw "Oracle consensus failed"; }
+self.eth_price = result.data;
+self.last_update = chain::get_block_timestamp(1);
 ```
 
-### 2. Price Freshness Checks
+### 2. Freshness and verification
 
-**✅ DO:**
-```dal
-uint256 constant MAX_PRICE_AGE = 300;  // 5 minutes
-
-@public
-@view
-function getPrice() -> uint256 {
-    require(
-        block.timestamp - lastUpdate <= MAX_PRICE_AGE,
-        "Price data is stale"
-    );
-    
-    return ethPrice;
-}
-```
+**✅ DO:** Check age with `chain::get_block_timestamp(chain_id)`; use `oracle::verify(data, signature)` when signatures are available. Reject or refresh when data is too old (e.g. > 300 seconds for prices).
 
 ---
 
 ## 🌍 Multi-Chain Development
 
-### 1. Chain-Agnostic Code
+### 1. Declare supported chains
 
-**✅ DO:**
+**✅ DO:** Use `@chain("ethereum", "polygon", ...)` and pass `chain_id` explicitly in `chain::` calls so the same service can run on multiple chains.
 ```dal
-@contract
-@blockchain("ethereum")
-@blockchain("polygon")
-@blockchain("arbitrum")
-contract MultiChain {
-    // Use chain-agnostic code
-    @public
-    function transfer(address to, uint256 amount) {
-        // This works on all chains
-        balances[msg.sender] -= amount;
-        balances[to] += amount;
+@trust("hybrid")
+@chain("ethereum", "polygon", "arbitrum")
+@secure
+service MultiChain {
+    fn transfer(chain_id: int, to: string, amount: int) -> bool {
+        let caller = chain::caller();
+        if (self.balances[caller] < amount) { throw "Insufficient balance"; }
+        self.balances[caller] = self.balances[caller] - amount;
+        if (!self.balances.contains_key(to)) { self.balances[to] = 0; }
+        self.balances[to] = self.balances[to] + amount;
+        return true;
     }
 }
 ```
 
-### 2. Chain-Specific Logic
+### 2. Chain-specific logic
 
-**✅ DO:**
+**✅ DO:** Use `chain::get_chain_config(chain_id)` and `chain::get_gas_price(chain_id)` (or `chain::get_current_gas_price(chain_id)`) when you need chain-dependent behavior (e.g. gas pricing, RPC, explorer).
 ```dal
-@public
-function getGasPrice() -> uint256 {
-    if (chain::id() == 1) {
-        // Ethereum mainnet
-        return tx.gasprice;
-    } else if (chain::id() == 137) {
-        // Polygon
-        return 30 gwei;
-    } else {
-        return 1 gwei;
-    }
+fn get_gas_cost(chain_id: int) -> float {
+    let gas = chain::estimate_gas(chain_id, "transfer");
+    let price = chain::get_gas_price(chain_id);
+    return gas * price;
 }
 ```
 
@@ -683,57 +387,35 @@ function getGasPrice() -> uint256 {
 
 ## 🎯 Common Patterns
 
-### 1. Pull Over Push for Payments
+### 1. Pull over push for withdrawals
 
-**✅ DO:**
+**✅ DO:** Update pending state first, then perform the external transfer or chain call so reentrancy cannot drain more than the cleared amount.
 ```dal
-mapping(address => uint256) public pendingWithdrawals;
-
-@public
-function withdraw() {
-    uint256 amount = pendingWithdrawals[msg.sender];
-    require(amount > 0, "No funds to withdraw");
-    
-    pendingWithdrawals[msg.sender] = 0;  // Update first
-    msg.sender.transfer(amount);          // Transfer last
+pending: map<string, int> = {};
+fn withdraw() {
+    let caller = chain::caller();
+    let amount = 0;
+    if (self.pending.contains_key(caller)) { amount = self.pending[caller]; }
+    if (amount <= 0) { throw "No funds to withdraw"; }
+    self.pending[caller] = 0;
+    let result = chain::call(chain_id, vault, "withdraw", { "amount": amount.to_string() });
+    if (!result.contains("success")) { throw "Withdraw failed"; }
 }
 ```
 
-### 2. Emergency Stop Pattern
+### 2. Pause / admin guard
 
-**✅ DO:**
+**✅ DO:** Use a `paused` field and an owner/caller check; throw at the start of sensitive methods when paused or when caller is not allowed.
 ```dal
-bool public paused = false;
-address public owner;
-
-@modifier
-modifier whenNotPaused() {
-    require(!paused, "Contract is paused");
-    _;
+paused: bool = false;
+owner: string = "0x...";
+fn pause() {
+    if (chain::caller() != self.owner) { throw "Not owner"; }
+    self.paused = true;
 }
-
-@modifier
-modifier onlyOwner() {
-    require(msg.sender == owner, "Not owner");
-    _;
-}
-
-@public
-@onlyOwner
-function pause() {
-    paused = true;
-}
-
-@public
-@onlyOwner
-function unpause() {
-    paused = false;
-}
-
-@public
-@whenNotPaused
-function criticalFunction() {
-    // Only works when not paused
+fn critical_operation() {
+    if (self.paused) { throw "Contract is paused"; }
+    // ...
 }
 ```
 
@@ -741,54 +423,36 @@ function criticalFunction() {
 
 ## ❌ Anti-Patterns (What to Avoid)
 
-### 1. DON'T Use `tx.origin` for Authorization
+### 1. Don't use origin/caller for auth without validation
 
-**❌ DON'T:**
-```dal
-// Vulnerable to phishing attacks!
-require(tx.origin == owner);
-```
+Use `chain::caller()` for the current caller and validate against a stored owner or capability; don't rely on unvalidated identity for privileged actions.
 
-**✅ DO:**
-```dal
-require(msg.sender == owner);
-```
+### 2. Don't ignore chain or oracle return values
 
-### 2. DON'T Ignore Return Values
+**❌ DON'T:** Call `chain::call` or `oracle::fetch` and ignore the result.
+**✅ DO:** Check the return value and throw or return Err when the call failed or returned invalid data.
 
-**❌ DON'T:**
-```dal
-token.transfer(recipient, amount);  // Ignores return value!
-```
+### 3. Don't use block or time for randomness
 
-**✅ DO:**
-```dal
-bool success = token.transfer(recipient, amount);
-require(success, "Transfer failed");
-```
+**❌ DON'T:** Use `chain::get_block_timestamp` or block-derived values as the sole source of randomness for value-bearing logic (manipulable).
+**✅ DO:** Use an oracle or verifiable randomness source (e.g. oracle::fetch with a VRF source) when you need randomness.
 
-### 3. DON'T Use Block Values for Randomness
+### 4. Don't put secrets in source
 
-**❌ DON'T:**
-```dal
-// Miners can manipulate this!
-uint256 random = uint256(blockhash(block.number - 1));
-```
-
-**✅ DO:**
-```dal
-// Use oracle-based randomness
-uint256 random = oracle::fetch("chainlink_vrf", "random");
-```
+Never put private keys or long-lived secrets in DAL source or in constructor args. Use env, config, or a secure deploy pipeline; see [PRESIGNED_DEPLOYMENT_GUIDE.md](PRESIGNED_DEPLOYMENT_GUIDE.md).
 
 ---
 
 ## 📚 Additional Resources
 
-- [Security Guide](SECURITY_GUIDE.md) - Deep dive into security
-- [Performance Guide](PERFORMANCE_GUIDE.md) - Advanced optimization
-- [API Reference](API_REFERENCE.md) - Complete stdlib documentation
-- [Tutorials](tutorials/) - Learn by building
+- [Syntax Reference](../syntax.md) — Grammar and structure
+- [Attributes Reference](../attributes.md) — `@trust`, `@chain`, `@secure`, `@txn`, `@limit`, `@compile_target`, etc.
+- [STDLIB_REFERENCE.md](../STDLIB_REFERENCE.md) — All stdlib modules and functions
+- [API Reference](API_REFERENCE.md) — Grouped API overview
+- [PRESIGNED_DEPLOYMENT_GUIDE.md](PRESIGNED_DEPLOYMENT_GUIDE.md) — Real contract deployment with DAL
+- [TESTING_QUICK_REFERENCE.md](../TESTING_QUICK_REFERENCE.md) — Three-layer testing, describe/it, test::expect_*
+- [ADVANCED_SECURITY_BEST_PRACTICES.md](../ADVANCED_SECURITY_BEST_PRACTICES.md) — Security deep dive
+- [Tutorials](../tutorials.md) — Learn by building
 
 ---
 

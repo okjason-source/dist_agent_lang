@@ -1,0 +1,20 @@
+// Minimal edge/IoT compile target example.
+// Build with: dal build examples/edge_gateway.dal --target edge [--output out]
+@edge
+service EdgeGateway @compile_target("edge") {
+    device_count: int = 0;
+    last_reading: float = 0.0;
+
+    fn on_sensor_reading(sensor_id: string, value: float) -> bool {
+        self.last_reading = value;
+        self.device_count = self.device_count + 1;
+        return true;
+    }
+
+    fn get_status() -> map<string, any> {
+        return {
+            "devices": self.device_count,
+            "last": self.last_reading
+        };
+    }
+}

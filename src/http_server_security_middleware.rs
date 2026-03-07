@@ -79,9 +79,9 @@ pub async fn auth_middleware(request: Request, next: Next) -> Response {
         // Create validator instance and validate token
         let validator = AuthValidator::default();
         match validator.validate_api_key(&token) {
-            Ok(_claims) => {
-                // Token is valid with claims, continue
-                // TODO: Can attach claims to request extensions
+            Ok(claims) => {
+                let mut request = request;
+                request.extensions_mut().insert(claims);
                 next.run(request).await
             }
             Err(e) => {

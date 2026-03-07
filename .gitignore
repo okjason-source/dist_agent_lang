@@ -49,6 +49,7 @@ PHASE*.md
 /docs/USER_FACING_DOCS.md
 /docs/IDE_AND_AGENT_INTEGRATION.md
 /docs/MUTATION_TESTING_ANALYSIS.md
+/docs/PRODUCTION_GRADE_CHECKLIST.md
 
 # Internal/planning guides (do not publish)
 /docs/guides/PACKAGING_STRATEGY.md
@@ -78,6 +79,8 @@ PHASE*.md
 /docs/VENV_FIRST_CLASS_DESIGN.md
 /docs/VENV_CONCEPT.md
 /docs/RELEASE_DOCS_BUNDLE.md
+/docs/design/
+**/docs/design/
 
 
 # Agent / project files (local workspace; do not commit)

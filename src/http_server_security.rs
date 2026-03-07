@@ -285,10 +285,17 @@ impl AuthValidator {
         Self { config }
     }
 
-    /// Validate JWT token
+    /// Validate JWT token.
+    /// Requires JWT_SECRET to be set; returns an error if secret is empty (production safety).
     pub fn validate_api_key(&self, token: &str) -> Result<Claims, String> {
         if token.is_empty() {
             return Err("Empty token provided".to_string());
+        }
+        if self.config.secret.is_empty() {
+            return Err(
+                "JWT_SECRET is not set; required for authentication. Set JWT_SECRET in production."
+                    .to_string(),
+            );
         }
 
         // Decode and validate JWT
@@ -309,13 +316,20 @@ impl AuthValidator {
         }
     }
 
-    /// Generate JWT token for a user (for testing/auth endpoints)
+    /// Generate JWT token for a user (for testing/auth endpoints).
+    /// Requires JWT_SECRET to be set.
     pub fn generate_token(
         &self,
         user_id: String,
         roles: Vec<String>,
         permissions: Vec<String>,
     ) -> Result<String, String> {
+        if self.config.secret.is_empty() {
+            return Err(
+                "JWT_SECRET is not set; required to generate tokens. Set JWT_SECRET in production."
+                    .to_string(),
+            );
+        }
         let claims = Claims::new(user_id, roles, permissions, self.config.expiration_hours);
 
         let encoding_key = EncodingKey::from_secret(self.config.secret.as_bytes());
@@ -467,6 +481,11 @@ impl SecurityLogger {
 mod tests {
     use super::*;
 
+    /// AuthValidator with a fixed secret so tests never depend on JWT_SECRET env.
+    fn test_validator() -> AuthValidator {
+        AuthValidator::new(JwtConfig::new("test_jwt_secret_for_unit_tests".to_string()))
+    }
+
     #[test]
     fn test_jwt_claims_creation() {
         let claims = Claims::new(
@@ -484,7 +503,7 @@ mod tests {
 
     #[test]
     fn test_jwt_generation_and_validation() {
-        let validator = AuthValidator::default();
+        let validator = test_validator();
 
         // Generate a token
         let token_result = validator.generate_token(
@@ -510,7 +529,7 @@ mod tests {
 
     #[test]
     fn test_jwt_role_validation() {
-        let validator = AuthValidator::default();
+        let validator = test_validator();
 
         let token = validator
             .generate_token(
@@ -538,7 +557,7 @@ mod tests {
 
     #[test]
     fn test_jwt_permission_validation() {
-        let validator = AuthValidator::default();
+        let validator = test_validator();
 
         let token = validator
             .generate_token(
@@ -561,7 +580,7 @@ mod tests {
 
     #[test]
     fn test_jwt_empty_token() {
-        let validator = AuthValidator::default();
+        let validator = test_validator();
 
         let result = validator.validate_api_key("");
         assert!(result.is_err());
@@ -570,7 +589,7 @@ mod tests {
 
     #[test]
     fn test_jwt_invalid_token() {
-        let validator = AuthValidator::default();
+        let validator = test_validator();
 
         let result = validator.validate_api_key("invalid.jwt.token");
         assert!(result.is_err());

@@ -54,8 +54,8 @@ Specifies the compilation target for the service.
 - `"blockchain"` - Transpile to Solidity for blockchain deployment
 - `"webassembly"` - Transpile to Rust, build as WebAssembly (also accepted: `"wasm"`) (experimental)
 - `"native"` - Transpile to Rust, build as native library (experimental)
-- `"mobile"` - Mobile target (stub — not yet implemented)
-- `"edge"` - Edge computing target (stub — not yet implemented)
+- `"mobile"` - Mobile target (stub; compile/transpile deferred until transpile path exists)
+- `"edge"` / `"iot"` - IoT/edge target (same: edge = IoT). IoT is **served** by the runtime (`iot::*` + IotState); compile/transpile to edge is stub, same pattern as others when added. Use `dal build --target edge` or `--target iot`.
 
 When `@compile_target` is present, the parser enforces **required attributes** and **forbidden operations** for that target. See [Compile targets (constraints)](#compile-targets-constraints) below.
 
@@ -79,9 +79,9 @@ Each target defines required attributes (must appear on the service) and forbidd
 | **webassembly** | `@web` | `chain::transaction`, `chain::deploy`, `desktop::file_system`, `mobile::camera`, `iot::device_control` |
 | **native** | `@native` | `chain::transaction`, `mobile::touch_event`, `iot::sensor_read` |
 | **mobile** | `@mobile` | `chain::transaction`, `desktop::window`, `iot::device_control` |
-| **edge** | `@edge` | `chain::transaction`, `web::dom_manipulation`, `desktop::window`, `mobile::camera` |
+| **edge** / **iot** | `@edge` | `chain::transaction`, `web::dom_manipulation`, `desktop::window`, `mobile::camera` |
 
-Allowed operations per target are defined in the implementation (`get_target_constraints()`); only the forbidden set and required attributes are listed here. If you use `@compile_target`, you must include the required attributes and avoid calling forbidden namespaces in any service method.
+Allowed operations per target are defined in the implementation (`get_target_constraints()`); only the forbidden set and required attributes are listed here. If you use `@compile_target`, you must include the required attributes and avoid calling forbidden namespaces in any service method. **Edge = IoT:** IoT/edge is served by the runtime; see [design/MOBILE_EDGE_IOT_TARGETS.md](design/MOBILE_EDGE_IOT_TARGETS.md) for serve vs transpile and mobile deferral.
 
 ### `@interface(language)`
 

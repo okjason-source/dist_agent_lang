@@ -354,7 +354,7 @@ pub enum Commands {
         /// Entry DAL file (default: from dal.toml or first .dal in cwd)
         #[arg(required = false)]
         entry: Option<String>,
-        /// Compilation target: blockchain, wasm, native, mobile, edge
+        /// Compilation target: blockchain, wasm, native, mobile, edge|iot (edge=IoT)
         #[arg(long, short = 't')]
         target: Option<String>,
         /// Output directory for artifacts (default: ./target/dal or ./out)

@@ -42,6 +42,13 @@ fn edit_distance(a: &str, b: &str) -> usize {
     dp[n][m]
 }
 
+/// Storage location for method-call receiver write-back (value methods that mutate).
+#[derive(Clone)]
+enum ReceiverStorage {
+    Variable(String),
+    ServiceField(String, String), // instance_id, field_name
+}
+
 /// Return up to `limit` candidates from `candidates` nearest to `name` by edit distance.
 fn nearest_strings(name: &str, candidates: &[String], limit: usize) -> Vec<String> {
     if candidates.is_empty() || limit == 0 {
@@ -125,6 +132,10 @@ pub struct Runtime {
     closure_counter: u64,
     /// In-memory agent state for ai:: and agent:: (message/task queues, status).
     agent_states: HashMap<String, AgentState>,
+    /// AI coordinators (ai::create_coordinator) for real workflow execution.
+    agent_coordinators: HashMap<String, crate::stdlib::ai::AgentCoordinator>,
+    /// AI agents (ai::spawn_agent) for use with coordinators/workflows.
+    ai_agents: HashMap<String, crate::stdlib::ai::Agent>,
     /// Test DSL: current suite name when inside describe().
     test_current_suite: Option<String>,
     /// Per-suite beforeEach closure id.
@@ -149,6 +160,17 @@ pub struct Runtime {
     current_import_index: usize,
     /// Venv strict profile: when set, only these stdlib namespaces are allowed (e.g. chain, crypto, log).
     allowed_namespaces: Option<Vec<String>>,
+    /// IoT namespace: in-memory device registry and edge cache for iot::* wiring.
+    iot_state: IotState,
+}
+
+/// In-memory state for iot:: namespace (device registry, edge cache). Phase 2 stdlib wiring.
+#[derive(Clone, Default)]
+pub struct IotState {
+    /// device_id -> status string ("online", "offline", "provisioning")
+    pub device_registry: HashMap<String, String>,
+    /// (edge_node_id, key) -> (value, expiry_unix_secs; 0 = no expiry)
+    pub edge_cache: HashMap<(String, String), (Value, i64)>,
 }
 
 // NEW: Service instance structure
@@ -246,6 +268,8 @@ impl Runtime {
             closure_registry: HashMap::new(),
             closure_counter: 0,
             agent_states: HashMap::new(),
+            agent_coordinators: HashMap::new(),
+            ai_agents: HashMap::new(),
             test_current_suite: None,
             test_suite_before_each: HashMap::new(),
             test_suite_after_each: HashMap::new(),
@@ -258,6 +282,7 @@ impl Runtime {
             resolved_imports: None,
             current_import_index: 0,
             allowed_namespaces: None,
+            iot_state: IotState::default(),
         };
 
         // Register built-in functions
@@ -288,6 +313,8 @@ impl Runtime {
             closure_registry: HashMap::new(),
             closure_counter: 0,
             agent_states: HashMap::new(),
+            agent_coordinators: HashMap::new(),
+            ai_agents: HashMap::new(),
             test_current_suite: None,
             test_suite_before_each: HashMap::new(),
             test_suite_after_each: HashMap::new(),
@@ -300,6 +327,7 @@ impl Runtime {
             resolved_imports: None,
             current_import_index: 0,
             allowed_namespaces: None,
+            iot_state: IotState::default(),
         };
 
         // Register built-in functions
@@ -332,6 +360,169 @@ impl Runtime {
         self.scope
             .get(name)
             .ok_or_else(|| RuntimeError::VariableNotFound(name.to_string()))
+    }
+
+    /// Determine storage for write-back when receiver is a variable or service field.
+    fn receiver_storage(
+        &self,
+        receiver: &crate::parser::ast::Expression,
+    ) -> Option<ReceiverStorage> {
+        use crate::parser::ast::Expression;
+        match receiver {
+            Expression::Identifier(name) => Some(ReceiverStorage::Variable(name.clone())),
+            Expression::FieldAccess(inner, field) => {
+                if let Expression::Identifier(name) = inner.as_ref() {
+                    if let Ok(Value::String(id)) = self.get_variable(name) {
+                        if self.services.contains_key(&id) {
+                            return Some(ReceiverStorage::ServiceField(id, field.clone()));
+                        }
+                    }
+                }
+                None
+            }
+            _ => None,
+        }
+    }
+
+    /// Write receiver value back after a mutating value method.
+    fn write_back_receiver(
+        &mut self,
+        storage: ReceiverStorage,
+        value: Value,
+    ) -> Result<(), RuntimeError> {
+        match storage {
+            ReceiverStorage::Variable(name) => {
+                self.set_variable(name, value);
+                Ok(())
+            }
+            ReceiverStorage::ServiceField(instance_id, field_name) => {
+                let instance = self.services.get_mut(&instance_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "Service instance '{}' not found for write-back",
+                        instance_id
+                    ))
+                })?;
+                instance.fields.insert(field_name, value);
+                Ok(())
+            }
+        }
+    }
+
+    /// Dispatch value methods (list/map/set/struct). Mutates receiver when method is mutating.
+    fn call_value_method(
+        &self,
+        receiver: &mut Value,
+        method_name: &str,
+        args: &[Value],
+    ) -> Result<Value, RuntimeError> {
+        use Value::*;
+        let type_name = receiver.type_name().to_string();
+        let out = match (receiver, method_name) {
+            (List(ref mut list), "length") | (List(ref mut list), "size") => {
+                Ok(Value::Int(list.len() as i64))
+            }
+            (Array(ref arr), "length") | (Array(ref arr), "size") => {
+                Ok(Value::Int(arr.len() as i64))
+            }
+            (List(ref list), "get") => {
+                let i = self.value_to_int(args.get(0).unwrap_or(&Null))? as usize;
+                Ok(list.get(i).cloned().unwrap_or(Null))
+            }
+            (Array(ref arr), "get") => {
+                let i = self.value_to_int(args.get(0).unwrap_or(&Null))? as usize;
+                Ok(arr.get(i).cloned().unwrap_or(Null))
+            }
+            (List(ref mut list), "set") => {
+                let i = self.value_to_int(args.get(0).unwrap_or(&Null))? as usize;
+                let v = args.get(1).cloned().unwrap_or(Null);
+                if i < list.len() {
+                    list[i] = v;
+                    Ok(Value::Bool(true))
+                } else {
+                    Ok(Value::Bool(false))
+                }
+            }
+            (List(ref mut list), "push") => {
+                let v = args.get(0).cloned().unwrap_or(Null);
+                list.push(v);
+                Ok(Value::Bool(true))
+            }
+            (Array(ref mut arr), "push") => {
+                let v = args.get(0).cloned().unwrap_or(Null);
+                arr.push(v);
+                Ok(Value::Bool(true))
+            }
+            (Map(ref map), "size") => Ok(Value::Int(map.len() as i64)),
+            (Map(ref map), "get") => {
+                let k = args
+                    .get(0)
+                    .and_then(|v| self.value_to_string(v).ok())
+                    .unwrap_or_default();
+                Ok(map.get(&k).cloned().unwrap_or(Null))
+            }
+            (Map(ref mut map), "set") => {
+                let k = args
+                    .get(0)
+                    .and_then(|v| self.value_to_string(v).ok())
+                    .unwrap_or_default();
+                let v = args.get(1).cloned().unwrap_or(Null);
+                map.insert(k, v);
+                Ok(Value::Bool(true))
+            }
+            (Map(ref map), "contains_key") => {
+                let k = args
+                    .get(0)
+                    .and_then(|v| self.value_to_string(v).ok())
+                    .unwrap_or_default();
+                Ok(Value::Bool(map.contains_key(&k)))
+            }
+            (Map(ref map), "keys") => {
+                let keys: Vec<Value> = map.keys().map(|s| Value::String(s.clone())).collect();
+                Ok(Value::List(keys))
+            }
+            (Map(ref map), "values") => Ok(Value::List(map.values().cloned().collect())),
+            (Map(ref mut map), "remove") => {
+                let k = args
+                    .get(0)
+                    .and_then(|v| self.value_to_string(v).ok())
+                    .unwrap_or_default();
+                Ok(map.remove(&k).unwrap_or(Null))
+            }
+            (Set(ref set), "size") => Ok(Value::Int(set.len() as i64)),
+            (Set(ref set), "contains") => {
+                let s = args
+                    .get(0)
+                    .and_then(|v| self.value_to_string(v).ok())
+                    .unwrap_or_default();
+                Ok(Value::Bool(set.contains(&s)))
+            }
+            (Set(ref mut set), "add") => {
+                let s = args
+                    .get(0)
+                    .and_then(|v| self.value_to_string(v).ok())
+                    .unwrap_or_default();
+                Ok(Value::Bool(set.insert(s)))
+            }
+            (Set(ref mut set), "remove") => {
+                let s = args
+                    .get(0)
+                    .and_then(|v| self.value_to_string(v).ok())
+                    .unwrap_or_default();
+                Ok(Value::Bool(set.remove(&s)))
+            }
+            (Struct(_, ref fields), "get") => {
+                let f = args
+                    .get(0)
+                    .and_then(|v| self.value_to_string(v).ok())
+                    .unwrap_or_default();
+                Ok(fields.get(&f).cloned().unwrap_or(Null))
+            }
+            _ => Err(RuntimeError::General(format!(
+                "Method '{}' not found on type '{}'",
+                method_name, type_name
+            ))),
+        };
+        out
     }
 
     // Helper methods for value conversion
@@ -1326,6 +1517,7 @@ impl Runtime {
             "agent" => self.call_agent_function(function_name, args),
             "ai" | "assist" => self.call_ai_function(function_name, args),
             "mold" => self.call_mold_function(function_name, args),
+            "fleet" => self.call_fleet_function(function_name, args),
             "desktop" => self.call_desktop_function(function_name, args),
             "mobile" => self.call_mobile_function(function_name, args),
             "iot" => self.call_iot_function(function_name, args),
@@ -2170,8 +2362,8 @@ impl Runtime {
                         })
                     }
                 };
-                let constructor_args = if args.len() >= 4 {
-                    self.value_map_to_string_map(&args[3])?
+                let constructor_args = if args.len() >= 3 {
+                    self.value_map_to_string_map(&args[2])?
                 } else {
                     HashMap::new()
                 };
@@ -2227,20 +2419,23 @@ impl Runtime {
                 Ok(Value::Float(gas_price))
             }
             "get_block_timestamp" => {
-                if args.len() != 1 {
+                let chain_id = if args.is_empty() {
+                    1i64
+                } else if args.len() == 1 {
+                    match &args[0] {
+                        Value::Int(n) => *n,
+                        _ => {
+                            return Err(RuntimeError::TypeError {
+                                expected: "int".to_string(),
+                                got: args[0].type_name().to_string(),
+                            })
+                        }
+                    }
+                } else {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 1,
                         got: args.len(),
                     });
-                }
-                let chain_id = match &args[0] {
-                    Value::Int(n) => *n,
-                    _ => {
-                        return Err(RuntimeError::TypeError {
-                            expected: "int".to_string(),
-                            got: args[0].type_name().to_string(),
-                        })
-                    }
                 };
                 let timestamp = crate::stdlib::chain::get_block_timestamp(chain_id);
                 Ok(Value::Int(timestamp))
@@ -2393,6 +2588,33 @@ impl Runtime {
                 Ok(Value::Bool(success))
             }
             "get" => {
+                if args.len() == 2 {
+                    // Example-only: chain::get(chain_id, address) -> map with balance/chain_id/address
+                    let chain_id = match &args[0] {
+                        Value::Int(n) => *n,
+                        _ => {
+                            return Err(RuntimeError::TypeError {
+                                expected: "int".to_string(),
+                                got: args[0].type_name().to_string(),
+                            })
+                        }
+                    };
+                    let address = match &args[1] {
+                        Value::String(s) => s.clone(),
+                        _ => {
+                            return Err(RuntimeError::TypeError {
+                                expected: "string".to_string(),
+                                got: args[1].type_name().to_string(),
+                            })
+                        }
+                    };
+                    let balance = crate::stdlib::chain::get_balance(chain_id, address.clone());
+                    let mut m = HashMap::new();
+                    m.insert("balance".to_string(), Value::Int(balance));
+                    m.insert("chain_id".to_string(), Value::Int(chain_id));
+                    m.insert("address".to_string(), Value::String(address));
+                    return Ok(Value::Map(m));
+                }
                 if args.len() != 1 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 1,
@@ -2409,7 +2631,228 @@ impl Runtime {
                     }
                 };
                 let asset_info = crate::stdlib::chain::get(asset_id);
-                Ok(Value::String(format!("{:?}", asset_info)))
+                let map: HashMap<String, Value> = asset_info
+                    .into_iter()
+                    .map(|(k, v)| (k, Value::String(v)))
+                    .collect();
+                Ok(Value::Map(map))
+            }
+            "get_info" => {
+                // Example-only: alias for get_chain_config(chain_id)
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let chain_id = match &args[0] {
+                    Value::Int(n) => *n,
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
+                };
+                match crate::stdlib::chain::get_chain_config(chain_id) {
+                    Some(config) => {
+                        let mut m = HashMap::new();
+                        m.insert("chain_id".to_string(), Value::Int(config.chain_id));
+                        m.insert("name".to_string(), Value::String(config.name));
+                        m.insert("rpc_url".to_string(), Value::String(config.rpc_url));
+                        m.insert("explorer".to_string(), Value::String(config.explorer));
+                        m.insert("gas_limit".to_string(), Value::Int(config.gas_limit));
+                        m.insert("gas_price".to_string(), Value::Float(config.gas_price));
+                        m.insert(
+                            "confirmations".to_string(),
+                            Value::Int(config.confirmations),
+                        );
+                        m.insert("is_testnet".to_string(), Value::Bool(config.is_testnet));
+                        Ok(Value::Map(m))
+                    }
+                    None => Ok(Value::Null),
+                }
+            }
+            "deploy_contract" => {
+                // Example-only: alias for deploy(chain_id, contract_name, constructor_args)
+                if args.len() != 3 && args.len() != 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let chain_id = match &args[0] {
+                    Value::Int(n) => *n,
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
+                };
+                let contract_name = match &args[1] {
+                    Value::String(s) => s.clone(),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[1].type_name().to_string(),
+                        })
+                    }
+                };
+                let constructor_args = if args.len() >= 3 {
+                    self.value_map_to_string_map(&args[2])?
+                } else {
+                    HashMap::new()
+                };
+                let address =
+                    crate::stdlib::chain::deploy(chain_id, contract_name, constructor_args);
+                Ok(Value::String(address))
+            }
+            "get_current_gas_price" => {
+                // Example-only: alias for get_gas_price(chain_id)
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let chain_id = match &args[0] {
+                    Value::Int(n) => *n,
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
+                };
+                let gas_price = crate::stdlib::chain::get_gas_price(chain_id);
+                Ok(Value::Float(gas_price))
+            }
+            "get_token_balance" => {
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let chain_id = match &args[0] {
+                    Value::Int(n) => *n,
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
+                };
+                let token_symbol_or_contract = match &args[1] {
+                    Value::String(s) => s.clone(),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[1].type_name().to_string(),
+                        })
+                    }
+                };
+                let address = match &args[2] {
+                    Value::String(s) => s.clone(),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[2].type_name().to_string(),
+                        })
+                    }
+                };
+                let balance = crate::stdlib::chain::get_token_balance(
+                    chain_id,
+                    token_symbol_or_contract,
+                    address,
+                );
+                Ok(Value::Int(balance))
+            }
+            "get_block_hash" => {
+                let chain_id = if args.is_empty() {
+                    1i64
+                } else if args.len() == 1 {
+                    match &args[0] {
+                        Value::Int(n) => *n,
+                        _ => {
+                            return Err(RuntimeError::TypeError {
+                                expected: "int".to_string(),
+                                got: args[0].type_name().to_string(),
+                            })
+                        }
+                    }
+                } else {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                };
+                let hash = crate::stdlib::chain::get_block_hash(chain_id);
+                Ok(Value::String(hash))
+            }
+            "get_chain_config" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let chain_id = match &args[0] {
+                    Value::Int(n) => *n,
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
+                };
+                match crate::stdlib::chain::get_chain_config(chain_id) {
+                    Some(config) => {
+                        let mut m = HashMap::new();
+                        m.insert("chain_id".to_string(), Value::Int(config.chain_id));
+                        m.insert("name".to_string(), Value::String(config.name));
+                        m.insert("rpc_url".to_string(), Value::String(config.rpc_url));
+                        m.insert("explorer".to_string(), Value::String(config.explorer));
+                        m.insert("gas_limit".to_string(), Value::Int(config.gas_limit));
+                        m.insert("gas_price".to_string(), Value::Float(config.gas_price));
+                        m.insert(
+                            "confirmations".to_string(),
+                            Value::Int(config.confirmations),
+                        );
+                        m.insert("is_testnet".to_string(), Value::Bool(config.is_testnet));
+                        Ok(Value::Map(m))
+                    }
+                    None => Ok(Value::Null),
+                }
+            }
+            "get_supported_chains" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                let configs = crate::stdlib::chain::get_supported_chains();
+                let list: Vec<Value> = configs
+                    .into_iter()
+                    .map(|config| {
+                        let mut m = HashMap::new();
+                        m.insert("chain_id".to_string(), Value::Int(config.chain_id));
+                        m.insert("name".to_string(), Value::String(config.name));
+                        m.insert("rpc_url".to_string(), Value::String(config.rpc_url));
+                        m.insert("explorer".to_string(), Value::String(config.explorer));
+                        m.insert("gas_limit".to_string(), Value::Int(config.gas_limit));
+                        m.insert("gas_price".to_string(), Value::Float(config.gas_price));
+                        m.insert(
+                            "confirmations".to_string(),
+                            Value::Int(config.confirmations),
+                        );
+                        m.insert("is_testnet".to_string(), Value::Bool(config.is_testnet));
+                        Value::Map(m)
+                    })
+                    .collect();
+                Ok(Value::List(list))
             }
             "exists" => {
                 if args.len() != 1 {
@@ -3365,6 +3808,8 @@ impl Runtime {
                                 closure_registry: HashMap::new(),
                                 closure_counter: 0,
                                 agent_states: HashMap::new(),
+                                agent_coordinators: HashMap::new(),
+                                ai_agents: HashMap::new(),
                                 test_current_suite: None,
                                 test_suite_before_each: HashMap::new(),
                                 test_suite_after_each: HashMap::new(),
@@ -3376,6 +3821,7 @@ impl Runtime {
                                 resolved_imports: None,
                                 current_import_index: 0,
                                 allowed_namespaces: None,
+                                iot_state: IotState::default(),
                             };
 
                             match catch_runtime.execute_statement_internal(
@@ -3706,6 +4152,50 @@ impl Runtime {
                         object_expr
                     ))),
                 }
+            }
+            crate::parser::ast::Expression::MethodCall {
+                receiver,
+                method_name,
+                arguments,
+            } => {
+                let mut args = Vec::new();
+                for arg in arguments {
+                    args.push(self.evaluate_expression_at_depth(arg, depth)?);
+                }
+                let storage_opt = self.receiver_storage(receiver);
+                let mut receiver_val = self.evaluate_expression_at_depth(receiver, depth)?;
+                // Service method dispatch
+                if let Value::String(ref instance_id) = receiver_val {
+                    if self.services.contains_key(instance_id) {
+                        let method = self
+                            .services
+                            .get(instance_id)
+                            .and_then(|inst| {
+                                inst.methods
+                                    .iter()
+                                    .find(|m| m.name == *method_name)
+                                    .cloned()
+                            })
+                            .ok_or_else(|| {
+                                RuntimeError::General(format!(
+                                    "Method '{}' not found on service instance '{}'",
+                                    method_name, instance_id
+                                ))
+                            })?;
+                        return self.execute_service_method(
+                            instance_id,
+                            method_name,
+                            &method,
+                            &args,
+                        );
+                    }
+                }
+                // Value method dispatch (list/map/set/struct)
+                let result = self.call_value_method(&mut receiver_val, method_name, &args)?;
+                if let Some(storage) = storage_opt {
+                    self.write_back_receiver(storage, receiver_val)?;
+                }
+                Ok(result)
             }
             crate::parser::ast::Expression::FunctionCall(call) => {
                 let mut args = Vec::new();
@@ -5797,9 +6287,8 @@ impl Runtime {
         match name {
             // === PHASE 4: AI AGENT FUNCTIONS ===
 
-            // Aliases for agent_system_demo and similar code
+            // Aliases for agent_system_demo and similar code (same as spawn_agent: ai:: + coordinators)
             "create_agent" => {
-                // Alias for spawn_agent
                 if args.len() != 1 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 1,
@@ -5807,14 +6296,22 @@ impl Runtime {
                     });
                 }
                 let config_value = &args[0];
-                let agent_config = self.parse_agent_config(config_value)?;
-                match crate::stdlib::agent::spawn(agent_config) {
-                    Ok(agent_context) => {
-                        let agent_id = agent_context.agent_id.clone();
+                let ai_config = self.parse_ai_agent_config(config_value)?;
+                match crate::stdlib::ai::spawn_agent(ai_config) {
+                    Ok(agent) => {
+                        let agent_id = agent.id.clone();
+                        let status_str = match agent.status {
+                            crate::stdlib::ai::AgentStatus::Idle => "idle",
+                            crate::stdlib::ai::AgentStatus::Active => "active",
+                            crate::stdlib::ai::AgentStatus::Busy => "busy",
+                            crate::stdlib::ai::AgentStatus::Error => "error",
+                            crate::stdlib::ai::AgentStatus::Terminated => "terminated",
+                        };
+                        self.ai_agents.insert(agent_id.clone(), agent);
                         self.agent_states.insert(
                             agent_id.clone(),
                             AgentState {
-                                status: agent_context.status.to_string(),
+                                status: status_str.to_string(),
                                 ..Default::default()
                             },
                         );
@@ -5828,11 +6325,11 @@ impl Runtime {
                                 );
                                 fields.insert(
                                     "status".to_string(),
-                                    Value::String(agent_context.status.to_string()),
+                                    Value::String(status_str.to_string()),
                                 );
                                 fields.insert(
                                     "agent_type".to_string(),
-                                    Value::String(agent_context.config.agent_type.to_string()),
+                                    Value::String("ai".to_string()),
                                 );
                                 fields
                             }),
@@ -5853,7 +6350,7 @@ impl Runtime {
                 Ok(Value::String(coordinator_id))
             }
 
-            // Agent Lifecycle Management
+            // Agent Lifecycle Management (ai::spawn_agent for use with coordinators/workflows)
             "spawn_agent" => {
                 if args.len() != 1 {
                     return Err(RuntimeError::ArgumentCountMismatch {
@@ -5861,18 +6358,23 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-
-                // Parse agent configuration from the argument
                 let config_value = &args[0];
-                let agent_config = self.parse_agent_config(config_value)?;
-
-                match crate::stdlib::agent::spawn(agent_config) {
-                    Ok(agent_context) => {
-                        let agent_id = agent_context.agent_id.clone();
+                let ai_config = self.parse_ai_agent_config(config_value)?;
+                match crate::stdlib::ai::spawn_agent(ai_config) {
+                    Ok(agent) => {
+                        let agent_id = agent.id.clone();
+                        let status_str = match agent.status {
+                            crate::stdlib::ai::AgentStatus::Idle => "idle",
+                            crate::stdlib::ai::AgentStatus::Active => "active",
+                            crate::stdlib::ai::AgentStatus::Busy => "busy",
+                            crate::stdlib::ai::AgentStatus::Error => "error",
+                            crate::stdlib::ai::AgentStatus::Terminated => "terminated",
+                        };
+                        self.ai_agents.insert(agent_id.clone(), agent);
                         self.agent_states.insert(
                             agent_id.clone(),
                             AgentState {
-                                status: agent_context.status.to_string(),
+                                status: status_str.to_string(),
                                 ..Default::default()
                             },
                         );
@@ -5886,11 +6388,11 @@ impl Runtime {
                                 );
                                 fields.insert(
                                     "status".to_string(),
-                                    Value::String(agent_context.status.to_string()),
+                                    Value::String(status_str.to_string()),
                                 );
                                 fields.insert(
                                     "agent_type".to_string(),
-                                    Value::String(agent_context.config.agent_type.to_string()),
+                                    Value::String("ai".to_string()),
                                 );
                                 fields
                             }),
@@ -6139,7 +6641,7 @@ impl Runtime {
                 Ok(Value::String("prediction_made".to_string()))
             }
 
-            // Agent Coordination
+            // Agent Coordination (wired to ai:: implementation; see docs/WORKFLOWS.md)
             "create_coordinator" => {
                 if args.len() != 1 {
                     return Err(RuntimeError::ArgumentCountMismatch {
@@ -6148,10 +6650,10 @@ impl Runtime {
                     });
                 }
                 let coordinator_id = self.value_to_string(&args[0])?;
-                Ok(Value::String(format!(
-                    "coordinator_created_{}",
-                    coordinator_id
-                )))
+                let coordinator = crate::stdlib::ai::create_coordinator(coordinator_id.clone());
+                self.agent_coordinators
+                    .insert(coordinator_id.clone(), coordinator);
+                Ok(Value::String(coordinator_id))
             }
             "add_agent_to_coordinator" => {
                 if args.len() != 2 {
@@ -6160,41 +6662,63 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                // Return agent_id (args[1]) so demo can store it; if struct, extract agent_id
-                let agent_val = &args[1];
-                let agent_id = match agent_val {
+                let coordinator_id = self.value_to_string(&args[0])?;
+                let agent_id = match &args[1] {
                     Value::String(s) => s.clone(),
-                    Value::Struct(_, fields) => fields
+                    Value::Struct(_, fields) | Value::Map(fields) => fields
                         .get("agent_id")
+                        .or_else(|| fields.get("id"))
                         .and_then(|v| self.value_to_string(v).ok())
-                        .unwrap_or_else(|| "agent_added".to_string()),
-                    _ => self
-                        .value_to_string(agent_val)
-                        .unwrap_or_else(|_| "agent_added".to_string()),
+                        .ok_or_else(|| RuntimeError::General("agent_id required".to_string()))?,
+                    _ => self.value_to_string(&args[1])?,
                 };
+                let coordinator = self
+                    .agent_coordinators
+                    .get_mut(&coordinator_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!("Coordinator {} not found", coordinator_id))
+                    })?;
+                let agent = self.ai_agents.get(&agent_id).cloned().ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "Agent {} not found (spawn with ai::spawn_agent first)",
+                        agent_id
+                    ))
+                })?;
+                crate::stdlib::ai::add_agent_to_coordinator(coordinator, agent);
                 Ok(Value::String(agent_id))
             }
             "create_workflow" => {
-                if args.len() >= 2 {
-                    let coordinator_id = self.value_to_string(&args[0])?;
-                    let workflow_name = match &args[1] {
-                        Value::Map(m) => m
-                            .get("name")
-                            .or_else(|| m.get("workflow_id"))
-                            .and_then(|v| self.value_to_string(v).ok())
-                            .unwrap_or_else(|| format!("workflow_{}", generate_id())),
-                        _ => self.value_to_string(&args[1])?,
-                    };
-                    Ok(Value::String(format!(
-                        "workflow_created_{}_{}",
-                        coordinator_id, workflow_name
-                    )))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 2,
                         got: args.len(),
-                    })
+                    });
                 }
+                let coordinator_id = self.value_to_string(&args[0])?;
+                let workflow_name = match &args[1] {
+                    Value::Map(m) => m
+                        .get("name")
+                        .or_else(|| m.get("workflow_id"))
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_else(|| {
+                            format!("workflow_{}", crate::stdlib::ai::generate_id())
+                        }),
+                    _ => self.value_to_string(&args[1])?,
+                };
+                let steps = if args.len() >= 3 {
+                    self.parse_workflow_steps(&args[2])?
+                } else {
+                    Vec::new()
+                };
+                let coordinator = self
+                    .agent_coordinators
+                    .get_mut(&coordinator_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!("Coordinator {} not found", coordinator_id))
+                    })?;
+                let workflow =
+                    crate::stdlib::ai::create_workflow(coordinator, workflow_name, steps);
+                Ok(Value::String(workflow.workflow_id))
             }
             "execute_workflow" => {
                 if args.len() != 2 {
@@ -6205,10 +6729,16 @@ impl Runtime {
                 }
                 let coordinator_id = self.value_to_string(&args[0])?;
                 let workflow_id = self.value_to_string(&args[1])?;
-                Ok(Value::String(format!(
-                    "workflow_executed_{}_{}",
-                    coordinator_id, workflow_id
-                )))
+                let coordinator = self
+                    .agent_coordinators
+                    .get_mut(&coordinator_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!("Coordinator {} not found", coordinator_id))
+                    })?;
+                match crate::stdlib::ai::execute_workflow(coordinator, &workflow_id) {
+                    Ok(ok) => Ok(Value::Bool(ok)),
+                    Err(e) => Err(RuntimeError::General(e)),
+                }
             }
 
             // Agent State Management
@@ -6270,7 +6800,19 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("coordinator_metrics".to_string()))
+                let coordinator_id = self.value_to_string(&args[0])?;
+                let metrics = self
+                    .agent_coordinators
+                    .get(&coordinator_id)
+                    .map(crate::stdlib::ai::get_coordinator_metrics)
+                    .unwrap_or_else(|| {
+                        let mut m = std::collections::HashMap::new();
+                        m.insert("coordinator_id".to_string(), Value::String(coordinator_id));
+                        m.insert("agents_count".to_string(), Value::Int(0));
+                        m.insert("workflows_count".to_string(), Value::Int(0));
+                        m
+                    });
+                Ok(Value::Map(metrics))
             }
 
             _ => Err(RuntimeError::function_not_found(format!("ai::{}", name))),
@@ -6393,6 +6935,206 @@ impl Runtime {
                 }
             }
             _ => Err(RuntimeError::function_not_found(format!("mold::{}", name))),
+        }
+    }
+
+    fn call_fleet_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use std::collections::HashMap;
+        let base = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+        let base_opt = Some(base.as_path());
+
+        fn fleet_map_to_params(v: &Value) -> Option<HashMap<String, String>> {
+            let map = match v {
+                Value::Map(m) => m,
+                _ => return None,
+            };
+            let mut out = HashMap::new();
+            for (k, val) in map {
+                if let Value::String(s) = val {
+                    out.insert(k.clone(), s.clone());
+                }
+            }
+            Some(out)
+        }
+
+        fn fleet_to_value(f: &crate::fleet::Fleet) -> Value {
+            let mut m = HashMap::new();
+            m.insert("name".to_string(), Value::String(f.name.clone()));
+            m.insert(
+                "member_ids".to_string(),
+                Value::List(
+                    f.member_ids
+                        .iter()
+                        .map(|s| Value::String(s.clone()))
+                        .collect(),
+                ),
+            );
+            if let Some(ref s) = f.mold_source {
+                m.insert("mold_source".to_string(), Value::String(s.clone()));
+            }
+            if let Some(ref s) = f.last_deployed_task {
+                m.insert("last_deployed_task".to_string(), Value::String(s.clone()));
+            }
+            if let Some(ref s) = f.last_deployed_at {
+                m.insert("last_deployed_at".to_string(), Value::String(s.clone()));
+            }
+            Value::Map(m)
+        }
+
+        fn health_to_value(h: &crate::fleet::FleetHealth) -> Value {
+            let mut m = HashMap::new();
+            m.insert("name".to_string(), Value::String(h.name.clone()));
+            m.insert(
+                "member_count".to_string(),
+                Value::Int(h.member_count as i64),
+            );
+            m.insert("has_mold".to_string(), Value::Bool(h.has_mold));
+            m.insert("status".to_string(), Value::String(h.status.clone()));
+            if let Some(ref s) = h.last_deployed_task {
+                m.insert("last_deployed_task".to_string(), Value::String(s.clone()));
+            }
+            if let Some(ref s) = h.last_deployed_at {
+                m.insert("last_deployed_at".to_string(), Value::String(s.clone()));
+            }
+            Value::Map(m)
+        }
+
+        match name {
+            "create" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                crate::fleet::create(&name, base_opt).map_err(RuntimeError::General)?;
+                Ok(Value::Bool(true))
+            }
+            "create_from_mold" => {
+                if args.len() < 3 || args.len() > 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                let mold_source = self.value_to_string(&args[1])?;
+                let count = self.value_to_int(&args[2])? as u32;
+                let params_opt = if args.len() >= 4 {
+                    fleet_map_to_params(&args[3])
+                } else {
+                    None
+                };
+                let params = params_opt.as_ref();
+                crate::fleet::create_from_mold(&name, &mold_source, count, &base, params)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Bool(true))
+            }
+            "list" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                let names = crate::fleet::list(base_opt);
+                Ok(Value::List(names.into_iter().map(Value::String).collect()))
+            }
+            "show" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                match crate::fleet::show(&name, base_opt) {
+                    Some(f) => Ok(fleet_to_value(&f)),
+                    None => Err(RuntimeError::General(format!("fleet '{}' not found", name))),
+                }
+            }
+            "scale" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                let n = self.value_to_int(&args[1])? as u32;
+                crate::fleet::scale(&name, n, base_opt).map_err(RuntimeError::General)?;
+                Ok(Value::Bool(true))
+            }
+            "delete" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                let removed =
+                    crate::fleet::delete(&name, base_opt).map_err(RuntimeError::General)?;
+                Ok(Value::Bool(removed))
+            }
+            "deploy" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                let task = self.value_to_string(&args[1])?;
+                crate::fleet::deploy(&name, &task, base_opt).map_err(RuntimeError::General)?;
+                Ok(Value::Bool(true))
+            }
+            "add_from_mold" => {
+                if args.len() < 3 || args.len() > 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                let mold_source = self.value_to_string(&args[1])?;
+                let count = self.value_to_int(&args[2])? as u32;
+                let params_opt = if args.len() >= 4 {
+                    fleet_map_to_params(&args[3])
+                } else {
+                    None
+                };
+                let params = params_opt.as_ref();
+                crate::fleet::add_from_mold(&name, &mold_source, count, &base, params)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Bool(true))
+            }
+            "add_member" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                let agent_id = self.value_to_string(&args[1])?;
+                crate::fleet::add_member(&name, &agent_id, base_opt)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Bool(true))
+            }
+            "health" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                let h = crate::fleet::health(&name, base_opt).map_err(RuntimeError::General)?;
+                Ok(health_to_value(&h))
+            }
+            _ => Err(RuntimeError::function_not_found(format!("fleet::{}", name))),
         }
     }
 
@@ -7713,7 +8455,7 @@ impl Runtime {
 
     fn call_iot_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         match name {
-            // === PHASE 6: IOT & EDGE COMPUTING FUNCTIONS ===
+            // === PHASE 6: IOT & EDGE COMPUTING (wired to stdlib + engine state) ===
 
             // Device Management
             "register_device" => {
@@ -7723,7 +8465,21 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("device_registered".to_string()))
+                let config = match &args[0] {
+                    Value::Map(m) => m.clone(),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "map".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
+                };
+                let device = crate::stdlib::iot::register_device(config)
+                    .map_err(|e| RuntimeError::General(format!("iot::register_device: {}", e)))?;
+                self.iot_state
+                    .device_registry
+                    .insert(device.device_id.clone(), "provisioning".to_string());
+                Ok(Value::String(device.device_id))
             }
             "connect_device" => {
                 if args.len() != 1 {
@@ -7732,6 +8488,17 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let device_id = self
+                    .value_to_string(args.get(0).unwrap_or(&Value::Null))
+                    .map_err(|_| {
+                        RuntimeError::General(
+                            "connect_device: expected string device_id".to_string(),
+                        )
+                    })?;
+                let _ = crate::stdlib::iot::connect_device(&device_id);
+                self.iot_state
+                    .device_registry
+                    .insert(device_id.clone(), "online".to_string());
                 Ok(Value::String("device_connected".to_string()))
             }
             "disconnect_device" => {
@@ -7741,6 +8508,15 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let device_id = self
+                    .value_to_string(args.get(0).unwrap_or(&Value::Null))
+                    .map_err(|_| {
+                        RuntimeError::General("disconnect_device: expected string".to_string())
+                    })?;
+                let _ = crate::stdlib::iot::disconnect_device(&device_id);
+                self.iot_state
+                    .device_registry
+                    .insert(device_id, "offline".to_string());
                 Ok(Value::Bool(true))
             }
             "get_device_status" => {
@@ -7750,7 +8526,16 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("online".to_string()))
+                let device_id = self
+                    .value_to_string(args.get(0).unwrap_or(&Value::Null))
+                    .unwrap_or_default();
+                let status = self
+                    .iot_state
+                    .device_registry
+                    .get(&device_id)
+                    .cloned()
+                    .unwrap_or_else(|| "offline".to_string());
+                Ok(Value::String(status))
             }
             "update_device_firmware" => {
                 if args.len() != 2 {
@@ -7779,17 +8564,45 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("sensor_data_read".to_string()))
+                let sensor_id = self
+                    .value_to_string(args.get(0).unwrap_or(&Value::Null))
+                    .map_err(|_| {
+                        RuntimeError::General("read_sensor_data: expected string".to_string())
+                    })?;
+                let reading = crate::stdlib::iot::read_sensor_data(&sensor_id)
+                    .map_err(|e| RuntimeError::General(format!("iot::read_sensor_data: {}", e)))?;
+                let mut m = HashMap::new();
+                m.insert("value".to_string(), reading.value.clone());
+                m.insert("timestamp".to_string(), Value::String(reading.timestamp));
+                m.insert(
+                    "quality".to_string(),
+                    Value::String(format!("{:?}", reading.quality)),
+                );
+                Ok(Value::Map(m))
             }
             "calibrate_sensor" => {
-                if args.len() >= 2 {
-                    Ok(Value::Bool(true))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 2,
                         got: args.len(),
-                    })
+                    });
                 }
+                let sensor_id = self
+                    .value_to_string(args.get(0).unwrap_or(&Value::Null))
+                    .map_err(|_| {
+                        RuntimeError::General("calibrate_sensor: sensor_id string".to_string())
+                    })?;
+                let offset = self
+                    .value_to_float(args.get(1).unwrap_or(&Value::Null))
+                    .or_else(|_| {
+                        self.value_to_int(args.get(1).unwrap_or(&Value::Null))
+                            .map(|i| i as f64)
+                    })
+                    .unwrap_or(0.0);
+                let ok = crate::stdlib::iot::calibrate_sensor_offset(&sensor_id, offset).map_err(
+                    |e| RuntimeError::General(format!("iot::calibrate_sensor_offset: {}", e)),
+                )?;
+                Ok(Value::Bool(ok))
             }
 
             // Actuator Control
@@ -7803,14 +8616,32 @@ impl Runtime {
                 Ok(Value::String("actuator_added".to_string()))
             }
             "send_actuator_command" => {
-                if args.len() >= 3 {
-                    Ok(Value::String("command_sent".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 3,
                         got: args.len(),
-                    })
+                    });
                 }
+                let actuator_id = self
+                    .value_to_string(args.get(0).unwrap_or(&Value::Null))
+                    .map_err(|_| {
+                        RuntimeError::General("send_actuator_command: actuator_id".to_string())
+                    })?;
+                let command = self
+                    .value_to_string(args.get(1).unwrap_or(&Value::Null))
+                    .map_err(|_| {
+                        RuntimeError::General("send_actuator_command: command".to_string())
+                    })?;
+                let params = if let Some(Value::Map(m)) = args.get(2) {
+                    m.clone()
+                } else {
+                    HashMap::new()
+                };
+                let _ = crate::stdlib::iot::send_actuator_command(&actuator_id, &command, params)
+                    .map_err(|e| {
+                    RuntimeError::General(format!("iot::send_actuator_command: {}", e))
+                })?;
+                Ok(Value::String("command_sent".to_string()))
             }
 
             // Edge Computing
@@ -7834,14 +8665,35 @@ impl Runtime {
                 }
             }
             "cache_data_at_edge" => {
-                if args.len() >= 4 {
-                    Ok(Value::Bool(true))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 4,
                         got: args.len(),
-                    })
+                    });
                 }
+                let node_id = self
+                    .value_to_string(args.get(0).unwrap_or(&Value::Null))
+                    .unwrap_or_default();
+                let key = self
+                    .value_to_string(args.get(1).unwrap_or(&Value::Null))
+                    .unwrap_or_default();
+                let data = args.get(2).cloned().unwrap_or(Value::Null);
+                let ttl_secs = self
+                    .value_to_int(args.get(3).unwrap_or(&Value::Null))
+                    .unwrap_or(0);
+                let expiry = if ttl_secs > 0 {
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs() as i64
+                        + ttl_secs
+                } else {
+                    0
+                };
+                self.iot_state
+                    .edge_cache
+                    .insert((node_id, key), (data, expiry));
+                Ok(Value::Bool(true))
             }
             "get_cached_data_from_edge" => {
                 if args.len() != 2 {
@@ -7850,7 +8702,28 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("cached_data".to_string()))
+                let node_id = self
+                    .value_to_string(args.get(0).unwrap_or(&Value::Null))
+                    .unwrap_or_default();
+                let key = self
+                    .value_to_string(args.get(1).unwrap_or(&Value::Null))
+                    .unwrap_or_default();
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs() as i64;
+                let out = self
+                    .iot_state
+                    .edge_cache
+                    .get(&(node_id, key))
+                    .and_then(|(v, exp)| {
+                        if *exp != 0 && now > *exp {
+                            None
+                        } else {
+                            Some(v.clone())
+                        }
+                    });
+                Ok(out.unwrap_or(Value::Null))
             }
 
             // Data Streaming
@@ -7928,7 +8801,20 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::Bool(true))
+                let device_id = self
+                    .value_to_string(args.get(0).unwrap_or(&Value::Null))
+                    .map_err(|_| {
+                        RuntimeError::General("authenticate_device: device_id".to_string())
+                    })?;
+                let cert = self
+                    .value_to_string(args.get(1).unwrap_or(&Value::Null))
+                    .unwrap_or_default();
+                let ok =
+                    crate::stdlib::iot::authenticate_device_with_certificate(&device_id, &cert)
+                        .map_err(|e| {
+                            RuntimeError::General(format!("iot::authenticate_device: {}", e))
+                        })?;
+                Ok(Value::Bool(ok))
             }
             "encrypt_device_data" => {
                 if args.len() != 2 {
@@ -8456,6 +9342,117 @@ impl Runtime {
         }
 
         Ok(config)
+    }
+
+    /// Parse ai::AgentConfig from Value (struct or map) for ai::spawn_agent and coordinator workflows.
+    fn parse_ai_agent_config(
+        &self,
+        value: &Value,
+    ) -> Result<crate::stdlib::ai::AgentConfig, RuntimeError> {
+        let fields = match value {
+            Value::Struct(_, fields) => fields,
+            Value::Map(fields) => fields,
+            _ => {
+                return Err(RuntimeError::General(
+                    "Agent config must be a struct or map".to_string(),
+                ))
+            }
+        };
+        let name = fields
+            .get("name")
+            .and_then(|v| self.value_to_string(v).ok())
+            .unwrap_or_else(|| "default_agent".to_string());
+        let role = fields
+            .get("role")
+            .and_then(|v| self.value_to_string(v).ok())
+            .unwrap_or_else(|| "worker".to_string());
+        let capabilities: Vec<String> = fields
+            .get("capabilities")
+            .and_then(|v| {
+                if let Value::List(cap) = v {
+                    Some(
+                        cap.iter()
+                            .filter_map(|c| self.value_to_string(c).ok())
+                            .collect(),
+                    )
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default();
+        Ok(crate::stdlib::ai::AgentConfig {
+            agent_id: String::new(),
+            name,
+            role,
+            capabilities,
+            memory_size: 1000,
+            max_concurrent_tasks: 5,
+            trust_level: "standard".to_string(),
+            communication_protocols: vec![],
+            ai_models: vec![],
+        })
+    }
+
+    /// Parse workflow steps from Value (list of maps/structs with step_id, agent_id, task_type, dependencies).
+    fn parse_workflow_steps(
+        &self,
+        value: &Value,
+    ) -> Result<Vec<crate::stdlib::ai::WorkflowStep>, RuntimeError> {
+        let list = match value {
+            Value::List(l) => l,
+            _ => {
+                return Err(RuntimeError::General(
+                    "Workflow steps must be a list".to_string(),
+                ))
+            }
+        };
+        let mut steps = Vec::with_capacity(list.len());
+        for (i, item) in list.iter().enumerate() {
+            let fields = match item {
+                Value::Struct(_, f) => f,
+                Value::Map(f) => f,
+                _ => {
+                    return Err(RuntimeError::General(format!(
+                        "Step {} must be a struct or map",
+                        i
+                    )))
+                }
+            };
+            let step_id = fields
+                .get("step_id")
+                .and_then(|v| self.value_to_string(v).ok())
+                .unwrap_or_else(|| format!("step_{}", i));
+            let agent_id = fields
+                .get("agent_id")
+                .and_then(|v| self.value_to_string(v).ok())
+                .ok_or_else(|| RuntimeError::General(format!("Step {} missing agent_id", i)))?;
+            let task_type = fields
+                .get("task_type")
+                .and_then(|v| self.value_to_string(v).ok())
+                .unwrap_or_else(|| "process".to_string());
+            let dependencies: Vec<String> = fields
+                .get("dependencies")
+                .and_then(|v| {
+                    if let Value::List(d) = v {
+                        Some(
+                            d.iter()
+                                .filter_map(|x| self.value_to_string(x).ok())
+                                .collect(),
+                        )
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_default();
+            steps.push(crate::stdlib::ai::WorkflowStep {
+                step_id,
+                agent_id,
+                task_type,
+                dependencies,
+                status: crate::stdlib::ai::StepStatus::Pending,
+            });
+        }
+        Ok(steps)
     }
 
     fn call_admin_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {

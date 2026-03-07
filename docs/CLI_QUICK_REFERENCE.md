@@ -350,12 +350,24 @@
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `dal agent fleet create <name>` | Fleet (placeholder) | `dal agent fleet create my_fleet` |
+| `dal agent fleet create <name> [--from-mold <path> --count N] [--param k=v ...]` | Create fleet (empty or from mold) | `dal agent fleet create workers --from-mold worker.mold.dal --count 10` |
+| `dal agent fleet list [-v \| --verbose]` | List fleets (optionally last_deployed) | `dal agent fleet list -v` |
+| `dal agent fleet show <name>` | Show fleet details | `dal agent fleet show workers` |
+| `dal agent fleet scale <name> <N>` | Resize to N members | `dal agent fleet scale workers 20` |
+| `dal agent fleet delete <name>` | Remove fleet metadata | `dal agent fleet delete workers` |
+| `dal agent fleet deploy <name> <task>` | Record last-deployed task | `dal agent fleet deploy workers "Process logs"` |
+| `dal agent fleet add-from-mold <name> <mold> <count> [--param k=v ...]` | Add N agents from mold | `dal agent fleet add-from-mold workers worker.mold.dal 5` |
+| `dal agent fleet add-member <name> <agent_id>` | Register existing agent | `dal agent fleet add-member workers agent_xyz` |
+| `dal agent fleet run [name]` | Dispatch last_deployed_task to members | `dal agent fleet run workers` |
+| `dal agent fleet health <name>` | Member count, mold, status | `dal agent fleet health workers` |
+| `dal agent fleet export [name] [--format k8s\|docker-compose]` | Emit YAML for orchestrators | `dal agent fleet export --format docker-compose` |
 | `dal agent mold list` | List local molds | `dal agent mold list` |
 | `dal agent mold show <path-or-name>` | Show mold config | `dal agent mold show verify_mold` |
 | `dal agent mold create <name>` | Scaffold new mold | `dal agent mold create my_mold` |
 | `dal agent mold publish <file>` | Upload to IPFS | `dal agent mold publish my_mold.mold.json` |
 | `dal agent create --mold <path\|ipfs://cid\|moldId> <name>` | Create agent from mold | `dal agent create --mold verify_mold MyAgent` |
+
+**fleet:: stdlib:** Use `fleet::create`, `fleet::create_from_mold`, `fleet::list`, `fleet::show`, `fleet::scale`, `fleet::deploy`, `fleet::add_from_mold`, `fleet::add_member`, `fleet::health` in DAL code. See [FLEET_DEPLOYMENT.md](FLEET_DEPLOYMENT.md).
 
 **mold:: stdlib:** Use `mold::load`, `mold::spawn_from`, `mold::list`, `mold::get_info`, `mold::use_mold` in DAL code. See [STDLIB_REFERENCE.md](STDLIB_REFERENCE.md#mold-module).
 

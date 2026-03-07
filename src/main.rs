@@ -1999,6 +1999,19 @@ fn format_expression(expr: &parser::ast::Expression) -> String {
                 call.arguments.iter().map(format_expression).collect();
             format!("{}({})", call.name, formatted_args.join(", "))
         }
+        Expression::MethodCall {
+            receiver,
+            method_name,
+            arguments,
+        } => {
+            let formatted_args: Vec<String> = arguments.iter().map(format_expression).collect();
+            format!(
+                "{}.{}({})",
+                format_expression(receiver),
+                method_name,
+                formatted_args.join(", ")
+            )
+        }
         Expression::ArrayLiteral(elements) => {
             let formatted_elements: Vec<String> = elements.iter().map(format_expression).collect();
             format!("[{}]", formatted_elements.join(", "))
@@ -2120,11 +2133,8 @@ fn lint_dal_file(filename: &str) {
         });
     }
 
-    // TODO: Add more lint checks:
-    // - Functions that don't return anything
-    // - Dead code after return
-    // - Non-idiomatic patterns
-    // - Security issues
+    // Planned lint checks (not yet implemented): dead code after return,
+    // non-idiomatic patterns, security-focused rules. See docs/guides/CLI_DESIGN.md.
 
     if issues.is_empty() {
         println!("✅ No lint issues found!");
@@ -5207,7 +5217,7 @@ fn handle_scaffold_command(args: &[String]) {
             let f = format!("{}.dal", name);
             let c = format!(
                 r#"// Smart contract scaffold: {}
-// TODO: Add contract logic
+// Add your contract logic below (e.g. state, transitions). See docs for @trust and chain APIs.
 
 fn main() {{
     let owner = "0x0000000000000000000000000000000000000000";
@@ -5222,7 +5232,7 @@ fn main() {{
             let f = format!("{}.dal", name);
             let c = format!(
                 r#"// API scaffold: {}
-// TODO: Add endpoints via stdlib::web
+// Add endpoints via stdlib::web (web::serve, web::route). See docs for web API.
 
 fn main() {{
     println("API: {} - add web::serve or route handlers");
@@ -5236,7 +5246,7 @@ fn main() {{
             let f = format!("{}.test.dal", name);
             let c = format!(
                 r#"// Test scaffold: {}
-// TODO: Add test cases
+// Add test cases below. Use test "name" {{ ... }} and assert_* from @dal/test.
 
 test "basic check" {{
     let x = 1 + 1;
@@ -5303,7 +5313,7 @@ fn handle_build_command(entry: Option<&str>, target: Option<&str>, output: Optio
             Some(t) => t,
             None => {
                 eprintln!(
-                    "❌ Unknown target '{}'. Use: blockchain, wasm, native, mobile, edge",
+                    "❌ Unknown target '{}'. Use: blockchain, wasm, native, mobile, edge|iot",
                     target_name
                 );
                 std::process::exit(1);
@@ -6818,7 +6828,7 @@ fn handle_agent_command(args: &[String]) {
                     "Usage: {} agent fleet <subcommand> [args...]",
                     binary_name()
                 );
-                eprintln!("Subcommands: create <name> [--from-mold <path> --count N] [--param k=v ...], list, show <name>, scale <name> <N>, delete <name>");
+                eprintln!("Subcommands: create, list, show, scale, delete, deploy, add-from-mold, add-member, run, health, export");
                 std::process::exit(1);
             }
             let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
@@ -6892,6 +6902,8 @@ fn handle_agent_command(args: &[String]) {
                     }
                 }
                 "list" => {
+                    let verbose = args[2..].contains(&"--verbose".to_string())
+                        || args[2..].contains(&"-v".to_string());
                     let names = dist_agent_lang::fleet::list(Some(&cwd));
                     if names.is_empty() {
                         println!("No fleets (create with: {} agent fleet create <name> [--from-mold <path> --count N])", binary_name());
@@ -6899,7 +6911,19 @@ fn handle_agent_command(args: &[String]) {
                         println!("Fleets:");
                         for n in &names {
                             if let Some(f) = dist_agent_lang::fleet::show(n, Some(&cwd)) {
-                                println!("  {}  ({} agents)", n, f.member_ids.len());
+                                if verbose {
+                                    let task = f.last_deployed_task.as_deref().unwrap_or("—");
+                                    let at = f.last_deployed_at.as_deref().unwrap_or("—");
+                                    println!(
+                                        "  {}  ({} agents)  last_deployed: {}  at: {}",
+                                        n,
+                                        f.member_ids.len(),
+                                        task,
+                                        at
+                                    );
+                                } else {
+                                    println!("  {}  ({} agents)", n, f.member_ids.len());
+                                }
                             } else {
                                 println!("  {}", n);
                             }
@@ -6921,6 +6945,12 @@ fn handle_agent_command(args: &[String]) {
                             println!("  Members: {}", f.member_ids.len());
                             for id in &f.member_ids {
                                 println!("    {}", id);
+                            }
+                            if let Some(ref t) = f.last_deployed_task {
+                                println!("  Last deployed: {}", t);
+                                if let Some(ref at) = f.last_deployed_at {
+                                    println!("  Deployed at: {}", at);
+                                }
                             }
                         }
                         None => {
@@ -6968,9 +6998,180 @@ fn handle_agent_command(args: &[String]) {
                         }
                     }
                 }
+                "deploy" => {
+                    if args.len() < 4 {
+                        eprintln!("Usage: {} agent fleet deploy <name> <task>", binary_name());
+                        eprintln!("  Records the task as the fleet's last deployment (see docs/FLEET_DEPLOYMENT.md).");
+                        std::process::exit(1);
+                    }
+                    let name = &args[2];
+                    let task = args[3..].join(" ").trim().to_string();
+                    if task.is_empty() {
+                        eprintln!("❌ Task cannot be empty");
+                        std::process::exit(1);
+                    }
+                    match dist_agent_lang::fleet::deploy(name, &task, Some(&cwd)) {
+                        Ok(()) => println!(
+                            "✅ Fleet '{}' deployed task (recorded in .dal/fleets.json)",
+                            name
+                        ),
+                        Err(e) => {
+                            eprintln!("❌ {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                "add-from-mold" => {
+                    if args.len() < 5 {
+                        eprintln!("Usage: {} agent fleet add-from-mold <name> <mold_source> <count> [--param k=v ...]", binary_name());
+                        std::process::exit(1);
+                    }
+                    let name = &args[2];
+                    let mold_source = &args[3];
+                    let count: u32 = match args[4].parse() {
+                        Ok(v) => v,
+                        Err(_) => {
+                            eprintln!("❌ Invalid count");
+                            std::process::exit(1);
+                        }
+                    };
+                    let mut fleet_params = std::collections::HashMap::new();
+                    let mut i = 5usize;
+                    while i < args.len() {
+                        if args[i] == "--param" && i + 1 < args.len() {
+                            let kv = &args[i + 1];
+                            if let Some(eq) = kv.find('=') {
+                                fleet_params.insert(kv[..eq].to_string(), kv[eq + 1..].to_string());
+                            }
+                            i += 2;
+                        } else {
+                            i += 1;
+                        }
+                    }
+                    let params_ref = if fleet_params.is_empty() {
+                        None
+                    } else {
+                        Some(&fleet_params)
+                    };
+                    match dist_agent_lang::fleet::add_from_mold(
+                        name,
+                        mold_source,
+                        count,
+                        &cwd,
+                        params_ref,
+                    ) {
+                        Ok(()) => println!(
+                            "✅ Added {} agent(s) to fleet '{}' from mold {}",
+                            count, name, mold_source
+                        ),
+                        Err(e) => {
+                            eprintln!("❌ {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                "add-member" => {
+                    if args.len() < 4 {
+                        eprintln!(
+                            "Usage: {} agent fleet add-member <name> <agent_id>",
+                            binary_name()
+                        );
+                        std::process::exit(1);
+                    }
+                    let name = &args[2];
+                    let agent_id = &args[3];
+                    match dist_agent_lang::fleet::add_member(name, agent_id, Some(&cwd)) {
+                        Ok(()) => println!("✅ Added agent {} to fleet '{}'", agent_id, name),
+                        Err(e) => {
+                            eprintln!("❌ {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                "run" => {
+                    let name_filter = if args.len() >= 3 && !args[2].starts_with('-') {
+                        Some(args[2].as_str())
+                    } else {
+                        None
+                    };
+                    match dist_agent_lang::fleet::run(name_filter, &cwd) {
+                        Ok(reports) => {
+                            for r in &reports {
+                                println!(
+                                    "Fleet '{}': dispatched to {} member(s)",
+                                    r.fleet_name, r.members_dispatched
+                                );
+                                for e in &r.errors {
+                                    eprintln!("  ⚠ {}", e);
+                                }
+                            }
+                            if reports.is_empty() {
+                                println!("No fleets with a deployed task to run (deploy first with: {} agent fleet deploy <name> <task>)", binary_name());
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("❌ {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                "health" => {
+                    if args.len() < 3 {
+                        eprintln!("Usage: {} agent fleet health <name>", binary_name());
+                        std::process::exit(1);
+                    }
+                    let name = &args[2];
+                    match dist_agent_lang::fleet::health(name, Some(&cwd)) {
+                        Ok(h) => {
+                            println!("Fleet: {}", h.name);
+                            println!("  Members: {}", h.member_count);
+                            println!("  Has mold: {}", h.has_mold);
+                            if let Some(ref t) = h.last_deployed_task {
+                                println!("  Last deployed: {}", t);
+                            }
+                            if let Some(ref at) = h.last_deployed_at {
+                                println!("  Deployed at: {}", at);
+                            }
+                            println!("  Status: {}", h.status);
+                        }
+                        Err(e) => {
+                            eprintln!("❌ {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                "export" => {
+                    let mut name: Option<&str> = None;
+                    let mut format_arg = "k8s";
+                    let mut i = 2usize;
+                    while i < args.len() {
+                        if args[i] == "--format" && i + 1 < args.len() {
+                            format_arg = &args[i + 1];
+                            i += 2;
+                        } else if !args[i].starts_with('-') && name.is_none() {
+                            name = Some(&args[i]);
+                            i += 1;
+                        } else {
+                            i += 1;
+                        }
+                    }
+                    let format_enum = match format_arg {
+                        "docker-compose" | "compose" => {
+                            dist_agent_lang::fleet::ExportFormat::DockerCompose
+                        }
+                        _ => dist_agent_lang::fleet::ExportFormat::K8s,
+                    };
+                    match dist_agent_lang::fleet::export(name, Some(&cwd), format_enum) {
+                        Ok(yaml) => println!("{}", yaml),
+                        Err(e) => {
+                            eprintln!("❌ {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
                 _ => {
                     eprintln!("Unknown fleet subcommand: {}", args[1]);
-                    eprintln!("Subcommands: create, list, show, scale, delete");
+                    eprintln!("Subcommands: create, list, show, scale, delete, deploy, add-from-mold, add-member, run, health, export");
                     std::process::exit(1);
                 }
             }
@@ -7268,10 +7469,7 @@ print("Server running on http://localhost:3000")"#
 
 fn main() {{
     print("Hello from DAL!")
-    
-    // TODO: Implement your logic here
-    // This is a template. Set OPENAI_API_KEY or ANTHROPIC_API_KEY 
-    // for AI-powered code generation.
+    // Implement your logic here. Set OPENAI_API_KEY or ANTHROPIC_API_KEY for AI codegen.
 }}
 
 main()"#,
@@ -7630,7 +7828,7 @@ fn generate_test_template(code: &str) -> String {
         tests.push_str(
             r#"describe("Main Tests", fn() {
     it("should execute without errors", fn() {
-        // TODO: Add test implementation
+        // Replace with real assertions (expect(...).toBe(...), etc.)
         expect(true).toBe(true)
     })
 })"#,
@@ -7647,23 +7845,23 @@ fn generate_test_template(code: &str) -> String {
             tests.push_str(&format!(
                 r#"describe("{} tests", fn() {{
     it("should work with valid input", fn() {{
-        // TODO: Test {} with valid input
+        // Replace with: call {} and expect(result).toBe(...)
         expect(true).toBe(true)
     }})
     
     it("should handle edge cases", fn() {{
-        // TODO: Test {} with edge cases
+        // Add edge-case inputs and expected outcomes
         expect(true).toBe(true)
     }})
     
     it("should handle errors", fn() {{
-        // TODO: Test {} error handling
+        // Add error-path tests (invalid input, expect error or fallback)
         expect(true).toBe(true)
     }})
 }})
 
 "#,
-                func_name, func_name, func_name, func_name
+                func_name, func_name
             ));
         }
     }

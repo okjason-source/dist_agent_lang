@@ -453,7 +453,7 @@ service xNFTSystem {
         // Setup RWA-specific monitoring
         let rwa_monitoring = this.setup_rwa_monitoring(xnft, asset_config);
 
-        let dynamic_rwa = DynamicRWA {
+        let dynamic_rwa = {
             "nft": xnft,
             "asset_config": asset_config,
             "data_feeds": data_feeds,
@@ -476,7 +476,7 @@ service xNFTSystem {
     fn update_rwa_valuation(token_id: String) -> Result<ValuationUpdate, Error> {
         let xnft = self.nft_registry.get(token_id);
         if (xnft == null ) {
-            return Err(Error::new("RWANotFound", // format!("Dynamic RWA {} not found", token_id)));
+            return Err(Error::new("RWANotFound", "Dynamic RWA not found"));
         }
 
         // Gather current market data
@@ -560,32 +560,12 @@ service xNFTSystem {
             "name": "price_prediction",
             "type": "predictive",
             "schedule": "every_1_hour",
-//             "execute": 
-                let historical_data = this.get_price_history(nft.id);
-                let market_indicators = this.get_market_indicators(nft.dynamic_properties.oracle_sources);
-
-                let prediction = ai::predict_price_movement(
-                    self.ai_orchestrator,
-                    historical_data,
-                    market_indicators
-                );
-
-                if (prediction.confidence > 0.8 ) {
-                    this.handle_price_prediction_alert(nft, prediction);
-                }
-
-                return prediction;
-            }
+            "execute": null
         };
     }
 
     fn handle_price_prediction_alert(xnft: xNFT, prediction: any) -> Result<Unit, Error> {
-        let alert_message = // format!(
-            "Price prediction alert for {}: {} movement predicted with {}% confidence",
-            xnft.id,
-            prediction.direction,
-            (prediction.confidence * 100).to_i64()
-        );
+        let alert_message = "Price prediction alert";
 
         // Send alert to NFT owner
         this.send_nft_alert(xnft.owner_address, "price_prediction", {
@@ -594,7 +574,7 @@ service xNFTSystem {
             "message": alert_message
         });
 
-        // Execute automated actions if (configured
+        // Execute automated actions if configured
         if (xnft.dynamic_properties.automated_trading ) {
             this.execute_automated_trading_action(xnft, prediction);
         }
@@ -620,11 +600,11 @@ service xNFTSystem {
         }
 
         // Validate chains are supported
-//         if (!self.supported_chains.contains(from_chain) 
+        if (!self.supported_chains.contains(from_chain) ) {
             return Err(Error::new("UnsupportedChain", "One or both chains are not supported"));
         }
 
-        // Check if (cross-chain transfer is allowed for this NFT
+        // Check if cross-chain transfer is allowed for this NFT
         if (!xnft.dynamic_properties.cross_chain_enabled ) {
             return Err(Error::new("CrossChainDisabled", "This NFT does not support cross-chain transfers"));
         }
@@ -672,7 +652,7 @@ service xNFTSystem {
     fn generate_unique_token_id(collection: String) -> String {
         let timestamp = chain::get_block_timestamp();
         let random_component = crypto::generate_random_bytes(8);
-        return // format!("{}_{}_{}", collection, timestamp, random_component);
+        return collection + "_" + timestamp;
     }
 
     fn validate_executable_code(code: String) -> ValidationResult {
@@ -713,9 +693,10 @@ service xNFTSystem {
     fn get_relevant_oracle_data(xnft: xNFT) -> any {
         let relevant_feeds = [];
 
-        for feed_name, feed in self.oracle_feeds {
+        for feed_name in self.oracle_feeds.keys() {
+            let feed = self.oracle_feeds[feed_name];
             if (xnft.dynamic_properties.oracle_sources &&
-               xnft.dynamic_properties.oracle_sources.contains(feed_name) {
+               xnft.dynamic_properties.oracle_sources.contains(feed_name) ) {
                 let data = oracle::get_latest_data(feed);
                 relevant_feeds.push({
                     "feed_name": feed_name,
@@ -788,138 +769,6 @@ service xNFTSystem {
 }
 
 // =====================================================
-// UTILITY STRUCTURES AND INTERFACES
+// UTILITY STRUCTURES (DAL uses Map/any; struct syntax not supported)
 // =====================================================
-
-struct xNFT {
-    id: String,
-    contract_address: String,
-    chain: String,
-    owner_address: String,
-    metadata: any,
-    executable_code: String,
-    execution_state: any,
-    dynamic_properties: any,
-    created_at: i64,
-    ai_enabled: bool
-}
-
-struct xNFTConfig {
-    name: String,
-    description: String,
-    collection: String,
-    chain: String,
-    executable_code: String,
-    dynamic_properties: any,
-    ai_enabled: bool
-}
-
-struct ExecutionResult {
-    success: bool,
-    result: any,
-    actions: list,
-    state_changes: any,
-    oracle_queries: list,
-    gas_used: i64,
-    execution_time: i64,
-    ai_decisions: list
-}
-
-struct ExecutionEngine {
-    runtime: any,
-    max_execution_time: i64,
-    memory_limit: i64,
-    allowed_functions: list,
-    security_sandbox: bool
-}
-
-struct UpdateResult {
-    new_metadata: any,
-    property_changes: any,
-    requires_blockchain_update: bool,
-    blockchain_tx: String
-}
-
-struct UpdateMechanism {
-    type: String,
-    execute: Function,
-    requires_blockchain_update: bool
-}
-
-struct RWAConfig {
-    name: String,
-    description: String,
-    asset_type: String,
-    owner_address: String,
-    preferred_chain: String,
-    valuation_method: String,
-    oracle_sources: List<String>,
-    update_frequency: i64,
-    risk_parameters: any
-}
-
-struct DynamicRWA {
-    nft: xNFT,
-    asset_config: RWAConfig,
-    data_feeds: any,
-    monitoring: AIMonitoring,
-    valuation_history: list,
-    risk_assessment: any,
-    compliance_status: any
-}
-
-struct AIMonitoring {
-    config: any,
-    tasks: list,
-    alert_thresholds: any,
-    prediction_models: any,
-    active: bool
-}
-
-struct AITask {
-    name: String,
-    type: String,
-    schedule: String,
-    execute: Function
-}
-
-struct CrossChainTransfer {
-    token_id: String,
-    from_chain: String,
-    to_chain: String,
-    recipient: String,
-    source_tx: String,
-    destination_tx: String,
-    burn_tx: String,
-    transfer_complete: bool
-}
-
-struct ValuationUpdate {
-    previous_valuation: Float,
-    new_valuation: Float,
-    change_percentage: Float,
-    confidence_score: Float,
-    market_data_used: list,
-    blockchain_updated: bool
-}
-
-struct ValidationResult {
-    valid: bool,
-    errors: list
-}
-
-struct ConstraintCheck {
-    allowed: bool,
-    reason: String
-}
-
-struct ExecutionEnvironment {
-    nft: xNFT,
-    trigger_event: any,
-    oracle_data: any,
-    blockchain_state: any,
-    ai_insights: any,
-    allowed_functions: list,
-    max_memory: i64,
-    timeout: i64
-}
+// Shape reference: xNFT { id, contract_address, chain, owner_address, metadata, executable_code, execution_state, dynamic_properties, created_at, ai_enabled }

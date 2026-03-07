@@ -1,8 +1,9 @@
-//! CT1/CT2/CT3/CT4: Compiler pipeline — driver, CompileBackend; blockchain, wasm, native = real codegen.
+//! CT1/CT2/CT3/CT4: Compiler pipeline — driver, CompileBackend; blockchain, wasm, native, edge = real codegen.
 //! Wire: module resolution so dal build works with imports and multi-file projects.
 //! See docs/development/implementation/COMPILE_TARGET_IMPLEMENTATION_PLAN.md.
 
 mod blockchain;
+mod edge;
 mod native;
 mod wasm;
 
@@ -140,16 +141,18 @@ fn check_compiler_available(cmd: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Returns the backend for the given target (blockchain, wasm, native = real codegen; mobile/edge = stub).
+/// Returns the backend for the given target (blockchain, wasm, native, edge = real codegen; mobile = stub).
 pub fn get_backend(target: &CompilationTarget) -> Option<Box<dyn CompileBackend>> {
     let b: Box<dyn CompileBackend> = match *target {
         CompilationTarget::Blockchain => Box::new(blockchain::BlockchainBackend),
         CompilationTarget::WebAssembly => Box::new(wasm::WasmBackend),
         CompilationTarget::Native => Box::new(native::NativeBackend),
-        CompilationTarget::Mobile | CompilationTarget::Edge => Box::new(StubBackend {
+        CompilationTarget::Edge => Box::new(edge::EdgeBackend),
+        CompilationTarget::Mobile => Box::new(StubBackend {
             target: target.clone(),
             check_cmd: "rustc",
-            install_hint: "Install Rust: https://rustup.rs (mobile/edge toolchains TBD)",
+            install_hint:
+                "Install Rust: https://rustup.rs (mobile compile deferred until transpile path)",
         }),
     };
     Some(b)

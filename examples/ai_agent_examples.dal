@@ -8,6 +8,7 @@
 
 // Example 1: Basic AI Agent Service
 @ai
+@secure
 @trust("hybrid")
 @chain("ethereum")
 @compile_target("blockchain")

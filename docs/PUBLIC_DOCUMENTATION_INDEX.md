@@ -179,6 +179,8 @@ DAL provides multi-chain blockchain integration through its trust model and chai
 | Guide | What it covers |
 |-------|---------------|
 | [Hybrid Integration Guide](guides/HYBRID_INTEGRATION_GUIDE.md) | On-chain/off-chain patterns, trust model, sync, security |
+| [Pre-signed Deployment Guide](guides/PRESIGNED_DEPLOYMENT_GUIDE.md) | Building and submitting pre-signed deploy tx (Foundry/Hardhat → DAL), use cases |
+| [Solidity Integration Guide](SOLIDITY_INTEGRATION_GUIDE.md) | Orchestrating Solidity contracts from DAL |
 | [AI Best Practices](guides/AI_BEST_PRACTICES.md) | Security and optimization for AI + blockchain |
 | [Architecture Separation](guides/ARCHITECTURE_SEPARATION.md) | Separating DAL contracts from frontend |
 
@@ -282,6 +284,11 @@ agent::coordinate(agent_id, task, "task_distribution");
 | WASM/native compile targets | Experimental |
 
 For the roadmap, see [Language Vision](guides/GENERAL_PURPOSE_LANGUAGE_ANALYSIS.md) and [Beta Release Summary](guides/BETA_RELEASE_SUMMARY.md).
+
+**Design docs:**
+- [Runtime value methods and stdlib wiring](design/RUNTIME_VALUE_METHODS_AND_STDLIB_WIRING.md) — Production-grade plan for value-method support (list/map methods, receiver-first dispatch) and stdlib wiring (IoT reference). Phase 1 and chain fixes implemented.
+- [Chain namespace gaps and fixes](design/CHAIN_NAMESPACE_GAPS_AND_FIXES.md) — deploy 3rd arg, get as Map, get_chain_config / get_supported_chains; remaining optional improvements.
+- [Mobile, edge, and IoT targets](design/MOBILE_EDGE_IOT_TARGETS.md) — Edge = IoT; IoT served by runtime (not compiled to); transpile deferred, same pattern; mobile compile deferred unless transpile path exists.
 
 ---
 

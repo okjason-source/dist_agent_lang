@@ -1,0 +1,70 @@
+// Pre-signed contract deployment example
+//
+// Real on-chain deployment only happens when constructor_args contains
+// "raw_transaction" or "signed_tx" with a hex string from your build tooling
+// (Foundry, Hardhat, etc.). See: docs/guides/PRESIGNED_DEPLOYMENT_GUIDE.md
+//
+// Without that key, chain::deploy returns a mock address (for demos only).
+
+@trust("hybrid")
+@chain("ethereum")
+service PresignedDeployer {
+    // Deploy using a pre-signed tx hex (e.g. from CI or a deploy service).
+    // The hex is built and signed outside DAL (Foundry/Hardhat/Node).
+    fn deploy_with_presigned(chain_id: int, contract_name: string, raw_tx_hex: string) -> string {
+        let address = chain::deploy(
+            chain_id,
+            contract_name,
+            {
+                "raw_transaction": raw_tx_hex
+            }
+        );
+        if (address == "") {
+            log::error("deploy", { "event": "deploy_failed", "chain_id": chain_id });
+            return "";
+        }
+        log::info("deploy", {
+            "event": "contract_deployed",
+            "chain_id": chain_id,
+            "contract_name": contract_name,
+            "address": address
+        });
+        return address;
+    }
+
+    // Same pattern using the "signed_tx" key (alias in chain stdlib).
+    fn deploy_with_signed_tx(chain_id: int, contract_name: string, signed_tx_hex: string) -> string {
+        return chain::deploy(chain_id, contract_name, { "signed_tx": signed_tx_hex });
+    }
+
+    // Demo path: no raw tx → mock address only (no real deployment).
+    // Use for testing script shape; use deploy_with_presigned for real deploys.
+    fn deploy_demo_only(chain_id: int, contract_name: string) -> string {
+        let address = chain::deploy(chain_id, contract_name, {
+            "name": "KEYS Token",
+            "symbol": "KEYS",
+            "total_supply": "120000000000000000000000000"
+        });
+        // address is 0x{timestamp} — not a real contract
+        return address;
+    }
+}
+
+// Example: multi-chain deploy when you have one signed tx per chain.
+// In practice, raw_tx_for_chain_1 and raw_tx_for_chain_137 would come from
+// env, a secure API, or a CI artifact — never hardcode a signed tx.
+@trust("hybrid")
+@chain("ethereum", "polygon")
+service MultiChainPresignedDeploy {
+    deployments: map<int, string>;
+
+    fn init() {
+        this.deployments = {};
+    }
+
+    fn deploy_to_chains(raw_tx_eth: string, raw_tx_polygon: string) -> map<int, string> {
+        this.deployments[1] = chain::deploy(1, "KEYS_Token", { "raw_transaction": raw_tx_eth });
+        this.deployments[137] = chain::deploy(137, "KEYS_Token", { "raw_transaction": raw_tx_polygon });
+        return this.deployments;
+    }
+}

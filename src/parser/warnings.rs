@@ -288,6 +288,16 @@ impl WarningPass {
                 }
                 self.pop_scope();
             }
+            Expression::MethodCall {
+                receiver,
+                arguments,
+                ..
+            } => {
+                self.visit_expression(receiver);
+                for arg in arguments {
+                    self.visit_expression(arg);
+                }
+            }
             Expression::Range(e1, e2) => {
                 self.visit_expression(e1);
                 self.visit_expression(e2);

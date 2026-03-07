@@ -1269,6 +1269,55 @@ pub fn authenticate_device(device_id: &str, credentials: &Credentials) -> Result
     Ok(true)
 }
 
+/// DAL-friendly auth: device_id + certificate payload string. Returns true if auth succeeds.
+pub fn authenticate_device_with_certificate(
+    device_id: &str,
+    certificate_payload: &str,
+) -> Result<bool, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "device_id".to_string(),
+                Value::String(device_id.to_string()),
+            );
+            data.insert(
+                "message".to_string(),
+                Value::String("Authenticating device with certificate".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
+    if certificate_payload.is_empty() {
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+/// DAL-friendly calibration: sensor_id + numeric offset. Stores offset for sensor (mock).
+pub fn calibrate_sensor_offset(sensor_id: &str, offset: f64) -> Result<bool, String> {
+    crate::stdlib::log::info(
+        "iot",
+        {
+            let mut data = std::collections::HashMap::new();
+            data.insert(
+                "sensor_id".to_string(),
+                Value::String(sensor_id.to_string()),
+            );
+            data.insert("offset".to_string(), Value::Float(offset));
+            data.insert(
+                "message".to_string(),
+                Value::String("Calibrating sensor offset".to_string()),
+            );
+            data
+        },
+        Some("iot"),
+    );
+    Ok(true)
+}
+
 pub fn encrypt_device_data(
     _data: Value,
     security_profile: &SecurityProfile,

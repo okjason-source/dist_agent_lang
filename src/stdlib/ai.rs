@@ -174,9 +174,70 @@ fn load_config_file() -> Option<AIConfig> {
     None
 }
 
-/// Parse configuration file (simple key=value format)
-/// TODO: Use proper TOML parser for production
+/// Parse configuration file using TOML. Supports `[ai]` section or flat keys.
+/// Falls back to legacy key=value parsing if TOML parse fails (e.g. simple .env-style files).
 fn parse_config_file(content: &str) -> Option<AIConfig> {
+    parse_config_file_toml(content).or_else(|| parse_config_file_legacy(content))
+}
+
+/// Parse config from proper TOML: root table or [ai] section.
+fn parse_config_file_toml(content: &str) -> Option<AIConfig> {
+    use toml::Value;
+
+    let root: toml::Table = content.parse().ok()?;
+    let table = root
+        .get("ai")
+        .and_then(Value::as_table)
+        .map(|t| t as &toml::Table)
+        .unwrap_or(&root);
+
+    let mut config = AIConfig::default();
+    let mut found_config = false;
+
+    let str_val =
+        |k: &str| -> Option<String> { table.get(k).and_then(Value::as_str).map(String::from) };
+    let num_f32 = |k: &str| table.get(k).and_then(Value::as_float).map(|f| f as f32);
+    let num_u32 = |k: &str| table.get(k).and_then(|v| v.as_integer()).map(|i| i as u32);
+    let num_u64 = |k: &str| table.get(k).and_then(|v| v.as_integer()).map(|i| i as u64);
+
+    if let Some(p) = str_val("provider") {
+        config.provider = match p.to_lowercase().as_str() {
+            "openai" => AIProvider::OpenAI,
+            "anthropic" => AIProvider::Anthropic,
+            "local" => AIProvider::Local,
+            other => AIProvider::Custom(other.to_string()),
+        };
+        found_config = true;
+    }
+    config.api_key = str_val("api_key")
+        .or_else(|| str_val("openai_api_key"))
+        .or_else(|| str_val("anthropic_api_key"));
+    config.endpoint = str_val("endpoint")
+        .or_else(|| str_val("local_endpoint"))
+        .or_else(|| str_val("dal_ai_endpoint"));
+    config.model = str_val("model")
+        .or_else(|| str_val("openai_model"))
+        .or_else(|| str_val("anthropic_model"))
+        .or_else(|| str_val("local_model"));
+    if let Some(t) = num_f32("temperature") {
+        config.temperature = t;
+    }
+    if let Some(t) = num_u32("max_tokens") {
+        config.max_tokens = t;
+    }
+    if let Some(t) = num_u64("timeout").or_else(|| num_u64("timeout_seconds")) {
+        config.timeout_seconds = t;
+    }
+
+    if found_config {
+        Some(config)
+    } else {
+        None
+    }
+}
+
+/// Legacy key=value parser for non-TOML config files (e.g. simple env-style).
+fn parse_config_file_legacy(content: &str) -> Option<AIConfig> {
     let mut config = AIConfig::default();
     let mut found_config = false;
 

@@ -6,6 +6,7 @@
 // =====================================================
 
 @trust("hybrid")
+@chain("ethereum")
 @ai
 service RealTimeAnalyticsDashboard {
     // Backend connections
@@ -307,7 +308,13 @@ service RealTimeAnalyticsDashboard {
 
         } else if (message.type == "unsubscribe" ) {
             // Handle unsubscription request
-            connection.subscriptions = connection.subscriptions.filter(sub => sub != message.channel);
+            let new_subs = [];
+            for sub in connection.subscriptions {
+                if (sub != message.channel ) {
+                    new_subs.push(sub);
+                }
+            }
+            connection.subscriptions = new_subs;
 
             web::send_websocket_message(
                 web::get_connection_by_id(connection_id),
@@ -347,13 +354,12 @@ service RealTimeAnalyticsDashboard {
 
         let sent_count = 0;
 
-        for connection_id, connection in self.active_connections {
-            // Check if (client is subscribed to this message type
-//             if (connection.subscriptions.contains(message_type) 
-                let ws_connection = web::get_connection_by_id(connection_id);
-                web::send_websocket_message(ws_connection, message);
-                sent_count += 1;
-            }
+        for connection_id in self.active_connections.keys() {
+            let connection = self.active_connections[connection_id];
+            // Check if client is subscribed to this message type
+            let ws_connection = web::get_connection_by_id(connection_id);
+            web::send_websocket_message(ws_connection, message);
+            sent_count = sent_count + 1;
         }
 
         log::info("analytics", {
@@ -382,8 +388,8 @@ service RealTimeAnalyticsDashboard {
 
         let result = database::query(self.database, query, [
             metric_type,
-            new Date(time_range.start),
-            new Date(time_range.end)
+            time_range.start,
+            time_range.end
         ]);
 
         return Ok({
@@ -396,7 +402,7 @@ service RealTimeAnalyticsDashboard {
 
     fn get_active_users_count() -> Result<i64, Error> {
         // Get active users in last 5 minutes
-        let five_minutes_ago = new Date(Date.now() - 5 * 60 * 1000);
+        let five_minutes_ago = chain::get_block_timestamp() - 300;
 
         let result = database::query(self.database, "
             SELECT COUNT(DISTINCT user_id) as active_users
@@ -405,7 +411,7 @@ service RealTimeAnalyticsDashboard {
             AND user_id IS NOT NULL
         ", [five_minutes_ago]);
 
-//         return Ok(result.rows[0].active_users 
+        return Ok(result.rows[0].active_users);
     }
 
     fn get_system_health_metrics() -> Result<any, Error> {
@@ -442,21 +448,20 @@ service RealTimeAnalyticsDashboard {
             "anomaly",
             json::stringify(anomaly),
             anomaly.confidence,
-            new Date()
+            chain::get_block_timestamp()
         ]);
 
         // Send alert to connected clients
         self.broadcast_to_clients("alert", {
             "type": "anomaly",
             "severity": anomaly.severity,
-            "message": // format!("Anomaly detected in {}: value {} is outside expected range",
-                anomaly.metric_name, anomaly.value),
+            "message": "Anomaly detected",
             "data": anomaly,
             "timestamp": chain::get_block_timestamp()
         });
 
         // Trigger automated response based on severity
-        if (anomaly.severity == "critical" {
+        if (anomaly.severity == "critical") {
             this.trigger_critical_anomaly_response(anomaly);
         } else if (anomaly.severity == "high" ) {
             this.trigger_high_anomaly_response(anomaly);
@@ -472,10 +477,8 @@ service RealTimeAnalyticsDashboard {
             "anomaly": anomaly.metric_name
         });
 
-        // Scale up resources if (needed
-//         if (anomaly.metric_name.contains("cpu") 
-            this.scale_up_resources();
-        }
+        // Scale up resources if needed
+        this.scale_up_resources();
 
         // Send emergency notifications
         this.send_emergency_notifications(anomaly);
@@ -488,11 +491,10 @@ service RealTimeAnalyticsDashboard {
     // ================================================
 
     fn calculate_metric_change(metric_data: any) -> Float {
-        // Get previous value from cache or database
-//         let previous_value = this.get_previous_metric_value(metric_data.name) 
+        let previous_value = 0.0;
         let current_value = metric_data.value;
 
-        if (previous_value == 0.0 {
+        if (previous_value == 0.0 ) {
             return 0.0;
         }
 
@@ -501,7 +503,7 @@ service RealTimeAnalyticsDashboard {
 
     fn get_event_processing_rate() -> Float {
         // Calculate events processed per second in last minute
-        let one_minute_ago = new Date(Date.now() - 60 * 1000);
+        let one_minute_ago = chain::get_block_timestamp() - 60;
 
         let result = database::query(self.database, "
             SELECT COUNT(*) as event_count
@@ -536,8 +538,8 @@ service RealTimeAnalyticsDashboard {
             ", [
                 metric.name,
                 metric.value,
-//                 json::stringify(metric.tags 
-                new Date()
+                json::stringify(metric.tags),
+                chain::get_block_timestamp()
             ]);
         }
 
@@ -546,13 +548,12 @@ service RealTimeAnalyticsDashboard {
 
     fn calculate_business_value(event_data: any) -> Float {
         // Calculate monetary value of the event
-        // This would depend on your specific business logic
-//         return event_data.value 
+        return event_data.value;
     }
 
     fn categorize_business_event(event_data: any) -> String {
         // Categorize event for reporting
-        if (event_data.type.contains("purchase") {
+        if (event_data.type.contains("purchase") ) {
             return "revenue";
         } else if (event_data.type.contains("signup") ) {
             return "acquisition";
@@ -564,21 +565,17 @@ service RealTimeAnalyticsDashboard {
     }
 
     fn calculate_event_priority(event_data: any) -> String {
-        // Calculate event priority for processing
-//         if (event_data.urgent 
-            return "high";
-        } else if (event_data.value > 100 ) {
+        if (event_data.value > 100 ) {
             return "medium";
-        } else {
-            return "low";
         }
+        return "low";
     }
 
     fn get_relevant_metrics(processed_event: any) -> List<any> {
         // Return metrics that should be updated based on this event
         let metrics = [];
 
-        if (processed_event.category == "revenue" {
+        if (processed_event.category == "revenue" ) {
             metrics.push({
                 "name": "total_revenue",
                 "value": processed_event.business_value,
@@ -586,7 +583,7 @@ service RealTimeAnalyticsDashboard {
             });
         }
 
-        if (processed_event.category == "acquisition" {
+        if (processed_event.category == "acquisition" ) {
             metrics.push({
                 "name": "new_users",
                 "value": 1,

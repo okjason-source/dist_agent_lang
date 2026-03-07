@@ -7,6 +7,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
+/// Result of running a fleet (dispatching last_deployed_task to each member).
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RunReport {
+    pub fleet_name: String,
+    pub members_dispatched: u32,
+    pub errors: Vec<String>,
+}
+
 /// A fleet is a named set of agent IDs. Optionally created from a mold (one mold + N instances).
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Fleet {
@@ -15,6 +23,15 @@ pub struct Fleet {
     pub mold_source: Option<String>,
     /// Agent IDs in this fleet (order preserved).
     pub member_ids: Vec<String>,
+    /// Last task deployed to this fleet (set by deploy). Runners/automation read this to know what to run.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_deployed_task: Option<String>,
+    /// When last_deployed_task was set (ISO-ish or opaque string).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_deployed_at: Option<String>,
+    /// Params used when creating from mold (and when scaling up). Reused by scale() for new members.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_create_params: Option<HashMap<String, String>>,
 }
 
 static FLEETS: OnceLock<Mutex<HashMap<String, Fleet>>> = OnceLock::new();
@@ -84,6 +101,9 @@ pub fn create(name: &str, base: Option<&Path>) -> Result<(), String> {
             name,
             mold_source: None,
             member_ids: Vec::new(),
+            last_deployed_task: None,
+            last_deployed_at: None,
+            last_create_params: None,
         },
     );
     drop(f);
@@ -127,6 +147,8 @@ pub fn create_from_mold(
         member_ids.push(ctx.agent_id);
     }
 
+    let last_create_params =
+        params.map(|p| p.iter().map(|(k, v)| (k.clone(), v.clone())).collect());
     let mut f = fleets();
     f.insert(
         name.clone(),
@@ -134,10 +156,117 @@ pub fn create_from_mold(
             name,
             mold_source: Some(mold_source.to_string()),
             member_ids,
+            last_deployed_task: None,
+            last_deployed_at: None,
+            last_create_params,
         },
     );
     drop(f);
     save_if_base(Some(base))
+}
+
+/// Add N members to an existing fleet from a mold. If the fleet is empty, sets mold_source.
+/// Use this to populate an empty fleet or add more members (same as scale-up logic but explicit).
+pub fn add_from_mold(
+    name: &str,
+    mold_source: &str,
+    count: u32,
+    base: &Path,
+    params: Option<&HashMap<String, String>>,
+) -> Result<(), String> {
+    if count == 0 {
+        return Err("add_from_mold requires count >= 1".to_string());
+    }
+    if count > 1000 {
+        return Err("add_from_mold count capped at 1000".to_string());
+    }
+    ensure_loaded(Some(base));
+    let f = fleets();
+    let mut fleet = f
+        .get(name)
+        .cloned()
+        .ok_or_else(|| format!("fleet '{}' not found", name))?;
+    let start = fleet.member_ids.len();
+    let last_create_params =
+        params.map(|p| p.iter().map(|(k, v)| (k.clone(), v.clone())).collect());
+    if fleet.mold_source.is_none() {
+        fleet.mold_source = Some(mold_source.to_string());
+    }
+    if fleet.last_create_params.is_none() {
+        fleet.last_create_params = last_create_params.clone();
+    }
+    drop(f);
+
+    let mut member_ids = fleet.member_ids;
+    for i in 0..count {
+        let agent_name = format!("{}_{}", name, start + i as usize);
+        let ctx = crate::mold::create_from_mold_source(
+            mold_source,
+            base,
+            Some(agent_name.as_str()),
+            params,
+        )
+        .map_err(|e| format!("add member {} from mold: {}", i, e))?;
+        member_ids.push(ctx.agent_id);
+    }
+
+    let mut f = fleets();
+    if let Some(fleet) = f.get_mut(name) {
+        fleet.member_ids = member_ids;
+        fleet
+            .mold_source
+            .get_or_insert_with(|| mold_source.to_string());
+        if fleet.last_create_params.is_none() {
+            fleet.last_create_params = last_create_params;
+        }
+    }
+    drop(f);
+    save_if_base(Some(base))
+}
+
+/// Add a single agent (by ID) to an existing fleet. Agent must already exist elsewhere; this only registers the ID.
+pub fn add_member(name: &str, agent_id: &str, base: Option<&Path>) -> Result<(), String> {
+    if agent_id.trim().is_empty() {
+        return Err("agent_id cannot be empty".to_string());
+    }
+    ensure_loaded(base);
+    let base_path = base.ok_or("add_member requires a base path for persistence")?;
+    let mut f = fleets();
+    let fleet = f
+        .get_mut(name)
+        .ok_or_else(|| format!("fleet '{}' not found", name))?;
+    if fleet.member_ids.contains(&agent_id.to_string()) {
+        drop(f);
+        return Ok(());
+    }
+    fleet.member_ids.push(agent_id.to_string());
+    drop(f);
+    save_if_base(Some(base_path))
+}
+
+/// Record a deployment (task) for a fleet. Updates last_deployed_task and last_deployed_at; persists if base is set.
+/// Runners/automation can read the fleet file to see what to execute for each fleet.
+pub fn deploy(name: &str, task: &str, base: Option<&Path>) -> Result<(), String> {
+    if task.trim().is_empty() {
+        return Err("deploy task cannot be empty".to_string());
+    }
+    ensure_loaded(base);
+    let base_path = base.ok_or("deploy requires a base path for persistence")?;
+    let mut f = fleets();
+    let mut fleet = f
+        .get(name)
+        .cloned()
+        .ok_or_else(|| format!("fleet '{}' not found", name))?;
+    fleet.last_deployed_task = Some(task.trim().to_string());
+    fleet.last_deployed_at = Some(
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs().to_string())
+            .unwrap_or_else(|_| "0".to_string()),
+    );
+    f.insert(name.to_string(), fleet);
+    drop(f);
+    save_if_base(Some(base_path))
 }
 
 /// List fleet names. If base is Some, loads from base/.dal/fleets.json first.
@@ -211,13 +340,14 @@ pub fn scale(name: &str, n: u32, base: Option<&Path>) -> Result<(), String> {
     let mut member_ids = fleet.member_ids;
     drop(f);
 
+    let params_ref = fleet.last_create_params.as_ref();
     for i in current..n {
         let agent_name = format!("{}_{}", name, i);
         let ctx = crate::mold::create_from_mold_source(
             mold_source,
             base_path,
             Some(agent_name.as_str()),
-            None,
+            params_ref,
         )
         .map_err(|e| format!("spawn agent {} from mold: {}", i, e))?;
         member_ids.push(ctx.agent_id);
@@ -229,6 +359,176 @@ pub fn scale(name: &str, n: u32, base: Option<&Path>) -> Result<(), String> {
     }
     drop(f);
     save_if_base(Some(base_path))
+}
+
+/// Run fleets: for each fleet with last_deployed_task (and name matching filter if given), ensure it has members
+/// (if empty and has mold_source, add one from mold), then dispatch last_deployed_task to each member via
+/// agent::coordinate(agent_id, task, "task_distribution"). Returns one RunReport per fleet processed.
+pub fn run(name_filter: Option<&str>, base: &Path) -> Result<Vec<RunReport>, String> {
+    ensure_loaded(Some(base));
+    let f = fleets();
+    let names: Vec<String> = f
+        .keys()
+        .filter(|n| name_filter.map(|f| *n == f).unwrap_or(true))
+        .cloned()
+        .collect();
+    drop(f);
+
+    let mut reports = Vec::new();
+    for name in names {
+        let fleet = show(&name, Some(base)).ok_or_else(|| format!("fleet '{}' not found", name))?;
+        let Some(ref task_desc) = fleet.last_deployed_task else {
+            continue;
+        };
+        let mut member_ids = fleet.member_ids.clone();
+        if member_ids.is_empty() {
+            let mold = fleet.mold_source.as_deref().ok_or_else(|| {
+                format!(
+                    "fleet '{}' has no members and no mold_source; add members or deploy from mold first",
+                    name
+                )
+            })?;
+            add_from_mold(&name, mold, 1, base, fleet.last_create_params.as_ref())?;
+            if let Some(updated) = show(&name, Some(base)) {
+                member_ids = updated.member_ids;
+            }
+        }
+        let mut errors = Vec::new();
+        let mut dispatched = 0u32;
+        for agent_id in &member_ids {
+            let task_id = uuid::Uuid::new_v4().to_string();
+            let task = match crate::stdlib::agent::create_agent_task(
+                task_id.clone(),
+                task_desc.clone(),
+                "medium",
+            ) {
+                Some(t) => t,
+                None => {
+                    errors.push(format!(
+                        "{}: create_agent_task failed (invalid priority)",
+                        agent_id
+                    ));
+                    continue;
+                }
+            };
+            match crate::stdlib::agent::coordinate(agent_id, task, "task_distribution") {
+                Ok(true) => dispatched += 1,
+                Ok(false) => errors.push(format!("{}: coordinate returned false", agent_id)),
+                Err(e) => errors.push(format!("{}: {}", agent_id, e)),
+            }
+        }
+        reports.push(RunReport {
+            fleet_name: name,
+            members_dispatched: dispatched,
+            errors,
+        });
+    }
+    Ok(reports)
+}
+
+/// Health summary for a fleet (member count, mold presence, last deployment).
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct FleetHealth {
+    pub name: String,
+    pub member_count: usize,
+    pub has_mold: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_deployed_task: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_deployed_at: Option<String>,
+    pub status: String,
+}
+
+/// Report health for a fleet. Status is "ok" if fleet exists and has at least one member or a mold; "empty" if no members and no mold.
+pub fn health(name: &str, base: Option<&Path>) -> Result<FleetHealth, String> {
+    ensure_loaded(base);
+    let f = fleets();
+    let fleet = f
+        .get(name)
+        .cloned()
+        .ok_or_else(|| format!("fleet '{}' not found", name))?;
+    drop(f);
+    let status = if !fleet.member_ids.is_empty() || fleet.mold_source.is_some() {
+        "ok"
+    } else {
+        "empty"
+    };
+    Ok(FleetHealth {
+        name: fleet.name,
+        member_count: fleet.member_ids.len(),
+        has_mold: fleet.mold_source.is_some(),
+        last_deployed_task: fleet.last_deployed_task,
+        last_deployed_at: fleet.last_deployed_at,
+        status: status.to_string(),
+    })
+}
+
+/// Export format for fleet(s) to infrastructure-as-code.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExportFormat {
+    K8s,
+    DockerCompose,
+}
+
+/// Export fleet(s) to YAML (k8s Job list or docker-compose). If name is None, exports all fleets.
+pub fn export(
+    name: Option<&str>,
+    base: Option<&Path>,
+    format: ExportFormat,
+) -> Result<String, String> {
+    ensure_loaded(base);
+    let fleets_to_export: Vec<Fleet> = {
+        let f = fleets();
+        let v: Vec<Fleet> = match name {
+            Some(n) => f.get(n).cloned().into_iter().collect(),
+            None => f.values().cloned().collect(),
+        };
+        v
+    };
+    if fleets_to_export.is_empty() {
+        return Err(name
+            .map(|n| format!("fleet '{}' not found", n))
+            .unwrap_or_else(|| "no fleets to export".to_string()));
+    }
+    let refs: Vec<&Fleet> = fleets_to_export.iter().collect();
+    match format {
+        ExportFormat::K8s => export_k8s(&refs),
+        ExportFormat::DockerCompose => export_docker_compose(&refs),
+    }
+}
+
+fn export_k8s(fleets: &[&Fleet]) -> Result<String, String> {
+    let mut out = String::from("apiVersion: batch/v1\nkind: JobList\nitems:\n");
+    for fleet in fleets {
+        for (i, agent_id) in fleet.member_ids.iter().enumerate() {
+            let job_name = format!("{}-{}", fleet.name, i)
+                .chars()
+                .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
+                .collect::<String>();
+            out.push_str(&format!(
+                "- apiVersion: batch/v1\n  kind: Job\n  metadata:\n    name: {}\n  spec:\n    template:\n      spec:\n        containers:\n        - name: agent\n          image: dal-agent:latest\n          env:\n          - name: DAL_AGENT_ID\n            value: \"{}\"\n        restartPolicy: Never\n",
+                job_name, agent_id
+            ));
+        }
+    }
+    Ok(out)
+}
+
+fn export_docker_compose(fleets: &[&Fleet]) -> Result<String, String> {
+    let mut out = String::from("version: \"3\"\nservices:\n");
+    for fleet in fleets {
+        for (i, agent_id) in fleet.member_ids.iter().enumerate() {
+            let svc = format!("{}-{}", fleet.name, i)
+                .chars()
+                .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
+                .collect::<String>();
+            out.push_str(&format!(
+                "  {}:\n    image: dal-agent:latest\n    environment:\n      DAL_AGENT_ID: \"{}\"\n",
+                svc, agent_id
+            ));
+        }
+    }
+    Ok(out)
 }
 
 #[cfg(test)]

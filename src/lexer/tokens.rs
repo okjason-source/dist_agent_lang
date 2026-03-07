@@ -539,7 +539,7 @@ impl CompilationTarget {
             "wasm" | "webassembly" => Some(CompilationTarget::WebAssembly),
             "native" => Some(CompilationTarget::Native),
             "mobile" => Some(CompilationTarget::Mobile),
-            "edge" => Some(CompilationTarget::Edge),
+            "edge" | "iot" => Some(CompilationTarget::Edge), // edge = IoT; same target, served by runtime
             _ => None,
         }
     }

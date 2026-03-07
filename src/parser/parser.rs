@@ -997,33 +997,18 @@ impl Parser {
                 let (new_pos, field_name) = self.expect_identifier_or_keyword(current_position)?;
                 current_position = new_pos;
 
-                // Check if this is a method call: expr.field()
+                // Check if this is a method call: expr.field() -> MethodCall for receiver-first dispatch
                 if let Some(Token::Punctuation(Punctuation::LeftParen)) =
                     self.tokens.get(current_position)
                 {
                     let (new_pos, arguments) =
                         self.parse_function_arguments(current_position, depth)?;
                     current_position = new_pos;
-                    // Create a function call with the field access as the name
-                    expr = Expression::FunctionCall(FunctionCall {
-                        name: format!(
-                            "{}.{}",
-                            match &expr {
-                                Expression::Identifier(name) => name.clone(),
-                                Expression::FieldAccess(obj, field) => format!(
-                                    "{}.{}",
-                                    match obj.as_ref() {
-                                        Expression::Identifier(n) => n.clone(),
-                                        _ => "self".to_string(),
-                                    },
-                                    field
-                                ),
-                                _ => "self".to_string(),
-                            },
-                            field_name
-                        ),
+                    expr = Expression::MethodCall {
+                        receiver: Box::new(expr),
+                        method_name: field_name,
                         arguments,
-                    });
+                    };
                 } else {
                     expr = Expression::FieldAccess(Box::new(expr), field_name);
                 }
@@ -2734,6 +2719,36 @@ impl Parser {
         let mut attributes = pre_parsed_attributes;
         let mut compilation_target = None;
 
+        // If @compile_target was in pre-parsed attributes, set compilation_target from it
+        for attr in &attributes {
+            let is_compile_target = attr.name == "compile_target"
+                || attr.name == "@compile_target"
+                || attr.name == "@compiletarget";
+            if is_compile_target {
+                if let Some(Expression::Literal(crate::lexer::tokens::Literal::String(
+                    ref target_name,
+                ))) = attr.parameters.first()
+                {
+                    if let Some(t) =
+                        crate::lexer::tokens::CompilationTarget::from_string(target_name)
+                    {
+                        let constraints = crate::lexer::tokens::get_target_constraints()
+                            .get(&t)
+                            .cloned()
+                            .unwrap_or_else(|| {
+                                crate::lexer::tokens::TargetConstraint::new(t.clone())
+                            });
+                        compilation_target = Some(CompilationTargetInfo {
+                            target: t,
+                            constraints,
+                            validation_errors: Vec::new(),
+                        });
+                    }
+                }
+                break;
+            }
+        }
+
         // Parse any additional attributes that might come after the service name
         while let Some(Token::Punctuation(Punctuation::At)) = self.tokens.get(current_position) {
             // Check if this is a @compile_target attribute
@@ -3405,6 +3420,16 @@ impl Parser {
             Expression::Range(start, end) => {
                 out.extend(self.collect_namespaces_from_expression(start));
                 out.extend(self.collect_namespaces_from_expression(end));
+            }
+            Expression::MethodCall {
+                receiver,
+                arguments,
+                ..
+            } => {
+                out.extend(self.collect_namespaces_from_expression(receiver));
+                for arg in arguments {
+                    out.extend(self.collect_namespaces_from_expression(arg));
+                }
             }
             _ => {}
         }
