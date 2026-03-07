@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.8-blue.svg)](https://github.com/okjason-source/dist_agent_lang)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](https://github.com/okjason-source/dist_agent_lang)
 
-**A hybrid compiled programming language tooled with trust off-chain and on-chain controls for the agentic future.**
+**A hybrid programming language tooled with trust off-chain and on-chain controls for the agentic future.**
 
 DAL is a programming language where AI agents are native citizens. Spawn agents, give them skills, persist their memory, coordinate multi-agent workflows, and serve them over HTTP — all in one language. Blockchain integration, off-chain services, and on-chain contracts coexist through a unified trust model.
 
