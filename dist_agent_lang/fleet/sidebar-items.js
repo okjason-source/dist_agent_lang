@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["create","create_from_mold","delete","list","scale","show"],"struct":["Fleet"]};
+window.SIDEBAR_ITEMS = {"enum":["ExportFormat"],"fn":["add_from_mold","add_member","create","create_from_mold","delete","deploy","export","health","list","run","scale","show"],"struct":["Fleet","FleetHealth","RunReport"]};

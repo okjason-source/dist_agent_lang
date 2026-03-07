@@ -539,8 +539,8 @@
 <a href=#539 id=539 data-nosnippet>539</a>            <span class="string">"wasm" </span>| <span class="string">"webassembly" </span>=&gt; <span class="prelude-val">Some</span>(CompilationTarget::WebAssembly),
 <a href=#540 id=540 data-nosnippet>540</a>            <span class="string">"native" </span>=&gt; <span class="prelude-val">Some</span>(CompilationTarget::Native),
 <a href=#541 id=541 data-nosnippet>541</a>            <span class="string">"mobile" </span>=&gt; <span class="prelude-val">Some</span>(CompilationTarget::Mobile),
-<a href=#542 id=542 data-nosnippet>542</a>            <span class="string">"edge" </span>=&gt; <span class="prelude-val">Some</span>(CompilationTarget::Edge),
-<a href=#543 id=543 data-nosnippet>543</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#542 id=542 data-nosnippet>542</a>            <span class="string">"edge" </span>| <span class="string">"iot" </span>=&gt; <span class="prelude-val">Some</span>(CompilationTarget::Edge), <span class="comment">// edge = IoT; same target, served by runtime
+<a href=#543 id=543 data-nosnippet>543</a>            </span><span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
 <a href=#544 id=544 data-nosnippet>544</a>        }
 <a href=#545 id=545 data-nosnippet>545</a>    }
 <a href=#546 id=546 data-nosnippet>546</a>

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["call","deploy","estimate_gas","exists","get","get_balance","get_block_timestamp","get_chain_config","get_gas_price","get_supported_chains","get_transaction_status","mint","update"],"struct":["ChainConfig"]};
+window.SIDEBAR_ITEMS = {"fn":["call","deploy","estimate_gas","exists","get","get_balance","get_block_hash","get_block_timestamp","get_chain_config","get_gas_price","get_supported_chains","get_token_balance","get_transaction_status","mint","update"],"struct":["ChainConfig"]};

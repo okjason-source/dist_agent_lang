@@ -306,35 +306,41 @@
 <a href=#306 id=306 data-nosnippet>306</a>    },
 <a href=#307 id=307 data-nosnippet>307</a>    <span class="doccomment">/// Range expression: start..end for for-loops
 <a href=#308 id=308 data-nosnippet>308</a>    </span>Range(Box&lt;Expression&gt;, Box&lt;Expression&gt;),
-<a href=#309 id=309 data-nosnippet>309</a>}
-<a href=#310 id=310 data-nosnippet>310</a>
-<a href=#311 id=311 data-nosnippet>311</a><span class="kw">impl </span>Program {
-<a href=#312 id=312 data-nosnippet>312</a>    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-<a href=#313 id=313 data-nosnippet>313</a>        <span class="self">Self </span>{
-<a href=#314 id=314 data-nosnippet>314</a>            statements: Vec::new(),
-<a href=#315 id=315 data-nosnippet>315</a>            statement_spans: Vec::new(),
-<a href=#316 id=316 data-nosnippet>316</a>        }
-<a href=#317 id=317 data-nosnippet>317</a>    }
-<a href=#318 id=318 data-nosnippet>318</a>
-<a href=#319 id=319 data-nosnippet>319</a>    <span class="kw">pub fn </span>add_statement(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: Statement) {
-<a href=#320 id=320 data-nosnippet>320</a>        <span class="self">self</span>.add_statement_with_span(statement, <span class="prelude-val">None</span>);
-<a href=#321 id=321 data-nosnippet>321</a>    }
-<a href=#322 id=322 data-nosnippet>322</a>
-<a href=#323 id=323 data-nosnippet>323</a>    <span class="kw">pub fn </span>add_statement_with_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: Statement, span: <span class="prelude-ty">Option</span>&lt;Span&gt;) {
-<a href=#324 id=324 data-nosnippet>324</a>        <span class="self">self</span>.statements.push(statement);
-<a href=#325 id=325 data-nosnippet>325</a>        <span class="self">self</span>.statement_spans.push(span);
-<a href=#326 id=326 data-nosnippet>326</a>    }
-<a href=#327 id=327 data-nosnippet>327</a>}
+<a href=#309 id=309 data-nosnippet>309</a>    <span class="doccomment">/// Method call: receiver.method_name(args) — dispatch by receiver type (service or value)
+<a href=#310 id=310 data-nosnippet>310</a>    </span>MethodCall {
+<a href=#311 id=311 data-nosnippet>311</a>        receiver: Box&lt;Expression&gt;,
+<a href=#312 id=312 data-nosnippet>312</a>        method_name: String,
+<a href=#313 id=313 data-nosnippet>313</a>        arguments: Vec&lt;Expression&gt;,
+<a href=#314 id=314 data-nosnippet>314</a>    },
+<a href=#315 id=315 data-nosnippet>315</a>}
+<a href=#316 id=316 data-nosnippet>316</a>
+<a href=#317 id=317 data-nosnippet>317</a><span class="kw">impl </span>Program {
+<a href=#318 id=318 data-nosnippet>318</a>    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+<a href=#319 id=319 data-nosnippet>319</a>        <span class="self">Self </span>{
+<a href=#320 id=320 data-nosnippet>320</a>            statements: Vec::new(),
+<a href=#321 id=321 data-nosnippet>321</a>            statement_spans: Vec::new(),
+<a href=#322 id=322 data-nosnippet>322</a>        }
+<a href=#323 id=323 data-nosnippet>323</a>    }
+<a href=#324 id=324 data-nosnippet>324</a>
+<a href=#325 id=325 data-nosnippet>325</a>    <span class="kw">pub fn </span>add_statement(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: Statement) {
+<a href=#326 id=326 data-nosnippet>326</a>        <span class="self">self</span>.add_statement_with_span(statement, <span class="prelude-val">None</span>);
+<a href=#327 id=327 data-nosnippet>327</a>    }
 <a href=#328 id=328 data-nosnippet>328</a>
-<a href=#329 id=329 data-nosnippet>329</a><span class="kw">impl </span>BlockStatement {
-<a href=#330 id=330 data-nosnippet>330</a>    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-<a href=#331 id=331 data-nosnippet>331</a>        <span class="self">Self </span>{
-<a href=#332 id=332 data-nosnippet>332</a>            statements: Vec::new(),
-<a href=#333 id=333 data-nosnippet>333</a>        }
-<a href=#334 id=334 data-nosnippet>334</a>    }
-<a href=#335 id=335 data-nosnippet>335</a>
-<a href=#336 id=336 data-nosnippet>336</a>    <span class="kw">pub fn </span>add_statement(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: Statement) {
-<a href=#337 id=337 data-nosnippet>337</a>        <span class="self">self</span>.statements.push(statement);
-<a href=#338 id=338 data-nosnippet>338</a>    }
-<a href=#339 id=339 data-nosnippet>339</a>}
+<a href=#329 id=329 data-nosnippet>329</a>    <span class="kw">pub fn </span>add_statement_with_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: Statement, span: <span class="prelude-ty">Option</span>&lt;Span&gt;) {
+<a href=#330 id=330 data-nosnippet>330</a>        <span class="self">self</span>.statements.push(statement);
+<a href=#331 id=331 data-nosnippet>331</a>        <span class="self">self</span>.statement_spans.push(span);
+<a href=#332 id=332 data-nosnippet>332</a>    }
+<a href=#333 id=333 data-nosnippet>333</a>}
+<a href=#334 id=334 data-nosnippet>334</a>
+<a href=#335 id=335 data-nosnippet>335</a><span class="kw">impl </span>BlockStatement {
+<a href=#336 id=336 data-nosnippet>336</a>    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+<a href=#337 id=337 data-nosnippet>337</a>        <span class="self">Self </span>{
+<a href=#338 id=338 data-nosnippet>338</a>            statements: Vec::new(),
+<a href=#339 id=339 data-nosnippet>339</a>        }
+<a href=#340 id=340 data-nosnippet>340</a>    }
+<a href=#341 id=341 data-nosnippet>341</a>
+<a href=#342 id=342 data-nosnippet>342</a>    <span class="kw">pub fn </span>add_statement(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: Statement) {
+<a href=#343 id=343 data-nosnippet>343</a>        <span class="self">self</span>.statements.push(statement);
+<a href=#344 id=344 data-nosnippet>344</a>    }
+<a href=#345 id=345 data-nosnippet>345</a>}
 </code></pre></div></section></main></body></html>

@@ -79,10 +79,10 @@
 <a href=#79 id=79 data-nosnippet>79</a>        <span class="comment">// Create validator instance and validate token
 <a href=#80 id=80 data-nosnippet>80</a>        </span><span class="kw">let </span>validator = AuthValidator::default();
 <a href=#81 id=81 data-nosnippet>81</a>        <span class="kw">match </span>validator.validate_api_key(<span class="kw-2">&amp;</span>token) {
-<a href=#82 id=82 data-nosnippet>82</a>            <span class="prelude-val">Ok</span>(_claims) =&gt; {
-<a href=#83 id=83 data-nosnippet>83</a>                <span class="comment">// Token is valid with claims, continue
-<a href=#84 id=84 data-nosnippet>84</a>                // TODO: Can attach claims to request extensions
-<a href=#85 id=85 data-nosnippet>85</a>                </span>next.run(request).<span class="kw">await
+<a href=#82 id=82 data-nosnippet>82</a>            <span class="prelude-val">Ok</span>(claims) =&gt; {
+<a href=#83 id=83 data-nosnippet>83</a>                <span class="kw">let </span><span class="kw-2">mut </span>request = request;
+<a href=#84 id=84 data-nosnippet>84</a>                request.extensions_mut().insert(claims);
+<a href=#85 id=85 data-nosnippet>85</a>                next.run(request).<span class="kw">await
 <a href=#86 id=86 data-nosnippet>86</a>            </span>}
 <a href=#87 id=87 data-nosnippet>87</a>            <span class="prelude-val">Err</span>(e) =&gt; {
 <a href=#88 id=88 data-nosnippet>88</a>                <span class="kw">let </span>ip = extract_ip(<span class="kw-2">&amp;</span>request);
