@@ -38,3 +38,98 @@ src/bin/registry_server.rs:83:5: replace name_to_storage_dir -> String with Stri
 src/bin/registry_server.rs:83:5: replace name_to_storage_dir -> String with "xyzzy".into()
 src/bin/registry_server.rs:90:5: replace get_package_index -> Response with Default::default()
 src/bin/registry_server.rs:90:8: delete ! in get_package_index
+src/bin/registry_server.rs:95:8: delete ! in get_package_index
+src/bin/registry_server.rs:109:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with true in get_package_index
+src/bin/registry_server.rs:109:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with false in get_package_index
+src/bin/registry_server.rs:109:28: replace == with != in get_package_index
+src/bin/registry_server.rs:122:5: replace get_tarball -> Response with Default::default()
+src/bin/registry_server.rs:122:8: delete ! in get_tarball
+src/bin/registry_server.rs:122:33: delete ! in get_tarball
+src/bin/registry_server.rs:132:8: delete ! in get_tarball
+src/bin/registry_server.rs:142:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with true in get_tarball
+src/bin/registry_server.rs:142:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with false in get_tarball
+src/bin/registry_server.rs:142:28: replace == with != in get_tarball
+src/bin/registry_server.rs:156:5: replace put_version -> Response with Default::default()
+src/bin/registry_server.rs:156:30: replace || with && in put_version
+src/bin/registry_server.rs:156:8: delete ! in put_version
+src/bin/registry_server.rs:156:33: delete ! in put_version
+src/bin/registry_server.rs:166:13: replace || with && in put_version
+src/bin/registry_server.rs:165:12: delete ! in put_version
+src/bin/registry_server.rs:166:59: replace != with == in put_version
+src/bin/registry_server.rs:171:42: replace * with + in put_version
+src/bin/registry_server.rs:171:42: replace * with / in put_version
+src/bin/registry_server.rs:171:35: replace * with + in put_version
+src/bin/registry_server.rs:171:35: replace * with / in put_version
+src/bin/registry_server.rs:179:8: delete ! in put_version
+src/bin/registry_server.rs:190:8: delete ! in put_version
+src/bin/registry_server.rs:197:8: delete ! in put_version
+src/bin/registry_server.rs:239:5: replace main with ()
+src/lib.rs:122:30: replace > with == in parse_source
+src/lib.rs:122:30: replace > with >= in parse_source
+src/agent_context_schema.rs:115:16: delete ! in build_prompt_for_llm::append_agent_state
+src/cli_design.rs:16:5: replace version -> &'static str with ""
+src/cli_design.rs:21:5: replace print_banner with ()
+src/cli_design.rs:37:5: replace help_content -> String with String::new()
+src/cli_design.rs:37:5: replace help_content -> String with "xyzzy".into()
+src/compile/mod.rs:72:9: replace <impl std::fmt::Display for CompileError>::fmt -> std::fmt::Result with Ok(Default::default())
+src/compile/mod.rs:184:5: replace package_entry_path -> Option<PathBuf> with None
+src/dal_summary.rs:95:8: delete ! in to_context_string
+src/ffi/mod.rs:63:9: replace FFIConfig::both -> Self with Default::default()
+src/ffi/mod.rs:70:9: replace FFIConfig::auto_detect -> Self with Default::default()
+src/fleet.rs:126:14: replace > with >= in create_from_mold
+src/fleet.rs:180:14: replace > with >= in add_from_mold
+src/fleet.rs:229:5: replace add_member -> Result<(), String> with Ok(())
+src/fleet.rs:250:5: replace deploy -> Result<(), String> with Ok(())
+src/fleet.rs:306:10: replace > with >= in scale
+src/fleet.rs:324:10: replace < with <= in scale
+src/fleet.rs:368:5: replace run -> Result<Vec<RunReport>, String> with Ok(vec![])
+src/fleet.rs:372:44: replace == with != in run
+src/fleet.rs:415:40: replace += with -= in run
+src/fleet.rs:415:40: replace += with *= in run
+src/fleet.rs:451:50: replace || with && in health
+src/fleet.rs:451:21: delete ! in health
+src/fleet.rs:479:5: replace export -> Result<String, String> with Ok(String::new())
+src/fleet.rs:479:5: replace export -> Result<String, String> with Ok("xyzzy".into())
+src/fleet.rs:501:5: replace export_k8s -> Result<String, String> with Ok(String::new())
+src/fleet.rs:501:5: replace export_k8s -> Result<String, String> with Ok("xyzzy".into())
+src/fleet.rs:506:55: replace || with && in export_k8s
+src/fleet.rs:506:61: replace == with != in export_k8s
+src/fleet.rs:518:5: replace export_docker_compose -> Result<String, String> with Ok(String::new())
+src/fleet.rs:518:5: replace export_docker_compose -> Result<String, String> with Ok("xyzzy".into())
+src/fleet.rs:523:55: replace || with && in export_docker_compose
+src/fleet.rs:523:61: replace == with != in export_docker_compose
+src/http_server.rs:47:5: replace start_http_server -> Result<(), Box<dyn std::error::Error>> with Ok(())
+src/http_server.rs:97:17: delete match arm "GET" in start_http_server
+src/http_server.rs:98:17: delete match arm "POST" in start_http_server
+src/http_server.rs:99:17: delete match arm "PUT" in start_http_server
+src/http_server.rs:100:17: delete match arm "DELETE" in start_http_server
+src/http_server.rs:139:5: replace home_handler -> Html<String> with Html::from(String::new())
+src/http_server_security.rs:414:24: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:428:9: replace SecurityLogger::log_event with ()
+src/http_server_security.rs:447:9: replace SecurityLogger::log_rate_limit with ()
+src/http_server_security.rs:453:9: replace SecurityLogger::log_auth_failure with ()
+src/http_server_security.rs:459:9: replace SecurityLogger::log_invalid_input with ()
+src/http_server_security.rs:465:9: replace SecurityLogger::log_auth_success with ()
+src/http_server_security.rs:470:9: replace SecurityLogger::log_suspicious_activity with ()
+src/http_server_security.rs:476:9: replace SecurityLogger::log_token_validation_failure with ()
+src/manifest.rs:151:14: replace > with >= in add_dependencies_if_missing
+src/manifest.rs:210:51: replace || with && in write_lockfile
+src/manifest.rs:210:39: replace || with && in write_lockfile
+src/manifest.rs:210:32: replace == with != in write_lockfile
+src/manifest.rs:210:44: replace == with != in write_lockfile
+src/manifest.rs:210:56: replace == with != in write_lockfile
+src/module_resolver.rs:14:5: replace package_import_names_from_program -> Vec<String> with vec![]
+src/module_resolver.rs:14:5: replace package_import_names_from_program -> Vec<String> with vec![String::new()]
+src/module_resolver.rs:14:5: replace package_import_names_from_program -> Vec<String> with vec!["xyzzy".into()]
+src/module_resolver.rs:25:17: replace || with && in package_import_names_from_program
+src/module_resolver.rs:24:17: replace || with && in package_import_names_from_program
+src/module_resolver.rs:23:17: replace || with && in package_import_names_from_program
+src/module_resolver.rs:22:17: replace || with && in package_import_names_from_program
+src/module_resolver.rs:29:47: replace == with != in package_import_names_from_program
+src/module_resolver.rs:133:9: replace ModuleResolver::with_root_dir -> Self with Default::default()
+src/module_resolver.rs:169:35: replace || with && in ModuleResolver::resolve
+src/module_resolver.rs:184:31: replace || with && in ModuleResolver::resolve
+src/module_resolver.rs:192:16: delete ! in ModuleResolver::resolve
+src/mold/mod.rs:27:5: replace use_mold_and_spawn -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/mold/mod.rs:29:8: delete ! in use_mold_and_spawn
+src/mold/mod.rs:52:5: replace load_principal_overrides -> PrincipalOverrides with Default::default()

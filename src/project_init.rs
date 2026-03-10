@@ -271,4 +271,52 @@ mod tests {
         assert!(dir.join("main.dal").exists());
         let _ = std::fs::remove_dir_all(&dir);
     }
+
+    #[test]
+    fn run_init_general_creates_gitignore_with_env() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = run_init("general", dir.path());
+        assert!(r.is_ok());
+        let gitignore = dir.path().join(".gitignore");
+        assert!(
+            gitignore.exists(),
+            "ensure_gitignore must create .gitignore"
+        );
+        let content = std::fs::read_to_string(&gitignore).unwrap();
+        assert!(content.contains(".env"), ".gitignore must contain .env");
+    }
+
+    #[test]
+    fn run_init_chain_creates_chain_dal_and_dal_toml() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = run_init("chain", dir.path());
+        assert!(r.is_ok(), "run_init chain: {:?}", r);
+        assert!(dir.path().join("dal.toml").exists());
+        assert!(dir.path().join("chain.dal").exists());
+        let content = std::fs::read_to_string(dir.path().join("chain.dal")).unwrap();
+        assert!(content.contains("Chain") && content.contains("chain::"));
+    }
+
+    #[test]
+    fn run_init_iot_creates_iot_dal_and_dal_toml() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = run_init("iot", dir.path());
+        assert!(r.is_ok(), "run_init iot: {:?}", r);
+        assert!(dir.path().join("dal.toml").exists());
+        assert!(dir.path().join("iot.dal").exists());
+        let content = std::fs::read_to_string(dir.path().join("iot.dal")).unwrap();
+        assert!(content.contains("IoT") && content.contains("iot"));
+    }
+
+    #[test]
+    fn run_init_agent_creates_agent_dal_evolve_and_agent_toml() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = run_init("agent", dir.path());
+        assert!(r.is_ok(), "run_init agent: {:?}", r);
+        assert!(dir.path().join("agent.dal").exists());
+        assert!(dir.path().join("agent.toml").exists());
+        assert!(dir.path().join("evolve.md").exists());
+        let content = std::fs::read_to_string(dir.path().join("agent.dal")).unwrap();
+        assert!(content.contains("agent") && content.contains("spawn"));
+    }
 }

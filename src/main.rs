@@ -3282,10 +3282,13 @@ fn publish_package() {
     }
 
     match dist_agent_lang::registry::publish_package(&manifest_path) {
-        Ok(()) => {
-            let info = dist_agent_lang::manifest::parse_package_info(&manifest_path).unwrap();
-            println!("   ✅ Published {}@{}", info.name, info.version);
-        }
+        Ok(()) => match dist_agent_lang::manifest::parse_package_info(&manifest_path) {
+            Ok(info) => println!("   ✅ Published {}@{}", info.name, info.version),
+            Err(e) => {
+                eprintln!("❌ Could not read package info after publish: {}", e);
+                std::process::exit(1);
+            }
+        },
         Err(e) => {
             eprintln!("❌ {}", e);
             std::process::exit(1);

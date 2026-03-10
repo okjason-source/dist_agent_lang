@@ -372,6 +372,61 @@ fn test_create_router_with_middleware_delete_method() {
     let _router = create_router_with_middleware(server);
 }
 
+// Mutation testing: home and health handlers return real content (see docs/MUTATION_ANALYSIS.md).
+#[tokio::test]
+async fn test_default_routes_return_non_empty_body() {
+    use axum::body::Body;
+    use axum::http::Request;
+    use dist_agent_lang::stdlib::web::HttpServer;
+    use dist_agent_lang::stdlib::web::ServerConfig;
+    use std::collections::HashMap;
+    use tower::ServiceExt;
+
+    let server = HttpServer {
+        port: 8080,
+        routes: HashMap::new(),
+        middleware: vec![],
+        static_files: HashMap::new(),
+        config: ServerConfig {
+            max_connections: 100,
+            timeout_seconds: 30,
+            cors_enabled: false,
+            ssl_enabled: false,
+            static_path: "".to_string(),
+        },
+    };
+    let app = create_router_with_middleware(server);
+
+    let get_home = Request::builder().uri("/").body(Body::empty()).unwrap();
+    let res = app.clone().oneshot(get_home).await.unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let body = axum::body::to_bytes(res.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    let body_str = String::from_utf8_lossy(&body);
+    assert!(
+        body_str.contains("Welcome") && body_str.contains("dist_agent_lang"),
+        "home handler must return welcome message, got: {}",
+        body_str
+    );
+
+    let get_health = Request::builder()
+        .uri("/health")
+        .body(Body::empty())
+        .unwrap();
+    let res = app.oneshot(get_health).await.unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let body = axum::body::to_bytes(res.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    let body_str = String::from_utf8_lossy(&body);
+    assert!(
+        body_str.contains("OK"),
+        "health handler must return OK, got: {}",
+        body_str
+    );
+}
+
 // ============================================================================
 // HTTP MIDDLEWARE TESTS
 // ============================================================================

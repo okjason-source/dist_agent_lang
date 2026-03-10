@@ -536,6 +536,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[serial_test::serial]
     fn create_and_list_empty_fleet() {
         let name = format!(
             "test_fleet_{}",
@@ -553,6 +554,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn create_duplicate_fails() {
         let name = format!(
             "dup_fleet_{}",
@@ -567,6 +569,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn scale_requires_base() {
         let name = format!(
             "scale_no_base_{}",
@@ -578,5 +581,124 @@ mod tests {
         assert!(create(&name, None).is_ok());
         assert!(scale(&name, 0, None).is_err());
         let _ = delete(&name, None);
+    }
+
+    // Mutation testing: catch count boundaries and delete return value (see docs/MUTATION_ANALYSIS.md).
+    const MINIMAL_MOLD: &str = r#"mold "m" "1.0"
+agent
+  type W
+  role "r"
+"#;
+
+    #[test]
+    #[serial_test::serial]
+    fn create_from_mold_rejects_count_zero() {
+        let base = tempfile::tempdir().unwrap();
+        let err = create_from_mold("mf", MINIMAL_MOLD, 0, base.path(), None).unwrap_err();
+        assert!(
+            err.contains("count") && (err.contains("1") || err.contains(">= 1")),
+            "expected count >= 1 error, got: {}",
+            err
+        );
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn create_from_mold_rejects_count_over_1000() {
+        let base = tempfile::tempdir().unwrap();
+        let err = create_from_mold("mf", MINIMAL_MOLD, 1001, base.path(), None).unwrap_err();
+        assert!(
+            err.contains("1000") || err.contains("capped"),
+            "expected cap at 1000, got: {}",
+            err
+        );
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn add_from_mold_rejects_count_zero() {
+        let base = tempfile::tempdir().unwrap();
+        let name = format!(
+            "add0_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, Some(base.path())).unwrap();
+        let err = add_from_mold(&name, MINIMAL_MOLD, 0, base.path(), None).unwrap_err();
+        assert!(
+            err.contains("count") && (err.contains("1") || err.contains(">= 1")),
+            "expected count >= 1 error, got: {}",
+            err
+        );
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn add_from_mold_rejects_count_over_1000() {
+        let base = tempfile::tempdir().unwrap();
+        let name = format!(
+            "add1001_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, Some(base.path())).unwrap();
+        let err = add_from_mold(&name, MINIMAL_MOLD, 1001, base.path(), None).unwrap_err();
+        assert!(
+            err.contains("1000") || err.contains("capped"),
+            "expected cap at 1000, got: {}",
+            err
+        );
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn scale_rejects_count_over_1000() {
+        let base = tempfile::tempdir().unwrap();
+        let name = format!(
+            "scale1001_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, Some(base.path())).unwrap();
+        let err = scale(&name, 1001, Some(base.path())).unwrap_err();
+        assert!(
+            err.contains("1000") || err.contains("capped"),
+            "expected scale cap at 1000, got: {}",
+            err
+        );
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn delete_returns_false_when_fleet_missing() {
+        let base = tempfile::tempdir().unwrap();
+        let ok = delete("nonexistent_fleet_xyz", Some(base.path())).unwrap();
+        assert!(!ok, "delete nonexistent should return false");
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn delete_returns_true_when_fleet_removed() {
+        let base = tempfile::tempdir().unwrap();
+        let name = format!(
+            "del_true_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, Some(base.path())).unwrap();
+        let ok = delete(&name, Some(base.path())).unwrap();
+        assert!(ok, "delete existing fleet should return true");
+        assert!(show(&name, Some(base.path())).is_none());
     }
 }

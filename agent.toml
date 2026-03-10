@@ -1,9 +1,0 @@
-# Agent project config
-
-[agent.sh]
-trust = "sandboxed"
-# forbidden_patterns = ["rm -rf", "sudo"]
-# allowed_prefixes = ["npm", "cargo", "git"]
-
-[agent]
-context_path = "./evolve.md"

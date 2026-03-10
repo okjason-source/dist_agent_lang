@@ -1,3 +1,207 @@
+src/bin/registry_server.rs:122:30: replace || with && in get_tarball
+src/compile/mod.rs:23:5: replace get_compiler_available_override -> Option<bool> with None
+src/compile/mod.rs:23:5: replace get_compiler_available_override -> Option<bool> with Some(true)
+src/compile/mod.rs:23:5: replace get_compiler_available_override -> Option<bool> with Some(false)
+src/compile/mod.rs:31:5: replace set_compiler_available_override with ()
+src/compile/mod.rs:114:12: delete ! in <impl CompileBackend for StubBackend>::compile
+src/compile/mod.rs:134:5: replace check_compiler_available -> bool with true
+src/compile/mod.rs:134:5: replace check_compiler_available -> bool with false
+src/compile/mod.rs:146:5: replace get_backend -> Option<Box<dyn CompileBackend>> with None
+src/compile/mod.rs:166:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![]
+src/compile/mod.rs:172:36: replace == with != in select_services_for_target
+src/compile/mod.rs:184:5: replace package_entry_path -> Option<PathBuf> with Some(Default::default())
+src/dal_summary.rs:49:13: delete match arm Statement::Agent(a) in summary_from_program
+src/dal_summary.rs:66:5: replace summary_from_path -> Result<DalSummary, String> with Ok(Default::default())
+src/dal_summary.rs:100:8: delete ! in to_context_string
+src/dal_summary.rs:105:8: delete ! in to_context_string
+src/fleet.rs:47:5: replace path_for_fleets -> PathBuf with Default::default()
+src/fleet.rs:51:5: replace load_from_file -> HashMap<String, Fleet> with HashMap::new()
+src/fleet.rs:61:5: replace save_to_file -> Result<(), String> with Ok(())
+src/fleet.rs:71:5: replace ensure_loaded with ()
+src/fleet.rs:79:5: replace save_if_base -> Result<(), String> with Ok(())
+src/fleet.rs:89:5: replace create -> Result<(), String> with Ok(())
+src/fleet.rs:123:5: replace create_from_mold -> Result<(), String> with Ok(())
+src/fleet.rs:123:14: replace == with != in create_from_mold
+src/fleet.rs:126:14: replace > with == in create_from_mold
+src/fleet.rs:126:14: replace > with < in create_from_mold
+src/fleet.rs:177:5: replace add_from_mold -> Result<(), String> with Ok(())
+src/fleet.rs:177:14: replace == with != in add_from_mold
+src/fleet.rs:180:14: replace > with == in add_from_mold
+src/fleet.rs:180:14: replace > with < in add_from_mold
+src/fleet.rs:274:5: replace list -> Vec<String> with vec![]
+src/fleet.rs:274:5: replace list -> Vec<String> with vec![String::new()]
+src/fleet.rs:274:5: replace list -> Vec<String> with vec!["xyzzy".into()]
+src/fleet.rs:283:5: replace show -> Option<Fleet> with None
+src/fleet.rs:291:5: replace delete -> Result<bool, String> with Ok(true)
+src/fleet.rs:291:5: replace delete -> Result<bool, String> with Ok(false)
+src/fleet.rs:306:5: replace scale -> Result<(), String> with Ok(())
+src/fleet.rs:306:10: replace > with == in scale
+src/fleet.rs:306:10: replace > with < in scale
+src/fleet.rs:319:10: replace == with != in scale
+src/fleet.rs:324:10: replace < with == in scale
+src/fleet.rs:324:10: replace < with > in scale
+src/http_server_security.rs:327:9: replace AuthValidator::generate_token -> Result<String, String> with Ok(String::new())
+src/http_server_security.rs:327:9: replace AuthValidator::generate_token -> Result<String, String> with Ok("xyzzy".into())
+src/http_server_security.rs:343:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:343:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:353:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:353:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:361:9: replace AuthValidator::extract_token -> Option<String> with None
+src/http_server_security.rs:361:9: replace AuthValidator::extract_token -> Option<String> with Some(String::new())
+src/http_server_security.rs:361:9: replace AuthValidator::extract_token -> Option<String> with Some("xyzzy".into())
+src/http_server_security.rs:399:9: replace RequestSizeLimiter::validate_request -> Result<(), StatusCode> with Ok(())
+src/http_server_security.rs:399:22: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:399:22: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:399:22: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:404:23: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:404:23: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:404:23: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:411:54: replace + with - in RequestSizeLimiter::validate_request
+src/http_server_security.rs:411:54: replace + with * in RequestSizeLimiter::validate_request
+src/http_server_security.rs:414:24: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:414:24: replace > with < in RequestSizeLimiter::validate_request
+src/compile/mod.rs:114:9: replace <impl CompileBackend for StubBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/mod.rs:146:5: replace get_backend -> Option<Box<dyn CompileBackend>> with Some(Box::new(Default::default()))
+src/compile/mod.rs:166:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![Box::leak(Box::new(Default::default()))]
+src/compile/mod.rs:202:5: replace run_compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/fleet.rs:40:5: replace fleets -> std::sync::MutexGuard<'static, HashMap<String, Fleet>> with MutexGuard::new()
+src/fleet.rs:40:5: replace fleets -> std::sync::MutexGuard<'static, HashMap<String, Fleet>> with MutexGuard::from_iter([HashMap::new()])
+src/fleet.rs:40:5: replace fleets -> std::sync::MutexGuard<'static, HashMap<String, Fleet>> with MutexGuard::new(HashMap::new())
+src/fleet.rs:40:5: replace fleets -> std::sync::MutexGuard<'static, HashMap<String, Fleet>> with MutexGuard::from(HashMap::new())
+src/fleet.rs:40:5: replace fleets -> std::sync::MutexGuard<'static, HashMap<String, Fleet>> with MutexGuard::from_iter([HashMap::from_iter([(String::new(), Default::default())])])
+src/fleet.rs:40:5: replace fleets -> std::sync::MutexGuard<'static, HashMap<String, Fleet>> with MutexGuard::new(HashMap::from_iter([(String::new(), Default::default())]))
+src/fleet.rs:40:5: replace fleets -> std::sync::MutexGuard<'static, HashMap<String, Fleet>> with MutexGuard::from(HashMap::from_iter([(String::new(), Default::default())]))
+src/fleet.rs:40:5: replace fleets -> std::sync::MutexGuard<'static, HashMap<String, Fleet>> with MutexGuard::from_iter([HashMap::from_iter([("xyzzy".into(), Default::default())])])
+src/fleet.rs:40:5: replace fleets -> std::sync::MutexGuard<'static, HashMap<String, Fleet>> with MutexGuard::new(HashMap::from_iter([("xyzzy".into(), Default::default())]))
+src/fleet.rs:40:5: replace fleets -> std::sync::MutexGuard<'static, HashMap<String, Fleet>> with MutexGuard::from(HashMap::from_iter([("xyzzy".into(), Default::default())]))
+src/fleet.rs:51:5: replace load_from_file -> HashMap<String, Fleet> with HashMap::from_iter([(String::new(), Default::default())])
+src/fleet.rs:51:5: replace load_from_file -> HashMap<String, Fleet> with HashMap::from_iter([("xyzzy".into(), Default::default())])
+src/fleet.rs:283:5: replace show -> Option<Fleet> with Some(Default::default())
+src/fleet.rs:368:5: replace run -> Result<Vec<RunReport>, String> with Ok(vec![Default::default()])
+src/fleet.rs:444:5: replace health -> Result<FleetHealth, String> with Ok(Default::default())
+src/http_server_security.rs:291:9: replace AuthValidator::validate_api_key -> Result<Claims, String> with Ok(Default::default())
+src/lib.rs:105:46: replace * with + in parse_source
+src/lib.rs:105:46: replace * with / in parse_source
+src/lib.rs:105:39: replace * with + in parse_source
+src/lib.rs:105:39: replace * with / in parse_source
+src/lib.rs:106:21: replace > with == in parse_source
+src/lib.rs:106:21: replace > with < in parse_source
+src/lib.rs:106:21: replace > with >= in parse_source
+src/lib.rs:122:30: replace > with < in parse_source
+src/lib.rs:165:5: replace execute_dal_file -> Result<(), String> with Ok(())
+src/module_resolver.rs:177:16: delete ! in ModuleResolver::resolve
+src/module_resolver.rs:219:9: replace ModuleResolver::resolve_program_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/module_resolver.rs:241:9: replace ModuleResolver::resolve_program_with_cycles -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/module_resolver.rs:255:9: replace ModuleResolver::resolve_program_recursive -> Result<(), ResolveError> with Ok(())
+src/module_resolver.rs:332:5: replace package_entry_path -> Option<PathBuf> with None
+src/module_resolver.rs:332:5: replace package_entry_path -> Option<PathBuf> with Some(Default::default())
+src/module_resolver.rs:348:5: replace resolve_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/mold/mod.rs:60:5: replace substitute_params -> String with String::new()
+src/mold/mod.rs:60:5: replace substitute_params -> String with "xyzzy".into()
+src/mold/mod.rs:191:5: replace load_mold_from_source -> Result<MoldConfig, String> with Ok(Default::default())
+src/mold/mod.rs:228:5: replace list_local_paths -> Vec<PathBuf> with vec![Default::default()]
+src/mold/mod.rs:262:5: replace resolve_mold_path -> Result<PathBuf, String> with Ok(Default::default())
+src/mold/mod.rs:304:5: replace scaffold_mold -> Result<(), String> with Ok(())
+src/project_init.rs:10:5: replace run_init -> Result<String, String> with Ok(String::new())
+src/project_init.rs:10:5: replace run_init -> Result<String, String> with Ok("xyzzy".into())
+src/project_init.rs:13:9: delete match arm "general" | "dal" | "" in run_init
+src/project_init.rs:25:5: replace write_if_missing -> std::io::Result<()> with Ok(())
+src/project_init.rs:26:8: delete ! in write_if_missing
+src/project_init.rs:49:5: replace run_init_general -> Result<String, String> with Ok(String::new())
+src/project_init.rs:49:5: replace run_init_general -> Result<String, String> with Ok("xyzzy".into())
+src/reporting.rs:23:21: replace && with || in format_lexer_error
+src/reporting.rs:23:17: replace > with >= in format_lexer_error
+src/reporting.rs:82:19: replace > with >= in format_parse_warnings
+src/skills.rs:39:9: replace SkillCategory::from_str -> Option<Self> with None
+src/skills.rs:40:13: delete match arm "development" | "dev" in SkillCategory::from_str
+src/skills.rs:41:13: delete match arm "creative" in SkillCategory::from_str
+src/skills.rs:42:13: delete match arm "office" in SkillCategory::from_str
+src/skills.rs:43:13: delete match arm "home" in SkillCategory::from_str
+src/skills.rs:49:9: replace SkillCategory::as_str -> &'static str with ""
+src/skills.rs:49:9: replace SkillCategory::as_str -> &'static str with "xyzzy"
+src/skills.rs:138:9: replace SkillRegistry::register with ()
+src/skills.rs:139:36: delete ! in SkillRegistry::register
+src/skills.rs:152:9: replace SkillRegistry::register_all with ()
+src/skills.rs:159:9: replace SkillRegistry::get -> Option<&SkillDefinition> with None
+src/skills.rs:169:9: replace SkillRegistry::len -> usize with 0
+src/skills.rs:169:9: replace SkillRegistry::len -> usize with 1
+src/skills.rs:179:9: replace SkillRegistry::resolve -> Vec<&SkillDefinition> with vec![]
+src/skills.rs:193:9: replace SkillRegistry::tools_for_skills -> Vec<String> with vec![]
+src/skills.rs:193:9: replace SkillRegistry::tools_for_skills -> Vec<String> with vec![String::new()]
+src/skills.rs:193:9: replace SkillRegistry::tools_for_skills -> Vec<String> with vec!["xyzzy".into()]
+src/skills.rs:207:9: replace SkillRegistry::descriptions_for_skills -> Vec<String> with vec![]
+src/skills.rs:207:9: replace SkillRegistry::descriptions_for_skills -> Vec<String> with vec![String::new()]
+src/skills.rs:207:9: replace SkillRegistry::descriptions_for_skills -> Vec<String> with vec!["xyzzy".into()]
+src/skills.rs:209:25: delete ! in SkillRegistry::descriptions_for_skills
+src/skills.rs:230:5: replace parse_skill_dal -> Result<Vec<SkillDefinition>, String> with Ok(vec![])
+src/skills.rs:241:66: replace || with && in parse_skill_dal
+src/skills.rs:263:50: replace == with != in parse_skill_dal
+src/skills.rs:319:5: replace load_skill_file -> Result<Vec<SkillDefinition>, String> with Ok(vec![])
+src/skills.rs:326:5: replace load_skills_from_path -> Result<Vec<SkillDefinition>, String> with Ok(vec![])
+src/skills.rs:339:36: replace == with != in load_skills_from_path
+src/skills.rs:364:5: replace skip_whitespace_and_comments with ()
+src/skills.rs:366:30: replace match guard c.is_whitespace() with true in skip_whitespace_and_comments
+src/skills.rs:366:30: replace match guard c.is_whitespace() with false in skip_whitespace_and_comments
+src/skills.rs:396:5: replace parse_quoted_string -> Option<String> with None
+src/skills.rs:396:5: replace parse_quoted_string -> Option<String> with Some(String::new())
+src/skills.rs:396:5: replace parse_quoted_string -> Option<String> with Some("xyzzy".into())
+src/skills.rs:396:38: replace != with == in parse_quoted_string
+src/skills.rs:403:14: replace == with != in parse_quoted_string
+src/skills.rs:406:14: replace == with != in parse_quoted_string
+src/skills.rs:428:5: replace try_parse_quoted_string -> Option<String> with None
+src/skills.rs:428:5: replace try_parse_quoted_string -> Option<String> with Some(String::new())
+src/skills.rs:428:38: replace == with != in try_parse_quoted_string
+src/skills.rs:436:5: replace parse_identifier -> String with String::new()
+src/skills.rs:436:5: replace parse_identifier -> String with "xyzzy".into()
+src/skills.rs:438:32: replace || with && in parse_identifier
+src/skills.rs:438:37: replace == with != in parse_identifier
+src/skills.rs:449:5: replace expect_char -> Result<(), ()> with Ok(())
+src/skills.rs:449:38: replace == with != in expect_char
+src/skills.rs:564:5: replace meta_from_memory -> Option<String> with None
+src/skills.rs:564:5: replace meta_from_memory -> Option<String> with Some(String::new())
+src/skills.rs:564:5: replace meta_from_memory -> Option<String> with Some("xyzzy".into())
+src/skills.rs:569:56: replace || with && in meta_from_memory
+src/skills.rs:584:5: replace reinforcement_note -> String with String::new()
+src/skills.rs:584:5: replace reinforcement_note -> String with "xyzzy".into()
+src/skills.rs:597:5: replace tools_description_for_skills -> String with String::new()
+src/skills.rs:597:5: replace tools_description_for_skills -> String with "xyzzy".into()
+src/skills.rs:608:5: replace tools_description_for_skills_with_registry -> String with String::new()
+src/skills.rs:608:5: replace tools_description_for_skills_with_registry -> String with "xyzzy".into()
+src/skills.rs:615:8: delete ! in tools_description_for_skills_with_registry
+src/skills.rs:615:36: replace == with != in tools_description_for_skills_with_registry
+src/lsp.rs:357:9: replace Backend::signature_for_function -> Option<(String, Vec<String>, Option<String>)> with Some((String::new(), vec![String::new()], Some("xyzzy".into())))
+src/lib.rs:105:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:138:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:151:5: replace execute_dal_with_scope -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:214:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:214:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:214:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/lib.rs:234:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:234:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:234:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/module_resolver.rs:219:9: replace ModuleResolver::resolve_program_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![Default::default()])
+src/module_resolver.rs:241:9: replace ModuleResolver::resolve_program_with_cycles -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![Default::default()])
+src/module_resolver.rs:348:5: replace resolve_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![Default::default()])
+src/mold/mod.rs:79:5: replace mold_config_to_agent_config -> Result<AgentConfig, String> with Ok(Default::default())
+src/mold/mod.rs:151:5: replace json_value_to_runtime_value -> Value with Default::default()
+src/mold/mod.rs:183:5: replace create_from_mold_path -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/mold/mod.rs:219:5: replace create_from_mold_source -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/skills.rs:39:9: replace SkillCategory::from_str -> Option<Self> with Some(Default::default())
+src/skills.rs:95:9: replace SkillRegistry::with_builtins -> Self with Default::default()
+src/skills.rs:159:9: replace SkillRegistry::get -> Option<&SkillDefinition> with Some(Box::leak(Box::new(Default::default())))
+src/skills.rs:179:9: replace SkillRegistry::resolve -> Vec<&SkillDefinition> with vec![Box::leak(Box::new(Default::default()))]
+src/skills.rs:230:5: replace parse_skill_dal -> Result<Vec<SkillDefinition>, String> with Ok(vec![Default::default()])
+src/skills.rs:319:5: replace load_skill_file -> Result<Vec<SkillDefinition>, String> with Ok(vec![Default::default()])
+src/skills.rs:326:5: replace load_skills_from_path -> Result<Vec<SkillDefinition>, String> with Ok(vec![Default::default()])
+src/skills.rs:518:5: replace get_global_registry -> &'static Mutex<SkillRegistry> with Box::leak(Box::new(Mutex::new(Default::default())))
+src/skills.rs:541:5: replace global_registry -> SkillRegistry with Default::default()
+src/venv.rs:23:9: replace VenvProfile::from_str -> Option<Self> with Some(Default::default())
+src/venv.rs:52:5: replace load_venvs -> HashMap<String, VenvRecord> with HashMap::from_iter([(String::new(), Default::default())])
+src/venv.rs:52:5: replace load_venvs -> HashMap<String, VenvRecord> with HashMap::from_iter([("xyzzy".into(), Default::default())])
+src/venv.rs:89:5: replace resolve_venv -> Result<(Venv, PathBuf), String> with Ok((Default::default(), Default::default()))
+src/venv.rs:168:5: replace list_venvs -> Vec<(String, VenvRecord)> with vec![(String::new(), Default::default())]
+src/venv.rs:168:5: replace list_venvs -> Vec<(String, VenvRecord)> with vec![("xyzzy".into(), Default::default())]
+src/venv.rs:189:5: replace show_venv -> Result<(VenvRecord, PathBuf), String> with Ok((Default::default(), Default::default()))
 src/lib.rs:103:46: replace * with + in parse_source
 src/lib.rs:103:46: replace * with / in parse_source
 src/lib.rs:103:39: replace * with + in parse_source

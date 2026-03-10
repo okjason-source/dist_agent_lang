@@ -50,6 +50,7 @@ PHASE*.md
 /docs/IDE_AND_AGENT_INTEGRATION.md
 /docs/MUTATION_TESTING_ANALYSIS.md
 /docs/PRODUCTION_GRADE_CHECKLIST.md
+/docs/MUTATION_ANALYSIS.md
 
 # Internal/planning guides (do not publish)
 /docs/guides/PACKAGING_STRATEGY.md

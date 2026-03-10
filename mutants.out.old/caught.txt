@@ -1,0 +1,8 @@
+src/manifest.rs:129:5: replace add_dependencies_if_missing -> Result<usize, ManifestError> with Ok(0)
+src/manifest.rs:129:5: replace add_dependencies_if_missing -> Result<usize, ManifestError> with Ok(1)
+src/manifest.rs:146:12: delete ! in add_dependencies_if_missing
+src/manifest.rs:148:19: replace += with -= in add_dependencies_if_missing
+src/manifest.rs:148:19: replace += with *= in add_dependencies_if_missing
+src/manifest.rs:151:14: replace > with == in add_dependencies_if_missing
+src/manifest.rs:151:14: replace > with < in add_dependencies_if_missing
+src/manifest.rs:225:8: delete ! in write_lockfile

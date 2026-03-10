@@ -496,7 +496,7 @@ dependencies = [
 
 [[package]]
 name = "dist_agent_lang"
-version = "1.0.10"
+version = "1.0.11"
 dependencies = [
  "aes-gcm",
  "axum",
@@ -504,6 +504,7 @@ dependencies = [
  "chrono",
  "clap",
  "dirs",
+ "dotenvy",
  "ecdsa",
  "ed25519-dalek",
  "flate2",
@@ -537,6 +538,12 @@ dependencies = [
  "dist_agent_lang",
  "libfuzzer-sys",
 ]
+
+[[package]]
+name = "dotenvy"
+version = "0.15.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "ecdsa"

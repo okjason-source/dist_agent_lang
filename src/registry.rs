@@ -448,6 +448,47 @@ mod tests {
         };
         assert_eq!(src.fetch_source().as_deref(), Some("ipfs://QmX"));
     }
+
+    // Mutation testing: registry_url and packages_cache_dir (see docs/MUTATION_ANALYSIS.md).
+    #[test]
+    fn test_registry_url_default() {
+        std::env::remove_var("DAL_REGISTRY_URL");
+        let u = registry_url();
+        assert!(
+            u.contains("registry") && u.contains("dal"),
+            "default registry URL should contain registry and dal: {}",
+            u
+        );
+    }
+
+    #[test]
+    fn test_registry_url_from_env() {
+        std::env::set_var("DAL_REGISTRY_URL", "https://custom.example.com/registry");
+        let u = registry_url();
+        std::env::remove_var("DAL_REGISTRY_URL");
+        assert_eq!(u, "https://custom.example.com/registry");
+    }
+
+    #[test]
+    fn test_packages_cache_dir_from_env() {
+        let custom = std::path::PathBuf::from("/tmp/dal-packages-cache");
+        std::env::set_var("DAL_PACKAGES_CACHE", &custom);
+        let p = packages_cache_dir();
+        std::env::remove_var("DAL_PACKAGES_CACHE");
+        assert_eq!(p, custom);
+    }
+
+    #[test]
+    fn test_packages_cache_dir_default_contains_dal_packages() {
+        std::env::remove_var("DAL_PACKAGES_CACHE");
+        let p = packages_cache_dir();
+        let s = p.to_string_lossy();
+        assert!(
+            s.contains(".dal") && s.contains("packages"),
+            "default cache dir should contain .dal and packages: {}",
+            s
+        );
+    }
 }
 
 /// Find package root (directory containing dal.toml) within an unpacked path.

@@ -162,6 +162,10 @@ pub struct Runtime {
     allowed_namespaces: Option<Vec<String>>,
     /// IoT namespace: in-memory device registry and edge cache for iot::* wiring.
     iot_state: IotState,
+    /// Desktop namespace: windows, components, themes for desktop::* wiring.
+    desktop_state: DesktopState,
+    /// Database connections: connection_id -> Database for database::connect/query wiring.
+    database_connections: HashMap<String, crate::stdlib::database::Database>,
 }
 
 /// In-memory state for iot:: namespace (device registry, edge cache). Phase 2 stdlib wiring.
@@ -171,6 +175,14 @@ pub struct IotState {
     pub device_registry: HashMap<String, String>,
     /// (edge_node_id, key) -> (value, expiry_unix_secs; 0 = no expiry)
     pub edge_cache: HashMap<(String, String), (Value, i64)>,
+}
+
+/// In-memory state for desktop:: namespace (windows, components, themes). Wired to stdlib::desktop.
+#[derive(Default)]
+pub struct DesktopState {
+    pub windows: HashMap<String, crate::stdlib::desktop::Window>,
+    pub components: HashMap<String, crate::stdlib::desktop::UIComponent>,
+    pub themes: HashMap<String, crate::stdlib::desktop::Theme>,
 }
 
 // NEW: Service instance structure
@@ -283,6 +295,8 @@ impl Runtime {
             current_import_index: 0,
             allowed_namespaces: None,
             iot_state: IotState::default(),
+            desktop_state: DesktopState::default(),
+            database_connections: HashMap::new(),
         };
 
         // Register built-in functions
@@ -328,6 +342,8 @@ impl Runtime {
             current_import_index: 0,
             allowed_namespaces: None,
             iot_state: IotState::default(),
+            desktop_state: DesktopState::default(),
+            database_connections: HashMap::new(),
         };
 
         // Register built-in functions
@@ -568,6 +584,253 @@ impl Runtime {
                 "Cannot convert value to float".to_string(),
             )),
         }
+    }
+
+    /// Convert Value::Map to WindowConfig for desktop::create_window.
+    fn value_to_window_config(
+        &self,
+        value: &Value,
+    ) -> Result<crate::stdlib::desktop::WindowConfig, RuntimeError> {
+        let map = match value {
+            Value::Map(m) => m,
+            _ => {
+                return Err(RuntimeError::TypeError {
+                    expected: "map".to_string(),
+                    got: value.type_name().to_string(),
+                })
+            }
+        };
+        let title = map
+            .get("title")
+            .map(|v| self.value_to_string(v))
+            .unwrap_or(Ok("Window".to_string()))?;
+        let width = map
+            .get("width")
+            .map(|v| self.value_to_int(v))
+            .unwrap_or(Ok(800i64))?;
+        let height = map
+            .get("height")
+            .map(|v| self.value_to_int(v))
+            .unwrap_or(Ok(600i64))?;
+        let x = map.get("x").map(|v| self.value_to_int(v).ok()).flatten();
+        let y = map.get("y").map(|v| self.value_to_int(v).ok()).flatten();
+        let resizable = map
+            .get("resizable")
+            .and_then(|v| self.value_to_bool(v).ok())
+            .unwrap_or(true);
+        let decorated = map
+            .get("decorated")
+            .and_then(|v| self.value_to_bool(v).ok())
+            .unwrap_or(true);
+        let always_on_top = map
+            .get("always_on_top")
+            .and_then(|v| self.value_to_bool(v).ok())
+            .unwrap_or(false);
+        let fullscreen = map
+            .get("fullscreen")
+            .and_then(|v| self.value_to_bool(v).ok())
+            .unwrap_or(false);
+        let icon_path = map
+            .get("icon_path")
+            .and_then(|v| self.value_to_string(v).ok());
+        let theme = map
+            .get("theme")
+            .map(|v| self.value_to_string(v))
+            .unwrap_or(Ok("default".to_string()))?;
+        Ok(crate::stdlib::desktop::WindowConfig {
+            title,
+            width,
+            height,
+            x,
+            y,
+            resizable,
+            decorated,
+            always_on_top,
+            fullscreen,
+            icon_path,
+            theme,
+        })
+    }
+
+    fn value_to_bool(&self, value: &Value) -> Result<bool, RuntimeError> {
+        match value {
+            Value::Bool(b) => Ok(*b),
+            _ => Err(RuntimeError::General("Expected bool".to_string())),
+        }
+    }
+
+    /// Convert Value::List of strings to Vec<String> for desktop components (combobox, listbox, table).
+    fn value_list_to_strings(&self, value: &Value) -> Result<Vec<String>, RuntimeError> {
+        let list = match value {
+            Value::List(l) => l,
+            _ => {
+                return Err(RuntimeError::TypeError {
+                    expected: "list".to_string(),
+                    got: value.type_name().to_string(),
+                })
+            }
+        };
+        let mut out = Vec::with_capacity(list.len());
+        for v in list {
+            out.push(self.value_to_string(v)?);
+        }
+        Ok(out)
+    }
+
+    fn value_to_file_dialog_options(
+        &self,
+        value: &Value,
+    ) -> Result<crate::stdlib::desktop::FileDialogOptions, RuntimeError> {
+        let map = match value {
+            Value::Map(m) => m,
+            _ => {
+                return Err(RuntimeError::TypeError {
+                    expected: "map".to_string(),
+                    got: value.type_name().to_string(),
+                })
+            }
+        };
+        let title = map
+            .get("title")
+            .map(|v| self.value_to_string(v))
+            .unwrap_or(Ok("Open".to_string()))?;
+        let multiple_selection = map
+            .get("multiple_selection")
+            .and_then(|v| self.value_to_bool(v).ok())
+            .unwrap_or(false);
+        let default_path = map
+            .get("default_path")
+            .and_then(|v| self.value_to_string(v).ok());
+        let filters = map
+            .get("filters")
+            .and_then(|v| self.value_to_file_filters(v).ok())
+            .unwrap_or_default();
+        Ok(crate::stdlib::desktop::FileDialogOptions {
+            title,
+            filters,
+            multiple_selection,
+            default_path,
+        })
+    }
+
+    fn value_to_file_filters(
+        &self,
+        value: &Value,
+    ) -> Result<Vec<crate::stdlib::desktop::FileFilter>, RuntimeError> {
+        let list = match value {
+            Value::List(l) => l,
+            _ => return Ok(Vec::new()),
+        };
+        let mut out = Vec::new();
+        for v in list {
+            if let Value::Map(m) = v {
+                let name = m
+                    .get("name")
+                    .map(|x| self.value_to_string(x))
+                    .unwrap_or(Ok("".to_string()))
+                    .unwrap_or_default();
+                let extensions = m
+                    .get("extensions")
+                    .map(|x| self.value_list_to_strings(x))
+                    .unwrap_or(Ok(Vec::new()))
+                    .unwrap_or_default();
+                out.push(crate::stdlib::desktop::FileFilter { name, extensions });
+            }
+        }
+        Ok(out)
+    }
+
+    fn value_to_save_dialog_options(
+        &self,
+        value: &Value,
+    ) -> Result<crate::stdlib::desktop::FileDialogOptions, RuntimeError> {
+        self.value_to_file_dialog_options(value)
+    }
+
+    fn value_to_message_dialog_options(
+        &self,
+        value: &Value,
+    ) -> Result<crate::stdlib::desktop::MessageDialogOptions, RuntimeError> {
+        let map = match value {
+            Value::Map(m) => m,
+            _ => {
+                return Err(RuntimeError::TypeError {
+                    expected: "map".to_string(),
+                    got: value.type_name().to_string(),
+                })
+            }
+        };
+        let title = map
+            .get("title")
+            .map(|v| self.value_to_string(v))
+            .unwrap_or(Ok("Message".to_string()))?;
+        let message = map
+            .get("message")
+            .map(|v| self.value_to_string(v))
+            .unwrap_or(Ok(String::new()))?;
+        let buttons: Vec<String> = map
+            .get("buttons")
+            .map(|v| self.value_list_to_strings(v))
+            .unwrap_or(Ok(vec!["OK".to_string()]))?;
+        let dialog_type = map
+            .get("dialog_type")
+            .and_then(|v| self.value_to_string(v).ok())
+            .map(|s| {
+                if s.eq_ignore_ascii_case("warning") {
+                    crate::stdlib::desktop::MessageDialogType::Warning
+                } else if s.eq_ignore_ascii_case("error") {
+                    crate::stdlib::desktop::MessageDialogType::Error
+                } else if s.eq_ignore_ascii_case("question") {
+                    crate::stdlib::desktop::MessageDialogType::Question
+                } else {
+                    crate::stdlib::desktop::MessageDialogType::Info
+                }
+            })
+            .unwrap_or(crate::stdlib::desktop::MessageDialogType::Info);
+        Ok(crate::stdlib::desktop::MessageDialogOptions {
+            title,
+            message,
+            dialog_type,
+            buttons,
+        })
+    }
+
+    fn value_to_notification_options(
+        &self,
+        value: &Value,
+    ) -> Result<crate::stdlib::desktop::NotificationOptions, RuntimeError> {
+        let map = match value {
+            Value::Map(m) => m,
+            _ => {
+                return Err(RuntimeError::TypeError {
+                    expected: "map".to_string(),
+                    got: value.type_name().to_string(),
+                })
+            }
+        };
+        let title = map
+            .get("title")
+            .map(|v| self.value_to_string(v))
+            .unwrap_or(Ok("".to_string()))?;
+        let message = map
+            .get("message")
+            .map(|v| self.value_to_string(v))
+            .unwrap_or(Ok(String::new()))?;
+        let icon_path = map
+            .get("icon_path")
+            .and_then(|v| self.value_to_string(v).ok());
+        let sound = map
+            .get("sound")
+            .and_then(|v| self.value_to_bool(v).ok())
+            .unwrap_or(true);
+        let timeout = map.get("timeout").and_then(|v| self.value_to_int(v).ok());
+        Ok(crate::stdlib::desktop::NotificationOptions {
+            title,
+            message,
+            icon_path,
+            sound,
+            timeout,
+        })
     }
 
     /// Convert Value::Map to HashMap<String, String> for chain:: deploy/call/mint/update.
@@ -1530,6 +1793,8 @@ impl Runtime {
             "evolve" => self.call_evolve_function(function_name, args),
             "workflow" => self.call_workflow_function(function_name, args),
             "skills" => self.call_skills_function(function_name, args),
+            "trust" => self.call_trust_function(function_name, args),
+            "add_sol" => self.call_add_sol_function(function_name, args),
             _ => {
                 // Check if namespace is a registered service name (e.g., TestNFT::new())
                 if self.services.contains_key(namespace) {
@@ -3235,25 +3500,275 @@ impl Runtime {
     }
 
     fn call_log_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::log::{self, LogLevel};
+
+        fn to_log_data(value: &Value) -> std::collections::HashMap<String, Value> {
+            match value {
+                Value::Map(m) => m.clone(),
+                Value::Struct(_, m) => m.clone(),
+                v => {
+                    let mut m = std::collections::HashMap::new();
+                    m.insert("message".to_string(), v.clone());
+                    m
+                }
+            }
+        }
+
         match name {
             "info" => {
-                if args.len() != 2 {
+                if args.len() < 2 || args.len() > 3 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 2,
                         got: args.len(),
                     });
                 }
-                println!("[INFO] {}: {}", args[0], args[1]);
+                let (msg, data, source): (String, _, Option<String>) = if args.len() == 2 {
+                    let tag = self.value_to_string(&args[0])?;
+                    let second = &args[1];
+                    match second {
+                        Value::Map(_) | Value::Struct(_, _) => {
+                            (tag.clone(), to_log_data(second), Some(tag))
+                        }
+                        _ => {
+                            let msg = self.value_to_string(second)?;
+                            (msg, std::collections::HashMap::new(), Some(tag))
+                        }
+                    }
+                } else {
+                    let msg = self.value_to_string(&args[0])?;
+                    let data = to_log_data(&args[1]);
+                    let source = self.value_to_string(&args[2]).ok();
+                    (msg, data, source)
+                };
+                log::info(&msg, data, source.as_deref());
+                Ok(Value::Null)
+            }
+            "warning" => {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let (msg, data, source): (String, _, Option<String>) = if args.len() == 2 {
+                    let tag = self.value_to_string(&args[0])?;
+                    let second = &args[1];
+                    match second {
+                        Value::Map(_) | Value::Struct(_, _) => {
+                            (tag.clone(), to_log_data(second), Some(tag))
+                        }
+                        _ => {
+                            let msg = self.value_to_string(second)?;
+                            (msg, std::collections::HashMap::new(), Some(tag))
+                        }
+                    }
+                } else {
+                    let msg = self.value_to_string(&args[0])?;
+                    let data = to_log_data(&args[1]);
+                    let source = self.value_to_string(&args[2]).ok();
+                    (msg, data, source)
+                };
+                log::warning(&msg, data, source.as_deref());
+                Ok(Value::Null)
+            }
+            "error" => {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let (msg, data, source): (String, _, Option<String>) = if args.len() == 2 {
+                    let tag = self.value_to_string(&args[0])?;
+                    let second = &args[1];
+                    match second {
+                        Value::Map(_) | Value::Struct(_, _) => {
+                            (tag.clone(), to_log_data(second), Some(tag))
+                        }
+                        _ => {
+                            let msg = self.value_to_string(second)?;
+                            (msg, std::collections::HashMap::new(), Some(tag))
+                        }
+                    }
+                } else {
+                    let msg = self.value_to_string(&args[0])?;
+                    let data = to_log_data(&args[1]);
+                    let source = self.value_to_string(&args[2]).ok();
+                    (msg, data, source)
+                };
+                log::error(&msg, data, source.as_deref());
                 Ok(Value::Null)
             }
             "audit" => {
-                if args.len() != 2 {
+                if args.len() < 2 || args.len() > 3 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 2,
                         got: args.len(),
                     });
                 }
-                println!("[AUDIT] {}: {}", args[0], args[1]);
+                let (event, data, source): (String, _, Option<String>) = if args.len() == 2 {
+                    let tag = self.value_to_string(&args[0])?;
+                    let second = &args[1];
+                    match second {
+                        Value::Map(_) | Value::Struct(_, _) => {
+                            (tag.clone(), to_log_data(second), Some(tag))
+                        }
+                        _ => {
+                            let mut m = std::collections::HashMap::new();
+                            m.insert("message".to_string(), second.clone());
+                            (tag, m, None)
+                        }
+                    }
+                } else {
+                    let event = self.value_to_string(&args[0])?;
+                    let data = to_log_data(&args[1]);
+                    let source = self.value_to_string(&args[2]).ok();
+                    (event, data, source)
+                };
+                log::audit(&event, data, source.as_deref());
+                Ok(Value::Null)
+            }
+            "debug" => {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let (msg, data, source): (String, _, Option<String>) = if args.len() == 2 {
+                    let tag = self.value_to_string(&args[0])?;
+                    let second = &args[1];
+                    match second {
+                        Value::Map(_) | Value::Struct(_, _) => {
+                            (tag.clone(), to_log_data(second), Some(tag))
+                        }
+                        _ => {
+                            let msg = self.value_to_string(second)?;
+                            (msg, std::collections::HashMap::new(), Some(tag))
+                        }
+                    }
+                } else {
+                    let msg = self.value_to_string(&args[0])?;
+                    let data = to_log_data(&args[1]);
+                    let source = self.value_to_string(&args[2]).ok();
+                    (msg, data, source)
+                };
+                log::debug(&msg, data, source.as_deref());
+                Ok(Value::Null)
+            }
+            "get_entries" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                let entries = log::get_entries();
+                let arr: Vec<Value> = entries
+                    .into_iter()
+                    .map(|e| {
+                        let mut m = std::collections::HashMap::new();
+                        m.insert("timestamp".to_string(), Value::Int(e.timestamp));
+                        m.insert(
+                            "level".to_string(),
+                            Value::String(format!("{:?}", e.level).to_lowercase()),
+                        );
+                        m.insert("message".to_string(), Value::String(e.message));
+                        m.insert("data".to_string(), Value::Map(e.data));
+                        m.insert("source".to_string(), Value::String(e.source));
+                        Value::Map(m)
+                    })
+                    .collect();
+                Ok(Value::Array(arr))
+            }
+            "get_entries_by_level" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let level_str = self.value_to_string(&args[0])?.to_lowercase();
+                let level = match level_str.as_str() {
+                    "info" => LogLevel::Info,
+                    "warning" => LogLevel::Warning,
+                    "error" => LogLevel::Error,
+                    "audit" => LogLevel::Audit,
+                    "debug" => LogLevel::Debug,
+                    _ => LogLevel::Info,
+                };
+                let entries = log::get_entries_by_level(level);
+                let arr: Vec<Value> = entries
+                    .into_iter()
+                    .map(|e| {
+                        let mut m = std::collections::HashMap::new();
+                        m.insert("timestamp".to_string(), Value::Int(e.timestamp));
+                        m.insert(
+                            "level".to_string(),
+                            Value::String(format!("{:?}", e.level).to_lowercase()),
+                        );
+                        m.insert("message".to_string(), Value::String(e.message));
+                        m.insert("data".to_string(), Value::Map(e.data));
+                        m.insert("source".to_string(), Value::String(e.source));
+                        Value::Map(m)
+                    })
+                    .collect();
+                Ok(Value::Array(arr))
+            }
+            "get_entries_by_source" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let source = self.value_to_string(&args[0])?;
+                let entries = log::get_entries_by_source(&source);
+                let arr: Vec<Value> = entries
+                    .into_iter()
+                    .map(|e| {
+                        let mut m = std::collections::HashMap::new();
+                        m.insert("timestamp".to_string(), Value::Int(e.timestamp));
+                        m.insert(
+                            "level".to_string(),
+                            Value::String(format!("{:?}", e.level).to_lowercase()),
+                        );
+                        m.insert("message".to_string(), Value::String(e.message));
+                        m.insert("data".to_string(), Value::Map(e.data));
+                        m.insert("source".to_string(), Value::String(e.source));
+                        Value::Map(m)
+                    })
+                    .collect();
+                Ok(Value::Array(arr))
+            }
+            "clear" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                log::clear();
+                Ok(Value::Null)
+            }
+            "get_stats" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                let stats = log::get_stats();
+                Ok(Value::Map(stats))
+            }
+            "initialize_file_logging" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                log::initialize_file_logging().map_err(RuntimeError::General)?;
                 Ok(Value::Null)
             }
             _ => Err(RuntimeError::function_not_found(format!("log::{}", name))),
@@ -3261,34 +3776,177 @@ impl Runtime {
     }
 
     fn call_crypto_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::crypto::{self, HashAlgorithm, SignatureAlgorithm};
+
+        fn parse_hash_algorithm(s: &str) -> HashAlgorithm {
+            match s.to_uppercase().as_str() {
+                "SHA256" => HashAlgorithm::SHA256,
+                "SHA512" => HashAlgorithm::SHA512,
+                "SIMPLE" => HashAlgorithm::Simple,
+                _ => HashAlgorithm::Custom(s.to_string()),
+            }
+        }
+
+        fn parse_sig_algorithm(s: &str) -> SignatureAlgorithm {
+            match s.to_uppercase().as_str() {
+                "RSA" => SignatureAlgorithm::RSA,
+                "ECDSA" => SignatureAlgorithm::ECDSA,
+                "ED25519" => SignatureAlgorithm::Ed25519,
+                _ => SignatureAlgorithm::Custom(s.to_string()),
+            }
+        }
+
         match name {
             "hash" => {
+                if args.len() < 1 || args.len() > 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let data = self.value_to_string(&args[0])?;
+                let algorithm = if args.len() > 1 {
+                    parse_hash_algorithm(&self.value_to_string(&args[1])?)
+                } else {
+                    HashAlgorithm::SHA256
+                };
+                Ok(Value::String(crypto::hash(&data, algorithm)))
+            }
+            "hash_bytes" => {
                 if args.len() != 2 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 2,
                         got: args.len(),
                     });
                 }
-                // Simulate hash generation
-                Ok(Value::String("hash_1234567890abcdef".to_string()))
+                let bytes = match &args[0] {
+                    Value::String(s) => s.as_bytes().to_vec(),
+                    Value::Array(arr) => arr
+                        .iter()
+                        .filter_map(|v| match v {
+                            Value::Int(i) => Some(*i as u8),
+                            _ => None,
+                        })
+                        .collect(),
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "crypto::hash_bytes: first arg must be string or int array".to_string(),
+                        ))
+                    }
+                };
+                let algorithm = self.value_to_string(&args[1])?;
+                crypto::hash_bytes(&bytes, &algorithm)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "random_hash" => {
+                let algorithm = if args.is_empty() {
+                    HashAlgorithm::SHA256
+                } else {
+                    parse_hash_algorithm(&self.value_to_string(&args[0])?)
+                };
+                Ok(Value::String(crypto::random_hash(algorithm)))
             }
             "sign" => {
-                if args.len() != 2 {
-                    return Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 2,
-                        got: args.len(),
-                    });
-                }
-                Ok(Value::String("signature_abcdef123456".to_string()))
-            }
-            "verify" => {
-                if args.len() != 3 {
+                if args.len() < 2 || args.len() > 3 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 3,
                         got: args.len(),
                     });
                 }
-                Ok(Value::Bool(true))
+                let data = self.value_to_string(&args[0])?;
+                let private_key = self.value_to_string(&args[1])?;
+                let algorithm = if args.len() > 2 {
+                    parse_sig_algorithm(&self.value_to_string(&args[2])?)
+                } else {
+                    SignatureAlgorithm::RSA
+                };
+                Ok(Value::String(crypto::sign(&data, &private_key, algorithm)))
+            }
+            "verify" => {
+                if args.len() < 3 || args.len() > 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
+                }
+                let data = self.value_to_string(&args[0])?;
+                let signature = self.value_to_string(&args[1])?;
+                let public_key = self.value_to_string(&args[2])?;
+                let algorithm = if args.len() > 3 {
+                    parse_sig_algorithm(&self.value_to_string(&args[3])?)
+                } else {
+                    SignatureAlgorithm::RSA
+                };
+                Ok(Value::Bool(crypto::verify(
+                    &data,
+                    &signature,
+                    &public_key,
+                    algorithm,
+                )))
+            }
+            "generate_keypair" => {
+                let algorithm = if args.is_empty() {
+                    SignatureAlgorithm::RSA
+                } else {
+                    parse_sig_algorithm(&self.value_to_string(&args[0])?)
+                };
+                let keypair = crypto::generate_keypair(algorithm);
+                let map: std::collections::HashMap<String, Value> = keypair
+                    .into_iter()
+                    .map(|(k, v)| (k, Value::String(v)))
+                    .collect();
+                Ok(Value::Map(map))
+            }
+            "encrypt" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let data = self.value_to_string(&args[0])?;
+                let public_key = self.value_to_string(&args[1])?;
+                Ok(Value::String(crypto::encrypt(&data, &public_key)))
+            }
+            "decrypt" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let encrypted = self.value_to_string(&args[0])?;
+                let private_key = self.value_to_string(&args[1])?;
+                Ok(crypto::decrypt(&encrypted, &private_key)
+                    .map(Value::String)
+                    .unwrap_or(Value::Null))
+            }
+            "encrypt_aes256" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let data = self.value_to_string(&args[0])?;
+                let key = self.value_to_string(&args[1])?;
+                crypto::encrypt_aes256(&data, &key)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "decrypt_aes256" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let encrypted = self.value_to_string(&args[0])?;
+                let key = self.value_to_string(&args[1])?;
+                crypto::decrypt_aes256(&encrypted, &key)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
             }
             _ => Err(RuntimeError::function_not_found(format!(
                 "crypto::{}",
@@ -3822,6 +4480,8 @@ impl Runtime {
                                 current_import_index: 0,
                                 allowed_namespaces: None,
                                 iot_state: IotState::default(),
+                                desktop_state: DesktopState::default(),
+                                database_connections: HashMap::new(),
                             };
 
                             match catch_runtime.execute_statement_internal(
@@ -5646,6 +6306,420 @@ impl Runtime {
         }
     }
 
+    fn call_trust_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::trust::{self, AdminLevel};
+
+        fn parse_admin_level(s: &str) -> Option<AdminLevel> {
+            AdminLevel::from_string(s)
+        }
+
+        match name {
+            "register_admin" => {
+                if args.len() < 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let admin_id = self.value_to_string(&args[0])?;
+                let level = parse_admin_level(&self.value_to_string(&args[1])?)
+                    .ok_or_else(|| RuntimeError::General("Invalid admin level".to_string()))?;
+                let permissions = if args.len() > 2 {
+                    self.value_to_string_vec(&args[2]).unwrap_or_default()
+                } else {
+                    vec![]
+                };
+                trust::register_admin(admin_id, level, permissions);
+                Ok(Value::Null)
+            }
+            "remove_admin" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let admin_id = self.value_to_string(&args[0])?;
+                Ok(Value::Bool(trust::remove_admin(&admin_id)))
+            }
+            "get_admin_info" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let admin_id = self.value_to_string(&args[0])?;
+                match trust::get_admin_info(&admin_id) {
+                    Some((level, perms)) => {
+                        let mut m = std::collections::HashMap::new();
+                        m.insert(
+                            "level".to_string(),
+                            Value::String(format!("{:?}", level).to_lowercase()),
+                        );
+                        m.insert(
+                            "permissions".to_string(),
+                            Value::Array(perms.into_iter().map(Value::String).collect()),
+                        );
+                        Ok(Value::Map(m))
+                    }
+                    None => Ok(Value::Null),
+                }
+            }
+            "authorize" => {
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let admin_id = self.value_to_string(&args[0])?;
+                let operation = self.value_to_string(&args[1])?;
+                let resource = self.value_to_string(&args[2])?;
+                Ok(Value::Bool(trust::authorize(
+                    &admin_id, &operation, &resource,
+                )))
+            }
+            "enforce_policy" => {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let policy_name = self.value_to_string(&args[0])?;
+                let (admin_id, level_str) = if args.len() == 3 {
+                    (
+                        self.value_to_string(&args[1])?,
+                        self.value_to_string(&args[2])?,
+                    )
+                } else if let Value::Map(m) = &args[1] {
+                    (
+                        m.get("admin_id")
+                            .and_then(|v| self.value_to_string(v).ok())
+                            .unwrap_or_else(|| "caller".to_string()),
+                        m.get("level")
+                            .and_then(|v| self.value_to_string(v).ok())
+                            .unwrap_or_else(|| "user".to_string()),
+                    )
+                } else {
+                    ("caller".to_string(), self.value_to_string(&args[1])?)
+                };
+                let context = trust::create_admin_context(admin_id, &level_str)
+                    .ok_or_else(|| RuntimeError::General("Invalid admin level".to_string()))?;
+                trust::enforce_policy(&policy_name, context)
+                    .map(Value::Bool)
+                    .map_err(RuntimeError::General)
+            }
+            "validate_hybrid_trust" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let admin_trust = self.value_to_string(&args[0])?;
+                let user_trust = self.value_to_string(&args[1])?;
+                Ok(Value::Bool(trust::validate_hybrid_trust(
+                    &admin_trust,
+                    &user_trust,
+                )))
+            }
+            "bridge_trusts" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let centralized = self.value_to_string(&args[0])?;
+                let decentralized = self.value_to_string(&args[1])?;
+                Ok(Value::Bool(trust::bridge_trusts(
+                    &centralized,
+                    &decentralized,
+                )))
+            }
+            "create_admin_context" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let admin_id = self.value_to_string(&args[0])?;
+                let level = self.value_to_string(&args[1])?;
+                match trust::create_admin_context(admin_id, &level) {
+                    Some(ctx) => {
+                        let mut m = std::collections::HashMap::new();
+                        m.insert("admin_id".to_string(), Value::String(ctx.admin_id));
+                        m.insert(
+                            "level".to_string(),
+                            Value::String(format!("{:?}", ctx.level).to_lowercase()),
+                        );
+                        Ok(Value::Map(m))
+                    }
+                    None => Ok(Value::Null),
+                }
+            }
+            _ => Err(RuntimeError::function_not_found(format!("trust::{}", name))),
+        }
+    }
+
+    fn call_add_sol_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::add_sol;
+        use std::collections::HashMap;
+
+        match name {
+            "parse_abi" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let abi_json = self.value_to_string(&args[0])?;
+                let functions = add_sol::parse_abi(abi_json).map_err(RuntimeError::General)?;
+                let arr: Vec<Value> = functions
+                    .into_iter()
+                    .map(|f| {
+                        let mut m = HashMap::new();
+                        m.insert("name".to_string(), Value::String(f.name));
+                        m.insert(
+                            "inputs".to_string(),
+                            Value::Array(
+                                f.inputs
+                                    .iter()
+                                    .map(|i| {
+                                        let mut im = HashMap::new();
+                                        im.insert(
+                                            "name".to_string(),
+                                            Value::String(i.name.clone()),
+                                        );
+                                        im.insert(
+                                            "param_type".to_string(),
+                                            Value::String(i.param_type.clone()),
+                                        );
+                                        Value::Map(im)
+                                    })
+                                    .collect(),
+                            ),
+                        );
+                        m.insert(
+                            "outputs".to_string(),
+                            Value::Array(
+                                f.outputs
+                                    .iter()
+                                    .map(|o| {
+                                        let mut om = HashMap::new();
+                                        om.insert(
+                                            "param_type".to_string(),
+                                            Value::String(o.param_type.clone()),
+                                        );
+                                        Value::Map(om)
+                                    })
+                                    .collect(),
+                            ),
+                        );
+                        Value::Map(m)
+                    })
+                    .collect();
+                Ok(Value::Array(arr))
+            }
+            "parse_events" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let abi_json = self.value_to_string(&args[0])?;
+                let events = add_sol::parse_events(abi_json).map_err(RuntimeError::General)?;
+                let arr: Vec<Value> = events
+                    .into_iter()
+                    .map(|e| {
+                        let mut m = HashMap::new();
+                        m.insert("name".to_string(), Value::String(e.name));
+                        m.insert(
+                            "inputs".to_string(),
+                            Value::Array(
+                                e.inputs
+                                    .iter()
+                                    .map(|i| {
+                                        let mut im = HashMap::new();
+                                        im.insert(
+                                            "name".to_string(),
+                                            Value::String(i.name.clone()),
+                                        );
+                                        im.insert(
+                                            "param_type".to_string(),
+                                            Value::String(i.param_type.clone()),
+                                        );
+                                        Value::Map(im)
+                                    })
+                                    .collect(),
+                            ),
+                        );
+                        Value::Map(m)
+                    })
+                    .collect();
+                Ok(Value::Array(arr))
+            }
+            "solidity_to_dal_type" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let solidity_type = self.value_to_string(&args[0])?;
+                Ok(Value::String(add_sol::solidity_to_dal_type(&solidity_type)))
+            }
+            "register_contract" => {
+                if args.len() < 3 || args.len() > 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                let address = self.value_to_string(&args[1])?;
+                let chain_id = self.value_to_int(&args[2])?;
+                let abi_json = args.get(3).and_then(|v| self.value_to_string(v).ok());
+                let contract = add_sol::register_contract(name, address, chain_id, abi_json);
+                let mut m = HashMap::new();
+                m.insert("name".to_string(), Value::String(contract.name));
+                m.insert("address".to_string(), Value::String(contract.address));
+                m.insert("chain_id".to_string(), Value::Int(contract.chain_id));
+                m.insert(
+                    "abi".to_string(),
+                    contract.abi.map(Value::String).unwrap_or(Value::Null),
+                );
+                Ok(Value::Map(m))
+            }
+            "call_with_abi" => {
+                if args.len() < 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let contract_map = match &args[0] {
+                    Value::Map(m) => m,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "add_sol::call_with_abi: first arg must be contract map".to_string(),
+                        ))
+                    }
+                };
+                let contract = add_sol::SolidityContract {
+                    name: contract_map
+                        .get("name")
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_default(),
+                    address: contract_map
+                        .get("address")
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_default(),
+                    chain_id: contract_map
+                        .get("chain_id")
+                        .and_then(|v| self.value_to_int(v).ok())
+                        .unwrap_or(1),
+                    abi: contract_map
+                        .get("abi")
+                        .and_then(|v| self.value_to_string(v).ok()),
+                };
+                let function_name = self.value_to_string(&args[1])?;
+                let args_map = match &args[2] {
+                    Value::Map(m) => m.clone(),
+                    _ => HashMap::new(),
+                };
+                add_sol::call_with_abi(&contract, function_name, args_map)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "listen_to_event" => {
+                if args.len() < 3 || args.len() > 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let contract_map = match &args[0] {
+                    Value::Map(m) => m,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "add_sol::listen_to_event: first arg must be contract map".to_string(),
+                        ))
+                    }
+                };
+                let contract = add_sol::SolidityContract {
+                    name: contract_map
+                        .get("name")
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_default(),
+                    address: contract_map
+                        .get("address")
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_default(),
+                    chain_id: contract_map
+                        .get("chain_id")
+                        .and_then(|v| self.value_to_int(v).ok())
+                        .unwrap_or(1),
+                    abi: contract_map
+                        .get("abi")
+                        .and_then(|v| self.value_to_string(v).ok()),
+                };
+                let event_name = self.value_to_string(&args[1])?;
+                let callback = self.value_to_string(&args[2])?;
+                let from_block = args.get(3).and_then(|v| self.value_to_int(v).ok());
+                let to_block = args.get(4).and_then(|v| self.value_to_int(v).ok());
+                Ok(Value::String(add_sol::listen_to_event(
+                    &contract, event_name, callback, from_block, to_block,
+                )))
+            }
+            "generate_wrapper_code" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let contract_map = match &args[0] {
+                    Value::Map(m) => m,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "add_sol::generate_wrapper_code: arg must be contract map".to_string(),
+                        ))
+                    }
+                };
+                let contract = add_sol::SolidityContract {
+                    name: contract_map
+                        .get("name")
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_default(),
+                    address: contract_map
+                        .get("address")
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_default(),
+                    chain_id: contract_map
+                        .get("chain_id")
+                        .and_then(|v| self.value_to_int(v).ok())
+                        .unwrap_or(1),
+                    abi: contract_map
+                        .get("abi")
+                        .and_then(|v| self.value_to_string(v).ok()),
+                };
+                add_sol::generate_wrapper_code(&contract)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            _ => Err(RuntimeError::function_not_found(format!(
+                "add_sol::{}",
+                name
+            ))),
+        }
+    }
+
     fn call_database_function(
         &mut self,
         name: &str,
@@ -5660,18 +6734,48 @@ impl Runtime {
                     });
                 }
                 let connection_string = self.value_to_string(&args[0])?;
-                Ok(Value::String(format!("db_connected_{}", connection_string)))
+                let db = crate::stdlib::database::connect(connection_string.clone())
+                    .map_err(RuntimeError::General)?;
+                let conn_id = format!("db_{}", crate::stdlib::ai::generate_id());
+                self.database_connections.insert(conn_id.clone(), db);
+                Ok(Value::String(conn_id))
             }
             "query" => {
-                if args.len() != 2 {
+                if args.len() < 2 || args.len() > 3 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 2,
                         got: args.len(),
                     });
                 }
-                let sql = self.value_to_string(&args[0])?;
-                let _params = self.value_to_string(&args[1])?;
-                Ok(Value::String(format!("query_result_{}", sql)))
+                let conn_id = self.value_to_string(&args[0])?;
+                let sql = self.value_to_string(&args[1])?;
+                let params = if args.len() > 2 {
+                    match &args[2] {
+                        Value::Array(a) | Value::List(a) => a.clone(),
+                        _ => vec![],
+                    }
+                } else {
+                    vec![]
+                };
+                let db = self.database_connections.get(&conn_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "database::query: connection '{}' not found (call database::connect first)",
+                        conn_id
+                    ))
+                })?;
+                let result = crate::stdlib::database::query(db, sql, params)
+                    .map_err(RuntimeError::General)?;
+                let mut out = std::collections::HashMap::new();
+                out.insert(
+                    "rows".to_string(),
+                    Value::Array(result.rows.into_iter().map(|row| Value::Map(row)).collect()),
+                );
+                out.insert("row_count".to_string(), Value::Int(result.row_count));
+                out.insert(
+                    "affected_rows".to_string(),
+                    Value::Int(result.affected_rows),
+                );
+                Ok(Value::Map(out))
             }
             // ===== TRANSACTION MANAGEMENT (ACID) =====
             "begin_transaction" => {
@@ -6587,7 +7691,32 @@ impl Runtime {
                     });
                 }
                 let text = self.value_to_string(&args[0])?;
-                Ok(Value::String(format!("text_analyzed_{}", text.len())))
+                let analysis =
+                    crate::stdlib::ai::analyze_text(text).map_err(RuntimeError::General)?;
+                let mut map = std::collections::HashMap::new();
+                map.insert("sentiment".to_string(), Value::Float(analysis.sentiment));
+                map.insert(
+                    "keywords".to_string(),
+                    Value::Array(analysis.keywords.into_iter().map(Value::String).collect()),
+                );
+                map.insert("summary".to_string(), Value::String(analysis.summary));
+                map.insert("language".to_string(), Value::String(analysis.language));
+                map.insert("confidence".to_string(), Value::Float(analysis.confidence));
+                let entities: Vec<Value> = analysis
+                    .entities
+                    .into_iter()
+                    .map(|e| {
+                        let mut em = std::collections::HashMap::new();
+                        em.insert("text".to_string(), Value::String(e.text));
+                        em.insert("entity_type".to_string(), Value::String(e.entity_type));
+                        em.insert("confidence".to_string(), Value::Float(e.confidence));
+                        em.insert("start_pos".to_string(), Value::Int(e.start_pos));
+                        em.insert("end_pos".to_string(), Value::Int(e.end_pos));
+                        Value::Map(em)
+                    })
+                    .collect();
+                map.insert("entities".to_string(), Value::Array(entities));
+                Ok(Value::Map(map))
             }
             "analyze_image" => {
                 if args.len() != 1 {
@@ -6596,7 +7725,32 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("image_analyzed".to_string()))
+                let image_data = match &args[0] {
+                    Value::String(s) => s.as_bytes().to_vec(),
+                    Value::Array(arr) => arr
+                        .iter()
+                        .filter_map(|v| match v {
+                            Value::Int(i) => Some(*i as u8),
+                            _ => None,
+                        })
+                        .collect(),
+                    _ => vec![],
+                };
+                let analysis =
+                    crate::stdlib::ai::analyze_image(image_data).map_err(RuntimeError::General)?;
+                Ok(self.image_analysis_to_value(analysis))
+            }
+            "analyze_image_url" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let url = self.value_to_string(&args[0])?;
+                let analysis =
+                    crate::stdlib::ai::analyze_image_url(&url).map_err(RuntimeError::General)?;
+                Ok(self.image_analysis_to_value(analysis))
             }
             "generate_text" => {
                 if args.len() != 1 {
@@ -6607,6 +7761,24 @@ impl Runtime {
                 }
                 let prompt = self.value_to_string(&args[0])?;
                 crate::stdlib::ai::generate_text(prompt)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "generate_image" => {
+                if args.len() < 1 || args.len() > 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let prompt = self.value_to_string(&args[0])?;
+                let model = if args.len() > 1 {
+                    self.value_to_string(&args[1])
+                        .unwrap_or_else(|_| "default".to_string())
+                } else {
+                    "default".to_string()
+                };
+                crate::stdlib::ai::generate_image(&model, &prompt)
                     .map(Value::String)
                     .map_err(RuntimeError::General)
             }
@@ -6622,6 +7794,25 @@ impl Runtime {
                     .map(Value::String)
                     .map_err(RuntimeError::General)
             }
+            "respond_with_tools_result" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let message = self.value_to_string(&args[0])?;
+                let r = crate::stdlib::ai::respond_with_tools_result(&message)
+                    .map_err(RuntimeError::General)?;
+                let mut map = std::collections::HashMap::new();
+                map.insert("final_text".to_string(), Value::String(r.final_text));
+                map.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
+                map.insert(
+                    "max_steps_reached".to_string(),
+                    Value::Bool(r.max_steps_reached),
+                );
+                Ok(Value::Map(map))
+            }
             "train_model" => {
                 if args.len() != 1 {
                     return Err(RuntimeError::ArgumentCountMismatch {
@@ -6629,7 +7820,10 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("model_trained".to_string()))
+                let training_data = self.parse_training_data(&args[0])?;
+                let model =
+                    crate::stdlib::ai::train_model(training_data).map_err(RuntimeError::General)?;
+                Ok(self.model_to_value(&model))
             }
             "predict" => {
                 if args.len() != 2 {
@@ -6638,7 +7832,315 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("prediction_made".to_string()))
+                let model_name = self.value_to_string(&args[0])?;
+                let input = args[1].clone();
+                let result = crate::stdlib::ai::predict_with_model(&model_name, input)
+                    .map_err(RuntimeError::General)?;
+                Ok(result)
+            }
+
+            // Simplified Wrapper API
+            "classify" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let model = self.value_to_string(&args[0])?;
+                let input = self.value_to_string(&args[1])?;
+                crate::stdlib::ai::classify(&model, &input)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "classify_with_confidence" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let model = self.value_to_string(&args[0])?;
+                let input = self.value_to_string(&args[1])?;
+                let (label, conf) = crate::stdlib::ai::classify_with_confidence(&model, &input)
+                    .map_err(RuntimeError::General)?;
+                let mut map = std::collections::HashMap::new();
+                map.insert("label".to_string(), Value::String(label));
+                map.insert("confidence".to_string(), Value::Float(conf));
+                Ok(Value::Map(map))
+            }
+            "generate" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let model = self.value_to_string(&args[0])?;
+                let prompt = self.value_to_string(&args[1])?;
+                crate::stdlib::ai::generate(&model, &prompt)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "embed" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let text = self.value_to_string(&args[0])?;
+                let embeddings = crate::stdlib::ai::embed(&text).map_err(RuntimeError::General)?;
+                Ok(Value::Array(
+                    embeddings.into_iter().map(Value::Float).collect(),
+                ))
+            }
+            "cosine_similarity" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let vec1 = self.value_to_f64_vec(&args[0])?;
+                let vec2 = self.value_to_f64_vec(&args[1])?;
+                let similarity = crate::stdlib::ai::cosine_similarity(&vec1, &vec2)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Float(similarity))
+            }
+            "detect_anomaly" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let data = self.value_to_f64_vec(&args[0])?;
+                let new_value = match &args[1] {
+                    Value::Float(f) => *f,
+                    Value::Int(i) => *i as f64,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "detect_anomaly: second argument must be a number".to_string(),
+                        ))
+                    }
+                };
+                let is_anomaly = crate::stdlib::ai::detect_anomaly(&data, new_value)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Bool(is_anomaly))
+            }
+            "predict_with_model" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let model_name = self.value_to_string(&args[0])?;
+                let input = args[1].clone();
+                crate::stdlib::ai::predict_with_model(&model_name, input)
+                    .map_err(RuntimeError::General)
+            }
+            "recommend" => {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let prefs = self.value_to_string_vec(&args[0])?;
+                let items = self.value_to_string_vec(&args[1])?;
+                let count = if args.len() > 2 {
+                    match &args[2] {
+                        Value::Int(i) => *i as usize,
+                        _ => 5,
+                    }
+                } else {
+                    5
+                };
+                let recs = crate::stdlib::ai::recommend(prefs, items, count)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Array(recs.into_iter().map(Value::String).collect()))
+            }
+
+            // Model Registry
+            "register_model" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                let model = self.parse_model_value(&args[1])?;
+                crate::stdlib::ai::register_model(name.clone(), model);
+                Ok(Value::String(name))
+            }
+            "get_model" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let name = self.value_to_string(&args[0])?;
+                match crate::stdlib::ai::get_model(&name) {
+                    Some(model) => Ok(self.model_to_value(&model)),
+                    None => Ok(Value::String("none".to_string())),
+                }
+            }
+
+            // AI Provider Configuration
+            "configure_openai" => {
+                if args.len() < 1 || args.len() > 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let api_key = self.value_to_string(&args[0])?;
+                let model = if args.len() > 1 {
+                    Some(self.value_to_string(&args[1])?)
+                } else {
+                    None
+                };
+                crate::stdlib::ai::configure_openai(api_key, model);
+                Ok(Value::Bool(true))
+            }
+            "configure_anthropic" => {
+                if args.len() < 1 || args.len() > 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let api_key = self.value_to_string(&args[0])?;
+                let model = if args.len() > 1 {
+                    Some(self.value_to_string(&args[1])?)
+                } else {
+                    None
+                };
+                crate::stdlib::ai::configure_anthropic(api_key, model);
+                Ok(Value::Bool(true))
+            }
+            "configure_local" => {
+                if args.len() < 1 || args.len() > 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let endpoint = self.value_to_string(&args[0])?;
+                let model = if args.len() > 1 {
+                    Some(self.value_to_string(&args[1])?)
+                } else {
+                    None
+                };
+                crate::stdlib::ai::configure_local(endpoint, model);
+                Ok(Value::Bool(true))
+            }
+            "configure_custom" => {
+                if args.len() < 3 || args.len() > 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let provider = self.value_to_string(&args[0])?;
+                let api_key = self.value_to_string(&args[1])?;
+                let endpoint = self.value_to_string(&args[2])?;
+                let model = if args.len() > 3 {
+                    Some(self.value_to_string(&args[3])?)
+                } else {
+                    None
+                };
+                crate::stdlib::ai::configure_custom(provider, api_key, endpoint, model);
+                Ok(Value::Bool(true))
+            }
+            "configure_cohere" => {
+                if args.len() < 1 || args.len() > 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let api_key = self.value_to_string(&args[0])?;
+                let model = if args.len() > 1 {
+                    Some(self.value_to_string(&args[1])?)
+                } else {
+                    None
+                };
+                crate::stdlib::ai::configure_cohere(api_key, model);
+                Ok(Value::Bool(true))
+            }
+            "configure_huggingface" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let api_key = self.value_to_string(&args[0])?;
+                let model = self.value_to_string(&args[1])?;
+                crate::stdlib::ai::configure_huggingface(api_key, model);
+                Ok(Value::Bool(true))
+            }
+            "configure_azure_openai" => {
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let endpoint = self.value_to_string(&args[0])?;
+                let api_key = self.value_to_string(&args[1])?;
+                let deployment = self.value_to_string(&args[2])?;
+                crate::stdlib::ai::configure_azure_openai(endpoint, api_key, deployment);
+                Ok(Value::Bool(true))
+            }
+            "configure_replicate" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let api_key = self.value_to_string(&args[0])?;
+                let model_version = self.value_to_string(&args[1])?;
+                crate::stdlib::ai::configure_replicate(api_key, model_version);
+                Ok(Value::Bool(true))
+            }
+            "configure_together_ai" => {
+                if args.len() < 1 || args.len() > 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let api_key = self.value_to_string(&args[0])?;
+                let model = if args.len() > 1 {
+                    Some(self.value_to_string(&args[1])?)
+                } else {
+                    None
+                };
+                crate::stdlib::ai::configure_together_ai(api_key, model);
+                Ok(Value::Bool(true))
+            }
+            "configure_openrouter" => {
+                if args.len() < 1 || args.len() > 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let api_key = self.value_to_string(&args[0])?;
+                let model = if args.len() > 1 {
+                    Some(self.value_to_string(&args[1])?)
+                } else {
+                    None
+                };
+                crate::stdlib::ai::configure_openrouter(api_key, model);
+                Ok(Value::Bool(true))
             }
 
             // Agent Coordination (wired to ai:: implementation; see docs/WORKFLOWS.md)
@@ -6749,7 +8251,14 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::Bool(true))
+                let agent_id = self.value_to_string(&args[0])?;
+                if let Some(agent) = self.ai_agents.get(&agent_id) {
+                    crate::stdlib::ai::save_agent_state(agent)
+                        .map(Value::Bool)
+                        .map_err(RuntimeError::General)
+                } else {
+                    Ok(Value::Bool(false))
+                }
             }
             "load_agent_state" => {
                 if args.len() != 1 {
@@ -6758,20 +8267,72 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("agent_state_loaded".to_string()))
+                let agent_id = self.value_to_string(&args[0])?;
+                match crate::stdlib::ai::load_agent_state(&agent_id) {
+                    Ok(agent) => {
+                        let id = agent.id.clone();
+                        let status = crate::stdlib::ai::get_agent_status(&agent);
+                        self.ai_agents.insert(id.clone(), agent);
+                        self.agent_states.entry(id.clone()).or_default().status = status.clone();
+                        Ok(Value::String(id))
+                    }
+                    Err(e) => Err(RuntimeError::General(e)),
+                }
             }
 
             // Agent Communication Protocols
             "create_communication_protocol" => {
-                if args.len() >= 3 {
-                    let name = self.value_to_string(&args[0])?;
-                    Ok(Value::String(format!("protocol_created_{}", name)))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 3,
                         got: args.len(),
-                    })
+                    });
                 }
+                let name = self.value_to_string(&args[0])?;
+                let supported_types = self.value_to_string_vec(&args[1])?;
+                let encryption = match &args[2] {
+                    Value::Bool(b) => *b,
+                    _ => false,
+                };
+                let auth = if args.len() > 3 {
+                    match &args[3] {
+                        Value::Bool(b) => *b,
+                        _ => false,
+                    }
+                } else {
+                    false
+                };
+                let protocol = crate::stdlib::ai::create_communication_protocol(
+                    name,
+                    supported_types,
+                    encryption,
+                    auth,
+                );
+                let mut map = std::collections::HashMap::new();
+                map.insert(
+                    "protocol_id".to_string(),
+                    Value::String(protocol.protocol_id),
+                );
+                map.insert("name".to_string(), Value::String(protocol.name));
+                map.insert(
+                    "supported_message_types".to_string(),
+                    Value::Array(
+                        protocol
+                            .supported_message_types
+                            .into_iter()
+                            .map(Value::String)
+                            .collect(),
+                    ),
+                );
+                map.insert(
+                    "encryption_enabled".to_string(),
+                    Value::Bool(protocol.encryption_enabled),
+                );
+                map.insert(
+                    "authentication_required".to_string(),
+                    Value::Bool(protocol.authentication_required),
+                );
+                Ok(Value::Map(map))
             }
             "validate_message_protocol" => {
                 if args.len() != 2 {
@@ -6780,7 +8341,50 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::Bool(true))
+                let msg_type = self.value_to_string(&args[0])?;
+                let protocol_name = self.value_to_string(&args[1])?;
+                let message = crate::stdlib::ai::Message {
+                    id: String::new(),
+                    from_agent: String::new(),
+                    to_agent: String::new(),
+                    message_type: msg_type,
+                    content: Value::String(String::new()),
+                    priority: crate::stdlib::ai::MessagePriority::Normal,
+                    timestamp: String::new(),
+                    correlation_id: None,
+                };
+                let protocol = crate::stdlib::ai::CommunicationProtocol {
+                    protocol_id: String::new(),
+                    name: protocol_name,
+                    supported_message_types: match &args[1] {
+                        Value::Map(m) => m
+                            .get("supported_message_types")
+                            .and_then(|v| {
+                                if let Value::Array(arr) = v {
+                                    Some(
+                                        arr.iter()
+                                            .filter_map(|v| {
+                                                if let Value::String(s) = v {
+                                                    Some(s.clone())
+                                                } else {
+                                                    None
+                                                }
+                                            })
+                                            .collect(),
+                                    )
+                                } else {
+                                    None
+                                }
+                            })
+                            .unwrap_or_default(),
+                        _ => vec![],
+                    },
+                    encryption_enabled: false,
+                    authentication_required: false,
+                };
+                crate::stdlib::ai::validate_message_protocol(&message, &protocol)
+                    .map(Value::Bool)
+                    .map_err(RuntimeError::General)
             }
 
             // Performance Monitoring
@@ -6791,7 +8395,16 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("agent_metrics".to_string()))
+                let agent_id = self.value_to_string(&args[0])?;
+                if let Some(agent) = self.ai_agents.get(&agent_id) {
+                    let metrics = crate::stdlib::ai::get_agent_metrics(agent);
+                    Ok(Value::Map(metrics))
+                } else {
+                    let mut m = std::collections::HashMap::new();
+                    m.insert("agent_id".to_string(), Value::String(agent_id));
+                    m.insert("status".to_string(), Value::String("unknown".to_string()));
+                    Ok(Value::Map(m))
+                }
             }
             "get_coordinator_metrics" => {
                 if args.len() != 1 {
@@ -7415,8 +9028,9 @@ impl Runtime {
     }
 
     fn call_desktop_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::desktop;
         match name {
-            // === PHASE 5: DESKTOP GUI FUNCTIONS ===
+            // === DESKTOP GUI (wired to stdlib::desktop) ===
 
             // Window Management
             "create_window" => {
@@ -7426,7 +9040,12 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("window_created".to_string()))
+                let config = self.value_to_window_config(&args[0])?;
+                let window = desktop::create_window(config)
+                    .map_err(|e| RuntimeError::General(format!("desktop::create_window: {}", e)))?;
+                let id = window.id.clone();
+                self.desktop_state.windows.insert(id.clone(), window);
+                Ok(Value::String(id))
             }
             "show_window" => {
                 if args.len() != 1 {
@@ -7435,6 +9054,19 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let window_id = self.value_to_string(args.get(0).unwrap_or(&Value::Null))?;
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::show_window: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                desktop::show_window(w)
+                    .map_err(|e| RuntimeError::General(format!("desktop::show_window: {}", e)))?;
                 Ok(Value::Bool(true))
             }
             "hide_window" => {
@@ -7444,6 +9076,19 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let window_id = self.value_to_string(args.get(0).unwrap_or(&Value::Null))?;
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::hide_window: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                desktop::hide_window(w)
+                    .map_err(|e| RuntimeError::General(format!("desktop::hide_window: {}", e)))?;
                 Ok(Value::Bool(true))
             }
             "close_window" => {
@@ -7453,6 +9098,20 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let window_id = self.value_to_string(args.get(0).unwrap_or(&Value::Null))?;
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::close_window: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                desktop::close_window(w)
+                    .map_err(|e| RuntimeError::General(format!("desktop::close_window: {}", e)))?;
+                self.desktop_state.windows.remove(&window_id);
                 Ok(Value::Bool(true))
             }
             "maximize_window" => {
@@ -7462,6 +9121,20 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let window_id = self.value_to_string(args.get(0).unwrap_or(&Value::Null))?;
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::maximize_window: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                desktop::maximize_window(w).map_err(|e| {
+                    RuntimeError::General(format!("desktop::maximize_window: {}", e))
+                })?;
                 Ok(Value::Bool(true))
             }
             "minimize_window" => {
@@ -7471,6 +9144,20 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let window_id = self.value_to_string(args.get(0).unwrap_or(&Value::Null))?;
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::minimize_window: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                desktop::minimize_window(w).map_err(|e| {
+                    RuntimeError::General(format!("desktop::minimize_window: {}", e))
+                })?;
                 Ok(Value::Bool(true))
             }
             "restore_window" => {
@@ -7480,142 +9167,265 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let window_id = self.value_to_string(args.get(0).unwrap_or(&Value::Null))?;
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::restore_window: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                desktop::restore_window(w).map_err(|e| {
+                    RuntimeError::General(format!("desktop::restore_window: {}", e))
+                })?;
                 Ok(Value::Bool(true))
             }
 
-            // UI Component Creation
+            // UI Component Creation (store in desktop_state.components, return id)
             "create_button" => {
-                if args.len() >= 5 {
-                    let text = self.value_to_string(&args[0])?;
-                    Ok(Value::String(format!("button_created_{}", text)))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 5,
                         got: args.len(),
-                    })
+                    });
                 }
+                let text = self.value_to_string(&args[0])?;
+                let x = self.value_to_int(&args[1])?;
+                let y = self.value_to_int(&args[2])?;
+                let width = self.value_to_int(&args[3])?;
+                let height = self.value_to_int(&args[4])?;
+                let comp = desktop::create_button(text, x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_label" => {
-                if args.len() >= 5 {
-                    let text = self.value_to_string(&args[0])?;
-                    Ok(Value::String(format!("label_created_{}", text)))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 5,
                         got: args.len(),
-                    })
+                    });
                 }
+                let text = self.value_to_string(&args[0])?;
+                let x = self.value_to_int(&args[1])?;
+                let y = self.value_to_int(&args[2])?;
+                let width = self.value_to_int(&args[3])?;
+                let height = self.value_to_int(&args[4])?;
+                let comp = desktop::create_label(text, x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_text_field" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("text_field_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 5,
                         got: args.len(),
-                    })
+                    });
                 }
+                let placeholder = args.get(0).and_then(|v| self.value_to_string(v).ok());
+                let x = self.value_to_int(&args[1])?;
+                let y = self.value_to_int(&args[2])?;
+                let width = self.value_to_int(&args[3])?;
+                let height = self.value_to_int(&args[4])?;
+                let comp = desktop::create_text_field(placeholder, x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_text_area" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("text_area_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 5,
                         got: args.len(),
-                    })
+                    });
                 }
+                let placeholder = args.get(0).and_then(|v| self.value_to_string(v).ok());
+                let x = self.value_to_int(&args[1])?;
+                let y = self.value_to_int(&args[2])?;
+                let width = self.value_to_int(&args[3])?;
+                let height = self.value_to_int(&args[4])?;
+                let comp = desktop::create_text_area(placeholder, x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_checkbox" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("checkbox_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 5,
                         got: args.len(),
-                    })
+                    });
                 }
+                let text = self.value_to_string(&args[0])?;
+                let x = self.value_to_int(&args[1])?;
+                let y = self.value_to_int(&args[2])?;
+                let width = self.value_to_int(&args[3])?;
+                let height = self.value_to_int(&args[4])?;
+                let comp = desktop::create_checkbox(text, x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_combobox" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("combobox_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 5,
                         got: args.len(),
-                    })
+                    });
                 }
+                let items = if let Value::List(_) = &args[0] {
+                    self.value_list_to_strings(&args[0])?
+                } else {
+                    vec![self.value_to_string(&args[0])?]
+                };
+                let x = self.value_to_int(&args[1])?;
+                let y = self.value_to_int(&args[2])?;
+                let width = self.value_to_int(&args[3])?;
+                let height = self.value_to_int(&args[4])?;
+                let comp = desktop::create_combobox(items, x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_listbox" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("listbox_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 5,
                         got: args.len(),
-                    })
+                    });
                 }
+                let items = if let Value::List(_) = &args[0] {
+                    self.value_list_to_strings(&args[0])?
+                } else {
+                    vec![self.value_to_string(&args[0])?]
+                };
+                let x = self.value_to_int(&args[1])?;
+                let y = self.value_to_int(&args[2])?;
+                let width = self.value_to_int(&args[3])?;
+                let height = self.value_to_int(&args[4])?;
+                let comp = desktop::create_listbox(items, x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_table" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("table_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 5,
                         got: args.len(),
-                    })
+                    });
                 }
+                let columns = if let Value::List(_) = &args[0] {
+                    self.value_list_to_strings(&args[0])?
+                } else {
+                    vec![self.value_to_string(&args[0])?]
+                };
+                let x = self.value_to_int(&args[1])?;
+                let y = self.value_to_int(&args[2])?;
+                let width = self.value_to_int(&args[3])?;
+                let height = self.value_to_int(&args[4])?;
+                let comp = desktop::create_table(columns, x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
-            "create_menu_bar" => Ok(Value::String("menu_bar_created".to_string())),
+            "create_menu_bar" => {
+                let comp = desktop::create_menu_bar();
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
+            }
             "create_toolbar" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("toolbar_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 5,
                         got: args.len(),
-                    })
+                    });
                 }
+                let orient = self
+                    .value_to_string(&args[0])
+                    .ok()
+                    .filter(|s| s.eq_ignore_ascii_case("vertical"))
+                    .map(|_| desktop::Orientation::Vertical)
+                    .unwrap_or(desktop::Orientation::Horizontal);
+                let x = self.value_to_int(&args[1])?;
+                let y = self.value_to_int(&args[2])?;
+                let width = self.value_to_int(&args[3])?;
+                let height = self.value_to_int(&args[4])?;
+                let comp = desktop::create_toolbar(orient, x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_status_bar" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("status_bar_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 5,
+                if args.len() < 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
                         got: args.len(),
-                    })
+                    });
                 }
+                let x = self.value_to_int(&args[0])?;
+                let y = self.value_to_int(&args[1])?;
+                let width = self.value_to_int(&args[2])?;
+                let height = self.value_to_int(&args[3])?;
+                let comp = desktop::create_status_bar(x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_tab_view" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("tab_view_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 5,
+                if args.len() < 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
                         got: args.len(),
-                    })
+                    });
                 }
+                let x = self.value_to_int(&args[0])?;
+                let y = self.value_to_int(&args[1])?;
+                let width = self.value_to_int(&args[2])?;
+                let height = self.value_to_int(&args[3])?;
+                let comp = desktop::create_tab_view(x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_progress_bar" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("progress_bar_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 5,
+                if args.len() < 6 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 6,
                         got: args.len(),
-                    })
+                    });
                 }
+                let min = self.value_to_int(&args[0])?;
+                let max = self.value_to_int(&args[1])?;
+                let x = self.value_to_int(&args[2])?;
+                let y = self.value_to_int(&args[3])?;
+                let width = self.value_to_int(&args[4])?;
+                let height = self.value_to_int(&args[5])?;
+                let comp = desktop::create_progress_bar(min, max, x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
             "create_image_view" => {
-                if args.len() >= 5 {
-                    Ok(Value::String("image_view_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 5,
+                if args.len() < 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
                         got: args.len(),
-                    })
+                    });
                 }
+                let x = self.value_to_int(&args[0])?;
+                let y = self.value_to_int(&args[1])?;
+                let width = self.value_to_int(&args[2])?;
+                let height = self.value_to_int(&args[3])?;
+                let comp = desktop::create_image_view(x, y, width, height);
+                let id = desktop::get_component_id(&comp);
+                self.desktop_state.components.insert(id.clone(), comp);
+                Ok(Value::String(id))
             }
 
             // Component Management
@@ -7626,6 +9436,31 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let window_id = self.value_to_string(&args[0])?;
+                let component_id = self.value_to_string(&args[1])?;
+                let comp = self
+                    .desktop_state
+                    .components
+                    .remove(&component_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::add_component_to_window: component '{}' not found",
+                            component_id
+                        ))
+                    })?;
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::add_component_to_window: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                desktop::add_component_to_window(w, comp).map_err(|e| {
+                    RuntimeError::General(format!("desktop::add_component_to_window: {}", e))
+                })?;
                 Ok(Value::Bool(true))
             }
             "remove_component_from_window" => {
@@ -7635,17 +9470,49 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::Bool(true))
+                let window_id = self.value_to_string(&args[0])?;
+                let component_id = self.value_to_string(&args[1])?;
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::remove_component_from_window: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                let ok = desktop::remove_component_from_window(w, &component_id).map_err(|e| {
+                    RuntimeError::General(format!("desktop::remove_component_from_window: {}", e))
+                })?;
+                Ok(Value::Bool(ok))
             }
 
             // Event Handling
             "add_event_handler" => {
-                if args.len() != 3 {
+                if args.len() != 4 {
                     return Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 3,
+                        expected: 4,
                         got: args.len(),
                     });
                 }
+                let window_id = self.value_to_string(&args[0])?;
+                let component_id = self.value_to_string(&args[1])?;
+                let event_type = self.value_to_string(&args[2])?;
+                let handler_function = self.value_to_string(&args[3])?;
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::add_event_handler: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                desktop::add_event_handler(w, component_id, event_type, handler_function).map_err(
+                    |e| RuntimeError::General(format!("desktop::add_event_handler: {}", e)),
+                )?;
                 Ok(Value::Bool(true))
             }
             "remove_event_handler" => {
@@ -7655,17 +9522,55 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let window_id = self.value_to_string(&args[0])?;
+                let component_id = self.value_to_string(&args[1])?;
+                let event_type = self.value_to_string(&args[2])?;
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::remove_event_handler: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                desktop::remove_event_handler(w, component_id, event_type).map_err(|e| {
+                    RuntimeError::General(format!("desktop::remove_event_handler: {}", e))
+                })?;
                 Ok(Value::Bool(true))
             }
             "trigger_event" => {
-                if args.len() >= 3 {
-                    Ok(Value::String("event_triggered".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 3,
                         got: args.len(),
-                    })
+                    });
                 }
+                let window_id = self.value_to_string(&args[0])?;
+                let component_id = self.value_to_string(&args[1])?;
+                let event_type = self.value_to_string(&args[2])?;
+                let event_data: HashMap<String, Value> = args
+                    .get(3)
+                    .and_then(|v| {
+                        if let Value::Map(m) = v {
+                            Some(m.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or_default();
+                let w = self.desktop_state.windows.get(&window_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "desktop::trigger_event: window '{}' not found",
+                        window_id
+                    ))
+                })?;
+                let handlers = desktop::trigger_event(w, component_id, event_type, event_data)
+                    .map_err(|e| RuntimeError::General(format!("desktop::trigger_event: {}", e)))?;
+                Ok(Value::List(
+                    handlers.into_iter().map(Value::String).collect(),
+                ))
             }
 
             // Dialogs and System Integration
@@ -7676,7 +9581,11 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("file_dialog_shown".to_string()))
+                let opts = self.value_to_file_dialog_options(&args[0])?;
+                let paths = desktop::show_file_dialog(opts).map_err(|e| {
+                    RuntimeError::General(format!("desktop::show_file_dialog: {}", e))
+                })?;
+                Ok(Value::List(paths.into_iter().map(Value::String).collect()))
             }
             "show_save_dialog" => {
                 if args.len() != 1 {
@@ -7685,7 +9594,11 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("save_dialog_shown".to_string()))
+                let opts = self.value_to_save_dialog_options(&args[0])?;
+                let path = desktop::show_save_dialog(opts).map_err(|e| {
+                    RuntimeError::General(format!("desktop::show_save_dialog: {}", e))
+                })?;
+                Ok(Value::String(path))
             }
             "show_message_dialog" => {
                 if args.len() != 1 {
@@ -7694,17 +9607,23 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("message_dialog_shown".to_string()))
+                let opts = self.value_to_message_dialog_options(&args[0])?;
+                let button = desktop::show_message_dialog(opts).map_err(|e| {
+                    RuntimeError::General(format!("desktop::show_message_dialog: {}", e))
+                })?;
+                Ok(Value::String(button))
             }
             "create_system_tray_icon" => {
-                if args.len() >= 2 {
-                    Ok(Value::String("system_tray_icon_created".to_string()))
-                } else {
-                    Err(RuntimeError::ArgumentCountMismatch {
+                if args.len() < 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 2,
                         got: args.len(),
-                    })
+                    });
                 }
+                let icon_path = self.value_to_string(&args[0])?;
+                let tooltip = self.value_to_string(&args[1])?;
+                let _icon = desktop::create_system_tray_icon(icon_path, tooltip);
+                Ok(Value::String("system_tray_icon_created".to_string()))
             }
             "show_notification" => {
                 if args.len() != 1 {
@@ -7713,7 +9632,11 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
-                Ok(Value::Bool(true))
+                let opts = self.value_to_notification_options(&args[0])?;
+                let ok = desktop::show_notification(opts).map_err(|e| {
+                    RuntimeError::General(format!("desktop::show_notification: {}", e))
+                })?;
+                Ok(Value::Bool(ok))
             }
 
             // Theming and Styling
@@ -7725,6 +9648,8 @@ impl Runtime {
                     });
                 }
                 let name = self.value_to_string(&args[0])?;
+                let theme = desktop::create_theme(name.clone());
+                self.desktop_state.themes.insert(name.clone(), theme);
                 Ok(Value::String(format!("theme_created_{}", name)))
             }
             "apply_theme_to_window" => {
@@ -7734,6 +9659,32 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let window_id = self.value_to_string(&args[0])?;
+                let theme_name = self.value_to_string(&args[1])?;
+                let theme = self
+                    .desktop_state
+                    .themes
+                    .get(&theme_name)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::apply_theme_to_window: theme '{}' not found",
+                            theme_name
+                        ))
+                    })?
+                    .clone();
+                let w = self
+                    .desktop_state
+                    .windows
+                    .get_mut(&window_id)
+                    .ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "desktop::apply_theme_to_window: window '{}' not found",
+                            window_id
+                        ))
+                    })?;
+                desktop::apply_theme_to_window(w, theme).map_err(|e| {
+                    RuntimeError::General(format!("desktop::apply_theme_to_window: {}", e))
+                })?;
                 Ok(Value::Bool(true))
             }
             "apply_theme_to_component" => {
@@ -7743,12 +9694,52 @@ impl Runtime {
                         got: args.len(),
                     });
                 }
+                let component_id = self.value_to_string(&args[0])?;
+                let theme_name = self.value_to_string(&args[1])?;
+                let theme = self.desktop_state.themes.get(&theme_name).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "desktop::apply_theme_to_component: theme '{}' not found",
+                        theme_name
+                    ))
+                })?;
+                let mut found = false;
+                for w in self.desktop_state.windows.values_mut() {
+                    for comp in w.components.iter_mut() {
+                        if desktop::get_component_id(comp) == component_id {
+                            desktop::apply_theme_to_component(comp, theme);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if !found {
+                    if let Some(comp) = self.desktop_state.components.get_mut(&component_id) {
+                        desktop::apply_theme_to_component(comp, theme);
+                        found = true;
+                    }
+                }
+                if !found {
+                    return Err(RuntimeError::General(format!(
+                        "desktop::apply_theme_to_component: component '{}' not found",
+                        component_id
+                    )));
+                }
                 Ok(Value::String("theme_applied".to_string()))
             }
 
             // Application Lifecycle
-            "run_event_loop" => Ok(Value::String("event_loop_started".to_string())),
-            "exit_application" => Ok(Value::String("application_exited".to_string())),
+            "run_event_loop" => {
+                desktop::run_event_loop().map_err(|e| {
+                    RuntimeError::General(format!("desktop::run_event_loop: {}", e))
+                })?;
+                Ok(Value::String("event_loop_started".to_string()))
+            }
+            "exit_application" => {
+                desktop::exit_application().map_err(|e| {
+                    RuntimeError::General(format!("desktop::exit_application: {}", e))
+                })?;
+                Ok(Value::String("application_exited".to_string()))
+            }
 
             _ => Err(RuntimeError::function_not_found(format!(
                 "desktop::{}",
@@ -9453,6 +11444,231 @@ impl Runtime {
             });
         }
         Ok(steps)
+    }
+
+    fn image_analysis_to_value(&self, analysis: crate::stdlib::ai::ImageAnalysis) -> Value {
+        let mut map = std::collections::HashMap::new();
+        let objects: Vec<Value> = analysis
+            .objects
+            .into_iter()
+            .map(|o| {
+                let mut om = std::collections::HashMap::new();
+                om.insert("object_type".to_string(), Value::String(o.object_type));
+                om.insert("confidence".to_string(), Value::Float(o.confidence));
+                let mut bb = std::collections::HashMap::new();
+                bb.insert("x".to_string(), Value::Int(o.bounding_box.x));
+                bb.insert("y".to_string(), Value::Int(o.bounding_box.y));
+                bb.insert("width".to_string(), Value::Int(o.bounding_box.width));
+                bb.insert("height".to_string(), Value::Int(o.bounding_box.height));
+                om.insert("bounding_box".to_string(), Value::Map(bb));
+                Value::Map(om)
+            })
+            .collect();
+        map.insert("objects".to_string(), Value::Array(objects));
+        map.insert(
+            "text".to_string(),
+            Value::Array(analysis.text.into_iter().map(Value::String).collect()),
+        );
+        map.insert(
+            "colors".to_string(),
+            Value::Array(analysis.colors.into_iter().map(Value::String).collect()),
+        );
+        map.insert(
+            "quality_score".to_string(),
+            Value::Float(analysis.quality_score),
+        );
+        Value::Map(map)
+    }
+
+    fn model_to_value(&self, model: &crate::stdlib::ai::Model) -> Value {
+        let mut map = std::collections::HashMap::new();
+        map.insert(
+            "model_id".to_string(),
+            Value::String(model.model_id.clone()),
+        );
+        map.insert(
+            "model_type".to_string(),
+            Value::String(model.model_type.clone()),
+        );
+        map.insert("version".to_string(), Value::String(model.version.clone()));
+        map.insert("accuracy".to_string(), Value::Float(model.accuracy));
+        map.insert(
+            "training_data_size".to_string(),
+            Value::Int(model.training_data_size),
+        );
+        map.insert(
+            "created_at".to_string(),
+            Value::String(model.created_at.clone()),
+        );
+        map.insert(
+            "last_updated".to_string(),
+            Value::String(model.last_updated.clone()),
+        );
+        Value::Map(map)
+    }
+
+    fn parse_training_data(
+        &self,
+        value: &Value,
+    ) -> Result<crate::stdlib::ai::TrainingData, RuntimeError> {
+        let fields = match value {
+            Value::Struct(_, f) | Value::Map(f) => f,
+            _ => {
+                return Ok(crate::stdlib::ai::TrainingData {
+                    data_type: "generic".to_string(),
+                    samples: vec![value.clone()],
+                    labels: vec![],
+                    features: vec![],
+                    metadata: std::collections::HashMap::new(),
+                });
+            }
+        };
+        let data_type = fields
+            .get("data_type")
+            .and_then(|v| self.value_to_string(v).ok())
+            .unwrap_or_else(|| "generic".to_string());
+        let samples = fields
+            .get("samples")
+            .and_then(|v| {
+                if let Value::Array(a) | Value::List(a) = v {
+                    Some(a.clone())
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default();
+        let labels = fields
+            .get("labels")
+            .and_then(|v| {
+                if let Value::Array(a) | Value::List(a) = v {
+                    Some(a.clone())
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default();
+        let features = fields
+            .get("features")
+            .and_then(|v| {
+                if let Value::Array(a) | Value::List(a) = v {
+                    Some(
+                        a.iter()
+                            .filter_map(|v| self.value_to_string(v).ok())
+                            .collect(),
+                    )
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default();
+        let metadata = fields
+            .get("metadata")
+            .and_then(|v| {
+                if let Value::Map(m) | Value::Struct(_, m) = v {
+                    Some(m.clone())
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default();
+        Ok(crate::stdlib::ai::TrainingData {
+            data_type,
+            samples,
+            labels,
+            features,
+            metadata,
+        })
+    }
+
+    fn parse_model_value(&self, value: &Value) -> Result<crate::stdlib::ai::Model, RuntimeError> {
+        let fields = match value {
+            Value::Struct(_, f) | Value::Map(f) => f,
+            _ => {
+                return Ok(crate::stdlib::ai::Model {
+                    model_id: format!("model_{}", crate::stdlib::ai::generate_id()),
+                    model_type: "custom".to_string(),
+                    version: "1.0.0".to_string(),
+                    accuracy: 0.0,
+                    training_data_size: 0,
+                    created_at: "unknown".to_string(),
+                    last_updated: "unknown".to_string(),
+                });
+            }
+        };
+        Ok(crate::stdlib::ai::Model {
+            model_id: fields
+                .get("model_id")
+                .and_then(|v| self.value_to_string(v).ok())
+                .unwrap_or_else(|| format!("model_{}", crate::stdlib::ai::generate_id())),
+            model_type: fields
+                .get("model_type")
+                .and_then(|v| self.value_to_string(v).ok())
+                .unwrap_or_else(|| "custom".to_string()),
+            version: fields
+                .get("version")
+                .and_then(|v| self.value_to_string(v).ok())
+                .unwrap_or_else(|| "1.0.0".to_string()),
+            accuracy: fields
+                .get("accuracy")
+                .and_then(|v| match v {
+                    Value::Float(f) => Some(*f),
+                    Value::Int(i) => Some(*i as f64),
+                    _ => None,
+                })
+                .unwrap_or(0.0),
+            training_data_size: fields
+                .get("training_data_size")
+                .and_then(|v| match v {
+                    Value::Int(i) => Some(*i),
+                    _ => None,
+                })
+                .unwrap_or(0),
+            created_at: fields
+                .get("created_at")
+                .and_then(|v| self.value_to_string(v).ok())
+                .unwrap_or_else(|| "unknown".to_string()),
+            last_updated: fields
+                .get("last_updated")
+                .and_then(|v| self.value_to_string(v).ok())
+                .unwrap_or_else(|| "unknown".to_string()),
+        })
+    }
+
+    fn value_to_f64_vec(&self, value: &Value) -> Result<Vec<f64>, RuntimeError> {
+        match value {
+            Value::Array(arr) | Value::List(arr) => {
+                let mut result = Vec::with_capacity(arr.len());
+                for v in arr {
+                    match v {
+                        Value::Float(f) => result.push(*f),
+                        Value::Int(i) => result.push(*i as f64),
+                        _ => {
+                            return Err(RuntimeError::General("Expected numeric array".to_string()))
+                        }
+                    }
+                }
+                Ok(result)
+            }
+            _ => Err(RuntimeError::General(
+                "Expected array of numbers".to_string(),
+            )),
+        }
+    }
+
+    fn value_to_string_vec(&self, value: &Value) -> Result<Vec<String>, RuntimeError> {
+        match value {
+            Value::Array(arr) | Value::List(arr) => {
+                let mut result = Vec::with_capacity(arr.len());
+                for v in arr {
+                    result.push(self.value_to_string(v)?);
+                }
+                Ok(result)
+            }
+            Value::String(s) => Ok(vec![s.clone()]),
+            _ => Err(RuntimeError::General(
+                "Expected array of strings".to_string(),
+            )),
+        }
     }
 
     fn call_admin_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {

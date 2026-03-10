@@ -39,7 +39,8 @@ impl Lexer {
         // Phase 2: Token count limit - prevent DoS via excessive tokens
         const MAX_TOKENS: usize = 1_000_000; // 1M tokens
 
-        // Safety: Prevent infinite loops from mutations that cause position to not advance
+        // Safety: Prevent infinite loops from mutations that cause position to not advance.
+        // Also limits mutation-testing timeouts (e.g. += -> -=) so they fail fast; see docs/MUTATION_ANALYSIS.md.
         let max_iterations = self.input.len() * 2; // Allow up to 2x input length iterations
         let mut iterations = 0;
 

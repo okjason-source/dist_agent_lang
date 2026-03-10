@@ -1776,6 +1776,8 @@ pub struct MultiStepResult {
     pub is_ask_user: bool,
     /// Number of tool steps executed (0 = immediate reply).
     pub steps_used: u32,
+    /// True if the loop stopped because the step limit was reached (no final reply from the model).
+    pub max_steps_reached: bool,
 }
 
 /// Default max tool steps when env DAL_AGENT_MAX_TOOL_STEPS is not set.
@@ -1816,6 +1818,7 @@ pub fn run_multi_step_tool_loop(
                     final_text: text,
                     is_ask_user: false,
                     steps_used,
+                    max_steps_reached: false,
                 });
             }
             ToolOutcome::AskUser(message) => {
@@ -1823,6 +1826,7 @@ pub fn run_multi_step_tool_loop(
                     final_text: message,
                     is_ask_user: true,
                     steps_used,
+                    max_steps_reached: false,
                 });
             }
             ToolOutcome::ParseFail(raw) => {
@@ -1830,6 +1834,7 @@ pub fn run_multi_step_tool_loop(
                     final_text: raw,
                     is_ask_user: false,
                     steps_used,
+                    max_steps_reached: false,
                 });
             }
             ToolOutcome::Run(cmd) => {
@@ -1851,6 +1856,7 @@ pub fn run_multi_step_tool_loop(
                         final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
+                        max_steps_reached: true,
                     });
                 }
             }
@@ -1873,6 +1879,7 @@ pub fn run_multi_step_tool_loop(
                         final_text: "Max tool steps reached".to_string(),
                         is_ask_user: false,
                         steps_used,
+                        max_steps_reached: true,
                     });
                 }
             }
@@ -1900,6 +1907,7 @@ pub fn run_multi_step_tool_loop(
                         final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
+                        max_steps_reached: true,
                     });
                 }
             }
@@ -1922,6 +1930,7 @@ pub fn run_multi_step_tool_loop(
                         final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
+                        max_steps_reached: true,
                     });
                 }
             }
@@ -1944,6 +1953,7 @@ pub fn run_multi_step_tool_loop(
                         final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
+                        max_steps_reached: true,
                     });
                 }
             }
@@ -1966,6 +1976,7 @@ pub fn run_multi_step_tool_loop(
                         final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
+                        max_steps_reached: true,
                     });
                 }
             }
@@ -1988,6 +1999,7 @@ pub fn run_multi_step_tool_loop(
                         final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
+                        max_steps_reached: true,
                     });
                 }
             }
@@ -2010,11 +2022,30 @@ pub fn run_multi_step_tool_loop(
                         final_text: "Max tool steps reached.".to_string(),
                         is_ask_user: false,
                         steps_used,
+                        max_steps_reached: true,
                     });
                 }
             }
         }
     }
+}
+
+/// Same as `respond_with_tools` but returns a map-friendly result: final text, steps used, and
+/// whether the step limit was reached. Lets DAL apps branch on outcome without parsing the reply.
+pub fn respond_with_tools_result(user_message: &str) -> Result<MultiStepResult, String> {
+    let max_steps = max_tool_steps_from_env();
+    let scripting_enabled = std::env::var("AGENT_ASSISTANT_SCRIPTING").as_deref() == Ok("1")
+        || std::env::var("AGENT_ASSISTANT_ROOT").is_ok();
+    let (tools_system, working_root) = if scripting_enabled {
+        let root = scripting_working_root();
+        (TOOLS_SYSTEM_WITH_SCRIPTING, root)
+    } else {
+        (TOOLS_SYSTEM, None)
+    };
+    let mut schema =
+        crate::agent_context_schema::AgentContextSchema::minimal(user_message, tools_system);
+    schema.completion_and_ask_guidance = Some(COMPLETION_AND_ASK_GUIDANCE.to_string());
+    run_multi_step_tool_loop(&mut schema, max_steps, None, working_root.as_deref())
 }
 
 #[cfg(test)]

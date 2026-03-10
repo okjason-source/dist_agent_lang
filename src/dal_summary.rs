@@ -155,4 +155,56 @@ service Foo {
         assert!(s.contains("run"));
         assert!(s.contains("main"));
     }
+
+    // Mutation testing: agent block capabilities and to_context_string sections (see docs/MUTATION_ANALYSIS.md).
+
+    #[test]
+    fn summary_extracts_agent_capabilities() {
+        let source = r#"
+agent Helper : ai {} with [ "analysis", "comms" ] { }
+fn main() { }
+"#;
+        let summary = summary_from_source(source).unwrap();
+        assert_eq!(
+            summary.capabilities,
+            vec!["analysis", "comms"],
+            "agent block capabilities must appear in summary"
+        );
+    }
+
+    #[test]
+    fn summary_from_path_sets_entry_file_and_project_root() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("entry.dal");
+        std::fs::write(&path, "fn main() { }\n").unwrap();
+        let summary = summary_from_path(&path).unwrap();
+        assert_eq!(
+            summary.entry_file.as_deref(),
+            Some(path.to_str().unwrap()),
+            "entry_file must be set from path"
+        );
+        assert_eq!(
+            summary.project_root.as_deref(),
+            Some(dir.path().to_str().unwrap()),
+            "project_root must be parent of path"
+        );
+    }
+
+    #[test]
+    fn to_context_string_includes_capabilities_and_imports() {
+        let mut summary = DalSummary::default();
+        summary.capabilities = vec!["a".to_string(), "b".to_string()];
+        summary.imports = vec!["stdlib::chain".to_string()];
+        let s = to_context_string(&summary);
+        assert!(
+            s.contains("Capabilities") && s.contains("a") && s.contains("b"),
+            "to_context_string must include capabilities: {}",
+            s
+        );
+        assert!(
+            s.contains("Imports") && s.contains("stdlib::chain"),
+            "to_context_string must include imports: {}",
+            s
+        );
+    }
 }
