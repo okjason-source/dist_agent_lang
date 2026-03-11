@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ChainSubcommand","ColorChoice","Commands"],"fn":["chain_subcommand_to_args"],"struct":["Cli"]};
+window.SIDEBAR_ITEMS = {"enum":["ChainSubcommand","ColorChoice","Commands","IdeSubcommand"],"fn":["chain_subcommand_to_args"],"struct":["Cli"]};

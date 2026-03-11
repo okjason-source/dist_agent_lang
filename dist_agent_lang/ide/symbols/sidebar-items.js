@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["document_symbols_from_source","references_in_source"],"struct":["DocumentSymbol","ReferenceLocation"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LspRequest","LspResponse"],"fn":["path_to_file_uri"],"struct":["LspCompletionItem","LspDiagnostic","SecondLsp"]};

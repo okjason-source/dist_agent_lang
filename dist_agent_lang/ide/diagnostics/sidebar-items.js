@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["completion_at_position","diagnostics_from_source","hover_at_position"],"struct":["CompletionItem","Diagnostic"]};
