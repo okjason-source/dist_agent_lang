@@ -6,7 +6,13 @@
 
 **A hybrid programming language tooled with trust off-chain and on-chain controls for the agentic future.**
 
+<<<<<<< HEAD
 DAL is a programming language where AI agents are native citizens. Spawn agents, give them skills, persist their memory, coordinate multi-agent workflows, and serve them over HTTP. Program applications using distributed integration with off-chain services, and on-chain contracts coexisting through a unified trust model.
+=======
+
+DAL is a programming language where AI agents are native citizens. Spawn agents, give them skills, persist their memory, coordinate multi-agent workflows, and serve them over HTTP. Program applications using distributed integration with off-chain services, and on-chain contracts coexisting through a unified trust model.
+
+>>>>>>> 3caa346b5a1cba04a1fc7d4b0b743900f2513829
 
 > **v1.0.15 Beta** — Actively maintained. Test thoroughly before production use.
 
@@ -111,7 +117,7 @@ DAL is a **Rust-hosted interpreted language** with a tree-walking runtime. The i
 | **Persistent memory** | Agent state survives restarts. File or SQLite backend. Schema versioning. On by default. |
 | **Blockchain** | Multi-chain (Ethereum, Polygon, Solana, Arbitrum). Deploy, call, events. Solidity converter. |
 | **Security** | Reentrancy protection, safe math, cross-chain security, oracle validation, shell trust controls, ACID transactions. |
-| **Hybrid trust** | `@trust("decentralized" | "hybrid" | "centralized")` — one language for on-chain and off-chain. |
+| **Hybrid trust** | `@trust("decentralized") | "hybrid" | "centralized")` — one language for on-chain and off-chain. |
 | **CLI toolchain** | `dal run`, `dal check`, `dal fmt`, `dal lint`, `dal test`, `dal repl`, `dal watch`, `dal new`, `dal init`, `dal agent serve` |
 | **Standard library** | 30 modules: agent, ai, chain, crypto, database, auth, cloud, iot, mobile, desktop, evolve, trust, and more |
 | **Testing** | Built-in test framework, mock registry, 140+ tests passing |
