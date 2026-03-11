@@ -9,7 +9,7 @@
 #![allow(clippy::get_first)]
 #![allow(clippy::useless_format)]
 
-use dist_agent_lang::cli::{chain_subcommand_to_args, Cli, Commands};
+use dist_agent_lang::cli::{chain_subcommand_to_args, Cli, Commands, IdeSubcommand};
 use dist_agent_lang::cli_design;
 use dist_agent_lang::lexer;
 use dist_agent_lang::parser;
@@ -309,6 +309,7 @@ fn main() {
             }
             handle_cross_component_command("invoke", &a, &cli);
         }
+        Commands::Ide { subcommand } => handle_ide_command(subcommand),
     }
 }
 
@@ -5504,6 +5505,50 @@ fn handle_dist_command(_args: &[String]) {
 // ============================================================================
 // Phase 5: IDE & LSP Integration (lsp, doc, completions, debug)
 // ============================================================================
+
+fn handle_ide_command(subcommand: &IdeSubcommand) {
+    match subcommand {
+        IdeSubcommand::Serve { port, workspace } => {
+            let workspace_root = workspace
+                .clone()
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|| {
+                    std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."))
+                });
+            run_ide_server(*port, workspace_root);
+        }
+    }
+}
+
+fn run_ide_server(port: u16, workspace_root: std::path::PathBuf) {
+    use dist_agent_lang::ide::server;
+    use std::net::SocketAddr;
+
+    println!("🪩  IDE backend starting");
+    println!("    Port: {}", port);
+    println!("    Workspace: {}", workspace_root.display());
+    println!();
+    println!("  GET  /api/orchestration?workspace=<path>  — project info, run configs");
+    println!("  POST /api/run                            — run config by id");
+    println!("  POST /api/agent/run_command              — run CLI command (agent API)");
+    println!("  POST /api/agent/write_file               — write file (agent API)");
+    println!("  GET  /health                             — liveness");
+    println!();
+    println!(
+        "  Open http://localhost:{}/api/orchestration to test.",
+        port
+    );
+
+    let app = server::build_router(workspace_root);
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    rt.block_on(async {
+        let listener = tokio::net::TcpListener::bind(addr)
+            .await
+            .expect("Failed to bind");
+        axum::serve(listener, app).await.expect("Server error");
+    });
+}
 
 #[cfg_attr(feature = "lsp", allow(dead_code))]
 fn handle_lsp_command(_args: &[String]) {

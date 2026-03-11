@@ -388,6 +388,12 @@ pub enum Commands {
         rest: Vec<String>,
     },
 
+    /// IDE backend (orchestration, run, agent API)
+    Ide {
+        #[command(subcommand)]
+        subcommand: IdeSubcommand,
+    },
+
     /// Connect components (bond, pipe, invoke)
     Bond {
         #[arg(required = true)]
@@ -406,6 +412,20 @@ pub enum Commands {
         subcommand: String,
         #[arg(trailing_var_arg = true)]
         rest: Vec<String>,
+    },
+}
+
+/// IDE subcommands.
+#[derive(Subcommand, Debug)]
+pub enum IdeSubcommand {
+    /// Start IDE backend (orchestration, run, agent API)
+    Serve {
+        /// Port to listen on (default: 3847)
+        #[arg(short, long, default_value = "3847")]
+        port: u16,
+        /// Workspace root (default: current directory)
+        #[arg(short, long)]
+        workspace: Option<String>,
     },
 }
 

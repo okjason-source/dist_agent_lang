@@ -62,6 +62,7 @@ pub mod http_server_integration;
 pub mod http_server_middleware;
 pub mod http_server_security;
 pub mod http_server_security_middleware;
+pub mod ide;
 pub mod lexer;
 pub mod manifest;
 pub mod module_resolver;

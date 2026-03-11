@@ -110,6 +110,10 @@ Vibes_Job/
 /chain
 **/chain
 
+# DAL IDE (premium, local only — not pushed to GitHub)
+/dal-ide/
+**/dal-ide/
+
 # IDE and OS
 .idea/
 .vscode/

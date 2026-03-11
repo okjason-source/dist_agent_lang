@@ -1,3 +1,25 @@
+src/project_init.rs:14:9: delete match arm "chain" in run_init
+src/project_init.rs:15:9: delete match arm "iot" in run_init
+src/project_init.rs:16:9: delete match arm "agent" in run_init
+src/project_init.rs:33:5: replace ensure_gitignore -> std::io::Result<()> with Ok(())
+src/project_init.rs:102:5: replace run_init_chain -> Result<String, String> with Ok(String::new())
+src/project_init.rs:102:5: replace run_init_chain -> Result<String, String> with Ok("xyzzy".into())
+src/project_init.rs:139:5: replace run_init_iot -> Result<String, String> with Ok(String::new())
+src/project_init.rs:139:5: replace run_init_iot -> Result<String, String> with Ok("xyzzy".into())
+src/project_init.rs:176:5: replace run_init_agent -> Result<String, String> with Ok(String::new())
+src/project_init.rs:176:5: replace run_init_agent -> Result<String, String> with Ok("xyzzy".into())
+src/project_init.rs:223:8: delete ! in run_init_agent
+src/registry.rs:58:5: replace registry_url -> String with String::new()
+src/registry.rs:58:5: replace registry_url -> String with "xyzzy".into()
+src/registry.rs:64:5: replace packages_cache_dir -> PathBuf with Default::default()
+src/manifest.rs:129:5: replace add_dependencies_if_missing -> Result<usize, ManifestError> with Ok(0)
+src/manifest.rs:129:5: replace add_dependencies_if_missing -> Result<usize, ManifestError> with Ok(1)
+src/manifest.rs:146:12: delete ! in add_dependencies_if_missing
+src/manifest.rs:148:19: replace += with -= in add_dependencies_if_missing
+src/manifest.rs:148:19: replace += with *= in add_dependencies_if_missing
+src/manifest.rs:151:14: replace > with == in add_dependencies_if_missing
+src/manifest.rs:151:14: replace > with < in add_dependencies_if_missing
+src/manifest.rs:225:8: delete ! in write_lockfile
 src/bin/registry_server.rs:122:30: replace || with && in get_tarball
 src/compile/mod.rs:23:5: replace get_compiler_available_override -> Option<bool> with None
 src/compile/mod.rs:23:5: replace get_compiler_available_override -> Option<bool> with Some(true)
