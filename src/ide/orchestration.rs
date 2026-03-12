@@ -79,7 +79,13 @@ pub struct OrchestrationResponse {
 }
 
 /// Discover DAL projects and run configs in a workspace.
+/// Uses canonical form of workspace_root for path operations to avoid path traversal.
 pub fn discover_workspace(workspace_root: &Path) -> OrchestrationResponse {
+    let workspace_root = workspace_root
+        .canonicalize()
+        .unwrap_or_else(|_| workspace_root.to_path_buf());
+    let workspace_root = workspace_root.as_path();
+
     let mut projects = Vec::new();
     let mut run_configs = Vec::new();
     let mut scripts = Vec::new();

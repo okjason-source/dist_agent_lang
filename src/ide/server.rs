@@ -14,6 +14,63 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+/// Sanitize a user-supplied relative path so it cannot escape a base directory.
+/// Resolves "." and ".."; returns None if path is absolute or ".." would escape.
+fn sanitize_relative_subpath(path: &str) -> Option<PathBuf> {
+    let path = path.trim();
+    if path.is_empty() {
+        return Some(PathBuf::new());
+    }
+    let p = std::path::Path::new(path);
+    if p.is_absolute() {
+        return None;
+    }
+    let mut out = PathBuf::new();
+    for comp in p.components() {
+        match comp {
+            std::path::Component::CurDir => {}
+            std::path::Component::ParentDir => {
+                if !out.pop() {
+                    return None;
+                }
+            }
+            std::path::Component::Normal(c) => {
+                out.push(c);
+            }
+            _ => return None,
+        }
+    }
+    Some(out)
+}
+
+/// Resolve a user-supplied path under a base directory. Returns None if the path
+/// would escape the base (path traversal) or is absolute.
+fn path_under_base(base: &std::path::Path, user_path: &str) -> Option<PathBuf> {
+    let sanitized = sanitize_relative_subpath(user_path)?;
+    Some(base.join(sanitized))
+}
+
+/// Resolve a user-supplied path (relative or absolute) to a path under root.
+/// Absolute paths are allowed only if they canonicalize to under root.
+fn resolve_path_under_root(root: &std::path::Path, user_path: &str) -> Option<PathBuf> {
+    let user_path = user_path.trim();
+    if user_path.is_empty() {
+        return None;
+    }
+    let p = std::path::Path::new(user_path);
+    if p.is_absolute() {
+        let canon_root = root.canonicalize().ok()?;
+        let canon_p = p.canonicalize().ok()?;
+        if canon_p.starts_with(&canon_root) {
+            Some(canon_p)
+        } else {
+            None
+        }
+    } else {
+        path_under_base(root, user_path)
+    }
+}
+
 /// Default parent directory for `dal new` when no cwd is provided. Uses $HOME (Unix) or %USERPROFILE% (Windows); falls back to ".".
 fn projects_root() -> PathBuf {
     let s = std::env::var("HOME")
@@ -119,7 +176,10 @@ fn search_workspace_blocking(
     let dir = if subpath.is_empty() {
         root.to_path_buf()
     } else {
-        root.join(subpath)
+        match path_under_base(root, subpath) {
+            Some(d) => d,
+            None => return Vec::new(),
+        }
     };
     if !dir.exists() || !dir.is_dir() {
         return Vec::new();
@@ -204,11 +264,23 @@ async fn get_orchestration(
 ) -> impl IntoResponse {
     let root = match &query.workspace {
         Some(ws) if !ws.trim().is_empty() => {
-            let p = PathBuf::from(ws.trim());
-            if p.is_absolute() && p.exists() {
-                p
+            let ws = ws.trim();
+            let p = PathBuf::from(ws);
+            if p.is_absolute() {
+                if let (Ok(canon_root), Ok(canon_p)) =
+                    (state.workspace_root.canonicalize(), p.canonicalize())
+                {
+                    if canon_p.starts_with(&canon_root) {
+                        canon_p
+                    } else {
+                        state.workspace_root.clone()
+                    }
+                } else {
+                    state.workspace_root.clone()
+                }
             } else {
-                state.workspace_root.join(ws.trim())
+                path_under_base(&state.workspace_root, ws)
+                    .unwrap_or_else(|| state.workspace_root.clone())
             }
         }
         _ => state.workspace_root.clone(),
@@ -245,22 +317,43 @@ async fn get_files(
     Query(query): Query<ListFilesQuery>,
 ) -> impl IntoResponse {
     let root = match &query.workspace {
-        Some(ws) => {
+        Some(ws) if !ws.trim().is_empty() => {
+            let ws = ws.trim();
             let p = PathBuf::from(ws);
             if p.is_absolute() {
-                p
+                if let (Ok(canon_root), Ok(canon_p)) =
+                    (state.workspace_root.canonicalize(), p.canonicalize())
+                {
+                    if canon_p.starts_with(&canon_root) {
+                        canon_p
+                    } else {
+                        state.workspace_root.clone()
+                    }
+                } else {
+                    state.workspace_root.clone()
+                }
             } else {
-                state.workspace_root.join(ws)
+                path_under_base(&state.workspace_root, ws)
+                    .unwrap_or_else(|| state.workspace_root.clone())
             }
         }
-        None => state.workspace_root.clone(),
+        _ => state.workspace_root.clone(),
     };
 
     let subpath = query.path.as_deref().unwrap_or("");
     let dir = if subpath.is_empty() {
         root
     } else {
-        root.join(subpath)
+        match path_under_base(&root, subpath) {
+            Some(d) => d,
+            None => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(serde_json::json!({"error": "Invalid path"})),
+                )
+                    .into_response();
+            }
+        }
     };
 
     if !dir.exists() || !dir.is_dir() {
@@ -337,7 +430,24 @@ async fn post_search(
     let root = query
         .workspace
         .as_ref()
-        .map(PathBuf::from)
+        .filter(|s| !s.trim().is_empty())
+        .and_then(|ws| {
+            let ws = ws.trim();
+            let p = PathBuf::from(ws);
+            if p.is_absolute() {
+                let (cr, cp) = (
+                    state.workspace_root.canonicalize().ok()?,
+                    p.canonicalize().ok()?,
+                );
+                if cp.starts_with(&cr) {
+                    Some(cp)
+                } else {
+                    None
+                }
+            } else {
+                path_under_base(&state.workspace_root, ws)
+            }
+        })
         .unwrap_or_else(|| state.workspace_root.clone());
     if !root.exists() {
         return (
@@ -625,7 +735,17 @@ async fn post_agent_run_command(
         if s.is_empty() {
             None
         } else {
-            Some(PathBuf::from(s))
+            let p = PathBuf::from(s);
+            if p.is_absolute() {
+                state.workspace_root.canonicalize().ok().and_then(|cr| {
+                    p.canonicalize()
+                        .ok()
+                        .filter(|cp| cp.starts_with(&cr))
+                        .map(|cp| cp)
+                })
+            } else {
+                path_under_base(&state.workspace_root, s)
+            }
         }
     });
     let cwd = cwd.unwrap_or_else(|| {
@@ -685,7 +805,17 @@ async fn post_agent_run_command_stream(
         if s.is_empty() {
             None
         } else {
-            Some(PathBuf::from(s))
+            let p = PathBuf::from(s);
+            if p.is_absolute() {
+                state.workspace_root.canonicalize().ok().and_then(|cr| {
+                    p.canonicalize()
+                        .ok()
+                        .filter(|cp| cp.starts_with(&cr))
+                        .map(|cp| cp)
+                })
+            } else {
+                path_under_base(&state.workspace_root, s)
+            }
         }
     });
     let cwd = cwd.unwrap_or_else(|| state.workspace_root.clone());
@@ -756,11 +886,15 @@ async fn post_lsp_diagnostics(
     let use_rust = path.ends_with(".rs");
     if use_rust && !path.is_empty() {
         let root = resolve_workspace_root(&state, req.workspace.as_deref());
-        let path_buf = std::path::Path::new(path);
-        let full_path = if path_buf.is_absolute() {
-            path_buf.to_path_buf()
-        } else {
-            root.join(path)
+        let full_path = match resolve_path_under_root(&root, path) {
+            Some(p) => p,
+            None => {
+                return (
+                    StatusCode::OK,
+                    Json(serde_json::json!({ "diagnostics": [] })),
+                )
+                    .into_response();
+            }
         };
         let cargo_root = find_cargo_root(&full_path, &state.workspace_root);
         let uri = lsp_client::path_to_file_uri(&full_path);
@@ -820,14 +954,25 @@ async fn get_lsp_ws(
     ws.on_upgrade(move |socket| lsp_bridge::run_lsp_bridge(socket, workspace_root))
 }
 
+/// Resolve workspace root from optional user input. Ensures the result is under
+/// state.workspace_root to prevent path traversal (absolute paths are canonicalized and checked).
 fn resolve_workspace_root(state: &AppState, workspace: Option<&str>) -> PathBuf {
     match workspace {
         Some(ws) if !ws.trim().is_empty() => {
-            let p = PathBuf::from(ws.trim());
-            if p.is_absolute() && p.exists() {
-                p
+            let ws = ws.trim();
+            let p = PathBuf::from(ws);
+            if p.is_absolute() {
+                if let (Ok(canon_root), Ok(canon_p)) =
+                    (state.workspace_root.canonicalize(), p.canonicalize())
+                {
+                    if canon_p.starts_with(&canon_root) {
+                        return canon_p;
+                    }
+                }
+                state.workspace_root.clone()
             } else {
-                state.workspace_root.join(ws.trim())
+                path_under_base(&state.workspace_root, ws)
+                    .unwrap_or_else(|| state.workspace_root.clone())
             }
         }
         _ => state.workspace_root.clone(),
@@ -876,11 +1021,12 @@ async fn post_lsp_hover(
     let use_rust = path.ends_with(".rs");
     if use_rust && !path.is_empty() {
         let root = resolve_workspace_root(&state, req.workspace.as_deref());
-        let path_buf = std::path::Path::new(path);
-        let full_path = if path_buf.is_absolute() {
-            path_buf.to_path_buf()
-        } else {
-            root.join(path)
+        let full_path = match resolve_path_under_root(&root, path) {
+            Some(p) => p,
+            None => {
+                return (StatusCode::OK, Json(serde_json::json!({ "contents": [] })))
+                    .into_response();
+            }
         };
         let cargo_root = find_cargo_root(&full_path, &state.workspace_root);
         let uri = lsp_client::path_to_file_uri(&full_path);
@@ -939,11 +1085,11 @@ async fn post_lsp_completion(
     let use_rust = path.ends_with(".rs");
     if use_rust && !path.is_empty() {
         let root = resolve_workspace_root(&state, req.workspace.as_deref());
-        let path_buf = std::path::Path::new(path);
-        let full_path = if path_buf.is_absolute() {
-            path_buf.to_path_buf()
-        } else {
-            root.join(path)
+        let full_path = match resolve_path_under_root(&root, path) {
+            Some(p) => p,
+            None => {
+                return (StatusCode::OK, Json(serde_json::json!({ "items": [] }))).into_response();
+            }
         };
         let cargo_root = find_cargo_root(&full_path, &state.workspace_root);
         let uri = lsp_client::path_to_file_uri(&full_path);
@@ -1032,25 +1178,35 @@ async fn post_agent_read_file(
             .into_response();
     }
     let root = match &req.workspace {
-        Some(ws) => {
+        Some(ws) if !ws.trim().is_empty() => {
             let ws = ws.trim();
-            if ws.is_empty() {
-                state.workspace_root.clone()
-            } else {
-                let p = PathBuf::from(ws);
-                if p.is_absolute() && p.exists() {
-                    p
+            let p = PathBuf::from(ws);
+            if p.is_absolute() {
+                if let (Ok(cr), Ok(cp)) = (state.workspace_root.canonicalize(), p.canonicalize()) {
+                    if cp.starts_with(&cr) {
+                        cp
+                    } else {
+                        state.workspace_root.clone()
+                    }
                 } else {
-                    state.workspace_root.join(ws)
+                    state.workspace_root.clone()
                 }
+            } else {
+                path_under_base(&state.workspace_root, ws)
+                    .unwrap_or_else(|| state.workspace_root.clone())
             }
         }
-        None => state.workspace_root.clone(),
+        _ => state.workspace_root.clone(),
     };
-    let path = if std::path::Path::new(path_str).is_absolute() {
-        PathBuf::from(path_str)
-    } else {
-        root.join(path_str)
+    let path = match resolve_path_under_root(&root, path_str) {
+        Some(p) => p,
+        None => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error": "Invalid path"})),
+            )
+                .into_response();
+        }
     };
 
     if !path.exists() {
@@ -1093,25 +1249,35 @@ async fn post_agent_write_file(
     Json(req): Json<WriteFileRequest>,
 ) -> impl IntoResponse {
     let root = match &req.workspace {
-        Some(ws) => {
+        Some(ws) if !ws.trim().is_empty() => {
             let ws = ws.trim();
-            if ws.is_empty() {
-                state.workspace_root.clone()
-            } else {
-                let p = PathBuf::from(ws);
-                if p.is_absolute() && p.exists() {
-                    p
+            let p = PathBuf::from(ws);
+            if p.is_absolute() {
+                if let (Ok(cr), Ok(cp)) = (state.workspace_root.canonicalize(), p.canonicalize()) {
+                    if cp.starts_with(&cr) {
+                        cp
+                    } else {
+                        state.workspace_root.clone()
+                    }
                 } else {
-                    state.workspace_root.join(ws)
+                    state.workspace_root.clone()
                 }
+            } else {
+                path_under_base(&state.workspace_root, ws)
+                    .unwrap_or_else(|| state.workspace_root.clone())
             }
         }
-        None => state.workspace_root.clone(),
+        _ => state.workspace_root.clone(),
     };
-    let path = if std::path::Path::new(&req.path).is_absolute() {
-        PathBuf::from(&req.path)
-    } else {
-        root.join(&req.path)
+    let path = match resolve_path_under_root(&root, &req.path) {
+        Some(p) => p,
+        None => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error": "Invalid path"})),
+            )
+                .into_response();
+        }
     };
 
     if let Some(parent) = path.parent() {
@@ -1119,7 +1285,8 @@ async fn post_agent_write_file(
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": format!("Failed to create parent dir: {}", e)})),
-            );
+            )
+                .into_response();
         }
     }
 
@@ -1134,11 +1301,13 @@ async fn post_agent_write_file(
                 StatusCode::OK,
                 Json(serde_json::json!({"ok": true, "path": path.to_string_lossy()})),
             )
+                .into_response()
         }
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({"error": e.to_string()})),
-        ),
+        )
+            .into_response(),
     }
 }
 
@@ -1167,11 +1336,21 @@ async fn post_agent_prompt(
     }
     let workspace_root = match req.workspace.as_deref() {
         Some(ws) if !ws.trim().is_empty() => {
-            let p = PathBuf::from(ws.trim());
-            if p.is_absolute() && p.exists() {
-                p
+            let ws = ws.trim();
+            let p = PathBuf::from(ws);
+            if p.is_absolute() {
+                if let (Ok(cr), Ok(cp)) = (state.workspace_root.canonicalize(), p.canonicalize()) {
+                    if cp.starts_with(&cr) {
+                        cp
+                    } else {
+                        state.workspace_root.clone()
+                    }
+                } else {
+                    state.workspace_root.clone()
+                }
             } else {
-                state.workspace_root.join(ws.trim())
+                path_under_base(&state.workspace_root, ws)
+                    .unwrap_or_else(|| state.workspace_root.clone())
             }
         }
         _ => state.workspace_root.clone(),
