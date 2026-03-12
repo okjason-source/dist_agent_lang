@@ -274,18 +274,20 @@ impl LanguageBenchmarks {
             (
                 "function_calls",
                 Box::new(|| {
+                    use crate::runtime::values::Value;
                     use crate::runtime::Runtime;
 
-                    let _runtime = Runtime::new();
-
-                    // Register and call functions
-                    // Note: This is a simplified version since the actual runtime doesn't support this pattern
-                    // In a real implementation, you'd register a proper Function struct
-                    println!("Function registration would happen here");
-
-                    // Note: Function calling would happen here
-                    println!("Function calling would happen here");
-
+                    // Micro-benchmark: create runtime and do repeated variable set/get (no println spam).
+                    let mut runtime = Runtime::new();
+                    runtime.set_variable("a".to_string(), Value::Int(1));
+                    runtime.set_variable("b".to_string(), Value::Int(2));
+                    for i in 0..50 {
+                        let key = format!("v_{}", i);
+                        runtime.set_variable(key.clone(), Value::Int(i as i64));
+                        let _ = runtime.get_variable(&key);
+                    }
+                    let _ = runtime.get_variable("a");
+                    let _ = runtime.get_variable("b");
                     Ok(())
                 }),
             ),

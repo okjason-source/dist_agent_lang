@@ -1194,15 +1194,18 @@ For run and search the tool will execute and you will see the result; then reply
 
 /// Extended tools with file and DAL scripting: write_file, read_file, list_dir, dal_run, dal_check.
 /// Use when AGENT_ASSISTANT_SCRIPTING=1 or AGENT_ASSISTANT_ROOT is set.
-const TOOLS_SYSTEM_WITH_SCRIPTING: &str = "You are an intelligent assistant. You can run shell commands, search the web, reply, ask the user, or use file/DAL tools. \
+/// Public for IDE agent runner (prompt → code development).
+pub const TOOLS_SYSTEM_WITH_SCRIPTING: &str = "You are an intelligent assistant. You can run shell commands, search the web, reply, ask the user, or use file/DAL tools. \
 Respond with JSON only, no markdown or extra text. Use exactly one of: \
 {\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"} \
 or {\"action\":\"write_file\",\"path\":\"path/to/file\",\"contents\":\"file contents\"} or {\"action\":\"read_file\",\"path\":\"path/to/file\"} or {\"action\":\"list_dir\",\"path\":\".\"} \
-or {\"action\":\"dal_run\",\"path\":\"file.dal\"} or {\"action\":\"dal_check\",\"path\":\"file.dal\"}. \
+or {\"action\":\"dal_run\",\"path\":\"file.dal\"} or {\"action\":\"dal_check\",\"path\":\"file.dal\"} \
+or {\"action\":\"show_url\",\"url\":\"https://...\"} or {\"action\":\"show_content\",\"content\":\"html or text\",\"title\":\"optional\"}. \
 For run and search the tool will execute and you will see the result. For write_file, read_file, list_dir, dal_run, dal_check: paths are relative to the scripts root. Use write_file to create .dal or .sh scripts, then dal_run for DAL or run with bash for shell. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
 
 /// Completion and when to ask: try to finish; if you need input or must stop, keep the user in the loop.
-const COMPLETION_AND_ASK_GUIDANCE: &str = "Complete in few steps: when a run succeeds (e.g. curl to post), use action reply right away with the outcome. Do not run extra checks or steps after success. If you need user input use ask_user; if something failed use reply to say what happened. Do not leave the user without a reply.";
+/// Public for IDE agent runner.
+pub const COMPLETION_AND_ASK_GUIDANCE: &str = "Complete in few steps: when a run succeeds (e.g. curl to post), use action reply right away with the outcome. Do not run extra checks or steps after success. If you need user input use ask_user; if something failed use reply to say what happened. Do not leave the user without a reply.";
 
 /// Extract the first JSON object from a string (between first { and matching }).
 fn extract_json_object(s: &str) -> Option<&str> {
@@ -1271,6 +1274,11 @@ fn search_web(_query: &str) -> Result<String, String> {
     Err("Web search requires the http-interface feature.".to_string())
 }
 
+/// Public wrapper for agent/IDE: run web search. Requires http-interface feature.
+pub fn run_web_search(query: &str) -> Result<String, String> {
+    search_web(query)
+}
+
 /// Resolve working root for scripting: if AGENT_ASSISTANT_ROOT is set, use that/scripts (create if needed).
 /// Returns None if env is unset or path cannot be resolved.
 fn scripting_working_root() -> Option<std::path::PathBuf> {
@@ -1337,6 +1345,10 @@ pub enum ToolOutcome {
     DalCheck(String),
     /// Run `dal run <file>`. Development skill.
     DalRun(String),
+    /// Show URL in IDE workspace (browser view). Operable by agents.
+    ShowUrl(String),
+    /// Show content (HTML or text) in IDE workspace. Operable by agents.
+    ShowContent(String, Option<String>),
     /// Response was not valid JSON or unknown action; treat as reply with raw text.
     ParseFail(String),
 }
@@ -1456,6 +1468,28 @@ pub fn parse_tool_response(response: &str) -> ToolOutcome {
                 .trim()
                 .to_string();
             ToolOutcome::DalRun(path)
+        }
+        "show_url" => {
+            let url = obj
+                .get("url")
+                .and_then(|u| u.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::ShowUrl(url)
+        }
+        "show_content" => {
+            let content = obj
+                .get("content")
+                .and_then(|c| c.as_str())
+                .unwrap_or("")
+                .to_string();
+            let title = obj
+                .get("title")
+                .and_then(|t| t.as_str())
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty());
+            ToolOutcome::ShowContent(content, title)
         }
         _ => {
             let text = obj
@@ -2008,6 +2042,46 @@ pub fn run_multi_step_tool_loop(
                 if agent_name.is_some() {
                     let _ = crate::stdlib::evolve::append_log("dal_run", &path, &result);
                 }
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: response.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text: "Max tool steps reached.".to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                        max_steps_reached: true,
+                    });
+                }
+            }
+            ToolOutcome::ShowUrl(_url) => {
+                let result = "URL display requested (visible in IDE workspace).".to_string();
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: response.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text: "Max tool steps reached.".to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                        max_steps_reached: true,
+                    });
+                }
+            }
+            ToolOutcome::ShowContent(_, _) => {
+                let result = "Content display requested (visible in IDE workspace).".to_string();
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
                     content: response.clone(),

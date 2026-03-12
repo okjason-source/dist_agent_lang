@@ -26,6 +26,7 @@ use tokio::sync::{broadcast, oneshot, RwLock};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::normalize_path::NormalizePathLayer;
 
+use super::agent_runner;
 use super::diagnostics;
 use super::lsp_bridge;
 use super::lsp_client::{self, SecondLsp};
@@ -1010,10 +1011,26 @@ async fn post_agent_write_file(
     State(state): State<AppState>,
     Json(req): Json<WriteFileRequest>,
 ) -> impl IntoResponse {
+    let root = match &req.workspace {
+        Some(ws) => {
+            let ws = ws.trim();
+            if ws.is_empty() {
+                state.workspace_root.clone()
+            } else {
+                let p = PathBuf::from(ws);
+                if p.is_absolute() && p.exists() {
+                    p
+                } else {
+                    state.workspace_root.join(ws)
+                }
+            }
+        }
+        None => state.workspace_root.clone(),
+    };
     let path = if std::path::Path::new(&req.path).is_absolute() {
         PathBuf::from(&req.path)
     } else {
-        state.workspace_root.join(&req.path)
+        root.join(&req.path)
     };
 
     if let Some(parent) = path.parent() {
@@ -1041,6 +1058,106 @@ async fn post_agent_write_file(
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({"error": e.to_string()})),
         ),
+    }
+}
+
+/// POST /api/agent/prompt — run DAL agent on prompt; returns job_id and streams activity (agent_started, agent_step, completion_summary).
+#[derive(Debug, Deserialize)]
+struct AgentPromptRequest {
+    text: String,
+    #[serde(default)]
+    context: Option<String>,
+    /// Optional workspace path (relative to server workspace or absolute). Defaults to server workspace.
+    #[serde(default)]
+    workspace: Option<String>,
+}
+
+async fn post_agent_prompt(
+    State(state): State<AppState>,
+    Json(req): Json<AgentPromptRequest>,
+) -> impl IntoResponse {
+    let text = req.text.trim().to_string();
+    if text.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "Prompt text is required"})),
+        )
+            .into_response();
+    }
+    let workspace_root = match req.workspace.as_deref() {
+        Some(ws) if !ws.trim().is_empty() => {
+            let p = PathBuf::from(ws.trim());
+            if p.is_absolute() && p.exists() {
+                p
+            } else {
+                state.workspace_root.join(ws.trim())
+            }
+        }
+        _ => state.workspace_root.clone(),
+    };
+    let job_id = uuid::Uuid::new_v4().to_string();
+    let job_id_response = job_id.clone();
+    let context = req.context.clone();
+    let events_tx = state.events_tx.clone();
+    tokio::task::spawn_blocking(move || {
+        let _ =
+            agent_runner::run_agent_prompt_sync(&workspace_root, text, context, job_id, events_tx);
+    });
+    (
+        StatusCode::OK,
+        Json(serde_json::json!({
+            "ok": true,
+            "job_id": job_id_response
+        })),
+    )
+        .into_response()
+}
+
+/// POST /api/agent/chat — single-turn chat using DAL's LLM (same as `dal agent chat`). Returns reply or error.
+#[derive(Debug, Deserialize)]
+struct AgentChatRequest {
+    text: String,
+}
+
+async fn post_agent_chat(
+    State(state): State<AppState>,
+    Json(req): Json<AgentChatRequest>,
+) -> impl IntoResponse {
+    let text = req.text.trim().to_string();
+    if text.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "text is required"})),
+        )
+            .into_response();
+    }
+    let events_tx = state.events_tx.clone();
+    emit_activity(&events_tx, "command", serde_json::json!({ "text": text }));
+    let result = tokio::task::spawn_blocking(move || crate::stdlib::ai::generate_text(text)).await;
+    match result {
+        Ok(Ok(reply)) => {
+            let reply_trimmed = reply.trim().to_string();
+            emit_activity(
+                &events_tx,
+                "chat_reply",
+                serde_json::json!({ "reply": reply_trimmed }),
+            );
+            (
+                StatusCode::OK,
+                Json(serde_json::json!({ "reply": reply_trimmed })),
+            )
+                .into_response()
+        }
+        Ok(Err(e)) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": e})),
+        )
+            .into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": e.to_string()})),
+        )
+            .into_response(),
     }
 }
 
@@ -1139,6 +1256,8 @@ pub fn build_router(workspace_root: PathBuf) -> Router {
         .route("/api/agent/run_command", post(post_agent_run_command))
         .route("/api/agent/write_file", post(post_agent_write_file))
         .route("/api/agent/read_file", post(post_agent_read_file))
+        .route("/api/agent/prompt", post(post_agent_prompt))
+        .route("/api/agent/chat", post(post_agent_chat))
         .route("/api/command", post(post_command))
         .route("/api/events/stream", get(get_events_stream))
         .route("/health", get(|| async { "OK" }))

@@ -1298,12 +1298,11 @@ fn test_error_handling_and_testing_framework() {
 
     println!("   ✅ Test suite: {} tests", test_suite.test_cases.len());
 
-    // Test mocking system
+    // Test mocking system (no expects_calls: this suite does not invoke chain::mint)
     let mock_chain_mint = MockBuilder::new("mint")
         .in_namespace("chain")
         .returns(Value::Int(12345))
         .logs("Mock chain::mint called")
-        .expects_calls(1)
         .build();
 
     let mock_oracle_fetch = MockBuilder::new("fetch")
@@ -1318,12 +1317,11 @@ fn test_error_handling_and_testing_framework() {
 
     println!("   ✅ Mock registry: {} mocks", mock_registry.mocks.len());
 
-    // Test runner (create a fresh mock since cloning loses the validator)
+    // Test runner (same mock; no call expectation since no test in this suite calls chain::mint)
     let mock_chain_mint_for_runner = MockBuilder::new("mint")
         .in_namespace("chain")
         .returns(Value::Int(12345))
         .logs("Mock chain::mint called")
-        .expects_calls(1)
         .build();
 
     let mut test_runner = TestRunner::new()

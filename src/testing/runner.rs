@@ -44,7 +44,16 @@ impl TestRunner {
         if let Some(desc) = &suite.description {
             println!("Description: {}", desc);
         }
-        println!("Total tests: {}", suite.test_cases.len());
+        let filtered_tests = self.filter_tests(&suite.test_cases);
+        if filtered_tests.len() == suite.test_cases.len() {
+            println!("Total tests: {}", suite.test_cases.len());
+        } else {
+            println!(
+                "Total tests: {} ({} run after tag filter)",
+                suite.test_cases.len(),
+                filtered_tests.len()
+            );
+        }
         println!("{}", "=".repeat(50));
 
         let start_time = Instant::now();
@@ -56,9 +65,6 @@ impl TestRunner {
                 return self.stats.clone();
             }
         }
-
-        // Filter tests based on tags
-        let filtered_tests = self.filter_tests(&suite.test_cases);
 
         // Run tests
         for test_case in filtered_tests {

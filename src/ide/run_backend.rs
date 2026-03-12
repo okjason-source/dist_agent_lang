@@ -29,6 +29,9 @@ pub struct RunCommandRequest {
 pub struct WriteFileRequest {
     pub path: String,
     pub contents: String,
+    /// Optional workspace root (relative or absolute). If set, path is resolved relative to this.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub workspace: Option<String>,
 }
 
 /// Request to read a file (agent API).
