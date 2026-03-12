@@ -24,6 +24,7 @@ fn projects_root() -> PathBuf {
 use std::time::Duration;
 use tokio::sync::{broadcast, oneshot, RwLock};
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::normalize_path::NormalizePathLayer;
 
 use super::diagnostics;
 use super::lsp_bridge;
@@ -200,11 +201,17 @@ async fn get_orchestration(
     State(state): State<AppState>,
     Query(query): Query<WorkspaceQuery>,
 ) -> impl IntoResponse {
-    let root = query
-        .workspace
-        .as_ref()
-        .map(PathBuf::from)
-        .unwrap_or_else(|| state.workspace_root.clone());
+    let root = match &query.workspace {
+        Some(ws) if !ws.trim().is_empty() => {
+            let p = PathBuf::from(ws.trim());
+            if p.is_absolute() && p.exists() {
+                p
+            } else {
+                state.workspace_root.join(ws.trim())
+            }
+        }
+        _ => state.workspace_root.clone(),
+    };
 
     if !root.exists() {
         return (
@@ -1123,6 +1130,10 @@ pub fn build_router(workspace_root: PathBuf) -> Router {
         .route("/api/lsp/hover", post(post_lsp_hover))
         .route("/api/lsp/completion", post(post_lsp_completion))
         .route("/api/lsp/document_symbols", post(post_lsp_document_symbols))
+        .route(
+            "/api/lsp/document_symbols/",
+            post(post_lsp_document_symbols),
+        )
         .route("/api/lsp/references", post(post_lsp_references))
         .route("/api/lsp/stream", get(get_lsp_ws))
         .route("/api/agent/run_command", post(post_agent_run_command))
@@ -1131,6 +1142,7 @@ pub fn build_router(workspace_root: PathBuf) -> Router {
         .route("/api/command", post(post_command))
         .route("/api/events/stream", get(get_events_stream))
         .route("/health", get(|| async { "OK" }))
+        .layer(NormalizePathLayer::trim_trailing_slash())
         .layer(cors)
         .with_state(state)
 }
