@@ -1,3 +1,4 @@
+src/registry.rs:203:5: replace resolve_and_fetch_with_meta -> Result<(PathBuf, String, String), RegistryError> with Ok((Default::default(), String::new(), String::new()))
 src/project_init.rs:14:9: delete match arm "chain" in run_init
 src/project_init.rs:15:9: delete match arm "iot" in run_init
 src/project_init.rs:16:9: delete match arm "agent" in run_init

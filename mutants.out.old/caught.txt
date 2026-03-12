@@ -1,1 +1,14 @@
-src/registry.rs:203:5: replace resolve_and_fetch_with_meta -> Result<(PathBuf, String, String), RegistryError> with Ok((Default::default(), String::new(), String::new()))
+src/bin/registry_server.rs:83:5: replace name_to_storage_dir -> String with "xyzzy".into()
+src/lib.rs:106:46: replace * with + in parse_source
+src/lib.rs:106:46: replace * with / in parse_source
+src/lib.rs:106:39: replace * with + in parse_source
+src/lib.rs:106:39: replace * with / in parse_source
+src/lib.rs:107:21: replace > with == in parse_source
+src/lib.rs:107:21: replace > with < in parse_source
+src/lib.rs:107:21: replace > with >= in parse_source
+src/lib.rs:123:30: replace > with < in parse_source
+src/lib.rs:166:5: replace execute_dal_file -> Result<(), String> with Ok(())
+src/agent_context_schema.rs:115:16: delete ! in build_prompt_for_llm::append_agent_state
+src/cli.rs:490:5: replace chain_subcommand_to_args -> Vec<String> with vec![]
+src/cli.rs:490:5: replace chain_subcommand_to_args -> Vec<String> with vec![String::new()]
+src/cli.rs:490:5: replace chain_subcommand_to_args -> Vec<String> with vec!["xyzzy".into()]

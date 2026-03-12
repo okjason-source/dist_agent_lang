@@ -1,0 +1,2 @@
+src/registry.rs:248:5: replace pack_package -> Result<Vec<u8>, RegistryError> with Ok(vec![0])
+src/registry.rs:248:5: replace pack_package -> Result<Vec<u8>, RegistryError> with Ok(vec![1])

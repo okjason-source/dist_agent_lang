@@ -1,4 +1,4 @@
--src/bin/registry_server.rs:24:5: replace storage_path -> PathBuf with Default::default()
+src/bin/registry_server.rs:24:5: replace storage_path -> PathBuf with Default::default()
 src/bin/registry_server.rs:30:5: replace auth_token -> Option<String> with None
 src/bin/registry_server.rs:30:5: replace auth_token -> Option<String> with Some(String::new())
 src/bin/registry_server.rs:30:5: replace auth_token -> Option<String> with Some("xyzzy".into())
@@ -35,7 +35,6 @@ src/bin/registry_server.rs:58:71: replace == with != in sanitize_version
 src/bin/registry_server.rs:63:5: replace path_under_storage -> bool with true
 src/bin/registry_server.rs:63:5: replace path_under_storage -> bool with false
 src/bin/registry_server.rs:83:5: replace name_to_storage_dir -> String with String::new()
-src/bin/registry_server.rs:83:5: replace name_to_storage_dir -> String with "xyzzy".into()
 src/bin/registry_server.rs:90:5: replace get_package_index -> Response with Default::default()
 src/bin/registry_server.rs:90:8: delete ! in get_package_index
 src/bin/registry_server.rs:95:8: delete ! in get_package_index
@@ -64,9 +63,8 @@ src/bin/registry_server.rs:179:8: delete ! in put_version
 src/bin/registry_server.rs:190:8: delete ! in put_version
 src/bin/registry_server.rs:197:8: delete ! in put_version
 src/bin/registry_server.rs:239:5: replace main with ()
-src/lib.rs:122:30: replace > with == in parse_source
-src/lib.rs:122:30: replace > with >= in parse_source
-src/agent_context_schema.rs:115:16: delete ! in build_prompt_for_llm::append_agent_state
+src/lib.rs:123:30: replace > with == in parse_source
+src/lib.rs:123:30: replace > with >= in parse_source
 src/cli_design.rs:16:5: replace version -> &'static str with ""
 src/cli_design.rs:21:5: replace print_banner with ()
 src/cli_design.rs:37:5: replace help_content -> String with String::new()
@@ -155,3 +153,13 @@ src/registry.rs:203:5: replace resolve_and_fetch_with_meta -> Result<(PathBuf, S
 src/registry.rs:203:5: replace resolve_and_fetch_with_meta -> Result<(PathBuf, String, String), RegistryError> with Ok((Default::default(), "xyzzy".into(), "xyzzy".into()))
 src/registry.rs:213:5: replace resolve_and_fetch -> Result<PathBuf, RegistryError> with Ok(Default::default())
 src/registry.rs:221:5: replace collect_package_files -> std::io::Result<()> with Ok(())
+src/registry.rs:232:39: replace || with && in collect_package_files
+src/registry.rs:232:30: replace == with != in collect_package_files
+src/registry.rs:232:69: replace == with != in collect_package_files
+src/registry.rs:233:23: replace || with && in collect_package_files
+src/registry.rs:233:31: replace == with != in collect_package_files
+src/registry.rs:248:5: replace pack_package -> Result<Vec<u8>, RegistryError> with Ok(vec![])
+src/registry.rs:281:5: replace publish_package -> Result<(), RegistryError> with Ok(())
+src/registry.rs:303:8: delete ! in publish_package
+src/registry.rs:313:5: replace publish_package -> Result<(), RegistryError> with Ok(())
+src/registry.rs:340:45: replace || with && in fetch_bytes
