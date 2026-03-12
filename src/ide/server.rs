@@ -657,6 +657,87 @@ async fn post_agent_run_command(
     }
 }
 
+/// POST /api/agent/run_command_stream — run command in background, stream output (does not block).
+/// Use GET /api/run/stream/:job_id for output. Long-lived servers (e.g. dal serve) will not block the IDE.
+async fn post_agent_run_command_stream(
+    State(state): State<AppState>,
+    Json(req): Json<RunCommandRequest>,
+) -> impl IntoResponse {
+    let cmd_string = req.cmd.clone();
+    let (cmd, args) = if req.args.is_empty() {
+        let parts: Vec<&str> = req.cmd.split_whitespace().collect();
+        if parts.is_empty() {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error": "Empty command"})),
+            )
+                .into_response();
+        }
+        let cmd = parts[0].to_string();
+        let args: Vec<String> = parts[1..].iter().map(|s| (*s).to_string()).collect();
+        (cmd, args)
+    } else {
+        (req.cmd, req.args)
+    };
+
+    let cwd = req.cwd.as_ref().and_then(|s| {
+        let s = s.trim();
+        if s.is_empty() {
+            None
+        } else {
+            Some(PathBuf::from(s))
+        }
+    });
+    let cwd = cwd.unwrap_or_else(|| state.workspace_root.clone());
+    let cwd_path = if cwd.exists() {
+        Some(cwd.as_path())
+    } else {
+        None
+    };
+
+    let cmd_resolved = if cmd == "dal" {
+        super::run_backend::dal_binary_path()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|_| "dal".to_string())
+    } else {
+        cmd
+    };
+
+    match spawn_run_streaming(&cmd_resolved, &args, cwd_path) {
+        Ok((output_tx, kill_tx)) => {
+            let job_id = format!(
+                "run-{}",
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis()
+            );
+            state
+                .jobs
+                .write()
+                .await
+                .insert(job_id.clone(), JobEntry { output_tx, kill_tx });
+            emit_activity(
+                &state.events_tx,
+                "run_started",
+                serde_json::json!({ "job_id": job_id, "cmd": cmd_string }),
+            );
+            (
+                StatusCode::OK,
+                Json(serde_json::json!({
+                    "job_id": job_id,
+                })),
+            )
+                .into_response()
+        }
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": e})),
+        )
+            .into_response(),
+    }
+}
+
 /// POST /api/lsp/diagnostics — get parse/lex diagnostics; route .rs to second LSP (e.g. rust-analyzer).
 #[derive(Debug, Deserialize)]
 struct LspDiagnosticsRequest {
@@ -1254,6 +1335,10 @@ pub fn build_router(workspace_root: PathBuf) -> Router {
         .route("/api/lsp/references", post(post_lsp_references))
         .route("/api/lsp/stream", get(get_lsp_ws))
         .route("/api/agent/run_command", post(post_agent_run_command))
+        .route(
+            "/api/agent/run_command_stream",
+            post(post_agent_run_command_stream),
+        )
         .route("/api/agent/write_file", post(post_agent_write_file))
         .route("/api/agent/read_file", post(post_agent_read_file))
         .route("/api/agent/prompt", post(post_agent_prompt))
