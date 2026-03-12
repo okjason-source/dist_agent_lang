@@ -147,6 +147,7 @@ fn main() {
         Commands::Watch { file } => watch_dal_file(&file),
         Commands::Add { package } => add_package(&package),
         Commands::Install { sync } => install_dependencies(*sync),
+        Commands::Update { release: _ } => handle_update_command(),
         Commands::Venv { subcommand, rest } => handle_venv_command(&subcommand, &rest),
         Commands::Publish => publish_package(),
         Commands::Bench { file, suite } => run_benchmarks(file.as_deref(), suite.as_deref()),
@@ -2945,6 +2946,36 @@ fn collect_dal_files_under(dir: &std::path::Path, out: &mut Vec<std::path::PathB
             collect_dal_files_under(&path, out);
         } else if path.extension().map_or(false, |e| e == "dal") {
             out.push(path);
+        }
+    }
+}
+
+/// Run `cargo install --git ...` to install or update the dal binary from GitHub.
+fn handle_update_command() {
+    const REPO: &str = "https://github.com/okjason-source/dist_agent_lang.git";
+    println!("Installing latest dal from {} ...", REPO);
+    let status = std::process::Command::new("cargo")
+        .args([
+            "install",
+            "--git",
+            REPO,
+            "--package",
+            "dist_agent_lang",
+            "--bin",
+            "dal",
+        ])
+        .status();
+    match status {
+        Ok(s) if s.success() => {
+            println!("Done. Run 'dal --version' to confirm.");
+        }
+        Ok(s) => {
+            eprintln!("cargo install exited with code {:?}", s.code());
+            std::process::exit(s.code().unwrap_or(1));
+        }
+        Err(e) => {
+            eprintln!("Failed to run cargo install: {}", e);
+            std::process::exit(1);
         }
     }
 }

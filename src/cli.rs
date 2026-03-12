@@ -164,6 +164,13 @@ pub enum Commands {
         sync: bool,
     },
 
+    /// Install or update dal from GitHub (release build)
+    Update {
+        /// Build in release mode (default)
+        #[arg(long, default_value_t = true)]
+        release: bool,
+    },
+
     /// Virtual environments (create, list, show, run, delete)
     Venv {
         #[arg(required = true)]
