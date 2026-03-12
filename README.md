@@ -18,7 +18,7 @@ DAL is a programming language where AI agents are native citizens. Spawn agents,
 
 ```bash
 # Install
-cargo install --git https://github.com/okjason-source/dist_agent_lang.git --package dist_agent_lang --bin dal
+cargo install --git https://github.com/okjason-source/dist_agent_lang.git dist_agent_lang --bin dal
 
 # Create an agent project
 mkdir my-agent && cd my-agent

@@ -2955,15 +2955,7 @@ fn handle_update_command() {
     const REPO: &str = "https://github.com/okjason-source/dist_agent_lang.git";
     println!("Installing latest dal from {} ...", REPO);
     let status = std::process::Command::new("cargo")
-        .args([
-            "install",
-            "--git",
-            REPO,
-            "--package",
-            "dist_agent_lang",
-            "--bin",
-            "dal",
-        ])
+        .args(["install", "--git", REPO, "dist_agent_lang", "--bin", "dal"])
         .status();
     match status {
         Ok(s) if s.success() => {
