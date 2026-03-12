@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["diagnostics","lsp_bridge","lsp_client","orchestration","run_backend","server","symbols"]};
+window.SIDEBAR_ITEMS = {"mod":["agent_runner","diagnostics","lsp_bridge","lsp_client","orchestration","run_backend","server","symbols"]};
