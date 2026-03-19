@@ -52,7 +52,10 @@ async fn read_file_rejects_parent_traversal() {
     .await;
 
     assert_eq!(status, StatusCode::BAD_REQUEST);
-    assert!(body["error"].as_str().unwrap_or("").contains("Invalid path"));
+    assert!(body["error"]
+        .as_str()
+        .unwrap_or("")
+        .contains("Invalid path"));
 }
 
 #[tokio::test]
@@ -71,7 +74,10 @@ async fn read_file_rejects_absolute_path_outside_workspace() {
     .await;
 
     assert_eq!(status, StatusCode::BAD_REQUEST);
-    assert!(body["error"].as_str().unwrap_or("").contains("Invalid path"));
+    assert!(body["error"]
+        .as_str()
+        .unwrap_or("")
+        .contains("Invalid path"));
 }
 
 #[tokio::test]
@@ -95,7 +101,10 @@ async fn write_file_allows_nonexistent_in_root_and_creates_parents() {
 
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["ok"], json!(true));
-    assert_eq!(fs::read_to_string(&target).expect("read created file"), "hello");
+    assert_eq!(
+        fs::read_to_string(&target).expect("read created file"),
+        "hello"
+    );
 }
 
 #[tokio::test]
@@ -114,7 +123,10 @@ async fn write_file_rejects_nonexistent_parent_traversal() {
     .await;
 
     assert_eq!(status, StatusCode::BAD_REQUEST);
-    assert!(body["error"].as_str().unwrap_or("").contains("Invalid path"));
+    assert!(body["error"]
+        .as_str()
+        .unwrap_or("")
+        .contains("Invalid path"));
 }
 
 #[tokio::test]
