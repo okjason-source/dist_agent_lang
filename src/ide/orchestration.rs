@@ -5,6 +5,16 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+/// Best-effort guard that a path is contained by root.
+/// For existing paths, compares canonical paths to account for symlinks.
+/// For non-existing paths, falls back to lexical prefix check.
+fn path_is_within_root(root: &Path, path: &Path) -> bool {
+    if let (Ok(canon_root), Ok(canon_path)) = (root.canonicalize(), path.canonicalize()) {
+        return canon_path.starts_with(&canon_root);
+    }
+    path.starts_with(root)
+}
+
 /// Project info returned by orchestration API.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProjectInfo {
@@ -229,16 +239,18 @@ pub fn discover_workspace(workspace_root: &Path) -> OrchestrationResponse {
 fn find_cargo_roots(workspace_root: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let root_cargo = workspace_root.join("Cargo.toml");
-    if root_cargo.exists() {
+    if path_is_within_root(workspace_root, &root_cargo) && root_cargo.exists() {
         out.push(workspace_root.to_path_buf());
     }
-    if let Ok(entries) = std::fs::read_dir(workspace_root) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                let manifest = path.join("Cargo.toml");
-                if manifest.exists() {
-                    out.push(path);
+    if path_is_within_root(workspace_root, workspace_root) {
+        if let Ok(entries) = std::fs::read_dir(workspace_root) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let manifest = path.join("Cargo.toml");
+                    if path_is_within_root(workspace_root, &manifest) && manifest.exists() {
+                        out.push(path);
+                    }
                 }
             }
         }
@@ -250,16 +262,18 @@ fn find_cargo_roots(workspace_root: &Path) -> Vec<PathBuf> {
 fn find_manifests(workspace_root: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let root_manifest = workspace_root.join("dal.toml");
-    if root_manifest.exists() {
+    if path_is_within_root(workspace_root, &root_manifest) && root_manifest.exists() {
         out.push(root_manifest);
     }
-    if let Ok(entries) = std::fs::read_dir(workspace_root) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                let manifest = path.join("dal.toml");
-                if manifest.exists() {
-                    out.push(manifest);
+    if path_is_within_root(workspace_root, workspace_root) {
+        if let Ok(entries) = std::fs::read_dir(workspace_root) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let manifest = path.join("dal.toml");
+                    if path_is_within_root(workspace_root, &manifest) && manifest.exists() {
+                        out.push(manifest);
+                    }
                 }
             }
         }

@@ -71,6 +71,16 @@ fn resolve_path_under_root(root: &std::path::Path, user_path: &str) -> Option<Pa
     }
 }
 
+/// Best-effort guard that a path is contained by root.
+/// For existing paths, compares canonical paths to account for symlinks.
+/// For non-existing paths (e.g. writes), falls back to lexical prefix check.
+fn path_is_within_root(root: &std::path::Path, path: &std::path::Path) -> bool {
+    if let (Ok(canon_root), Ok(canon_path)) = (root.canonicalize(), path.canonicalize()) {
+        return canon_path.starts_with(&canon_root);
+    }
+    path.starts_with(root)
+}
+
 /// Default parent directory for `dal new` when no cwd is provided. Uses $HOME (Unix) or %USERPROFILE% (Windows); falls back to ".".
 fn projects_root() -> PathBuf {
     let s = std::env::var("HOME")
@@ -286,7 +296,7 @@ async fn get_orchestration(
         _ => state.workspace_root.clone(),
     };
 
-    if !root.exists() {
+    if !path_is_within_root(&state.workspace_root, &root) || !root.exists() {
         return (
             StatusCode::BAD_REQUEST,
             Json(serde_json::json!({"error": "Workspace path does not exist"})),
@@ -342,7 +352,7 @@ async fn get_files(
 
     let subpath = query.path.as_deref().unwrap_or("");
     let dir = if subpath.is_empty() {
-        root
+        root.clone()
     } else {
         match path_under_base(&root, subpath) {
             Some(d) => d,
@@ -356,7 +366,7 @@ async fn get_files(
         }
     };
 
-    if !dir.exists() || !dir.is_dir() {
+    if !path_is_within_root(&root, &dir) || !dir.exists() || !dir.is_dir() {
         return (
             StatusCode::BAD_REQUEST,
             Json(serde_json::json!({"error": "Path does not exist or is not a directory"})),
@@ -449,7 +459,7 @@ async fn post_search(
             }
         })
         .unwrap_or_else(|| state.workspace_root.clone());
-    if !root.exists() {
+    if !path_is_within_root(&state.workspace_root, &root) || !root.exists() {
         return (
             StatusCode::BAD_REQUEST,
             Json(serde_json::json!({"error": "Workspace path does not exist"})),
@@ -755,7 +765,7 @@ async fn post_agent_run_command(
             state.workspace_root.clone()
         }
     });
-    let cwd_path = if cwd.exists() {
+    let cwd_path = if path_is_within_root(&state.workspace_root, &cwd) && cwd.exists() {
         Some(cwd.as_path())
     } else {
         None
@@ -819,7 +829,7 @@ async fn post_agent_run_command_stream(
         }
     });
     let cwd = cwd.unwrap_or_else(|| state.workspace_root.clone());
-    let cwd_path = if cwd.exists() {
+    let cwd_path = if path_is_within_root(&state.workspace_root, &cwd) && cwd.exists() {
         Some(cwd.as_path())
     } else {
         None
@@ -988,7 +998,8 @@ fn find_cargo_root(file_path: &std::path::Path, workspace_root: &std::path::Path
         .filter(|p: &&std::path::Path| !p.as_os_str().is_empty())
         .unwrap_or_else(|| file_path);
     loop {
-        if dir.join("Cargo.toml").exists() {
+        let cargo_toml = dir.join("Cargo.toml");
+        if path_is_within_root(workspace_root, &cargo_toml) && cargo_toml.exists() {
             return dir.to_path_buf();
         }
         if dir == workspace_root {
@@ -1209,14 +1220,14 @@ async fn post_agent_read_file(
         }
     };
 
-    if !path.exists() {
+    if !path_is_within_root(&root, &path) || !path.exists() {
         return (
             StatusCode::NOT_FOUND,
             Json(serde_json::json!({"error": "file not found", "path": path.to_string_lossy()})),
         )
             .into_response();
     }
-    if path.is_dir() {
+    if !path_is_within_root(&root, &path) || path.is_dir() {
         return (
             StatusCode::BAD_REQUEST,
             Json(
@@ -1226,6 +1237,13 @@ async fn post_agent_read_file(
             .into_response();
     }
 
+    if !path_is_within_root(&root, &path) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "Invalid path"})),
+        )
+            .into_response();
+    }
     match std::fs::read_to_string(&path) {
         Ok(contents) => (
             StatusCode::OK,
@@ -1280,7 +1298,21 @@ async fn post_agent_write_file(
         }
     };
 
+    if !path_is_within_root(&root, &path) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "Invalid path"})),
+        )
+            .into_response();
+    }
     if let Some(parent) = path.parent() {
+        if !path_is_within_root(&root, parent) {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error": "Invalid path"})),
+            )
+                .into_response();
+        }
         if let Err(e) = std::fs::create_dir_all(parent) {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
