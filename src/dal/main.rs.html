@@ -6778,8 +6778,8 @@
 <a href=#6778 id=6778 data-nosnippet>6778</a>                    <span class="macro">eprintln!</span>(<span class="string">"❌ Send failed"</span>);
 <a href=#6779 id=6779 data-nosnippet>6779</a>                    <span class="kw">continue</span>;
 <a href=#6780 id=6780 data-nosnippet>6780</a>                }
-<a href=#6781 id=6781 data-nosnippet>6781</a>                <span class="comment">// AI reply via LLM
-<a href=#6782 id=6782 data-nosnippet>6782</a>                </span><span class="kw">let </span>reply = <span class="kw">match </span>stdlib::ai::generate_text(input.to_string()) {
+<a href=#6781 id=6781 data-nosnippet>6781</a>                <span class="comment">// AI reply via canonical agent primitive (planner gate + tool loop when needed)
+<a href=#6782 id=6782 data-nosnippet>6782</a>                </span><span class="kw">let </span>reply = <span class="kw">match </span>stdlib::ai::respond_with_tools(input) {
 <a href=#6783 id=6783 data-nosnippet>6783</a>                    <span class="prelude-val">Ok</span>(s) =&gt; s.trim().to_string(),
 <a href=#6784 id=6784 data-nosnippet>6784</a>                    <span class="prelude-val">Err</span>(e) =&gt; {
 <a href=#6785 id=6785 data-nosnippet>6785</a>                        <span class="macro">eprintln!</span>(<span class="string">"⚠️  LLM error: {} (check API keys)"</span>, e);
