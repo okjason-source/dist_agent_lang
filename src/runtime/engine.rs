@@ -7783,27 +7783,61 @@ impl Runtime {
                     .map_err(RuntimeError::General)
             }
             "respond_with_tools" => {
-                if args.len() != 1 {
+                if args.len() < 1 || args.len() > 2 {
                     return Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 1,
+                        expected: 2,
                         got: args.len(),
                     });
                 }
                 let message = self.value_to_string(&args[0])?;
-                crate::stdlib::ai::respond_with_tools(&message)
+                let policy = if args.len() == 2 {
+                    let p = self.value_to_string(&args[1])?;
+                    crate::stdlib::ai::ChatPolicy::from_str(&p).ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "Invalid chat policy '{}'. Use auto|reply_only|tool_loop.",
+                            p
+                        ))
+                    })?
+                } else {
+                    crate::stdlib::ai::default_chat_policy_from_env()
+                };
+                crate::stdlib::ai::respond_with_tools_with_policy(&message, policy)
                     .map(Value::String)
                     .map_err(RuntimeError::General)
             }
             "respond_with_tools_result" => {
-                if args.len() != 1 {
+                if args.len() < 1 || args.len() > 2 {
                     return Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 1,
+                        expected: 2,
                         got: args.len(),
                     });
                 }
                 let message = self.value_to_string(&args[0])?;
-                let r = crate::stdlib::ai::respond_with_tools_result(&message)
-                    .map_err(RuntimeError::General)?;
+                let policy = if args.len() == 2 {
+                    let p = self.value_to_string(&args[1])?;
+                    crate::stdlib::ai::ChatPolicy::from_str(&p).ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "Invalid chat policy '{}'. Use auto|reply_only|tool_loop.",
+                            p
+                        ))
+                    })?
+                } else {
+                    crate::stdlib::ai::default_chat_policy_from_env()
+                };
+                let d =
+                    crate::stdlib::ai::respond_with_tools_diagnostics_with_policy(&message, policy)
+                        .map_err(RuntimeError::General)?;
+                let route = match d.route {
+                    crate::stdlib::ai::ChatRoute::ReplyOnly => "reply_only",
+                    crate::stdlib::ai::ChatRoute::ToolLoop => "tool_loop",
+                };
+                let policy_str = match d.policy {
+                    crate::stdlib::ai::ChatPolicy::Auto => "auto",
+                    crate::stdlib::ai::ChatPolicy::ReplyOnly => "reply_only",
+                    crate::stdlib::ai::ChatPolicy::ToolLoop => "tool_loop",
+                };
+                let tool_trace_raw = d.tool_trace;
+                let r = d.result;
                 let mut map = std::collections::HashMap::new();
                 map.insert("final_text".to_string(), Value::String(r.final_text));
                 map.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
@@ -7811,6 +7845,43 @@ impl Runtime {
                     "max_steps_reached".to_string(),
                     Value::Bool(r.max_steps_reached),
                 );
+                map.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
+                map.insert("route".to_string(), Value::String(route.to_string()));
+                map.insert("policy".to_string(), Value::String(policy_str.to_string()));
+                // Non-critical diagnostics for DAL/HTTP surfaces.
+                let mut obs = std::collections::HashMap::new();
+                obs.insert("route".to_string(), Value::String(route.to_string()));
+                obs.insert("policy".to_string(), Value::String(policy_str.to_string()));
+                obs.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
+                obs.insert(
+                    "max_steps_reached".to_string(),
+                    Value::Bool(r.max_steps_reached),
+                );
+                obs.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
+                obs.insert(
+                    "legacy_text_protocol_enabled".to_string(),
+                    Value::Bool(crate::stdlib::ai::legacy_text_tool_protocol_enabled()),
+                );
+                obs.insert(
+                    "native_tool_calling_enabled".to_string(),
+                    Value::Bool(crate::stdlib::ai::native_tool_calling_enabled()),
+                );
+                let default_policy = match crate::stdlib::ai::default_chat_policy_from_env() {
+                    crate::stdlib::ai::ChatPolicy::Auto => "auto",
+                    crate::stdlib::ai::ChatPolicy::ReplyOnly => "reply_only",
+                    crate::stdlib::ai::ChatPolicy::ToolLoop => "tool_loop",
+                };
+                obs.insert(
+                    "default_policy".to_string(),
+                    Value::String(default_policy.to_string()),
+                );
+                map.insert("observability".to_string(), Value::Map(obs));
+                let tool_trace = tool_trace_raw
+                    .into_iter()
+                    .map(Value::String)
+                    .collect::<Vec<_>>();
+                map.insert("tool_trace".to_string(), Value::Array(tool_trace.clone()));
+                map.insert("last_tool_names".to_string(), Value::Array(tool_trace));
                 Ok(Value::Map(map))
             }
             "train_model" => {

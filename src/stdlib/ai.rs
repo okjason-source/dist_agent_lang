@@ -1188,7 +1188,8 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
 
 /// System prompt for tool-using agent: reply, run shell, or search.
 const TOOLS_SYSTEM: &str = "You are an intelligent assistant. You can run shell commands, search the web, reply, or ask the user. \
-Respond with JSON only, no markdown or extra text. Use exactly one of: \
+Use host tools through the API when needed, and answer users in natural language when finished. \
+If legacy text-JSON mode is explicitly enabled, output exactly one JSON action object using: \
 {\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"}. \
 For run and search the tool will execute and you will see the result; then reply once to complete the task. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
 
@@ -1196,7 +1197,8 @@ For run and search the tool will execute and you will see the result; then reply
 /// Use when AGENT_ASSISTANT_SCRIPTING=1 or AGENT_ASSISTANT_ROOT is set.
 /// Public for IDE agent runner (prompt → code development).
 pub const TOOLS_SYSTEM_WITH_SCRIPTING: &str = "You are an intelligent assistant. You can run shell commands, search the web, reply, ask the user, or use file/DAL tools. \
-Respond with JSON only, no markdown or extra text. Use exactly one of: \
+Use host tools through the API when needed, and answer users in natural language when finished. \
+If legacy text-JSON mode is explicitly enabled, output exactly one JSON action object using: \
 {\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"} \
 or {\"action\":\"write_file\",\"path\":\"path/to/file\",\"contents\":\"file contents\"} or {\"action\":\"read_file\",\"path\":\"path/to/file\"} or {\"action\":\"list_dir\",\"path\":\".\"} \
 or {\"action\":\"dal_run\",\"path\":\"file.dal\"} or {\"action\":\"dal_check\",\"path\":\"file.dal\"} \
@@ -1206,6 +1208,143 @@ For run and search the tool will execute and you will see the result. For write_
 /// Completion and when to ask: try to finish; if you need input or must stop, keep the user in the loop.
 /// Public for IDE agent runner.
 pub const COMPLETION_AND_ASK_GUIDANCE: &str = "Complete in few steps: when a run succeeds (e.g. curl to post), use action reply right away with the outcome. Do not run extra checks or steps after success. If you need user input use ask_user; if something failed use reply to say what happened. Do not leave the user without a reply.";
+const CHAT_REPLY_ONLY_SYSTEM: &str =
+    "You are an intelligent assistant. Answer the user directly in natural language. \
+Do not return JSON, code fences, or tool actions unless explicitly requested by the host.";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ChatRoute {
+    ReplyOnly,
+    ToolLoop,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ChatPolicy {
+    Auto,
+    ReplyOnly,
+    ToolLoop,
+}
+
+impl ChatPolicy {
+    pub fn from_str(s: &str) -> Option<Self> {
+        let v = s.trim().to_ascii_lowercase();
+        match v.as_str() {
+            "auto" => Some(Self::Auto),
+            "reply_only" | "replyonly" => Some(Self::ReplyOnly),
+            "tool_loop" | "toolloop" => Some(Self::ToolLoop),
+            _ => None,
+        }
+    }
+}
+
+/// Lightweight planner gate for chat surfaces:
+/// - reply_only for simple conversational or conceptual questions
+/// - tool_loop for action-oriented requests that likely need tools
+pub fn decide_chat_route(user_message: &str) -> ChatRoute {
+    let msg = user_message.trim().to_lowercase();
+    if msg.is_empty() {
+        return ChatRoute::ReplyOnly;
+    }
+
+    let starts_conversational = [
+        "hi",
+        "hello",
+        "hey",
+        "thanks",
+        "thank you",
+        "what is",
+        "who is",
+        "why ",
+        "how does",
+        "explain ",
+    ]
+    .iter()
+    .any(|p| msg.starts_with(p));
+
+    let action_markers = [
+        "run ",
+        "execute ",
+        "search ",
+        "look up",
+        "find ",
+        "open ",
+        "read file",
+        "write file",
+        "create file",
+        "edit file",
+        "list ",
+        "directory",
+        "folder",
+        "terminal",
+        "shell",
+        "command",
+        "debug ",
+        "fix ",
+        "test ",
+        "build ",
+        "compile ",
+        "deploy ",
+        "check my ",
+        "check the ",
+        "check this ",
+        "api ",
+        "url",
+        "website",
+        "x page",
+        "tweet",
+    ]
+    .iter()
+    .any(|p| msg.contains(p));
+
+    if action_markers {
+        ChatRoute::ToolLoop
+    } else if starts_conversational {
+        ChatRoute::ReplyOnly
+    } else {
+        // Default to conversational path for ambiguous prompts.
+        ChatRoute::ReplyOnly
+    }
+}
+
+fn route_for_policy(policy: ChatPolicy, user_message: &str) -> ChatRoute {
+    match policy {
+        ChatPolicy::Auto => decide_chat_route(user_message),
+        ChatPolicy::ReplyOnly => ChatRoute::ReplyOnly,
+        ChatPolicy::ToolLoop => ChatRoute::ToolLoop,
+    }
+}
+
+fn build_tool_loop_schema(
+    user_message: &str,
+) -> (
+    crate::agent_context_schema::AgentContextSchema,
+    Option<std::path::PathBuf>,
+) {
+    let scripting_enabled = std::env::var("AGENT_ASSISTANT_SCRIPTING").as_deref() == Ok("1")
+        || std::env::var("AGENT_ASSISTANT_ROOT").is_ok();
+    let (tools_system, working_root) = if scripting_enabled {
+        let root = scripting_working_root();
+        (TOOLS_SYSTEM_WITH_SCRIPTING, root)
+    } else {
+        (TOOLS_SYSTEM, None)
+    };
+    let mut schema =
+        crate::agent_context_schema::AgentContextSchema::minimal(user_message, tools_system);
+    schema.completion_and_ask_guidance = Some(COMPLETION_AND_ASK_GUIDANCE.to_string());
+    (schema, working_root)
+}
+
+fn build_reply_only_schema(user_message: &str) -> crate::agent_context_schema::AgentContextSchema {
+    let mut schema = crate::agent_context_schema::AgentContextSchema::minimal(
+        user_message,
+        CHAT_REPLY_ONLY_SYSTEM,
+    );
+    schema.completion_and_ask_guidance = Some(
+        "Answer directly and clearly. Ask a brief follow-up question only if critical information is missing."
+            .to_string(),
+    );
+    schema
+}
 
 /// Extract the first JSON object from a string (between first { and matching }).
 fn extract_json_object(s: &str) -> Option<&str> {
@@ -1304,20 +1443,14 @@ fn scripting_working_root() -> Option<std::path::PathBuf> {
 /// When AGENT_ASSISTANT_SCRIPTING=1 or AGENT_ASSISTANT_ROOT is set, exposes write_file, read_file,
 /// list_dir, dal_run, dal_check and uses scripts/ under AGENT_ASSISTANT_ROOT as working root.
 pub fn respond_with_tools(user_message: &str) -> Result<String, String> {
-    let max_steps = max_tool_steps_from_env();
-    let scripting_enabled = std::env::var("AGENT_ASSISTANT_SCRIPTING").as_deref() == Ok("1")
-        || std::env::var("AGENT_ASSISTANT_ROOT").is_ok();
-    let (tools_system, working_root) = if scripting_enabled {
-        let root = scripting_working_root();
-        (TOOLS_SYSTEM_WITH_SCRIPTING, root)
-    } else {
-        (TOOLS_SYSTEM, None)
-    };
-    let mut schema =
-        crate::agent_context_schema::AgentContextSchema::minimal(user_message, tools_system);
-    schema.completion_and_ask_guidance = Some(COMPLETION_AND_ASK_GUIDANCE.to_string());
-    let result = run_multi_step_tool_loop(&mut schema, max_steps, None, working_root.as_deref())?;
-    Ok(result.final_text)
+    respond_with_tools_result(user_message).map(|r| r.final_text)
+}
+
+pub fn respond_with_tools_with_policy(
+    user_message: &str,
+    policy: ChatPolicy,
+) -> Result<String, String> {
+    respond_with_tools_result_with_policy(user_message, policy).map(|r| r.final_text)
 }
 
 // --- Multi-step tool loop (production) ---
@@ -1351,6 +1484,33 @@ pub enum ToolOutcome {
     ShowContent(String, Option<String>),
     /// Response was not valid JSON or unknown action; treat as reply with raw text.
     ParseFail(String),
+}
+
+/// One provider-native tool call emitted by the model.
+#[derive(Debug, Clone)]
+pub struct NativeToolCall {
+    pub id: Option<String>,
+    pub name: String,
+    pub arguments: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct TurnUsage {
+    pub input_tokens: Option<u64>,
+    pub output_tokens: Option<u64>,
+    pub total_tokens: Option<u64>,
+    pub estimated_cost_microusd: Option<u64>,
+}
+
+/// One model turn used by the host protocol loop.
+#[derive(Debug, Clone)]
+pub struct AgentModelTurn {
+    /// Optional assistant text content for the user.
+    pub content: String,
+    /// Native tool/function calls requested by the provider response.
+    pub tool_calls: Vec<NativeToolCall>,
+    /// Optional provider token/cost usage for budget guards.
+    pub usage: TurnUsage,
 }
 
 /// Parse LLM response into a tool outcome. Uses same JSON shape as SERVE_*_TOOLS.
@@ -1503,6 +1663,352 @@ pub fn parse_tool_response(response: &str) -> ToolOutcome {
                 text.to_string()
             })
         }
+    }
+}
+
+/// Legacy JSON-in-text parser gate. Keep disabled by default for production protocol.
+pub fn legacy_text_tool_protocol_enabled() -> bool {
+    std::env::var("DAL_AGENT_ENABLE_LEGACY_TEXT_JSON")
+        .map(|v| {
+            let v = v.trim().to_ascii_lowercase();
+            matches!(v.as_str(), "1" | "true" | "yes" | "on")
+        })
+        .unwrap_or(false)
+}
+
+pub fn native_tool_calling_enabled() -> bool {
+    std::env::var("DAL_AGENT_NATIVE_TOOL_CALLS_ENABLED")
+        .map(|v| {
+            let v = v.trim().to_ascii_lowercase();
+            !matches!(v.as_str(), "0" | "false" | "no" | "off")
+        })
+        .unwrap_or(true)
+}
+
+pub fn default_chat_policy_from_env() -> ChatPolicy {
+    std::env::var("DAL_AGENT_POLICY_DEFAULT")
+        .ok()
+        .and_then(|s| ChatPolicy::from_str(&s))
+        .unwrap_or(ChatPolicy::Auto)
+}
+
+fn native_tool_call_to_outcome(call: &NativeToolCall) -> ToolOutcome {
+    let name = call.name.trim().to_ascii_lowercase();
+    let obj = call.arguments.as_object();
+    match name.as_str() {
+        "ask_user" => {
+            let msg = obj
+                .and_then(|o| o.get("message"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::AskUser(msg)
+        }
+        "reply" => {
+            let text = obj
+                .and_then(|o| o.get("text"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::Reply(text)
+        }
+        "run" => {
+            let cmd = obj
+                .and_then(|o| o.get("cmd").or_else(|| o.get("command")))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::Run(cmd)
+        }
+        "search" => {
+            let query = obj
+                .and_then(|o| o.get("query"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::Search(query)
+        }
+        "dal_init" => {
+            let template = obj
+                .and_then(|o| o.get("template"))
+                .and_then(|v| v.as_str())
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty());
+            ToolOutcome::DalInit(template)
+        }
+        "read_file" => {
+            let path = obj
+                .and_then(|o| o.get("path"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::ReadFile(path)
+        }
+        "write_file" => {
+            let path = obj
+                .and_then(|o| o.get("path"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            let contents = obj
+                .and_then(|o| o.get("contents"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            ToolOutcome::WriteFile(path, contents)
+        }
+        "list_dir" => {
+            let path = obj
+                .and_then(|o| o.get("path"))
+                .and_then(|v| v.as_str())
+                .unwrap_or(".")
+                .trim()
+                .to_string();
+            ToolOutcome::ListDir(path)
+        }
+        "dal_check" => {
+            let path = obj
+                .and_then(|o| o.get("path"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::DalCheck(path)
+        }
+        "dal_run" => {
+            let path = obj
+                .and_then(|o| o.get("path"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::DalRun(path)
+        }
+        "show_url" => {
+            let url = obj
+                .and_then(|o| o.get("url"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::ShowUrl(url)
+        }
+        "show_content" => {
+            let content = obj
+                .and_then(|o| o.get("content"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let title = obj
+                .and_then(|o| o.get("title"))
+                .and_then(|v| v.as_str())
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty());
+            ToolOutcome::ShowContent(content, title)
+        }
+        other => ToolOutcome::ParseFail(format!("Unsupported tool call: {}", other)),
+    }
+}
+
+fn tool_call_for_conversation(call: &NativeToolCall) -> String {
+    let id = call.id.clone().unwrap_or_else(|| "tool_call".to_string());
+    format!(
+        "{{\"tool_call_id\":\"{}\",\"name\":\"{}\",\"arguments\":{}}}",
+        id, call.name, call.arguments
+    )
+}
+
+fn parse_tool_call_from_conversation(content: &str) -> Option<NativeToolCall> {
+    let v: serde_json::Value = serde_json::from_str(content.trim()).ok()?;
+    let obj = v.as_object()?;
+    let id = obj
+        .get("tool_call_id")
+        .and_then(|x| x.as_str())
+        .map(|s| s.to_string());
+    let name = obj.get("name").and_then(|x| x.as_str())?.to_string();
+    let arguments = obj
+        .get("arguments")
+        .and_then(|x| x.as_object())
+        .map(|m| serde_json::Value::Object(m.clone()))?;
+    Some(NativeToolCall {
+        id,
+        name,
+        arguments,
+    })
+}
+
+fn parse_tool_result_from_conversation(content: &str) -> Option<String> {
+    let prefix = "[Tool result]\n";
+    if let Some(rest) = content.strip_prefix(prefix) {
+        return Some(rest.to_string());
+    }
+    None
+}
+
+#[derive(Debug, Clone)]
+enum TranscriptEvent {
+    UserText(String),
+    AssistantText(String),
+    AssistantToolCall(NativeToolCall),
+    ToolResult {
+        tool_call_id: String,
+        content: String,
+    },
+}
+
+fn build_transcript_events(
+    schema: &crate::agent_context_schema::AgentContextSchema,
+) -> Vec<TranscriptEvent> {
+    let mut events = Vec::new();
+    if !schema.objective.trim().is_empty() {
+        events.push(TranscriptEvent::UserText(
+            schema.objective.trim().to_string(),
+        ));
+    }
+    let mut pending_tool_call_id: Option<String> = None;
+    for turn in &schema.conversation {
+        let role = turn.role.trim().to_ascii_lowercase();
+        if role == "assistant" {
+            if let Some(tool_call) = parse_tool_call_from_conversation(&turn.content) {
+                pending_tool_call_id = tool_call.id.clone();
+                events.push(TranscriptEvent::AssistantToolCall(tool_call));
+            } else {
+                pending_tool_call_id = None;
+                events.push(TranscriptEvent::AssistantText(turn.content.clone()));
+            }
+            continue;
+        }
+        if role == "user" {
+            if let Some(tool_call_id) = pending_tool_call_id.clone() {
+                if let Some(tool_result) = parse_tool_result_from_conversation(&turn.content) {
+                    events.push(TranscriptEvent::ToolResult {
+                        tool_call_id,
+                        content: tool_result,
+                    });
+                    pending_tool_call_id = None;
+                    continue;
+                }
+            }
+            pending_tool_call_id = None;
+            events.push(TranscriptEvent::UserText(turn.content.clone()));
+        }
+    }
+    events
+}
+
+fn build_provider_system_prompt(
+    schema: &crate::agent_context_schema::AgentContextSchema,
+) -> String {
+    let mut out = String::from(
+        "You are an expert dist_agent_lang (DAL) programmer. Use tools when needed and answer users in natural language.",
+    );
+    if !schema.tools_description.trim().is_empty() {
+        out.push_str("\n\n## Tools\n");
+        out.push_str(schema.tools_description.trim());
+    }
+    if let Some(constraints) = &schema.constraints {
+        if !constraints.trim().is_empty() {
+            out.push_str("\n\n## Constraints\n");
+            out.push_str(constraints.trim());
+        }
+    }
+    if let Some(guidance) = &schema.completion_and_ask_guidance {
+        if !guidance.trim().is_empty() {
+            out.push_str("\n\n## Completion and when to ask human\n");
+            out.push_str(guidance.trim());
+        }
+    }
+    if !schema.context_blocks.is_empty() {
+        out.push_str("\n\n## Context\n");
+        for block in &schema.context_blocks {
+            if !block.source.trim().is_empty() {
+                out.push('[');
+                out.push_str(block.source.trim());
+                out.push_str("]\n");
+            }
+            out.push_str(block.content.trim());
+            out.push('\n');
+        }
+    }
+    out
+}
+
+pub fn generate_agent_model_turn(
+    schema: &crate::agent_context_schema::AgentContextSchema,
+    include_scripting_tools: bool,
+) -> Result<AgentModelTurn, String> {
+    let config = get_ai_config();
+    if native_tool_calling_enabled() && !legacy_text_tool_protocol_enabled() {
+        match &config.provider {
+            AIProvider::OpenAI => {
+                if let Some(ref api_key) = config.api_key {
+                    if let Ok(turn) =
+                        call_openai_api_tool_turn(schema, api_key, &config, include_scripting_tools)
+                    {
+                        return Ok(turn);
+                    }
+                }
+            }
+            AIProvider::Anthropic => {
+                if let Some(ref api_key) = config.api_key {
+                    if let Ok(turn) = call_anthropic_api_tool_turn(
+                        schema,
+                        api_key,
+                        &config,
+                        include_scripting_tools,
+                    ) {
+                        return Ok(turn);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    let prompt = crate::agent_context_schema::build_prompt_for_llm(schema);
+    let response = generate_text(prompt)?;
+    Ok(AgentModelTurn {
+        content: response.trim().to_string(),
+        tool_calls: Vec::new(),
+        usage: TurnUsage::default(),
+    })
+}
+
+pub struct ParsedTurnOutcome {
+    pub outcome: ToolOutcome,
+    pub assistant_event: String,
+    pub used_native_tool_call: bool,
+    pub used_legacy_parse: bool,
+}
+
+pub fn model_turn_to_outcome(turn: &AgentModelTurn) -> ParsedTurnOutcome {
+    if let Some(call) = turn.tool_calls.first() {
+        return ParsedTurnOutcome {
+            outcome: native_tool_call_to_outcome(call),
+            assistant_event: tool_call_for_conversation(call),
+            used_native_tool_call: true,
+            used_legacy_parse: false,
+        };
+    }
+    if legacy_text_tool_protocol_enabled() {
+        let parsed = parse_tool_response(&turn.content);
+        return ParsedTurnOutcome {
+            outcome: parsed,
+            assistant_event: turn.content.clone(),
+            used_native_tool_call: false,
+            used_legacy_parse: true,
+        };
+    }
+    ParsedTurnOutcome {
+        outcome: ToolOutcome::Reply(turn.content.clone()),
+        assistant_event: turn.content.clone(),
+        used_native_tool_call: false,
+        used_legacy_parse: false,
     }
 }
 
@@ -1826,6 +2332,229 @@ pub fn max_tool_steps_from_env() -> u32 {
         .clamp(1, 80)
 }
 
+#[derive(Debug, Clone)]
+struct ToolLoopGuards {
+    max_wall_clock_ms: u64,
+    max_tool_calls_per_type: u32,
+    max_repeated_identical_invocations: u32,
+    max_consecutive_no_progress: u32,
+    max_total_tokens: u64,
+    max_estimated_cost_microusd: u64,
+}
+
+fn tool_loop_guards_from_env() -> ToolLoopGuards {
+    let env_u64 = |key: &str, default: u64| {
+        std::env::var(key)
+            .ok()
+            .and_then(|s| s.trim().parse::<u64>().ok())
+            .unwrap_or(default)
+    };
+    let env_u32 = |key: &str, default: u32| {
+        std::env::var(key)
+            .ok()
+            .and_then(|s| s.trim().parse::<u32>().ok())
+            .unwrap_or(default)
+    };
+    let strict_mode = std::env::var("DAL_AGENT_GUARDS_STRICT_MODE")
+        .map(|v| {
+            let v = v.trim().to_ascii_lowercase();
+            matches!(v.as_str(), "1" | "true" | "yes" | "on")
+        })
+        .unwrap_or(false);
+    ToolLoopGuards {
+        // Bound total wall clock for one tool-loop turn.
+        max_wall_clock_ms: env_u64(
+            "DAL_AGENT_MAX_WALL_CLOCK_MS",
+            if strict_mode { 90_000 } else { 120_000 },
+        ),
+        // Bound each tool type to avoid runaway repetition.
+        max_tool_calls_per_type: env_u32(
+            "DAL_AGENT_MAX_TOOL_CALLS_PER_TYPE",
+            if strict_mode { 8 } else { 12 },
+        ),
+        // Bound repeated identical invocations (same tool + same args).
+        max_repeated_identical_invocations: env_u32(
+            "DAL_AGENT_MAX_REPEATED_IDENTICAL_INVOCATIONS",
+            if strict_mode { 2 } else { 3 },
+        ),
+        // Bound consecutive no-progress loops (same tool + args + same result).
+        max_consecutive_no_progress: env_u32(
+            "DAL_AGENT_MAX_CONSECUTIVE_NO_PROGRESS",
+            if strict_mode { 1 } else { 2 },
+        ),
+        // Token/cost caps are opt-in; 0 means disabled.
+        max_total_tokens: env_u64("DAL_AGENT_MAX_TOTAL_TOKENS", 0),
+        max_estimated_cost_microusd: env_u64("DAL_AGENT_MAX_COST_MICROUSD", 0),
+    }
+}
+
+#[derive(Debug, Default)]
+struct ToolLoopGuardState {
+    started_at: Option<std::time::Instant>,
+    tool_type_counts: HashMap<String, u32>,
+    last_tool_signature: Option<String>,
+    repeated_identical_invocations: u32,
+    last_result_fingerprint: Option<u64>,
+    consecutive_no_progress: u32,
+    total_tokens: u64,
+    estimated_cost_microusd: u64,
+}
+
+fn fingerprint_str(s: &str) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    s.hash(&mut h);
+    h.finish()
+}
+
+fn apply_turn_usage_budget(
+    state: &mut ToolLoopGuardState,
+    guards: &ToolLoopGuards,
+    turn: &AgentModelTurn,
+) -> Option<String> {
+    let turn_tokens = if let Some(t) = turn.usage.total_tokens {
+        t
+    } else {
+        let in_toks = turn.usage.input_tokens.unwrap_or(0);
+        let out_toks = turn.usage.output_tokens.unwrap_or(0);
+        if in_toks > 0 || out_toks > 0 {
+            in_toks.saturating_add(out_toks)
+        } else {
+            // Fallback heuristic when provider does not expose usage.
+            (turn.content.len() as u64).saturating_div(4)
+        }
+    };
+    state.total_tokens = state.total_tokens.saturating_add(turn_tokens);
+    if let Some(cost) = turn.usage.estimated_cost_microusd {
+        state.estimated_cost_microusd = state.estimated_cost_microusd.saturating_add(cost);
+    }
+
+    if guards.max_total_tokens > 0 && state.total_tokens > guards.max_total_tokens {
+        return Some(format!(
+            "Stopped: token budget exceeded ({} > {}).",
+            state.total_tokens, guards.max_total_tokens
+        ));
+    }
+    if guards.max_estimated_cost_microusd > 0
+        && state.estimated_cost_microusd > guards.max_estimated_cost_microusd
+    {
+        return Some(format!(
+            "Stopped: cost budget exceeded ({} > {} microusd).",
+            state.estimated_cost_microusd, guards.max_estimated_cost_microusd
+        ));
+    }
+    None
+}
+
+fn tool_signature(outcome: &ToolOutcome) -> Option<(String, String)> {
+    match outcome {
+        ToolOutcome::Run(cmd) => Some(("run".to_string(), format!("run:{}", cmd.trim()))),
+        ToolOutcome::Search(query) => {
+            Some(("search".to_string(), format!("search:{}", query.trim())))
+        }
+        ToolOutcome::DalInit(template) => Some((
+            "dal_init".to_string(),
+            format!(
+                "dal_init:{}",
+                template.clone().unwrap_or_else(|| "general".to_string())
+            ),
+        )),
+        ToolOutcome::ReadFile(path) => Some((
+            "read_file".to_string(),
+            format!("read_file:{}", path.trim()),
+        )),
+        ToolOutcome::WriteFile(path, contents) => Some((
+            "write_file".to_string(),
+            format!("write_file:{}:{}", path.trim(), fingerprint_str(contents)),
+        )),
+        ToolOutcome::ListDir(path) => {
+            Some(("list_dir".to_string(), format!("list_dir:{}", path.trim())))
+        }
+        ToolOutcome::DalCheck(path) => Some((
+            "dal_check".to_string(),
+            format!("dal_check:{}", path.trim()),
+        )),
+        ToolOutcome::DalRun(path) => {
+            Some(("dal_run".to_string(), format!("dal_run:{}", path.trim())))
+        }
+        ToolOutcome::ShowUrl(url) => {
+            Some(("show_url".to_string(), format!("show_url:{}", url.trim())))
+        }
+        ToolOutcome::ShowContent(content, title) => Some((
+            "show_content".to_string(),
+            format!(
+                "show_content:{}:{}",
+                title.clone().unwrap_or_default(),
+                fingerprint_str(content)
+            ),
+        )),
+        _ => None,
+    }
+}
+
+fn register_tool_invocation_guard(
+    state: &mut ToolLoopGuardState,
+    guards: &ToolLoopGuards,
+    tool_name: &str,
+    signature: &str,
+) -> Option<String> {
+    let count = state
+        .tool_type_counts
+        .entry(tool_name.to_string())
+        .or_insert(0);
+    *count = count.saturating_add(1);
+    if guards.max_tool_calls_per_type > 0 && *count > guards.max_tool_calls_per_type {
+        return Some(format!(
+            "Stopped: tool '{}' exceeded per-type limit ({} > {}).",
+            tool_name, *count, guards.max_tool_calls_per_type
+        ));
+    }
+    if state.last_tool_signature.as_deref() == Some(signature) {
+        state.repeated_identical_invocations =
+            state.repeated_identical_invocations.saturating_add(1);
+    } else {
+        state.repeated_identical_invocations = 1;
+    }
+    if guards.max_repeated_identical_invocations > 0
+        && state.repeated_identical_invocations > guards.max_repeated_identical_invocations
+    {
+        return Some(format!(
+            "Stopped: repeated identical tool invocation '{}' exceeded limit ({} > {}).",
+            tool_name,
+            state.repeated_identical_invocations,
+            guards.max_repeated_identical_invocations
+        ));
+    }
+    None
+}
+
+fn register_tool_result_guard(
+    state: &mut ToolLoopGuardState,
+    guards: &ToolLoopGuards,
+    signature: &str,
+    result: &str,
+) -> Option<String> {
+    let current_fingerprint = fingerprint_str(result);
+    if state.last_tool_signature.as_deref() == Some(signature)
+        && state.last_result_fingerprint == Some(current_fingerprint)
+    {
+        state.consecutive_no_progress = state.consecutive_no_progress.saturating_add(1);
+    } else {
+        state.consecutive_no_progress = 0;
+    }
+    state.last_tool_signature = Some(signature.to_string());
+    state.last_result_fingerprint = Some(current_fingerprint);
+    if guards.max_consecutive_no_progress > 0
+        && state.consecutive_no_progress >= guards.max_consecutive_no_progress
+    {
+        return Some(format!(
+            "Stopped: consecutive no-progress loop detected (limit {}).",
+            guards.max_consecutive_no_progress
+        ));
+    }
+    None
+}
+
 /// Run the tool loop until the LLM returns reply or ask_user, or max_steps is reached.
 /// Appends each run/search to evolve action log when agent_name is Some.
 /// working_root: if Some, file tools (read_file, write_file, list_dir, dal_check, dal_run, dal_init) use this path; else process current_dir (Phase D).
@@ -1836,16 +2565,58 @@ pub fn run_multi_step_tool_loop(
     agent_name: Option<&str>,
     working_root: Option<&std::path::Path>,
 ) -> Result<MultiStepResult, String> {
-    use crate::agent_context_schema::{build_prompt_for_llm, ConversationTurn};
+    use crate::agent_context_schema::ConversationTurn;
     let root = working_root.map(|p| p.to_path_buf()).unwrap_or_else(|| {
         std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."))
     });
+    let guards = tool_loop_guards_from_env();
+    let mut guard_state = ToolLoopGuardState {
+        started_at: Some(std::time::Instant::now()),
+        ..ToolLoopGuardState::default()
+    };
     let mut steps_used: u32 = 0;
+    let include_scripting_tools = working_root.is_some();
     loop {
-        let prompt = build_prompt_for_llm(schema);
-        let response = generate_text(prompt).map_err(|e| e.to_string())?;
-        let response = response.trim().to_string();
-        let outcome = parse_tool_response(&response);
+        if let Some(started) = guard_state.started_at {
+            if guards.max_wall_clock_ms > 0
+                && started.elapsed().as_millis() as u64 > guards.max_wall_clock_ms
+            {
+                return Ok(MultiStepResult {
+                    final_text: format!(
+                        "Stopped: wall-clock limit exceeded (>{} ms).",
+                        guards.max_wall_clock_ms
+                    ),
+                    is_ask_user: false,
+                    steps_used,
+                    max_steps_reached: false,
+                });
+            }
+        }
+        let turn = generate_agent_model_turn(schema, include_scripting_tools)?;
+        if let Some(msg) = apply_turn_usage_budget(&mut guard_state, &guards, &turn) {
+            return Ok(MultiStepResult {
+                final_text: msg,
+                is_ask_user: false,
+                steps_used,
+                max_steps_reached: false,
+            });
+        }
+        let parsed = model_turn_to_outcome(&turn);
+        let outcome = parsed.outcome;
+        let assistant_event = parsed.assistant_event;
+        let pending_signature = tool_signature(&outcome);
+        if let Some((tool_name, signature)) = pending_signature.as_ref() {
+            if let Some(msg) =
+                register_tool_invocation_guard(&mut guard_state, &guards, tool_name, signature)
+            {
+                return Ok(MultiStepResult {
+                    final_text: msg,
+                    is_ask_user: false,
+                    steps_used,
+                    max_steps_reached: false,
+                });
+            }
+        }
         match outcome {
             ToolOutcome::Reply(text) => {
                 return Ok(MultiStepResult {
@@ -1873,12 +2644,24 @@ pub fn run_multi_step_tool_loop(
             }
             ToolOutcome::Run(cmd) => {
                 let result = execute_run_result(&cmd);
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
                 if agent_name.is_some() {
                     let _ = crate::stdlib::evolve::append_log("run", &cmd, &result);
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response.clone(),
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -1896,12 +2679,24 @@ pub fn run_multi_step_tool_loop(
             }
             ToolOutcome::Search(query) => {
                 let result = execute_search_result(&query);
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
                 if agent_name.is_some() {
                     let _ = crate::stdlib::evolve::append_log("search", &query, &result);
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response.clone(),
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -1920,6 +2715,18 @@ pub fn run_multi_step_tool_loop(
             ToolOutcome::DalInit(template) => {
                 let t = template.as_deref();
                 let result = execute_dal_init_result(t, &root);
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
                 if agent_name.is_some() {
                     let _ = crate::stdlib::evolve::append_log(
                         "dal_init",
@@ -1929,7 +2736,7 @@ pub fn run_multi_step_tool_loop(
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response.clone(),
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -1947,12 +2754,24 @@ pub fn run_multi_step_tool_loop(
             }
             ToolOutcome::ReadFile(path) => {
                 let result = execute_read_file_result(&path, &root);
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
                 if agent_name.is_some() {
                     let _ = crate::stdlib::evolve::append_log("read_file", &path, &result);
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response.clone(),
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -1970,12 +2789,24 @@ pub fn run_multi_step_tool_loop(
             }
             ToolOutcome::WriteFile(path, contents) => {
                 let result = execute_write_file_result(&path, &contents, &root);
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
                 if agent_name.is_some() {
                     let _ = crate::stdlib::evolve::append_log("write_file", &path, &result);
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response.clone(),
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -1993,12 +2824,24 @@ pub fn run_multi_step_tool_loop(
             }
             ToolOutcome::ListDir(path) => {
                 let result = execute_list_dir_result(&path, &root);
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
                 if agent_name.is_some() {
                     let _ = crate::stdlib::evolve::append_log("list_dir", &path, &result);
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response.clone(),
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -2016,12 +2859,24 @@ pub fn run_multi_step_tool_loop(
             }
             ToolOutcome::DalCheck(path) => {
                 let result = execute_dal_check_result(&path, &root);
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
                 if agent_name.is_some() {
                     let _ = crate::stdlib::evolve::append_log("dal_check", &path, &result);
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response.clone(),
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -2039,12 +2894,24 @@ pub fn run_multi_step_tool_loop(
             }
             ToolOutcome::DalRun(path) => {
                 let result = execute_dal_run_result(&path, &root);
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
                 if agent_name.is_some() {
                     let _ = crate::stdlib::evolve::append_log("dal_run", &path, &result);
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response.clone(),
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -2062,9 +2929,21 @@ pub fn run_multi_step_tool_loop(
             }
             ToolOutcome::ShowUrl(_url) => {
                 let result = "URL display requested (visible in IDE workspace).".to_string();
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response.clone(),
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -2082,9 +2961,21 @@ pub fn run_multi_step_tool_loop(
             }
             ToolOutcome::ShowContent(_, _) => {
                 let result = "Content display requested (visible in IDE workspace).".to_string();
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response.clone(),
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -2106,25 +2997,242 @@ pub fn run_multi_step_tool_loop(
 
 /// Same as `respond_with_tools` but returns a map-friendly result: final text, steps used, and
 /// whether the step limit was reached. Lets DAL apps branch on outcome without parsing the reply.
-pub fn respond_with_tools_result(user_message: &str) -> Result<MultiStepResult, String> {
-    let max_steps = max_tool_steps_from_env();
-    let scripting_enabled = std::env::var("AGENT_ASSISTANT_SCRIPTING").as_deref() == Ok("1")
-        || std::env::var("AGENT_ASSISTANT_ROOT").is_ok();
-    let (tools_system, working_root) = if scripting_enabled {
-        let root = scripting_working_root();
-        (TOOLS_SYSTEM_WITH_SCRIPTING, root)
+fn emit_route_metrics(
+    route: &str,
+    schema: Option<&crate::agent_context_schema::AgentContextSchema>,
+    result: &MultiStepResult,
+    max_steps: u32,
+) {
+    let mut native_tool_calls_seen: i64 = 0;
+    let mut tool_results_seen: i64 = 0;
+    if let Some(schema) = schema {
+        for turn in &schema.conversation {
+            if turn.role.trim().eq_ignore_ascii_case("assistant")
+                && parse_tool_call_from_conversation(&turn.content).is_some()
+            {
+                native_tool_calls_seen += 1;
+            }
+            if turn.role.trim().eq_ignore_ascii_case("user")
+                && parse_tool_result_from_conversation(&turn.content).is_some()
+            {
+                tool_results_seen += 1;
+            }
+        }
+    }
+    let parse_fail_terminal = if result.max_steps_reached {
+        false
     } else {
-        (TOOLS_SYSTEM, None)
+        result.steps_used == 0
+            && !result.is_ask_user
+            && !result.final_text.is_empty()
+            && legacy_text_tool_protocol_enabled()
     };
-    let mut schema =
-        crate::agent_context_schema::AgentContextSchema::minimal(user_message, tools_system);
-    schema.completion_and_ask_guidance = Some(COMPLETION_AND_ASK_GUIDANCE.to_string());
-    run_multi_step_tool_loop(&mut schema, max_steps, None, working_root.as_deref())
+    let unsupported_tool_call_terminal = result.final_text.starts_with("Unsupported tool call:");
+    let guard_stopped = result.final_text.starts_with("Stopped:");
+    let termination_reason = if result.max_steps_reached {
+        "max_steps_reached"
+    } else if result.is_ask_user {
+        "ask_user"
+    } else if guard_stopped {
+        if result.final_text.contains("wall-clock limit exceeded") {
+            "guard_wall_clock"
+        } else if result.final_text.contains("token budget exceeded") {
+            "guard_token_budget"
+        } else if result.final_text.contains("cost budget exceeded") {
+            "guard_cost_budget"
+        } else if result.final_text.contains("exceeded per-type limit") {
+            "guard_per_tool_type_limit"
+        } else if result
+            .final_text
+            .contains("repeated identical tool invocation")
+        {
+            "guard_repeated_identical_invocation"
+        } else if result.final_text.contains("consecutive no-progress loop") {
+            "guard_no_progress"
+        } else {
+            "guard_other"
+        }
+    } else if parse_fail_terminal {
+        "parse_fail_terminal"
+    } else if unsupported_tool_call_terminal {
+        "unsupported_tool_call_terminal"
+    } else {
+        "reply"
+    };
+    crate::stdlib::log::info(
+        "agent_route_metrics",
+        {
+            let mut data = HashMap::new();
+            data.insert("route".to_string(), Value::String(route.to_string()));
+            data.insert(
+                "steps_used".to_string(),
+                Value::Int(result.steps_used as i64),
+            );
+            data.insert("max_steps".to_string(), Value::Int(max_steps as i64));
+            data.insert(
+                "max_steps_reached".to_string(),
+                Value::Bool(result.max_steps_reached),
+            );
+            data.insert("is_ask_user".to_string(), Value::Bool(result.is_ask_user));
+            data.insert(
+                "native_tool_calls_seen".to_string(),
+                Value::Int(native_tool_calls_seen),
+            );
+            data.insert(
+                "tool_results_seen".to_string(),
+                Value::Int(tool_results_seen),
+            );
+            data.insert(
+                "legacy_parse_enabled".to_string(),
+                Value::Bool(legacy_text_tool_protocol_enabled()),
+            );
+            data.insert(
+                "native_tool_calling_enabled".to_string(),
+                Value::Bool(native_tool_calling_enabled()),
+            );
+            let default_policy = match default_chat_policy_from_env() {
+                ChatPolicy::Auto => "auto",
+                ChatPolicy::ReplyOnly => "reply_only",
+                ChatPolicy::ToolLoop => "tool_loop",
+            };
+            data.insert(
+                "default_policy".to_string(),
+                Value::String(default_policy.to_string()),
+            );
+            data.insert(
+                "parse_fail_terminal".to_string(),
+                Value::Bool(parse_fail_terminal),
+            );
+            data.insert(
+                "unsupported_tool_call_terminal".to_string(),
+                Value::Bool(unsupported_tool_call_terminal),
+            );
+            data.insert("guard_stopped".to_string(), Value::Bool(guard_stopped));
+            data.insert(
+                "termination_reason".to_string(),
+                Value::String(termination_reason.to_string()),
+            );
+            data
+        },
+        Some("ai"),
+    );
+}
+
+#[derive(Debug, Clone)]
+pub struct RespondWithToolsDiagnostics {
+    pub policy: ChatPolicy,
+    pub route: ChatRoute,
+    pub result: MultiStepResult,
+    /// Tool names only, in execution order.
+    pub tool_trace: Vec<String>,
+}
+
+fn collect_tool_trace_from_schema(
+    schema: &crate::agent_context_schema::AgentContextSchema,
+) -> Vec<String> {
+    let mut out = Vec::new();
+    for turn in &schema.conversation {
+        if !turn.role.trim().eq_ignore_ascii_case("assistant") {
+            continue;
+        }
+        if let Some(call) = parse_tool_call_from_conversation(&turn.content) {
+            out.push(call.name);
+        }
+    }
+    out
+}
+
+pub fn respond_with_tools_diagnostics(
+    user_message: &str,
+) -> Result<RespondWithToolsDiagnostics, String> {
+    respond_with_tools_diagnostics_with_policy(user_message, default_chat_policy_from_env())
+}
+
+pub fn respond_with_tools_diagnostics_with_policy(
+    user_message: &str,
+    policy: ChatPolicy,
+) -> Result<RespondWithToolsDiagnostics, String> {
+    let route = route_for_policy(policy, user_message);
+    match route {
+        ChatRoute::ReplyOnly => {
+            let schema = build_reply_only_schema(user_message);
+            let prompt = crate::agent_context_schema::build_prompt_for_llm(&schema);
+            let reply = generate_text(prompt).map_err(|e| e.to_string())?;
+            let result = MultiStepResult {
+                final_text: reply.trim().to_string(),
+                is_ask_user: false,
+                steps_used: 0,
+                max_steps_reached: false,
+            };
+            emit_route_metrics("reply_only", None, &result, 0);
+            Ok(RespondWithToolsDiagnostics {
+                policy,
+                route,
+                result,
+                tool_trace: Vec::new(),
+            })
+        }
+        ChatRoute::ToolLoop => {
+            let max_steps = max_tool_steps_from_env();
+            let (mut schema, working_root) = build_tool_loop_schema(user_message);
+            let result =
+                run_multi_step_tool_loop(&mut schema, max_steps, None, working_root.as_deref())?;
+            let tool_trace = collect_tool_trace_from_schema(&schema);
+            emit_route_metrics("tool_loop", Some(&schema), &result, max_steps);
+            Ok(RespondWithToolsDiagnostics {
+                policy,
+                route,
+                result,
+                tool_trace,
+            })
+        }
+    }
+}
+
+pub fn respond_with_tools_result(user_message: &str) -> Result<MultiStepResult, String> {
+    respond_with_tools_diagnostics(user_message).map(|d| d.result)
+}
+
+pub fn respond_with_tools_result_with_policy(
+    user_message: &str,
+    policy: ChatPolicy,
+) -> Result<MultiStepResult, String> {
+    respond_with_tools_diagnostics_with_policy(user_message, policy).map(|d| d.result)
 }
 
 #[cfg(test)]
 mod multi_step_loop_tests {
-    use super::{parse_tool_response, ToolOutcome};
+    use super::{
+        build_transcript_events, decide_chat_route, model_turn_to_outcome,
+        parse_tool_call_from_conversation, parse_tool_response, AgentModelTurn, ChatPolicy,
+        ChatRoute, NativeToolCall, ToolOutcome, TranscriptEvent, TurnUsage,
+    };
+
+    #[test]
+    fn chat_route_reply_only_for_conceptual_prompt() {
+        let route = decide_chat_route("What is a DAL module?");
+        assert_eq!(route, ChatRoute::ReplyOnly);
+    }
+
+    #[test]
+    fn chat_route_tool_loop_for_action_prompt() {
+        let route = decide_chat_route("Check this project and run tests.");
+        assert_eq!(route, ChatRoute::ToolLoop);
+    }
+
+    #[test]
+    fn chat_policy_parse_and_route_override() {
+        assert_eq!(ChatPolicy::from_str("auto"), Some(ChatPolicy::Auto));
+        assert_eq!(
+            ChatPolicy::from_str("reply_only"),
+            Some(ChatPolicy::ReplyOnly)
+        );
+        assert_eq!(
+            ChatPolicy::from_str("tool_loop"),
+            Some(ChatPolicy::ToolLoop)
+        );
+        assert_eq!(ChatPolicy::from_str("unknown"), None);
+    }
 
     #[test]
     fn parse_tool_response_reply() {
@@ -2198,6 +3306,579 @@ mod multi_step_loop_tests {
             _ => panic!("expected ParseFail"),
         }
     }
+
+    #[test]
+    fn model_turn_prefers_native_tool_calls() {
+        let turn = AgentModelTurn {
+            content: "This should not be used when a tool call exists.".to_string(),
+            tool_calls: vec![NativeToolCall {
+                id: Some("call_123".to_string()),
+                name: "run".to_string(),
+                arguments: serde_json::json!({"cmd":"echo hello"}),
+            }],
+            usage: TurnUsage::default(),
+        };
+        let parsed = model_turn_to_outcome(&turn);
+        match parsed.outcome {
+            ToolOutcome::Run(cmd) => assert_eq!(cmd, "echo hello"),
+            _ => panic!("expected Run"),
+        }
+        assert!(parsed.assistant_event.contains("\"name\":\"run\""));
+    }
+
+    #[test]
+    fn transcript_events_capture_tool_roundtrip() {
+        let mut schema =
+            crate::agent_context_schema::AgentContextSchema::minimal("Do work", "run/search");
+        schema
+            .conversation
+            .push(crate::agent_context_schema::ConversationTurn {
+            role: "assistant".to_string(),
+            content:
+                "{\"tool_call_id\":\"call_1\",\"name\":\"run\",\"arguments\":{\"cmd\":\"echo hi\"}}"
+                    .to_string(),
+        });
+        schema
+            .conversation
+            .push(crate::agent_context_schema::ConversationTurn {
+                role: "user".to_string(),
+                content: "[Tool result]\nExit code: 0\nstdout:\nhi".to_string(),
+            });
+        let events = build_transcript_events(&schema);
+        assert!(matches!(events.first(), Some(TranscriptEvent::UserText(_))));
+        assert!(matches!(
+            events.get(1),
+            Some(TranscriptEvent::AssistantToolCall(_))
+        ));
+        assert!(matches!(
+            events.get(2),
+            Some(TranscriptEvent::ToolResult { .. })
+        ));
+    }
+
+    #[test]
+    fn unsupported_native_tool_call_is_parse_fail() {
+        let turn = AgentModelTurn {
+            content: "ignored".to_string(),
+            tool_calls: vec![NativeToolCall {
+                id: Some("call_bad".to_string()),
+                name: "delete_everything".to_string(),
+                arguments: serde_json::json!({}),
+            }],
+            usage: TurnUsage::default(),
+        };
+        let parsed = model_turn_to_outcome(&turn);
+        match parsed.outcome {
+            ToolOutcome::ParseFail(msg) => {
+                assert_eq!(msg, "Unsupported tool call: delete_everything")
+            }
+            _ => panic!("expected ParseFail for unsupported tool"),
+        }
+        assert!(parsed
+            .assistant_event
+            .contains("\"tool_call_id\":\"call_bad\""));
+    }
+
+    #[test]
+    fn malformed_tool_call_marker_is_not_interpreted_as_tool_call() {
+        let bad = r#"{"tool_call_id":"c1","name":"run","arguments":"not-an-object"}"#;
+        let parsed = parse_tool_call_from_conversation(bad);
+        assert!(parsed.is_none());
+    }
+
+    #[test]
+    fn orphan_tool_result_stays_user_text() {
+        let mut schema =
+            crate::agent_context_schema::AgentContextSchema::minimal("Do work", "run/search");
+        schema
+            .conversation
+            .push(crate::agent_context_schema::ConversationTurn {
+                role: "user".to_string(),
+                content: "[Tool result]\nExit code: 1".to_string(),
+            });
+        let events = build_transcript_events(&schema);
+        assert!(matches!(
+            events.get(1),
+            Some(TranscriptEvent::UserText(s)) if s.contains("[Tool result]")
+        ));
+    }
+}
+
+#[cfg(feature = "http-interface")]
+fn host_tool_definitions(include_scripting_tools: bool) -> serde_json::Value {
+    use serde_json::json;
+
+    let mut tools = vec![
+        json!({
+            "type": "function",
+            "function": {
+                "name": "run",
+                "description": "Run a shell command.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "cmd": { "type": "string" }
+                    },
+                    "required": ["cmd"],
+                    "additionalProperties": false
+                }
+            }
+        }),
+        json!({
+            "type": "function",
+            "function": {
+                "name": "search",
+                "description": "Search the web for public information.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": { "type": "string" }
+                    },
+                    "required": ["query"],
+                    "additionalProperties": false
+                }
+            }
+        }),
+        json!({
+            "type": "function",
+            "function": {
+                "name": "ask_user",
+                "description": "Request additional user input.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "message": { "type": "string" }
+                    },
+                    "required": ["message"],
+                    "additionalProperties": false
+                }
+            }
+        }),
+    ];
+    if include_scripting_tools {
+        tools.extend([
+            json!({
+                "type": "function",
+                "function": {
+                    "name": "write_file",
+                    "description": "Write text content to a relative file path.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "path": { "type": "string" },
+                            "contents": { "type": "string" }
+                        },
+                        "required": ["path", "contents"],
+                        "additionalProperties": false
+                    }
+                }
+            }),
+            json!({
+                "type": "function",
+                "function": {
+                    "name": "read_file",
+                    "description": "Read a relative file path.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "path": { "type": "string" }
+                        },
+                        "required": ["path"],
+                        "additionalProperties": false
+                    }
+                }
+            }),
+            json!({
+                "type": "function",
+                "function": {
+                    "name": "list_dir",
+                    "description": "List directory entries at a relative path.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "path": { "type": "string" }
+                        },
+                        "required": ["path"],
+                        "additionalProperties": false
+                    }
+                }
+            }),
+            json!({
+                "type": "function",
+                "function": {
+                    "name": "dal_check",
+                    "description": "Run dal check on a DAL file path.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "path": { "type": "string" }
+                        },
+                        "required": ["path"],
+                        "additionalProperties": false
+                    }
+                }
+            }),
+            json!({
+                "type": "function",
+                "function": {
+                    "name": "dal_run",
+                    "description": "Run dal run on a DAL file path.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "path": { "type": "string" }
+                        },
+                        "required": ["path"],
+                        "additionalProperties": false
+                    }
+                }
+            }),
+            json!({
+                "type": "function",
+                "function": {
+                    "name": "dal_init",
+                    "description": "Initialize DAL project template.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "template": { "type": "string" }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            }),
+            json!({
+                "type": "function",
+                "function": {
+                    "name": "show_url",
+                    "description": "Show a URL in IDE workspace.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": { "type": "string" }
+                        },
+                        "required": ["url"],
+                        "additionalProperties": false
+                    }
+                }
+            }),
+            json!({
+                "type": "function",
+                "function": {
+                    "name": "show_content",
+                    "description": "Show HTML/text content in IDE workspace.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "content": { "type": "string" },
+                            "title": { "type": "string" }
+                        },
+                        "required": ["content"],
+                        "additionalProperties": false
+                    }
+                }
+            }),
+        ]);
+    }
+    serde_json::Value::Array(tools)
+}
+
+#[cfg(feature = "http-interface")]
+fn estimate_turn_cost_microusd(input_tokens: u64, output_tokens: u64) -> Option<u64> {
+    let in_rate = std::env::var("DAL_AGENT_INPUT_COST_MICROUSD_PER_1K_TOKENS")
+        .ok()
+        .and_then(|s| s.trim().parse::<u64>().ok())
+        .unwrap_or(0);
+    let out_rate = std::env::var("DAL_AGENT_OUTPUT_COST_MICROUSD_PER_1K_TOKENS")
+        .ok()
+        .and_then(|s| s.trim().parse::<u64>().ok())
+        .unwrap_or(0);
+    if in_rate == 0 && out_rate == 0 {
+        return None;
+    }
+    let in_cost = input_tokens.saturating_mul(in_rate).saturating_div(1000);
+    let out_cost = output_tokens.saturating_mul(out_rate).saturating_div(1000);
+    Some(in_cost.saturating_add(out_cost))
+}
+
+#[cfg(feature = "http-interface")]
+fn call_openai_api_tool_turn(
+    schema: &crate::agent_context_schema::AgentContextSchema,
+    api_key: &str,
+    config: &AIConfig,
+    include_scripting_tools: bool,
+) -> Result<AgentModelTurn, String> {
+    use serde_json::json;
+
+    let timeout = std::time::Duration::from_secs(config.timeout_seconds);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(timeout)
+        .build()
+        .map_err(|e| e.to_string())?;
+    let model = config
+        .model
+        .clone()
+        .or_else(|| env::var("OPENAI_MODEL").ok())
+        .or_else(|| env::var("DAL_OPENAI_MODEL").ok())
+        .unwrap_or_else(|| "gpt-4o-mini".to_string());
+
+    let mut messages = vec![json!({
+        "role": "system",
+        "content": build_provider_system_prompt(schema)
+    })];
+    for event in build_transcript_events(schema) {
+        match event {
+            TranscriptEvent::UserText(text) => messages.push(json!({
+                "role": "user",
+                "content": text
+            })),
+            TranscriptEvent::AssistantText(text) => messages.push(json!({
+                "role": "assistant",
+                "content": text
+            })),
+            TranscriptEvent::AssistantToolCall(call) => {
+                let id = call.id.unwrap_or_else(|| "tool_call".to_string());
+                messages.push(json!({
+                    "role": "assistant",
+                    "content": "",
+                    "tool_calls": [
+                        {
+                            "id": id,
+                            "type": "function",
+                            "function": {
+                                "name": call.name,
+                                "arguments": call.arguments.to_string()
+                            }
+                        }
+                    ]
+                }));
+            }
+            TranscriptEvent::ToolResult {
+                tool_call_id,
+                content,
+            } => messages.push(json!({
+                "role": "tool",
+                "tool_call_id": tool_call_id,
+                "content": content
+            })),
+        }
+    }
+
+    let body = json!({
+        "model": model,
+        "messages": messages,
+        "tools": host_tool_definitions(include_scripting_tools),
+        "temperature": config.temperature,
+        "max_tokens": config.max_tokens
+    });
+
+    let response = client
+        .post("https://api.openai.com/v1/chat/completions")
+        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .send()
+        .map_err(|e| format!("Request failed: {}", e))?;
+    let status = response.status();
+    if !status.is_success() {
+        let error_text = response
+            .text()
+            .unwrap_or_else(|_| "Unknown error".to_string());
+        return Err(format!("API error {}: {}", status, error_text));
+    }
+    let json: serde_json::Value = response.json().map_err(|e| format!("Parse error: {}", e))?;
+
+    let message = &json["choices"][0]["message"];
+    let content = message["content"].as_str().unwrap_or("").trim().to_string();
+    let tool_calls = message["tool_calls"]
+        .as_array()
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|tc| {
+                    let id = tc["id"].as_str().map(|s| s.to_string());
+                    let name = tc["function"]["name"].as_str()?.to_string();
+                    let raw_args = tc["function"]["arguments"].as_str().unwrap_or("{}");
+                    let arguments = serde_json::from_str(raw_args).unwrap_or_else(|_| json!({}));
+                    Some(NativeToolCall {
+                        id,
+                        name,
+                        arguments,
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
+    let input_tokens = json["usage"]["prompt_tokens"].as_u64();
+    let output_tokens = json["usage"]["completion_tokens"].as_u64();
+    let total_tokens = json["usage"]["total_tokens"].as_u64();
+    let estimated_cost_microusd = match (input_tokens, output_tokens) {
+        (Some(i), Some(o)) => estimate_turn_cost_microusd(i, o),
+        _ => None,
+    };
+
+    Ok(AgentModelTurn {
+        content,
+        tool_calls,
+        usage: TurnUsage {
+            input_tokens,
+            output_tokens,
+            total_tokens,
+            estimated_cost_microusd,
+        },
+    })
+}
+
+#[cfg(feature = "http-interface")]
+fn call_anthropic_api_tool_turn(
+    schema: &crate::agent_context_schema::AgentContextSchema,
+    api_key: &str,
+    config: &AIConfig,
+    include_scripting_tools: bool,
+) -> Result<AgentModelTurn, String> {
+    use serde_json::json;
+    let timeout = std::time::Duration::from_secs(config.timeout_seconds);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(timeout)
+        .build()
+        .map_err(|e| e.to_string())?;
+    let model = config
+        .model
+        .clone()
+        .or_else(|| env::var("ANTHROPIC_MODEL").ok())
+        .or_else(|| env::var("DAL_ANTHROPIC_MODEL").ok())
+        .unwrap_or_else(|| "claude-3-5-sonnet-20241022".to_string());
+
+    let openai_tools = host_tool_definitions(include_scripting_tools);
+    let tools = openai_tools
+        .as_array()
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|t| {
+            let name = t["function"]["name"].clone();
+            let description = t["function"]["description"].clone();
+            let input_schema = t["function"]["parameters"].clone();
+            json!({
+                "name": name,
+                "description": description,
+                "input_schema": input_schema
+            })
+        })
+        .collect::<Vec<_>>();
+
+    let mut messages = Vec::new();
+    for event in build_transcript_events(schema) {
+        match event {
+            TranscriptEvent::UserText(text) => messages.push(json!({
+                "role": "user",
+                "content": text
+            })),
+            TranscriptEvent::AssistantText(text) => messages.push(json!({
+                "role": "assistant",
+                "content": text
+            })),
+            TranscriptEvent::AssistantToolCall(call) => {
+                let id = call.id.unwrap_or_else(|| "tool_call".to_string());
+                messages.push(json!({
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_use",
+                            "id": id,
+                            "name": call.name,
+                            "input": call.arguments
+                        }
+                    ]
+                }));
+            }
+            TranscriptEvent::ToolResult {
+                tool_call_id,
+                content,
+            } => messages.push(json!({
+                "role": "user",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": tool_call_id,
+                        "content": content
+                    }
+                ]
+            })),
+        }
+    }
+
+    let body = json!({
+        "model": model,
+        "max_tokens": config.max_tokens,
+        "system": build_provider_system_prompt(schema),
+        "messages": messages,
+        "tools": tools
+    });
+    let response = client
+        .post("https://api.anthropic.com/v1/messages")
+        .header("x-api-key", api_key)
+        .header("anthropic-version", "2023-06-01")
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .send()
+        .map_err(|e| format!("Request failed: {}", e))?;
+    let status = response.status();
+    if !status.is_success() {
+        let error_text = response
+            .text()
+            .unwrap_or_else(|_| "Unknown error".to_string());
+        return Err(format!("API error {}: {}", status, error_text));
+    }
+    let json: serde_json::Value = response.json().map_err(|e| format!("Parse error: {}", e))?;
+
+    let mut content_parts: Vec<String> = Vec::new();
+    let mut tool_calls: Vec<NativeToolCall> = Vec::new();
+    if let Some(blocks) = json["content"].as_array() {
+        for block in blocks {
+            match block["type"].as_str().unwrap_or("") {
+                "text" => {
+                    if let Some(text) = block["text"].as_str() {
+                        if !text.trim().is_empty() {
+                            content_parts.push(text.trim().to_string());
+                        }
+                    }
+                }
+                "tool_use" => {
+                    if let Some(name) = block["name"].as_str() {
+                        tool_calls.push(NativeToolCall {
+                            id: block["id"].as_str().map(|s| s.to_string()),
+                            name: name.to_string(),
+                            arguments: block["input"].clone(),
+                        });
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    let input_tokens = json["usage"]["input_tokens"].as_u64();
+    let output_tokens = json["usage"]["output_tokens"].as_u64();
+    let total_tokens = match (input_tokens, output_tokens) {
+        (Some(i), Some(o)) => Some(i.saturating_add(o)),
+        _ => None,
+    };
+    let estimated_cost_microusd = match (input_tokens, output_tokens) {
+        (Some(i), Some(o)) => estimate_turn_cost_microusd(i, o),
+        _ => None,
+    };
+
+    Ok(AgentModelTurn {
+        content: content_parts.join("\n"),
+        tool_calls,
+        usage: TurnUsage {
+            input_tokens,
+            output_tokens,
+            total_tokens,
+            estimated_cost_microusd,
+        },
+    })
 }
 
 #[cfg(feature = "http-interface")]
@@ -2356,6 +4037,26 @@ fn call_local_model(prompt: &str, endpoint: &str, config: &AIConfig) -> Result<S
         .as_str()
         .map(|s| s.trim().to_string())
         .ok_or_else(|| "Invalid response format".to_string())
+}
+
+#[cfg(not(feature = "http-interface"))]
+fn call_openai_api_tool_turn(
+    _schema: &crate::agent_context_schema::AgentContextSchema,
+    _api_key: &str,
+    _config: &AIConfig,
+    _include_scripting_tools: bool,
+) -> Result<AgentModelTurn, String> {
+    Err("HTTP interface not enabled".to_string())
+}
+
+#[cfg(not(feature = "http-interface"))]
+fn call_anthropic_api_tool_turn(
+    _schema: &crate::agent_context_schema::AgentContextSchema,
+    _api_key: &str,
+    _config: &AIConfig,
+    _include_scripting_tools: bool,
+) -> Result<AgentModelTurn, String> {
+    Err("HTTP interface not enabled".to_string())
 }
 
 #[cfg(not(feature = "http-interface"))]

@@ -6778,8 +6778,8 @@ fn handle_agent_command(args: &[String]) {
                     eprintln!("❌ Send failed");
                     continue;
                 }
-                // AI reply via LLM
-                let reply = match stdlib::ai::generate_text(input.to_string()) {
+                // AI reply via canonical agent primitive (planner gate + tool loop when needed)
+                let reply = match stdlib::ai::respond_with_tools(input) {
                     Ok(s) => s.trim().to_string(),
                     Err(e) => {
                         eprintln!("⚠️  LLM error: {} (check API keys)", e);

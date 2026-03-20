@@ -1,15 +1,13 @@
 //! IDE agent runner: run DAL agent loop with workspace as surface and emit activity.
-//! Uses dist_agent_lang (DAL) agent API: build_prompt_for_llm, generate_text, parse_tool_response.
+//! Uses dist_agent_lang (DAL) agent API for model turn parsing.
 //! Tool execution goes through the same logic as the IDE API (run_command, read_file, write_file)
 //! so activity events (file_written, run_started, run_stopped, agent_step) are emitted.
 
-use crate::agent_context_schema::{
-    build_prompt_for_llm, AgentContextSchema, ContextBlock, ConversationTurn,
-};
+use crate::agent_context_schema::{AgentContextSchema, ContextBlock, ConversationTurn};
 use crate::ide::run_backend;
 use crate::stdlib::ai::{
-    generate_text, max_tool_steps_from_env, parse_tool_response, run_web_search, MultiStepResult,
-    ToolOutcome, COMPLETION_AND_ASK_GUIDANCE, TOOLS_SYSTEM_WITH_SCRIPTING,
+    generate_agent_model_turn, max_tool_steps_from_env, model_turn_to_outcome, run_web_search,
+    MultiStepResult, ToolOutcome, COMPLETION_AND_ASK_GUIDANCE, TOOLS_SYSTEM_WITH_SCRIPTING,
 };
 use std::path::Path;
 use tokio::sync::broadcast;
@@ -97,11 +95,12 @@ pub fn run_agent_prompt_sync(
         serde_json::json!({ "job_id": job_id, "prompt": schema.objective }),
     );
 
+    let include_scripting_tools = true;
     let result = loop {
-        let prompt_str = build_prompt_for_llm(&schema);
-        let response = generate_text(prompt_str).map_err(|e| e.to_string())?;
-        let response = response.trim().to_string();
-        let outcome = parse_tool_response(&response);
+        let turn = generate_agent_model_turn(&schema, include_scripting_tools)?;
+        let parsed = model_turn_to_outcome(&turn);
+        let outcome = parsed.outcome;
+        let assistant_event = parsed.assistant_event;
 
         match outcome {
             ToolOutcome::Reply(text) => {
@@ -190,7 +189,7 @@ pub fn run_agent_prompt_sync(
                 );
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response,
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -223,7 +222,7 @@ pub fn run_agent_prompt_sync(
                 );
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response,
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -265,7 +264,7 @@ pub fn run_agent_prompt_sync(
                 );
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response,
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -318,7 +317,7 @@ pub fn run_agent_prompt_sync(
                 );
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response,
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -375,7 +374,7 @@ pub fn run_agent_prompt_sync(
                 );
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response,
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -440,7 +439,7 @@ pub fn run_agent_prompt_sync(
                 );
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response,
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -505,7 +504,7 @@ pub fn run_agent_prompt_sync(
                 );
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response,
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -537,7 +536,7 @@ pub fn run_agent_prompt_sync(
                 );
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response,
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -577,7 +576,7 @@ pub fn run_agent_prompt_sync(
                 );
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response,
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
@@ -612,7 +611,7 @@ pub fn run_agent_prompt_sync(
                 );
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
-                    content: response,
+                    content: assistant_event.clone(),
                 });
                 schema.conversation.push(ConversationTurn {
                     role: "user".to_string(),
