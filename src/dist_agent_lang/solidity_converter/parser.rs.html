@@ -212,8 +212,8 @@
 <a href=#212 id=212 data-nosnippet>212</a>                <span class="kw">let </span>(content_to_parse, next_i) = <span class="kw">if </span>at_decl_start {
 <a href=#213 id=213 data-nosnippet>213</a>                    <span class="kw">let </span>(logical, next_i) = <span class="self">self</span>.get_logical_line_for_declaration(<span class="kw-2">&amp;</span>lines, i);
 <a href=#214 id=214 data-nosnippet>214</a>                    <span class="comment">// Update brace counts for all lines we're consuming
-<a href=#215 id=215 data-nosnippet>215</a>                    </span><span class="kw">for </span>j <span class="kw">in </span>i..next_i {
-<a href=#216 id=216 data-nosnippet>216</a>                        <span class="kw">let </span>t = lines[j].trim();
+<a href=#215 id=215 data-nosnippet>215</a>                    </span><span class="kw">for </span>line <span class="kw">in </span>lines.iter().take(next_i).skip(i) {
+<a href=#216 id=216 data-nosnippet>216</a>                        <span class="kw">let </span>t = line.trim();
 <a href=#217 id=217 data-nosnippet>217</a>                        brace_count += t.matches(<span class="string">'{'</span>).count() <span class="kw">as </span>i32;
 <a href=#218 id=218 data-nosnippet>218</a>                        brace_count -= t.matches(<span class="string">'}'</span>).count() <span class="kw">as </span>i32;
 <a href=#219 id=219 data-nosnippet>219</a>                        <span class="kw">if </span>!nested_brace_counts.is_empty() {
@@ -842,4 +842,10 @@
 <a href=#842 id=842 data-nosnippet>842</a>        })
 <a href=#843 id=843 data-nosnippet>843</a>    }
 <a href=#844 id=844 data-nosnippet>844</a>}
+<a href=#845 id=845 data-nosnippet>845</a>
+<a href=#846 id=846 data-nosnippet>846</a><span class="kw">impl </span>Default <span class="kw">for </span>SolidityParser {
+<a href=#847 id=847 data-nosnippet>847</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#848 id=848 data-nosnippet>848</a>        <span class="self">Self</span>::new()
+<a href=#849 id=849 data-nosnippet>849</a>    }
+<a href=#850 id=850 data-nosnippet>850</a>}
 </code></pre></div></section></main></body></html>

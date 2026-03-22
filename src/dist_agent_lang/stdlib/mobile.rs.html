@@ -874,7 +874,7 @@
 <a href=#874 id=874 data-nosnippet>874</a>}
 <a href=#875 id=875 data-nosnippet>875</a>
 <a href=#876 id=876 data-nosnippet>876</a><span class="kw">pub fn </span>push_screen(app: <span class="kw-2">&amp;mut </span>MobileApp, screen_id: String) -&gt; <span class="prelude-ty">Result</span>&lt;bool, String&gt; {
-<a href=#877 id=877 data-nosnippet>877</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">_</span>) = app.screens.iter().find(|s| s.id == screen_id) {
+<a href=#877 id=877 data-nosnippet>877</a>    <span class="kw">if </span>app.screens.iter().any(|s| s.id == screen_id) {
 <a href=#878 id=878 data-nosnippet>878</a>        app.navigation.screens.push(screen_id.clone());
 <a href=#879 id=879 data-nosnippet>879</a>        app.navigation.current_screen = <span class="prelude-val">Some</span>(screen_id.clone());
 <a href=#880 id=880 data-nosnippet>880</a>
@@ -1493,7 +1493,7 @@
 <a href=#1493 id=1493 data-nosnippet>1493</a>}
 <a href=#1494 id=1494 data-nosnippet>1494</a>
 <a href=#1495 id=1495 data-nosnippet>1495</a><span class="kw">pub fn </span>rate_app(rating: i64, review: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;bool, String&gt; {
-<a href=#1496 id=1496 data-nosnippet>1496</a>    <span class="kw">if </span>rating &lt; <span class="number">1 </span>|| rating &gt; <span class="number">5 </span>{
+<a href=#1496 id=1496 data-nosnippet>1496</a>    <span class="kw">if </span>!(<span class="number">1</span>..=<span class="number">5</span>).contains(<span class="kw-2">&amp;</span>rating) {
 <a href=#1497 id=1497 data-nosnippet>1497</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="string">"Rating must be between 1 and 5"</span>.to_string());
 <a href=#1498 id=1498 data-nosnippet>1498</a>    }
 <a href=#1499 id=1499 data-nosnippet>1499</a>

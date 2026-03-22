@@ -112,12 +112,12 @@
 <a href=#112 id=112 data-nosnippet>112</a>                </span>|| !line[pos - <span class="number">1</span>..pos]
 <a href=#113 id=113 data-nosnippet>113</a>                    .chars()
 <a href=#114 id=114 data-nosnippet>114</a>                    .next()
-<a href=#115 id=115 data-nosnippet>115</a>                    .map_or(<span class="bool-val">false</span>, |c| c.is_ascii_alphanumeric() || c == <span class="string">'_'</span>);
+<a href=#115 id=115 data-nosnippet>115</a>                    .is_some_and(|c| c.is_ascii_alphanumeric() || c == <span class="string">'_'</span>);
 <a href=#116 id=116 data-nosnippet>116</a>            <span class="kw">let </span>word_bound_after = after.is_empty()
 <a href=#117 id=117 data-nosnippet>117</a>                || !after
 <a href=#118 id=118 data-nosnippet>118</a>                    .chars()
 <a href=#119 id=119 data-nosnippet>119</a>                    .next()
-<a href=#120 id=120 data-nosnippet>120</a>                    .map_or(<span class="bool-val">false</span>, |c| c.is_ascii_alphanumeric() || c == <span class="string">'_'</span>);
+<a href=#120 id=120 data-nosnippet>120</a>                    .is_some_and(|c| c.is_ascii_alphanumeric() || c == <span class="string">'_'</span>);
 <a href=#121 id=121 data-nosnippet>121</a>            <span class="kw">if </span>word_bound_before &amp;&amp; word_bound_after &amp;&amp; after.starts_with(<span class="string">'('</span>) {
 <a href=#122 id=122 data-nosnippet>122</a>                <span class="kw">let </span>column_0 = line[..pos].chars().count();
 <a href=#123 id=123 data-nosnippet>123</a>                refs.push(ReferenceLocation {

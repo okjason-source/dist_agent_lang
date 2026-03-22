@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["CompileError"],"fn":["get_backend","run_compile","select_services_for_target"],"struct":["CompileArtifacts","CompileOptions"],"trait":["CompileBackend"]};
+window.SIDEBAR_ITEMS = {"enum":["CompileError","TrustCompileMode"],"fn":["get_backend","run_compile","run_compile_with_mode","select_services_for_target"],"struct":["CompileArtifacts","CompileOptions"],"trait":["CompileBackend"]};
