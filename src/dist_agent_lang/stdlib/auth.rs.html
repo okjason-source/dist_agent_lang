@@ -405,7 +405,7 @@
 <a href=#405 id=405 data-nosnippet>405</a>
 <a href=#406 id=406 data-nosnippet>406</a><span class="doccomment">/// Get role information.
 <a href=#407 id=407 data-nosnippet>407</a>/// Loads from env when set: AUTH_ROLES_JSON (JSON array of {name, permissions[], description}),
-<a href=#408 id=408 data-nosnippet>408</a>/// or AUTH_ROLE_&lt;name&gt;_PERMISSIONS (comma-separated) and AUTH_ROLE_&lt;name&gt;_DESCRIPTION.
+<a href=#408 id=408 data-nosnippet>408</a>/// or `AUTH_ROLE_&lt;name&gt;_PERMISSIONS` (comma-separated) and `AUTH_ROLE_&lt;name&gt;_DESCRIPTION`.
 <a href=#409 id=409 data-nosnippet>409</a>/// Falls back to built-in admin/moderator/user when not configured.
 <a href=#410 id=410 data-nosnippet>410</a></span><span class="kw">pub fn </span>get_role(role_name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;Role&gt; {
 <a href=#411 id=411 data-nosnippet>411</a>    <span class="comment">// Env: single role AUTH_ROLE_&lt;name&gt;_PERMISSIONS and AUTH_ROLE_&lt;name&gt;_DESCRIPTION

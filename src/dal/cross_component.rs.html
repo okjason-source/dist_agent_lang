@@ -102,7 +102,7 @@
 <a href=#102 id=102 data-nosnippet>102</a>    }
 <a href=#103 id=103 data-nosnippet>103</a>}
 <a href=#104 id=104 data-nosnippet>104</a>
-<a href=#105 id=105 data-nosnippet>105</a><span class="doccomment">/// bond auth-to-web: &lt;token&gt; &lt;url&gt; [method] or --token/--token-env/--auth-file with &lt;url&gt; [method].
+<a href=#105 id=105 data-nosnippet>105</a><span class="doccomment">/// bond auth-to-web: `{token} {url} {method}` or --token/--token-env/--auth-file with `{url} {method}`.
 <a href=#106 id=106 data-nosnippet>106</a></span><span class="kw">fn </span>run_bond_auth_to_web(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool, opts: <span class="kw-2">&amp;</span>RunOptions) -&gt; RunResult {
 <a href=#107 id=107 data-nosnippet>107</a>    <span class="comment">// Token: from opts (--token/--token-env/--auth-file) or first positional arg
 <a href=#108 id=108 data-nosnippet>108</a>    </span><span class="kw">let </span>token = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>t) = opts.token {
@@ -189,7 +189,7 @@
 <a href=#189 id=189 data-nosnippet>189</a>    }
 <a href=#190 id=190 data-nosnippet>190</a>}
 <a href=#191 id=191 data-nosnippet>191</a>
-<a href=#192 id=192 data-nosnippet>192</a><span class="doccomment">/// bond oracle-to-chain: &lt;source&gt; &lt;query&gt; &lt;chain_id&gt; [--use-as gas|price|param]. Fetch from oracle, pass to chain (e.g. gas estimate).
+<a href=#192 id=192 data-nosnippet>192</a><span class="doccomment">/// bond oracle-to-chain: `{source} {query} {chain_id}` [--use-as gas|price|param]. Fetch from oracle, pass to chain (e.g. gas estimate).
 <a href=#193 id=193 data-nosnippet>193</a></span><span class="kw">fn </span>run_bond_oracle_to_chain(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool) -&gt; RunResult {
 <a href=#194 id=194 data-nosnippet>194</a>    <span class="kw">if </span>args.len() &lt; <span class="number">3 </span>{
 <a href=#195 id=195 data-nosnippet>195</a>        <span class="kw">return </span>RunResult {
@@ -268,7 +268,7 @@
 <a href=#268 id=268 data-nosnippet>268</a>    }
 <a href=#269 id=269 data-nosnippet>269</a>}
 <a href=#270 id=270 data-nosnippet>270</a>
-<a href=#271 id=271 data-nosnippet>271</a><span class="doccomment">/// bond chain-to-sync: &lt;chain_id&gt; &lt;tx_hash&gt; &lt;sync_url&gt;. Chain tx status → sync push.
+<a href=#271 id=271 data-nosnippet>271</a><span class="doccomment">/// bond chain-to-sync: `{chain_id} {tx_hash} {sync_url}`. Chain tx status → sync push.
 <a href=#272 id=272 data-nosnippet>272</a></span><span class="kw">fn </span>run_bond_chain_to_sync(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool) -&gt; RunResult {
 <a href=#273 id=273 data-nosnippet>273</a>    <span class="kw">if </span>args.len() &lt; <span class="number">3 </span>{
 <a href=#274 id=274 data-nosnippet>274</a>        <span class="kw">return </span>RunResult {
@@ -340,7 +340,7 @@
 <a href=#340 id=340 data-nosnippet>340</a>    }
 <a href=#341 id=341 data-nosnippet>341</a>}
 <a href=#342 id=342 data-nosnippet>342</a>
-<a href=#343 id=343 data-nosnippet>343</a><span class="doccomment">/// bond iot-to-db: &lt;device_id&gt; &lt;conn_str&gt; [--table name]. IoT read → DB insert.
+<a href=#343 id=343 data-nosnippet>343</a><span class="doccomment">/// bond iot-to-db: `{device_id} {conn_str}` [--table name]. IoT read → DB insert.
 <a href=#344 id=344 data-nosnippet>344</a></span><span class="kw">fn </span>run_bond_iot_to_db(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool) -&gt; RunResult {
 <a href=#345 id=345 data-nosnippet>345</a>    <span class="kw">if </span>args.len() &lt; <span class="number">2 </span>{
 <a href=#346 id=346 data-nosnippet>346</a>        <span class="kw">return </span>RunResult {
@@ -419,7 +419,7 @@
 <a href=#419 id=419 data-nosnippet>419</a>    }
 <a href=#420 id=420 data-nosnippet>420</a>}
 <a href=#421 id=421 data-nosnippet>421</a>
-<a href=#422 id=422 data-nosnippet>422</a><span class="doccomment">/// bond iot-to-web: &lt;device_id&gt; &lt;url&gt; [--auth token]. IoT read → web POST.
+<a href=#422 id=422 data-nosnippet>422</a><span class="doccomment">/// bond iot-to-web: `{device_id} {url}` [--auth token]. IoT read → web POST.
 <a href=#423 id=423 data-nosnippet>423</a></span><span class="kw">fn </span>run_bond_iot_to_web(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool, opts: <span class="kw-2">&amp;</span>RunOptions) -&gt; RunResult {
 <a href=#424 id=424 data-nosnippet>424</a>    <span class="kw">if </span>args.len() &lt; <span class="number">2 </span>{
 <a href=#425 id=425 data-nosnippet>425</a>        <span class="kw">return </span>RunResult {
@@ -519,7 +519,7 @@
 <a href=#519 id=519 data-nosnippet>519</a>    }
 <a href=#520 id=520 data-nosnippet>520</a>}
 <a href=#521 id=521 data-nosnippet>521</a>
-<a href=#522 id=522 data-nosnippet>522</a><span class="doccomment">/// bond db-to-sync: &lt;conn_str&gt; &lt;sync_url&gt; [--query sql]. DB query → sync push.
+<a href=#522 id=522 data-nosnippet>522</a><span class="doccomment">/// bond db-to-sync: `{conn_str} {sync_url}` [--query sql]. DB query → sync push.
 <a href=#523 id=523 data-nosnippet>523</a></span><span class="kw">fn </span>run_bond_db_to_sync(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool) -&gt; RunResult {
 <a href=#524 id=524 data-nosnippet>524</a>    <span class="kw">if </span>args.len() &lt; <span class="number">2 </span>{
 <a href=#525 id=525 data-nosnippet>525</a>        <span class="kw">return </span>RunResult {
@@ -616,7 +616,7 @@
 <a href=#616 id=616 data-nosnippet>616</a>    }
 <a href=#617 id=617 data-nosnippet>617</a>}
 <a href=#618 id=618 data-nosnippet>618</a>
-<a href=#619 id=619 data-nosnippet>619</a><span class="doccomment">/// bond sync-to-db: &lt;sync_url&gt; &lt;conn_str&gt; [--table name]. Sync pull → DB insert.
+<a href=#619 id=619 data-nosnippet>619</a><span class="doccomment">/// bond sync-to-db: `{sync_url} {conn_str}` [--table name]. Sync pull → DB insert.
 <a href=#620 id=620 data-nosnippet>620</a></span><span class="kw">fn </span>run_bond_sync_to_db(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool) -&gt; RunResult {
 <a href=#621 id=621 data-nosnippet>621</a>    <span class="kw">if </span>args.len() &lt; <span class="number">2 </span>{
 <a href=#622 id=622 data-nosnippet>622</a>        <span class="kw">return </span>RunResult {
@@ -690,7 +690,7 @@
 <a href=#690 id=690 data-nosnippet>690</a>    }
 <a href=#691 id=691 data-nosnippet>691</a>}
 <a href=#692 id=692 data-nosnippet>692</a>
-<a href=#693 id=693 data-nosnippet>693</a><span class="doccomment">/// bond ai-to-service: &lt;prompt&gt; &lt;service_url&gt; [--model]. AI generate → web POST.
+<a href=#693 id=693 data-nosnippet>693</a><span class="doccomment">/// bond ai-to-service: `{prompt} {service_url}` [--model]. AI generate → web POST.
 <a href=#694 id=694 data-nosnippet>694</a></span><span class="kw">fn </span>run_bond_ai_to_service(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool, opts: <span class="kw-2">&amp;</span>RunOptions) -&gt; RunResult {
 <a href=#695 id=695 data-nosnippet>695</a>    <span class="kw">if </span>args.len() &lt; <span class="number">2 </span>{
 <a href=#696 id=696 data-nosnippet>696</a>        <span class="kw">return </span>RunResult {
@@ -779,7 +779,7 @@
 <a href=#779 id=779 data-nosnippet>779</a>    }
 <a href=#780 id=780 data-nosnippet>780</a>}
 <a href=#781 id=781 data-nosnippet>781</a>
-<a href=#782 id=782 data-nosnippet>782</a><span class="doccomment">/// bond service-to-chain: &lt;service_url&gt; &lt;chain_id&gt; &lt;addr&gt; &lt;fn&gt;. Service result → chain call.
+<a href=#782 id=782 data-nosnippet>782</a><span class="doccomment">/// bond service-to-chain: `{service_url} {chain_id} {addr} {fn_name}`. Service result → chain call.
 <a href=#783 id=783 data-nosnippet>783</a></span><span class="kw">fn </span>run_bond_service_to_chain(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool, opts: <span class="kw-2">&amp;</span>RunOptions) -&gt; RunResult {
 <a href=#784 id=784 data-nosnippet>784</a>    <span class="kw">if </span>args.len() &lt; <span class="number">4 </span>{
 <a href=#785 id=785 data-nosnippet>785</a>        <span class="kw">return </span>RunResult {
@@ -874,7 +874,7 @@
 <a href=#874 id=874 data-nosnippet>874</a>    }
 <a href=#875 id=875 data-nosnippet>875</a>}
 <a href=#876 id=876 data-nosnippet>876</a>
-<a href=#877 id=877 data-nosnippet>877</a><span class="doccomment">/// bond log-to-sync: &lt;sync_url&gt; [--level info|warn|error|audit]. Log entries → sync push.
+<a href=#877 id=877 data-nosnippet>877</a><span class="doccomment">/// bond log-to-sync: `{sync_url}` [--level info|warn|error|audit]. Log entries → sync push.
 <a href=#878 id=878 data-nosnippet>878</a></span><span class="kw">fn </span>run_bond_log_to_sync(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool) -&gt; RunResult {
 <a href=#879 id=879 data-nosnippet>879</a>    <span class="kw">if </span>args.is_empty() {
 <a href=#880 id=880 data-nosnippet>880</a>        <span class="kw">return </span>RunResult {
@@ -1053,7 +1053,7 @@
 <a href=#1053 id=1053 data-nosnippet>1053</a>}
 <a href=#1054 id=1054 data-nosnippet>1054</a>
 <a href=#1055 id=1055 data-nosnippet>1055</a><span class="doccomment">/// Execute a single pipe step. Step = [component, subcommand, ...args]. Returns payload string for next step.
-<a href=#1056 id=1056 data-nosnippet>1056</a>/// Supported: oracle fetch &lt;source&gt; &lt;query&gt;, chain estimate &lt;chain_id&gt; &lt;op&gt;, chain gas-price &lt;chain_id&gt;, web get &lt;url&gt;.
+<a href=#1056 id=1056 data-nosnippet>1056</a>/// Supported: oracle fetch `{source} {query}`, chain estimate `{chain_id} {op}`, chain gas-price `{chain_id}`, web get `{url}`.
 <a href=#1057 id=1057 data-nosnippet>1057</a></span><span class="kw">fn </span>execute_pipe_step(step: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], _input: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;String, String&gt; {
 <a href=#1058 id=1058 data-nosnippet>1058</a>    <span class="kw">if </span>step.len() &lt; <span class="number">2 </span>{
 <a href=#1059 id=1059 data-nosnippet>1059</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="string">"step must be at least [component, subcommand]"</span>.to_string());
@@ -1256,7 +1256,7 @@
 <a href=#1256 id=1256 data-nosnippet>1256</a>    }
 <a href=#1257 id=1257 data-nosnippet>1257</a>}
 <a href=#1258 id=1258 data-nosnippet>1258</a>
-<a href=#1259 id=1259 data-nosnippet>1259</a><span class="doccomment">/// invoke price-to-deploy: &lt;oracle_source&gt; &lt;chain_id&gt; &lt;contract&gt;. Oracle price → chain deploy (or estimate).
+<a href=#1259 id=1259 data-nosnippet>1259</a><span class="doccomment">/// invoke price-to-deploy: `{oracle_source} {chain_id} {contract}`. Oracle price → chain deploy (or estimate).
 <a href=#1260 id=1260 data-nosnippet>1260</a></span><span class="kw">fn </span>run_invoke_price_to_deploy(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool) -&gt; RunResult {
 <a href=#1261 id=1261 data-nosnippet>1261</a>    <span class="kw">if </span>args.len() &lt; <span class="number">3 </span>{
 <a href=#1262 id=1262 data-nosnippet>1262</a>        <span class="kw">return </span>RunResult {
@@ -1327,7 +1327,7 @@
 <a href=#1327 id=1327 data-nosnippet>1327</a>    }
 <a href=#1328 id=1328 data-nosnippet>1328</a>}
 <a href=#1329 id=1329 data-nosnippet>1329</a>
-<a href=#1330 id=1330 data-nosnippet>1330</a><span class="doccomment">/// invoke iot-ingest: &lt;device_id&gt; &lt;conn_str&gt; [--window secs]. IoT read → DB → Sync.
+<a href=#1330 id=1330 data-nosnippet>1330</a><span class="doccomment">/// invoke iot-ingest: `{device_id} {conn_str}` [--window secs]. IoT read → DB → Sync.
 <a href=#1331 id=1331 data-nosnippet>1331</a></span><span class="kw">fn </span>run_invoke_iot_ingest(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool) -&gt; RunResult {
 <a href=#1332 id=1332 data-nosnippet>1332</a>    <span class="kw">if </span>args.len() &lt; <span class="number">2 </span>{
 <a href=#1333 id=1333 data-nosnippet>1333</a>        <span class="kw">return </span>RunResult {
@@ -1395,7 +1395,7 @@
 <a href=#1395 id=1395 data-nosnippet>1395</a>    }
 <a href=#1396 id=1396 data-nosnippet>1396</a>}
 <a href=#1397 id=1397 data-nosnippet>1397</a>
-<a href=#1398 id=1398 data-nosnippet>1398</a><span class="doccomment">/// invoke ai-audit: &lt;conn_str&gt; "&lt;query&gt;". DB query → AI analysis → log.
+<a href=#1398 id=1398 data-nosnippet>1398</a><span class="doccomment">/// invoke ai-audit: `{conn_str}` `"{query}"`. DB query → AI analysis → log.
 <a href=#1399 id=1399 data-nosnippet>1399</a></span><span class="kw">fn </span>run_invoke_ai_audit(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool) -&gt; RunResult {
 <a href=#1400 id=1400 data-nosnippet>1400</a>    <span class="kw">if </span>args.len() &lt; <span class="number">2 </span>{
 <a href=#1401 id=1401 data-nosnippet>1401</a>        <span class="kw">return </span>RunResult {
@@ -1462,7 +1462,7 @@
 <a href=#1462 id=1462 data-nosnippet>1462</a>    }
 <a href=#1463 id=1463 data-nosnippet>1463</a>}
 <a href=#1464 id=1464 data-nosnippet>1464</a>
-<a href=#1465 id=1465 data-nosnippet>1465</a><span class="doccomment">/// invoke compliance-check: &lt;addr&gt; [--chain_id N] [--aml]. Chain balance + AML check, combined report.
+<a href=#1465 id=1465 data-nosnippet>1465</a><span class="doccomment">/// invoke compliance-check: `{addr}` [--chain_id N] [--aml]. Chain balance + AML check, combined report.
 <a href=#1466 id=1466 data-nosnippet>1466</a></span><span class="kw">fn </span>run_invoke_compliance_check(args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], dry_run: bool) -&gt; RunResult {
 <a href=#1467 id=1467 data-nosnippet>1467</a>    <span class="kw">if </span>args.is_empty() {
 <a href=#1468 id=1468 data-nosnippet>1468</a>        <span class="kw">return </span>RunResult {

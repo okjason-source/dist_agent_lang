@@ -3,7 +3,7 @@
 <a href=#3 id=3 data-nosnippet>3</a>//! Endpoints:
 <a href=#4 id=4 data-nosnippet>4</a>//! - GET /v1/packages/:name     -&gt; index JSON (versions + url per version)
 <a href=#5 id=5 data-nosnippet>5</a>//! - GET /v1/packages/:name/versions/:version/tarball -&gt; tarball bytes
-<a href=#6 id=6 data-nosnippet>6</a>//! - PUT /v1/packages/:name/versions/:version -&gt; publish (body = tarball, Authorization: Bearer &lt;token&gt;)
+<a href=#6 id=6 data-nosnippet>6</a>//! - PUT /v1/packages/:name/versions/:version -&gt; publish (body = tarball, `Authorization: Bearer` + registry token)
 <a href=#7 id=7 data-nosnippet>7</a>//!
 <a href=#8 id=8 data-nosnippet>8</a>//! Env: REGISTRY_STORAGE_PATH, REGISTRY_TOKEN (auth), REGISTRY_PUBLIC_URL (for index urls), PORT.
 <a href=#9 id=9 data-nosnippet>9</a>
