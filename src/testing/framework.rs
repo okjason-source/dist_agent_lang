@@ -173,6 +173,12 @@ impl TestCoverage {
     }
 }
 
+impl Default for TestCoverage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Test suite containing multiple test cases
 #[derive(Debug, Clone)]
 pub struct TestSuite {
@@ -416,5 +422,11 @@ impl TestStats {
         } else {
             (self.passed as f64 / self.total_tests as f64) * 100.0
         }
+    }
+}
+
+impl Default for TestStats {
+    fn default() -> Self {
+        Self::new()
     }
 }

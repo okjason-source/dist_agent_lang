@@ -822,10 +822,8 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
         .unwrap_or_else(|_| std::path::Path::new(filename).to_path_buf());
     if let Some(parent) = entry_path_for_env.parent() {
         let env_path = parent.join(".env");
-        if env_path.exists() {
-            if dotenvy::from_path(&env_path).is_ok() {
-                println!("    Loaded .env from {}", env_path.display());
-            }
+        if env_path.exists() && dotenvy::from_path(&env_path).is_ok() {
+            println!("    Loaded .env from {}", env_path.display());
         }
     }
     if std::env::var("X_API_KEY").is_err() {
@@ -5331,7 +5329,7 @@ fn handle_build_command(entry: Option<&str>, target: Option<&str>, output: Optio
 
     // CT1: If --target is set, run the compiler driver
     if let Some(target_name) = target {
-        use dist_agent_lang::compile::{run_compile, CompileError};
+        use dist_agent_lang::compile::{run_compile_with_mode, CompileError, TrustCompileMode};
         use dist_agent_lang::lexer::tokens::CompilationTarget;
 
         let target_enum = match CompilationTarget::from_string(target_name) {
@@ -5380,7 +5378,18 @@ fn handle_build_command(entry: Option<&str>, target: Option<&str>, output: Optio
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| cwd.join("target").join("dal"));
 
-        match run_compile(entry_path.clone(), target_enum, output_dir.clone(), &source) {
+        let trust_mode = std::env::var("DAL_COMPILE_TRUST_MODE")
+            .ok()
+            .and_then(|s| TrustCompileMode::from_str(&s))
+            .unwrap_or(TrustCompileMode::Auto);
+
+        match run_compile_with_mode(
+            entry_path.clone(),
+            target_enum,
+            output_dir.clone(),
+            &source,
+            trust_mode,
+        ) {
             Ok(artifacts) => {
                 println!(
                     "✅ Compiled {} service(s) to target '{}'",

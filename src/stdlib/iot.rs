@@ -366,6 +366,15 @@ pub enum ProtocolType {
     BLE,
     LoRa,
     Zigbee,
+    Bluetooth,
+    WiFi,
+    Ethernet,
+    Cellular,
+    Satellite,
+    Radio,
+    Optical,
+    Infrared,
+    Microwave,
     Custom(String),
 }
 

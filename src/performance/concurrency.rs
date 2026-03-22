@@ -483,3 +483,9 @@ impl ConcurrencyProfiler {
         report
     }
 }
+
+impl Default for ConcurrencyProfiler {
+    fn default() -> Self {
+        Self::new()
+    }
+}

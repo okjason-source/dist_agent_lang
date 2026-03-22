@@ -280,7 +280,7 @@ utils = { path = "utils" }
     assert!(lock_path.exists());
     let loaded = load_resolved_deps(&manifest).unwrap();
     assert_eq!(loaded.len(), 1);
-    assert!(loaded.get("utils").is_some());
+    assert!(loaded.contains_key("utils"));
 }
 
 #[test]

@@ -148,11 +148,8 @@ fn run_lsp_worker(
     if write_lsp_message(&mut stdin, &init_req.to_string()).is_err() {
         return;
     }
-    loop {
-        let msg = match read_lsp_message(&mut reader) {
-            Some(m) => m,
-            None => break,
-        };
+    while let Some(m) = read_lsp_message(&mut reader) {
+        let msg = m;
         if parse_response(&msg, next_id - 1).is_some() {
             break; // initialize response received
         }

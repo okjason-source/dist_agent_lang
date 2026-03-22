@@ -31,6 +31,12 @@ impl TestContext {
     }
 }
 
+impl Default for TestContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Global test context (thread-safe)
 lazy_static::lazy_static! {
     static ref TEST_CONTEXT: Arc<Mutex<TestContext>> = Arc::new(Mutex::new(TestContext::new()));

@@ -339,6 +339,12 @@ impl ConfigManager {
     }
 }
 
+impl Default for ConfigManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Get environment variable with validation
 pub fn get_env(key: &str) -> Result<Value, String> {
     ConfigManager::get_env(key, None)

@@ -16,6 +16,7 @@ pub enum AgentType {
     AI,
     System,
     Worker,
+    IDE,
     Custom(String),
 }
 
@@ -25,6 +26,7 @@ impl AgentType {
             "ai" => Some(AgentType::AI),
             "system" => Some(AgentType::System),
             "worker" => Some(AgentType::Worker),
+            "ide" => Some(AgentType::IDE),
             custom if custom.starts_with("custom:") => {
                 Some(AgentType::Custom(custom[7..].to_string()))
             }
@@ -37,6 +39,7 @@ impl AgentType {
             AgentType::AI => "ai".to_string(),
             AgentType::System => "system".to_string(),
             AgentType::Worker => "worker".to_string(),
+            AgentType::IDE => "ide".to_string(),
             AgentType::Custom(name) => format!("custom:{}", name),
         }
     }
@@ -86,6 +89,18 @@ pub struct LifecycleHooks {
     pub on_destroy: Option<String>,
 }
 
+/// Resource limits for agent execution (wall clock, tokens, cost, tool call bounds).
+/// Used by IDE agents and any agent that needs budget enforcement.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct ResourceBudget {
+    pub max_wall_clock_ms: Option<u64>,
+    pub max_tool_calls_per_type: Option<u32>,
+    pub max_repeated_identical_invocations: Option<u32>,
+    pub max_consecutive_no_progress: Option<u32>,
+    pub max_total_tokens: Option<u64>,
+    pub max_cost_microusd: Option<u64>,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct AgentConfig {
     pub name: String,
@@ -101,6 +116,7 @@ pub struct AgentConfig {
     pub coordination_enabled: bool,
     pub metadata: HashMap<String, Value>,
     pub lifecycle: Option<LifecycleHooks>,
+    pub resource_budget: Option<ResourceBudget>,
 }
 
 impl AgentConfig {
@@ -118,6 +134,7 @@ impl AgentConfig {
             coordination_enabled: true,
             metadata: HashMap::new(),
             lifecycle: None,
+            resource_budget: None,
         }
     }
 
@@ -183,6 +200,11 @@ impl AgentConfig {
 
     pub fn with_coordination_enabled(mut self, enabled: bool) -> Self {
         self.coordination_enabled = enabled;
+        self
+    }
+
+    pub fn with_resource_budget(mut self, budget: ResourceBudget) -> Self {
+        self.resource_budget = Some(budget);
         self
     }
 }
@@ -451,6 +473,12 @@ impl AgentMetrics {
     }
 }
 
+impl Default for AgentMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Spawn a new agent
 pub fn spawn(config: AgentConfig) -> Result<AgentContext, String> {
     // Generate unique agent ID
@@ -464,6 +492,7 @@ pub fn spawn(config: AgentConfig) -> Result<AgentContext, String> {
         AgentType::AI => initialize_ai_agent(&mut agent_context),
         AgentType::System => initialize_system_agent(&mut agent_context),
         AgentType::Worker => initialize_worker_agent(&mut agent_context),
+        AgentType::IDE => initialize_ide_agent(&mut agent_context),
         AgentType::Custom(_) => initialize_custom_agent(&mut agent_context),
     }
 
@@ -513,6 +542,43 @@ pub fn spawn(config: AgentConfig) -> Result<AgentContext, String> {
         r.persist();
     }
     Ok(agent_context)
+}
+
+/// Terminate an agent: set status to Terminated, run on_destroy lifecycle hook, persist.
+pub fn terminate(agent_id: &str) -> Result<(), String> {
+    let on_destroy = {
+        let mut r = get_runtime();
+        let ctx = r
+            .agent_contexts
+            .get_mut(agent_id)
+            .ok_or_else(|| format!("Agent not found: {}", agent_id))?;
+        ctx.update_status(AgentStatus::Terminated);
+        let hook = ctx
+            .config
+            .lifecycle
+            .as_ref()
+            .and_then(|l| l.on_destroy.clone());
+        r.persist();
+        hook
+    };
+    if let Some(snippet) = on_destroy {
+        let mut vars = HashMap::new();
+        vars.insert("agent_id".to_string(), Value::String(agent_id.to_string()));
+        if let Err(e) = crate::execute_dal_with_scope(&vars, &snippet) {
+            log::warn!(
+                "Mold on_destroy lifecycle hook failed for {}: {}",
+                agent_id,
+                e
+            );
+        }
+    }
+    log::info!("agent: terminated {}", agent_id);
+    Ok(())
+}
+
+/// Look up an agent context by id (clone).
+pub fn get_agent_context(agent_id: &str) -> Option<AgentContext> {
+    get_runtime().agent_contexts.get(agent_id).cloned()
 }
 
 /// Coordination runtime with integrated persistence.
@@ -905,6 +971,18 @@ fn builtin_capabilities(agent_type: &AgentType) -> Vec<&'static str> {
         AgentType::AI => vec!["analysis", "learning", "communication", "task_execution"],
         AgentType::System => vec!["monitoring", "coordination", "resource_management"],
         AgentType::Worker => vec!["task_execution", "data_processing", "automation"],
+        AgentType::IDE => vec![
+            "run",
+            "read_file",
+            "write_file",
+            "list_dir",
+            "search",
+            "dal_check",
+            "dal_run",
+            "dal_init",
+            "show_url",
+            "show_content",
+        ],
         AgentType::Custom(_) => vec!["custom_processing"],
     }
 }
@@ -976,6 +1054,24 @@ fn initialize_worker_agent(agent_context: &mut AgentContext) {
         "automation".to_string(),
         "workflow_management".to_string(),
     ];
+}
+
+fn initialize_ide_agent(agent_context: &mut AgentContext) {
+    agent_context.store_memory(
+        "surface".to_string(),
+        Value::String("workspace".to_string()),
+    );
+    agent_context.store_memory(
+        "tool_dispatch".to_string(),
+        Value::String("model_turn_loop".to_string()),
+    );
+
+    if agent_context.config.capabilities.is_empty() {
+        agent_context.config.capabilities = builtin_capabilities(&AgentType::IDE)
+            .into_iter()
+            .map(String::from)
+            .collect();
+    }
 }
 
 fn initialize_custom_agent(agent_context: &mut AgentContext) {

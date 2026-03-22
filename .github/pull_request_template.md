@@ -56,6 +56,15 @@ Related to # <!-- issue number -->
 - [ ] Performance improvement: <!-- Describe -->
 - [ ] Performance regression: <!-- Describe and justify -->
 
+## Agent Host Protocol (Phase 5 Gate)
+<!-- Complete when this PR touches agent runtime/protocol/routes/runbooks -->
+- [ ] Not applicable (PR does not affect agent host protocol paths)
+- [ ] API contract preserved for `ai::agent_run` / `ai::respond_with_tools_result` diagnostics keys and types
+- [ ] First-party DAL surfaces use typed `ai::agent_run(request_map)` where applicable
+- [ ] Telemetry parity verified (`route`, `policy`, `termination_reason`, `guard_stopped`) between payloads and `agent_route_metrics`
+- [ ] Rollback profile tested or explicitly unchanged (`DAL_AGENT_POLICY_DEFAULT`, native/legacy toggles, strict guards)
+- [ ] Cross-surface behavior sanity-checked (CLI/server/workflow/IDE where relevant)
+
 ## Security Considerations
 <!-- If applicable, describe any security implications -->
 - [ ] No security implications

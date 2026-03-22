@@ -82,10 +82,9 @@ pub fn sanitize_for_conversation(s: &str) -> String {
     };
     let with_newlines = truncated.replace("\n", "\n  ");
     // Prevent injection of our own **User:** / **Agent:** structure
-    let safe = with_newlines
+    with_newlines
         .replace("**User:**", "[User]:")
-        .replace("**Agent:**", "[Agent]:");
-    safe
+        .replace("**Agent:**", "[Agent]:")
 }
 
 /// Append a conversation turn (user message + agent response) to the context file.

@@ -217,7 +217,7 @@ pub fn resolve_and_fetch(name: &str, version_request: &str) -> Result<PathBuf, R
 /// Directories to skip when packing a package (publish).
 const PACK_IGNORE_DIRS: &[&str] = &[".git", "target", "node_modules", ".dal"];
 
-fn collect_package_files(root: &Path, dir: &Path, out: &mut Vec<PathBuf>) -> std::io::Result<()> {
+fn collect_package_files(dir: &Path, out: &mut Vec<PathBuf>) -> std::io::Result<()> {
     for entry in std::fs::read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
@@ -226,7 +226,7 @@ fn collect_package_files(root: &Path, dir: &Path, out: &mut Vec<PathBuf>) -> std
             if PACK_IGNORE_DIRS.contains(&name) {
                 continue;
             }
-            collect_package_files(root, &path, out)?;
+            collect_package_files(&path, out)?;
         } else {
             let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
             let is_dal = ext == "dal" || path.file_name().map(|n| n == "dal.toml").unwrap_or(false);
@@ -247,8 +247,7 @@ pub fn pack_package(
 ) -> Result<Vec<u8>, RegistryError> {
     let root = manifest_path.parent().unwrap_or_else(|| Path::new("."));
     let mut files = Vec::new();
-    collect_package_files(root, root, &mut files)
-        .map_err(|e| RegistryError::Unpack(e.to_string()))?;
+    collect_package_files(root, &mut files).map_err(|e| RegistryError::Unpack(e.to_string()))?;
     if files.is_empty() {
         return Err(RegistryError::Publish(
             "no dal.toml or *.dal files found".to_string(),
@@ -388,6 +387,23 @@ fn unpack_tarball(bytes: &[u8]) -> Result<PathBuf, RegistryError> {
     Ok(dest)
 }
 
+/// Find package root (directory containing dal.toml) within an unpacked path.
+/// Tarballs often have a single top-level dir (e.g. package-1.0.0/); this locates dal.toml.
+pub fn find_package_root(unpacked: &Path) -> Option<PathBuf> {
+    if unpacked.join("dal.toml").exists() {
+        return Some(unpacked.to_path_buf());
+    }
+    if let Ok(entries) = std::fs::read_dir(unpacked) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() && path.join("dal.toml").exists() {
+                return Some(path);
+            }
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -489,21 +505,4 @@ mod tests {
             s
         );
     }
-}
-
-/// Find package root (directory containing dal.toml) within an unpacked path.
-/// Tarballs often have a single top-level dir (e.g. package-1.0.0/); this locates dal.toml.
-pub fn find_package_root(unpacked: &Path) -> Option<PathBuf> {
-    if unpacked.join("dal.toml").exists() {
-        return Some(unpacked.to_path_buf());
-    }
-    if let Ok(entries) = std::fs::read_dir(unpacked) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() && path.join("dal.toml").exists() {
-                return Some(path);
-            }
-        }
-    }
-    None
 }

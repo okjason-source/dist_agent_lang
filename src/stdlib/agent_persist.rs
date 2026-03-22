@@ -48,6 +48,22 @@ pub struct AgentContextDto {
     pub trust_score: f64,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct ResourceBudgetDto {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_wall_clock_ms: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_tool_calls_per_type: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_repeated_identical_invocations: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_consecutive_no_progress: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_total_tokens: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_cost_microusd: Option<u64>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AgentConfigDto {
     pub name: String,
@@ -62,6 +78,8 @@ pub struct AgentConfigDto {
     pub coordination_enabled: bool,
     pub metadata: HashMap<String, Value>,
     pub lifecycle: Option<LifecycleHooksDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resource_budget: Option<ResourceBudgetDto>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -165,6 +183,14 @@ impl From<&AgentConfig> for AgentConfigDto {
             coordination_enabled: cfg.coordination_enabled,
             metadata: cfg.metadata.clone(),
             lifecycle: cfg.lifecycle.as_ref().map(LifecycleHooksDto::from),
+            resource_budget: cfg.resource_budget.as_ref().map(|b| ResourceBudgetDto {
+                max_wall_clock_ms: b.max_wall_clock_ms,
+                max_tool_calls_per_type: b.max_tool_calls_per_type,
+                max_repeated_identical_invocations: b.max_repeated_identical_invocations,
+                max_consecutive_no_progress: b.max_consecutive_no_progress,
+                max_total_tokens: b.max_total_tokens,
+                max_cost_microusd: b.max_cost_microusd,
+            }),
         }
     }
 }
@@ -184,6 +210,16 @@ impl AgentConfigDto {
             coordination_enabled: self.coordination_enabled,
             metadata: self.metadata.clone(),
             lifecycle: self.lifecycle.as_ref().map(|l| l.to_domain()),
+            resource_budget: self.resource_budget.as_ref().map(|b| {
+                crate::stdlib::agent::ResourceBudget {
+                    max_wall_clock_ms: b.max_wall_clock_ms,
+                    max_tool_calls_per_type: b.max_tool_calls_per_type,
+                    max_repeated_identical_invocations: b.max_repeated_identical_invocations,
+                    max_consecutive_no_progress: b.max_consecutive_no_progress,
+                    max_total_tokens: b.max_total_tokens,
+                    max_cost_microusd: b.max_cost_microusd,
+                }
+            }),
         }
     }
 }
@@ -938,7 +974,7 @@ mod tests {
             &[],
             &HashMap::new(),
             &None,
-            &[skill.clone()],
+            std::slice::from_ref(&skill),
         );
         assert_eq!(snap.registered_skills.len(), 1);
         assert_eq!(snap.registered_skills[0].name, "ms_office");

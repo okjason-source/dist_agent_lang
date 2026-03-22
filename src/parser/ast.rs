@@ -187,6 +187,7 @@ pub enum AgentType {
     AI,
     System,
     Worker,
+    IDE,
     Custom(String),
 }
 
@@ -332,6 +333,12 @@ impl Program {
     }
 }
 
+impl Default for Program {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BlockStatement {
     pub fn new() -> Self {
         Self {
@@ -341,5 +348,11 @@ impl BlockStatement {
 
     pub fn add_statement(&mut self, statement: Statement) {
         self.statements.push(statement);
+    }
+}
+
+impl Default for BlockStatement {
+    fn default() -> Self {
+        Self::new()
     }
 }

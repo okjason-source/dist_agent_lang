@@ -1,3 +1,4 @@
+#![allow(clippy::len_zero)]
 use crate::parser::ast::{BlockStatement, Program, ServiceStatement, Statement};
 use crate::runtime::advanced_security::AdvancedSecurityManager;
 use crate::runtime::control_flow::{ControlFlow, StatementOutcome, StatementResult};
@@ -25,11 +26,11 @@ fn edit_distance(a: &str, b: &str) -> usize {
     let n = a.len();
     let m = b.len();
     let mut dp = vec![vec![0usize; m + 1]; n + 1];
-    for i in 0..=n {
-        dp[i][0] = i;
+    for (i, row) in dp.iter_mut().enumerate().take(n + 1) {
+        row[0] = i;
     }
-    for j in 0..=m {
-        dp[0][j] = j;
+    for (j, cell) in dp[0].iter_mut().enumerate().take(m + 1) {
+        *cell = j;
     }
     for i in 1..=n {
         for j in 1..=m {
@@ -612,8 +613,8 @@ impl Runtime {
             .get("height")
             .map(|v| self.value_to_int(v))
             .unwrap_or(Ok(600i64))?;
-        let x = map.get("x").map(|v| self.value_to_int(v).ok()).flatten();
-        let y = map.get("y").map(|v| self.value_to_int(v).ok()).flatten();
+        let x = map.get("x").and_then(|v| self.value_to_int(v).ok());
+        let y = map.get("y").and_then(|v| self.value_to_int(v).ok());
         let resizable = map
             .get("resizable")
             .and_then(|v| self.value_to_bool(v).ok())
@@ -834,6 +835,9 @@ impl Runtime {
     }
 
     /// Convert Value::Map to HashMap<String, String> for chain:: deploy/call/mint/update.
+    ///
+    /// Delegates to [`crate::stdlib::chain::chain_arg_map_from_runtime_values`] so chain kwargs
+    /// share one coercion contract with typed call/deploy (`Value::to_chain_arg_string`).
     fn value_map_to_string_map(
         &self,
         value: &Value,
@@ -842,14 +846,7 @@ impl Runtime {
             Value::Map(m) => m,
             _ => return Err(RuntimeError::General("Expected a map value".to_string())),
         };
-        let mut out = HashMap::new();
-        for (k, v) in map {
-            let s = self
-                .value_to_string(v)
-                .unwrap_or_else(|_| format!("{:?}", v));
-            out.insert(k.clone(), s);
-        }
-        Ok(out)
+        Ok(crate::stdlib::chain::chain_arg_map_from_runtime_values(map))
     }
 
     /// Build call-stack info for error reporting (P3).
@@ -2632,9 +2629,50 @@ impl Runtime {
                 } else {
                     HashMap::new()
                 };
-                let address =
-                    crate::stdlib::chain::deploy(chain_id, contract_name, constructor_args);
-                Ok(Value::String(address))
+                let deploy_result = crate::stdlib::chain::deploy_typed(
+                    chain_id,
+                    contract_name.clone(),
+                    constructor_args,
+                );
+                if deploy_result.has_evidence() {
+                    let evidence = deploy_result.to_audit_evidence(chain_id, &contract_name);
+                    crate::stdlib::log::audit("chain_deploy_typed_result", evidence, Some("chain"));
+                }
+                Ok(Value::String(deploy_result.into_legacy_string()))
+            }
+            "deploy_typed" => {
+                if args.len() != 3 && args.len() != 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let chain_id = match &args[0] {
+                    Value::Int(n) => *n,
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
+                };
+                let contract_name = match &args[1] {
+                    Value::String(s) => s.clone(),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[1].type_name().to_string(),
+                        })
+                    }
+                };
+                let constructor_args = if args.len() >= 3 {
+                    self.value_map_to_string_map(&args[2])?
+                } else {
+                    HashMap::new()
+                };
+                let result =
+                    crate::stdlib::chain::deploy_typed(chain_id, contract_name, constructor_args);
+                Ok(Value::Map(result.to_value_map()))
             }
             "estimate_gas" => {
                 if args.len() != 2 {
@@ -2797,12 +2835,72 @@ impl Runtime {
                 };
                 let args_map = if args.len() >= 5 {
                     self.value_map_to_string_map(&args[4])?
+                } else if args.len() >= 4 {
+                    self.value_map_to_string_map(&args[3])?
                 } else {
                     HashMap::new()
                 };
-                let result =
-                    crate::stdlib::chain::call(chain_id, contract_address, function_name, args_map);
-                Ok(Value::String(result))
+                let call_result = crate::stdlib::chain::call_typed(
+                    chain_id,
+                    contract_address.clone(),
+                    function_name.clone(),
+                    args_map,
+                );
+                if call_result.has_evidence() {
+                    let evidence =
+                        call_result.to_audit_evidence(chain_id, &contract_address, &function_name);
+                    crate::stdlib::log::audit("chain_call_typed_result", evidence, Some("chain"));
+                }
+                Ok(Value::String(call_result.into_legacy_string()))
+            }
+            "call_typed" => {
+                if args.len() != 4 && args.len() != 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
+                }
+                let chain_id = match &args[0] {
+                    Value::Int(n) => *n,
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "int".to_string(),
+                            got: args[0].type_name().to_string(),
+                        })
+                    }
+                };
+                let contract_address = match &args[1] {
+                    Value::String(s) => s.clone(),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[1].type_name().to_string(),
+                        })
+                    }
+                };
+                let function_name = match &args[2] {
+                    Value::String(s) => s.clone(),
+                    _ => {
+                        return Err(RuntimeError::TypeError {
+                            expected: "string".to_string(),
+                            got: args[2].type_name().to_string(),
+                        })
+                    }
+                };
+                let args_map = if args.len() >= 5 {
+                    self.value_map_to_string_map(&args[4])?
+                } else if args.len() >= 4 {
+                    self.value_map_to_string_map(&args[3])?
+                } else {
+                    HashMap::new()
+                };
+                let result = crate::stdlib::chain::call_typed(
+                    chain_id,
+                    contract_address,
+                    function_name,
+                    args_map,
+                );
+                Ok(Value::Map(result.to_value_map()))
             }
             "mint" => {
                 if args.len() != 2 && args.len() != 3 {
@@ -2969,9 +3067,20 @@ impl Runtime {
                 } else {
                     HashMap::new()
                 };
-                let address =
-                    crate::stdlib::chain::deploy(chain_id, contract_name, constructor_args);
-                Ok(Value::String(address))
+                let deploy_result = crate::stdlib::chain::deploy_typed(
+                    chain_id,
+                    contract_name.clone(),
+                    constructor_args,
+                );
+                if deploy_result.has_evidence() {
+                    let evidence = deploy_result.to_audit_evidence(chain_id, &contract_name);
+                    crate::stdlib::log::audit(
+                        "chain_deploy_contract_typed_result",
+                        evidence,
+                        Some("chain"),
+                    );
+                }
+                Ok(Value::String(deploy_result.into_legacy_string()))
             }
             "get_current_gas_price" => {
                 // Example-only: alias for get_gas_price(chain_id)
@@ -4056,12 +4165,8 @@ impl Runtime {
                 let evaluated_value = self.evaluate_expression(&let_stmt.value)?;
 
                 // Phase 4: Apply formal verification to variable assignments
-                if let Err(e) = self
-                    .advanced_security
-                    .verify_assignment(&let_stmt.name, &evaluated_value)
-                {
-                    return Err(e);
-                }
+                self.advanced_security
+                    .verify_assignment(&let_stmt.name, &evaluated_value)?;
 
                 self.set_variable(let_stmt.name.clone(), evaluated_value.clone());
                 Ok(StatementOutcome::value(evaluated_value))
@@ -6637,6 +6742,81 @@ impl Runtime {
                     .map(Value::String)
                     .map_err(RuntimeError::General)
             }
+            "call_with_abi_typed" => {
+                if args.len() < 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let contract_map = match &args[0] {
+                    Value::Map(m) => m,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "add_sol::call_with_abi_typed: first arg must be contract map"
+                                .to_string(),
+                        ))
+                    }
+                };
+                let contract = add_sol::SolidityContract {
+                    name: contract_map
+                        .get("name")
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_default(),
+                    address: contract_map
+                        .get("address")
+                        .and_then(|v| self.value_to_string(v).ok())
+                        .unwrap_or_default(),
+                    chain_id: contract_map
+                        .get("chain_id")
+                        .and_then(|v| self.value_to_int(v).ok())
+                        .unwrap_or(1),
+                    abi: contract_map
+                        .get("abi")
+                        .and_then(|v| self.value_to_string(v).ok()),
+                };
+                let function_name = self.value_to_string(&args[1])?;
+                let args_map = match &args[2] {
+                    Value::Map(m) => m.clone(),
+                    _ => HashMap::new(),
+                };
+                let result = add_sol::call_with_abi_typed(&contract, function_name, args_map)
+                    .map_err(RuntimeError::General)?;
+                let mut out = HashMap::new();
+                out.insert(
+                    "result_hex".to_string(),
+                    result.result_hex.map(Value::String).unwrap_or(Value::Null),
+                );
+                out.insert("decoded".to_string(), result.decoded);
+                out.insert(
+                    "decode_error".to_string(),
+                    result
+                        .decode_error
+                        .map(Value::String)
+                        .unwrap_or(Value::Null),
+                );
+                out.insert(
+                    "tx_hash".to_string(),
+                    result.tx_hash.map(Value::String).unwrap_or(Value::Null),
+                );
+                out.insert(
+                    "receipt_status".to_string(),
+                    result
+                        .receipt_status
+                        .map(Value::String)
+                        .unwrap_or(Value::Null),
+                );
+                out.insert(
+                    "revert_data".to_string(),
+                    result.revert_data.map(Value::String).unwrap_or(Value::Null),
+                );
+                out.insert(
+                    "error_code".to_string(),
+                    result.error_code.map(Value::String).unwrap_or(Value::Null),
+                );
+                out.insert("message".to_string(), Value::String(result.message));
+                Ok(Value::Map(out))
+            }
             "listen_to_event" => {
                 if args.len() < 3 || args.len() > 5 {
                     return Err(RuntimeError::ArgumentCountMismatch {
@@ -7583,7 +7763,7 @@ impl Runtime {
                     .or_default()
                     .message_queue
                     .pop_front();
-                Ok(msg.map(|v| v).unwrap_or(Value::String("none".to_string())))
+                Ok(msg.unwrap_or(Value::String("none".to_string())))
             }
             "process_message_queue" => {
                 if args.len() != 1 {
@@ -7599,7 +7779,7 @@ impl Runtime {
                     .or_default()
                     .message_queue
                     .pop_front();
-                Ok(msg.map(|v| v).unwrap_or(Value::String("none".to_string())))
+                Ok(msg.unwrap_or(Value::String("none".to_string())))
             }
             "process_message" => {
                 if args.len() != 2 {
@@ -7838,6 +8018,7 @@ impl Runtime {
                 };
                 let tool_trace_raw = d.tool_trace;
                 let r = d.result;
+                let termination = crate::stdlib::ai::classify_termination(&r);
                 let mut map = std::collections::HashMap::new();
                 map.insert("final_text".to_string(), Value::String(r.final_text));
                 map.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
@@ -7848,6 +8029,14 @@ impl Runtime {
                 map.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
                 map.insert("route".to_string(), Value::String(route.to_string()));
                 map.insert("policy".to_string(), Value::String(policy_str.to_string()));
+                map.insert(
+                    "guard_stopped".to_string(),
+                    Value::Bool(termination.guard_stopped),
+                );
+                map.insert(
+                    "termination_reason".to_string(),
+                    Value::String(termination.termination_reason.to_string()),
+                );
                 // Non-critical diagnostics for DAL/HTTP surfaces.
                 let mut obs = std::collections::HashMap::new();
                 obs.insert("route".to_string(), Value::String(route.to_string()));
@@ -7858,6 +8047,126 @@ impl Runtime {
                     Value::Bool(r.max_steps_reached),
                 );
                 obs.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
+                obs.insert(
+                    "guard_stopped".to_string(),
+                    Value::Bool(termination.guard_stopped),
+                );
+                obs.insert(
+                    "termination_reason".to_string(),
+                    Value::String(termination.termination_reason.to_string()),
+                );
+                obs.insert(
+                    "legacy_text_protocol_enabled".to_string(),
+                    Value::Bool(crate::stdlib::ai::legacy_text_tool_protocol_enabled()),
+                );
+                obs.insert(
+                    "native_tool_calling_enabled".to_string(),
+                    Value::Bool(crate::stdlib::ai::native_tool_calling_enabled()),
+                );
+                let default_policy = match crate::stdlib::ai::default_chat_policy_from_env() {
+                    crate::stdlib::ai::ChatPolicy::Auto => "auto",
+                    crate::stdlib::ai::ChatPolicy::ReplyOnly => "reply_only",
+                    crate::stdlib::ai::ChatPolicy::ToolLoop => "tool_loop",
+                };
+                obs.insert(
+                    "default_policy".to_string(),
+                    Value::String(default_policy.to_string()),
+                );
+                map.insert("observability".to_string(), Value::Map(obs));
+                let tool_trace = tool_trace_raw
+                    .into_iter()
+                    .map(Value::String)
+                    .collect::<Vec<_>>();
+                map.insert("tool_trace".to_string(), Value::Array(tool_trace.clone()));
+                map.insert("last_tool_names".to_string(), Value::Array(tool_trace));
+                Ok(Value::Map(map))
+            }
+            "agent_run" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let req = match &args[0] {
+                    Value::Map(m) => m,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "ai::agent_run expects a map argument: {\"message\": \"...\", \"policy\": \"auto|reply_only|tool_loop\"}".to_string(),
+                        ))
+                    }
+                };
+                let message_v = req
+                    .get("message")
+                    .or_else(|| req.get("content"))
+                    .ok_or_else(|| {
+                        RuntimeError::General(
+                            "ai::agent_run requires 'message' (or 'content') in request map."
+                                .to_string(),
+                        )
+                    })?;
+                let message = self.value_to_string(message_v)?;
+                let policy = if let Some(pv) = req.get("policy") {
+                    let p = self.value_to_string(pv)?;
+                    crate::stdlib::ai::ChatPolicy::from_str(&p).ok_or_else(|| {
+                        RuntimeError::General(format!(
+                            "Invalid chat policy '{}'. Use auto|reply_only|tool_loop.",
+                            p
+                        ))
+                    })?
+                } else {
+                    crate::stdlib::ai::default_chat_policy_from_env()
+                };
+                let d =
+                    crate::stdlib::ai::respond_with_tools_diagnostics_with_policy(&message, policy)
+                        .map_err(RuntimeError::General)?;
+                let route = match d.route {
+                    crate::stdlib::ai::ChatRoute::ReplyOnly => "reply_only",
+                    crate::stdlib::ai::ChatRoute::ToolLoop => "tool_loop",
+                };
+                let policy_str = match d.policy {
+                    crate::stdlib::ai::ChatPolicy::Auto => "auto",
+                    crate::stdlib::ai::ChatPolicy::ReplyOnly => "reply_only",
+                    crate::stdlib::ai::ChatPolicy::ToolLoop => "tool_loop",
+                };
+                let tool_trace_raw = d.tool_trace;
+                let r = d.result;
+                let termination = crate::stdlib::ai::classify_termination(&r);
+                let mut map = std::collections::HashMap::new();
+                map.insert("final_text".to_string(), Value::String(r.final_text));
+                map.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
+                map.insert(
+                    "max_steps_reached".to_string(),
+                    Value::Bool(r.max_steps_reached),
+                );
+                map.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
+                map.insert("route".to_string(), Value::String(route.to_string()));
+                map.insert("policy".to_string(), Value::String(policy_str.to_string()));
+                map.insert(
+                    "guard_stopped".to_string(),
+                    Value::Bool(termination.guard_stopped),
+                );
+                map.insert(
+                    "termination_reason".to_string(),
+                    Value::String(termination.termination_reason.to_string()),
+                );
+                let mut obs = std::collections::HashMap::new();
+                obs.insert("route".to_string(), Value::String(route.to_string()));
+                obs.insert("policy".to_string(), Value::String(policy_str.to_string()));
+                obs.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
+                obs.insert(
+                    "max_steps_reached".to_string(),
+                    Value::Bool(r.max_steps_reached),
+                );
+                obs.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
+                obs.insert(
+                    "guard_stopped".to_string(),
+                    Value::Bool(termination.guard_stopped),
+                );
+                obs.insert(
+                    "termination_reason".to_string(),
+                    Value::String(termination.termination_reason.to_string()),
+                );
                 obs.insert(
                     "legacy_text_protocol_enabled".to_string(),
                     Value::Bool(crate::stdlib::ai::legacy_text_tool_protocol_enabled()),
@@ -10143,6 +10452,7 @@ impl Runtime {
             crate::parser::ast::AgentType::Worker => {
                 self.execute_worker_agent_declaration(agent_stmt)
             }
+            crate::parser::ast::AgentType::IDE => self.execute_ide_agent_declaration(agent_stmt),
             crate::parser::ast::AgentType::Custom(custom_type) => {
                 self.execute_custom_agent_declaration(agent_stmt, custom_type)
             }
@@ -10472,6 +10782,42 @@ impl Runtime {
         self.execute_statement(&crate::parser::ast::Statement::Block(
             agent_stmt.body.clone(),
         ))
+    }
+
+    fn execute_ide_agent_declaration(
+        &mut self,
+        agent_stmt: &crate::parser::ast::AgentStatement,
+    ) -> Result<Value, RuntimeError> {
+        crate::stdlib::log::info(
+            "Executing IDE agent declaration",
+            {
+                let mut data = std::collections::HashMap::new();
+                data.insert(
+                    "agent_name".to_string(),
+                    Value::String(agent_stmt.name.clone()),
+                );
+                data.insert("agent_type".to_string(), Value::String("ide".to_string()));
+                data.insert(
+                    "message".to_string(),
+                    Value::String("Executing IDE agent declaration".to_string()),
+                );
+                data
+            },
+            Some("runtime"),
+        );
+
+        let parent_scope = self.scope.clone();
+        self.scope = Scope::new();
+        self.scope
+            .set("agent_type".to_string(), Value::String("ide".to_string()));
+
+        let result = self.execute_statement(&crate::parser::ast::Statement::Block(
+            agent_stmt.body.clone(),
+        ));
+
+        self.scope = parent_scope;
+
+        result
     }
 
     fn execute_custom_agent_declaration(
@@ -11198,33 +11544,34 @@ impl Runtime {
             // 1. REENTRANCY PROTECTION: Check and enter reentrancy guard
             // Clone the guard (it uses Arc internally, so this shares the same state)
             let guard = self.reentrancy_guard.clone();
-            let token = guard.enter(method_name, Some(instance_id)).map_err(|e| {
-                // Log reentrancy attempt for audit
-                let mut audit_data = std::collections::HashMap::new();
-                audit_data.insert(
-                    "service".to_string(),
-                    Value::String(instance_id.to_string()),
-                );
-                audit_data.insert("method".to_string(), Value::String(method_name.to_string()));
-                audit_data.insert(
-                    "caller".to_string(),
-                    Value::String(
-                        self.current_caller
-                            .clone()
-                            .unwrap_or_else(|| "unauthenticated".to_string()),
-                    ),
-                );
-                audit_data.insert(
-                    "result".to_string(),
-                    Value::String("reentrancy_detected".to_string()),
-                );
-                audit_data.insert(
-                    "call_stack".to_string(),
-                    Value::String(format!("{:?}", guard.get_call_stack())),
-                );
-                log::audit("reentrancy_attempt", audit_data, Some("runtime"));
-                e
-            })?;
+            let token = guard
+                .enter(method_name, Some(instance_id))
+                .inspect_err(|_e| {
+                    // Log reentrancy attempt for audit
+                    let mut audit_data = std::collections::HashMap::new();
+                    audit_data.insert(
+                        "service".to_string(),
+                        Value::String(instance_id.to_string()),
+                    );
+                    audit_data.insert("method".to_string(), Value::String(method_name.to_string()));
+                    audit_data.insert(
+                        "caller".to_string(),
+                        Value::String(
+                            self.current_caller
+                                .clone()
+                                .unwrap_or_else(|| "unauthenticated".to_string()),
+                        ),
+                    );
+                    audit_data.insert(
+                        "result".to_string(),
+                        Value::String("reentrancy_detected".to_string()),
+                    );
+                    audit_data.insert(
+                        "call_stack".to_string(),
+                        Value::String(format!("{:?}", guard.get_call_stack())),
+                    );
+                    log::audit("reentrancy_attempt", audit_data, Some("runtime"));
+                })?;
 
             // Store token - it will be dropped automatically when function returns, releasing the guard
             _reentrancy_token = Some(token);

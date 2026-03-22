@@ -212,8 +212,8 @@ impl SolidityParser {
                 let (content_to_parse, next_i) = if at_decl_start {
                     let (logical, next_i) = self.get_logical_line_for_declaration(&lines, i);
                     // Update brace counts for all lines we're consuming
-                    for j in i..next_i {
-                        let t = lines[j].trim();
+                    for line in lines.iter().take(next_i).skip(i) {
+                        let t = line.trim();
                         brace_count += t.matches('{').count() as i32;
                         brace_count -= t.matches('}').count() as i32;
                         if !nested_brace_counts.is_empty() {
@@ -840,5 +840,11 @@ impl SolidityParser {
             mutability,
             initial_value,
         })
+    }
+}
+
+impl Default for SolidityParser {
+    fn default() -> Self {
+        Self::new()
     }
 }

@@ -112,12 +112,12 @@ pub fn references_in_source(source: &str, name: &str) -> Vec<ReferenceLocation> 
                 || !line[pos - 1..pos]
                     .chars()
                     .next()
-                    .map_or(false, |c| c.is_ascii_alphanumeric() || c == '_');
+                    .is_some_and(|c| c.is_ascii_alphanumeric() || c == '_');
             let word_bound_after = after.is_empty()
                 || !after
                     .chars()
                     .next()
-                    .map_or(false, |c| c.is_ascii_alphanumeric() || c == '_');
+                    .is_some_and(|c| c.is_ascii_alphanumeric() || c == '_');
             if word_bound_before && word_bound_after && after.starts_with('(') {
                 let column_0 = line[..pos].chars().count();
                 refs.push(ReferenceLocation {

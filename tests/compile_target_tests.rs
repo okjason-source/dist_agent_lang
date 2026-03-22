@@ -204,6 +204,7 @@ fn test_run_compile_blockchain_backend() {
     let source = r#"
 @secure
 @trust("hybrid")
+@chain("ethereum")
 service Token @compile_target("blockchain") {
     fn transfer(to: string, amount: int) { }
 }
@@ -252,6 +253,90 @@ service Token @compile_target("blockchain") {
         Err(CompileError::Parse(_)) => {
             // Parser/attribute validation may fail in some configurations
         }
+        Err(e) => panic!("unexpected error: {}", e),
+    }
+}
+
+#[test]
+fn test_hybrid_blockchain_autosplits_auth_namespace_for_http_artifacts() {
+    let source = r#"
+@secure
+@trust("hybrid")
+@chain("ethereum")
+service Token @compile_target("blockchain") {
+    fn transfer(to: string, amount: int) {
+        let session = auth::session("user1", ["user"]);
+        chain::call(1, "0x1234", "transfer", {"to": to, "amount": amount});
+    }
+}
+"#;
+    let dir = tempfile::tempdir().unwrap();
+    let entry = dir.path().join("main.dal");
+    let out = dir.path().join("out");
+    std::fs::create_dir_all(&out).unwrap();
+
+    let result = run_compile(entry, CompilationTarget::Blockchain, out, source);
+    match result {
+        Ok(artifacts) => {
+            let has_http_split = artifacts
+                .artifact_paths
+                .iter()
+                .any(|p| p.extension().map(|e| e == "json").unwrap_or(false));
+            assert!(
+                has_http_split,
+                "expected HTTP split artifact for auth-routed block, got {:?}",
+                artifacts.artifact_paths
+            );
+        }
+        Err(CompileError::CompilerNotFound { .. }) => {
+            // solc missing is acceptable here; critical assertion is no Parse rejection.
+        }
+        Err(CompileError::Parse(msg)) => panic!(
+            "hybrid auth block should be auto-split, not parse-failed: {}",
+            msg
+        ),
+        Err(e) => panic!("unexpected error: {}", e),
+    }
+}
+
+#[test]
+fn test_hybrid_blockchain_autosplits_cloudadmin_namespace_for_http_artifacts() {
+    let source = r#"
+@secure
+@trust("hybrid")
+@chain("ethereum")
+service Governance @compile_target("blockchain") {
+    fn rebalance() {
+        cloudadmin::authorize("admin", "rebalance", "vault");
+        chain::call(1, "0x1234", "rebalance", {});
+    }
+}
+"#;
+    let dir = tempfile::tempdir().unwrap();
+    let entry = dir.path().join("main.dal");
+    let out = dir.path().join("out");
+    std::fs::create_dir_all(&out).unwrap();
+
+    let result = run_compile(entry, CompilationTarget::Blockchain, out, source);
+    match result {
+        Ok(artifacts) => {
+            let has_http_split = artifacts
+                .artifact_paths
+                .iter()
+                .any(|p| p.extension().map(|e| e == "json").unwrap_or(false));
+            assert!(
+                has_http_split,
+                "expected HTTP split artifact for cloudadmin-routed block, got {:?}",
+                artifacts.artifact_paths
+            );
+        }
+        Err(CompileError::CompilerNotFound { .. }) => {
+            // solc missing is acceptable here; critical assertion is no Parse rejection.
+        }
+        Err(CompileError::Parse(msg)) => panic!(
+            "hybrid cloudadmin block should be auto-split, not parse-failed: {}",
+            msg
+        ),
         Err(e) => panic!("unexpected error: {}", e),
     }
 }

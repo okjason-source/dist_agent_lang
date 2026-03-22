@@ -26,6 +26,7 @@ use dist_agent_lang::stdlib::service;
 use dist_agent_lang::stdlib::sync;
 use dist_agent_lang::stdlib::trust;
 use dist_agent_lang::stdlib::web;
+use dist_agent_lang::{parse_source, Runtime};
 use std::collections::HashMap;
 
 // Test-only credentials: loaded from env when set to avoid hard-coded crypto values in CI
@@ -75,8 +76,15 @@ fn test_auth_password_strong() -> String {
 // CHAIN MODULE TESTS
 // ============================================
 
+fn disable_strict_chain_mode_for_test() {
+    std::env::remove_var("DAL_CHAIN_STRICT");
+    std::env::remove_var("DAL_CHAIN_STRICT_FROM_TRUST_MODE");
+}
+
 #[test]
+#[serial_test::serial]
 fn test_chain_get_supported_chains() {
+    disable_strict_chain_mode_for_test();
     let chains = chain::get_supported_chains();
 
     // Should return multiple chains
@@ -89,7 +97,9 @@ fn test_chain_get_supported_chains() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_chain_get_chain_config() {
+    disable_strict_chain_mode_for_test();
     // Test Ethereum Mainnet
     let eth_config = chain::get_chain_config(1);
     assert!(eth_config.is_some());
@@ -106,7 +116,9 @@ fn test_chain_get_chain_config() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_chain_deploy_contract() {
+    disable_strict_chain_mode_for_test();
     let mut args = HashMap::new();
     args.insert("name".to_string(), "TestToken".to_string());
     args.insert("symbol".to_string(), "TST".to_string());
@@ -119,7 +131,9 @@ fn test_chain_deploy_contract() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_chain_call_contract() {
+    disable_strict_chain_mode_for_test();
     let mut args = HashMap::new();
     args.insert("to".to_string(), "0x5678".to_string());
     args.insert("amount".to_string(), "1000000000000000000".to_string());
@@ -132,7 +146,9 @@ fn test_chain_call_contract() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_chain_get_balance() {
+    disable_strict_chain_mode_for_test();
     // Test with valid address format (should not overflow)
     let balance = chain::get_balance(1, "0x1234567890abcdef1234567890abcdef12345678".to_string());
 
@@ -149,7 +165,9 @@ fn test_chain_get_balance() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_chain_get_transaction_status() {
+    disable_strict_chain_mode_for_test();
     // Test confirmed transaction
     let status1 = chain::get_transaction_status(
         1,
@@ -163,7 +181,9 @@ fn test_chain_get_transaction_status() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_chain_estimate_gas() {
+    disable_strict_chain_mode_for_test();
     let gas = chain::estimate_gas(1, "transfer".to_string());
 
     // Should return gas estimate
@@ -171,7 +191,9 @@ fn test_chain_estimate_gas() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_chain_mint_asset() {
+    disable_strict_chain_mode_for_test();
     let mut metadata = HashMap::new();
     metadata.insert("description".to_string(), "Test NFT".to_string());
     metadata.insert("image".to_string(), "ipfs://test".to_string());
@@ -183,7 +205,9 @@ fn test_chain_mint_asset() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_chain_multi_chain_operations() {
+    disable_strict_chain_mode_for_test();
     // Test operations on different chains
     let eth_result = chain::call(
         1,
@@ -201,6 +225,153 @@ fn test_chain_multi_chain_operations() {
     // Both should succeed
     assert!(eth_result.contains("success"));
     assert!(polygon_result.contains("success"));
+}
+
+#[test]
+#[serial_test::serial]
+fn test_chain_call_strict_policy_requires_calldata() {
+    std::env::set_var("DAL_CHAIN_STRICT", "1");
+    let result = chain::call(
+        1,
+        "0x1234".to_string(),
+        "transfer".to_string(),
+        HashMap::new(),
+    );
+    std::env::remove_var("DAL_CHAIN_STRICT");
+    assert!(result.contains("error: strict chain policy"));
+    assert!(result.contains("data or calldata"));
+}
+
+#[test]
+#[serial_test::serial]
+fn test_chain_deploy_strict_policy_requires_signed_tx() {
+    std::env::set_var("DAL_CHAIN_STRICT", "1");
+    let result = chain::deploy(1, "TestToken".to_string(), HashMap::new());
+    std::env::remove_var("DAL_CHAIN_STRICT");
+    assert!(result.contains("error: strict chain policy"));
+    assert!(result.contains("raw_transaction or signed_tx"));
+}
+
+#[test]
+#[serial_test::serial]
+fn test_chain_transaction_status_strict_policy_requires_rpc_receipt() {
+    std::env::set_var("DAL_CHAIN_STRICT", "1");
+    let result = chain::get_transaction_status(
+        1,
+        "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12".to_string(),
+    );
+    std::env::remove_var("DAL_CHAIN_STRICT");
+    assert!(result.contains("error: strict chain policy"));
+    assert!(result.contains("RPC transaction receipt"));
+}
+
+#[test]
+#[serial_test::serial]
+fn test_chain_block_hash_strict_policy_requires_rpc_hash() {
+    std::env::set_var("DAL_CHAIN_STRICT", "1");
+    let result = chain::get_block_hash(1);
+    std::env::remove_var("DAL_CHAIN_STRICT");
+    assert!(result.contains("error: strict chain policy"));
+    assert!(result.contains("RPC-backed block hash"));
+}
+
+#[test]
+#[serial_test::serial]
+fn test_chain_estimate_gas_strict_policy_disables_synthetic_fallback() {
+    std::env::set_var("DAL_CHAIN_STRICT", "1");
+    let result = chain::estimate_gas(1, "transfer".to_string());
+    std::env::remove_var("DAL_CHAIN_STRICT");
+    assert_eq!(result, -1);
+}
+
+#[test]
+#[serial_test::serial]
+fn test_chain_get_balance_strict_policy_disables_synthetic_fallback() {
+    std::env::set_var("DAL_CHAIN_STRICT", "1");
+    let result = chain::get_balance(1, "0x1234567890abcdef1234567890abcdef12345678".to_string());
+    std::env::remove_var("DAL_CHAIN_STRICT");
+    assert_eq!(result, -1);
+}
+
+#[test]
+#[serial_test::serial]
+fn test_chain_get_block_timestamp_strict_policy_disables_synthetic_fallback() {
+    std::env::set_var("DAL_CHAIN_STRICT", "1");
+    let result = chain::get_block_timestamp(1);
+    std::env::remove_var("DAL_CHAIN_STRICT");
+    assert_eq!(result, -1);
+}
+
+#[test]
+#[serial_test::serial]
+fn test_runtime_chain_call_typed_returns_evidence_map_fields() {
+    let code = r#"
+let result = chain::call_typed(999999, "0x000000000000000000000000000000000000dead", "balanceOf", {});
+return result;
+"#;
+    let program = parse_source(code).expect("parse_source should succeed");
+    let mut runtime = Runtime::new();
+    runtime.set_current_service(
+        "TypedRuntimeHarness".to_string(),
+        vec![
+            "@trust(\"hybrid\")".to_string(),
+            "@chain(\"ethereum\")".to_string(),
+        ],
+    );
+    let result = runtime
+        .execute_program(program, None)
+        .expect("execute_program should succeed")
+        .unwrap_or(Value::Null);
+    let map = match result {
+        Value::Map(m) => m,
+        other => panic!("expected map from chain::call_typed, got {:?}", other),
+    };
+
+    assert_eq!(
+        map.get("error_code"),
+        Some(&Value::String("CHAIN_UNSUPPORTED".to_string()))
+    );
+    assert_eq!(map.get("result_hex"), Some(&Value::Null));
+    assert_eq!(map.get("decoded"), Some(&Value::Null));
+    assert_eq!(map.get("decode_error"), Some(&Value::Null));
+    assert_eq!(map.get("tx_hash"), Some(&Value::Null));
+    assert_eq!(map.get("receipt_status"), Some(&Value::Null));
+    assert_eq!(map.get("revert_data"), Some(&Value::Null));
+}
+
+#[test]
+#[serial_test::serial]
+fn test_runtime_chain_deploy_typed_returns_evidence_map_fields() {
+    let code = r#"
+let result = chain::deploy_typed(999999, "TestContract", {});
+return result;
+"#;
+    let program = parse_source(code).expect("parse_source should succeed");
+    let mut runtime = Runtime::new();
+    runtime.set_current_service(
+        "TypedRuntimeHarness".to_string(),
+        vec![
+            "@trust(\"hybrid\")".to_string(),
+            "@chain(\"ethereum\")".to_string(),
+        ],
+    );
+    let result = runtime
+        .execute_program(program, None)
+        .expect("execute_program should succeed")
+        .unwrap_or(Value::Null);
+    let map = match result {
+        Value::Map(m) => m,
+        other => panic!("expected map from chain::deploy_typed, got {:?}", other),
+    };
+
+    assert_eq!(
+        map.get("error_code"),
+        Some(&Value::String("CHAIN_UNSUPPORTED".to_string()))
+    );
+    assert_eq!(map.get("contract_address"), Some(&Value::Null));
+    assert_eq!(map.get("tx_hash"), Some(&Value::Null));
+    assert_eq!(map.get("receipt_status"), Some(&Value::Null));
+    assert_eq!(map.get("revert_data"), Some(&Value::Null));
 }
 
 // ============================================
@@ -1841,6 +2012,63 @@ fn test_add_sol_call_with_abi() {
 
     let result = add_sol::call_with_abi(&contract, "transfer".to_string(), args);
     assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_add_sol_call_with_abi_surfaces_typed_chain_error_projection() {
+    let abi_json = r#"[
+        {
+            "type": "function",
+            "name": "transfer",
+            "inputs": [{"name": "to", "type": "address"}, {"name": "amount", "type": "uint256"}]
+        }
+    ]"#;
+
+    // Unsupported chain forces chain::call_typed CHAIN_UNSUPPORTED path.
+    let contract = add_sol::register_contract(
+        "TestContract".to_string(),
+        "0x1234".to_string(),
+        999_999,
+        Some(abi_json.to_string()),
+    );
+
+    let mut args = HashMap::new();
+    args.insert("to".to_string(), Value::String("0x5678".to_string()));
+    args.insert("amount".to_string(), Value::String("1000".to_string()));
+
+    let result = add_sol::call_with_abi(&contract, "transfer".to_string(), args)
+        .expect("call_with_abi should return projected typed error message");
+    assert_eq!(result, "error: chain not supported");
+}
+
+#[test]
+fn test_add_sol_call_with_abi_typed_surfaces_decoded_and_evidence_contract() {
+    let abi_json = r#"[
+        {
+            "type": "function",
+            "name": "transfer",
+            "inputs": [{"name": "to", "type": "address"}, {"name": "amount", "type": "uint256"}],
+            "outputs": [{"name": "ok", "type": "bool"}]
+        }
+    ]"#;
+
+    let contract = add_sol::register_contract(
+        "TestContract".to_string(),
+        "0x1234".to_string(),
+        999_999,
+        Some(abi_json.to_string()),
+    );
+
+    let mut args = HashMap::new();
+    args.insert("to".to_string(), Value::String("0x5678".to_string()));
+    args.insert("amount".to_string(), Value::String("1000".to_string()));
+
+    let result = add_sol::call_with_abi_typed(&contract, "transfer".to_string(), args)
+        .expect("call_with_abi_typed should return typed chain envelope");
+    assert_eq!(result.error_code, Some("CHAIN_UNSUPPORTED".to_string()));
+    assert_eq!(result.result_hex, None);
+    assert_eq!(result.decoded, Value::Null);
+    assert_eq!(result.decode_error, None);
 }
 
 // ============================================

@@ -63,51 +63,6 @@ fn test_fuzz_parser_crash_deep_nesting_y_no_panic() {
         .unwrap();
 }
 
-/// Run parser on a crash artifact file to reproduce the failure (for debugging).
-/// Run with: cargo test --test fuzz_regression_tests test_fuzz_parser_crash_artifact_repro -- --ignored --nocapture
-/// Uses 8MB stack so recursion limit triggers before stack overflow.
-#[test]
-#[ignore] // run manually to reproduce
-fn test_fuzz_parser_crash_artifact_repro() {
-    let path = "fuzz/artifacts/fuzz_parser/crash-4a6efcfc0987cd7ded43c9b78bb300e7e63953c4";
-    let input = match std::fs::read_to_string(path) {
-        Ok(s) => s,
-        Err(_) => {
-            eprintln!("Crash file not found, skipping");
-            return;
-        }
-    };
-    std::thread::Builder::new()
-        .stack_size(8 * 1024 * 1024)
-        .spawn(move || {
-            eprintln!("Input length: {} bytes", input.len());
-            let lexer = Lexer::new(&input);
-            let tokens_with_pos = match lexer.tokenize_with_positions_immutable() {
-                Ok(t) => t,
-                Err(e) => {
-                    eprintln!("Lexer error: {:?}", e);
-                    return;
-                }
-            };
-            eprintln!("Tokens: {}", tokens_with_pos.len());
-            let mut parser = Parser::new_with_positions(tokens_with_pos);
-            let result = parser.parse();
-            eprintln!("Parse result: {:?}", result);
-            // Should get recursion error, not panic/overflow
-            if let Err(e) = &result {
-                assert!(
-                    format!("{:?}", e).contains("recursion")
-                        || format!("{:?}", e).contains("depth"),
-                    "Expected recursion/depth error, got: {:?}",
-                    e
-                );
-            }
-        })
-        .unwrap()
-        .join()
-        .unwrap();
-}
-
 /// Parser try/catch crash artifacts: deeply nested try { } c try { } ... caused stack overflow
 /// because try/catch/finally did not pass depth. Fixed by passing depth through parse_try_statement.
 /// Fuzz harness now uses 8 MiB stack so recursion limit triggers before overflow; fuzzing continues.
@@ -514,7 +469,7 @@ fn test_route_attributes_count() {
                 count_route_in_block(&i.consequence)
                     + i.alternative
                         .as_ref()
-                        .map(|a| count_route_in_block(a))
+                        .map(count_route_in_block)
                         .unwrap_or(0)
             }
             Statement::While(w) => count_route_in_block(&w.body),

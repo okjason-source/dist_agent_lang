@@ -67,7 +67,7 @@ jobs:
           components: clippy
 
       - name: Run Clippy
-        run: cargo clippy --all-targets
+        run: cargo clippy --all-targets -- -D clippy::not_unsafe_ptr_arg_deref
 
   fmt-check:
     name: Code Formatting Check

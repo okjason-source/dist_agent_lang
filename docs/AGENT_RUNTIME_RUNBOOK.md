@@ -11,8 +11,9 @@ Operational runbook for host-protocol agent runtime (project baseline).
    - `route`, `policy`
    - `steps_used`, `max_steps_reached`
    - `guard_stopped`
-2. Check API diagnostics payloads (`respond_with_tools_result`):
+2. Check API diagnostics payloads (`agent_run` / `respond_with_tools_result`):
    - `route`, `policy`, `tool_trace`
+   - `termination_reason`, `guard_stopped`
    - `observability.legacy_text_protocol_enabled`
    - `observability.native_tool_calling_enabled`
 3. Confirm environment toggles in the running process.
@@ -132,9 +133,10 @@ Use this quick loop after deploy or during an incident to verify controls are li
        -d '{"content":"Run echo hello","sender_id":"web","policy":"tool_loop"}' | python3 -m json.tool
      ```
 2. **Observability field check**
-   - Call a path that uses `ai::respond_with_tools_result`.
+   - Call a path that uses `ai::agent_run` (or legacy-compatible `ai::respond_with_tools_result`).
    - Confirm diagnostics include:
      - `route`, `policy`, `tool_trace`
+     - `termination_reason`, `guard_stopped`
      - `observability.legacy_text_protocol_enabled`
      - `observability.native_tool_calling_enabled`
    - Example:

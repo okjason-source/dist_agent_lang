@@ -873,6 +873,12 @@ impl StateIsolationManager {
     }
 }
 
+impl Default for StateIsolationManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

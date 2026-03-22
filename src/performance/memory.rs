@@ -181,6 +181,12 @@ impl MemoryManager {
     }
 }
 
+impl Default for MemoryManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Global memory manager instance
 lazy_static::lazy_static! {
     static ref GLOBAL_MEMORY_MANAGER: Arc<MemoryManager> = Arc::new(MemoryManager::new());

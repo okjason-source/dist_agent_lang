@@ -53,7 +53,7 @@ jobs:
       run: cargo fmt --all -- --check
 
     - name: Clippy lints
-      run: cargo clippy --all-targets
+      run: cargo clippy --all-targets -- -D clippy::not_unsafe_ptr_arg_deref
 
   test:
     name: Test Suite
@@ -92,6 +92,94 @@ jobs:
 
     - name: Run tests with optional features
       run: cargo test --features "http-interface,web3,sqlite-storage,c-ffi" --verbose
+
+  trust-split-fast:
+    name: Trust Split Fast Gate
+    runs-on: ubuntu-latest
+    needs: [check]
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Fix CA cert path for Cargo/curl
+      run: |
+        sudo mkdir -p /usr/local/etc/ca-certificates
+        sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+        sudo update-ca-certificates
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Run trust-split gate suite (with logs)
+      run: |
+        mkdir -p .artifacts/trust-split-fast
+        set -o pipefail
+        cargo test --test trust_split_validation_tests --verbose 2>&1 | tee .artifacts/trust-split-fast/trust_split_validation_tests.log
+        cargo test --test trust_split_validation_tests decentralized_v1_rejects_try_catch_constructs --verbose 2>&1 | tee .artifacts/trust-split-fast/decentralized_v1_unsupported_construct_gate.log
+        cargo test --test trust_split_validation_tests decentralized_v1_allows_critical_subset_constructs --verbose 2>&1 | tee .artifacts/trust-split-fast/decentralized_v1_supported_subset_gate.log
+        cargo test --lib compile::blockchain::tests::decentralized_v1_generates_non_stub_method_body_for_supported_pattern --verbose 2>&1 | tee .artifacts/trust-split-fast/decentralized_v1_non_stub_codegen.log
+        cargo test --lib compile::blockchain::tests::decentralized_v1_rejects_codegen_for_unsupported_method_pattern --verbose 2>&1 | tee .artifacts/trust-split-fast/decentralized_v1_codegen_unsupported_pattern.log
+        cargo test --lib compile::blockchain::tests::decentralized_v1_infers_local_types_for_binary_and_identifier_flows --verbose 2>&1 | tee .artifacts/trust-split-fast/decentralized_v1_local_inference_codegen.log
+        cargo test --lib compile::blockchain::tests::decentralized_v1_emits_field_initializers_when_supported --verbose 2>&1 | tee .artifacts/trust-split-fast/decentralized_v1_field_initializer_codegen.log
+        cargo test --lib compile::blockchain::tests::decentralized_v1_lowers_unary_and_boolean_expression_family --verbose 2>&1 | tee .artifacts/trust-split-fast/decentralized_v1_unary_boolean_codegen.log
+        cargo test --lib compile::blockchain::tests::decentralized_v1_equivalence_shape_for_state_update_path --verbose 2>&1 | tee .artifacts/trust-split-fast/decentralized_v1_equivalence_shape.log
+        cargo test --test stdlib_tests test_chain_call_strict_policy_requires_calldata --verbose 2>&1 | tee .artifacts/trust-split-fast/strict_call_requires_calldata.log
+        cargo test --test stdlib_tests test_chain_deploy_strict_policy_requires_signed_tx --verbose 2>&1 | tee .artifacts/trust-split-fast/strict_deploy_requires_signed_tx.log
+        cargo test --test stdlib_tests test_chain_transaction_status_strict_policy_requires_rpc_receipt --verbose 2>&1 | tee .artifacts/trust-split-fast/strict_tx_status_requires_receipt.log
+        cargo test --test stdlib_tests test_chain_block_hash_strict_policy_requires_rpc_hash --verbose 2>&1 | tee .artifacts/trust-split-fast/strict_block_hash_requires_rpc.log
+        cargo test --test stdlib_tests test_chain_estimate_gas_strict_policy_disables_synthetic_fallback --verbose 2>&1 | tee .artifacts/trust-split-fast/strict_estimate_gas_no_fallback.log
+        cargo test --test stdlib_tests test_chain_get_balance_strict_policy_disables_synthetic_fallback --verbose 2>&1 | tee .artifacts/trust-split-fast/strict_get_balance_no_fallback.log
+        cargo test --test stdlib_tests test_chain_get_block_timestamp_strict_policy_disables_synthetic_fallback --verbose 2>&1 | tee .artifacts/trust-split-fast/strict_block_timestamp_no_fallback.log
+        cargo test --lib stdlib::abi::tests --verbose 2>&1 | tee .artifacts/trust-split-fast/typed_selector_utility_tests.log
+        cargo test --lib stdlib::abi_codec::tests --verbose 2>&1 | tee .artifacts/trust-split-fast/typed_abi_codec_surface_tests.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::public_typed_api_surfaces_chain_unsupported_with_typed_error_code --verbose 2>&1 | tee .artifacts/trust-split-fast/public_typed_chain_api_bridge.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::public_typed_api_chain_unsupported_preserves_evidence_contract --verbose 2>&1 | tee .artifacts/trust-split-fast/public_typed_chain_evidence_contract.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::legacy_and_typed_wrappers_remain_behaviorally_aligned --verbose 2>&1 | tee .artifacts/trust-split-fast/typed_legacy_wrapper_parity.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::typed_response_envelopes_capture_evidence_fields --verbose 2>&1 | tee .artifacts/trust-split-fast/typed_evidence_envelope_fields.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::dynamic_string_return_decode_vectors --verbose 2>&1 | tee .artifacts/trust-split-fast/dynamic_string_decode_vectors.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::revert_data_decode_parity_vectors_for_error_string_and_panic --verbose 2>&1 | tee .artifacts/trust-split-fast/revert_data_decode_parity_vectors.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::dynamic_bytes_return_decode_vectors --verbose 2>&1 | tee .artifacts/trust-split-fast/dynamic_bytes_decode_vectors.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::static_tuple_decode_parity_vectors_for_address_uint_bool --verbose 2>&1 | tee .artifacts/trust-split-fast/static_tuple_decode_parity_vectors.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::nested_dynamic_tuple_decode_parity_vectors --verbose 2>&1 | tee .artifacts/trust-split-fast/nested_dynamic_tuple_decode_vectors.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::selector_mismatch_rejection_vectors_for_custom_error_payloads --verbose 2>&1 | tee .artifacts/trust-split-fast/selector_mismatch_rejection_vectors.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::dynamic_and_revert_decode_reject_malformed_payload_vectors --verbose 2>&1 | tee .artifacts/trust-split-fast/malformed_payload_rejection_vectors.log
+        cargo test --lib stdlib::add_sol::tests --verbose 2>&1 | tee .artifacts/trust-split-fast/add_sol_typed_decode_surface_tests.log
+        cargo test --test stdlib_tests test_add_sol_call_with_abi_surfaces_typed_chain_error_projection --verbose 2>&1 | tee .artifacts/trust-split-fast/add_sol_typed_projection.log
+        cargo test --test stdlib_tests test_add_sol_call_with_abi_typed_surfaces_decoded_and_evidence_contract --verbose 2>&1 | tee .artifacts/trust-split-fast/add_sol_typed_map_contract.log
+        cargo test --test stdlib_tests test_runtime_chain_call_typed_returns_evidence_map_fields --verbose 2>&1 | tee .artifacts/trust-split-fast/runtime_call_typed_map_fields.log
+        cargo test --test stdlib_tests test_runtime_chain_deploy_typed_returns_evidence_map_fields --verbose 2>&1 | tee .artifacts/trust-split-fast/runtime_deploy_typed_map_fields.log
+        cargo test --lib abi_golden_vectors --verbose 2>&1 | tee .artifacts/trust-split-fast/abi_golden_vectors.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::selector_reference_parity_matrix_for_selected_signatures --verbose 2>&1 | tee .artifacts/trust-split-fast/h3_selector_reference_parity_matrix.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::supports_interface_bytes4_calldata_layout_matches_reference_vector --verbose 2>&1 | tee .artifacts/trust-split-fast/h3_supports_interface_bytes4_layout.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::deploy_result_to_value_map_provenance_contract_has_exact_keys --verbose 2>&1 | tee .artifacts/trust-split-fast/h4_deploy_provenance_key_contract.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::call_result_to_value_map_provenance_contract_has_exact_keys --verbose 2>&1 | tee .artifacts/trust-split-fast/h4_call_provenance_key_contract.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::deploy_result_audit_evidence_includes_context_and_provenance --verbose 2>&1 | tee .artifacts/trust-split-fast/h4_deploy_audit_evidence.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::call_result_audit_evidence_includes_context_and_provenance --verbose 2>&1 | tee .artifacts/trust-split-fast/h4_call_audit_evidence.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::typed_chain_error_code_tokens_are_unique --verbose 2>&1 | tee .artifacts/trust-split-fast/h4_error_taxonomy_uniqueness.log
+        cargo test --lib stdlib::chain::abi_golden_vectors::chain_arg_map_from_runtime_values_preserves_chain_kwarg_contract --verbose 2>&1 | tee .artifacts/trust-split-fast/h4_chain_kwargs_bridge.log
+        cargo test --lib runtime::values::tests::to_chain_arg_string --verbose 2>&1 | tee .artifacts/trust-split-fast/h4_value_chain_arg_coercion.log
+
+    - name: Upload trust-split gate logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: trust-split-fast-logs-${{ github.run_id }}
+        path: .artifacts/trust-split-fast
 
   build:
     name: Build Release

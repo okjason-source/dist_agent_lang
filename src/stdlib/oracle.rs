@@ -236,6 +236,12 @@ impl OracleSecurityManager {
     }
 }
 
+impl Default for OracleSecurityManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OracleConsensus {
     pub fn new(sources: Vec<String>, threshold: f64) -> Self {
         Self {

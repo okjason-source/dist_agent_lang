@@ -411,6 +411,12 @@ impl MEVProtectionManager {
     }
 }
 
+impl Default for MEVProtectionManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum MEVProtectionType {
     CommitReveal,
@@ -650,7 +656,7 @@ impl TimeLockManager {
     /// Check if function is time-locked
     pub fn check_lock(&self, function_name: &str) -> Result<(), RuntimeError> {
         // Check if this function type has a time-lock configuration
-        for (operation_type, _config) in &self.time_lock_configs {
+        for operation_type in self.time_lock_configs.keys() {
             if function_name.contains(operation_type) {
                 // Check if there's an active lock for this specific function
                 let lock_key = format!("{}:{}", operation_type, function_name);
@@ -673,6 +679,12 @@ impl TimeLockManager {
         }
 
         Ok(())
+    }
+}
+
+impl Default for TimeLockManager {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -894,6 +906,12 @@ impl FormalVerificationManager {
     }
 }
 
+impl Default for FormalVerificationManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1028,5 +1046,11 @@ impl AdvancedSecurityManager {
             // No specification exists, skip verification
             Ok(())
         }
+    }
+}
+
+impl Default for AdvancedSecurityManager {
+    fn default() -> Self {
+        Self::new()
     }
 }

@@ -128,7 +128,7 @@ impl PasswordHasher {
         // Outer hash
         let mut outer_hasher = Sha256::new();
         outer_hasher.update(&opad);
-        outer_hasher.update(&inner_hash);
+        outer_hasher.update(inner_hash);
 
         outer_hasher.finalize().to_vec()
     }
@@ -547,6 +547,12 @@ impl SecureUserStore {
             && password.chars().any(|c| c.is_ascii_uppercase())
             && password.chars().any(|c| c.is_ascii_digit())
             && password.chars().any(|c| !c.is_alphanumeric())
+    }
+}
+
+impl Default for SecureUserStore {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

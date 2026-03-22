@@ -9,13 +9,13 @@ mod wasm;
 
 use crate::lexer::tokens::CompilationTarget;
 use crate::module_resolver::{ModuleResolver, ResolvedImport};
-use crate::parser::ast::{Program, ServiceStatement, Statement};
+use crate::parser::ast::{BlockStatement, Expression, Program, ServiceStatement, Statement};
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 thread_local! {
-    static COMPILER_AVAILABLE_OVERRIDE: RefCell<Option<bool>> = RefCell::new(None);
+    static COMPILER_AVAILABLE_OVERRIDE: RefCell<Option<bool>> = const { RefCell::new(None) };
 }
 
 /// Returns the current override if set (used by backend check functions).
@@ -48,6 +48,41 @@ pub struct CompileOptions {
     pub entry_path: PathBuf,
     pub target: CompilationTarget,
     pub output_dir: PathBuf,
+    pub trust_mode: TrustCompileMode,
+}
+
+/// Trust mode profile for compile-time policy checks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TrustCompileMode {
+    /// Use per-service @trust attribute to decide policy.
+    Auto,
+    /// Force decentralized policy checks on selected services.
+    Decentralized,
+    /// Force hybrid mode (no decentralized-only restrictions).
+    Hybrid,
+    /// Force centralized mode (no decentralized-only restrictions).
+    Centralized,
+}
+
+impl TrustCompileMode {
+    #[allow(clippy::should_implement_trait)]
+    pub fn from_str(value: &str) -> Option<Self> {
+        match value.trim().to_ascii_lowercase().as_str() {
+            "auto" => Some(Self::Auto),
+            "decentralized" => Some(Self::Decentralized),
+            "hybrid" => Some(Self::Hybrid),
+            "centralized" => Some(Self::Centralized),
+            _ => None,
+        }
+    }
+}
+
+impl std::str::FromStr for TrustCompileMode {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        TrustCompileMode::from_str(s).ok_or(())
+    }
 }
 
 /// Compile driver error.
@@ -65,6 +100,8 @@ pub enum CompileError {
     Backend(String),
     /// Import resolution failed (cycle, missing file, etc.)
     Resolve(String),
+    /// Trust/profile policy check failed before backend compile.
+    Policy(String),
 }
 
 impl std::fmt::Display for CompileError {
@@ -80,6 +117,7 @@ impl std::fmt::Display for CompileError {
             }
             CompileError::Backend(s) => write!(f, "Backend error: {}", s),
             CompileError::Resolve(s) => write!(f, "Import resolution failed: {}", s),
+            CompileError::Policy(s) => write!(f, "Policy check failed: {}", s),
         }
     }
 }
@@ -199,6 +237,23 @@ pub fn run_compile(
     output_dir: PathBuf,
     source: &str,
 ) -> Result<CompileArtifacts, CompileError> {
+    run_compile_with_mode(
+        entry_path,
+        target,
+        output_dir,
+        source,
+        TrustCompileMode::Auto,
+    )
+}
+
+/// Run compiler with explicit trust-mode profile.
+pub fn run_compile_with_mode(
+    entry_path: PathBuf,
+    target: CompilationTarget,
+    output_dir: PathBuf,
+    source: &str,
+    trust_mode: TrustCompileMode,
+) -> Result<CompileArtifacts, CompileError> {
     let program = crate::parse_source(source).map_err(|e| CompileError::Parse(e.to_string()))?;
 
     let program = if program
@@ -247,10 +302,13 @@ pub fn run_compile(
         target: target.to_string(),
     })?;
 
+    validate_trust_policy_for_services(&services, &target, trust_mode)?;
+
     let opts = CompileOptions {
         entry_path: entry_path.clone(),
         target,
         output_dir: output_dir.clone(),
+        trust_mode,
     };
 
     let artifacts = backend.compile(&program, &services, &opts)?;
@@ -265,4 +323,377 @@ pub fn run_compile(
     std::fs::write(manifest_path, manifest.to_string()).map_err(CompileError::Io)?;
 
     Ok(artifacts)
+}
+
+fn service_declares_decentralized(service: &ServiceStatement) -> bool {
+    service.attributes.iter().any(|attr| {
+        attr.name == "@trust"
+            && attr
+                .parameters
+                .first()
+                .and_then(expression_to_string_literal)
+                == Some("decentralized")
+    })
+}
+
+fn expression_to_string_literal(expr: &Expression) -> Option<&str> {
+    use crate::lexer::tokens::Literal;
+    if let Expression::Literal(Literal::String(s)) = expr {
+        Some(s.as_str())
+    } else {
+        None
+    }
+}
+
+fn validate_trust_policy_for_services(
+    services: &[&ServiceStatement],
+    target: &CompilationTarget,
+    mode: TrustCompileMode,
+) -> Result<(), CompileError> {
+    let should_validate_service = |service: &ServiceStatement| match mode {
+        TrustCompileMode::Auto => service_declares_decentralized(service),
+        TrustCompileMode::Decentralized => true,
+        TrustCompileMode::Hybrid | TrustCompileMode::Centralized => false,
+    };
+
+    for service in services {
+        if !should_validate_service(service) {
+            continue;
+        }
+        validate_decentralized_service(service, target)?;
+    }
+    Ok(())
+}
+
+fn validate_decentralized_service(
+    service: &ServiceStatement,
+    target: &CompilationTarget,
+) -> Result<(), CompileError> {
+    let forbidden = ["ai", "sh", "web", "http", "oracle", "agent", "cloudadmin"];
+    for method in &service.methods {
+        let namespaces = collect_namespaces_from_block(&method.body);
+        let mut violating: Vec<String> = namespaces
+            .into_iter()
+            .filter(|ns| forbidden.contains(&ns.as_str()))
+            .collect();
+        if !violating.is_empty() {
+            violating.sort();
+            violating.dedup();
+            return Err(CompileError::Policy(format!(
+                "Service '{}' (decentralized mode) method '{}' uses disallowed namespace(s): {:?}. \
+Allowed approach: keep on-chain deterministic logic in decentralized services and move orchestration/AI/tooling to hybrid or centralized services.",
+                service.name, method.name, violating
+            )));
+        }
+        let unsupported = collect_decentralized_v1_unsupported_constructs(&method.body);
+        if !unsupported.is_empty() {
+            return Err(CompileError::Policy(format!(
+                "Service '{}' (decentralized mode) method '{}' uses unsupported decentralized-v1 construct(s): [{}]. \
+Supported in v1: deterministic let/return/if/event/assign/call expressions only. \
+Move orchestration/dynamic behavior to hybrid or centralized services.",
+                service.name,
+                method.name,
+                unsupported.join(", ")
+            )));
+        }
+        if method.is_async {
+            return Err(CompileError::Policy(format!(
+                "Service '{}' (decentralized mode) method '{}' cannot be async in decentralized-v1 subset.",
+                service.name, method.name
+            )));
+        }
+    }
+    if *target == CompilationTarget::Blockchain {
+        let unsupported_fields: Vec<String> = service
+            .fields
+            .iter()
+            .filter(|f| !is_decentralized_v1_supported_type(&f.field_type))
+            .map(|f| format!("{}: {}", f.name, f.field_type))
+            .collect();
+        if !unsupported_fields.is_empty() {
+            return Err(CompileError::Policy(format!(
+                "Service '{}' (decentralized mode) has unsupported decentralized-v1 field type(s): [{}]. \
+Supported field types: int, bool, string, address, bytes32, map<address,int>, map<string,int>.",
+                service.name,
+                unsupported_fields.join(", ")
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn is_decentralized_v1_supported_type(field_type: &str) -> bool {
+    let t = field_type.trim().to_ascii_lowercase();
+    matches!(
+        t.as_str(),
+        "int" | "bool" | "string" | "address" | "bytes32" | "map<address,int>" | "map<string,int>"
+    )
+}
+
+fn collect_decentralized_v1_unsupported_constructs(block: &BlockStatement) -> Vec<String> {
+    let mut unsupported = std::collections::HashSet::new();
+    for stmt in &block.statements {
+        collect_unsupported_from_statement(stmt, &mut unsupported);
+    }
+    let mut out: Vec<String> = unsupported.into_iter().collect();
+    out.sort();
+    out
+}
+
+fn collect_unsupported_from_statement(
+    stmt: &Statement,
+    unsupported: &mut std::collections::HashSet<String>,
+) {
+    use crate::parser::ast::Statement::*;
+    match stmt {
+        Let(s) => collect_unsupported_from_expression(&s.value, unsupported),
+        Return(s) => {
+            if let Some(v) = &s.value {
+                collect_unsupported_from_expression(v, unsupported);
+            }
+        }
+        Block(b) => {
+            for child in &b.statements {
+                collect_unsupported_from_statement(child, unsupported);
+            }
+        }
+        Expression(e) => collect_unsupported_from_expression(e, unsupported),
+        If(s) => {
+            collect_unsupported_from_expression(&s.condition, unsupported);
+            for child in &s.consequence.statements {
+                collect_unsupported_from_statement(child, unsupported);
+            }
+            if let Some(alt) = &s.alternative {
+                for child in &alt.statements {
+                    collect_unsupported_from_statement(child, unsupported);
+                }
+            }
+        }
+        Event(e) => {
+            for value in e.data.values() {
+                collect_unsupported_from_expression(value, unsupported);
+            }
+        }
+        While(_) => {
+            unsupported.insert("while".to_string());
+        }
+        ForIn(_) => {
+            unsupported.insert("for-in".to_string());
+        }
+        Try(_) => {
+            unsupported.insert("try/catch".to_string());
+        }
+        Loop(_) => {
+            unsupported.insert("loop".to_string());
+        }
+        Match(_) => {
+            unsupported.insert("match".to_string());
+        }
+        Spawn(_) => {
+            unsupported.insert("spawn-statement".to_string());
+        }
+        Agent(_) => {
+            unsupported.insert("agent-statement".to_string());
+        }
+        Message(_) => {
+            unsupported.insert("message-statement".to_string());
+        }
+        Import(_) | Function(_) | Service(_) | Break(_) | Continue(_) => {}
+    }
+}
+
+fn collect_unsupported_from_expression(
+    expr: &Expression,
+    unsupported: &mut std::collections::HashSet<String>,
+) {
+    use crate::parser::ast::Expression::*;
+    match expr {
+        Literal(_) | Identifier(_) => {}
+        BinaryOp(l, _, r) => {
+            collect_unsupported_from_expression(l, unsupported);
+            collect_unsupported_from_expression(r, unsupported);
+        }
+        UnaryOp(_, e) | Assignment(_, e) | FieldAccess(e, _) | Await(e) | Spawn(e) | Throw(e) => {
+            if matches!(expr, Await(_)) {
+                unsupported.insert("await".to_string());
+            }
+            if matches!(expr, Spawn(_)) {
+                unsupported.insert("spawn-expression".to_string());
+            }
+            if matches!(expr, Throw(_)) {
+                unsupported.insert("throw".to_string());
+            }
+            collect_unsupported_from_expression(e, unsupported);
+        }
+        FunctionCall(call) => {
+            for arg in &call.arguments {
+                collect_unsupported_from_expression(arg, unsupported);
+            }
+        }
+        FieldAssignment(l, _, r) => {
+            collect_unsupported_from_expression(l, unsupported);
+            collect_unsupported_from_expression(r, unsupported);
+        }
+        ObjectLiteral(map) => {
+            for value in map.values() {
+                collect_unsupported_from_expression(value, unsupported);
+            }
+        }
+        ArrayLiteral(items) => {
+            unsupported.insert("array-literal".to_string());
+            for item in items {
+                collect_unsupported_from_expression(item, unsupported);
+            }
+        }
+        IndexAccess(container, idx) => {
+            unsupported.insert("index-access".to_string());
+            collect_unsupported_from_expression(container, unsupported);
+            collect_unsupported_from_expression(idx, unsupported);
+        }
+        ArrowFunction { .. } => {
+            unsupported.insert("arrow-function".to_string());
+        }
+        Range(start, end) => {
+            unsupported.insert("range-expression".to_string());
+            collect_unsupported_from_expression(start, unsupported);
+            collect_unsupported_from_expression(end, unsupported);
+        }
+        MethodCall {
+            receiver,
+            arguments,
+            ..
+        } => {
+            unsupported.insert("method-call".to_string());
+            collect_unsupported_from_expression(receiver, unsupported);
+            for arg in arguments {
+                collect_unsupported_from_expression(arg, unsupported);
+            }
+        }
+    }
+}
+
+fn collect_namespaces_from_block(block: &BlockStatement) -> std::collections::HashSet<String> {
+    block
+        .statements
+        .iter()
+        .flat_map(collect_namespaces_from_statement)
+        .collect()
+}
+
+fn collect_namespaces_from_statement(stmt: &Statement) -> std::collections::HashSet<String> {
+    use crate::parser::ast::Statement::*;
+    match stmt {
+        Let(s) => collect_namespaces_from_expression(&s.value),
+        Return(s) => s
+            .value
+            .as_ref()
+            .map(collect_namespaces_from_expression)
+            .unwrap_or_default(),
+        Expression(e) => collect_namespaces_from_expression(e),
+        If(s) => {
+            let mut set = collect_namespaces_from_expression(&s.condition);
+            set.extend(collect_namespaces_from_block(&s.consequence));
+            if let Some(alt) = &s.alternative {
+                set.extend(collect_namespaces_from_block(alt));
+            }
+            set
+        }
+        While(s) => {
+            let mut set = collect_namespaces_from_expression(&s.condition);
+            set.extend(collect_namespaces_from_block(&s.body));
+            set
+        }
+        ForIn(s) => {
+            let mut set = collect_namespaces_from_expression(&s.iterable);
+            set.extend(collect_namespaces_from_block(&s.body));
+            set
+        }
+        Try(s) => {
+            let mut set = collect_namespaces_from_block(&s.try_block);
+            for catch in &s.catch_blocks {
+                set.extend(collect_namespaces_from_block(&catch.body));
+            }
+            if let Some(fin) = &s.finally_block {
+                set.extend(collect_namespaces_from_block(fin));
+            }
+            set
+        }
+        Event(e) => e
+            .data
+            .values()
+            .flat_map(collect_namespaces_from_expression)
+            .collect(),
+        Function(f) => collect_namespaces_from_block(&f.body),
+        Block(b) => collect_namespaces_from_block(b),
+        Match(m) => {
+            let mut set = collect_namespaces_from_expression(&m.expression);
+            for case in &m.cases {
+                set.extend(collect_namespaces_from_block(&case.body));
+            }
+            if let Some(default_case) = &m.default_case {
+                set.extend(collect_namespaces_from_block(default_case));
+            }
+            set
+        }
+        Loop(l) => collect_namespaces_from_block(&l.body),
+        Service(_) | Import(_) | Agent(_) | Spawn(_) | Break(_) | Continue(_) | Message(_) => {
+            std::collections::HashSet::new()
+        }
+    }
+}
+
+fn collect_namespaces_from_expression(expr: &Expression) -> std::collections::HashSet<String> {
+    use crate::parser::ast::Expression::*;
+    let mut set = std::collections::HashSet::new();
+    match expr {
+        FunctionCall(call) => {
+            if let Some((ns, _)) = call.name.split_once("::") {
+                set.insert(ns.to_string());
+            }
+            for arg in &call.arguments {
+                set.extend(collect_namespaces_from_expression(arg));
+            }
+        }
+        BinaryOp(l, _, r) => {
+            set.extend(collect_namespaces_from_expression(l));
+            set.extend(collect_namespaces_from_expression(r));
+        }
+        UnaryOp(_, e) | Assignment(_, e) | FieldAccess(e, _) | Await(e) | Spawn(e) | Throw(e) => {
+            set.extend(collect_namespaces_from_expression(e))
+        }
+        FieldAssignment(l, _, r) => {
+            set.extend(collect_namespaces_from_expression(l));
+            set.extend(collect_namespaces_from_expression(r));
+        }
+        ObjectLiteral(map) => {
+            for v in map.values() {
+                set.extend(collect_namespaces_from_expression(v));
+            }
+        }
+        ArrayLiteral(list) => {
+            for e in list {
+                set.extend(collect_namespaces_from_expression(e));
+            }
+        }
+        IndexAccess(container, idx) => {
+            set.extend(collect_namespaces_from_expression(container));
+            set.extend(collect_namespaces_from_expression(idx));
+        }
+        MethodCall {
+            receiver,
+            arguments,
+            ..
+        } => {
+            set.extend(collect_namespaces_from_expression(receiver));
+            for arg in arguments {
+                set.extend(collect_namespaces_from_expression(arg));
+            }
+        }
+        Range(start, end) => {
+            set.extend(collect_namespaces_from_expression(start));
+            set.extend(collect_namespaces_from_expression(end));
+        }
+        Identifier(_) | Literal(_) | ArrowFunction { .. } => {}
+    }
+    set
 }

@@ -213,10 +213,48 @@ main();
 "#;
     write_if_missing(dir, "agent.dal", agent_dal).map_err(|e| e.to_string())?;
 
+    let playground_dal = r#"// Language playground: run with `dal run playground.dal`
+// Use this file to learn core DAL syntax outside the agent serve flow.
+
+import stdlib::crypto;
+import stdlib::agent;
+
+fn greet(name) {
+    return "Hello, " + name + "!";
+}
+
+fn main() {
+    let user = "builder";
+    let numbers = [1, 2, 3];
+    let profile = {"name": user, "active": true};
+
+    print(greet(user));
+    print(numbers);
+    print(profile);
+
+    // Tiny stdlib example: deterministic hash.
+    let digest = crypto::hash("sha256", "hello dal");
+    print("sha256(hello dal): " + digest);
+
+    // Agent on-ramp (commented, optional):
+    // let agent_id = agent::spawn({
+    //     "name": "playground-agent",
+    //     "type": "worker",
+    //     "role": "Playground demo"
+    // });
+    // print("spawned agent id: " + agent_id);
+
+    print("Next: edit this file, then run `dal run playground.dal` again.");
+}
+
+main();
+"#;
+    write_if_missing(dir, "playground.dal", playground_dal).map_err(|e| e.to_string())?;
+
     write_if_missing(
         dir,
         "README.md",
-        "# Agent project\n\n- agent.dal, agent.toml, evolve.md\n- dal run agent.dal | dal agent serve\n",
+        "# Agent project\n\n## Minimum working flow\n\n1. Start the behavior script:\n   - `dal run agent.dal`\n2. Start HTTP serving:\n   - `dal agent serve`\n3. Verify health:\n   - `curl -s http://localhost:4040/status`\n4. Send a message:\n   - `curl -s -X POST http://localhost:4040/message -H 'Content-Type: application/json' -d '{\"sender_id\":\"user\",\"content\":\"Run pwd once and reply with the output\",\"policy\":\"tool_loop\"}'`\n\n## Files\n\n- `agent.dal` - minimal serve agent bootstrap\n- `agent.toml` - shell trust + evolve context path\n- `evolve.md` - conversation and action log context\n- `playground.dal` - language learning sandbox (`dal run playground.dal`)\n- `.env` / `.env.example` - runtime env defaults\n",
     )
     .map_err(|e| e.to_string())?;
 
@@ -231,6 +269,12 @@ main();
         r#"# Agent project env
 DAL_AGENT_SHELL_TRUST=sandboxed
 DAL_AGENT_CONTEXT_PATH=./evolve.md
+# Host-protocol agent defaults (completion-first with safety guards)
+DAL_AGENT_POLICY_DEFAULT=auto
+DAL_AGENT_NATIVE_TOOL_CALLS_ENABLED=1
+DAL_AGENT_ENABLE_LEGACY_TEXT_JSON=0
+DAL_AGENT_GUARDS_STRICT_MODE=1
+# DAL_AI_ENDPOINT=http://localhost:11434/api/generate
 # OPENAI_API_KEY=
 # ANTHROPIC_API_KEY=
 "#,
@@ -240,7 +284,7 @@ DAL_AGENT_CONTEXT_PATH=./evolve.md
     write_if_missing(
         dir,
         ".env",
-        "# Local env\nDAL_AGENT_SHELL_TRUST=sandboxed\nDAL_AGENT_CONTEXT_PATH=./evolve.md\n",
+        "# Local env\nDAL_AGENT_SHELL_TRUST=sandboxed\nDAL_AGENT_CONTEXT_PATH=./evolve.md\nDAL_AGENT_POLICY_DEFAULT=auto\nDAL_AGENT_NATIVE_TOOL_CALLS_ENABLED=1\nDAL_AGENT_ENABLE_LEGACY_TEXT_JSON=0\nDAL_AGENT_GUARDS_STRICT_MODE=1\n",
     )
     .map_err(|e| e.to_string())?;
 
@@ -316,7 +360,50 @@ mod tests {
         assert!(dir.path().join("agent.dal").exists());
         assert!(dir.path().join("agent.toml").exists());
         assert!(dir.path().join("evolve.md").exists());
+        assert!(dir.path().join("playground.dal").exists());
         let content = std::fs::read_to_string(dir.path().join("agent.dal")).unwrap();
         assert!(content.contains("agent") && content.contains("spawn"));
+    }
+
+    #[test]
+    fn run_init_agent_readme_includes_minimum_working_flow() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = run_init("agent", dir.path());
+        assert!(r.is_ok(), "run_init agent: {:?}", r);
+        let readme = std::fs::read_to_string(dir.path().join("README.md")).unwrap();
+        assert!(readme.contains("Minimum working flow"));
+        assert!(readme.contains("dal agent serve"));
+        assert!(readme.contains("playground.dal"));
+    }
+
+    #[test]
+    fn run_init_agent_playground_includes_stdlib_onramp() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = run_init("agent", dir.path());
+        assert!(r.is_ok(), "run_init agent: {:?}", r);
+        let playground = std::fs::read_to_string(dir.path().join("playground.dal")).unwrap();
+        assert!(playground.contains("import stdlib::crypto;"));
+        assert!(playground.contains("import stdlib::agent;"));
+        assert!(playground.contains("crypto::hash(\"sha256\", \"hello dal\")"));
+        assert!(playground.contains("agent::spawn({"));
+    }
+
+    #[test]
+    fn run_init_agent_env_includes_minimal_host_protocol_profile() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = run_init("agent", dir.path());
+        assert!(r.is_ok(), "run_init agent: {:?}", r);
+
+        let env_example = std::fs::read_to_string(dir.path().join(".env.example")).unwrap();
+        assert!(env_example.contains("DAL_AGENT_POLICY_DEFAULT=auto"));
+        assert!(env_example.contains("DAL_AGENT_NATIVE_TOOL_CALLS_ENABLED=1"));
+        assert!(env_example.contains("DAL_AGENT_ENABLE_LEGACY_TEXT_JSON=0"));
+        assert!(env_example.contains("DAL_AGENT_GUARDS_STRICT_MODE=1"));
+
+        let env_local = std::fs::read_to_string(dir.path().join(".env")).unwrap();
+        assert!(env_local.contains("DAL_AGENT_POLICY_DEFAULT=auto"));
+        assert!(env_local.contains("DAL_AGENT_NATIVE_TOOL_CALLS_ENABLED=1"));
+        assert!(env_local.contains("DAL_AGENT_ENABLE_LEGACY_TEXT_JSON=0"));
+        assert!(env_local.contains("DAL_AGENT_GUARDS_STRICT_MODE=1"));
     }
 }

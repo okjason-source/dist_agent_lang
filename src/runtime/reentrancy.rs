@@ -89,6 +89,12 @@ impl ReentrancyGuard {
     }
 }
 
+impl Default for ReentrancyGuard {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Token that represents an active function call
 /// Automatically releases the re-entrancy guard when dropped
 pub struct ReentrancyToken {

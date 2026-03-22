@@ -44,8 +44,7 @@ impl TypeMapper {
     /// Convert Solidity type to DAL type
     pub fn convert_type(&self, solidity_type: &str) -> String {
         // Handle arrays
-        if solidity_type.ends_with("[]") {
-            let base_type = &solidity_type[..solidity_type.len() - 2];
+        if let Some(base_type) = solidity_type.strip_suffix("[]") {
             let dal_base = self.convert_type(base_type);
             return format!("vector<{}>", dal_base);
         }

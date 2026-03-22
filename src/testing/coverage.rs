@@ -126,6 +126,12 @@ impl CoverageTracker {
     }
 }
 
+impl Default for CoverageTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Coverage analyzer that analyzes AST for coverage information
 pub struct CoverageAnalyzer {
     pub tracker: CoverageTracker,
@@ -256,6 +262,12 @@ impl CoverageAnalyzer {
     }
 }
 
+impl Default for CoverageAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Coverage instrumentation for runtime tracking
 pub struct CoverageInstrumentation {
     pub tracker: CoverageTracker,
@@ -298,6 +310,12 @@ impl CoverageInstrumentation {
 
     pub fn get_coverage(&self) -> TestCoverage {
         self.tracker.get_coverage()
+    }
+}
+
+impl Default for CoverageInstrumentation {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -550,5 +568,11 @@ impl CoverageReporter {
         );
 
         html
+    }
+}
+
+impl Default for CoverageReporter {
+    fn default() -> Self {
+        Self::new()
     }
 }

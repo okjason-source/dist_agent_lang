@@ -139,6 +139,12 @@ impl BenchmarkRunner {
     }
 }
 
+impl Default for BenchmarkRunner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Built-in benchmarks for language components
 pub struct LanguageBenchmarks;
 

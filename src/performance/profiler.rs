@@ -214,6 +214,12 @@ impl Profiler {
     }
 }
 
+impl Default for Profiler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Global profiler instance
 lazy_static::lazy_static! {
     static ref GLOBAL_PROFILER: Arc<Profiler> = Arc::new(Profiler::new());
@@ -328,5 +334,11 @@ impl MemoryProfiler {
         }
 
         report
+    }
+}
+
+impl Default for MemoryProfiler {
+    fn default() -> Self {
+        Self::new()
     }
 }

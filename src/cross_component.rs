@@ -41,39 +41,6 @@ fn strip_global_flags(args: &[String]) -> Vec<String> {
     out
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_strip_global_flags() {
-        let args: Vec<String> = vec![
-            "auth-to-web".into(),
-            "token".into(),
-            "https://example.com".into(),
-            "--format".into(),
-            "json".into(),
-            "--dry-run".into(),
-        ];
-        let out = strip_global_flags(&args);
-        assert_eq!(out, ["auth-to-web", "token", "https://example.com"]);
-    }
-
-    #[test]
-    fn test_strip_format_before_url() {
-        let args: Vec<String> = vec![
-            "auth-to-web".into(),
-            "token".into(),
-            "--format".into(),
-            "json".into(),
-            "https://example.com".into(),
-            "--dry-run".into(),
-        ];
-        let out = strip_global_flags(&args);
-        assert_eq!(out, ["auth-to-web", "token", "https://example.com"]);
-    }
-}
-
 const BOND_FLOWS: &[&str] = &[
     "oracle-to-chain",
     "chain-to-sync",
@@ -199,9 +166,9 @@ fn run_bond_auth_to_web(args: &[&str], dry_run: bool, opts: &RunOptions) -> RunR
     {
         match do_auth_to_web_request(token, url, &method) {
             Ok(status) => RunResult {
-                success: status >= 200 && status < 300,
+                success: (200..300).contains(&status),
                 message: format!("bond auth-to-web: {} {} → {}", method, url, status),
-                exit_code: if status >= 200 && status < 300 { 0 } else { 1 },
+                exit_code: if (200..300).contains(&status) { 0 } else { 1 },
             },
             Err(e) => RunResult {
                 success: false,
@@ -1002,7 +969,7 @@ fn do_auth_to_web_request(token: &str, url: &str, method: &str) -> Result<u16, S
     let client = reqwest::blocking::Client::builder()
         .build()
         .map_err(|e| e.to_string())?;
-    let mut request = match method.as_ref() {
+    let mut request = match method {
         "GET" => client.get(url),
         "POST" => client.post(url),
         "PUT" => client.put(url),
@@ -1510,7 +1477,7 @@ fn run_invoke_compliance_check(args: &[&str], dry_run: bool) -> RunResult {
         .find(|w| w[0] == "--chain_id")
         .and_then(|w| w[1].parse().ok())
         .unwrap_or(1);
-    let do_aml = args.contains(&"--aml") || !args.iter().any(|&a| a == "--chain_id");
+    let do_aml = args.contains(&"--aml") || !args.contains(&"--chain_id");
 
     if dry_run {
         return RunResult {
@@ -1580,10 +1547,43 @@ pub fn run(cmd: &str, args: &[String], opts: &RunOptions) -> RunResult {
         });
         RunResult {
             success: result.success,
-            message: serde_json::to_string(&json).unwrap_or_else(|_| result.message),
+            message: serde_json::to_string(&json).unwrap_or(result.message),
             exit_code: result.exit_code,
         }
     } else {
         result
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_strip_global_flags() {
+        let args: Vec<String> = vec![
+            "auth-to-web".into(),
+            "token".into(),
+            "https://example.com".into(),
+            "--format".into(),
+            "json".into(),
+            "--dry-run".into(),
+        ];
+        let out = strip_global_flags(&args);
+        assert_eq!(out, ["auth-to-web", "token", "https://example.com"]);
+    }
+
+    #[test]
+    fn test_strip_format_before_url() {
+        let args: Vec<String> = vec![
+            "auth-to-web".into(),
+            "token".into(),
+            "--format".into(),
+            "json".into(),
+            "https://example.com".into(),
+            "--dry-run".into(),
+        ];
+        let out = strip_global_flags(&args);
+        assert_eq!(out, ["auth-to-web", "token", "https://example.com"]);
     }
 }

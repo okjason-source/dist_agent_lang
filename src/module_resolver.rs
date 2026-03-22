@@ -26,7 +26,7 @@ pub fn package_import_names_from_program(program: &Program) -> Vec<String> {
             {
                 continue;
             }
-            if KNOWN_STDLIB.iter().any(|s| *s == p) {
+            if KNOWN_STDLIB.contains(&p) {
                 continue;
             }
             out.push(p.to_string());
@@ -168,7 +168,7 @@ impl ModuleResolver {
         // 2. Relative path: "./..." or "../..."
         if path.starts_with("./") || path.starts_with("../") {
             let base = current_file_dir
-                .or_else(|| self.root_dir.as_deref())
+                .or(self.root_dir.as_deref())
                 .ok_or(ResolveError::RelativeWithoutEntryPath)?;
             let joined = base.join(path);
             let canonical = joined
@@ -183,7 +183,7 @@ impl ModuleResolver {
         // 3. String that looks like a path
         if path.contains('/') || path.ends_with(".dal") {
             let base = current_file_dir
-                .or_else(|| self.root_dir.as_deref())
+                .or(self.root_dir.as_deref())
                 .ok_or(ResolveError::RelativeWithoutEntryPath)?;
             let joined = base.join(path);
             let canonical = joined
@@ -328,7 +328,7 @@ impl ModuleResolver {
 }
 
 /// M3: Return path to package entry file (main.dal or lib.dal) if present.
-fn package_entry_path(package_root: &PathBuf) -> Option<PathBuf> {
+fn package_entry_path(package_root: &Path) -> Option<PathBuf> {
     let main = package_root.join("main.dal");
     let lib = package_root.join("lib.dal");
     if main.exists() {

@@ -138,23 +138,12 @@ impl FFIExecutionMonitor {
 }
 
 /// Sandbox configuration for FFI execution
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct FFISandbox {
     pub allow_file_access: bool,
     pub allow_network_access: bool,
     pub allow_system_calls: bool,
     pub allowed_paths: Vec<String>,
-}
-
-impl Default for FFISandbox {
-    fn default() -> Self {
-        Self {
-            allow_file_access: false,
-            allow_network_access: false,
-            allow_system_calls: false,
-            allowed_paths: vec![],
-        }
-    }
 }
 
 impl FFISandbox {

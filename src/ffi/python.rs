@@ -186,3 +186,10 @@ impl DistAgentLangRuntime {
         Self
     }
 }
+
+#[cfg(not(feature = "python-ffi"))]
+impl Default for DistAgentLangRuntime {
+    fn default() -> Self {
+        Self::new()
+    }
+}

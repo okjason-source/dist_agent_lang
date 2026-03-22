@@ -1,3 +1,133 @@
+src/compile/mod.rs:100:9: replace <impl std::fmt::Display for CompileError>::fmt -> std::fmt::Result with Ok(Default::default())
+src/compile/mod.rs:143:12: delete ! in <impl CompileBackend for StubBackend>::compile
+src/compile/mod.rs:163:5: replace check_compiler_available -> bool with true
+src/compile/mod.rs:163:5: replace check_compiler_available -> bool with false
+src/compile/mod.rs:175:5: replace get_backend -> Option<Box<dyn CompileBackend>> with None
+src/compile/mod.rs:195:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![]
+src/compile/mod.rs:201:36: replace == with != in select_services_for_target
+src/compile/mod.rs:213:5: replace package_entry_path -> Option<PathBuf> with Some(Default::default())
+src/compile/mod.rs:320:5: replace service_declares_decentralized -> bool with true
+src/compile/mod.rs:320:5: replace service_declares_decentralized -> bool with false
+src/compile/mod.rs:322:13: replace && with || in service_declares_decentralized
+src/compile/mod.rs:321:19: replace == with != in service_declares_decentralized
+src/compile/mod.rs:326:17: replace == with != in service_declares_decentralized
+src/compile/mod.rs:331:5: replace expression_to_string_literal -> Option<&str> with None
+src/compile/mod.rs:331:5: replace expression_to_string_literal -> Option<&str> with Some("")
+src/compile/mod.rs:331:5: replace expression_to_string_literal -> Option<&str> with Some("xyzzy")
+src/compile/mod.rs:344:5: replace validate_trust_policy_for_services -> Result<(), CompileError> with Ok(())
+src/compile/mod.rs:351:12: delete ! in validate_trust_policy_for_services
+src/compile/mod.rs:363:5: replace validate_decentralized_service -> Result<(), CompileError> with Ok(())
+src/compile/mod.rs:370:12: delete ! in validate_decentralized_service
+src/compile/mod.rs:380:12: delete ! in validate_decentralized_service
+src/compile/mod.rs:425:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec![]
+src/compile/mod.rs:425:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec![String::new()]
+src/compile/mod.rs:425:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec!["xyzzy".into()]
+src/compile/mod.rs:438:5: replace collect_unsupported_from_statement with ()
+src/registry.rs:497:5: replace find_package_root -> Option<PathBuf> with None
+src/registry.rs:497:5: replace find_package_root -> Option<PathBuf> with Some(Default::default())
+src/skills.rs:238:5: replace parse_skill_dal -> Result<Vec<SkillDefinition>, String> with Ok(vec![])
+src/skills.rs:249:66: replace || with && in parse_skill_dal
+src/skills.rs:271:50: replace == with != in parse_skill_dal
+src/skills.rs:327:5: replace load_skill_file -> Result<Vec<SkillDefinition>, String> with Ok(vec![])
+src/skills.rs:334:5: replace load_skills_from_path -> Result<Vec<SkillDefinition>, String> with Ok(vec![])
+src/skills.rs:347:36: replace == with != in load_skills_from_path
+src/skills.rs:372:5: replace skip_whitespace_and_comments with ()
+src/skills.rs:374:30: replace match guard c.is_whitespace() with true in skip_whitespace_and_comments
+src/skills.rs:374:30: replace match guard c.is_whitespace() with false in skip_whitespace_and_comments
+src/skills.rs:404:5: replace parse_quoted_string -> Option<String> with None
+src/skills.rs:404:5: replace parse_quoted_string -> Option<String> with Some(String::new())
+src/skills.rs:404:5: replace parse_quoted_string -> Option<String> with Some("xyzzy".into())
+src/skills.rs:404:38: replace != with == in parse_quoted_string
+src/skills.rs:411:14: replace == with != in parse_quoted_string
+src/skills.rs:414:14: replace == with != in parse_quoted_string
+src/skills.rs:436:5: replace try_parse_quoted_string -> Option<String> with None
+src/skills.rs:436:5: replace try_parse_quoted_string -> Option<String> with Some(String::new())
+src/skills.rs:436:38: replace == with != in try_parse_quoted_string
+src/skills.rs:444:5: replace parse_identifier -> String with String::new()
+src/compile/mod.rs:69:9: replace TrustCompileMode::from_str -> Option<Self> with Some(Default::default())
+src/compile/mod.rs:143:9: replace <impl CompileBackend for StubBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/mod.rs:175:5: replace get_backend -> Option<Box<dyn CompileBackend>> with Some(Box::new(Default::default()))
+src/compile/mod.rs:195:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![Box::leak(Box::new(Default::default()))]
+src/compile/mod.rs:231:5: replace run_compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/mod.rs:248:5: replace run_compile_with_mode -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/mod.rs:567:5: replace collect_namespaces_from_block -> std::collections::HashSet<String> with HashSet::new()
+src/compile/mod.rs:567:5: replace collect_namespaces_from_block -> std::collections::HashSet<String> with HashSet::from_iter([String::new()])
+src/compile/mod.rs:567:5: replace collect_namespaces_from_block -> std::collections::HashSet<String> with HashSet::from_iter(["xyzzy".into()])
+src/compile/mod.rs:575:5: replace collect_namespaces_from_statement -> std::collections::HashSet<String> with HashSet::new()
+src/compile/mod.rs:575:5: replace collect_namespaces_from_statement -> std::collections::HashSet<String> with HashSet::from_iter([String::new()])
+src/compile/mod.rs:575:5: replace collect_namespaces_from_statement -> std::collections::HashSet<String> with HashSet::from_iter(["xyzzy".into()])
+src/compile/mod.rs:637:5: replace collect_namespaces_from_expression -> std::collections::HashSet<String> with HashSet::new()
+src/compile/mod.rs:637:5: replace collect_namespaces_from_expression -> std::collections::HashSet<String> with HashSet::from_iter([String::new()])
+src/compile/mod.rs:637:5: replace collect_namespaces_from_expression -> std::collections::HashSet<String> with HashSet::from_iter(["xyzzy".into()])
+src/skills.rs:238:5: replace parse_skill_dal -> Result<Vec<SkillDefinition>, String> with Ok(vec![Default::default()])
+src/skills.rs:327:5: replace load_skill_file -> Result<Vec<SkillDefinition>, String> with Ok(vec![Default::default()])
+src/skills.rs:334:5: replace load_skills_from_path -> Result<Vec<SkillDefinition>, String> with Ok(vec![Default::default()])
+src/skills.rs:444:5: replace parse_identifier -> String with "xyzzy".into()
+src/skills.rs:446:32: replace || with && in parse_identifier
+src/skills.rs:446:37: replace == with != in parse_identifier
+src/skills.rs:457:5: replace expect_char -> Result<(), ()> with Ok(())
+src/skills.rs:457:38: replace == with != in expect_char
+src/skills.rs:470:5: replace resolve_skills_path -> Option<PathBuf> with None
+src/skills.rs:470:5: replace resolve_skills_path -> Option<PathBuf> with Some(Default::default())
+src/skills.rs:491:24: delete ! in resolve_skills_path
+src/skills.rs:511:52: replace && with || in resolve_skills_path
+src/skills.rs:526:5: replace get_global_registry -> &'static Mutex<SkillRegistry> with Box::leak(Box::new(Mutex::new(Default::default())))
+src/skills.rs:534:30: replace > with == in get_global_registry
+src/skills.rs:534:30: replace > with < in get_global_registry
+src/skills.rs:534:30: replace > with >= in get_global_registry
+src/skills.rs:549:5: replace global_registry -> SkillRegistry with Default::default()
+src/skills.rs:554:5: replace list_skills -> Result<Vec<(String, String)>, String> with Ok(vec![])
+src/skills.rs:554:5: replace list_skills -> Result<Vec<(String, String)>, String> with Ok(vec![(String::new(), String::new())])
+src/skills.rs:554:5: replace list_skills -> Result<Vec<(String, String)>, String> with Ok(vec![(String::new(), "xyzzy".into())])
+src/skills.rs:554:5: replace list_skills -> Result<Vec<(String, String)>, String> with Ok(vec![("xyzzy".into(), String::new())])
+src/skills.rs:554:5: replace list_skills -> Result<Vec<(String, String)>, String> with Ok(vec![("xyzzy".into(), "xyzzy".into())])
+src/skills.rs:565:5: replace register_global_skills with ()
+src/skills.rs:583:5: replace meta_from_memory -> Option<String> with None
+src/skills.rs:583:5: replace meta_from_memory -> Option<String> with Some(String::new())
+src/skills.rs:583:5: replace meta_from_memory -> Option<String> with Some("xyzzy".into())
+src/skills.rs:587:47: replace || with && in meta_from_memory
+src/skills.rs:588:56: replace || with && in meta_from_memory
+src/skills.rs:590:19: replace && with || in meta_from_memory
+src/skills.rs:603:5: replace reinforcement_note -> String with String::new()
+src/skills.rs:603:5: replace reinforcement_note -> String with "xyzzy".into()
+src/skills.rs:616:5: replace tools_description_for_skills -> String with String::new()
+src/skills.rs:616:5: replace tools_description_for_skills -> String with "xyzzy".into()
+src/skills.rs:627:5: replace tools_description_for_skills_with_registry -> String with String::new()
+src/skills.rs:627:5: replace tools_description_for_skills_with_registry -> String with "xyzzy".into()
+src/skills.rs:634:8: delete ! in tools_description_for_skills_with_registry
+src/skills.rs:634:36: replace == with != in tools_description_for_skills_with_registry
+src/skills.rs:650:54: replace == with != in tools_description_for_skills_with_registry
+src/skills.rs:658:40: replace && with || in tools_description_for_skills_with_registry
+src/skills.rs:658:16: delete ! in tools_description_for_skills_with_registry
+src/skills.rs:658:43: delete ! in tools_description_for_skills_with_registry
+src/cli.rs:497:5: replace chain_subcommand_to_args -> Vec<String> with vec![]
+src/cli.rs:497:5: replace chain_subcommand_to_args -> Vec<String> with vec![String::new()]
+src/cli.rs:497:5: replace chain_subcommand_to_args -> Vec<String> with vec!["xyzzy".into()]
+src/cli.rs:491:9: replace Cli::parse -> Self with Default::default()
+src/bin/registry_server.rs:83:5: replace name_to_storage_dir -> String with "xyzzy".into()
+src/lib.rs:106:46: replace * with + in parse_source
+src/lib.rs:106:46: replace * with / in parse_source
+src/lib.rs:106:39: replace * with + in parse_source
+src/lib.rs:106:39: replace * with / in parse_source
+src/lib.rs:107:21: replace > with == in parse_source
+src/lib.rs:107:21: replace > with < in parse_source
+src/lib.rs:107:21: replace > with >= in parse_source
+src/lib.rs:123:30: replace > with < in parse_source
+src/lib.rs:166:5: replace execute_dal_file -> Result<(), String> with Ok(())
+src/agent_context_schema.rs:115:16: delete ! in build_prompt_for_llm::append_agent_state
+src/cli.rs:490:5: replace chain_subcommand_to_args -> Vec<String> with vec![]
+src/cli.rs:490:5: replace chain_subcommand_to_args -> Vec<String> with vec![String::new()]
+src/cli.rs:490:5: replace chain_subcommand_to_args -> Vec<String> with vec!["xyzzy".into()]
+src/lib.rs:106:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:139:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:152:5: replace execute_dal_with_scope -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:215:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:215:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:215:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/lib.rs:235:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:235:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:235:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/cli.rs:484:9: replace Cli::parse -> Self with Default::default()
 src/registry.rs:203:5: replace resolve_and_fetch_with_meta -> Result<(PathBuf, String, String), RegistryError> with Ok((Default::default(), String::new(), String::new()))
 src/project_init.rs:14:9: delete match arm "chain" in run_init
 src/project_init.rs:15:9: delete match arm "iot" in run_init

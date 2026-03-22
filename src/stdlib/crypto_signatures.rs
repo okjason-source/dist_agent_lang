@@ -67,6 +67,12 @@ impl NonceManager {
     }
 }
 
+impl Default for NonceManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// ECDSA signature verification and signing (Ethereum-style with secp256k1)
 pub struct ECDSASignatureVerifier;
 
@@ -364,7 +370,7 @@ impl SecureSignatureVerifier {
         // Include nonce in message hash to bind signature to nonce
         let mut hasher = Sha256::new();
         hasher.update(message);
-        hasher.update(&nonce.to_be_bytes());
+        hasher.update(nonce.to_be_bytes());
         let message_with_nonce = hasher.finalize();
 
         // Verify signature based on scheme
@@ -389,6 +395,12 @@ impl SecureSignatureVerifier {
     /// Get next expected nonce for an address
     pub fn get_next_nonce(&self, signer_key: &str) -> u64 {
         self.nonce_manager.get_next_nonce(signer_key)
+    }
+}
+
+impl Default for SecureSignatureVerifier {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -542,7 +554,7 @@ mod tests {
         // Create message with nonce
         let mut hasher = Sha256::new();
         hasher.update(message);
-        hasher.update(&nonce.to_be_bytes());
+        hasher.update(nonce.to_be_bytes());
         let message_with_nonce = hasher.finalize();
 
         // Sign the message with nonce

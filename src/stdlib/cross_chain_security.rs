@@ -696,6 +696,12 @@ impl CrossChainSecurityManager {
     }
 }
 
+impl Default for CrossChainSecurityManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct CrossChainProof {
     pub source_chain: i64,
@@ -907,7 +913,7 @@ mod tests {
         use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
         hasher.update(b"test_data");
-        hasher.update(&now.to_be_bytes());
+        hasher.update(now.to_be_bytes());
         let message_with_nonce = hasher.finalize();
 
         // Sign with real ECDSA

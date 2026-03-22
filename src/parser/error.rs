@@ -55,6 +55,12 @@ impl ErrorContext {
     }
 }
 
+impl Default for ErrorContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Comprehensive error types with context
 #[derive(Error, Debug, Clone)]
 pub enum ParserError {
@@ -345,6 +351,12 @@ impl SimpleErrorReporter {
             errors: Vec::new(),
             warnings: Vec::new(),
         }
+    }
+}
+
+impl Default for SimpleErrorReporter {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

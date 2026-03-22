@@ -23,7 +23,7 @@ impl Parser {
     /// Limit recursion to prevent stack overflow from malicious/deeply nested input (e.g. fuzzer-generated).
     /// 100 is safe for production while preventing DoS attacks via deeply nested structures.
     /// Phase 2: Increased from 25 to 100 for production use while maintaining safety.
-    const MAX_RECURSION_DEPTH: usize = 100;
+    const MAX_RECURSION_DEPTH: usize = 50;
 
     /// Creates a parser from tokens. Token positions are empty, so parse errors will use fallback line/column (e.g. 1, 1).
     /// For user-facing parse paths (CLI, IDE) prefer [`Self::new_with_positions`] so errors have accurate line/column.
@@ -2890,7 +2890,7 @@ impl Parser {
         };
 
         // Validate target constraints if compilation target is specified
-        if let Some(_) = &service_stmt.compilation_target {
+        if service_stmt.compilation_target.is_some() {
             self.validate_target_constraints(&service_stmt)?;
         }
 
@@ -3057,7 +3057,7 @@ impl Parser {
         };
 
         // Validate target constraints if compilation target is specified
-        if let Some(_) = &service_stmt.compilation_target {
+        if service_stmt.compilation_target.is_some() {
             self.validate_target_constraints(&service_stmt)?;
         }
 
@@ -3405,7 +3405,7 @@ impl Parser {
                 out.extend(self.collect_namespaces_from_expression(i));
             }
             Expression::ObjectLiteral(props) => {
-                for (_, e) in props {
+                for e in props.values() {
                     out.extend(self.collect_namespaces_from_expression(e));
                 }
             }
@@ -3487,12 +3487,12 @@ impl Parser {
                 out.extend(self.collect_namespaces_from_block(&agent.body));
             }
             Statement::Message(msg) => {
-                for (_, e) in &msg.data {
+                for e in msg.data.values() {
                     out.extend(self.collect_namespaces_from_expression(e));
                 }
             }
             Statement::Event(ev) => {
-                for (_, e) in &ev.data {
+                for e in ev.data.values() {
                     out.extend(self.collect_namespaces_from_expression(e));
                 }
             }
@@ -3692,7 +3692,52 @@ impl Parser {
             }
         }
 
-        // Rule 5: Validate function-level attributes (@secure and @public are mutually exclusive)
+        // Rule 5: @trust("decentralized") requires deterministic-only namespace usage.
+        let is_decentralized = service.attributes.iter().any(|attr| {
+            attr.name == "@trust"
+                && matches!(
+                    attr.parameters.first(),
+                    Some(Expression::Literal(Literal::String(model))) if model == "decentralized"
+                )
+        });
+        if is_decentralized {
+            let forbidden_namespaces: HashSet<String> =
+                ["ai", "sh", "web", "http", "oracle", "agent", "cloudadmin"]
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect();
+
+            for method in &service.methods {
+                let used_namespaces = self.collect_namespaces_from_block(&method.body);
+                let mut violating: Vec<String> = used_namespaces
+                    .intersection(&forbidden_namespaces)
+                    .cloned()
+                    .collect();
+                if !violating.is_empty() {
+                    violating.sort();
+                    violating.dedup();
+                    let line = if let Some(pos) =
+                        self.find_function_position(&service.name, &method.name)
+                    {
+                        let (line, _column) = self.get_token_position(pos);
+                        line
+                    } else {
+                        self.get_service_line_column(service).0
+                    };
+                    return Err(ParserError::SemanticError {
+                        message: format!(
+                            "Function '{}' in decentralized service '{}' uses disallowed namespace(s): {:?}. \
+Move orchestration/tooling calls to @trust(\"hybrid\") or @trust(\"centralized\") services.",
+                            method.name, service.name, violating
+                        ),
+                        line,
+                        context: ErrorContext::new(),
+                    });
+                }
+            }
+        }
+
+        // Rule 6: Validate function-level attributes (@secure and @public are mutually exclusive)
         for method in &service.methods {
             let func_attr_names: Vec<&str> =
                 method.attributes.iter().map(|a| a.name.as_str()).collect();

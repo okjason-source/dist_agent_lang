@@ -19,12 +19,21 @@ impl VenvProfile {
             VenvProfile::Relaxed => "relaxed",
         }
     }
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "strict" => Some(VenvProfile::Strict),
             "relaxed" => Some(VenvProfile::Relaxed),
             _ => None,
         }
+    }
+}
+
+impl std::str::FromStr for VenvProfile {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        VenvProfile::from_str(s).ok_or(())
     }
 }
 

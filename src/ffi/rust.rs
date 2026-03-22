@@ -1,5 +1,7 @@
 // Rust FFI bindings (C-compatible)
 // Provides direct function calls for Rust codebases
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+// FFI requires raw pointer dereferencing; keep this scoped to this module.
 
 use crate::runtime::engine::Runtime;
 use crate::runtime::values::Value;
@@ -49,6 +51,12 @@ impl RustFFIRuntime {
             .execute_program(program, None)
             .map_err(|e| format!("Execution error: {}", e))?;
         Ok(Value::Null) // Return null for now - would need to capture return value
+    }
+}
+
+impl Default for RustFFIRuntime {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

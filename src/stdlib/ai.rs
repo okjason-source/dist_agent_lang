@@ -1226,6 +1226,7 @@ pub enum ChatPolicy {
 }
 
 impl ChatPolicy {
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Option<Self> {
         let v = s.trim().to_ascii_lowercase();
         match v.as_str() {
@@ -1234,6 +1235,14 @@ impl ChatPolicy {
             "tool_loop" | "toolloop" => Some(Self::ToolLoop),
             _ => None,
         }
+    }
+}
+
+impl std::str::FromStr for ChatPolicy {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        ChatPolicy::from_str(s).ok_or(())
     }
 }
 
@@ -1357,7 +1366,7 @@ fn extract_json_object(s: &str) -> Option<&str> {
             b'}' => {
                 depth = depth.saturating_sub(1);
                 if depth == 0 {
-                    return Some(std::str::from_utf8(&bytes[start..=i]).ok()?);
+                    return std::str::from_utf8(&bytes[start..=i]).ok();
                 }
             }
             _ => {}
@@ -1392,7 +1401,7 @@ fn search_web(query: &str) -> Result<String, String> {
         }
     }
     if let Some(related) = json["RelatedTopics"].as_array() {
-        for (_, topic) in related.iter().take(3).enumerate() {
+        for topic in related.iter().take(3) {
             let text = topic["Text"].as_str().unwrap_or("");
             if !text.is_empty() {
                 if !out.is_empty() {
@@ -2283,7 +2292,7 @@ fn run_dal_subcommand(subcommand: &str, args: &[&str], root: &std::path::Path) -
         }
     };
     let mut cmd = std::process::Command::new(&exe);
-    cmd.arg(subcommand).args(args).current_dir(&cwd);
+    cmd.arg(subcommand).args(args).current_dir(cwd);
     match cmd.output() {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout);
@@ -2318,6 +2327,63 @@ pub struct MultiStepResult {
     pub steps_used: u32,
     /// True if the loop stopped because the step limit was reached (no final reply from the model).
     pub max_steps_reached: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TerminationDiagnostics {
+    pub termination_reason: &'static str,
+    pub guard_stopped: bool,
+    pub parse_fail_terminal: bool,
+    pub unsupported_tool_call_terminal: bool,
+}
+
+pub fn classify_termination(result: &MultiStepResult) -> TerminationDiagnostics {
+    let parse_fail_terminal = if result.max_steps_reached {
+        false
+    } else {
+        result.steps_used == 0
+            && !result.is_ask_user
+            && !result.final_text.is_empty()
+            && legacy_text_tool_protocol_enabled()
+    };
+    let unsupported_tool_call_terminal = result.final_text.starts_with("Unsupported tool call:");
+    let guard_stopped = result.final_text.starts_with("Stopped:");
+    let termination_reason = if result.max_steps_reached {
+        "max_steps_reached"
+    } else if result.is_ask_user {
+        "ask_user"
+    } else if guard_stopped {
+        if result.final_text.contains("wall-clock limit exceeded") {
+            "guard_wall_clock"
+        } else if result.final_text.contains("token budget exceeded") {
+            "guard_token_budget"
+        } else if result.final_text.contains("cost budget exceeded") {
+            "guard_cost_budget"
+        } else if result.final_text.contains("exceeded per-type limit") {
+            "guard_per_tool_type_limit"
+        } else if result
+            .final_text
+            .contains("repeated identical tool invocation")
+        {
+            "guard_repeated_identical_invocation"
+        } else if result.final_text.contains("consecutive no-progress loop") {
+            "guard_no_progress"
+        } else {
+            "guard_other"
+        }
+    } else if parse_fail_terminal {
+        "parse_fail_terminal"
+    } else if unsupported_tool_call_terminal {
+        "unsupported_tool_call_terminal"
+    } else {
+        "reply"
+    };
+    TerminationDiagnostics {
+        termination_reason,
+        guard_stopped,
+        parse_fail_terminal,
+        unsupported_tool_call_terminal,
+    }
 }
 
 /// Default max tool steps when env DAL_AGENT_MAX_TOOL_STEPS is not set.
@@ -3019,46 +3085,7 @@ fn emit_route_metrics(
             }
         }
     }
-    let parse_fail_terminal = if result.max_steps_reached {
-        false
-    } else {
-        result.steps_used == 0
-            && !result.is_ask_user
-            && !result.final_text.is_empty()
-            && legacy_text_tool_protocol_enabled()
-    };
-    let unsupported_tool_call_terminal = result.final_text.starts_with("Unsupported tool call:");
-    let guard_stopped = result.final_text.starts_with("Stopped:");
-    let termination_reason = if result.max_steps_reached {
-        "max_steps_reached"
-    } else if result.is_ask_user {
-        "ask_user"
-    } else if guard_stopped {
-        if result.final_text.contains("wall-clock limit exceeded") {
-            "guard_wall_clock"
-        } else if result.final_text.contains("token budget exceeded") {
-            "guard_token_budget"
-        } else if result.final_text.contains("cost budget exceeded") {
-            "guard_cost_budget"
-        } else if result.final_text.contains("exceeded per-type limit") {
-            "guard_per_tool_type_limit"
-        } else if result
-            .final_text
-            .contains("repeated identical tool invocation")
-        {
-            "guard_repeated_identical_invocation"
-        } else if result.final_text.contains("consecutive no-progress loop") {
-            "guard_no_progress"
-        } else {
-            "guard_other"
-        }
-    } else if parse_fail_terminal {
-        "parse_fail_terminal"
-    } else if unsupported_tool_call_terminal {
-        "unsupported_tool_call_terminal"
-    } else {
-        "reply"
-    };
+    let termination = classify_termination(result);
     crate::stdlib::log::info(
         "agent_route_metrics",
         {
@@ -3101,16 +3128,19 @@ fn emit_route_metrics(
             );
             data.insert(
                 "parse_fail_terminal".to_string(),
-                Value::Bool(parse_fail_terminal),
+                Value::Bool(termination.parse_fail_terminal),
             );
             data.insert(
                 "unsupported_tool_call_terminal".to_string(),
-                Value::Bool(unsupported_tool_call_terminal),
+                Value::Bool(termination.unsupported_tool_call_terminal),
             );
-            data.insert("guard_stopped".to_string(), Value::Bool(guard_stopped));
+            data.insert(
+                "guard_stopped".to_string(),
+                Value::Bool(termination.guard_stopped),
+            );
             data.insert(
                 "termination_reason".to_string(),
-                Value::String(termination_reason.to_string()),
+                Value::String(termination.termination_reason.to_string()),
             );
             data
         },
@@ -5349,7 +5379,7 @@ mod wrapper_tests {
 
         // Check values are in reasonable range
         for val in embeddings {
-            assert!(val >= -1.0 && val <= 1.0);
+            assert!((-1.0..=1.0).contains(&val));
         }
     }
 

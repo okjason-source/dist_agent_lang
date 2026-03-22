@@ -8,7 +8,6 @@ use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -109,28 +108,7 @@ struct JobEntry {
     kill_tx: oneshot::Sender<()>,
 }
 
-/// Activity event for the events stream (run_started, run_stopped, file_written, command).
-#[derive(Debug, Clone, Serialize)]
-struct ActivityEvent {
-    #[serde(rename = "type")]
-    event_type: String,
-    timestamp: String,
-    payload: serde_json::Value,
-}
-
-fn emit_activity(
-    events_tx: &broadcast::Sender<String>,
-    event_type: &str,
-    payload: serde_json::Value,
-) {
-    let timestamp = Utc::now().to_rfc3339();
-    let event = ActivityEvent {
-        event_type: event_type.to_string(),
-        timestamp,
-        payload,
-    };
-    let _ = serde_json::to_string(&event).map(|s| events_tx.send(s));
-}
+use super::agent_runner::emit_activity;
 
 #[derive(Clone)]
 struct AppState {
@@ -747,12 +725,11 @@ async fn post_agent_run_command(
         } else {
             let p = PathBuf::from(s);
             if p.is_absolute() {
-                state.workspace_root.canonicalize().ok().and_then(|cr| {
-                    p.canonicalize()
-                        .ok()
-                        .filter(|cp| cp.starts_with(&cr))
-                        .map(|cp| cp)
-                })
+                state
+                    .workspace_root
+                    .canonicalize()
+                    .ok()
+                    .and_then(|cr| p.canonicalize().ok().filter(|cp| cp.starts_with(&cr)))
             } else {
                 path_under_base(&state.workspace_root, s)
             }
@@ -817,12 +794,11 @@ async fn post_agent_run_command_stream(
         } else {
             let p = PathBuf::from(s);
             if p.is_absolute() {
-                state.workspace_root.canonicalize().ok().and_then(|cr| {
-                    p.canonicalize()
-                        .ok()
-                        .filter(|cp| cp.starts_with(&cr))
-                        .map(|cp| cp)
-                })
+                state
+                    .workspace_root
+                    .canonicalize()
+                    .ok()
+                    .and_then(|cr| p.canonicalize().ok().filter(|cp| cp.starts_with(&cr)))
             } else {
                 path_under_base(&state.workspace_root, s)
             }
@@ -910,7 +886,7 @@ async fn post_lsp_diagnostics(
         let uri = lsp_client::path_to_file_uri(&full_path);
         let contents = req.contents.clone();
         let state_clone = state.clone();
-        match tokio::task::spawn_blocking(move || {
+        if let Ok(Some(diags)) = tokio::task::spawn_blocking(move || {
             let mut guard = state_clone.second_lsp_by_cargo_root.lock().unwrap();
             if !guard.contains_key(&cargo_root) {
                 if let Some(lsp) = SecondLsp::spawn(&cargo_root) {
@@ -923,27 +899,24 @@ async fn post_lsp_diagnostics(
         })
         .await
         {
-            Ok(Some(diags)) => {
-                let out: Vec<serde_json::Value> = diags
-                    .into_iter()
-                    .map(|d| {
-                        serde_json::json!({
-                            "line": d.line,
-                            "column": d.column,
-                            "end_line": d.end_line,
-                            "end_column": d.end_column,
-                            "message": d.message,
-                            "severity": d.severity
-                        })
+            let out: Vec<serde_json::Value> = diags
+                .into_iter()
+                .map(|d| {
+                    serde_json::json!({
+                        "line": d.line,
+                        "column": d.column,
+                        "end_line": d.end_line,
+                        "end_column": d.end_column,
+                        "message": d.message,
+                        "severity": d.severity
                     })
-                    .collect();
-                return (
-                    StatusCode::OK,
-                    Json(serde_json::json!({ "diagnostics": out })),
-                )
-                    .into_response();
-            }
-            _ => {}
+                })
+                .collect();
+            return (
+                StatusCode::OK,
+                Json(serde_json::json!({ "diagnostics": out })),
+            )
+                .into_response();
         }
     }
     let diags = diagnostics::diagnostics_from_source(&req.contents);
@@ -996,7 +969,7 @@ fn find_cargo_root(file_path: &std::path::Path, workspace_root: &std::path::Path
     let mut dir = file_path
         .parent()
         .filter(|p: &&std::path::Path| !p.as_os_str().is_empty())
-        .unwrap_or_else(|| file_path);
+        .unwrap_or(file_path);
     loop {
         let cargo_toml = dir.join("Cargo.toml");
         if path_is_within_root(workspace_root, &cargo_toml) && cargo_toml.exists() {
@@ -1045,7 +1018,7 @@ async fn post_lsp_hover(
         let line = req.line;
         let character = req.character;
         let state_clone = state.clone();
-        match tokio::task::spawn_blocking(move || {
+        if let Ok(Some(hover_content)) = tokio::task::spawn_blocking(move || {
             let mut guard = state_clone.second_lsp_by_cargo_root.lock().unwrap();
             if !guard.contains_key(&cargo_root) {
                 if let Some(lsp) = SecondLsp::spawn(&cargo_root) {
@@ -1058,14 +1031,11 @@ async fn post_lsp_hover(
         })
         .await
         {
-            Ok(Some(hover_content)) => {
-                return (
-                    StatusCode::OK,
-                    Json(serde_json::json!({ "contents": hover_content })),
-                )
-                    .into_response();
-            }
-            _ => {}
+            return (
+                StatusCode::OK,
+                Json(serde_json::json!({ "contents": hover_content })),
+            )
+                .into_response();
         }
     }
     let content = diagnostics::hover_at_position(&req.contents, req.line, req.character);
@@ -1108,7 +1078,7 @@ async fn post_lsp_completion(
         let line = req.line;
         let character = req.character;
         let state_clone = state.clone();
-        match tokio::task::spawn_blocking(move || {
+        if let Ok(Some(items)) = tokio::task::spawn_blocking(move || {
             let mut guard = state_clone.second_lsp_by_cargo_root.lock().unwrap();
             if !guard.contains_key(&cargo_root) {
                 if let Some(lsp) = SecondLsp::spawn(&cargo_root) {
@@ -1121,21 +1091,18 @@ async fn post_lsp_completion(
         })
         .await
         {
-            Ok(Some(items)) => {
-                let out: Vec<serde_json::Value> = items
-                    .into_iter()
-                    .map(|c| {
-                        serde_json::json!({
-                            "label": c.label,
-                            "kind": c.kind,
-                            "detail": c.detail,
-                            "insertText": c.insert_text
-                        })
+            let out: Vec<serde_json::Value> = items
+                .into_iter()
+                .map(|c| {
+                    serde_json::json!({
+                        "label": c.label,
+                        "kind": c.kind,
+                        "detail": c.detail,
+                        "insertText": c.insert_text
                     })
-                    .collect();
-                return (StatusCode::OK, Json(serde_json::json!({ "items": out }))).into_response();
-            }
-            _ => {}
+                })
+                .collect();
+            return (StatusCode::OK, Json(serde_json::json!({ "items": out }))).into_response();
         }
     }
     let items = diagnostics::completion_at_position(&req.contents, req.line, req.character);

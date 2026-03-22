@@ -1,231 +1,234 @@
-# Comprehensive Review: Writing Smart Contracts with DAL
+# Comprehensive Review: Smart Contracts with DAL (Current State)
 
-**Version:** 1.0  
-**Date:** 2026-02-17  
-**Purpose:** Where we stand now: Single reference for what DAL offers when writing “smart contract” style logic: model, security, chain interaction, limitations, and how it fits with Solidity/EVM.
+**Version:** 2.0  
+**Date:** 2026-03-20  
+**Purpose:** Single, up-to-date reference for DAL smart-contract workflows: trust split model, EVM path maturity, ABI/decode reliability, and remaining gaps.
 
 ---
 
 ## 1. Executive Summary
 
-DAL (dist_agent_lang) lets you write **contract-like services** that combine on-chain interaction, built-in security, and hybrid trust in one language. You do **not** write Solidity or EVM bytecode directly; you write DAL **services** that can call chains via `chain::`, enforce `@secure` and reentrancy protection, and use `@advanced_security` for MEV-aware DeFi. Deployment to real chains today is via **pre-signed raw transactions** or orchestration around existing contracts; **DAL does not compile to EVM bytecode**. This review covers the contract-writing model, security attributes, chain usage, testing, and practical limits.
+DAL now supports a stronger smart-contract path than the previous review:
+
+- You can write contract-oriented DAL services with explicit trust boundaries.
+- `@compile_target("blockchain")` emits Solidity/ABI/bin artifacts when toolchain is present.
+- Hybrid services can auto-split orchestration-only methods to HTTP artifacts while preserving bytecode-safe methods for EVM artifacts.
+- `chain::call_typed` and `chain::deploy_typed` expose typed evidence fields.
+- A typed ABI decode surface (`stdlib::abi_codec`) is extracted and used at integration boundaries.
+- ABI registry-based decode is active, with overload-safe disambiguation via optional `function_signature`.
+
+What is still not complete:
+
+- Generated Solidity method bodies are still conservative/stub-oriented for many constructs.
+- Full decentralized codegen subset and end-to-end “DAL source -> production-grade on-chain logic” is still in-progress.
 
 ---
 
-## 2. The Contract Model in DAL
+## 2. DAL Contract Model
 
-### 2.1 Services, Not `contract` Keyword
+### 2.1 Services as Contract Units
 
-DAL uses **services** as the unit of stateful, callable logic. There is no `contract` keyword; a “smart contract” in DAL is a **service** with chain-related attributes and optional `chain::` calls.
+DAL “contracts” are services with trust and chain attributes. There is no separate `contract` keyword.
 
-```dal
-@trust("hybrid")
-@chain("ethereum")
-@secure
-service DefiToken {
-    name: string = "DeFi Token";
-    symbol: string = "DFT";
-    total_supply: int = 0;
-    balances: map<string, int> = {};
+Key attributes:
 
-    fn balance_of(account: string) -> int {
-        if (self.balances.contains_key(account)) {
-            return self.balances[account];
-        }
-        return 0;
-    }
+| Attribute | Role |
+|---|---|
+| `@trust("decentralized" \| "hybrid" \| "centralized")` | Declares trust model and policy envelope |
+| `@chain("...")` | Declares chain context and allowed chain namespace usage |
+| `@secure` / `@public` | Access semantics; mutually exclusive |
+| `@compile_target("blockchain")` | Routes service into blockchain compile backend |
 
-    fn transfer(to: string, amount: int) -> bool {
-        let from = auth::session("user", ["holder"]).user_id;
-        if (self.balances[from] < amount) {
-            return false;
-        }
-        self.balances[from] = self.balances[from] - amount;
-        self.balances[to] = self.balances[to] + amount;
-        return true;
-    }
-}
-```
+### 2.2 Trust Split (Current Enforcement)
 
-- **Fields:** Typed state (e.g. `map<string, int>` for balances).  
-- **Methods:** `fn name(params) [ -> type ] { body }`.  
-- **Attributes:** Applied at service or function level (see below).
+- **`decentralized`**: deterministic-only path; disallowed orchestration namespaces are blocked by policy/checks.
+- **`hybrid`**: orchestration + chain interaction; now supports dual-artifact split for mixed logic.
+- **`centralized`**: runtime-centric orchestration path.
 
-### 2.2 Core Attributes for “Contract” Behavior
+Important product direction:
 
-| Attribute | Level | Effect |
-|-----------|--------|--------|
-| **`@trust("hybrid" \| "decentralized" \| "centralized")`** | Service | Trust model for the service; required with `@chain` in examples. |
-| **`@chain("ethereum" \| "polygon" \| ...)`** | Service | Declares which chain(s) the service targets (chain_id resolved via stdlib registry). |
-| **`@secure`** | Service or function | Auth + reentrancy guard + audit logging. Enforced at runtime. |
-| **`@public`** | Service or function | No auth required; mutually exclusive with `@secure`. |
-| **`@txn`** | Function | Wraps execution in a transaction (atomicity/rollback in DAL runtime). |
-| **`@limit(n)`** | Service or function | Resource cap (e.g. max operations). |
-| **`@advanced_security`** / **`@advanced_security("monitor" \| "advisory" \| "strict")`** | Service | MEV-aware checks: monitor (warn), advisory (suggest), strict (block unprotected execution). |
-| **`@compile_target("blockchain")`** | Service | Declares intent to compile to chain; **not yet implemented** (no EVM bytecode emission). |
-
-Function-level `@secure` / `@public` override service-level; if a function has neither, it inherits from the service.
-
-### 2.3 Events
-
-Services can declare **events** and “emit” them in logic (for audit and downstream tooling; not on-chain event logs unless you push them via chain/oracle).
-
-```dal
-event Transfer(from: string, to: string, amount: int);
-event AdminAction(admin: string, action: string);
-
-// In a method:
-event Transfer { from: from, to: to, amount: amount };
-```
+- Eventual naming migration from `decentralized` to `zero` is planned with compatibility aliasing; not yet cut over.
 
 ---
 
-## 3. Security Model
+## 3. EVM Compile Path: What Works Today
 
-### 3.1 @secure: Auth, Reentrancy, Audit
+### 3.1 Blockchain Backend
 
-When a service or function is `@secure`:
+`@compile_target("blockchain")` currently supports:
 
-- **Authentication:** Runtime requires a valid `current_caller` (not null/default address). Otherwise `AccessDenied`.  
-- **Reentrancy:** A reentrancy guard prevents re-entry into the **same** `instance_id::method_name`. Same instance + different method is allowed.  
-- **Audit:** Access attempts (allowed/denied) and reentrancy attempts are logged. With file logging enabled (`LOG_SINK`, `LOG_DIR`), logs go to disk for compliance.
+- DAL service selection for blockchain target
+- Solidity source emission
+- solc invocation for `.abi`/`.bin` outputs (when available)
+- compile manifest generation
 
-So for “contract” style code, `@secure` gives you a single attribute for “only authenticated callers” and “no reentrancy into this method.”
+### 3.2 Hybrid Auto-Split Artifacts
 
-### 3.2 @public vs @secure
+For `@trust("hybrid")` + `@compile_target("blockchain")`:
 
-- Use **`@public`** for read-only or unauthenticated endpoints (e.g. `balance_of`, public config).  
-- Use **`@secure`** for state-changing or privileged operations (e.g. `transfer`, `mint`, admin).  
-- Do not combine both on the same service/function; they are mutually exclusive.
+- Methods using orchestration/admin namespaces (`auth::`, `cloudadmin::`, `cloud` alias) are auto-routed to HTTP/orchestration artifact output.
+- Bytecode-safe methods continue in EVM artifact flow.
+- HTTP split artifact emitted as `<Service>.http.json`.
 
-### 3.3 @advanced_security (MEV / DeFi)
-
-For DeFi-style logic, `@advanced_security` adds:
-
-- **Monitor (default):** Scans for MEV-related patterns, logs warnings, does **not** block.  
-- **Advisory:** Suggests protection patterns (e.g. slippage, commit-reveal).  
-- **Strict:** Can **block** execution when unprotected high-risk patterns are detected.
-
-The runtime distinguishes “monitoring” code (e.g. `find_*`, `detect_*`) from “execution” code (e.g. `execute_swap`, `transfer`). Monitoring is allowed; execution may be blocked in strict mode if protections are missing. Manual patterns (commit-reveal, slippage checks) are documented in `MEV_PROTECTION_MANUAL.md`.
-
-### 3.4 No Separate @reentrancy_guard / @safe_math in Docs
-
-Reentrancy is covered by **`@secure`**. Overflow/safe math is not a separate attribute in the current attributes reference; use careful arithmetic or patterns as needed. The Solidity converter suggests `@reentrancy_guard` and `@safe_math` when converting from OpenZeppelin; in DAL, the runtime reentrancy guard is part of `@secure`.
+This enables one hybrid service definition to produce dual artifacts without silent cross-boundary leakage.
 
 ---
 
-## 4. Chain Interaction
+## 4. Chain Runtime and Typed Evidence
 
-### 4.1 What chain:: Provides
+### 4.1 Typed Chain Surfaces
 
-- **chain::deploy(chain_id, contract_name, constructor_args)**  
-  - If `constructor_args` contains **`raw_transaction`** or **`signed_tx`** (hex): sends via `eth_sendRawTransaction` and returns the contract address.  
-  - Otherwise returns a **mock** address (no on-chain deploy).  
+- `chain::deploy_typed(...)`
+- `chain::call_typed(...)`
 
-- **chain::call(chain_id, contract_address, function_name, args)**  
-  - If `args` contains **`data`** or **`calldata`** (ABI-encoded hex): performs **eth_call** and returns result.  
-  - Otherwise returns a string message only (no real call).  
+Both carry evidence contracts including:
 
-- **chain::get_balance**, **chain::get_gas_price**, **chain::estimate_gas**, **chain::get_transaction_status**, **chain::get_block_timestamp**  
-  - Use JSON-RPC when the `http-interface` feature is enabled and RPC is configured; otherwise fallbacks/mocks.  
+- payload fields (`contract_address` / `result_hex`)
+- `tx_hash`
+- `receipt_status`
+- `revert_data`
+- `error_code`
+- `message`
 
-- **chain::mint(name, metadata)**  
-  - Generates an in-memory asset id and logs; no chain mint unless you wire raw tx elsewhere.  
+`chain::deploy`/`chain::call` remain as compatibility wrappers.
 
-- **chain::get(asset_id)** / **chain::exists(asset_id)**  
-  - When `CHAIN_ASSET_CHAIN_ID` and `CHAIN_ASSET_CONTRACT` are set, can call ERC721 `tokenURI` / `ownerOf` via hardcoded selectors.  
+### 4.2 Strict Mode
 
-So: **real on-chain reads and real deploy/call are possible when you supply signed tx or ABI-encoded `data`.** DAL does not today compile your service to EVM bytecode or produce that encoding for you.
+Strict policy controls synthetic fallback behavior:
 
-### 4.2 Multi-Chain
-
-You can declare multiple chains and pass `chain_id` into `chain::` calls. The chain registry (e.g. Ethereum, Polygon, BSC, Arbitrum, Optimism) provides RPC URLs and metadata. Examples use `@chain("ethereum")` or multiple `@chain(...)`; configuration can be overridden via env (e.g. RPC URL).
-
-### 4.3 Orchestration vs On-Chain Bytecode
-
-- **Orchestration:** DAL services run in the DAL runtime. They keep state in the runtime (e.g. `self.balances`), call `chain::*` to read/write chains, and can coordinate agents, oracles, and HTTP. This is the **current** model.  
-- **On-chain bytecode:** Some docs (e.g. SMART_CONTRACT_INTERFACE_SEPARATION, PHASE2_COMPILATION_TARGETS) describe `@compile_target("blockchain")` and compiling to EVM bytecode. **That pipeline is not implemented.** Today, “deploying a DAL contract” means either (1) supplying a pre-signed raw transaction from an external build (e.g. Solidity compiled elsewhere), or (2) running the DAL service as an off-chain orchestrator that talks to existing contracts.
+- enabled via env policy path
+- rejects missing signed deploy tx / missing calldata in strict contexts
+- enforces explicit, auditable failure over implicit simulation in protected paths
 
 ---
 
-## 5. Writing Patterns
+## 5. ABI/Decode Maturity (Major Progress)
 
-### 5.1 Token / Balance Logic
+### 5.1 Vector-Hardened Coverage
 
-Keep balances in a `map<string, int>` (or similar); use `@secure` on transfer/mint, check balances and use `@txn` if you want atomicity in the DAL runtime. Emit events for audit. Example: `tutorials/01_defi_token.md`, `examples/smart_contract.dal`.
+ABI golden vectors now cover:
 
-### 5.2 Calling Existing Solidity Contracts
+- selector determinism and catalog parity
+- static words (`uint`, `bool`, `address`, `bytes32`)
+- revert payloads (`Error(string)`, `Panic(uint256)`)
+- custom error family parity
+- dynamic returns (`string`, `bytes`)
+- nested dynamic tuple decode (`tuple(string,bytes)`)
+- malformed payload rejection
+- selector mismatch rejection
 
-To call an already-deployed contract you need ABI-encoded **`data`**. Today you must:
+### 5.2 Extracted Typed Codec Surface
 
-- Provide that encoding externally, or  
-- Use a future add_sol that is wired in the engine and does ABI encoding (see SOLIDITY_EVM_INTEGRATION_SCOPE.md).
+`src/stdlib/abi_codec.rs` now contains decode-focused helpers:
 
-Then pass `data` (or `calldata`) in the args to **chain::call**.
+- word decoders
+- dynamic payload decoders
+- nested tuple decoder
+- custom error payload decoder
+- revert payload decoders
 
-### 5.3 Oracle and External Data
-
-Use **oracle::** for price/data feeds and **chain::** for on-chain state. DeFi examples combine oracle data with transfer/pool logic; MEV patterns (commit-reveal, slippage) are manual in DAL as in `MEV_PROTECTION_MANUAL.md`.
-
-### 5.4 Admin and Access
-
-Use **auth::** (e.g. `auth::session()`, `auth::has_role()`) for caller identity and roles. **cloudadmin::** provides authorize/grant/revoke and policy for hybrid admin control. Apply **@secure** on admin-only methods so only authenticated callers with the right context can execute.
-
----
-
-## 6. Testing
-
-- **Unit / integration:** Use the built-in test framework (e.g. `*.test.dal`), `dal test`, and assertions. You can test service methods and chain calls (with mocks or real RPC as needed).  
-- **Security:** Reentrancy and safe math are covered by runtime tests. `@advanced_security` behavior can be tested with monitor/advisory/strict examples (see READINESS_CHECKLIST.md).  
-- **Testnet:** Deploy via raw tx to a testnet and run DAL against that RPC to validate chain:: behavior end-to-end.
+This extraction is additive and compatibility-safe: behavior remains pinned by vectors.
 
 ---
 
-## 7. Limitations and Caveats
+## 6. ABI Registry Integration (Current State)
 
-| Area | Limitation |
-|------|------------|
-| **EVM bytecode** | DAL does not compile services to EVM bytecode. No “dal build → deploy bytecode” today. |
-| **ABI encoding** | No built-in encoding of (function, args) to `data`. Callers must supply encoded `data` or use a future add_sol. |
-| **Deploy** | Real deploy only via pre-signed raw transaction. No “compile Solidity/DAL and sign inside DAL” in one step. |
-| **add_sol** | ABI parse/register/call_with_abi exist in stdlib but are **not** wired in the runtime; DAL code cannot call `add_sol::*` yet. |
-| **Function-level @secure** | Documented; implementation may only enforce at service level in some paths (see SECURE_SCOPE.md). |
-| **Events** | Event declarations and emission are in-DAL; they do not automatically become chain logs unless you explicitly push them (e.g. via chain or logging). |
+### 6.1 Registry Model
 
----
+ABI metadata is registered per contract identity:
 
-## 8. When to Use DAL for “Smart Contract” Work
+- key: `(chain_id, contract_address)`
+- value: parsed function metadata
 
-- **Good fit:**  
-  - Off-chain orchestration that coordinates multiple contracts, oracles, and agents.  
-  - Services that need built-in auth, reentrancy protection, and audit logging in one place.  
-  - DeFi-style logic where you want MEV awareness and manual protection patterns in the same language.  
-  - Multi-chain reads and writes when you can supply raw tx or pre-encoded call data.  
+Registration occurs during `add_sol::register_contract(...)`.
 
-- **Less fit today:**  
-  - Deploying new contract bytecode from DAL only (need external compile + sign).  
-  - Calling arbitrary Solidity functions by name + args without bringing your own ABI encoding.  
-  - Replacing Solidity entirely for contracts that must live only on-chain; DAL is a hybrid runtime.
+### 6.2 Runtime Decode Resolution
 
----
+`chain::call_typed` now attempts decode through registry identity:
 
-## 9. References
+- resolves by `chain_id + contract_address + function_name`
+- populates additive fields:
+  - `decoded`
+  - `decode_error`
 
-| Document | Content |
-|----------|---------|
-| `docs/syntax.md` | Service declaration, attributes, events |
-| `docs/attributes.md` | Full attribute list |
-| `docs/REENTRANCY_CLARITY.md` | What @secure does (reentrancy + auth) |
-| `docs/SECURE_SCOPE.md` | Scope of @secure, service vs function |
-| `docs/guides/SECURE_ATTRIBUTE_USAGE.md` | @secure vs @public, patterns |
-| `docs/MEV_PROTECTION_MANUAL.md` | Manual MEV patterns in DAL |
-| `docs/ADVANCED_SECURITY_DESIGN.md` | @advanced_security tiers |
-| `docs/tutorials/01_defi_token.md` | DeFi token tutorial |
-| `docs/guides/DEPLOYMENT_GUIDE.md` | Deployment checklist and env |
-| `docs/project/SOLIDITY_EVM_INTEGRATION_SCOPE.md` | What’s implemented vs missing for EVM |
-| `docs/guides/SMART_CONTRACT_INTERFACE_SEPARATION.md` | Separation of contract vs UI |
-| `examples/smart_contract.dal`, `examples/defi_nft_rwa_contract.dal` | Example “contract” services |
+### 6.3 Overload Safety
+
+For overloaded function names:
+
+- decode does **not** guess
+- optional `function_signature` hint is used for deterministic disambiguation
+- if omitted under overload ambiguity, decode is skipped with explicit `decode_error`
+
+This is aligned with audit-ready deterministic behavior.
 
 ---
 
-**Bottom line:** DAL gives you a **single language** for contract-like services with **@trust**, **@chain**, **@secure**, and **@advanced_security**, plus **chain::** for real RPC and raw-tx deploy/call. Use it for orchestration and hybrid apps; treat “compile to EVM” as a future or external step and supply signed tx or ABI-encoded `data` for real on-chain deployment and calls today.
+## 7. add_sol Boundary Status
+
+`add_sol` is now runtime-integrated (no longer “stdlib-only/not wired”):
+
+- `add_sol::call_with_abi(...)` (legacy string projection)
+- `add_sol::call_with_abi_typed(...)` (typed envelope with decoded/evidence fields)
+
+Typed boundary fields include:
+
+- `result_hex`
+- `decoded`
+- `decode_error`
+- `tx_hash`
+- `receipt_status`
+- `revert_data`
+- `error_code`
+- `message`
+
+---
+
+## 8. Security and Policy Posture
+
+- `@secure` remains the primary runtime guard for authenticated, non-reentrant execution paths.
+- Trust-mode boundary enforcement is active and increasingly compile/test-gated.
+- Hybrid split and overload-safe decode reduce ambiguity and policy leakage risks.
+- CI trust-gate has expanded forensic logs for each hardening increment.
+
+---
+
+## 9. Remaining Gaps (Honest Status)
+
+| Area | Current gap |
+|---|---|
+| Full decentralized codegen | Broad subset still pending; many generated method bodies remain conservative |
+| End-to-end production contract path | Still not equivalent to “drop-in Solidity replacement” for all patterns |
+| Typed decode conventions in DAL call-sites | Signature-hint conventions and guidance are still being normalized |
+| Audit package completeness | In progress; not yet final-form |
+
+---
+
+## 10. Practical Guidance: Use DAL for Smart Contract Work
+
+**Good fit now**
+
+- Trust-aware orchestration over on-chain systems
+- Typed chain interaction with evidence-first outputs
+- ABI-driven integration with existing Solidity contracts
+- Hybrid services requiring clear split between chain-safe and orchestration-only blocks
+
+**Use caution / expect work-in-progress**
+
+- Fully replacing Solidity-only contract development for complex on-chain-only programs
+- Assuming all DAL methods under blockchain target generate production-grade non-stub contract logic today
+
+---
+
+## 11. Reference Pointers (Live Source of Truth)
+
+- `docs/development/implementation/TRUST_SPLIT_EVM_PRODUCTION_PLAN.md`
+- `docs/development/testing/TRUST_SPLIT_EVM_TEST_AND_RELEASE_PLAN.md`
+- `docs/development/implementation/TRUST_SPLIT_EVM_HARDENING_REFACTOR_PLAN.md`
+- `src/stdlib/chain.rs`
+- `src/stdlib/abi_codec.rs`
+- `src/stdlib/add_sol.rs`
+- `.github/workflows/ci.yml` (`trust-split-fast`)
+
+---
+
+**Bottom line:** DAL’s smart-contract path is now materially stronger than earlier states: typed evidence, hardened ABI decode, hybrid dual-artifact split, and overload-safe registry decode are in place. The strategic goal remains unchanged: continue converting this reliable integration/runtime surface into a full audit-ready contract-native path by closing the remaining decentralized codegen and final operational audit gaps.

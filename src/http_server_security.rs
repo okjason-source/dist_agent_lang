@@ -267,17 +267,10 @@ impl JwtConfig {
     }
 }
 
+#[derive(Default)]
 /// Authentication token validation with JWT support
 pub struct AuthValidator {
     config: JwtConfig,
-}
-
-impl Default for AuthValidator {
-    fn default() -> Self {
-        Self {
-            config: JwtConfig::default(),
-        }
-    }
 }
 
 impl AuthValidator {
@@ -362,11 +355,8 @@ impl AuthValidator {
             .get("Authorization")
             .and_then(|h| h.to_str().ok())
             .and_then(|s| {
-                if s.starts_with("Bearer ") {
-                    Some(s[7..].to_string())
-                } else {
-                    None
-                }
+                s.strip_prefix("Bearer ")
+                    .map(|stripped| stripped.to_string())
             })
     }
 }

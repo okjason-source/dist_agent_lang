@@ -54,6 +54,7 @@ This creates (only if missing):
 - `agent.toml` — agent config: `[agent.sh]` trust, `[agent]` context_path
 - `agent.dal` — entry script that spawns an agent and sets it as the serve agent
 - `evolve.md` — evolve context (conversation + action log)
+- `playground.dal` — small language sandbox (`dal run playground.dal`)
 - `README.md` — short project summary
 - `.env.example` and `.env` — env vars (`.env` in `.gitignore`)
 
@@ -77,6 +78,31 @@ If `agent.dal` exists in the current directory, it is run first; the script must
 
 Copy `.env.example` to `.env`, set any keys (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` for AI), and load them (e.g. `export $(cat .env | xargs)` or use a .env loader). See [Shell trust and evolve context](#8-shell-trust-and-evolve-context).
 
+### Host protocol API note
+
+For DAL apps, prefer the typed request shape:
+
+```dal
+let ai_result = ai::agent_run({"message": "Run pwd once and summarize", "policy": "tool_loop"});
+```
+
+`ai::respond_with_tools_result(...)` remains available for compatibility, but new first-party examples and templates use `ai::agent_run(...)`.
+
+For `dal init agent`, the generated `.env` includes a minimal host-protocol profile intended for task completion with safety guardrails:
+
+```bash
+DAL_AGENT_SHELL_TRUST=sandboxed
+DAL_AGENT_CONTEXT_PATH=./evolve.md
+DAL_AGENT_POLICY_DEFAULT=auto
+DAL_AGENT_NATIVE_TOOL_CALLS_ENABLED=1
+DAL_AGENT_ENABLE_LEGACY_TEXT_JSON=0
+DAL_AGENT_GUARDS_STRICT_MODE=1
+```
+
+- `DAL_AGENT_POLICY_DEFAULT=auto` favors execution for actionable requests and direct replies for purely conversational prompts.
+- `DAL_AGENT_GUARDS_STRICT_MODE=1` keeps conservative loop safeguards enabled for fresh projects.
+- If you want chat-only behavior, set `DAL_AGENT_POLICY_DEFAULT=reply_only`.
+
 ---
 
 ## 3. Project layout and config
@@ -88,6 +114,7 @@ Copy `.env.example` to `.env`, set any keys (e.g. `OPENAI_API_KEY`, `ANTHROPIC_A
 | `agent.dal` | Agent behavior: spawn agent, call `agent::set_serve_agent(agent_id)`. Used by `dal run agent.dal` and by `dal agent serve` when no `--behavior` is given. |
 | `agent.toml` | Agent config: `[agent.sh]` (shell trust), `[agent]` (e.g. `context_path` for evolve). |
 | `evolve.md` | Evolve context file: conversation history and action log. Path set by `[agent] context_path` or `DAL_AGENT_CONTEXT_PATH`. |
+| `playground.dal` | Minimal DAL language sandbox for quick experimentation (`dal run playground.dal`). |
 | `dal.toml` | Minimal DAL package (created only if missing). |
 | `.env.example` | Documented env vars (safe to commit). |
 | `.env` | Local overrides (do not commit; in `.gitignore`). |

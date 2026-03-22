@@ -35,6 +35,7 @@ pub enum SkillCategory {
 }
 
 impl SkillCategory {
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "development" | "dev" => Some(Self::Development),
@@ -52,6 +53,14 @@ impl SkillCategory {
             Self::Office => "office",
             Self::Home => "home",
         }
+    }
+}
+
+impl std::str::FromStr for SkillCategory {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        SkillCategory::from_str(s).ok_or(())
     }
 }
 
@@ -220,6 +229,12 @@ impl SkillRegistry {
     }
 }
 
+impl Default for SkillRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // ── .skill.dal loader ───────────────────────────────────────────────
 
 /// Parse skill definitions from a `.skill.dal` file or string.
@@ -297,7 +312,7 @@ pub fn parse_skill_dal(source: &str) -> Result<Vec<SkillDefinition>, String> {
                             skip_whitespace_and_comments(&mut chars);
                         }
                     }
-                    other if other.is_empty() => {
+                    "" => {
                         return Err(format!("Unexpected character in skill '{}' block", name));
                     }
                     other => {

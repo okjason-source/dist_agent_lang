@@ -874,7 +874,7 @@ pub fn set_root_screen(app: &mut MobileApp, screen_id: String) -> Result<bool, S
 }
 
 pub fn push_screen(app: &mut MobileApp, screen_id: String) -> Result<bool, String> {
-    if let Some(_) = app.screens.iter().find(|s| s.id == screen_id) {
+    if app.screens.iter().any(|s| s.id == screen_id) {
         app.navigation.screens.push(screen_id.clone());
         app.navigation.current_screen = Some(screen_id.clone());
 
@@ -1493,7 +1493,7 @@ pub fn check_for_updates() -> Result<bool, String> {
 }
 
 pub fn rate_app(rating: i64, review: Option<String>) -> Result<bool, String> {
-    if rating < 1 || rating > 5 {
+    if !(1..=5).contains(&rating) {
         return Err("Rating must be between 1 and 5".to_string());
     }
 
