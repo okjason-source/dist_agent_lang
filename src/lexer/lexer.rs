@@ -36,8 +36,9 @@ impl Lexer {
         let mut line = self.line;
         let mut column = self.column;
 
-        // Phase 2: Token count limit - prevent DoS via excessive tokens
-        const MAX_TOKENS: usize = 1_000_000; // 1M tokens
+        // Token budget: single source of truth is `crate::MAX_PARSE_TOKEN_COUNT` / `parse_source`.
+        // Guard uses `>=` before lexing the next non-EOF token; one `EOF` is appended after the loop.
+        // `parse_source` applies `len >` on the final vec (defense in depth).
 
         // Safety: Prevent infinite loops from mutations that cause position to not advance.
         // Also limits mutation-testing timeouts (e.g. += -> -=) so they fail fast; see docs/MUTATION_ANALYSIS.md.
@@ -51,13 +52,13 @@ impl Lexer {
                 return Err(LexerError::UnexpectedCharacter('\0', line, column));
             }
 
-            // Phase 2: Check token count limit
-            if tokens.len() >= MAX_TOKENS {
+            // Check token count limit (see `crate::MAX_PARSE_TOKEN_COUNT`).
+            if tokens.len() >= crate::MAX_PARSE_TOKEN_COUNT {
                 return Err(LexerError::TooManyTokens(
                     line,
                     column,
                     tokens.len(),
-                    MAX_TOKENS,
+                    crate::MAX_PARSE_TOKEN_COUNT,
                 ));
             }
 

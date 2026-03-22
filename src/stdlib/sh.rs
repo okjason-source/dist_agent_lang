@@ -1,9 +1,9 @@
 //! Shell execution for agents (Phase 1–2 of AGENT_SHELL_EVOLUTION_PLAN).
 //! sh::run(cmd) runs a command in a subprocess; trust config (off/sandboxed/confirmed/trusted)
-//! is read from env DAL_AGENT_SHELL_TRUST, agent.toml [agent.sh], or dal.toml [agent.sh].
-//! When owner_principal_id is set (env DAL_AGENT_OWNER_PRINCIPAL or [agent] owner_principal_id),
+//! is read from env DAL_AGENT_SHELL_TRUST, agent.toml \[agent.sh\], or dal.toml \[agent.sh\].
+//! When owner_principal_id is set (env DAL_AGENT_OWNER_PRINCIPAL or \[agent\] owner_principal_id),
 //! key::check("sh", "run", principal_id) is consulted first; if key allows, run proceeds; if key
-//! denies or no key exists, we fall back to [agent.sh] config.
+//! denies or no key exists, we fall back to \[agent.sh\] config.
 
 use crate::runtime::values::Value;
 use crate::stdlib::key::{self, CapabilityRequest};
@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::env;
 use std::process::Command;
 
-/// Trust level for sh execution. Precedence: env DAL_AGENT_SHELL_TRUST → agent.toml / dal.toml [agent.sh] → default "sandboxed".
+/// Trust level for sh execution. Precedence: env DAL_AGENT_SHELL_TRUST → agent.toml / dal.toml \[agent.sh\] → default "sandboxed".
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TrustLevel {
     Off,
@@ -135,7 +135,7 @@ pub fn constraints_description_for_prompt(config: &ShConfig) -> String {
     lines.join(" ")
 }
 
-/// Load owner principal ID for key::check. Precedence: DAL_AGENT_OWNER_PRINCIPAL → agent.toml [agent] owner_principal_id → dal.toml [agent] owner_principal_id.
+/// Load owner principal ID for key::check. Precedence: DAL_AGENT_OWNER_PRINCIPAL → agent.toml \[agent\] owner_principal_id → dal.toml \[agent\] owner_principal_id.
 pub fn load_owner_principal_id() -> Option<String> {
     if let Ok(id) = env::var("DAL_AGENT_OWNER_PRINCIPAL") {
         if !id.trim().is_empty() {

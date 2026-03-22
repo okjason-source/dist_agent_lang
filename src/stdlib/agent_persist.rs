@@ -1,6 +1,6 @@
 //! Persistent agent runtime: snapshot, backends (file, SQLite), config.
-//! Persistence is ON by default; set DAL_AGENT_RUNTIME_PERSIST=0 or agent.toml [agent] runtime_persist = false to disable.
-//! Backend: DAL_AGENT_RUNTIME_BACKEND=file|sqlite (default: file). Path: DAL_AGENT_RUNTIME_PATH or agent.toml [agent] runtime_path.
+//! Persistence is ON by default; set DAL_AGENT_RUNTIME_PERSIST=0 or agent.toml \[agent\] runtime_persist = false to disable.
+//! Backend: DAL_AGENT_RUNTIME_BACKEND=file|sqlite (default: file). Path: DAL_AGENT_RUNTIME_PATH or agent.toml \[agent\] runtime_path.
 
 use crate::runtime::values::Value;
 use crate::stdlib::agent::{

@@ -298,7 +298,7 @@ pub enum Expression {
     Throw(Box<Expression>),
     ObjectLiteral(HashMap<String, Expression>), // NEW: object literal syntax
     ArrayLiteral(Vec<Expression>),              // NEW: array literal syntax [expr1, expr2, ...]
-    /// Index access: expr[index] — array or map key access
+    /// Index access: `expr[index]` — array or map key access
     IndexAccess(Box<Expression>, Box<Expression>),
     /// Arrow function: (param => { body }) — single param, block body
     ArrowFunction {

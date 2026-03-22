@@ -102,7 +102,7 @@ fn run_bond(args: &[String], opts: &RunOptions) -> RunResult {
     }
 }
 
-/// bond auth-to-web: <token> <url> [method] or --token/--token-env/--auth-file with <url> [method].
+/// bond auth-to-web: `{token} {url} {method}` or --token/--token-env/--auth-file with `{url} {method}`.
 fn run_bond_auth_to_web(args: &[&str], dry_run: bool, opts: &RunOptions) -> RunResult {
     // Token: from opts (--token/--token-env/--auth-file) or first positional arg
     let token = if let Some(ref t) = opts.token {
@@ -189,7 +189,7 @@ fn run_bond_auth_to_web(args: &[&str], dry_run: bool, opts: &RunOptions) -> RunR
     }
 }
 
-/// bond oracle-to-chain: <source> <query> <chain_id> [--use-as gas|price|param]. Fetch from oracle, pass to chain (e.g. gas estimate).
+/// bond oracle-to-chain: `{source} {query} {chain_id}` [--use-as gas|price|param]. Fetch from oracle, pass to chain (e.g. gas estimate).
 fn run_bond_oracle_to_chain(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 3 {
         return RunResult {
@@ -268,7 +268,7 @@ fn run_bond_oracle_to_chain(args: &[&str], dry_run: bool) -> RunResult {
     }
 }
 
-/// bond chain-to-sync: <chain_id> <tx_hash> <sync_url>. Chain tx status → sync push.
+/// bond chain-to-sync: `{chain_id} {tx_hash} {sync_url}`. Chain tx status → sync push.
 fn run_bond_chain_to_sync(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 3 {
         return RunResult {
@@ -340,7 +340,7 @@ fn run_bond_chain_to_sync(args: &[&str], dry_run: bool) -> RunResult {
     }
 }
 
-/// bond iot-to-db: <device_id> <conn_str> [--table name]. IoT read → DB insert.
+/// bond iot-to-db: `{device_id} {conn_str}` [--table name]. IoT read → DB insert.
 fn run_bond_iot_to_db(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 2 {
         return RunResult {
@@ -419,7 +419,7 @@ fn run_bond_iot_to_db(args: &[&str], dry_run: bool) -> RunResult {
     }
 }
 
-/// bond iot-to-web: <device_id> <url> [--auth token]. IoT read → web POST.
+/// bond iot-to-web: `{device_id} {url}` [--auth token]. IoT read → web POST.
 fn run_bond_iot_to_web(args: &[&str], dry_run: bool, opts: &RunOptions) -> RunResult {
     if args.len() < 2 {
         return RunResult {
@@ -519,7 +519,7 @@ fn run_bond_iot_to_web(args: &[&str], dry_run: bool, opts: &RunOptions) -> RunRe
     }
 }
 
-/// bond db-to-sync: <conn_str> <sync_url> [--query sql]. DB query → sync push.
+/// bond db-to-sync: `{conn_str} {sync_url}` [--query sql]. DB query → sync push.
 fn run_bond_db_to_sync(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 2 {
         return RunResult {
@@ -616,7 +616,7 @@ fn run_bond_db_to_sync(args: &[&str], dry_run: bool) -> RunResult {
     }
 }
 
-/// bond sync-to-db: <sync_url> <conn_str> [--table name]. Sync pull → DB insert.
+/// bond sync-to-db: `{sync_url} {conn_str}` [--table name]. Sync pull → DB insert.
 fn run_bond_sync_to_db(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 2 {
         return RunResult {
@@ -690,7 +690,7 @@ fn run_bond_sync_to_db(args: &[&str], dry_run: bool) -> RunResult {
     }
 }
 
-/// bond ai-to-service: <prompt> <service_url> [--model]. AI generate → web POST.
+/// bond ai-to-service: `{prompt} {service_url}` [--model]. AI generate → web POST.
 fn run_bond_ai_to_service(args: &[&str], dry_run: bool, opts: &RunOptions) -> RunResult {
     if args.len() < 2 {
         return RunResult {
@@ -779,7 +779,7 @@ fn run_bond_ai_to_service(args: &[&str], dry_run: bool, opts: &RunOptions) -> Ru
     }
 }
 
-/// bond service-to-chain: <service_url> <chain_id> <addr> <fn>. Service result → chain call.
+/// bond service-to-chain: `{service_url} {chain_id} {addr} {fn_name}`. Service result → chain call.
 fn run_bond_service_to_chain(args: &[&str], dry_run: bool, opts: &RunOptions) -> RunResult {
     if args.len() < 4 {
         return RunResult {
@@ -874,7 +874,7 @@ fn run_bond_service_to_chain(args: &[&str], dry_run: bool, opts: &RunOptions) ->
     }
 }
 
-/// bond log-to-sync: <sync_url> [--level info|warn|error|audit]. Log entries → sync push.
+/// bond log-to-sync: `{sync_url}` [--level info|warn|error|audit]. Log entries → sync push.
 fn run_bond_log_to_sync(args: &[&str], dry_run: bool) -> RunResult {
     if args.is_empty() {
         return RunResult {
@@ -1053,7 +1053,7 @@ fn run_pipe(args: &[String], opts: &RunOptions) -> RunResult {
 }
 
 /// Execute a single pipe step. Step = [component, subcommand, ...args]. Returns payload string for next step.
-/// Supported: oracle fetch <source> <query>, chain estimate <chain_id> <op>, chain gas-price <chain_id>, web get <url>.
+/// Supported: oracle fetch `{source} {query}`, chain estimate `{chain_id} {op}`, chain gas-price `{chain_id}`, web get `{url}`.
 fn execute_pipe_step(step: &[&str], _input: Option<&str>) -> Result<String, String> {
     if step.len() < 2 {
         return Err("step must be at least [component, subcommand]".to_string());
@@ -1256,7 +1256,7 @@ fn run_invoke(args: &[String], opts: &RunOptions) -> RunResult {
     }
 }
 
-/// invoke price-to-deploy: <oracle_source> <chain_id> <contract>. Oracle price → chain deploy (or estimate).
+/// invoke price-to-deploy: `{oracle_source} {chain_id} {contract}`. Oracle price → chain deploy (or estimate).
 fn run_invoke_price_to_deploy(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 3 {
         return RunResult {
@@ -1327,7 +1327,7 @@ fn run_invoke_price_to_deploy(args: &[&str], dry_run: bool) -> RunResult {
     }
 }
 
-/// invoke iot-ingest: <device_id> <conn_str> [--window secs]. IoT read → DB → Sync.
+/// invoke iot-ingest: `{device_id} {conn_str}` [--window secs]. IoT read → DB → Sync.
 fn run_invoke_iot_ingest(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 2 {
         return RunResult {
@@ -1395,7 +1395,7 @@ fn run_invoke_iot_ingest(args: &[&str], dry_run: bool) -> RunResult {
     }
 }
 
-/// invoke ai-audit: <conn_str> "<query>". DB query → AI analysis → log.
+/// invoke ai-audit: `{conn_str}` `"{query}"`. DB query → AI analysis → log.
 fn run_invoke_ai_audit(args: &[&str], dry_run: bool) -> RunResult {
     if args.len() < 2 {
         return RunResult {
@@ -1462,7 +1462,7 @@ fn run_invoke_ai_audit(args: &[&str], dry_run: bool) -> RunResult {
     }
 }
 
-/// invoke compliance-check: <addr> [--chain_id N] [--aml]. Chain balance + AML check, combined report.
+/// invoke compliance-check: `{addr}` [--chain_id N] [--aml]. Chain balance + AML check, combined report.
 fn run_invoke_compliance_check(args: &[&str], dry_run: bool) -> RunResult {
     if args.is_empty() {
         return RunResult {

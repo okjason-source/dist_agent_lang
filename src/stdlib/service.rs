@@ -14,7 +14,7 @@ pub struct AIService {
     pub temperature: f64,
     pub max_tokens: Option<i64>,
     pub api_key: Option<String>,
-    /// Optional base URL for API (e.g. https://api.openai.com/v1). When set with api_key, real HTTP is used.
+    /// Optional base URL for API (e.g. <https://api.openai.com/v1>). When set with api_key, real HTTP is used.
     pub base_url: Option<String>,
 }
 

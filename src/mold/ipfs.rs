@@ -46,7 +46,7 @@ pub fn upload_file(api_base: &str, path: &Path) -> Result<String, String> {
     Ok(hash.to_string())
 }
 
-/// Download content from IPFS by CID as raw bytes (POST /api/v0/cat?arg=<cid>).
+/// Download content from IPFS by CID as raw bytes (`POST .../api/v0/cat?arg=` + cid).
 /// Use for binary content (e.g. tarballs). For text, use `cat` instead.
 pub fn cat_bytes(api_base: &str, cid: &str) -> Result<Vec<u8>, String> {
     let url = format!("{}/api/v0/cat?arg={}", api_base.trim_end_matches('/'), cid);
@@ -67,7 +67,7 @@ pub fn cat_bytes(api_base: &str, cid: &str) -> Result<Vec<u8>, String> {
     Ok(bytes.to_vec())
 }
 
-/// Download content from IPFS by CID (POST /api/v0/cat?arg=<cid>).
+/// Download content from IPFS by CID (`POST .../api/v0/cat?arg=` + cid).
 pub fn cat(api_base: &str, cid: &str) -> Result<String, String> {
     let url = format!("{}/api/v0/cat?arg={}", api_base.trim_end_matches('/'), cid);
     let client = reqwest::blocking::Client::builder()

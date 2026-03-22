@@ -2969,7 +2969,7 @@ fn handle_update_command() {
 }
 
 /// Install dependencies from dal.toml (M3: resolve path deps, write dal.lock).
-/// If sync is true, adds missing [dependencies] from import usage in .dal files first.
+/// If sync is true, adds missing \[dependencies\] from import usage in .dal files first.
 fn install_dependencies(sync: bool) {
     println!("📦 Installing dependencies...");
 
@@ -3289,7 +3289,7 @@ fn run_dal_file_with_venv(script_path: &std::path::Path, venv: &dist_agent_lang:
     }
 }
 
-/// Publish package to registry (R4). Requires dal.toml with [package] name/version and DAL_REGISTRY_TOKEN.
+/// Publish package to registry (R4). Requires dal.toml with \[package\] name/version and DAL_REGISTRY_TOKEN.
 fn publish_package() {
     println!("📤 Publishing package...");
 

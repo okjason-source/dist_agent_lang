@@ -159,7 +159,7 @@ pub enum Commands {
 
     /// Install dependencies
     Install {
-        /// Add missing [dependencies] from import usage in .dal files under current dir
+        /// Add missing \[dependencies\] from import usage in .dal files under current dir
         #[arg(long)]
         sync: bool,
     },

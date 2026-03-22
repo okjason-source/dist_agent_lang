@@ -437,6 +437,8 @@ When adding new DAL features, ensure:
 
 ## Future Enhancements
 
+For **mutation testing** (fault injection against the Rust test suite), see the [mutation testing runbook](testing/mutation_testing/README.md) and [Mutation analysis](MUTATION_ANALYSIS.md) for run scripts, reliable long-run practices, and enterprise-oriented test policy.
+
 ### Planned Features
 
 1. **AST-aware semantic validation**

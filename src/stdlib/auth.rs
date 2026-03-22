@@ -405,7 +405,7 @@ pub fn create_role(name: String, permissions: Vec<String>, description: String) 
 
 /// Get role information.
 /// Loads from env when set: AUTH_ROLES_JSON (JSON array of {name, permissions[], description}),
-/// or AUTH_ROLE_<name>_PERMISSIONS (comma-separated) and AUTH_ROLE_<name>_DESCRIPTION.
+/// or `AUTH_ROLE_<name>_PERMISSIONS` (comma-separated) and `AUTH_ROLE_<name>_DESCRIPTION`.
 /// Falls back to built-in admin/moderator/user when not configured.
 pub fn get_role(role_name: &str) -> Option<Role> {
     // Env: single role AUTH_ROLE_<name>_PERMISSIONS and AUTH_ROLE_<name>_DESCRIPTION

@@ -697,3 +697,57 @@ fn collect_namespaces_from_expression(expr: &Expression) -> std::collections::Ha
     }
     set
 }
+
+#[cfg(test)]
+mod trust_compile_mode_tests {
+    use super::TrustCompileMode;
+
+    #[test]
+    fn from_str_accepts_all_compile_trust_modes_case_insensitive() {
+        assert_eq!(
+            TrustCompileMode::from_str("auto"),
+            Some(TrustCompileMode::Auto)
+        );
+        assert_eq!(
+            TrustCompileMode::from_str("AUTO"),
+            Some(TrustCompileMode::Auto)
+        );
+        assert_eq!(
+            TrustCompileMode::from_str("  Auto  "),
+            Some(TrustCompileMode::Auto)
+        );
+        assert_eq!(
+            TrustCompileMode::from_str("decentralized"),
+            Some(TrustCompileMode::Decentralized)
+        );
+        assert_eq!(
+            TrustCompileMode::from_str("DECENTRALIZED"),
+            Some(TrustCompileMode::Decentralized)
+        );
+        assert_eq!(
+            TrustCompileMode::from_str("hybrid"),
+            Some(TrustCompileMode::Hybrid)
+        );
+        assert_eq!(
+            TrustCompileMode::from_str("centralized"),
+            Some(TrustCompileMode::Centralized)
+        );
+        assert_eq!(
+            TrustCompileMode::from_str("auto "),
+            Some(TrustCompileMode::Auto)
+        );
+    }
+
+    #[test]
+    fn from_str_rejects_unknown_and_empty() {
+        assert_eq!(TrustCompileMode::from_str(""), None);
+        assert_eq!(TrustCompileMode::from_str("   "), None);
+        assert_eq!(TrustCompileMode::from_str("xyzzy"), None);
+    }
+
+    #[test]
+    fn std_from_str_matches_from_str() {
+        assert_eq!(TrustCompileMode::Hybrid, "hybrid".parse().unwrap());
+        assert!("nope".parse::<TrustCompileMode>().is_err());
+    }
+}

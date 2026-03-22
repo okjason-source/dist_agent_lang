@@ -88,15 +88,33 @@ pub use testing::{
     TestStatus, TestSuite,
 };
 
+/// Maximum DAL source size accepted by [`parse_source`] (bytes).
+pub const MAX_PARSE_SOURCE_BYTES: usize = 10 * 1024 * 1024;
+
+/// Maximum number of [`lexer::tokens::TokenWithPosition`] entries allowed after lexing (including the
+/// final `EOF`). The lexer uses this same value; it checks `tokens.len() >=` before each new
+/// non-EOF token, then appends `EOF` once. [`parse_source`] rejects `len > MAX_PARSE_TOKEN_COUNT`
+/// on the finished vector as defense in depth.
+pub const MAX_PARSE_TOKEN_COUNT: usize = 1_000_000;
+
+#[inline]
+fn source_byte_len_exceeds_parse_limit(len: usize) -> bool {
+    len > MAX_PARSE_SOURCE_BYTES
+}
+
+#[inline]
+fn token_count_exceeds_parse_limit(count: usize) -> bool {
+    count > MAX_PARSE_TOKEN_COUNT
+}
+
 // For external integrations
 pub fn parse_source(source: &str) -> Result<ast::Program, Box<dyn std::error::Error>> {
     // Phase 2: Input size limit - prevent DoS via oversized source code
-    const MAX_SOURCE_SIZE: usize = 10 * 1024 * 1024; // 10MB
-    if source.len() > MAX_SOURCE_SIZE {
+    if source_byte_len_exceeds_parse_limit(source.len()) {
         return Err(format!(
             "Source code too large: {} bytes (max: {} bytes)",
             source.len(),
-            MAX_SOURCE_SIZE
+            MAX_PARSE_SOURCE_BYTES
         )
         .into());
     }
@@ -107,12 +125,11 @@ pub fn parse_source(source: &str) -> Result<ast::Program, Box<dyn std::error::Er
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
 
     // Phase 2: Token count limit - prevent DoS via excessive tokens
-    const MAX_TOKENS: usize = 1_000_000; // 1M tokens
-    if tokens_with_pos.len() > MAX_TOKENS {
+    if token_count_exceeds_parse_limit(tokens_with_pos.len()) {
         return Err(format!(
             "Too many tokens: {} (max: {})",
             tokens_with_pos.len(),
-            MAX_TOKENS
+            MAX_PARSE_TOKEN_COUNT
         )
         .into());
     }
@@ -255,4 +272,26 @@ pub fn execute_dal_and_extract_handlers_with_path(
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
     }
     Ok((runtime.user_functions.clone(), runtime.scope.clone()))
+}
+
+#[cfg(test)]
+mod parse_source_limit_tests {
+    use super::{
+        source_byte_len_exceeds_parse_limit, token_count_exceeds_parse_limit,
+        MAX_PARSE_SOURCE_BYTES, MAX_PARSE_TOKEN_COUNT,
+    };
+
+    #[test]
+    fn byte_length_limit_uses_strict_greater_than() {
+        assert!(!source_byte_len_exceeds_parse_limit(MAX_PARSE_SOURCE_BYTES));
+        assert!(source_byte_len_exceeds_parse_limit(
+            MAX_PARSE_SOURCE_BYTES + 1
+        ));
+    }
+
+    #[test]
+    fn token_count_limit_uses_strict_greater_than() {
+        assert!(!token_count_exceeds_parse_limit(MAX_PARSE_TOKEN_COUNT));
+        assert!(token_count_exceeds_parse_limit(MAX_PARSE_TOKEN_COUNT + 1));
+    }
 }

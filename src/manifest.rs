@@ -1,4 +1,4 @@
-//! M3: dal.toml and lockfile — parse [dependencies], resolve path deps, read/write dal.lock.
+//! M3: dal.toml and lockfile — parse \[dependencies\], resolve path deps, read/write dal.lock.
 //! Path-only resolution first; no registry fetch.
 
 use std::collections::HashMap;
@@ -26,7 +26,7 @@ pub enum DependencySpec {
     Path(PathBuf),
 }
 
-/// Parsed [dependencies] section: package name -> spec.
+/// Parsed \[dependencies\] section: package name -> spec.
 pub type DependenciesMap = HashMap<String, DependencySpec>;
 
 /// Resolved dependencies: package name -> absolute package root directory.
@@ -35,14 +35,14 @@ pub type ResolvedDeps = HashMap<String, PathBuf>;
 /// Version metadata for lockfile: name -> (version, source). Only for version deps.
 pub type LockfileVersionMeta = HashMap<String, (String, String)>;
 
-/// Package identity from [package] section (for publish).
+/// Package identity from \[package\] section (for publish).
 #[derive(Debug, Clone)]
 pub struct PackageInfo {
     pub name: String,
     pub version: String,
 }
 
-/// Parse [package] name and version from dal.toml.
+/// Parse \[package\] name and version from dal.toml.
 pub fn parse_package_info(manifest_path: &Path) -> Result<PackageInfo, ManifestError> {
     let content = std::fs::read_to_string(manifest_path)
         .map_err(|_| ManifestError::NotFound(manifest_path.to_path_buf()))?;
@@ -75,7 +75,7 @@ pub fn parse_package_info(manifest_path: &Path) -> Result<PackageInfo, ManifestE
     Ok(PackageInfo { name, version })
 }
 
-/// Parse dal.toml and return [dependencies] (path or version).
+/// Parse dal.toml and return \[dependencies\] (path or version).
 pub fn parse_dependencies(manifest_path: &Path) -> Result<DependenciesMap, ManifestError> {
     let content = std::fs::read_to_string(manifest_path)
         .map_err(|_| ManifestError::NotFound(manifest_path.to_path_buf()))?;
@@ -119,7 +119,7 @@ pub fn parse_dependencies(manifest_path: &Path) -> Result<DependenciesMap, Manif
     Ok(out)
 }
 
-/// Add package names to [dependencies] in dal.toml if not already present (with given version).
+/// Add package names to \[dependencies\] in dal.toml if not already present (with given version).
 /// Returns the number of entries added. Preserves existing keys; new keys use version (e.g. "latest").
 pub fn add_dependencies_if_missing(
     manifest_path: &Path,
@@ -193,7 +193,7 @@ pub fn resolve_dependencies(
     Ok((resolved, version_meta))
 }
 
-/// Lockfile format: [dependencies] name = "absolute_path"
+/// Lockfile format: \[dependencies\] name = "absolute_path"
 const LOCKFILE_SECTION: &str = "[dependencies]\n";
 
 /// Write dal.lock next to manifest_path with resolved paths and optional version metadata.
@@ -240,7 +240,7 @@ pub fn write_lockfile(
 }
 
 /// Read dal.lock and return name -> path. If lockfile missing, resolve from manifest and return.
-/// When a cached path is missing, re-fetches from [metadata] source if available.
+/// When a cached path is missing, re-fetches from \[metadata\] source if available.
 pub fn load_resolved_deps(manifest_path: &Path) -> Result<ResolvedDeps, ManifestError> {
     let project_dir = manifest_path.parent().unwrap_or_else(|| Path::new("."));
     let lock_path = project_dir.join("dal.lock");

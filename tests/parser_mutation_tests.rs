@@ -3,8 +3,8 @@
 // See docs/testing/mutation_testing/analysis/CAUGHT_VS_MISSED_ANALYSIS.md
 
 use dist_agent_lang::lexer::tokens::Literal;
-use dist_agent_lang::parse_source;
 use dist_agent_lang::parser::ast::{Expression, Statement};
+use dist_agent_lang::{parse_source, MAX_PARSE_SOURCE_BYTES, MAX_PARSE_TOKEN_COUNT};
 use dist_agent_lang::{Lexer, Parser};
 
 // ============================================================================
@@ -797,13 +797,12 @@ fn test_parser_range_expression() {
 // ============================================================================
 // PARSE_SOURCE DoS LIMITS (lib.rs mutations: *→+, >→==, >→>=)
 // ============================================================================
-// Catches: replace * with + in MAX_SOURCE_SIZE; replace > with == or >= in size/token checks
-
-const TEN_MB: usize = 10 * 1024 * 1024;
+// Catches: replace * with + in limit constants; replace > with == or >= in size/token checks.
+// Boundaries are also asserted in `lib.rs` `parse_source_limit_tests` (runs under `cargo test --lib`).
 
 #[test]
 fn test_parse_source_rejects_oversized_source() {
-    let oversized = "x".repeat(TEN_MB + 1);
+    let oversized = "x".repeat(MAX_PARSE_SOURCE_BYTES + 1);
     let result = parse_source(&oversized);
     assert!(result.is_err(), "parse_source should reject source > 10MB");
     let err = result.unwrap_err();
@@ -814,15 +813,16 @@ fn test_parse_source_rejects_oversized_source() {
         msg
     );
     assert!(
-        msg.contains("10485760"),
-        "error should include max size (10485760); got: {}",
+        msg.contains(&MAX_PARSE_SOURCE_BYTES.to_string()),
+        "error should include max size ({}); got: {}",
+        MAX_PARSE_SOURCE_BYTES,
         msg
     );
 }
 
 #[test]
 fn test_parse_source_accepts_source_under_limit() {
-    let at_limit = "x".repeat(TEN_MB);
+    let at_limit = "x".repeat(MAX_PARSE_SOURCE_BYTES);
     let result = parse_source(&at_limit);
     assert!(
         result.is_ok(),
@@ -844,8 +844,9 @@ fn test_parse_source_rejects_too_many_tokens() {
         msg
     );
     assert!(
-        msg.contains("1000000"),
-        "error should include max token count (1000000); got: {}",
+        msg.contains(&MAX_PARSE_TOKEN_COUNT.to_string()),
+        "error should include max token count ({}); got: {}",
+        MAX_PARSE_TOKEN_COUNT,
         msg
     );
 }

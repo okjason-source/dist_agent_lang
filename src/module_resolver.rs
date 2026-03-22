@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 /// Collect import paths from a program that look like package names (not stdlib, not relative paths).
-/// Used by `dal install --sync` to add missing [dependencies] from usage.
+/// Used by `dal install --sync` to add missing \[dependencies\] from usage.
 pub fn package_import_names_from_program(program: &Program) -> Vec<String> {
     let mut out = Vec::new();
     for stmt in &program.statements {

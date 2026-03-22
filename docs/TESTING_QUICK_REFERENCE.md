@@ -281,6 +281,16 @@ cargo run --release -- run file.test.dal --verbose
 
 ## Documentation
 
+### rustdoc (no warnings)
+
+Build API docs for the library and binaries without documenting dependencies:
+
+```bash
+RUSTDOCFLAGS='-D warnings' cargo doc -p dist_agent_lang --no-deps --lib --bins
+```
+
+Library only (faster): `RUSTDOCFLAGS='-D warnings' cargo doc -p dist_agent_lang --no-deps`.
+
 - **Full Strategy**: [`THREE_LAYER_TESTING.md`](THREE_LAYER_TESTING.md)
 - **Comprehensive Guide**: [`guides/TESTING_GUIDE.md`](guides/TESTING_GUIDE.md)
 - **Attribute Testing**: [`TESTING_ATTRIBUTES.md`](TESTING_ATTRIBUTES.md)

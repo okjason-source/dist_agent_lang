@@ -51,7 +51,8 @@ Welcome to the comprehensive documentation for `dist_agent_lang` (DAL), a hybrid
 ### 🧪 Testing
 - **[Testing Quick Reference](TESTING_QUICK_REFERENCE.md)** - Testing commands and overview
 - **[Three-Layer Testing](THREE_LAYER_TESTING.md)** - Unit, integration, and mutation testing
-- **[Mutation Analysis](MUTATION_ANALYSIS.md)** - Mutation testing results, critical gaps, and test recommendations
+- **[Mutation testing runbook](testing/mutation_testing/README.md)** - Scripts, outputs, hardening pointers
+- **[Mutation Analysis](MUTATION_ANALYSIS.md)** - Results, gaps, enterprise hardening, and test policy
 - **[Testing Guide](getting_started/TESTING_GUIDE.md)** - How to run tests
 
 ### 📋 Specialized Guides
@@ -73,7 +74,9 @@ docs/
 ├── GIT_QUICK_REFERENCE.md # Git/GitHub commands for this repo
 ├── TESTING_QUICK_REFERENCE.md
 ├── THREE_LAYER_TESTING.md
-├── MUTATION_ANALYSIS.md  # Mutation testing gaps and recommendations
+├── MUTATION_ANALYSIS.md  # Mutation gaps, enterprise hardening, test policy
+├── testing/
+│   └── mutation_testing/README.md  # cargo-mutants runbook
 └── README.md             # This file
 ```
 

@@ -3,7 +3,7 @@
 //! Endpoints:
 //! - GET /v1/packages/:name     -> index JSON (versions + url per version)
 //! - GET /v1/packages/:name/versions/:version/tarball -> tarball bytes
-//! - PUT /v1/packages/:name/versions/:version -> publish (body = tarball, Authorization: Bearer <token>)
+//! - PUT /v1/packages/:name/versions/:version -> publish (body = tarball, `Authorization: Bearer` + registry token)
 //!
 //! Env: REGISTRY_STORAGE_PATH, REGISTRY_TOKEN (auth), REGISTRY_PUBLIC_URL (for index urls), PORT.
 

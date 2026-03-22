@@ -8,8 +8,8 @@ use std::sync::{Mutex, OnceLock};
 ///
 /// Real-world behavior:
 /// - **authorize**: First checks the key registry (key::check); then an in-memory admin
-///   registry (optionally loaded from env ADMIN_IDS, ADMIN_LEVEL_<id>); then built-in rules.
-/// - **enforce_policy**: Evaluates policy by admin level; optional env POLICY_<name>_LEVEL overrides.
+///   registry (optionally loaded from env ADMIN_IDS, `ADMIN_LEVEL_<id>`); then built-in rules.
+/// - **enforce_policy**: Evaluates policy by admin level; optional env `POLICY_<name>_LEVEL` overrides.
 /// - **validate_hybrid_trust** / **bridge_trusts**: Semantic checks for hybrid trust models.
 
 #[derive(Debug, Clone, PartialEq)]
@@ -262,7 +262,7 @@ fn level_at_least(level: &AdminLevel, min_level: &AdminLevel) -> bool {
     )
 }
 
-/// Enforce admin policy: optional env POLICY_<name>_LEVEL sets minimum level; else built-in rules.
+/// Enforce admin policy: optional env `POLICY_<name>_LEVEL` sets minimum level; else built-in rules.
 pub fn enforce_policy(policy_name: &str, context: AdminContext) -> Result<bool, String> {
     if let Some(min_level) = policy_min_level(policy_name) {
         return Ok(level_at_least(&context.level, &min_level));
