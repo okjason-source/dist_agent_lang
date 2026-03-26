@@ -1,6 +1,6 @@
 [package]
 name = "dist_agent_lang"
-version = "1.0.17"
+version = "1.0.18"
 edition = "2021"
 description = "Hybrid programming with library and CLI support for Off/On-chain network integration"
 authors = ["OK Jason <jason.dinh.developer@gmail.com>"]
@@ -48,7 +48,7 @@ path = "src/lib.rs"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
-thiserror = "2.0"
+thiserror = "1.0"
 lazy_static = "1.4"
 sha2 = "0.10"
 sha3 = "0.10"
@@ -64,9 +64,9 @@ tokio = { version = "1.0", features = ["full"] }
 axum = { version = "0.7", features = ["ws"] }
 futures-util = "0.3"
 tower = { version = "0.4", features = ["util"] }
-tower-http = { version = "0.6", features = ["cors", "fs", "normalize-path"] }
+tower-http = { version = "0.5", features = ["cors", "fs", "normalize-path"] }
 serde_json = "1.0"
-toml = "1.0"
+toml = "0.8"
 base64 = "0.21"
 hex = "0.4"
 # Cryptography for production-grade signatures
@@ -76,14 +76,14 @@ ed25519-dalek = "2.1"
 jsonwebtoken = { version = "10.3", features = ["rust_crypto"] }
 rsa = { version = "0.9", features = ["sha2"] }
 aes-gcm = "0.10"
-uuid = { version = "1.22", features = ["v4"] }
+uuid = { version = "1.0", features = ["v4"] }
 # HTTP client for HTTP interface
 # Using rustls instead of native-tls to avoid TLSv1.3 match pattern issues
 reqwest = { version = "0.11", features = ["blocking", "json", "multipart", "rustls-tls"], default-features = false, optional = true }
 # Package registry: unpack tarballs, index, cache
 tar = "0.4"
 flate2 = "1.0"
-tempfile = "3.27"
+tempfile = "3.0"
 dirs = "5"
 urlencoding = "2"
 dotenvy = "0.15"
@@ -113,7 +113,7 @@ criterion = "0.5"
 proptest = "1.4"
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
-tempfile = "3.27"
+tempfile = "3.0"
 serial_test = "3.0"
 
 [[bench]]
