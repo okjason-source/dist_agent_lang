@@ -1,5 +1,7 @@
 # Installation and Usage Guide
 
+**Canonical doc:** [`docs/getting_started/INSTALLATION.md`](docs/getting_started/INSTALLATION.md) — prefer updating that file first; see [`docs/INSTALLATION_CANONICAL.md`](docs/INSTALLATION_CANONICAL.md).
+
 ## ⚠️ Production Readiness Notice
 
 **dist_agent_lang v1.0.5 is currently in beta/early release.** While it includes comprehensive security features, it has not yet undergone extensive real-world production testing. 

@@ -110,6 +110,11 @@ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::er
             .route("/health", axum::routing::get(health_handler));
     }
 
+    router = router.route(
+        "/metrics",
+        axum::routing::get(crate::observability::metrics_http_response),
+    );
+
     // Shared rate limiter so all requests are counted (default 100 req/min).
     // Without this, the middleware would create a new limiter per request and rate limiting would never trigger.
     let rate_limiter = Arc::new(RateLimiter::new(100, 60));
@@ -117,6 +122,9 @@ pub async fn start_http_server(server: HttpServer) -> Result<(), Box<dyn std::er
     // Add security middleware layers, then state.
     // Extension(rate_limiter) is added last so it runs first on the request and rate_limit_middleware sees it in extensions.
     let app = router
+        .layer(middleware::from_fn(
+            crate::observability::http_observability_middleware,
+        ))
         .layer(middleware::from_fn(security_headers_middleware))
         .layer(middleware::from_fn(rate_limit_middleware))
         .layer(middleware::from_fn(request_size_middleware))

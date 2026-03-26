@@ -74,7 +74,7 @@ fn default_return_expr(ret: &str, method_name: &str) -> String {
     }
     if r.starts_with("Result<") {
         return format!(
-            "unimplemented!(\"native stub: {} not implemented; implement in Rust or use DAL interpreter\")",
+            "panic!(\"DAL native codegen: Result-returning method '{}' is not fully lowered. Use `dal run` / the interpreter, or extend the native backend (see docs/USAGE_GUIDE.md @compile_target).\")",
             method_name
         );
     }

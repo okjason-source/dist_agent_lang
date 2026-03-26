@@ -58,7 +58,17 @@ fn binary_name() -> String {
         .unwrap_or_else(|| "dal".to_string())
 }
 
+/// Milliseconds since UNIX epoch; 0 if the system clock is before the epoch.
+fn unix_epoch_millis_u128() -> u128 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0)
+}
+
 fn main() {
+    dist_agent_lang::observability::init_tracing();
+
     // Initialize persistent file logging if configured
     // This enables audit log persistence for @secure services
     if let Err(e) = log::initialize_file_logging() {
@@ -191,9 +201,14 @@ fn main() {
             #[cfg(feature = "lsp")]
             {
                 let _ = rest;
-                tokio::runtime::Runtime::new()
-                    .expect("tokio runtime")
-                    .block_on(lsp::run_lsp_server());
+                let rt = match tokio::runtime::Runtime::new() {
+                    Ok(rt) => rt,
+                    Err(e) => {
+                        eprintln!("❌ Failed to create async runtime: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+                rt.block_on(lsp::run_lsp_server());
             }
             #[cfg(not(feature = "lsp"))]
             handle_lsp_command(rest);
@@ -899,7 +914,7 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
             let mut rt = Runtime::new();
             rt.user_functions = (*uf).clone();
             // Read shared scope (handler state persists across requests)
-            rt.scope = sc.read().unwrap().clone();
+            rt.scope = sc.read().unwrap_or_else(|e| e.into_inner()).clone();
             rt
         }
     };
@@ -909,7 +924,7 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
         let sc = shared_scope.clone();
         Arc::new(Box::new(
             move |new_scope: &dist_agent_lang::runtime::scope::Scope| {
-                let mut guard = sc.write().unwrap();
+                let mut guard = sc.write().unwrap_or_else(|e| e.into_inner());
                 *guard = new_scope.clone();
             },
         ))
@@ -988,7 +1003,16 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
             .allow_origin(origin)
             .allow_headers(Any)
     };
-    let app = app.layer(cors);
+    use axum::middleware;
+    let app = app
+        .route(
+            "/metrics",
+            axum::routing::get(dist_agent_lang::observability::metrics_http_response),
+        )
+        .layer(middleware::from_fn(
+            dist_agent_lang::observability::http_observability_middleware,
+        ))
+        .layer(cors);
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
 
@@ -1440,15 +1464,33 @@ fn test_performance_optimization() {
     // Profile lexer operations
     let _tokens = profiler.profile_scope("lexer_tokenization", || {
         let lexer = Lexer::new("let x = 42 + 10 * 2; let y = (x + 5) / 3;");
-        lexer.tokenize_immutable().unwrap()
+        match lexer.tokenize_immutable() {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("❌ Selftest benchmark lexer failed: {}", e);
+                std::process::exit(1);
+            }
+        }
     });
 
     // Profile parser operations
     let _ast = profiler.profile_scope("parser_parsing", || {
         let lexer = Lexer::new("let x = 42 + 10 * 2; let y = (x + 5) / 3;");
-        let tokens = lexer.tokenize_immutable().unwrap();
+        let tokens = match lexer.tokenize_immutable() {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("❌ Selftest benchmark lexer failed: {}", e);
+                std::process::exit(1);
+            }
+        };
         let mut parser = Parser::new(tokens);
-        parser.parse().unwrap()
+        match parser.parse() {
+            Ok(a) => a,
+            Err(e) => {
+                eprintln!("❌ Selftest benchmark parse failed: {}", e);
+                std::process::exit(1);
+            }
+        }
     });
 
     // Profile runtime operations
@@ -1480,9 +1522,21 @@ fn test_performance_optimization() {
     "#;
 
     let lexer = Lexer::new(test_source);
-    let tokens = lexer.tokenize_immutable().unwrap();
+    let tokens = match lexer.tokenize_immutable() {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("❌ Selftest optimizer lexer failed: {}", e);
+            std::process::exit(1);
+        }
+    };
     let mut parser = Parser::new(tokens);
-    let original_ast = parser.parse().unwrap();
+    let original_ast = match parser.parse() {
+        Ok(a) => a,
+        Err(e) => {
+            eprintln!("❌ Selftest optimizer parse failed: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     let optimization_result = optimizer.optimize(original_ast);
     println!("   ✅ Optimization completed:");
@@ -2146,6 +2200,15 @@ fn lint_dal_file(filename: &str) {
     }
 }
 
+/// Write a file during `dal new` / project scaffolding. Exits with a clear error instead of panicking on I/O failure.
+fn write_project_file(path: impl AsRef<std::path::Path>, contents: &str) {
+    let path = path.as_ref();
+    if let Err(e) = std::fs::write(path, contents) {
+        eprintln!("❌ Failed to write {}: {}", path.display(), e);
+        std::process::exit(1);
+    }
+}
+
 /// Create a new DAL project
 fn create_new_project(project_name: &str, project_type: Option<&str>) {
     println!("📦 Creating new dist_agent_lang project: {}", project_name);
@@ -2270,8 +2333,8 @@ dal fmt main.dal
     );
 
     // Write files
-    std::fs::write(format!("{}/main.dal", project_name), main_dal).unwrap();
-    std::fs::write(format!("{}/README.md", project_name), readme).unwrap();
+    write_project_file(format!("{}/main.dal", project_name), &main_dal);
+    write_project_file(format!("{}/README.md", project_name), &readme);
 
     println!("   ✅ Created main.dal");
     println!("   ✅ Created README.md");
@@ -2308,15 +2371,12 @@ contract Token {{
 "#
     );
 
-    std::fs::write(format!("{}/contract.dal", project_name), contract_dal).unwrap();
-    std::fs::write(
-        format!("{}/README.md", project_name),
-        format!(
-            "# {} Smart Contract\n\nA dist_agent_lang smart contract project.",
-            project_name
-        ),
-    )
-    .unwrap();
+    write_project_file(format!("{}/contract.dal", project_name), &contract_dal);
+    let readme_contract = format!(
+        "# {} Smart Contract\n\nA dist_agent_lang smart contract project.",
+        project_name
+    );
+    write_project_file(format!("{}/README.md", project_name), &readme_contract);
 
     println!("   ✅ Created contract.dal");
     println!("   ✅ Created README.md");
@@ -2341,15 +2401,12 @@ web::start(WebApp, 3000);
 "#
     );
 
-    std::fs::write(format!("{}/web.dal", project_name), web_dal).unwrap();
-    std::fs::write(
-        format!("{}/README.md", project_name),
-        format!(
-            "# {} Web App\n\nA dist_agent_lang web application.",
-            project_name
-        ),
-    )
-    .unwrap();
+    write_project_file(format!("{}/web.dal", project_name), &web_dal);
+    let readme_web = format!(
+        "# {} Web App\n\nA dist_agent_lang web application.",
+        project_name
+    );
+    write_project_file(format!("{}/README.md", project_name), &readme_web);
 
     println!("   ✅ Created web.dal");
     println!("   ✅ Created README.md");
@@ -2385,15 +2442,12 @@ main(sys::args());
 "#
     );
 
-    std::fs::write(format!("{}/cli.dal", project_name), cli_dal).unwrap();
-    std::fs::write(
-        format!("{}/README.md", project_name),
-        format!(
-            "# {} CLI\n\nA dist_agent_lang CLI application.",
-            project_name
-        ),
-    )
-    .unwrap();
+    write_project_file(format!("{}/cli.dal", project_name), &cli_dal);
+    let readme_cli = format!(
+        "# {} CLI\n\nA dist_agent_lang CLI application.",
+        project_name
+    );
+    write_project_file(format!("{}/README.md", project_name), &readme_cli);
 
     println!("   ✅ Created cli.dal");
     println!("   ✅ Created README.md");
@@ -2420,12 +2474,9 @@ fn validate(x: int) -> bool {{
 "#
     );
 
-    std::fs::write(format!("{}/lib.dal", project_name), lib_dal).unwrap();
-    std::fs::write(
-        format!("{}/README.md", project_name),
-        format!("# {} Library\n\nA dist_agent_lang library.", project_name),
-    )
-    .unwrap();
+    write_project_file(format!("{}/lib.dal", project_name), &lib_dal);
+    let readme_lib = format!("# {} Library\n\nA dist_agent_lang library.", project_name);
+    write_project_file(format!("{}/README.md", project_name), &readme_lib);
 
     println!("   ✅ Created lib.dal");
     println!("   ✅ Created README.md");
@@ -2505,8 +2556,8 @@ dal ai test ai.dal
 "#
     );
 
-    std::fs::write(format!("{}/ai.dal", project_name), ai_dal).unwrap();
-    std::fs::write(format!("{}/README.md", project_name), readme).unwrap();
+    write_project_file(format!("{}/ai.dal", project_name), &ai_dal);
+    write_project_file(format!("{}/README.md", project_name), &readme);
 
     println!("   ✅ Created ai.dal");
     println!("   ✅ Created README.md");
@@ -2598,8 +2649,8 @@ dal iot ai-optimize <device_id> --goal energy
 "#
     );
 
-    std::fs::write(format!("{}/iot.dal", project_name), iot_dal).unwrap();
-    std::fs::write(format!("{}/README.md", project_name), readme).unwrap();
+    write_project_file(format!("{}/iot.dal", project_name), &iot_dal);
+    write_project_file(format!("{}/README.md", project_name), &readme);
 
     println!("   ✅ Created iot.dal");
     println!("   ✅ Created README.md");
@@ -2724,8 +2775,8 @@ For creating new projects, use: `dal new <name> --type <ai|iot|agent|chain|web|c
 "#
     );
 
-    std::fs::write(format!("{}/agent.dal", project_name), agent_dal).unwrap();
-    std::fs::write(format!("{}/README.md", project_name), readme).unwrap();
+    write_project_file(format!("{}/agent.dal", project_name), &agent_dal);
+    write_project_file(format!("{}/README.md", project_name), &readme);
 
     println!("   ✅ Created agent.dal");
     println!("   ✅ Created README.md");
@@ -2775,7 +2826,7 @@ fn run_repl() {
     loop {
         // Print prompt
         print!("dal[{}]> ", line_number);
-        std::io::Write::flush(&mut std::io::stdout()).unwrap();
+        let _ = std::io::Write::flush(&mut std::io::stdout());
 
         // Read line
         let mut input = String::new();
@@ -3452,50 +3503,49 @@ fn profile_dal_file(filename: &str, memory_tracking: bool) {
 
     // Profile lexing
     let tokens = profiler.profile_scope("lexing", || {
-        let t = Lexer::new(&source_code)
-            .tokenize_immutable()
-            .map_err(|e| {
+        match Lexer::new(&source_code).tokenize_immutable() {
+            Ok(t) => {
+                println!("✅ Lexer scanning... {} tokens", t.len());
+                t
+            }
+            Err(e) => {
                 eprintln!(
                     "❌ Lexer error:\n{}",
                     format_lexer_error(&e, Some(filename), Some(&source_code))
                 );
                 std::process::exit(1);
-            })
-            .unwrap();
-        println!("✅ Lexer scanning... {} tokens", t.len());
-        t
+            }
+        }
     });
 
     // Profile parsing
     let ast = profiler.profile_scope("parsing", || {
         let mut parser = Parser::new(tokens);
-        let a = parser
-            .parse()
-            .map_err(|e| {
+        match parser.parse() {
+            Ok(a) => {
+                println!("✅ Parsed {} statements", a.statements.len());
+                a
+            }
+            Err(e) => {
                 eprintln!(
                     "❌ Parsing failed:\n{}",
                     format_parser_error(&e, Some(filename), Some(&source_code))
                 );
                 std::process::exit(1);
-            })
-            .unwrap();
-        println!("✅ Parsed {} statements", a.statements.len());
-        a
+            }
+        }
     });
 
     // Profile execution
     profiler.profile_scope("execution", || {
         let mut runtime = Runtime::new();
-        runtime
-            .execute_program(ast, None)
-            .map_err(|e| {
-                eprintln!(
-                    "❌ Execution failed:\n{}",
-                    format_runtime_error(&e, Some(filename), Some(&source_code))
-                );
-                std::process::exit(1);
-            })
-            .unwrap();
+        if let Err(e) = runtime.execute_program(ast, None) {
+            eprintln!(
+                "❌ Execution failed:\n{}",
+                format_runtime_error(&e, Some(filename), Some(&source_code))
+            );
+            std::process::exit(1);
+        }
     });
 
     // Generate and print report
@@ -5571,12 +5621,25 @@ fn run_ide_server(port: u16, workspace_root: std::path::PathBuf) {
 
     let app = server::build_router(workspace_root);
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
-    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    let rt = match tokio::runtime::Runtime::new() {
+        Ok(rt) => rt,
+        Err(e) => {
+            eprintln!("❌ Failed to create async runtime: {}", e);
+            std::process::exit(1);
+        }
+    };
     rt.block_on(async {
-        let listener = tokio::net::TcpListener::bind(addr)
-            .await
-            .expect("Failed to bind");
-        axum::serve(listener, app).await.expect("Server error");
+        let listener = match tokio::net::TcpListener::bind(addr).await {
+            Ok(l) => l,
+            Err(e) => {
+                eprintln!("❌ Failed to bind {}: {}", addr, e);
+                std::process::exit(1);
+            }
+        };
+        if let Err(e) = axum::serve(listener, app).await {
+            eprintln!("❌ IDE server error: {}", e);
+            std::process::exit(1);
+        }
     });
 }
 
@@ -6682,13 +6745,7 @@ fn handle_agent_command(args: &[String]) {
             let sender_id = &args[1];
             let receiver_id = &args[2];
             let content = args[3].clone();
-            let msg_id = format!(
-                "msg_{}",
-                std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis()
-            );
+            let msg_id = format!("msg_{}", unix_epoch_millis_u128());
             let msg = agent::create_agent_message(
                 msg_id,
                 sender_id.to_string(),
@@ -6755,7 +6812,7 @@ fn handle_agent_command(args: &[String]) {
             println!("   Commands: exit, quit\n");
             loop {
                 print!("you> ");
-                std::io::Write::flush(&mut std::io::stdout()).unwrap();
+                let _ = std::io::Write::flush(&mut std::io::stdout());
                 let mut input = String::new();
                 if std::io::stdin().read_line(&mut input).is_err() {
                     break;
@@ -6769,13 +6826,7 @@ fn handle_agent_command(args: &[String]) {
                     break;
                 }
                 // Send user -> agent
-                let msg_id = format!(
-                    "msg_{}",
-                    std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis()
-                );
+                let msg_id = format!("msg_{}", unix_epoch_millis_u128());
                 let msg = agent::create_agent_message(
                     msg_id.clone(),
                     USER_ID.to_string(),
@@ -6833,13 +6884,7 @@ fn handle_agent_command(args: &[String]) {
                     } else {
                         "medium"
                     };
-                    let task_id = format!(
-                        "task_{}",
-                        std::time::SystemTime::now()
-                            .duration_since(std::time::UNIX_EPOCH)
-                            .unwrap()
-                            .as_millis()
-                    );
+                    let task_id = format!("task_{}", unix_epoch_millis_u128());
                     let task = match agent::create_agent_task(task_id, description, priority) {
                         Some(t) => t,
                         None => {
@@ -6895,7 +6940,7 @@ fn handle_agent_command(args: &[String]) {
             println!();
             println!("   For multi-agent workflows, use DAL code:");
             println!("   import agent from \"@dal/agent\"");
-            println!("   let ctx = agent::spawn(agent::create_agent_config(\"w1\", \"worker\", \"Process\").unwrap())");
+            println!("   let ctx = agent::spawn(agent::create_agent_config(\"w1\", \"worker\", \"Process\")); // returns Result — use ? or match");
             println!("   agent::communicate(ctx.agent_id, \"agent_2\", agent::create_agent_message(...))");
             println!();
             println!("   Run with: dal run your_agents.dal");
@@ -7547,7 +7592,7 @@ print("Server running on http://localhost:3000")"#
 
 fn main() {{
     print("Hello from DAL!")
-    // Implement your logic here. Set OPENAI_API_KEY or ANTHROPIC_API_KEY for AI codegen.
+    // Next: edit this file or use `dal ai code` / `dal check`. See docs/PUBLIC_DOCUMENTATION_INDEX.md and docs/guides/AGENT_SETUP_AND_USAGE.md for AI keys.
 }}
 
 main()"#,

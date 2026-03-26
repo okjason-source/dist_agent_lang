@@ -55,6 +55,7 @@ pub mod lexer;
 pub mod manifest;
 pub mod module_resolver;
 pub mod mold;
+pub mod observability;
 pub mod parser;
 pub mod performance;
 pub mod project_init;

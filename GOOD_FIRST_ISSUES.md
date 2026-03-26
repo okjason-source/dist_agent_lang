@@ -201,7 +201,7 @@ pub fn verify_ecdsa_signature(message: &[u8], signature: &[u8], public_key: &[u8
 
 **Files:**
 - `src/stdlib/crypto_signatures.rs`
-- See `CODEBASE_TODOS.md` for details
+- See [CODEBASE_TODOS.md](CODEBASE_TODOS.md) for the TODO index
 
 **Effort:** 4-6 hours total
 **Impact:** High - Security critical
@@ -222,7 +222,7 @@ pub fn verify_ecdsa_signature(message: &[u8], signature: &[u8], public_key: &[u8
 
 **Files:**
 - `src/http_server_security.rs`
-- See `CODEBASE_TODOS.md` for details
+- See [CODEBASE_TODOS.md](CODEBASE_TODOS.md) for the TODO index
 
 **Effort:** 2-3 hours
 **Impact:** High - Security critical

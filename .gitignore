@@ -51,6 +51,7 @@ PHASE*.md
 /docs/MUTATION_TESTING_ANALYSIS.md
 /docs/PRODUCTION_GRADE_CHECKLIST.md
 /docs/MUTATION_ANALYSIS.md
+/docs/PROJECT_STATE_AND_ALIGNMENT.md
 
 # Internal/planning guides (do not publish)
 /docs/guides/PACKAGING_STRATEGY.md
@@ -124,6 +125,7 @@ Vibes_Job/
 Dockerfile*
 Makefile
 CONTRIBUTOR_LICENSE_AGREEMENT.md
+CODEBASE_TODOS.md
 *.swp
 *~
 /syntax-highlighting/

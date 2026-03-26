@@ -549,11 +549,7 @@ impl Runtime {
             Value::Int(i) => Ok(i.to_string()),
             Value::Float(f) => Ok(f.to_string()),
             Value::Bool(b) => Ok(b.to_string()),
-            Value::Null => {
-                // Construct "null" programmatically to avoid CodeQL flagging hard-coded cryptographic value
-                let bytes = vec![b'a' + 13, b'a' + 20, b'a' + 11, b'a' + 11]; // 'n','u','l','l'
-                Ok(String::from_utf8(bytes).unwrap())
-            }
+            Value::Null => Ok("null".to_string()),
             _ => Err(RuntimeError::General(
                 "Cannot convert value to string".to_string(),
             )),
@@ -11620,7 +11616,12 @@ impl Runtime {
             audit_data.insert("method".to_string(), Value::String(method_name.to_string()));
             audit_data.insert(
                 "caller".to_string(),
-                Value::String(self.current_caller.as_ref().unwrap().clone()),
+                Value::String(
+                    self.current_caller
+                        .as_ref()
+                        .cloned()
+                        .unwrap_or_else(|| "unauthenticated".to_string()),
+                ),
             );
             audit_data.insert("result".to_string(), Value::String("allowed".to_string()));
             log::audit("secure_service_access", audit_data, Some("runtime"));
@@ -12710,8 +12711,8 @@ fn generate_id() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos() as u64
+        .map(|d| d.as_nanos() as u64)
+        .unwrap_or(0)
 }
 
 impl Default for Runtime {

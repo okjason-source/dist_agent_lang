@@ -1,3 +1,531 @@
+src/bin/registry_server.rs:50:62: replace == with != in sanitize_name
+src/compile/native.rs:50:5: replace default_return_expr -> String with "xyzzy".into()
+src/compile/native.rs:86:5: replace services_to_rust -> String with "xyzzy".into()
+src/compile/native.rs:133:5: replace check_rust_available -> bool with true
+src/compile/native.rs:133:5: replace check_rust_available -> bool with false
+src/compile/native.rs:153:12: delete ! in <impl CompileBackend for NativeBackend>::compile
+src/compile/native.rs:186:12: delete ! in <impl CompileBackend for NativeBackend>::compile
+src/compile/edge.rs:151:9: replace <impl CompileBackend for EdgeBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/native.rs:153:9: replace <impl CompileBackend for NativeBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/ffi/rust.rs:32:9: replace RustFFIRuntime::call_function -> Result<Value, String> with Ok(Default::default())
+src/ffi/rust.rs:41:9: replace RustFFIRuntime::execute -> Result<Value, String> with Ok(Default::default())
+src/ide/agent_runner.rs:475:5: replace guard_break -> MultiStepResult with Default::default()
+src/ide/agent_runner.rs:500:5: replace run_agent_prompt_sync -> Result<MultiStepResult, String> with Ok(Default::default())
+src/ide/diagnostics.rs:22:5: replace diagnostics_from_source -> Vec<Diagnostic> with vec![Default::default()]
+src/ide/diagnostics.rs:191:5: replace completion_at_position -> Vec<CompletionItem> with vec![Default::default()]
+src/ide/lsp_bridge.rs:59:5: replace spawn_dal_lsp -> Option<(Child, BufReader<std::process::ChildStdout>)> with Some((Default::default(), BufReader::new()))
+src/ide/lsp_bridge.rs:59:5: replace spawn_dal_lsp -> Option<(Child, BufReader<std::process::ChildStdout>)> with Some((Default::default(), BufReader::from_iter([Default::default()])))
+src/ide/lsp_bridge.rs:59:5: replace spawn_dal_lsp -> Option<(Child, BufReader<std::process::ChildStdout>)> with Some((Default::default(), BufReader::new(Default::default())))
+src/ide/lsp_bridge.rs:59:5: replace spawn_dal_lsp -> Option<(Child, BufReader<std::process::ChildStdout>)> with Some((Default::default(), BufReader::from(Default::default())))
+src/ide/lsp_client.rs:176:5: replace handle_one_request -> Option<LspResponse> with Some(Default::default())
+src/ide/lsp_client.rs:341:9: replace SecondLsp::spawn -> Option<Self> with Some(Default::default())
+src/ide/lsp_client.rs:356:9: replace SecondLsp::request_diagnostics -> Option<Vec<LspDiagnostic>> with Some(vec![Default::default()])
+src/ide/lsp_client.rs:400:9: replace SecondLsp::request_completion -> Option<Vec<LspCompletionItem>> with Some(vec![Default::default()])
+src/lib.rs:92:53: replace * with +
+src/lib.rs:92:53: replace * with /
+src/lib.rs:92:46: replace * with +
+src/lib.rs:92:46: replace * with /
+src/lib.rs:102:5: replace source_byte_len_exceeds_parse_limit -> bool with true
+src/lib.rs:102:5: replace source_byte_len_exceeds_parse_limit -> bool with false
+src/lib.rs:102:9: replace > with == in source_byte_len_exceeds_parse_limit
+src/lib.rs:102:9: replace > with < in source_byte_len_exceeds_parse_limit
+src/lib.rs:102:9: replace > with >= in source_byte_len_exceeds_parse_limit
+src/lib.rs:107:5: replace token_count_exceeds_parse_limit -> bool with true
+src/lib.rs:107:5: replace token_count_exceeds_parse_limit -> bool with false
+src/lib.rs:107:11: replace > with == in token_count_exceeds_parse_limit
+src/lib.rs:107:11: replace > with < in token_count_exceeds_parse_limit
+src/lib.rs:107:11: replace > with >= in token_count_exceeds_parse_limit
+src/lib.rs:113:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:171:5: replace execute_dal_file -> Result<(), String> with Ok(())
+src/compile/mod.rs:70:9: replace TrustCompileMode::from_str -> Option<Self> with None
+src/compile/mod.rs:71:13: delete match arm "auto" in TrustCompileMode::from_str
+src/compile/mod.rs:72:13: delete match arm "decentralized" in TrustCompileMode::from_str
+src/compile/mod.rs:73:13: delete match arm "hybrid" in TrustCompileMode::from_str
+src/compile/mod.rs:74:13: delete match arm "centralized" in TrustCompileMode::from_str
+src/cross_component.rs:25:5: replace strip_global_flags -> Vec<String> with vec![]
+src/cross_component.rs:25:5: replace strip_global_flags -> Vec<String> with vec![String::new()]
+src/cross_component.rs:25:5: replace strip_global_flags -> Vec<String> with vec!["xyzzy".into()]
+src/cross_component.rs:27:13: replace < with == in strip_global_flags
+src/cross_component.rs:27:13: replace < with > in strip_global_flags
+src/cross_component.rs:27:13: replace < with <= in strip_global_flags
+src/cross_component.rs:29:14: replace == with != in strip_global_flags
+src/lib.rs:144:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:157:5: replace execute_dal_with_scope -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:220:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:220:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:220:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/lib.rs:240:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:240:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:240:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/agent_serve.rs:573:5: replace spawn_agent -> Result<AgentContext, String> with Ok(Default::default())
+src/cross_component.rs:30:15: replace += with *= in strip_global_flags
+src/cross_component.rs:31:75: replace || with && in strip_global_flags
+src/cross_component.rs:31:53: replace || with && in strip_global_flags
+src/cross_component.rs:31:35: replace || with && in strip_global_flags
+src/cross_component.rs:31:21: replace == with != in strip_global_flags
+src/cross_component.rs:31:40: replace == with != in strip_global_flags
+src/cross_component.rs:31:58: replace == with != in strip_global_flags
+src/cross_component.rs:31:80: replace == with != in strip_global_flags
+src/cross_component.rs:32:15: replace += with -= in strip_global_flags
+src/cross_component.rs:32:15: replace += with *= in strip_global_flags
+src/cross_component.rs:33:31: replace && with || in strip_global_flags
+src/cross_component.rs:33:18: replace < with == in strip_global_flags
+src/cross_component.rs:33:18: replace < with > in strip_global_flags
+src/cross_component.rs:33:18: replace < with <= in strip_global_flags
+src/cross_component.rs:33:34: delete ! in strip_global_flags
+src/cross_component.rs:34:19: replace += with -= in strip_global_flags
+src/cross_component.rs:34:19: replace += with *= in strip_global_flags
+src/cross_component.rs:38:15: replace += with -= in strip_global_flags
+src/cross_component.rs:38:15: replace += with *= in strip_global_flags
+src/cross_component.rs:59:5: replace run_bond -> RunResult with Default::default()
+src/cross_component.rs:70:8: delete ! in run_bond
+src/cross_component.rs:84:9: delete match arm "auth-to-web" in run_bond
+src/cross_component.rs:85:9: delete match arm "oracle-to-chain" in run_bond
+src/cross_component.rs:86:9: delete match arm "chain-to-sync" in run_bond
+src/cross_component.rs:87:9: delete match arm "iot-to-db" in run_bond
+src/cross_component.rs:88:9: delete match arm "iot-to-web" in run_bond
+src/cross_component.rs:89:9: delete match arm "db-to-sync" in run_bond
+src/cross_component.rs:90:9: delete match arm "sync-to-db" in run_bond
+src/cross_component.rs:91:9: delete match arm "ai-to-service" in run_bond
+src/cross_component.rs:92:9: delete match arm "service-to-chain" in run_bond
+src/cross_component.rs:93:9: delete match arm "log-to-sync" in run_bond
+src/cross_component.rs:108:5: replace run_bond_auth_to_web -> RunResult with Default::default()
+src/cross_component.rs:110:26: replace >= with < in run_bond_auth_to_web
+src/cross_component.rs:134:23: replace < with == in run_bond_auth_to_web
+src/cross_component.rs:134:23: replace < with > in run_bond_auth_to_web
+src/cross_component.rs:134:23: replace < with <= in run_bond_auth_to_web
+src/cross_component.rs:150:37: replace > with == in run_bond_auth_to_web
+src/cross_component.rs:150:37: replace > with < in run_bond_auth_to_web
+src/cross_component.rs:150:37: replace > with >= in run_bond_auth_to_web
+src/cross_component.rs:194:5: replace run_bond_oracle_to_chain -> RunResult with Default::default()
+src/cross_component.rs:194:19: replace < with == in run_bond_oracle_to_chain
+src/cross_component.rs:194:19: replace < with > in run_bond_oracle_to_chain
+src/cross_component.rs:194:19: replace < with <= in run_bond_oracle_to_chain
+src/cross_component.rs:215:24: replace == with != in run_bond_oracle_to_chain
+src/cross_component.rs:273:5: replace run_bond_chain_to_sync -> RunResult with Default::default()
+src/cross_component.rs:273:19: replace < with == in run_bond_chain_to_sync
+src/cross_component.rs:273:19: replace < with > in run_bond_chain_to_sync
+src/cross_component.rs:273:19: replace < with <= in run_bond_chain_to_sync
+src/cross_component.rs:345:5: replace run_bond_iot_to_db -> RunResult with Default::default()
+src/cross_component.rs:345:19: replace < with == in run_bond_iot_to_db
+src/cross_component.rs:345:19: replace < with > in run_bond_iot_to_db
+src/cross_component.rs:345:19: replace < with <= in run_bond_iot_to_db
+src/cross_component.rs:358:24: replace == with != in run_bond_iot_to_db
+src/cross_component.rs:424:5: replace run_bond_iot_to_web -> RunResult with Default::default()
+src/cross_component.rs:424:19: replace < with == in run_bond_iot_to_web
+src/cross_component.rs:424:19: replace < with > in run_bond_iot_to_web
+src/cross_component.rs:424:19: replace < with <= in run_bond_iot_to_web
+src/cross_component.rs:436:28: replace == with != in run_bond_iot_to_web
+src/cross_component.rs:524:5: replace run_bond_db_to_sync -> RunResult with Default::default()
+src/cross_component.rs:524:19: replace < with == in run_bond_db_to_sync
+src/cross_component.rs:524:19: replace < with > in run_bond_db_to_sync
+src/cross_component.rs:524:19: replace < with <= in run_bond_db_to_sync
+src/cross_component.rs:537:24: replace == with != in run_bond_db_to_sync
+src/cross_component.rs:621:5: replace run_bond_sync_to_db -> RunResult with Default::default()
+src/cross_component.rs:621:19: replace < with == in run_bond_sync_to_db
+src/cross_component.rs:621:19: replace < with > in run_bond_sync_to_db
+src/cross_component.rs:621:19: replace < with <= in run_bond_sync_to_db
+src/cross_component.rs:634:24: replace == with != in run_bond_sync_to_db
+src/cross_component.rs:695:5: replace run_bond_ai_to_service -> RunResult with Default::default()
+src/cross_component.rs:695:19: replace < with == in run_bond_ai_to_service
+src/cross_component.rs:695:19: replace < with > in run_bond_ai_to_service
+src/cross_component.rs:695:19: replace < with <= in run_bond_ai_to_service
+src/cross_component.rs:706:24: replace == with != in run_bond_ai_to_service
+src/cross_component.rs:784:5: replace run_bond_service_to_chain -> RunResult with Default::default()
+src/cross_component.rs:784:19: replace < with == in run_bond_service_to_chain
+src/cross_component.rs:784:19: replace < with > in run_bond_service_to_chain
+src/cross_component.rs:784:19: replace < with <= in run_bond_service_to_chain
+src/cross_component.rs:847:12: delete ! in run_bond_service_to_chain
+src/cross_component.rs:879:5: replace run_bond_log_to_sync -> RunResult with Default::default()
+src/cross_component.rs:889:24: replace == with != in run_bond_log_to_sync
+src/cross_component.rs:911:13: delete match arm "warn" | "warning" in run_bond_log_to_sync
+src/cross_component.rs:912:13: delete match arm "error" in run_bond_log_to_sync
+src/cross_component.rs:913:13: delete match arm "audit" in run_bond_log_to_sync
+src/cross_component.rs:914:13: delete match arm "debug" in run_bond_log_to_sync
+src/cross_component.rs:969:5: replace do_auth_to_web_request -> Result<u16, String> with Ok(0)
+src/cross_component.rs:969:5: replace do_auth_to_web_request -> Result<u16, String> with Ok(1)
+src/cross_component.rs:973:9: delete match arm "GET" in do_auth_to_web_request
+src/cross_component.rs:974:9: delete match arm "POST" in do_auth_to_web_request
+src/cross_component.rs:975:9: delete match arm "PUT" in do_auth_to_web_request
+src/cross_component.rs:976:9: delete match arm "PATCH" in do_auth_to_web_request
+src/cross_component.rs:977:9: delete match arm "DELETE" in do_auth_to_web_request
+src/cross_component.rs:988:5: replace run_pipe -> RunResult with Default::default()
+src/cross_component.rs:1002:23: replace == with != in run_pipe
+src/cross_component.rs:1004:35: delete ! in run_pipe
+src/cross_component.rs:1058:5: replace execute_pipe_step -> Result<String, String> with Ok(String::new())
+src/cross_component.rs:1058:5: replace execute_pipe_step -> Result<String, String> with Ok("xyzzy".into())
+src/cross_component.rs:1058:19: replace < with == in execute_pipe_step
+src/cross_component.rs:1058:19: replace < with > in execute_pipe_step
+src/cross_component.rs:1058:19: replace < with <= in execute_pipe_step
+src/cross_component.rs:1066:9: delete match arm ("oracle", "fetch") in execute_pipe_step
+src/cross_component.rs:1080:9: delete match arm ("chain", "estimate") in execute_pipe_step
+src/cross_component.rs:1089:9: delete match arm ("chain", "gas-price") in execute_pipe_step
+src/cross_component.rs:1097:9: delete match arm ("web", "get") in execute_pipe_step
+src/cross_component.rs:1119:9: delete match arm ("web", "post") in execute_pipe_step
+src/cross_component.rs:1151:9: delete match arm ("db", "query") in execute_pipe_step
+src/cross_component.rs:1161:9: delete match arm ("sync", "push") in execute_pipe_step
+src/cross_component.rs:1184:9: delete match arm ("iot", "read-sensor") |("iot", "read") in execute_pipe_step
+src/cross_component.rs:1195:9: delete match arm ("log", "info") in execute_pipe_step
+src/cross_component.rs:1067:27: replace < with == in execute_pipe_step
+src/cross_component.rs:1067:27: replace < with > in execute_pipe_step
+src/cross_component.rs:1067:27: replace < with <= in execute_pipe_step
+src/cross_component.rs:1081:27: replace < with == in execute_pipe_step
+src/cross_component.rs:1081:27: replace < with > in execute_pipe_step
+src/cross_component.rs:1081:27: replace < with <= in execute_pipe_step
+src/cross_component.rs:1109:45: replace > with == in execute_pipe_step
+src/cross_component.rs:1109:45: replace > with < in execute_pipe_step
+src/cross_component.rs:1109:45: replace > with >= in execute_pipe_step
+src/cross_component.rs:1152:27: replace < with == in execute_pipe_step
+src/cross_component.rs:1152:27: replace < with > in execute_pipe_step
+src/cross_component.rs:1152:27: replace < with <= in execute_pipe_step
+src/cross_component.rs:1218:5: replace run_invoke -> RunResult with Default::default()
+src/cross_component.rs:1232:8: delete ! in run_invoke
+src/cross_component.rs:1244:9: delete match arm "price-to-deploy" in run_invoke
+src/cross_component.rs:1245:9: delete match arm "iot-ingest" in run_invoke
+src/cross_component.rs:1246:9: delete match arm "ai-audit" in run_invoke
+src/cross_component.rs:1247:9: delete match arm "compliance-check" in run_invoke
+src/cross_component.rs:1261:5: replace run_invoke_price_to_deploy -> RunResult with Default::default()
+src/cross_component.rs:1261:19: replace < with == in run_invoke_price_to_deploy
+src/cross_component.rs:1261:19: replace < with > in run_invoke_price_to_deploy
+src/cross_component.rs:1261:19: replace < with <= in run_invoke_price_to_deploy
+src/cross_component.rs:1332:5: replace run_invoke_iot_ingest -> RunResult with Default::default()
+src/cross_component.rs:1332:19: replace < with == in run_invoke_iot_ingest
+src/cross_component.rs:1332:19: replace < with > in run_invoke_iot_ingest
+src/cross_component.rs:1332:19: replace < with <= in run_invoke_iot_ingest
+src/cross_component.rs:1400:5: replace run_invoke_ai_audit -> RunResult with Default::default()
+src/cross_component.rs:1400:19: replace < with == in run_invoke_ai_audit
+src/cross_component.rs:1400:19: replace < with > in run_invoke_ai_audit
+src/cross_component.rs:1400:19: replace < with <= in run_invoke_ai_audit
+src/cross_component.rs:1467:5: replace run_invoke_compliance_check -> RunResult with Default::default()
+src/cross_component.rs:1477:24: replace == with != in run_invoke_compliance_check
+src/cross_component.rs:1480:42: replace || with && in run_invoke_compliance_check
+src/cross_component.rs:1480:45: delete ! in run_invoke_compliance_check
+src/cross_component.rs:1515:17: delete match arm dist_agent_lang::runtime::values::Value::String(s) in run_invoke_compliance_check
+src/cross_component.rs:1531:5: replace run -> RunResult with Default::default()
+src/cross_component.rs:1532:9: delete match arm "bond" in run
+src/cross_component.rs:1533:9: delete match arm "pipe" in run
+src/cross_component.rs:1534:9: delete match arm "invoke" in run
+src/compile/blockchain.rs:15:5: replace dal_type_to_solidity -> String with String::new()
+src/compile/blockchain.rs:15:5: replace dal_type_to_solidity -> String with "xyzzy".into()
+src/compile/blockchain.rs:19:10: replace == with != in dal_type_to_solidity
+src/compile/blockchain.rs:22:22: replace || with && in dal_type_to_solidity
+src/compile/blockchain.rs:22:10: replace == with != in dal_type_to_solidity
+src/compile/blockchain.rs:22:27: replace == with != in dal_type_to_solidity
+src/compile/blockchain.rs:25:31: replace || with && in dal_type_to_solidity
+src/compile/blockchain.rs:43:10: replace == with != in dal_type_to_solidity
+src/compile/blockchain.rs:50:5: replace service_declares_decentralized -> bool with true
+src/compile/blockchain.rs:50:5: replace service_declares_decentralized -> bool with false
+src/compile/blockchain.rs:52:13: replace && with || in service_declares_decentralized
+src/compile/blockchain.rs:51:19: replace == with != in service_declares_decentralized
+src/compile/blockchain.rs:56:17: replace == with != in service_declares_decentralized
+src/compile/blockchain.rs:61:5: replace solidity_binary_operator -> Option<&'static str> with None
+src/compile/blockchain.rs:61:5: replace solidity_binary_operator -> Option<&'static str> with Some("")
+src/compile/blockchain.rs:61:5: replace solidity_binary_operator -> Option<&'static str> with Some("xyzzy")
+src/compile/blockchain.rs:62:9: delete match arm Operator::Plus in solidity_binary_operator
+src/compile/blockchain.rs:63:9: delete match arm Operator::Minus in solidity_binary_operator
+src/compile/blockchain.rs:64:9: delete match arm Operator::Star in solidity_binary_operator
+src/compile/blockchain.rs:65:9: delete match arm Operator::Slash in solidity_binary_operator
+src/compile/blockchain.rs:66:9: delete match arm Operator::Percent in solidity_binary_operator
+src/compile/blockchain.rs:67:9: delete match arm Operator::EqualEqual in solidity_binary_operator
+src/compile/blockchain.rs:68:9: delete match arm Operator::BangEqual | Operator::NotEqual in solidity_binary_operator
+src/compile/blockchain.rs:69:9: delete match arm Operator::Less in solidity_binary_operator
+src/compile/blockchain.rs:70:9: delete match arm Operator::LessEqual in solidity_binary_operator
+src/compile/blockchain.rs:71:9: delete match arm Operator::Greater in solidity_binary_operator
+src/compile/blockchain.rs:72:9: delete match arm Operator::GreaterEqual in solidity_binary_operator
+src/compile/blockchain.rs:73:9: delete match arm Operator::And in solidity_binary_operator
+src/compile/blockchain.rs:74:9: delete match arm Operator::Or in solidity_binary_operator
+src/compile/blockchain.rs:80:5: replace normalized_value_type -> String with String::new()
+src/compile/blockchain.rs:80:5: replace normalized_value_type -> String with "xyzzy".into()
+src/compile/blockchain.rs:92:5: replace infer_expr_solidity_type -> Option<String> with None
+src/compile/blockchain.rs:92:5: replace infer_expr_solidity_type -> Option<String> with Some(String::new())
+src/compile/blockchain.rs:92:5: replace infer_expr_solidity_type -> Option<String> with Some("xyzzy".into())
+src/compile/blockchain.rs:93:9: delete match arm Expression::Literal(Literal::Int(_)) in infer_expr_solidity_type
+src/compile/blockchain.rs:94:9: delete match arm Expression::Literal(Literal::Bool(_)) in infer_expr_solidity_type
+src/compile/blockchain.rs:95:9: delete match arm Expression::Literal(Literal::String(_)) in infer_expr_solidity_type
+src/compile/blockchain.rs:96:9: delete match arm Expression::Identifier(name) in infer_expr_solidity_type
+src/compile/blockchain.rs:101:9: delete match arm Expression::BinaryOp(left, op, right) in infer_expr_solidity_type
+src/compile/blockchain.rs:128:9: delete match arm Expression::UnaryOp(op, inner) in infer_expr_solidity_type
+src/compile/blockchain.rs:136:9: delete match arm Expression::FieldAccess(owner, field) in infer_expr_solidity_type
+src/compile/blockchain.rs:105:17: delete match arm Operator::Plus | Operator::Minus | Operator::Star | Operator::Slash | Operator::Percent in infer_expr_solidity_type
+src/compile/blockchain.rs:116:17: delete match arm Operator::EqualEqual | Operator::BangEqual | Operator::NotEqual | Operator::Less | Operator::LessEqual | Operator::Greater | Operator::GreaterEqual | Operator::And | Operator::Or in infer_expr_solidity_type
+src/compile/blockchain.rs:110:44: replace && with || in infer_expr_solidity_type
+src/compile/blockchain.rs:110:32: replace == with != in infer_expr_solidity_type
+src/compile/blockchain.rs:110:56: replace == with != in infer_expr_solidity_type
+src/compile/blockchain.rs:131:36: replace match guard inner_ty == "int256" with true in infer_expr_solidity_type
+src/compile/blockchain.rs:131:36: replace match guard inner_ty == "int256" with false in infer_expr_solidity_type
+src/compile/blockchain.rs:132:51: replace match guard inner_ty == "bool" with true in infer_expr_solidity_type
+src/compile/blockchain.rs:132:51: replace match guard inner_ty == "bool" with false in infer_expr_solidity_type
+src/compile/blockchain.rs:131:45: replace == with != in infer_expr_solidity_type
+src/compile/blockchain.rs:132:60: replace == with != in infer_expr_solidity_type
+src/compile/blockchain.rs:141:38: replace == with != in infer_expr_solidity_type
+src/compile/blockchain.rs:152:5: replace expression_to_solidity -> Result<String, String> with Ok(String::new())
+src/compile/blockchain.rs:152:5: replace expression_to_solidity -> Result<String, String> with Ok("xyzzy".into())
+src/compile/blockchain.rs:153:9: delete match arm Expression::Literal(Literal::Int(v)) in expression_to_solidity
+src/compile/blockchain.rs:154:9: delete match arm Expression::Literal(Literal::Float(_)) in expression_to_solidity
+src/compile/blockchain.rs:157:9: delete match arm Expression::Literal(Literal::String(s)) in expression_to_solidity
+src/compile/blockchain.rs:158:9: delete match arm Expression::Literal(Literal::Bool(v)) in expression_to_solidity
+src/compile/blockchain.rs:159:9: delete match arm Expression::Literal(Literal::Null) in expression_to_solidity
+src/compile/blockchain.rs:162:9: delete match arm Expression::Identifier(name) in expression_to_solidity
+src/compile/blockchain.rs:163:9: delete match arm Expression::BinaryOp(left, op, right) in expression_to_solidity
+src/compile/blockchain.rs:174:9: delete match arm Expression::UnaryOp(op, e) in expression_to_solidity
+src/compile/blockchain.rs:185:9: delete match arm Expression::Assignment(name, value) in expression_to_solidity
+src/compile/blockchain.rs:189:9: delete match arm Expression::FieldAccess(owner, field) in expression_to_solidity
+src/compile/blockchain.rs:196:9: delete match arm Expression::FieldAssignment(owner, field, value) in expression_to_solidity
+src/compile/blockchain.rs:177:17: delete match arm Operator::Minus in expression_to_solidity
+src/compile/blockchain.rs:178:17: delete match arm Operator::Bang | Operator::Not in expression_to_solidity
+src/compile/blockchain.rs:216:5: replace block_to_solidity_v1 -> Result<String, String> with Ok(String::new())
+src/compile/blockchain.rs:216:5: replace block_to_solidity_v1 -> Result<String, String> with Ok("xyzzy".into())
+src/compile/blockchain.rs:220:13: delete match arm Statement::Let(let_stmt) in block_to_solidity_v1
+src/compile/blockchain.rs:242:13: delete match arm Statement::Return(ret) in block_to_solidity_v1
+src/compile/blockchain.rs:253:13: delete match arm Statement::Expression(expr) in block_to_solidity_v1
+src/compile/blockchain.rs:256:13: delete match arm Statement::Event(ev) in block_to_solidity_v1
+src/compile/blockchain.rs:284:13: delete match arm Statement::If(if_stmt) in block_to_solidity_v1
+src/compile/blockchain.rs:312:13: delete match arm Statement::Block(block_stmt) in block_to_solidity_v1
+src/compile/blockchain.rs:230:36: replace == with != in block_to_solidity_v1
+src/compile/blockchain.rs:260:38: replace == with != in block_to_solidity_v1
+src/compile/blockchain.rs:292:28: replace + with - in block_to_solidity_v1
+src/compile/blockchain.rs:292:28: replace + with * in block_to_solidity_v1
+src/compile/blockchain.rs:304:32: replace + with - in block_to_solidity_v1
+src/compile/blockchain.rs:304:32: replace + with * in block_to_solidity_v1
+src/compile/blockchain.rs:319:28: replace + with - in block_to_solidity_v1
+src/compile/blockchain.rs:319:28: replace + with * in block_to_solidity_v1
+src/compile/blockchain.rs:341:5: replace service_to_solidity -> Result<String, CompileError> with Ok(String::new())
+src/compile/blockchain.rs:341:5: replace service_to_solidity -> Result<String, CompileError> with Ok("xyzzy".into())
+src/compile/blockchain.rs:366:8: delete ! in service_to_solidity
+src/compile/blockchain.rs:380:8: delete ! in service_to_solidity
+src/compile/blockchain.rs:446:5: replace expression_to_string_literal -> Option<&str> with None
+src/compile/blockchain.rs:446:5: replace expression_to_string_literal -> Option<&str> with Some("")
+src/compile/blockchain.rs:446:5: replace expression_to_string_literal -> Option<&str> with Some("xyzzy")
+src/compile/blockchain.rs:455:5: replace service_declares_hybrid -> bool with true
+src/compile/blockchain.rs:455:5: replace service_declares_hybrid -> bool with false
+src/compile/blockchain.rs:457:13: replace && with || in service_declares_hybrid
+src/compile/blockchain.rs:456:19: replace == with != in service_declares_hybrid
+src/compile/blockchain.rs:461:17: replace == with != in service_declares_hybrid
+src/compile/blockchain.rs:466:5: replace collect_namespaces_from_block -> HashSet<String> with HashSet::new()
+src/compile/blockchain.rs:466:5: replace collect_namespaces_from_block -> HashSet<String> with HashSet::from_iter([String::new()])
+src/compile/blockchain.rs:466:5: replace collect_namespaces_from_block -> HashSet<String> with HashSet::from_iter(["xyzzy".into()])
+src/compile/blockchain.rs:474:5: replace collect_namespaces_from_statement -> HashSet<String> with HashSet::new()
+src/compile/blockchain.rs:474:5: replace collect_namespaces_from_statement -> HashSet<String> with HashSet::from_iter([String::new()])
+src/compile/blockchain.rs:474:5: replace collect_namespaces_from_statement -> HashSet<String> with HashSet::from_iter(["xyzzy".into()])
+src/compile/blockchain.rs:545:5: replace collect_namespaces_from_expression -> HashSet<String> with HashSet::new()
+src/compile/blockchain.rs:545:5: replace collect_namespaces_from_expression -> HashSet<String> with HashSet::from_iter([String::new()])
+src/compile/blockchain.rs:545:5: replace collect_namespaces_from_expression -> HashSet<String> with HashSet::from_iter(["xyzzy".into()])
+src/compile/blockchain.rs:616:5: replace partition_methods_for_targets -> (Vec<FunctionStatement>, Vec<FunctionStatement>) with (vec![], vec![])
+src/compile/blockchain.rs:616:5: replace partition_methods_for_targets -> (Vec<FunctionStatement>, Vec<FunctionStatement>) with (vec![], vec![Default::default()])
+src/compile/blockchain.rs:616:5: replace partition_methods_for_targets -> (Vec<FunctionStatement>, Vec<FunctionStatement>) with (vec![Default::default()], vec![])
+src/compile/blockchain.rs:616:5: replace partition_methods_for_targets -> (Vec<FunctionStatement>, Vec<FunctionStatement>) with (vec![Default::default()], vec![Default::default()])
+src/compile/blockchain.rs:642:5: replace emit_http_split_artifact -> Result<Option<std::path::PathBuf>, CompileError> with Ok(None)
+src/compile/blockchain.rs:642:5: replace emit_http_split_artifact -> Result<Option<std::path::PathBuf>, CompileError> with Ok(Some(Default::default()))
+src/compile/blockchain.rs:659:5: replace check_solc_available -> bool with true
+src/compile/blockchain.rs:659:5: replace check_solc_available -> bool with false
+src/compile/blockchain.rs:679:9: replace <impl CompileBackend for BlockchainBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/blockchain.rs:705:23: replace && with || in <impl CompileBackend for BlockchainBackend>::compile
+src/compile/blockchain.rs:705:26: delete ! in <impl CompileBackend for BlockchainBackend>::compile
+src/compile/blockchain.rs:728:16: delete ! in <impl CompileBackend for BlockchainBackend>::compile
+src/lib.rs:94:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:94:46: replace * with + in parse_source
+src/lib.rs:94:46: replace * with / in parse_source
+src/lib.rs:94:39: replace * with + in parse_source
+src/lib.rs:94:39: replace * with / in parse_source
+src/lib.rs:95:21: replace > with == in parse_source
+src/lib.rs:95:21: replace > with < in parse_source
+src/lib.rs:95:21: replace > with >= in parse_source
+src/lib.rs:111:30: replace > with < in parse_source
+src/lib.rs:154:5: replace execute_dal_file -> Result<(), String> with Ok(())
+src/compile/mod.rs:109:9: replace <impl std::fmt::Display for CompileError>::fmt -> std::fmt::Result with Ok(Default::default())
+src/compile/mod.rs:152:12: delete ! in <impl CompileBackend for StubBackend>::compile
+src/compile/mod.rs:172:5: replace check_compiler_available -> bool with true
+src/compile/mod.rs:172:5: replace check_compiler_available -> bool with false
+src/compile/mod.rs:184:5: replace get_backend -> Option<Box<dyn CompileBackend>> with None
+src/compile/mod.rs:204:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![]
+src/compile/mod.rs:210:36: replace == with != in select_services_for_target
+src/compile/mod.rs:222:5: replace package_entry_path -> Option<PathBuf> with Some(Default::default())
+src/compile/mod.rs:329:5: replace service_declares_decentralized -> bool with true
+src/compile/mod.rs:329:5: replace service_declares_decentralized -> bool with false
+src/compile/mod.rs:331:13: replace && with || in service_declares_decentralized
+src/compile/mod.rs:330:19: replace == with != in service_declares_decentralized
+src/compile/mod.rs:335:17: replace == with != in service_declares_decentralized
+src/compile/mod.rs:340:5: replace expression_to_string_literal -> Option<&str> with None
+src/compile/mod.rs:340:5: replace expression_to_string_literal -> Option<&str> with Some("")
+src/compile/mod.rs:340:5: replace expression_to_string_literal -> Option<&str> with Some("xyzzy")
+src/compile/mod.rs:353:5: replace validate_trust_policy_for_services -> Result<(), CompileError> with Ok(())
+src/compile/mod.rs:360:12: delete ! in validate_trust_policy_for_services
+src/compile/mod.rs:372:5: replace validate_decentralized_service -> Result<(), CompileError> with Ok(())
+src/compile/mod.rs:379:12: delete ! in validate_decentralized_service
+src/compile/mod.rs:389:12: delete ! in validate_decentralized_service
+src/compile/mod.rs:434:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec![]
+src/compile/mod.rs:434:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec![String::new()]
+src/compile/mod.rs:434:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec!["xyzzy".into()]
+src/compile/mod.rs:447:5: replace collect_unsupported_from_statement with ()
+src/http_server_security.rs:320:9: replace AuthValidator::generate_token -> Result<String, String> with Ok(String::new())
+src/http_server_security.rs:320:9: replace AuthValidator::generate_token -> Result<String, String> with Ok("xyzzy".into())
+src/http_server_security.rs:336:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:336:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:346:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:346:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:354:9: replace AuthValidator::extract_token -> Option<String> with None
+src/http_server_security.rs:354:9: replace AuthValidator::extract_token -> Option<String> with Some(String::new())
+src/http_server_security.rs:354:9: replace AuthValidator::extract_token -> Option<String> with Some("xyzzy".into())
+src/http_server_security.rs:389:9: replace RequestSizeLimiter::validate_request -> Result<(), StatusCode> with Ok(())
+src/http_server_security.rs:389:22: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:389:22: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:389:22: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:394:23: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:394:23: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:394:23: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:401:54: replace + with - in RequestSizeLimiter::validate_request
+src/http_server_security.rs:401:54: replace + with * in RequestSizeLimiter::validate_request
+src/http_server_security.rs:404:24: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:404:24: replace > with < in RequestSizeLimiter::validate_request
+src/module_resolver.rs:192:16: delete ! in ModuleResolver::resolve
+src/project_init.rs:261:8: delete ! in run_init_agent
+src/registry.rs:322:5: replace fetch_package -> Result<PathBuf, RegistryError> with Ok(Default::default())
+src/registry.rs:329:5: replace fetch_bytes -> Result<Vec<u8>, RegistryError> with Ok(vec![])
+src/registry.rs:329:5: replace fetch_bytes -> Result<Vec<u8>, RegistryError> with Ok(vec![0])
+src/registry.rs:329:5: replace fetch_bytes -> Result<Vec<u8>, RegistryError> with Ok(vec![1])
+src/registry.rs:393:5: replace find_package_root -> Option<PathBuf> with None
+src/registry.rs:393:5: replace find_package_root -> Option<PathBuf> with Some(Default::default())
+src/skills.rs:40:9: replace SkillCategory::from_str -> Option<Self> with None
+src/skills.rs:41:13: delete match arm "development" | "dev" in SkillCategory::from_str
+src/skills.rs:42:13: delete match arm "creative" in SkillCategory::from_str
+src/skills.rs:43:13: delete match arm "office" in SkillCategory::from_str
+src/skills.rs:44:13: delete match arm "home" in SkillCategory::from_str
+src/skills.rs:50:9: replace SkillCategory::as_str -> &'static str with ""
+src/skills.rs:50:9: replace SkillCategory::as_str -> &'static str with "xyzzy"
+src/skills.rs:104:9: replace SkillRegistry::with_builtins -> Self with Default::default()
+src/skills.rs:147:9: replace SkillRegistry::register with ()
+src/skills.rs:148:36: delete ! in SkillRegistry::register
+src/skills.rs:161:9: replace SkillRegistry::register_all with ()
+src/skills.rs:168:9: replace SkillRegistry::get -> Option<&SkillDefinition> with None
+src/skills.rs:178:9: replace SkillRegistry::len -> usize with 0
+src/skills.rs:178:9: replace SkillRegistry::len -> usize with 1
+src/skills.rs:188:9: replace SkillRegistry::resolve -> Vec<&SkillDefinition> with vec![]
+src/skills.rs:202:9: replace SkillRegistry::tools_for_skills -> Vec<String> with vec![]
+src/skills.rs:202:9: replace SkillRegistry::tools_for_skills -> Vec<String> with vec![String::new()]
+src/skills.rs:202:9: replace SkillRegistry::tools_for_skills -> Vec<String> with vec!["xyzzy".into()]
+src/skills.rs:216:9: replace SkillRegistry::descriptions_for_skills -> Vec<String> with vec![]
+src/skills.rs:216:9: replace SkillRegistry::descriptions_for_skills -> Vec<String> with vec![String::new()]
+src/skills.rs:216:9: replace SkillRegistry::descriptions_for_skills -> Vec<String> with vec!["xyzzy".into()]
+src/skills.rs:218:25: delete ! in SkillRegistry::descriptions_for_skills
+src/skills.rs:253:5: replace parse_skill_dal -> Result<Vec<SkillDefinition>, String> with Ok(vec![])
+src/skills.rs:264:66: replace || with && in parse_skill_dal
+src/skills.rs:286:50: replace == with != in parse_skill_dal
+src/skills.rs:342:5: replace load_skill_file -> Result<Vec<SkillDefinition>, String> with Ok(vec![])
+src/skills.rs:349:5: replace load_skills_from_path -> Result<Vec<SkillDefinition>, String> with Ok(vec![])
+src/skills.rs:362:36: replace == with != in load_skills_from_path
+src/skills.rs:387:5: replace skip_whitespace_and_comments with ()
+src/skills.rs:389:30: replace match guard c.is_whitespace() with true in skip_whitespace_and_comments
+src/skills.rs:389:30: replace match guard c.is_whitespace() with false in skip_whitespace_and_comments
+src/skills.rs:419:5: replace parse_quoted_string -> Option<String> with None
+src/skills.rs:419:5: replace parse_quoted_string -> Option<String> with Some(String::new())
+src/skills.rs:419:5: replace parse_quoted_string -> Option<String> with Some("xyzzy".into())
+src/skills.rs:419:38: replace != with == in parse_quoted_string
+src/skills.rs:426:14: replace == with != in parse_quoted_string
+src/skills.rs:429:14: replace == with != in parse_quoted_string
+src/skills.rs:451:5: replace try_parse_quoted_string -> Option<String> with None
+src/skills.rs:451:5: replace try_parse_quoted_string -> Option<String> with Some(String::new())
+src/skills.rs:451:5: replace try_parse_quoted_string -> Option<String> with Some("xyzzy".into())
+src/skills.rs:451:38: replace == with != in try_parse_quoted_string
+src/skills.rs:459:5: replace parse_identifier -> String with String::new()
+src/skills.rs:459:5: replace parse_identifier -> String with "xyzzy".into()
+src/lib.rs:127:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:140:5: replace execute_dal_with_scope -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:203:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:203:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:203:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/lib.rs:223:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:223:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:223:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/compile/mod.rs:70:9: replace TrustCompileMode::from_str -> Option<Self> with Some(Default::default())
+src/compile/mod.rs:84:9: replace <impl std::str::FromStr for TrustCompileMode>::from_str -> Result<Self, Self::Err> with Ok(Default::default())
+src/compile/mod.rs:152:9: replace <impl CompileBackend for StubBackend>::compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/mod.rs:184:5: replace get_backend -> Option<Box<dyn CompileBackend>> with Some(Box::new(Default::default()))
+src/compile/mod.rs:204:5: replace select_services_for_target -> Vec<&'a ServiceStatement> with vec![Box::leak(Box::new(Default::default()))]
+src/compile/mod.rs:240:5: replace run_compile -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/mod.rs:257:5: replace run_compile_with_mode -> Result<CompileArtifacts, CompileError> with Ok(Default::default())
+src/compile/mod.rs:576:5: replace collect_namespaces_from_block -> std::collections::HashSet<String> with HashSet::new()
+src/compile/mod.rs:576:5: replace collect_namespaces_from_block -> std::collections::HashSet<String> with HashSet::from_iter([String::new()])
+src/compile/mod.rs:576:5: replace collect_namespaces_from_block -> std::collections::HashSet<String> with HashSet::from_iter(["xyzzy".into()])
+src/compile/mod.rs:584:5: replace collect_namespaces_from_statement -> std::collections::HashSet<String> with HashSet::new()
+src/compile/mod.rs:584:5: replace collect_namespaces_from_statement -> std::collections::HashSet<String> with HashSet::from_iter([String::new()])
+src/compile/mod.rs:584:5: replace collect_namespaces_from_statement -> std::collections::HashSet<String> with HashSet::from_iter(["xyzzy".into()])
+src/compile/mod.rs:646:5: replace collect_namespaces_from_expression -> std::collections::HashSet<String> with HashSet::new()
+src/compile/mod.rs:646:5: replace collect_namespaces_from_expression -> std::collections::HashSet<String> with HashSet::from_iter([String::new()])
+src/compile/mod.rs:646:5: replace collect_namespaces_from_expression -> std::collections::HashSet<String> with HashSet::from_iter(["xyzzy".into()])
+src/skills.rs:40:9: replace SkillCategory::from_str -> Option<Self> with Some(Default::default())
+src/skills.rs:63:9: replace <impl std::str::FromStr for SkillCategory>::from_str -> Result<Self, Self::Err> with Ok(Default::default())
+src/skills.rs:168:9: replace SkillRegistry::get -> Option<&SkillDefinition> with Some(Box::leak(Box::new(Default::default())))
+src/skills.rs:188:9: replace SkillRegistry::resolve -> Vec<&SkillDefinition> with vec![Box::leak(Box::new(Default::default()))]
+src/skills.rs:253:5: replace parse_skill_dal -> Result<Vec<SkillDefinition>, String> with Ok(vec![Default::default()])
+src/skills.rs:342:5: replace load_skill_file -> Result<Vec<SkillDefinition>, String> with Ok(vec![Default::default()])
+src/skills.rs:349:5: replace load_skills_from_path -> Result<Vec<SkillDefinition>, String> with Ok(vec![Default::default()])
+src/skills.rs:461:32: replace || with && in parse_identifier
+src/skills.rs:461:37: replace == with != in parse_identifier
+src/skills.rs:472:5: replace expect_char -> Result<(), ()> with Ok(())
+src/skills.rs:472:38: replace == with != in expect_char
+src/skills.rs:485:5: replace resolve_skills_path -> Option<PathBuf> with None
+src/skills.rs:485:5: replace resolve_skills_path -> Option<PathBuf> with Some(Default::default())
+src/skills.rs:506:24: delete ! in resolve_skills_path
+src/skills.rs:526:52: replace && with || in resolve_skills_path
+src/skills.rs:541:5: replace get_global_registry -> &'static Mutex<SkillRegistry> with Box::leak(Box::new(Mutex::new(Default::default())))
+src/skills.rs:549:30: replace > with == in get_global_registry
+src/skills.rs:549:30: replace > with < in get_global_registry
+src/skills.rs:549:30: replace > with >= in get_global_registry
+src/skills.rs:564:5: replace global_registry -> SkillRegistry with Default::default()
+src/skills.rs:569:5: replace list_skills -> Result<Vec<(String, String)>, String> with Ok(vec![])
+src/skills.rs:569:5: replace list_skills -> Result<Vec<(String, String)>, String> with Ok(vec![(String::new(), String::new())])
+src/skills.rs:569:5: replace list_skills -> Result<Vec<(String, String)>, String> with Ok(vec![(String::new(), "xyzzy".into())])
+src/skills.rs:569:5: replace list_skills -> Result<Vec<(String, String)>, String> with Ok(vec![("xyzzy".into(), String::new())])
+src/skills.rs:569:5: replace list_skills -> Result<Vec<(String, String)>, String> with Ok(vec![("xyzzy".into(), "xyzzy".into())])
+src/skills.rs:580:5: replace register_global_skills with ()
+src/skills.rs:598:5: replace meta_from_memory -> Option<String> with None
+src/skills.rs:598:5: replace meta_from_memory -> Option<String> with Some(String::new())
+src/skills.rs:598:5: replace meta_from_memory -> Option<String> with Some("xyzzy".into())
+src/skills.rs:602:47: replace || with && in meta_from_memory
+src/skills.rs:603:56: replace || with && in meta_from_memory
+src/skills.rs:605:19: replace && with || in meta_from_memory
+src/skills.rs:618:5: replace reinforcement_note -> String with String::new()
+src/skills.rs:618:5: replace reinforcement_note -> String with "xyzzy".into()
+src/skills.rs:631:5: replace tools_description_for_skills -> String with String::new()
+src/skills.rs:631:5: replace tools_description_for_skills -> String with "xyzzy".into()
+src/skills.rs:642:5: replace tools_description_for_skills_with_registry -> String with String::new()
+src/skills.rs:642:5: replace tools_description_for_skills_with_registry -> String with "xyzzy".into()
+src/skills.rs:649:8: delete ! in tools_description_for_skills_with_registry
+src/skills.rs:649:36: replace == with != in tools_description_for_skills_with_registry
+src/skills.rs:665:54: replace == with != in tools_description_for_skills_with_registry
+src/skills.rs:673:40: replace && with || in tools_description_for_skills_with_registry
+src/skills.rs:673:16: delete ! in tools_description_for_skills_with_registry
+src/skills.rs:673:43: delete ! in tools_description_for_skills_with_registry
+src/venv.rs:17:9: replace VenvProfile::as_str -> &'static str with ""
+src/venv.rs:17:9: replace VenvProfile::as_str -> &'static str with "xyzzy"
+src/venv.rs:24:9: replace VenvProfile::from_str -> Option<Self> with None
+src/venv.rs:24:9: replace VenvProfile::from_str -> Option<Self> with Some(Default::default())
+src/venv.rs:25:13: delete match arm "strict" in VenvProfile::from_str
+src/venv.rs:26:13: delete match arm "relaxed" in VenvProfile::from_str
+src/venv.rs:36:9: replace <impl std::str::FromStr for VenvProfile>::from_str -> Result<Self, Self::Err> with Ok(Default::default())
+src/venv.rs:56:5: replace path_for_venvs -> PathBuf with Default::default()
+src/venv.rs:61:5: replace load_venvs -> HashMap<String, VenvRecord> with HashMap::new()
+src/venv.rs:61:5: replace load_venvs -> HashMap<String, VenvRecord> with HashMap::from_iter([(String::new(), Default::default())])
+src/venv.rs:61:5: replace load_venvs -> HashMap<String, VenvRecord> with HashMap::from_iter([("xyzzy".into(), Default::default())])
+src/venv.rs:71:5: replace save_venvs -> Result<(), String> with Ok(())
+src/venv.rs:83:5: replace project_registry_path -> PathBuf with Default::default()
+src/venv.rs:88:5: replace global_registry_path -> Option<PathBuf> with None
+src/venv.rs:88:5: replace global_registry_path -> Option<PathBuf> with Some(Default::default())
+src/venv.rs:89:12: delete ! in global_registry_path
+src/venv.rs:98:5: replace resolve_venv -> Result<(Venv, PathBuf), String> with Ok((Default::default(), Default::default()))
+src/venv.rs:103:12: delete ! in resolve_venv
+src/venv.rs:124:16: delete ! in resolve_venv
+src/venv.rs:152:5: replace create_venv -> Result<(), String> with Ok(())
+src/venv.rs:158:8: delete ! in create_venv
+src/venv.rs:177:5: replace list_venvs -> Vec<(String, VenvRecord)> with vec![]
+src/venv.rs:177:5: replace list_venvs -> Vec<(String, VenvRecord)> with vec![(String::new(), Default::default())]
+src/venv.rs:177:5: replace list_venvs -> Vec<(String, VenvRecord)> with vec![("xyzzy".into(), Default::default())]
+src/venv.rs:184:24: replace != with == in list_venvs
+src/venv.rs:186:20: delete ! in list_venvs
+src/venv.rs:186:47: replace == with != in list_venvs
+src/venv.rs:198:5: replace show_venv -> Result<(VenvRecord, PathBuf), String> with Ok((Default::default(), Default::default()))
+src/venv.rs:214:5: replace delete_venv -> Result<bool, String> with Ok(true)
+src/venv.rs:214:5: replace delete_venv -> Result<bool, String> with Ok(false)
 src/compile/mod.rs:100:9: replace <impl std::fmt::Display for CompileError>::fmt -> std::fmt::Result with Ok(Default::default())
 src/compile/mod.rs:143:12: delete ! in <impl CompileBackend for StubBackend>::compile
 src/compile/mod.rs:163:5: replace check_compiler_available -> bool with true

@@ -701,4 +701,41 @@ agent
         assert!(ok, "delete existing fleet should return true");
         assert!(show(&name, Some(base.path())).is_none());
     }
+
+    /// Deploy + run dispatches `last_deployed_task` to each member via `agent::coordinate` (task_distribution).
+    #[test]
+    #[serial_test::serial]
+    fn deploy_and_run_dispatches_to_all_members() {
+        use std::fs;
+        let base = tempfile::tempdir().unwrap();
+        let mold_dal = r#"mold "fleet_run_test" "1.0"
+agent
+  type Worker
+  role "run test worker"
+"#;
+        fs::write(base.path().join("frt.mold.dal"), mold_dal).unwrap();
+        let name = format!(
+            "fleet_run_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create_from_mold(&name, "frt", 2, base.path(), None).unwrap();
+        deploy(&name, "integration task description", Some(base.path())).unwrap();
+        let reports = run(Some(name.as_str()), base.path()).unwrap();
+        assert_eq!(reports.len(), 1, "expected one RunReport: {:?}", reports);
+        assert_eq!(reports[0].fleet_name, name);
+        assert_eq!(
+            reports[0].members_dispatched, 2,
+            "coordinate should run for each member: {:?}",
+            reports[0].errors
+        );
+        assert!(
+            reports[0].errors.is_empty(),
+            "unexpected errors: {:?}",
+            reports[0].errors
+        );
+        let _ = delete(&name, Some(base.path()));
+    }
 }

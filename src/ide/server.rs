@@ -7,7 +7,7 @@ use axum::http::{Method, StatusCode};
 use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
-use axum::{Json, Router};
+use axum::{middleware, Json, Router};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -1524,7 +1524,11 @@ pub fn build_router(workspace_root: PathBuf) -> Router {
         .route("/api/command", post(post_command))
         .route("/api/events/stream", get(get_events_stream))
         .route("/health", get(|| async { "OK" }))
+        .route("/metrics", get(crate::observability::metrics_http_response))
         .layer(NormalizePathLayer::trim_trailing_slash())
+        .layer(middleware::from_fn(
+            crate::observability::http_observability_middleware,
+        ))
         .layer(cors)
         .with_state(state)
 }

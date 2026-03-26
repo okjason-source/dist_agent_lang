@@ -294,10 +294,65 @@ impl Assertions for TestCase {
         }
     }
 
-    fn assert_contains(&self, _container: &Value, _item: &Value) -> Result<(), String> {
-        // This is a simplified implementation
-        // In a real implementation, you'd check if item is in container
-        Err("assert_contains not implemented".to_string())
+    fn assert_contains(&self, container: &Value, item: &Value) -> Result<(), String> {
+        match container {
+            Value::String(s) => match item {
+                Value::String(sub) => {
+                    if s.contains(sub.as_str()) {
+                        Ok(())
+                    } else {
+                        Err(format!(
+                            "expected string to contain substring {:?}, got {:?}",
+                            sub, s
+                        ))
+                    }
+                }
+                _ => Err(format!(
+                    "assert_contains(string, item): item must be a string (substring), got {:?}",
+                    item
+                )),
+            },
+            Value::List(items) | Value::Array(items) => {
+                if items.iter().any(|v| v == item) {
+                    Ok(())
+                } else {
+                    Err(format!(
+                        "expected collection to contain {:?}, had {:?}",
+                        item, items
+                    ))
+                }
+            }
+            Value::Map(m) => match item {
+                Value::String(key) => {
+                    if m.contains_key(key) {
+                        Ok(())
+                    } else {
+                        Err(format!("expected map to contain key {:?}", key))
+                    }
+                }
+                _ => Err(format!(
+                    "assert_contains(map, item): item must be a string key, got {:?}",
+                    item
+                )),
+            },
+            Value::Set(s) => match item {
+                Value::String(k) => {
+                    if s.contains(k) {
+                        Ok(())
+                    } else {
+                        Err(format!("expected set to contain {:?}", k))
+                    }
+                }
+                _ => Err(format!(
+                    "assert_contains(set, item): item must be a string, got {:?}",
+                    item
+                )),
+            },
+            _ => Err(format!(
+                "assert_contains: unsupported container type {} (use string, list, array, map, or set)",
+                container.type_name()
+            )),
+        }
     }
 
     fn assert_greater(&self, actual: &Value, expected: &Value) -> Result<(), String> {
@@ -315,9 +370,9 @@ impl Assertions for TestCase {
     }
 
     fn assert_throws(&self, _code: &str, _expected_error: &str) -> Result<(), String> {
-        // This would require parsing and executing the code
-        // For now, return a placeholder
-        Err("assert_throws not implemented".to_string())
+        Err(
+            "assert_throws is not implemented in the test framework yet; use explicit try/catch in test code or expect_error patterns. See docs/RUNTIME_TESTING_STATUS.md.".to_string(),
+        )
     }
 }
 

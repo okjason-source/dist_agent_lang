@@ -4,6 +4,83 @@ How fleets work and how to get the most out of the fleet API for deployment.
 
 ---
 
+## Start here (first time)
+
+Work from a **project directory** you care about. Fleet data is written to **`.dal/fleets.json`** under the current working directory (see [File layout](#file-layout)). That path is typically **gitignored** (e.g. `agent_assistant` ignores `.dal/`).
+
+### Example: `agent_assistant` (in-tree sample project)
+
+From the **dist_agent_lang** repo root:
+
+```bash
+cd agent_assistant
+dal agent fleet create assistant-workers --from-mold mold/assistant.mold.dal --count 2
+dal agent fleet list -v
+dal agent fleet deploy assistant-workers "Smoke test task"
+dal agent fleet run assistant-workers
+dal agent fleet health assistant-workers
+```
+
+- **Mold:** [`agent_assistant/mold/assistant.mold.dal`](../agent_assistant/mold/assistant.mold.dal) — minimal Worker mold for CLI experiments (same tree as the [Vibes Job / Agent Assistant](../agent_assistant/README.md) app).
+- Use **`dal agent fleet delete assistant-workers`** when you are done (fleet metadata only; see [Reality check](#reality-check) below).
+
+### 1. Create a fleet (any project)
+
+**Option A — empty fleet** (name only; add members later with `add-from-mold` or `add-member`):
+
+```bash
+dal agent fleet create my-fleet
+```
+
+**Option B — fleet from a mold** (spawns N agents and records their IDs):
+
+```bash
+dal agent fleet create my-fleet --from-mold mold/worker.mold.dal --count 3
+```
+
+Molds are `.mold.dal` files; see [MOLD_FORMAT.md](MOLD_FORMAT.md).
+
+### 2. Inspect
+
+```bash
+dal agent fleet list
+dal agent fleet list -v
+dal agent fleet show my-fleet
+```
+
+### 3. Record a task, then run it
+
+`deploy` stores the **task string** on the fleet (what you intend to run). It does not by itself execute long-lived workers across machines.
+
+```bash
+dal agent fleet deploy my-fleet "Process daily logs"
+dal agent fleet run my-fleet
+```
+
+`run` uses the built-in dispatcher: it loads the fleet, ensures members (may add from mold if the roster is empty), and sends `last_deployed_task` to each member via agent coordination. Use **`dal agent fleet health my-fleet`** for a quick status.
+
+### 4. Scale (optional)
+
+```bash
+dal agent fleet scale my-fleet 5
+```
+
+### 5. Export for Docker / Kubernetes (optional)
+
+```bash
+dal agent fleet export my-fleet --format docker-compose
+dal agent fleet export my-fleet --format k8s
+```
+
+### Reality check
+
+- **Fleet** = roster + last-deploy metadata in `.dal/fleets.json`. **Agents** = runtime objects (memory, tasks, messaging) in the **process that created them**.
+- If you only `create` / `deploy` and exit, the **next** `dal agent fleet run` may **re-create** members from the mold when it needs agents again—behavior is described in [Where execution happens](#3-where-execution-happens) below.
+
+When you are comfortable with this flow, read [Fleet vs agent](#fleet-vs-agent) and the rest of this page for scaling, blue/green, and automation.
+
+---
+
 ## Fleet vs agent
 
 - **A fleet is not one agent.** It is a **named collection of agent IDs** (`member_ids`). So one fleet = many agents (or zero).

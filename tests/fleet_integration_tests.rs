@@ -1,4 +1,5 @@
-//! Integration tests for fleet CLI: create (empty and from-mold), list, show, scale, delete.
+//! Integration tests for fleet CLI: create (empty and from-mold), list, show, scale, delete,
+//! deploy, run (task dispatch via coordinate), health, export.
 //! Covers COMPREHENSIVE_AGENT_AND_MOLD_PLANS.md §5.
 
 use std::fs;
@@ -153,4 +154,154 @@ agent
     assert!(out.status.success());
     let s = String::from_utf8_lossy(&out.stdout);
     assert!(s.contains("Members: 3"));
+}
+
+#[test]
+fn fleet_deploy_run_dispatches_coordinate() {
+    let temp = tempfile::tempdir().unwrap();
+    let mold_dal = r#"
+mold "deploy_run_mold" "1.0"
+agent
+  type Worker
+  role "Deploy run worker"
+"#;
+    fs::write(temp.path().join("drm.mold.dal"), mold_dal).unwrap();
+
+    let out = dal()
+        .args([
+            "agent",
+            "fleet",
+            "create",
+            "deploy_run_fleet",
+            "--from-mold",
+            "drm",
+            "--count",
+            "2",
+        ])
+        .current_dir(temp.path())
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "fleet create: {:?}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let out = dal()
+        .args([
+            "agent",
+            "fleet",
+            "deploy",
+            "deploy_run_fleet",
+            "Process queued items",
+        ])
+        .current_dir(temp.path())
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "fleet deploy: {:?}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let out = dal()
+        .args(["agent", "fleet", "run", "deploy_run_fleet"])
+        .current_dir(temp.path())
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "fleet run: {:?} stderr={}",
+        out.status,
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("dispatched to 2 member"),
+        "expected dispatch line, got: {}",
+        stdout
+    );
+}
+
+#[test]
+fn fleet_health_shows_deployed_task() {
+    let temp = tempfile::tempdir().unwrap();
+    let mold_dal = r#"
+mold "health_mold" "1.0"
+agent
+  type Worker
+  role "Health mold"
+"#;
+    fs::write(temp.path().join("hm.mold.dal"), mold_dal).unwrap();
+    let _ = dal()
+        .args([
+            "agent",
+            "fleet",
+            "create",
+            "health_fleet",
+            "--from-mold",
+            "hm",
+            "--count",
+            "1",
+        ])
+        .current_dir(temp.path())
+        .output()
+        .unwrap();
+    let out = dal()
+        .args(["agent", "fleet", "deploy", "health_fleet", "watchdog tick"])
+        .current_dir(temp.path())
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    let out = dal()
+        .args(["agent", "fleet", "health", "health_fleet"])
+        .current_dir(temp.path())
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    let s = String::from_utf8_lossy(&out.stdout);
+    assert!(s.contains("watchdog tick"), "health output: {}", s);
+    assert!(s.contains("Status:"), "health output: {}", s);
+}
+
+#[test]
+fn fleet_export_k8s_contains_agent_env() {
+    let temp = tempfile::tempdir().unwrap();
+    let mold_dal = r#"
+mold "export_mold" "1.0"
+agent
+  type Worker
+  role "Export worker"
+"#;
+    fs::write(temp.path().join("em.mold.dal"), mold_dal).unwrap();
+    let _ = dal()
+        .args([
+            "agent",
+            "fleet",
+            "create",
+            "export_fleet",
+            "--from-mold",
+            "em",
+            "--count",
+            "1",
+        ])
+        .current_dir(temp.path())
+        .output()
+        .unwrap();
+    let out = dal()
+        .args([
+            "agent",
+            "fleet",
+            "export",
+            "export_fleet",
+            "--format",
+            "k8s",
+        ])
+        .current_dir(temp.path())
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "export: {:?}", out);
+    let yaml = String::from_utf8_lossy(&out.stdout);
+    assert!(yaml.contains("kind: Job"), "expected Job YAML: {}", yaml);
+    assert!(yaml.contains("DAL_AGENT_ID"), "expected env ref: {}", yaml);
 }

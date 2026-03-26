@@ -196,7 +196,7 @@ Ready to write code? Here are some areas that need help:
 - Write documentation
 - Fix typos and improve clarity
 
-See [CODEBASE_TODOS.md](../CODEBASE_TODOS.md) for detailed TODO list.
+See [CODEBASE_TODOS.md](CODEBASE_TODOS.md) for the TODO index (alignment + checklists).
 
 ## Development Workflow
 

@@ -17,6 +17,8 @@
 | [CLI reference](#cli-reference) | All commands | You need CLI help |
 | [Blockchain and hybrid](#blockchain-and-hybrid-trust) | Multi-chain, trust models, security | You're integrating blockchain |
 | [IDE and agent integration](#ide-and-agent-integration) | LSP, editor setup, agent tools | You're setting up an editor |
+| [Project state](#project-state-and-alignment-maintainers) | Shipped vs planned; gap checklist | You maintain releases or audit docs |
+| [Configuration](#configuration) | Environment variables index | You deploy or set keys / policies |
 | [Examples](#examples) | Code samples and tutorials | You learn by example |
 
 ---
@@ -80,6 +82,7 @@ DAL is agent-first. Agents are native language constructs with lifecycle operati
 | [Persistent Agent Memory](guides/PERSISTENT_AGENT_MEMORY.md) | Runtime persistence, backends (file/SQLite), configuration, schema versioning |
 | [Agent Capabilities](AGENT_CAPABILITIES.md) | Capability definition, validation, and per-type/per-agent configuration |
 | [Mold Format](MOLD_FORMAT.md) | `.mold.dal` syntax, lifecycle hooks, principal vs mold trust |
+| [Fleet deployment](FLEET_DEPLOYMENT.md) | CLI walkthrough (`dal agent fleet …`), `.dal/fleets.json`, deploy/run/health/export |
 | [Comprehensive Agent Plans](COMPREHENSIVE_AGENT_AND_MOLD_PLANS.md) | Agent reasoning, fleet, mold config, off-chain implementation |
 
 ### Key concepts
@@ -196,7 +199,18 @@ DAL provides multi-chain blockchain integration through its trust model and chai
 ## IDE and agent integration
 
 - [IDE and Agent Integration](IDE_AND_AGENT_INTEGRATION.md) — LSP setup, editor agents, tool schema
+- [LSP and Agent Integration Plan (detailed)](development/LSP_AND_AGENT_INTEGRATION_PLAN.md) — Full LSP feature plan, phases, stdio vs IDE HTTP routes
 - [DAL Assistant Plan](AGENT_ASSISTANT_PLAN.md) — How agents work as DAL assistants: skills, molds, code-editor tools
+
+### Project state and alignment (maintainers)
+
+- **[Project state and alignment](PROJECT_STATE_AND_ALIGNMENT.md)** — Single matrix: what is shipped vs stub vs planned; links to trust-split EVM, LSP, checklists; **gap backlog** to keep docs and code honest across releases.
+- **[Production grade checklist](PRODUCTION_GRADE_CHECKLIST.md)** — Unwrap/panic, stubs, JWT, logging
+- **[CODEBASE_TODOS.md](../CODEBASE_TODOS.md)** — Short index into the above (repo root)
+
+### Configuration
+
+- **[CONFIG.md](CONFIG.md)** — Index of environment variables (`DAL_*`, LLM keys, JWT, etc.) with links to full guides.
 
 **File extensions:**
 - `.dal` — Source files

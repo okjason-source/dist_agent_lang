@@ -1182,8 +1182,10 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
         }
     }
 
-    // Fallback to simulated response
-    Ok(format!("Generated response to: {}", prompt))
+    // Fallback when no provider is configured/available.
+    // Important: do NOT echo the full prompt (it may include large tool schemas and internal instructions).
+    let _ = prompt; // keep signature stable; avoid unused warning in some builds
+    Ok("Generated response (AI not configured). Set DAL_AI_PROVIDER and an API key to enable real replies.".to_string())
 }
 
 /// System prompt for tool-using agent: reply, run shell, or search.

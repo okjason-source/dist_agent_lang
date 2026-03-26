@@ -435,7 +435,7 @@ fn api_debug_ai(request) {
 fn api_diag(request) {
  try {
   let reply = ai::generate_text(".");
-  let is_placeholder = (reply == "Generated response to: .");
+  let is_placeholder = (reply.contains("AI not configured") || reply.contains("Generated response"));
   let rlen = 0;
   if (reply != null) {
    rlen = len(reply);
@@ -467,7 +467,7 @@ fn api_ai_status(request) {
     "body": "{\"connected\":false,\"message\":\"LLM disconnected\"}"
    };
   }
-  let is_placeholder = (reply == "Generated response to: .");
+  let is_placeholder = (reply.contains("AI not configured") || reply.contains("Generated response"));
   if (is_placeholder) {
    return {
     "status": 200,

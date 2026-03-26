@@ -11,6 +11,7 @@ use axum::{
     body::Body,
     extract::{Path, State},
     http::{Request, StatusCode},
+    middleware,
     response::{IntoResponse, Json, Response},
     routing::{get, put},
     Router,
@@ -236,6 +237,8 @@ async fn put_version(
 
 #[tokio::main]
 async fn main() {
+    dist_agent_lang::observability::init_tracing();
+
     let storage = storage_path();
     let public_url = public_url();
     let auth_token = auth_token();
@@ -260,6 +263,13 @@ async fn main() {
             get(get_tarball),
         )
         .route("/v1/packages/:name/versions/:version", put(put_version))
+        .route(
+            "/metrics",
+            get(dist_agent_lang::observability::metrics_http_response),
+        )
+        .layer(middleware::from_fn(
+            dist_agent_lang::observability::http_observability_middleware,
+        ))
         .layer(CorsLayer::permissive())
         .with_state(state);
     let port: u16 = std::env::var("PORT")

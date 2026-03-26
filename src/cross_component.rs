@@ -97,7 +97,7 @@ fn run_bond(args: &[String], opts: &RunOptions) -> RunResult {
                 "bond {}: not yet implemented (stub). Use --dry-run to see planned steps.",
                 flow
             ),
-            exit_code: 0,
+            exit_code: 1,
         },
     }
 }
@@ -1246,12 +1246,12 @@ fn run_invoke(args: &[String], opts: &RunOptions) -> RunResult {
         "ai-audit" => run_invoke_ai_audit(&rest, dry_run),
         "compliance-check" => run_invoke_compliance_check(&rest, dry_run),
         _ => RunResult {
-            success: true,
+            success: false,
             message: format!(
                 "invoke {}: not yet implemented (stub). Args: {:?}",
                 workflow, rest
             ),
-            exit_code: 0,
+            exit_code: 1,
         },
     }
 }

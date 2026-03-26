@@ -222,8 +222,8 @@ Typed boundary fields include:
 ## 11. Reference Pointers (Live Source of Truth)
 
 - `docs/development/implementation/TRUST_SPLIT_EVM_PRODUCTION_PLAN.md`
-- `docs/development/testing/TRUST_SPLIT_EVM_TEST_AND_RELEASE_PLAN.md`
-- `docs/development/implementation/TRUST_SPLIT_EVM_HARDENING_REFACTOR_PLAN.md`
+- `docs/development/implementation/TRUST_SPLIT_EVM_HARDENING_REFACTOR_PLAN.md` (gateboard §7 = test/release style gates until a standalone test plan file is added)
+- `docs/PROJECT_STATE_AND_ALIGNMENT.md`
 - `src/stdlib/chain.rs`
 - `src/stdlib/abi_codec.rs`
 - `src/stdlib/add_sol.rs`

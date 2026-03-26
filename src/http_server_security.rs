@@ -3,7 +3,7 @@
 
 use axum::{
     extract::Request,
-    http::{HeaderMap, StatusCode},
+    http::{HeaderMap, HeaderName, HeaderValue, StatusCode},
     middleware::Next,
     response::Response,
 };
@@ -63,27 +63,29 @@ pub async fn security_headers_middleware(request: Request, next: Next) -> Respon
 
     let headers = response.headers_mut();
 
-    // Content Security Policy
+    // Static header names/values — use `HeaderName`/`HeaderValue` constructors instead of
+    // infallible `.parse().unwrap()` on the request path.
     headers.insert(
-        "Content-Security-Policy",
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
-            .parse()
-            .unwrap(),
+        HeaderName::from_static("content-security-policy"),
+        HeaderValue::from_static(
+            "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+        ),
     );
-
-    // X-Frame-Options
-    headers.insert("X-Frame-Options", "DENY".parse().unwrap());
-
-    // X-Content-Type-Options
-    headers.insert("X-Content-Type-Options", "nosniff".parse().unwrap());
-
-    // X-XSS-Protection
-    headers.insert("X-XSS-Protection", "1; mode=block".parse().unwrap());
-
-    // Referrer-Policy
     headers.insert(
-        "Referrer-Policy",
-        "strict-origin-when-cross-origin".parse().unwrap(),
+        HeaderName::from_static("x-frame-options"),
+        HeaderValue::from_static("DENY"),
+    );
+    headers.insert(
+        HeaderName::from_static("x-content-type-options"),
+        HeaderValue::from_static("nosniff"),
+    );
+    headers.insert(
+        HeaderName::from_static("x-xss-protection"),
+        HeaderValue::from_static("1; mode=block"),
+    );
+    headers.insert(
+        HeaderName::from_static("referrer-policy"),
+        HeaderValue::from_static("strict-origin-when-cross-origin"),
     );
 
     response
@@ -502,17 +504,12 @@ mod tests {
             vec!["read".to_string(), "write".to_string()],
         );
 
-        assert!(token_result.is_ok());
-        let token = token_result.unwrap();
-
-        // Token should not be empty
+        let token = token_result.expect("generate_token in test");
         assert!(!token.is_empty());
 
-        // Validate the token
-        let claims_result = validator.validate_api_key(&token);
-        assert!(claims_result.is_ok());
-
-        let claims = claims_result.unwrap();
+        let claims = validator
+            .validate_api_key(&token)
+            .expect("validate_api_key in test");
         assert_eq!(claims.sub, "user123");
         assert_eq!(claims.roles, vec!["admin"]);
     }
@@ -527,22 +524,11 @@ mod tests {
                 vec!["admin".to_string(), "moderator".to_string()],
                 vec![],
             )
-            .unwrap();
+            .expect("generate_token in test");
 
-        // Should have admin role
-        let has_admin = validator.validate_role(&token, "admin");
-        assert!(has_admin.is_ok());
-        assert!(has_admin.unwrap());
-
-        // Should have moderator role
-        let has_mod = validator.validate_role(&token, "moderator");
-        assert!(has_mod.is_ok());
-        assert!(has_mod.unwrap());
-
-        // Should not have user role
-        let has_user = validator.validate_role(&token, "user");
-        assert!(has_user.is_ok());
-        assert!(!has_user.unwrap());
+        assert_eq!(validator.validate_role(&token, "admin"), Ok(true));
+        assert_eq!(validator.validate_role(&token, "moderator"), Ok(true));
+        assert_eq!(validator.validate_role(&token, "user"), Ok(false));
     }
 
     #[test]
@@ -555,17 +541,10 @@ mod tests {
                 vec![],
                 vec!["read".to_string(), "write".to_string()],
             )
-            .unwrap();
+            .expect("generate_token in test");
 
-        // Should have read permission
-        let has_read = validator.validate_permission(&token, "read");
-        assert!(has_read.is_ok());
-        assert!(has_read.unwrap());
-
-        // Should not have delete permission
-        let has_delete = validator.validate_permission(&token, "delete");
-        assert!(has_delete.is_ok());
-        assert!(!has_delete.unwrap());
+        assert_eq!(validator.validate_permission(&token, "read"), Ok(true));
+        assert_eq!(validator.validate_permission(&token, "delete"), Ok(false));
     }
 
     #[test]
@@ -573,8 +552,8 @@ mod tests {
         let validator = test_validator();
 
         let result = validator.validate_api_key("");
-        assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Empty token"));
+        let err = result.expect_err("empty token should fail");
+        assert!(err.contains("Empty token"));
     }
 
     #[test]
@@ -588,17 +567,22 @@ mod tests {
     #[test]
     fn test_jwt_extract_bearer_token() {
         let mut headers = HeaderMap::new();
-        headers.insert("Authorization", "Bearer my_token_123".parse().unwrap());
+        headers.insert(
+            HeaderName::from_static("authorization"),
+            HeaderValue::try_from("Bearer my_token_123").expect("test Authorization header"),
+        );
 
         let token = AuthValidator::extract_token(&headers);
-        assert!(token.is_some());
-        assert_eq!(token.unwrap(), "my_token_123");
+        assert_eq!(token.as_deref(), Some("my_token_123"));
     }
 
     #[test]
     fn test_jwt_extract_no_bearer() {
         let mut headers = HeaderMap::new();
-        headers.insert("Authorization", "my_token_123".parse().unwrap());
+        headers.insert(
+            HeaderName::from_static("authorization"),
+            HeaderValue::from_static("my_token_123"),
+        );
 
         let token = AuthValidator::extract_token(&headers);
         assert!(token.is_none());
@@ -615,10 +599,10 @@ mod tests {
     fn test_rate_limiter() {
         use tokio::runtime::Runtime;
 
-        let rt = Runtime::new().unwrap();
+        let rt = Runtime::new().expect("tokio runtime for test");
         rt.block_on(async {
             let limiter = RateLimiter::new(3, 60); // 3 requests per 60 seconds
-            let ip: IpAddr = "127.0.0.1".parse().unwrap();
+            let ip: IpAddr = "127.0.0.1".parse().expect("loopback test IP");
 
             // First 3 requests should succeed
             assert!(limiter.check_rate_limit(ip).await.is_ok());
@@ -627,8 +611,7 @@ mod tests {
 
             // 4th request should be rate limited
             let result = limiter.check_rate_limit(ip).await;
-            assert!(result.is_err());
-            assert_eq!(result.unwrap_err(), StatusCode::TOO_MANY_REQUESTS);
+            assert_eq!(result, Err(StatusCode::TOO_MANY_REQUESTS));
         });
     }
 }

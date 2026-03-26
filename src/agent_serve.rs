@@ -5,6 +5,7 @@
 use axum::{
     extract::State,
     http::StatusCode,
+    middleware,
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
@@ -565,6 +566,13 @@ fn build_router(state: Arc<AgentServeState>) -> Router {
         .route("/task", post(handle_task))
         .route("/tasks", get(handle_tasks))
         .route("/health", get(handle_health))
+        .route(
+            "/metrics",
+            get(dist_agent_lang::observability::metrics_http_response),
+        )
+        .layer(middleware::from_fn(
+            dist_agent_lang::observability::http_observability_middleware,
+        ))
         .with_state(state)
 }
 

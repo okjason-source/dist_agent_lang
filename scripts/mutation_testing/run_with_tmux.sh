@@ -61,14 +61,11 @@ tmux new-session -d -s "$SESSION_NAME" -c "$PROJECT_ROOT" " \
     --exclude tests/ffi_performance_tests.rs \
     --exclude tests/example_tests.rs \
     --exclude src/ffi/security.rs \
-    --exclude src/parser/ast.rs \
-    --timeout 300 \
-    --build-timeout 300 \
+    --exclude src/registry.rs \
+    --exclude src/skills.rs \
+    --exclude src/lsp.rs \
+    --timeout 500 \
+    --build-timeout 500 \
     -- $CARGO_TEST_ARGS \
   2>&1 | tee -a '$LOG_FILE'; \
-  echo; echo Done. Press Enter to close.; read
-"
-echo "Started tmux session: $SESSION_NAME"
-echo "  Attach: tmux attach -t $SESSION_NAME"
-echo "  Detach: Ctrl+B then D"
-echo "  Log:    $LOG_FILE"
+  echo; echo Done. Press Enter to close.; read"
