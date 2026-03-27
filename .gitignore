@@ -87,8 +87,8 @@ PHASE*.md
 
 # CEO / project files (local workspace; do not commit)
 /CEO/
-*/CEO/
-*/CEO/**/
+**/CEO/
+**/CEO/**/
 
 # Agent / project files (local workspace; do not commit)
 
