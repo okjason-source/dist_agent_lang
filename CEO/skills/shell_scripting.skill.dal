@@ -1,0 +1,10 @@
+# Shell scripting — write and run bash/sh scripts from the agent.
+#
+# Use the run tool to create .sh files and execute them with bash.
+# Be careful with quoting and escaping; prefer heredoc with a unique delimiter.
+
+skill "shell_scripting" {
+  category "development"
+  description "Write and run shell (bash/sh) scripts. Use the run tool: (1) Write script to a file with a heredoc or printf, e.g. bash -c 'cat > /tmp/step.sh << \"ENDSCRIPT\"\n#!/bin/bash\necho hello\nENDSCRIPT' then chmod +x /tmp/step.sh. (2) Run with bash /tmp/step.sh. Use a unique heredoc delimiter (e.g. ENDSCRIPT, SH_END) that does not appear in the script body. Be careful with quoting: inside the run command, escape double quotes and backslashes. Prefer /tmp for one-off scripts. After running, report the output to the user."
+  tools "run" "search"
+}

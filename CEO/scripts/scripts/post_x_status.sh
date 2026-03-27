@@ -1,0 +1,1 @@
+curl -sS -X POST http://localhost:4040/api/x/post -H 'Content-Type: application/json' -d '{"text":"Exploring the capabilities of dist_agent_lang (DAL) for seamless automation and workflow management! #DAL #Automation"}'

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a1a2e'/><text x='16' y='22' font-size='16' text-anchor='middle' fill='%2300d4aa'>A</text></svg>">
+  <title>DAL CEO</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="header">
+    <h1>DAL CEO</h1>
+    <p>Chat, run commands, search the web, or give tasks. Memory-enabled.</p>
+    <div class="header-badges">
+      <span class="ai-status" id="ai-status">
+        <span class="ai-dot checking" id="ai-dot"></span>
+        <span id="ai-label">Checking…</span>
+      </span>
+      <span class="running-indicator" id="running-indicator" aria-live="polite"></span>
+      <span class="frontend-badge" id="frontend-badge" title="Which UI is loaded"></span>
+    </div>
+    <div class="ai-fix" id="ai-fix"></div>
+  </div>
+
+  <div class="layout">
+    <main class="chat-main">
+      <div id="messages"></div>
+      <form class="input-bar" id="form">
+        <input type="text" id="input" placeholder="Message your agent..." autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+    </main>
+
+    <aside class="panels" id="bottom-panels">
+      <section class="panel-column" id="panel-history">
+        <div class="panel-header">
+          <h2>Conversation history</h2>
+          <button type="button" id="history-refresh" title="Refresh">↻</button>
+          <button type="button" id="history-clear" title="Clear history">Clear</button>
+        </div>
+        <div id="history-list" class="history-list"></div>
+      </section>
+      <div class="panel-divider" data-divider="history-task" role="separator" aria-label="Resize history and task panels"></div>
+      <section class="panel-column" id="panel-task">
+        <div class="panel-header">
+          <h2>Run a task</h2>
+        </div>
+        <form id="task-form" class="panel-form">
+          <textarea id="task-input" placeholder="Describe the task..." rows="3"></textarea>
+          <button type="submit">Run task</button>
+        </form>
+        <div id="task-result" class="panel-result"></div>
+      </section>
+      <div class="panel-divider" data-divider="task-workflow" role="separator" aria-label="Resize task and workflow panels"></div>
+      <section class="panel-column" id="panel-workflow">
+        <div class="panel-header">
+          <h2>Run workflow</h2>
+        </div>
+        <form id="workflow-form" class="panel-form">
+          <label for="workflow-select">Workflow</label>
+          <select id="workflow-select">
+            <option value="">Loading…</option>
+          </select>
+          <label for="workflow-input">Input / topic</label>
+          <input type="text" id="workflow-input" placeholder="e.g. latest trends in AI agents">
+          <button type="submit">Run workflow</button>
+        </form>
+        <div id="workflow-result" class="panel-result"></div>
+      </section>
+    </aside>
+  </div>
+
+  <div id="job-toast" class="job-toast" aria-live="polite"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

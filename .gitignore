@@ -87,8 +87,7 @@ PHASE*.md
 
 
 # Agent / project files (local workspace; do not commit)
-/CEO/
-**/CEO/
+# CEO app sources are tracked; per-machine files are listed in CEO/.gitignore.
 /.dal/
 **/.dal/
 /test_agent_init/

@@ -1,0 +1,28 @@
+# Local env (do not commit API keys)
+.env
+bridge/.env
+
+# Node
+bridge/node_modules/
+
+# DAL runtime state (regenerated on start)
+.dal/
+
+# Process / start locks (never commit)
+.agent-assistant.pid
+.agent-assistant.start.lock/
+.dal-ceo.pid
+.dal-ceo.start.lock/
+
+# Evolve context, history, custom workflows (personal)
+evolve.md
+history.jsonl
+custom_workflows.json
+
+# Personality and learning (user-specific; optional to commit)
+personality.md
+learned_preferences.md
+feedback.jsonl
+
+# Python venv (for scripts/x_post.py)
+venv/

@@ -1,0 +1,10 @@
+// Minimal mold for fleet / `dal agent serve --mold` smoke tests in this repo.
+// Trust and evolve paths come from agent.toml / env (principal), not from the mold.
+
+mold "assistant" "1.0"
+agent
+  type Worker
+  role "Agent Assistant worker (fleet sample)"
+  capabilities "read" "write"
+  learning true
+  communication true
