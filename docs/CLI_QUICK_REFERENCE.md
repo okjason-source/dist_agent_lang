@@ -32,7 +32,7 @@
 | `dal run <file.dal>` | Run a DAL file | `dal run app.dal` |
 | `dal web <file.dal>` | Run DAL web app | `dal web server.dal` |
 | `dal web <file.js> [args...]` | Run standalone JS (Node) | `dal web app.js` |
-| `dal serve <file.dal> [--port N] [--venv <name>]` | Serve HTTP handlers (optional venv) | `dal serve server.dal --port 4040 --venv agent_assistant` |
+| `dal serve <file.dal> [--port N] [--venv <name>]` | Serve HTTP handlers (optional venv) | `dal serve server.dal --port 4040` |
 | `dal test [file]` | Run tests | `dal test` or `dal test app.test.dal` |
 | `dal parse <file.dal>` | Parse and validate syntax | `dal parse app.dal` |
 | `dal help` | Show help message | `dal help` |
