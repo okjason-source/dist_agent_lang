@@ -87,6 +87,8 @@ PHASE*.md
 
 
 # Agent / project files (local workspace; do not commit)
+/CEO/
+**/CEO/
 /.dal/
 **/.dal/
 /test_agent_init/
