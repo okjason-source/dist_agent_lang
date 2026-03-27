@@ -1,0 +1,43 @@
+// UI built in DAL: HTML, CSS, JS for the agent assistant web UI.
+// Prefer public/ files when base path is set; otherwise return minimal inline content.
+// Use: import "./web.dal" as web;  body = web::get_index_html(base);
+
+fn read_from_public(base, filename) {
+ try {
+  let path = "public/" + filename;
+  if (len(base) > 0) { path = base + "/public/" + filename; }
+  let out = sh::run("cat " + path + " 2>/dev/null");
+  if (out != null && len(out) > 0) {
+   return out;
+  }
+ } catch {
+  // ignore
+ }
+ return null;
+}
+
+fn get_index_html(base) {
+ let body = read_from_public(base, "index.html");
+ if (body != null && len(body) > 0) {
+  return body;
+ }
+ return default_index_html();
+}
+
+fn get_styles_css(base) {
+ let body = read_from_public(base, "styles.css");
+ if (body != null && len(body) > 0) {
+  return body;
+ }
+ return default_styles_css();
+}
+
+fn get_app_js(base) {
+    let body = read_from_public(base, "app.js");
+ if (body != null && len(body) > 0) {
+  return body;
+ }
+ return default_app_js();
+}
+
+   

@@ -1,0 +1,3 @@
+# For scripts/x_post.py (X API OAuth 1.0a).
+# Install via venv (recommended on macOS): from agent_assistant run ./scripts/setup_venv.sh
+requests-oauthlib>=1.3.0

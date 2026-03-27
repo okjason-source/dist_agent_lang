@@ -259,7 +259,7 @@ main();
     .map_err(|e| e.to_string())?;
 
     if !dir.join("evolve.md").exists() {
-        let header = "# Agent context\n\n## Conversation\n\n## Action log\n\n| Time | Action | Detail | Result |\n|------|--------|--------|--------|\n";
+        let header = "# Agent context\n\n## Conversation\n\n## Action log\n\n| Time | Action | Detail | Result | Get Task (ms) | Do Task (ms) | Total (ms) |\n|------|--------|--------|--------|----------------|--------------|------------|\n";
         std::fs::write(dir.join("evolve.md"), header).map_err(|e| e.to_string())?;
     }
 

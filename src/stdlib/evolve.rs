@@ -56,7 +56,7 @@ fn ensure_action_log_section(path: &std::path::Path) -> std::io::Result<()> {
     if content.contains("## Action log") {
         return Ok(());
     }
-    let table_header = "\n## Action log\n\n| Time | Action | Detail | Result |\n|------|--------|--------|--------|\n";
+    let table_header = "\n## Action log\n\n| Time | Action | Detail | Result | Get Task (ms) | Do Task (ms) | Total (ms) |\n|------|--------|--------|--------|----------------|--------------|------------|\n";
     let mut f = OpenOptions::new().append(true).open(path)?;
     f.write_all(table_header.as_bytes())?;
     Ok(())
@@ -117,12 +117,49 @@ pub fn append_conversation(
 
 /// Append an action log entry (e.g. sh::run, command, result).
 pub fn append_log(action: &str, detail: &str, result: &str) -> Result<(), String> {
+    append_log_with_timing(action, detail, result, None, None)
+}
+
+/// Append an action log entry with task timing fields.
+///
+/// `get_task_ms` should represent the time spent choosing/acquiring a task.
+/// `do_task_ms` should represent the time spent executing the task.
+pub fn append_log_timed(
+    action: &str,
+    detail: &str,
+    result: &str,
+    get_task_ms: i64,
+    do_task_ms: i64,
+) -> Result<(), String> {
+    append_log_with_timing(action, detail, result, Some(get_task_ms), Some(do_task_ms))
+}
+
+fn append_log_with_timing(
+    action: &str,
+    detail: &str,
+    result: &str,
+    get_task_ms: Option<i64>,
+    do_task_ms: Option<i64>,
+) -> Result<(), String> {
     let path = get_context_path();
     ensure_header(&path, DEFAULT_AGENT_NAME).map_err(|e| e.to_string())?;
     ensure_action_log_section(&path).map_err(|e| e.to_string())?;
 
     let now = chrono::Utc::now().format("%H:%M:%S");
-    let line = format!("| {} | {} | {} | {} |\n", now, action, detail, result);
+    let get_ms = get_task_ms
+        .map(|v| v.to_string())
+        .unwrap_or_else(|| "-".to_string());
+    let do_ms = do_task_ms
+        .map(|v| v.to_string())
+        .unwrap_or_else(|| "-".to_string());
+    let total_ms = match (get_task_ms, do_task_ms) {
+        (Some(get), Some(exec)) => (get.saturating_add(exec)).to_string(),
+        _ => "-".to_string(),
+    };
+    let line = format!(
+        "| {} | {} | {} | {} | {} | {} | {} |\n",
+        now, action, detail, result, get_ms, do_ms, total_ms
+    );
 
     let mut f = OpenOptions::new()
         .create(true)

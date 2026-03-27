@@ -6255,6 +6255,22 @@ impl Runtime {
                 evolve::append_log(&action, &detail, &result).map_err(RuntimeError::General)?;
                 Ok(Value::Null)
             }
+            "append_log_timed" => {
+                if args.len() < 5 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 5,
+                        got: args.len(),
+                    });
+                }
+                let action = self.value_to_string(&args[0])?;
+                let detail = self.value_to_string(&args[1])?;
+                let result = self.value_to_string(&args[2])?;
+                let get_task_ms = self.value_to_int(&args[3])?;
+                let do_task_ms = self.value_to_int(&args[4])?;
+                evolve::append_log_timed(&action, &detail, &result, get_task_ms, do_task_ms)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Null)
+            }
             "get_path" => Ok(Value::String(evolve::get_path())),
             "load_recent" => {
                 let (agent_name, max_lines) = match args.len() {
@@ -8003,78 +8019,7 @@ impl Runtime {
                 let d =
                     crate::stdlib::ai::respond_with_tools_diagnostics_with_policy(&message, policy)
                         .map_err(RuntimeError::General)?;
-                let route = match d.route {
-                    crate::stdlib::ai::ChatRoute::ReplyOnly => "reply_only",
-                    crate::stdlib::ai::ChatRoute::ToolLoop => "tool_loop",
-                };
-                let policy_str = match d.policy {
-                    crate::stdlib::ai::ChatPolicy::Auto => "auto",
-                    crate::stdlib::ai::ChatPolicy::ReplyOnly => "reply_only",
-                    crate::stdlib::ai::ChatPolicy::ToolLoop => "tool_loop",
-                };
-                let tool_trace_raw = d.tool_trace;
-                let r = d.result;
-                let termination = crate::stdlib::ai::classify_termination(&r);
-                let mut map = std::collections::HashMap::new();
-                map.insert("final_text".to_string(), Value::String(r.final_text));
-                map.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
-                map.insert(
-                    "max_steps_reached".to_string(),
-                    Value::Bool(r.max_steps_reached),
-                );
-                map.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
-                map.insert("route".to_string(), Value::String(route.to_string()));
-                map.insert("policy".to_string(), Value::String(policy_str.to_string()));
-                map.insert(
-                    "guard_stopped".to_string(),
-                    Value::Bool(termination.guard_stopped),
-                );
-                map.insert(
-                    "termination_reason".to_string(),
-                    Value::String(termination.termination_reason.to_string()),
-                );
-                // Non-critical diagnostics for DAL/HTTP surfaces.
-                let mut obs = std::collections::HashMap::new();
-                obs.insert("route".to_string(), Value::String(route.to_string()));
-                obs.insert("policy".to_string(), Value::String(policy_str.to_string()));
-                obs.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
-                obs.insert(
-                    "max_steps_reached".to_string(),
-                    Value::Bool(r.max_steps_reached),
-                );
-                obs.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
-                obs.insert(
-                    "guard_stopped".to_string(),
-                    Value::Bool(termination.guard_stopped),
-                );
-                obs.insert(
-                    "termination_reason".to_string(),
-                    Value::String(termination.termination_reason.to_string()),
-                );
-                obs.insert(
-                    "legacy_text_protocol_enabled".to_string(),
-                    Value::Bool(crate::stdlib::ai::legacy_text_tool_protocol_enabled()),
-                );
-                obs.insert(
-                    "native_tool_calling_enabled".to_string(),
-                    Value::Bool(crate::stdlib::ai::native_tool_calling_enabled()),
-                );
-                let default_policy = match crate::stdlib::ai::default_chat_policy_from_env() {
-                    crate::stdlib::ai::ChatPolicy::Auto => "auto",
-                    crate::stdlib::ai::ChatPolicy::ReplyOnly => "reply_only",
-                    crate::stdlib::ai::ChatPolicy::ToolLoop => "tool_loop",
-                };
-                obs.insert(
-                    "default_policy".to_string(),
-                    Value::String(default_policy.to_string()),
-                );
-                map.insert("observability".to_string(), Value::Map(obs));
-                let tool_trace = tool_trace_raw
-                    .into_iter()
-                    .map(Value::String)
-                    .collect::<Vec<_>>();
-                map.insert("tool_trace".to_string(), Value::Array(tool_trace.clone()));
-                map.insert("last_tool_names".to_string(), Value::Array(tool_trace));
+                let map = crate::stdlib::ai::agent_run_result_map_from_diagnostics(&d);
                 Ok(Value::Map(map))
             }
             "agent_run" => {
@@ -8116,77 +8061,7 @@ impl Runtime {
                 let d =
                     crate::stdlib::ai::respond_with_tools_diagnostics_with_policy(&message, policy)
                         .map_err(RuntimeError::General)?;
-                let route = match d.route {
-                    crate::stdlib::ai::ChatRoute::ReplyOnly => "reply_only",
-                    crate::stdlib::ai::ChatRoute::ToolLoop => "tool_loop",
-                };
-                let policy_str = match d.policy {
-                    crate::stdlib::ai::ChatPolicy::Auto => "auto",
-                    crate::stdlib::ai::ChatPolicy::ReplyOnly => "reply_only",
-                    crate::stdlib::ai::ChatPolicy::ToolLoop => "tool_loop",
-                };
-                let tool_trace_raw = d.tool_trace;
-                let r = d.result;
-                let termination = crate::stdlib::ai::classify_termination(&r);
-                let mut map = std::collections::HashMap::new();
-                map.insert("final_text".to_string(), Value::String(r.final_text));
-                map.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
-                map.insert(
-                    "max_steps_reached".to_string(),
-                    Value::Bool(r.max_steps_reached),
-                );
-                map.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
-                map.insert("route".to_string(), Value::String(route.to_string()));
-                map.insert("policy".to_string(), Value::String(policy_str.to_string()));
-                map.insert(
-                    "guard_stopped".to_string(),
-                    Value::Bool(termination.guard_stopped),
-                );
-                map.insert(
-                    "termination_reason".to_string(),
-                    Value::String(termination.termination_reason.to_string()),
-                );
-                let mut obs = std::collections::HashMap::new();
-                obs.insert("route".to_string(), Value::String(route.to_string()));
-                obs.insert("policy".to_string(), Value::String(policy_str.to_string()));
-                obs.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
-                obs.insert(
-                    "max_steps_reached".to_string(),
-                    Value::Bool(r.max_steps_reached),
-                );
-                obs.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
-                obs.insert(
-                    "guard_stopped".to_string(),
-                    Value::Bool(termination.guard_stopped),
-                );
-                obs.insert(
-                    "termination_reason".to_string(),
-                    Value::String(termination.termination_reason.to_string()),
-                );
-                obs.insert(
-                    "legacy_text_protocol_enabled".to_string(),
-                    Value::Bool(crate::stdlib::ai::legacy_text_tool_protocol_enabled()),
-                );
-                obs.insert(
-                    "native_tool_calling_enabled".to_string(),
-                    Value::Bool(crate::stdlib::ai::native_tool_calling_enabled()),
-                );
-                let default_policy = match crate::stdlib::ai::default_chat_policy_from_env() {
-                    crate::stdlib::ai::ChatPolicy::Auto => "auto",
-                    crate::stdlib::ai::ChatPolicy::ReplyOnly => "reply_only",
-                    crate::stdlib::ai::ChatPolicy::ToolLoop => "tool_loop",
-                };
-                obs.insert(
-                    "default_policy".to_string(),
-                    Value::String(default_policy.to_string()),
-                );
-                map.insert("observability".to_string(), Value::Map(obs));
-                let tool_trace = tool_trace_raw
-                    .into_iter()
-                    .map(Value::String)
-                    .collect::<Vec<_>>();
-                map.insert("tool_trace".to_string(), Value::Array(tool_trace.clone()));
-                map.insert("last_tool_names".to_string(), Value::Array(tool_trace));
+                let map = crate::stdlib::ai::agent_run_result_map_from_diagnostics(&d);
                 Ok(Value::Map(map))
             }
             "train_model" => {

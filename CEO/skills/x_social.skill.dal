@@ -1,0 +1,10 @@
+# X (Twitter) social media skill — post and reply from the agent.
+#
+# The 'run' tool runs real shell commands only (e.g. curl, python, node). Posting and replying
+# are done by calling this server's API with curl using the full URL http://localhost:4040.
+
+skill "x_social" {
+  category "office"
+  description "Post tweets to X (Twitter) and reply to tweets. Single tweet: curl -sS -X POST http://localhost:4040/api/x/post -H 'Content-Type: application/json' -d '{\"text\":\"YOUR_TWEET_TEXT\"}'. Batch (many tweets with limits): curl -sS -X POST http://localhost:4040/api/x/batch -H 'Content-Type: application/json' -d '{\"tweets\":[\"first tweet\",\"second tweet\"],\"max_per_batch\":5,\"delay_seconds\":2}'. Max 10 tweets per batch; delay_seconds 0–60 between posts. Reply: POST http://localhost:4040/api/x/reply with {\"tweet_id\":\"ID\",\"text\":\"REPLY_TEXT\"}. Tweets 280 chars max. One run then reply to the user; no post_tweets command."
+  tools "run" "search"
+}

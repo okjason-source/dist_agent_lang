@@ -2634,6 +2634,12 @@ pub fn run_multi_step_tool_loop(
     working_root: Option<&std::path::Path>,
 ) -> Result<MultiStepResult, String> {
     use crate::agent_context_schema::ConversationTurn;
+    fn duration_ms_i64(duration: std::time::Duration) -> i64 {
+        match i64::try_from(duration.as_millis()) {
+            Ok(ms) => ms,
+            Err(_) => i64::MAX,
+        }
+    }
     let root = working_root.map(|p| p.to_path_buf()).unwrap_or_else(|| {
         std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."))
     });
@@ -2645,6 +2651,7 @@ pub fn run_multi_step_tool_loop(
     let mut steps_used: u32 = 0;
     let include_scripting_tools = working_root.is_some();
     loop {
+        let task_get_started = std::time::Instant::now();
         if let Some(started) = guard_state.started_at {
             if guards.max_wall_clock_ms > 0
                 && started.elapsed().as_millis() as u64 > guards.max_wall_clock_ms
@@ -2673,6 +2680,7 @@ pub fn run_multi_step_tool_loop(
         let outcome = parsed.outcome;
         let assistant_event = parsed.assistant_event;
         let pending_signature = tool_signature(&outcome);
+        let get_task_ms = duration_ms_i64(task_get_started.elapsed());
         if let Some((tool_name, signature)) = pending_signature.as_ref() {
             if let Some(msg) =
                 register_tool_invocation_guard(&mut guard_state, &guards, tool_name, signature)
@@ -2711,7 +2719,9 @@ pub fn run_multi_step_tool_loop(
                 });
             }
             ToolOutcome::Run(cmd) => {
+                let task_do_started = std::time::Instant::now();
                 let result = execute_run_result(&cmd);
+                let do_task_ms = duration_ms_i64(task_do_started.elapsed());
                 if let Some((_, signature)) = pending_signature.as_ref() {
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
@@ -2725,7 +2735,13 @@ pub fn run_multi_step_tool_loop(
                     }
                 }
                 if agent_name.is_some() {
-                    let _ = crate::stdlib::evolve::append_log("run", &cmd, &result);
+                    let _ = crate::stdlib::evolve::append_log_timed(
+                        "run",
+                        &cmd,
+                        &result,
+                        get_task_ms,
+                        do_task_ms,
+                    );
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
@@ -2746,7 +2762,9 @@ pub fn run_multi_step_tool_loop(
                 }
             }
             ToolOutcome::Search(query) => {
+                let task_do_started = std::time::Instant::now();
                 let result = execute_search_result(&query);
+                let do_task_ms = duration_ms_i64(task_do_started.elapsed());
                 if let Some((_, signature)) = pending_signature.as_ref() {
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
@@ -2760,7 +2778,13 @@ pub fn run_multi_step_tool_loop(
                     }
                 }
                 if agent_name.is_some() {
-                    let _ = crate::stdlib::evolve::append_log("search", &query, &result);
+                    let _ = crate::stdlib::evolve::append_log_timed(
+                        "search",
+                        &query,
+                        &result,
+                        get_task_ms,
+                        do_task_ms,
+                    );
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
@@ -2782,7 +2806,9 @@ pub fn run_multi_step_tool_loop(
             }
             ToolOutcome::DalInit(template) => {
                 let t = template.as_deref();
+                let task_do_started = std::time::Instant::now();
                 let result = execute_dal_init_result(t, &root);
+                let do_task_ms = duration_ms_i64(task_do_started.elapsed());
                 if let Some((_, signature)) = pending_signature.as_ref() {
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
@@ -2796,10 +2822,12 @@ pub fn run_multi_step_tool_loop(
                     }
                 }
                 if agent_name.is_some() {
-                    let _ = crate::stdlib::evolve::append_log(
+                    let _ = crate::stdlib::evolve::append_log_timed(
                         "dal_init",
                         &template.unwrap_or_else(|| "general".to_string()),
                         &result,
+                        get_task_ms,
+                        do_task_ms,
                     );
                 }
                 schema.conversation.push(ConversationTurn {
@@ -2821,7 +2849,9 @@ pub fn run_multi_step_tool_loop(
                 }
             }
             ToolOutcome::ReadFile(path) => {
+                let task_do_started = std::time::Instant::now();
                 let result = execute_read_file_result(&path, &root);
+                let do_task_ms = duration_ms_i64(task_do_started.elapsed());
                 if let Some((_, signature)) = pending_signature.as_ref() {
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
@@ -2835,7 +2865,13 @@ pub fn run_multi_step_tool_loop(
                     }
                 }
                 if agent_name.is_some() {
-                    let _ = crate::stdlib::evolve::append_log("read_file", &path, &result);
+                    let _ = crate::stdlib::evolve::append_log_timed(
+                        "read_file",
+                        &path,
+                        &result,
+                        get_task_ms,
+                        do_task_ms,
+                    );
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
@@ -2856,7 +2892,9 @@ pub fn run_multi_step_tool_loop(
                 }
             }
             ToolOutcome::WriteFile(path, contents) => {
+                let task_do_started = std::time::Instant::now();
                 let result = execute_write_file_result(&path, &contents, &root);
+                let do_task_ms = duration_ms_i64(task_do_started.elapsed());
                 if let Some((_, signature)) = pending_signature.as_ref() {
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
@@ -2870,7 +2908,13 @@ pub fn run_multi_step_tool_loop(
                     }
                 }
                 if agent_name.is_some() {
-                    let _ = crate::stdlib::evolve::append_log("write_file", &path, &result);
+                    let _ = crate::stdlib::evolve::append_log_timed(
+                        "write_file",
+                        &path,
+                        &result,
+                        get_task_ms,
+                        do_task_ms,
+                    );
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
@@ -2891,7 +2935,9 @@ pub fn run_multi_step_tool_loop(
                 }
             }
             ToolOutcome::ListDir(path) => {
+                let task_do_started = std::time::Instant::now();
                 let result = execute_list_dir_result(&path, &root);
+                let do_task_ms = duration_ms_i64(task_do_started.elapsed());
                 if let Some((_, signature)) = pending_signature.as_ref() {
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
@@ -2905,7 +2951,13 @@ pub fn run_multi_step_tool_loop(
                     }
                 }
                 if agent_name.is_some() {
-                    let _ = crate::stdlib::evolve::append_log("list_dir", &path, &result);
+                    let _ = crate::stdlib::evolve::append_log_timed(
+                        "list_dir",
+                        &path,
+                        &result,
+                        get_task_ms,
+                        do_task_ms,
+                    );
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
@@ -2926,7 +2978,9 @@ pub fn run_multi_step_tool_loop(
                 }
             }
             ToolOutcome::DalCheck(path) => {
+                let task_do_started = std::time::Instant::now();
                 let result = execute_dal_check_result(&path, &root);
+                let do_task_ms = duration_ms_i64(task_do_started.elapsed());
                 if let Some((_, signature)) = pending_signature.as_ref() {
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
@@ -2940,7 +2994,13 @@ pub fn run_multi_step_tool_loop(
                     }
                 }
                 if agent_name.is_some() {
-                    let _ = crate::stdlib::evolve::append_log("dal_check", &path, &result);
+                    let _ = crate::stdlib::evolve::append_log_timed(
+                        "dal_check",
+                        &path,
+                        &result,
+                        get_task_ms,
+                        do_task_ms,
+                    );
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
@@ -2961,7 +3021,9 @@ pub fn run_multi_step_tool_loop(
                 }
             }
             ToolOutcome::DalRun(path) => {
+                let task_do_started = std::time::Instant::now();
                 let result = execute_dal_run_result(&path, &root);
+                let do_task_ms = duration_ms_i64(task_do_started.elapsed());
                 if let Some((_, signature)) = pending_signature.as_ref() {
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
@@ -2975,7 +3037,13 @@ pub fn run_multi_step_tool_loop(
                     }
                 }
                 if agent_name.is_some() {
-                    let _ = crate::stdlib::evolve::append_log("dal_run", &path, &result);
+                    let _ = crate::stdlib::evolve::append_log_timed(
+                        "dal_run",
+                        &path,
+                        &result,
+                        get_task_ms,
+                        do_task_ms,
+                    );
                 }
                 schema.conversation.push(ConversationTurn {
                     role: "assistant".to_string(),
@@ -3230,6 +3298,150 @@ pub fn respond_with_tools_result_with_policy(
     policy: ChatPolicy,
 ) -> Result<MultiStepResult, String> {
     respond_with_tools_diagnostics_with_policy(user_message, policy).map(|d| d.result)
+}
+
+/// Canonical result map for `ai::agent_run` and `ai::respond_with_tools_result` in the engine.
+/// Phase 5 (`AGENT_HOST_PROTOCOL_PLAN.md`) requires stable keys across both bindings — keep them
+/// identical by routing both through this helper.
+pub fn agent_run_result_map_from_diagnostics(
+    d: &RespondWithToolsDiagnostics,
+) -> HashMap<String, Value> {
+    let route = match d.route {
+        ChatRoute::ReplyOnly => "reply_only",
+        ChatRoute::ToolLoop => "tool_loop",
+    };
+    let policy_str = match d.policy {
+        ChatPolicy::Auto => "auto",
+        ChatPolicy::ReplyOnly => "reply_only",
+        ChatPolicy::ToolLoop => "tool_loop",
+    };
+    let tool_trace_raw = d.tool_trace.clone();
+    let r = &d.result;
+    let termination = classify_termination(r);
+    let mut map = HashMap::new();
+    map.insert(
+        "final_text".to_string(),
+        Value::String(r.final_text.clone()),
+    );
+    map.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
+    map.insert(
+        "max_steps_reached".to_string(),
+        Value::Bool(r.max_steps_reached),
+    );
+    map.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
+    map.insert("route".to_string(), Value::String(route.to_string()));
+    map.insert("policy".to_string(), Value::String(policy_str.to_string()));
+    map.insert(
+        "guard_stopped".to_string(),
+        Value::Bool(termination.guard_stopped),
+    );
+    map.insert(
+        "termination_reason".to_string(),
+        Value::String(termination.termination_reason.to_string()),
+    );
+    let mut obs = HashMap::new();
+    obs.insert("route".to_string(), Value::String(route.to_string()));
+    obs.insert("policy".to_string(), Value::String(policy_str.to_string()));
+    obs.insert("steps_used".to_string(), Value::Int(r.steps_used as i64));
+    obs.insert(
+        "max_steps_reached".to_string(),
+        Value::Bool(r.max_steps_reached),
+    );
+    obs.insert("is_ask_user".to_string(), Value::Bool(r.is_ask_user));
+    obs.insert(
+        "guard_stopped".to_string(),
+        Value::Bool(termination.guard_stopped),
+    );
+    obs.insert(
+        "termination_reason".to_string(),
+        Value::String(termination.termination_reason.to_string()),
+    );
+    obs.insert(
+        "legacy_text_protocol_enabled".to_string(),
+        Value::Bool(legacy_text_tool_protocol_enabled()),
+    );
+    obs.insert(
+        "native_tool_calling_enabled".to_string(),
+        Value::Bool(native_tool_calling_enabled()),
+    );
+    let default_policy = match default_chat_policy_from_env() {
+        ChatPolicy::Auto => "auto",
+        ChatPolicy::ReplyOnly => "reply_only",
+        ChatPolicy::ToolLoop => "tool_loop",
+    };
+    obs.insert(
+        "default_policy".to_string(),
+        Value::String(default_policy.to_string()),
+    );
+    map.insert("observability".to_string(), Value::Map(obs));
+    let tool_trace = tool_trace_raw
+        .into_iter()
+        .map(Value::String)
+        .collect::<Vec<_>>();
+    map.insert("tool_trace".to_string(), Value::Array(tool_trace.clone()));
+    map.insert("last_tool_names".to_string(), Value::Array(tool_trace));
+    map
+}
+
+#[cfg(test)]
+mod agent_run_result_contract_tests {
+    use super::{
+        agent_run_result_map_from_diagnostics, ChatPolicy, ChatRoute, MultiStepResult,
+        RespondWithToolsDiagnostics,
+    };
+    use crate::runtime::values::Value;
+
+    /// Phase 5 closure checklist: stable keys for `agent_run` / `respond_with_tools_result`.
+    #[test]
+    fn agent_run_result_map_has_required_diagnostics_keys() {
+        let d = RespondWithToolsDiagnostics {
+            policy: ChatPolicy::Auto,
+            route: ChatRoute::ReplyOnly,
+            result: MultiStepResult {
+                final_text: "ok".to_string(),
+                is_ask_user: false,
+                steps_used: 0,
+                max_steps_reached: false,
+            },
+            tool_trace: vec!["run".to_string()],
+        };
+        let m = agent_run_result_map_from_diagnostics(&d);
+        for key in [
+            "final_text",
+            "steps_used",
+            "max_steps_reached",
+            "is_ask_user",
+            "route",
+            "policy",
+            "guard_stopped",
+            "termination_reason",
+            "observability",
+            "tool_trace",
+            "last_tool_names",
+        ] {
+            assert!(
+                m.contains_key(key),
+                "agent_run / respond_with_tools_result contract missing key: {key}"
+            );
+        }
+        match &m["observability"] {
+            Value::Map(obs) => {
+                for key in [
+                    "legacy_text_protocol_enabled",
+                    "native_tool_calling_enabled",
+                    "default_policy",
+                    "termination_reason",
+                    "guard_stopped",
+                ] {
+                    assert!(
+                        obs.contains_key(key),
+                        "observability map missing key: {key}"
+                    );
+                }
+            }
+            other => panic!("observability must be Map, got {:?}", other),
+        }
+    }
 }
 
 #[cfg(test)]
