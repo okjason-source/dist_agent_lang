@@ -85,10 +85,11 @@ PHASE*.md
 /docs/design/
 **/docs/design/
 
-# CEO / project files (local workspace; do not commit)
+# DAL CEO app — keep the whole tree out of Git (local-only). Do not `git add CEO/`.
+# If CEO were tracked while also ignored, sync tools that "remove tracked ignored files"
+# delete the working copy. Untracked + ignored is safe.
 /CEO/
 **/CEO/
-**/CEO/**/
 
 # Agent / project files (local workspace; do not commit)
 
