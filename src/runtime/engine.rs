@@ -1784,6 +1784,8 @@ impl Runtime {
             "config" => self.call_config_function(function_name, args),
             "sh" => self.call_sh_function(function_name, args),
             "evolve" => self.call_evolve_function(function_name, args),
+            "scatter" => self.call_scatter_function(function_name, args),
+            "time" => self.call_time_function(function_name, args),
             "workflow" => self.call_workflow_function(function_name, args),
             "skills" => self.call_skills_function(function_name, args),
             "trust" => self.call_trust_function(function_name, args),
@@ -3877,6 +3879,185 @@ impl Runtime {
                 Ok(Value::Null)
             }
             _ => Err(RuntimeError::function_not_found(format!("log::{}", name))),
+        }
+    }
+
+    fn call_scatter_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::scatter;
+        match name {
+            "after_ms" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let ms = match &args[0] {
+                    Value::Int(n) => *n,
+                    Value::Float(f) => *f as i64,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "scatter::after_ms: first argument must be a number (milliseconds)"
+                                .into(),
+                        ));
+                    }
+                };
+                let id = self.value_to_string(&args[1])?;
+                scatter::after_ms(ms, &id).map_err(RuntimeError::General)?;
+                Ok(Value::String(id))
+            }
+            "every_ms" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let ms = match &args[0] {
+                    Value::Int(n) => *n,
+                    Value::Float(f) => *f as i64,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "scatter::every_ms: first argument must be a number (milliseconds)"
+                                .into(),
+                        ));
+                    }
+                };
+                let id = self.value_to_string(&args[1])?;
+                scatter::every_ms(ms, &id).map_err(RuntimeError::General)?;
+                Ok(Value::String(id))
+            }
+            "after_at_unix_ms" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let unix_ms = match &args[0] {
+                    Value::Int(n) => *n,
+                    Value::Float(f) => *f as i64,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "scatter::after_at_unix_ms: first argument must be Unix time in ms"
+                                .into(),
+                        ));
+                    }
+                };
+                let id = self.value_to_string(&args[1])?;
+                scatter::after_at_unix_ms(unix_ms, &id).map_err(RuntimeError::General)?;
+                Ok(Value::String(id))
+            }
+            "cancel" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let id = self.value_to_string(&args[0])?;
+                Ok(Value::Bool(scatter::cancel(&id)))
+            }
+            "pending" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                Ok(scatter::pending_value())
+            }
+            "peek_pending" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                Ok(scatter::peek_pending_value())
+            }
+            "scheduled_count" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                Ok(Value::Int(scatter::scheduled_count() as i64))
+            }
+            "next_due_ms" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                Ok(match scatter::next_due_ms() {
+                    Some(ms) => Value::Int(ms as i64),
+                    None => Value::Null,
+                })
+            }
+            _ => Err(RuntimeError::function_not_found(format!(
+                "scatter::{}",
+                name
+            ))),
+        }
+    }
+
+    fn call_time_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::time;
+        match name {
+            "unix_ms_now" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                Ok(Value::Int(time::unix_ms_now()))
+            }
+            "delay_ms_until_unix_ms" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let target = match &args[0] {
+                    Value::Int(n) => *n,
+                    Value::Float(f) => *f as i64,
+                    _ => {
+                        return Err(RuntimeError::General(
+                            "time::delay_ms_until_unix_ms: argument must be Unix ms".into(),
+                        ));
+                    }
+                };
+                Ok(Value::Int(time::delay_ms_until_unix_ms(target)))
+            }
+            "parse_rfc3339_unix_ms" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let s = self.value_to_string(&args[0])?;
+                let ms = time::parse_rfc3339_unix_ms(&s).map_err(RuntimeError::General)?;
+                Ok(Value::Int(ms))
+            }
+            "parse_rfc3339_or_naive_utc_unix_ms" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let s = self.value_to_string(&args[0])?;
+                let ms =
+                    time::parse_rfc3339_or_naive_utc_unix_ms(&s).map_err(RuntimeError::General)?;
+                Ok(Value::Int(ms))
+            }
+            _ => Err(RuntimeError::function_not_found(format!("time::{}", name))),
         }
     }
 

@@ -19,7 +19,7 @@ For **multi-step agent workflows** (research → summarize, code → review, etc
    let result = wf::run("code_and_review", "implement a retry helper");
    ```
 
-3. **Built-in workflows** (see `workflows.dal` in your project; the in-tree DAL CEO app may ship `CEO/workflows.dal` when present):
+3. **Built-in workflows** (see `workflows.dal` in your project):
    - `research_and_summarize` — researcher gathers info, reviewer summarizes
    - `code_and_review` — coder writes code, reviewer checks quality
    - `deep_research` — researcher → coder (commands) → reviewer (report)

@@ -23,10 +23,12 @@ pub mod log;
 pub mod mobile;
 pub mod mold;
 pub mod oracle;
+pub mod scatter;
 pub mod secure_auth;
 pub mod service;
 pub mod sh;
 pub mod sync;
 pub mod test;
+pub mod time;
 pub mod trust;
 pub mod web; // Layer 2/3 semantic validators and test DSL (describe, it, etc.)

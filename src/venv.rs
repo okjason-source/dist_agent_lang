@@ -229,5 +229,6 @@ pub fn delete_venv(name: &str, project_base: &Path) -> Result<bool, String> {
 
 /// Namespaces allowed when profile is Strict (no sh, no service; chain, crypto, log, config, etc.).
 pub const STRICT_ALLOWED_NAMESPACES: &[&str] = &[
-    "chain", "crypto", "log", "config", "key", "auth", "evolve", "sync", "json", "test",
+    "chain", "crypto", "log", "config", "key", "auth", "evolve", "sync", "json", "test", "scatter",
+    "time",
 ];

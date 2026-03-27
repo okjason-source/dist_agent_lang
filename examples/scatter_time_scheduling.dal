@@ -1,0 +1,40 @@
+// Scatter + time — minimal scheduling demo.
+//
+// `dal run`  — runs main(); registers a timer (process may exit before it fires).
+// `dal serve` — long-running process: poll with GET /health (see SCATTER.md "Developer experience").
+//
+// Try:  dal serve examples/scatter_time_scheduling.dal --port 4040
+//       curl -s http://127.0.0.1:4040/health
+//       (repeat after ~2s to see a drained "demo_tick" from scatter::pending())
+
+fn main() {
+    let now = time::unix_ms_now();
+    log::info("scatter_demo", "time::unix_ms_now() = " + to_string(now));
+
+    let deadline = time::parse_rfc3339_unix_ms("2030-01-01T00:00:00Z");
+    let delay = time::delay_ms_until_unix_ms(deadline);
+    log::info("scatter_demo", "ms until 2030-01-01 (sanity) = " + to_string(delay));
+
+    scatter::after_ms(2000, "demo_tick");
+    log::info("scatter_demo", "Scheduled demo_tick in 2000ms — poll GET /health on dal serve to drain pending().");
+}
+
+@route("GET", "/health")
+fn health(request) {
+    let due = scatter::pending();
+    let next_ms = scatter::next_due_ms();
+    let scheduled = scatter::scheduled_count();
+    return {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "body": json::stringify({
+            "ok": true,
+            "path": request.path,
+            "due_this_poll": due,
+            "scheduled_remaining": scheduled,
+            "next_due_ms": next_ms,
+        }),
+    };
+}
+
+main();

@@ -6,14 +6,13 @@ How fleets work and how to get the most out of the fleet API for deployment.
 
 ## Start here (first time)
 
-Work from a **project directory** you care about. Fleet data is written to **`.dal/fleets.json`** under the current working directory (see [File layout](#file-layout)). That path is typically **gitignored** (e.g. the `CEO/` app ignores `.dal/`).
+Work from a **project directory** you care about. Fleet data is written to **`.dal/fleets.json`** under the current working directory (see [File layout](#file-layout)). That path is typically **gitignored** (many apps add `.dal/` to `.gitignore`).
 
-### Example: `CEO/` (in-tree sample project)
+### Example: first fleet from a Worker mold
 
-From the **dist_agent_lang** repo root:
+From a directory that contains your Worker mold file (paths are examples; use your own):
 
 ```bash
-cd CEO
 dal agent fleet create assistant-workers --from-mold mold/worker.mold.dal --count 2
 dal agent fleet list -v
 dal agent fleet deploy assistant-workers "Smoke test task"
@@ -21,7 +20,7 @@ dal agent fleet run assistant-workers
 dal agent fleet health assistant-workers
 ```
 
-- **Mold:** a Worker mold in your tree (e.g. `mold/worker.mold.dal`). The in-tree **DAL CEO** app lives under [`CEO/README.md`](../CEO/README.md).
+- **Mold:** a Worker mold in your tree (e.g. `mold/worker.mold.dal`).
 - Use **`dal agent fleet delete assistant-workers`** when you are done (fleet metadata only; see [Reality check](#reality-check) below).
 
 ### 1. Create a fleet (any project)
