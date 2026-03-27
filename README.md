@@ -4,13 +4,13 @@
 [![Version](https://img.shields.io/badge/version-1.0.8-blue.svg)](https://github.com/okjason-source/dist_agent_lang)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](https://github.com/okjason-source/dist_agent_lang)
 
-**A hybrid programming language tooled with trust off-chain and on-chain controls for the agentic future.**
+**A runtime programming language tooled with trust off-chain and on-chain controls for the agentic future.**
 
 
 DAL is a programming language where AI agents are native citizens. Spawn agents, give them skills, persist their memory, coordinate multi-agent workflows, and serve them over HTTP. Program applications using distributed integration with off-chain services, and on-chain contracts coexisting through a unified trust model. [Try the IDE](https://d10e14gce1iuq7.cloudfront.net/).
 
 
-> **v1.0.15 Beta** — Actively maintained. Test thoroughly before production use.
+> **v1.0.XX Beta** — Actively maintained. Test thoroughly before production use.
 
 ---
 
@@ -142,6 +142,11 @@ dal mold list                # List available molds
 ---
 
 ## Documentation
+
+**Canonical documentation** is the Markdown under [`docs/`](docs/) on the **`main`** branch ([browse on GitHub](https://github.com/okjason-source/dist_agent_lang/tree/main/docs)). That tree is the source of truth for prose docs; tools and models can fetch stable raw URLs (for example [`PUBLIC_DOCUMENTATION_INDEX.md`](https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/PUBLIC_DOCUMENTATION_INDEX.md)).
+
+- **Browse in the browser:** [Documentation index on GitHub Pages](https://okjason-source.github.io/dist_agent_lang/docs/PUBLIC_DOCUMENTATION_INDEX.html)
+- **LLM / agent entry point:** [`llms.txt`](https://okjason-source.github.io/dist_agent_lang/llms.txt) (same file as [`llms.txt`](llms.txt) in the repo root)
 
 ### Getting started
 - **[Quick Start](docs/guides/QUICK_START.md)** — Up and running in 5 minutes
