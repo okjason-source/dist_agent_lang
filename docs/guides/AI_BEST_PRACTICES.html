@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AI_BEST_PRACTICES</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="ai-best-practices-for-smart-contracts-v108">AI Best Practices
+for Smart Contracts (v1.0.8)</h1>
+<blockquote>
+<p><strong>Beta Release v1.0.8:</strong> Follow these best practices for
+AI features. Test thoroughly before production. <strong>Beta testing
+contributions welcome!</strong></p>
+</blockquote>
+<p>Security, performance, and reliability best practices for
+<strong>AI-powered smart contracts</strong>.</p>
+<hr />
+<h2 id="-table-of-contents">📋 Table of Contents</h2>
+<ol type="1">
+<li><a href="#security-best-practices">Security Best Practices</a></li>
+<li><a href="#performance-optimization">Performance
+Optimization</a></li>
+<li><a href="#cost-management">Cost Management</a></li>
+<li><a href="#reliability--error-handling">Reliability &amp; Error
+Handling</a></li>
+<li><a href="#testing-ai-features">Testing AI Features</a></li>
+<li><a href="#model-selection">Model Selection</a></li>
+<li><a href="#common-pitfalls">Common Pitfalls</a></li>
+</ol>
+<hr />
+<h2 id="-security-best-practices">🔒 Security Best Practices</h2>
+<h3 id="1-never-trust-ai-output-blindly">1. Never Trust AI Output
+Blindly</h3>
+<p><strong>❌ DON'T:</strong></p>
+<pre class="dal"><code>service UnsafeAIContract {
+    fn execute_ai_decision() {
+        let decision = ai::generate_text(&quot;What should I do?&quot;);
+        
+        // Dangerous! Executing without validation
+        execute_trade(decision);
+    }
+}</code></pre>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>@secure
+service SafeAIContract {
+    fn execute_ai_decision() {
+        let decision = ai::generate_text(&quot;What should I do?&quot;);
+        
+        // Validate AI output
+        if !is_valid_decision(decision) {
+            log::error(&quot;ai&quot;, &quot;Invalid AI decision&quot;);
+            return;
+        }
+        if !is_within_risk_limits(decision) {
+            log::error(&quot;ai&quot;, &quot;Exceeds risk limits&quot;);
+            return;
+        }
+        if !has_required_approvals(decision) {
+            log::error(&quot;ai&quot;, &quot;Requires approval&quot;);
+            return;
+        }
+        
+        // Log for audit
+        log::info(&quot;ai&quot;, &quot;AI Decision: &quot; + decision);
+        
+        // Execute with safety checks
+        execute_trade_with_safety(decision);
+    }
+    
+    fn is_valid_decision(decision: string) -&gt; bool {
+        // Validate decision format
+        if decision == &quot;&quot; {
+            return false;
+        }
+        
+        // Check if decision is one of allowed actions
+        return string::contains(decision, &quot;buy&quot;) || 
+               string::contains(decision, &quot;sell&quot;) ||
+               string::contains(decision, &quot;hold&quot;);
+    }
+    
+    fn is_within_risk_limits(decision: string) -&gt; bool {
+        // Parse decision amount
+        let amount = parse_amount(decision);
+        
+        // Check against risk limits
+        return amount &lt;= max_trade_amount &amp;&amp; 
+               amount &gt;= min_trade_amount;
+    }
+}</code></pre>
+<h3 id="2-implement-circuit-breakers">2. Implement Circuit Breakers</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>@ai
+@secure
+service SafeAIContract {
+    // Circuit breaker state
+    consecutive_ai_failures: int = 0;
+    max_failures: int = 3;
+    ai_circuit_breaker_tripped: bool = false;
+    
+    fn ai_operation(input: string) {
+        if ai_circuit_breaker_tripped {
+            log::error(&quot;ai&quot;, &quot;AI circuit breaker tripped&quot;);
+            return;
+        }
+        
+        let result = ai::classify(&quot;model&quot;, input);
+        if result.is_ok() {
+            process_result(result.unwrap());
+            // Reset on success
+            consecutive_ai_failures = 0;
+        } else {
+            consecutive_ai_failures = consecutive_ai_failures + 1;
+            
+            if consecutive_ai_failures &gt;= max_failures {
+                ai_circuit_breaker_tripped = true;
+                log::error(&quot;ai&quot;, &quot;Circuit breaker tripped&quot;);
+            }
+        }
+    }
+    
+    fn reset_circuit_breaker() {
+        ai_circuit_breaker_tripped = false;
+        consecutive_ai_failures = 0;
+    }
+}</code></pre>
+<h3 id="3-rate-limit-ai-calls">3. Rate Limit AI Calls</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service RateLimitedAI {
+    last_ai_call: map&lt;string, int&gt; = {};
+    ai_call_count: map&lt;string, int&gt; = {};
+    
+    ai_call_cooldown: int = 60; // seconds
+    max_ai_calls_per_day: int = 100;
+    
+    fn make_ai_decision(user_id: string, input: string) {
+        // Time-based rate limiting
+        let current_time = time::now();
+        let last_call = last_ai_call.get(user_id, 0);
+        
+        if current_time - last_call &lt; ai_call_cooldown {
+            log::error(&quot;ai&quot;, &quot;AI call cooldown active&quot;);
+            return;
+        }
+        
+        // Daily limit
+        if current_time - last_call &gt; 86400 { // 1 day
+            ai_call_count[user_id] = 0; // Reset daily count
+        }
+        
+        if ai_call_count.get(user_id, 0) &gt;= max_ai_calls_per_day {
+            log::error(&quot;ai&quot;, &quot;Daily AI call limit exceeded&quot;);
+            return;
+        }
+        
+        last_ai_call[user_id] = current_time;
+        ai_call_count[user_id] = ai_call_count.get(user_id, 0) + 1;
+        
+        // Perform AI operation
+        let result = ai::classify(&quot;model&quot;, input);
+        process_result(result);
+    }
+}</code></pre>
+<h3 id="4-validate-ai-model-outputs">4. Validate AI Model Outputs</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service ValidatedAIOracle {
+    fn get_price_with_ai_validation() -&gt; int {
+        // Get oracle price
+        let oracle_result = oracle::fetch(&quot;chainlink&quot;, &quot;ETH/USD&quot;);
+        let oracle_price = oracle_result.data;
+        
+        // AI sanity check
+        let historical_prices = get_recent_prices(10);
+        let price_data = json::stringify({
+            &quot;current&quot;: oracle_price,
+            &quot;historical&quot;: historical_prices
+        });
+        
+        let ai_validation = ai::classify(&quot;price_validator&quot;, price_data);
+        
+        if ai_validation != &quot;valid&quot; {
+            log::error(&quot;ai&quot;, &quot;AI flagged suspicious price&quot;);
+            return 0;
+        }
+        
+        // Additional bounds check
+        if oracle_price &lt;= 0 {
+            log::error(&quot;ai&quot;, &quot;Invalid price&quot;);
+            return 0;
+        }
+        if oracle_price &gt; 10000 {
+            log::error(&quot;ai&quot;, &quot;Price unreasonably high&quot;);
+            return 0;
+        }
+        
+        return oracle_price;
+    }
+}</code></pre>
+<h3 id="5-use-multi-model-consensus">5. Use Multi-Model Consensus</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service MultiModelConsensus {
+    fn get_ai_consensus(input: string) -&gt; string {
+        // Get predictions from multiple models
+        let model1 = ai::classify(&quot;model_a&quot;, input);
+        let model2 = ai::classify(&quot;model_b&quot;, input);
+        let model3 = ai::classify(&quot;model_c&quot;, input);
+        
+        // Require 2 out of 3 consensus
+        let agreement_count = 0;
+        let consensus = &quot;&quot;;
+        
+        if model1 == model2 {
+            agreement_count = agreement_count + 1;
+            consensus = model1;
+        }
+        if model2 == model3 {
+            agreement_count = agreement_count + 1;
+            consensus = model2;
+        }
+        if model1 == model3 {
+            agreement_count = agreement_count + 1;
+            consensus = model1;
+        }
+        
+        if agreement_count &lt; 2 {
+            log::error(&quot;ai&quot;, &quot;No model consensus&quot;);
+            return &quot;&quot;;
+        }
+        
+        return consensus;
+    }
+}</code></pre>
+<hr />
+<h2 id="-performance-optimization">⚡ Performance Optimization</h2>
+<h3 id="1-cache-ai-results">1. Cache AI Results</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service CachedAI {
+    ai_cache: map&lt;string, string&gt; = {};
+    cache_timestamp: map&lt;string, int&gt; = {};
+    cache_duration: int = 3600; // 1 hour
+    
+    fn get_ai_result_cached(input: string) -&gt; string {
+        let cache_key = crypto::hash(input);
+        let cached = ai_cache.get(cache_key, &quot;&quot;);
+        let timestamp = cache_timestamp.get(cache_key, 0);
+        let current_time = time::now();
+        
+        // Check cache validity
+        if cached != &quot;&quot; &amp;&amp; current_time - timestamp &lt; cache_duration {
+            // Cache hit
+            return cached;
+        }
+        
+        // Cache miss - generate new result
+        let result = ai::classify(&quot;model&quot;, input);
+        if result.is_ok() {
+            let result_value = result.unwrap();
+            
+            // Update cache
+            ai_cache[cache_key] = result_value;
+            cache_timestamp[cache_key] = current_time;
+            
+            return result_value;
+        }
+        
+        return &quot;&quot;;
+    }
+}</code></pre>
+<h3 id="2-batch-ai-operations">2. Batch AI Operations</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service BatchAI {
+    fn batch_classify(inputs: list&lt;string&gt;) -&gt; list&lt;string&gt; {
+        if inputs.len() &gt; 10 {
+            log::error(&quot;ai&quot;, &quot;Max 10 items per batch&quot;);
+            return [];
+        }
+        
+        let results: list&lt;string&gt; = [];
+        
+        // Single AI call for batch
+        let batch_input = json::stringify(inputs);
+        let batch_result = ai::classify(&quot;batch_model&quot;, batch_input);
+        
+        if batch_result.is_ok() {
+            // Parse results
+            let parsed = json::parse(batch_result.unwrap());
+            if parsed.is_ok() {
+                return parsed.unwrap();
+            }
+        }
+        
+        return results;
+    }
+}</code></pre>
+<h3 id="3-use-async-for-non-critical-ai">3. Use Async for Non-Critical
+AI</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service AsyncAI {
+    fn analyze_in_background(data: string) {
+        // Non-blocking AI operation
+        spawn {
+            let analysis = ai::analyze_text(data);
+            if analysis.is_ok() {
+                process_analysis(analysis.unwrap());
+            }
+        };
+    }
+    
+    // Critical path doesn&#39;t wait
+    fn critical_operation() {
+        // Start analysis in background
+        analyze_in_background(&quot;data&quot;);
+        
+        // Continue with critical operations
+        execute_critical_logic();
+    }
+}</code></pre>
+<hr />
+<h2 id="-cost-management">💰 Cost Management</h2>
+<h3 id="1-estimate-costs-before-ai-calls">1. Estimate Costs Before AI
+Calls</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service CostAwareAI {
+    fn estimate_ai_cost(operation: string) -&gt; int {
+        // Cost varies by operation
+        if operation == &quot;classify&quot; {
+            return 1000; // Classification cost
+        } else if operation == &quot;generate&quot; {
+            return 10000; // Generation cost (higher)
+        } else if operation == &quot;embed&quot; {
+            return 500; // Embedding cost
+        }
+        
+        return 5000; // Default
+    }
+    
+    fn perform_ai_operation(user_id: string, operation: string, payment: int) {
+        let estimated_cost = estimate_ai_cost(operation);
+        
+        if payment &lt; estimated_cost {
+            log::error(&quot;ai&quot;, &quot;Insufficient payment&quot;);
+            return;
+        }
+        
+        // Perform operation
+        if operation == &quot;classify&quot; {
+            let result = ai::classify(&quot;model&quot;, &quot;input&quot;);
+            process_result(result);
+        }
+        
+        // Refund excess
+        if payment &gt; estimated_cost {
+            refund(user_id, payment - estimated_cost);
+        }
+    }
+}</code></pre>
+<h3 id="2-use-cheaper-models-for-simple-tasks">2. Use Cheaper Models for
+Simple Tasks</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service OptimalModelSelection {
+    fn classify_with_optimal_model(input: string) -&gt; string {
+        // Use simple model for short inputs
+        if input.len() &lt; 100 {
+            return ai::classify(&quot;fast_model&quot;, input).unwrap_or(&quot;&quot;); // Cheaper
+        }
+        
+        // Use advanced model for complex inputs
+        return ai::classify(&quot;advanced_model&quot;, input).unwrap_or(&quot;&quot;); // More expensive but accurate
+    }
+}</code></pre>
+<h3 id="3-implement-cost-limits">3. Implement Cost Limits</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service BudgetLimitedAI {
+    daily_ai_budget: int = 1000000; // 1 ETH equivalent
+    daily_ai_spent: int = 0;
+    last_budget_reset: int = 0;
+    
+    fn within_budget(cost: int) -&gt; bool {
+        let current_time = time::now();
+        
+        // Reset daily budget
+        if current_time - last_budget_reset &gt; 86400 { // 1 day
+            daily_ai_spent = 0;
+            last_budget_reset = current_time;
+        }
+        
+        if daily_ai_spent + cost &gt; daily_ai_budget {
+            log::error(&quot;ai&quot;, &quot;Daily AI budget exceeded&quot;);
+            return false;
+        }
+        
+        daily_ai_spent = daily_ai_spent + cost;
+        return true;
+    }
+    
+    fn expensive_ai_operation() {
+        let cost = 10000; // 0.01 ETH equivalent
+        
+        if !within_budget(cost) {
+            return;
+        }
+        
+        // Operation that costs 0.01 ETH
+        let result = ai::generate_text(&quot;complex prompt&quot;);
+        process_result(result);
+    }
+}</code></pre>
+<hr />
+<h2 id="️-reliability--error-handling">🛡️ Reliability &amp; Error
+Handling</h2>
+<h3 id="1-implement-fallback-mechanisms">1. Implement Fallback
+Mechanisms</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service FallbackAI {
+    fn get_decision_with_fallback(input: string) -&gt; string {
+        // Try AI first
+        let decision = ai::generate_text(&quot;primary_model: &quot; + input);
+        if decision.is_ok() {
+            let decision_value = decision.unwrap();
+            if is_valid_decision(decision_value) {
+                return decision_value;
+            }
+        }
+        
+        log::warn(&quot;ai&quot;, &quot;Primary AI model failed&quot;);
+        
+        // Fallback to secondary model
+        let decision2 = ai::generate_text(&quot;fallback_model: &quot; + input);
+        if decision2.is_ok() {
+            let decision_value = decision2.unwrap();
+            if is_valid_decision(decision_value) {
+                return decision_value;
+            }
+        }
+        
+        log::warn(&quot;ai&quot;, &quot;Fallback AI model failed&quot;);
+        
+        // Ultimate fallback: rule-based decision
+        return get_rule_based_decision(input);
+    }
+    
+    fn get_rule_based_decision(input: string) -&gt; string {
+        // Simple rule-based logic as last resort
+        let current_price = get_current_price();
+        let average_price = get_average_price();
+        
+        if current_price &gt; average_price {
+            return &quot;sell&quot;;
+        } else {
+            return &quot;buy&quot;;
+        }
+    }
+}</code></pre>
+<h3 id="2-handle-ai-timeouts">2. Handle AI Timeouts</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service TimeoutAwareAI {
+    fn ai_operation_with_timeout(input: string) -&gt; string {
+        let start_time = time::now();
+        let timeout = 30; // 30 seconds
+        
+        // Start AI operation
+        let result = ai::classify(&quot;model&quot;, input);
+        
+        if result.is_ok() {
+            let elapsed = time::now() - start_time;
+            
+            // Check if operation completed in time
+            if elapsed &lt; timeout {
+                return result.unwrap();
+            } else {
+                log::error(&quot;ai&quot;, &quot;AI operation timed out&quot;);
+                return &quot;&quot;;
+            }
+        }
+        
+        return &quot;&quot;;
+    }
+}</code></pre>
+<h3 id="3-log-ai-failures-for-debugging">3. Log AI Failures for
+Debugging</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service LoggedAI {
+    fn ai_operation_with_logging(input: string) {
+        let result = ai::classify(&quot;model&quot;, input);
+        
+        if result.is_ok() {
+            process_result(result.unwrap());
+        } else {
+            // Log failure
+            log::error(&quot;ai&quot;, &quot;AI operation failed: &quot; + result.unwrap_err());
+            
+            // Use fallback
+            use_fallback_logic();
+        }
+    }
+}</code></pre>
+<hr />
+<h2 id="-testing-ai-features">🧪 Testing AI Features</h2>
+<h3 id="1-mock-ai-responses-for-testing">1. Mock AI Responses for
+Testing</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service TestableAI {
+    test_mode: bool = false;
+    mock_responses: map&lt;string, string&gt; = {};
+    
+    fn set_test_mode(enabled: bool) {
+        test_mode = enabled;
+    }
+    
+    fn set_mock_response(input: string, response: string) {
+        mock_responses[input] = response;
+    }
+    
+    fn get_ai_result(input: string) -&gt; string {
+        if test_mode {
+            // Return mock response in test mode
+            return mock_responses.get(input, &quot;&quot;);
+        }
+        
+        // Real AI call in production
+        let result = ai::classify(&quot;model&quot;, input);
+        return result.unwrap_or(&quot;&quot;);
+    }
+}</code></pre>
+<h3 id="2-property-based-testing-for-ai">2. Property-Based Testing for
+AI</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service TestableAIConsistency {
+    fn test_ai_consistency(input: string) -&gt; bool {
+        // Same input should give same output (within cache period)
+        let result1 = ai::classify(&quot;model&quot;, input);
+        let result2 = ai::classify(&quot;model&quot;, input);
+        
+        if result1.is_ok() &amp;&amp; result2.is_ok() {
+            return result1.unwrap() == result2.unwrap();
+        }
+        
+        return false;
+    }
+    
+    fn test_ai_valid_output(input: string) -&gt; bool {
+        let result = ai::classify(&quot;sentiment_model&quot;, input);
+        
+        if result.is_ok() {
+            let classification = result.unwrap();
+            
+            // Result should be one of valid sentiments
+            return classification == &quot;positive&quot; || 
+                   classification == &quot;negative&quot; || 
+                   classification == &quot;neutral&quot;;
+        }
+        
+        return false;
+    }
+}</code></pre>
+<hr />
+<h2 id="-model-selection">🎯 Model Selection</h2>
+<h3 id="choosing-the-right-model">Choosing the Right Model</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Task</th>
+<th>Recommended Model</th>
+<th>Cost</th>
+<th>Speed</th>
+<th>Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sentiment Analysis</td>
+<td><code>sentiment_model</code></td>
+<td>💰 Low</td>
+<td>⚡ Fast</td>
+<td>🎯 Good</td>
+</tr>
+<tr class="even">
+<td>Text Generation</td>
+<td><code>gpt-4</code></td>
+<td>💰💰💰 High</td>
+<td>🐌 Slow</td>
+<td>🎯🎯🎯 Excellent</td>
+</tr>
+<tr class="odd">
+<td>Classification</td>
+<td><code>fast_classifier</code></td>
+<td>💰 Low</td>
+<td>⚡⚡ Very Fast</td>
+<td>🎯 Good</td>
+</tr>
+<tr class="even">
+<td>Price Prediction</td>
+<td><code>price_model</code></td>
+<td>💰💰 Medium</td>
+<td>⚡ Fast</td>
+<td>🎯🎯 Very Good</td>
+</tr>
+<tr class="odd">
+<td>Risk Assessment</td>
+<td><code>risk_model</code></td>
+<td>💰💰 Medium</td>
+<td>⚡ Fast</td>
+<td>🎯🎯 Very Good</td>
+</tr>
+</tbody>
+</table>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service OptimalModelSelection {
+    fn select_optimal_model(task_type: string, urgency: int) -&gt; string {
+        if task_type == &quot;sentiment&quot; {
+            return &quot;sentiment_model&quot;; // Fast and cheap
+        } else if task_type == &quot;generation&quot; {
+            if urgency &gt; 8 {
+                return &quot;llama-3&quot;; // Faster, cheaper
+            } else {
+                return &quot;gpt-4&quot;; // Better quality
+            }
+        } else if task_type == &quot;prediction&quot; {
+            return &quot;price_model&quot;;
+        }
+        
+        return &quot;default_model&quot;;
+    }
+}</code></pre>
+<hr />
+<h2 id="-common-pitfalls">❌ Common Pitfalls</h2>
+<h3 id="pitfall-1-unbounded-ai-loops">Pitfall 1: Unbounded AI Loops</h3>
+<p><strong>❌ DON'T:</strong></p>
+<pre class="dal"><code>service DangerousAI {
+    fn dangerous_ai_loop() {
+        loop {
+            let decision = ai::generate_text(&quot;What next?&quot;);
+            execute(decision);
+            // Infinite loop! No exit condition!
+        }
+    }
+}</code></pre>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service SafeAI {
+    fn safe_ai_loop() {
+        let max_iterations = 10;
+        let iterations = 0;
+        
+        while iterations &lt; max_iterations {
+            let decision = ai::generate_text(&quot;What next?&quot;);
+            
+            if decision == &quot;stop&quot; {
+                break; // Exit condition
+            }
+            
+            execute(decision);
+            iterations = iterations + 1;
+        }
+        
+        if iterations &gt;= max_iterations {
+            log::error(&quot;ai&quot;, &quot;Max iterations reached&quot;);
+        }
+    }
+}</code></pre>
+<h3 id="pitfall-2-ignoring-ai-confidence-scores">Pitfall 2: Ignoring AI
+Confidence Scores</h3>
+<p><strong>❌ DON'T:</strong></p>
+<pre class="dal"><code>service IgnoreConfidence {
+    fn ignore_confidence(input: string) {
+        let result = ai::classify(&quot;model&quot;, input);
+        // Using result without checking confidence!
+        execute(result);
+    }
+}</code></pre>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service CheckConfidence {
+    fn check_confidence(input: string) {
+        let analysis = ai::analyze_text(input);
+        
+        if analysis.is_ok() {
+            let analysis_value = analysis.unwrap();
+            
+            if analysis_value.confidence &gt; 0.8 {
+                // Only use high-confidence results
+                let classification = ai::classify(&quot;model&quot;, input);
+                if classification.is_ok() {
+                    execute(classification.unwrap());
+                }
+            } else {
+                log::warn(&quot;ai&quot;, &quot;Low confidence prediction&quot;);
+            }
+        }
+    }
+}</code></pre>
+<h3 id="pitfall-3-not-handling-model-updates">Pitfall 3: Not Handling
+Model Updates</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>service ModelVersioning {
+    current_model_version: string = &quot;v1.0&quot;;
+    approved_models: map&lt;string, bool&gt; = {};
+    
+    fn approve_model(version: string) {
+        approved_models[version] = true;
+    }
+    
+    fn use_approved_model(input: string) -&gt; string {
+        if !approved_models.get(current_model_version, false) {
+            log::error(&quot;ai&quot;, &quot;Model version not approved&quot;);
+            return &quot;&quot;;
+        }
+        
+        let result = ai::classify(current_model_version, input);
+        return result.unwrap_or(&quot;&quot;);
+    }
+}</code></pre>
+<hr />
+<h2 id="-additional-resources">📚 Additional Resources</h2>
+<ul>
+<li><a href="AI_FEATURES_GUIDE.html">AI Features Guide</a> - Complete AI
+capabilities overview</li>
+<li><a href="../BEST_PRACTICES.html">Best Practices</a> - General smart
+contract best practices</li>
+<li><a href="../SECURITY_GUIDE.html">Security Guide</a> - Security deep
+dive</li>
+<li><a href="../STDLIB_REFERENCE.html#ai-module">Standard Library
+Reference</a> - AI module API</li>
+</ul>
+<hr />
+<p><strong>Next:</strong> <a href="AI_FEATURES_GUIDE.html">AI Features
+Guide →</a></p>
+</body>
+</html>

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>QUICK_START</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="-quick-start-guide---get-started-in-5-minutes">🚀 Quick Start
+Guide - Get Started in 5 Minutes</h1>
+<blockquote>
+<p><strong>Beta Release v1.0.8:</strong> dist_agent_lang is actively
+developed with consistent updates. This is a beta release — test
+thoroughly before production use. <strong>Beta testing contributions
+appreciated!</strong></p>
+</blockquote>
+<p>Welcome to <strong>dist_agent_lang</strong> (DAL) - the hybrid
+language for decentralized smart contracts and centralized services!</p>
+<p>This guide will get you from zero to your first DAL program in
+<strong>5 minutes</strong>.</p>
+<hr />
+<h2 id="-installation-30-seconds">📦 Installation (30 seconds)</h2>
+<h3 id="option-1-from-cratesio-recommended">Option 1: From crates.io
+(recommended)</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install dist_agent_lang</span></code></pre></div>
+<h3 id="option-2-from-source">Option 2: From source</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/okjason-source/dist_agent_lang.git</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> dist_agent_lang</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/target/release:</span><span class="va">$PATH</span><span class="st">&quot;</span></span></code></pre></div>
+<h3 id="option-3-from-release-binary">Option 3: From release binary</h3>
+<p>Download from <a
+href="https://github.com/okjason-source/dist_agent_lang/releases">GitHub
+Releases</a> and extract the binary (<code>dal</code> or
+<code>dal.exe</code>) to your PATH.</p>
+<h3 id="verify-installation">Verify Installation</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> <span class="at">--version</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Expected: dist_agent_lang v1.0.8</span></span></code></pre></div>
+<hr />
+<h2 id="-your-first-dal-program-3-minutes">🎯 Your First DAL Program (3
+minutes)</h2>
+<h3 id="step-1-create-a-new-file">Step 1: Create a New File</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create your first DAL file</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">touch</span> hello.dal</span></code></pre></div>
+<h3 id="step-2-write-your-program">Step 2: Write Your Program</h3>
+<p>Copy this into <code>hello.dal</code>:</p>
+<pre class="dal"><code>// hello.dal - Your first DAL program!
+
+fn main() {
+    let greeting = &quot;Hello, dist_agent_lang!&quot;;
+    log::info(&quot;hello&quot;, greeting);
+    
+    let result = add_numbers(10, 20);
+    log::info(&quot;result&quot;, { &quot;sum&quot;: result });
+}
+
+fn add_numbers(a: int, b: int) -&gt; int {
+    return a + b;
+}</code></pre>
+<h3 id="step-3-run-it">Step 3: Run It</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run hello.dal</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Output:</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 🚀 Running dist_agent_lang file: hello.dal</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Tokenization successful! Generated 25 tokens</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Parsing successful! Generated 2 statements</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># [INFO] &quot;hello&quot;: &quot;Hello, dist_agent_lang!&quot;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># [INFO] &quot;result&quot;: {&quot;sum&quot;: 30}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Execution successful!</span></span></code></pre></div>
+<hr />
+<h2 id="-your-first-service-2-minutes">🌐 Your First Service (2
+minutes)</h2>
+<h3 id="create-a-service">Create a Service</h3>
+<p>Create <code>greeting.dal</code>:</p>
+<pre class="dal"><code>// greeting.dal - A simple service example
+
+@trust(&quot;hybrid&quot;)
+service GreetingService {
+    message: string = &quot;Hello&quot;;
+    
+    fn initialize(msg: string) {
+        self.message = msg;
+    }
+    
+    fn greet(name: string) -&gt; string {
+        return self.message + &quot;, &quot; + name + &quot;!&quot;;
+    }
+    
+    fn get_message() -&gt; string {
+        return self.message;
+    }
+}
+
+// Use the service
+fn main() {
+    let service = GreetingService::new();
+    service.initialize(&quot;Welcome&quot;);
+    
+    let greeting = service.greet(&quot;Alice&quot;);
+    log::info(&quot;greeting&quot;, greeting);
+    // Output: &quot;Welcome, Alice!&quot;
+}</code></pre>
+<h3 id="run-the-service">Run the Service</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run greeting.dal</span></code></pre></div>
+<hr />
+<h2 id="-test-your-code">🧪 Test Your Code</h2>
+<h3 id="run-tests">Run Tests</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run all tests in current directory</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> test</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run tests for a specific file</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> test hello.dal</span></code></pre></div>
+<h3 id="create-a-test-file">Create a Test File</h3>
+<p>Create <code>hello.test.dal</code>:</p>
+<pre class="dal"><code>// hello.test.dal - Test file
+
+fn test_add_numbers() {
+    let result = add_numbers(5, 3);
+    assert(result == 8, &quot;5 + 3 should equal 8&quot;);
+}
+
+fn add_numbers(a: int, b: int) -&gt; int {
+    return a + b;
+}</code></pre>
+<p>Run it:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> test hello.test.dal</span></code></pre></div>
+<hr />
+<h2 id="-code-quality-tools">🔍 Code Quality Tools</h2>
+<h3 id="check-syntax">Check Syntax</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> check hello.dal</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Validates syntax and type checking</span></span></code></pre></div>
+<h3 id="parse-syntax-validation">Parse (Syntax Validation)</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> parse hello.dal</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Shows parse tree and validates syntax</span></span></code></pre></div>
+<h3 id="format-code">Format Code</h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> fmt hello.dal</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Formats your DAL code consistently</span></span></code></pre></div>
+<h3 id="lint-code">Lint Code</h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> lint hello.dal</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Checks for common issues and best practices</span></span></code></pre></div>
+<hr />
+<h2 id="-next-steps">📚 Next Steps</h2>
+<p>Congratulations! You've just:</p>
+<ul>
+<li>✅ Installed dist_agent_lang</li>
+<li>✅ Written your first DAL program</li>
+<li>✅ Created a service</li>
+<li>✅ Run tests</li>
+<li>✅ Used code quality tools</li>
+</ul>
+<h3 id="continue-learning">Continue Learning</h3>
+<ol type="1">
+<li><strong><a href="../syntax.html">Syntax Reference</a></strong> - Learn
+DAL syntax in detail</li>
+<li><strong><a href="../attributes.html">Attributes Reference</a></strong>
+- Understand <code>@trust</code>, <code>@secure</code>,
+<code>@chain</code>, etc.</li>
+<li><strong><a href="../STDLIB_REFERENCE.html">Standard
+Library</a></strong> - Explore 22 stdlib modules</li>
+<li><strong><a href="../CLI_QUICK_REFERENCE.html">CLI
+Reference</a></strong> - Complete command reference</li>
+<li><strong><a href="../../examples/">Examples</a></strong> - See
+real-world code examples</li>
+</ol>
+<h3 id="try-more-examples">Try More Examples</h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View available examples</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> examples/</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run example programs</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run examples/hello_world_demo.dal</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run examples/smart_contract.dal</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run examples/ai_agent_examples.dal</span></code></pre></div>
+<hr />
+<h2 id="-troubleshooting">🆘 Troubleshooting</h2>
+<h3 id="build-errors">Build Errors</h3>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean and rebuild</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> clean</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span></span></code></pre></div>
+<h3 id="syntax-errors">Syntax Errors</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check syntax</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> check hello.dal</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse with verbose output</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> parse hello.dal</span></code></pre></div>
+<h3 id="runtime-errors">Runtime Errors</h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with verbose logging</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="va">RUST_LOG</span><span class="op">=</span>debug <span class="ex">dal</span> run hello.dal</span></code></pre></div>
+<hr />
+<h2 id="-quick-tips">💡 Quick Tips</h2>
+<h3 id="1-use-the-repl">1. Use the REPL</h3>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> repl</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Interactive shell for testing code snippets</span></span></code></pre></div>
+<h3 id="2-watch-mode">2. Watch Mode</h3>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> watch hello.dal</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-runs on file save</span></span></code></pre></div>
+<h3 id="3-create-new-projects">3. Create New Projects</h3>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> new my-project</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Creates a new project structure</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> new my-ai <span class="at">--type</span> ai</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Creates an AI-focused project</span></span></code></pre></div>
+<h3 id="4-format-before-committing">4. Format Before Committing</h3>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> fmt hello.dal</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensures consistent code style</span></span></code></pre></div>
+<hr />
+<h2 id="-key-concepts-30-second-overview">🎓 Key Concepts (30-second
+overview)</h2>
+<h3 id="services">Services</h3>
+<p>Services are the main building blocks in DAL:</p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service MyService {
+    count: int = 0;
+    
+    fn increment() {
+        self.count = self.count + 1;
+    }
+}</code></pre>
+<h3 id="attributes">Attributes</h3>
+<p>Use attributes to control behavior:</p>
+<ul>
+<li><code>@trust("hybrid")</code> - Hybrid trust model</li>
+<li><code>@trust("decentralized")</code> - Fully decentralized</li>
+<li><code>@trust("centralized")</code> - Centralized trust</li>
+<li><code>@chain("ethereum")</code> - Target blockchain</li>
+<li><code>@secure</code> - Enable security features</li>
+<li><code>@txn</code> - Transaction context</li>
+<li><code>@limit(n)</code> - Resource limits</li>
+</ul>
+<h3 id="standard-library-namespaces">Standard Library Namespaces</h3>
+<p>DAL provides 22 standard library modules:</p>
+<pre class="dal"><code>// Logging
+log::info(&quot;category&quot;, &quot;message&quot;);
+log::error(&quot;category&quot;, &quot;error&quot;);
+
+// Authentication
+auth::create_user(&quot;alice&quot;, &quot;password&quot;, &quot;email&quot;);
+auth::authenticate(&quot;alice&quot;, &quot;password&quot;);
+
+// Blockchain
+chain::deploy(1, &quot;Contract&quot;, []);
+chain::call(1, &quot;0x...&quot;, &quot;function&quot;, []);
+
+// Crypto
+crypto::hash(&quot;data&quot;, &quot;SHA256&quot;);
+crypto::sign(&quot;data&quot;, &quot;private_key&quot;, SignatureAlgorithm::ECDSA);
+
+// And many more: oracle::, service::, database::, web::, ai::, etc.</code></pre>
+<h3 id="multi-chain-support">Multi-Chain Support</h3>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;, &quot;polygon&quot;, &quot;arbitrum&quot;)
+service MultiChainService {
+    // Automatically works across all specified chains!
+}</code></pre>
+<h3 id="built-in-security">Built-in Security</h3>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@secure
+service SecureService {
+    // Automatic:
+    // - Reentrancy protection
+    // - Safe math (overflow protection)
+    // - Audit logging
+    // - Capability checks
+}</code></pre>
+<hr />
+<h2 id="-what-makes-dal-special">🌟 What Makes DAL Special?</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>DAL</th>
+<th>Solidity</th>
+<th>Rust</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Multi-Chain</strong></td>
+<td>✅ Native</td>
+<td>❌</td>
+<td>⚠️ Limited</td>
+</tr>
+<tr class="even">
+<td><strong>Type Safety</strong></td>
+<td>✅ Strong</td>
+<td>⚠️ Medium</td>
+<td>✅ Strong</td>
+</tr>
+<tr class="odd">
+<td><strong>Security</strong></td>
+<td>✅ Built-in</td>
+<td>⚠️ Manual</td>
+<td>⚠️ Manual</td>
+</tr>
+<tr class="even">
+<td><strong>Oracle Access</strong></td>
+<td>✅ Native</td>
+<td>❌ External</td>
+<td>❌ External</td>
+</tr>
+<tr class="odd">
+<td><strong>AI Integration</strong></td>
+<td>✅ Native</td>
+<td>❌</td>
+<td>⚠️ External</td>
+</tr>
+<tr class="even">
+<td><strong>Hybrid Trust</strong></td>
+<td>✅ Native</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr class="odd">
+<td><strong>Learning Curve</strong></td>
+<td>🟢 Moderate</td>
+<td>🟢 Easy</td>
+<td>🔴 Steep</td>
+</tr>
+<tr class="even">
+<td><strong>Agent Support</strong></td>
+<td>✅ First-class</td>
+<td>❌</td>
+<td>⚠️ External</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="-get-help">🤝 Get Help</h2>
+<ul>
+<li>📖 <strong>Documentation</strong>: <a
+href="../Documentation.html">Full Docs</a></li>
+<li>📖 <strong>Public Index</strong>: <a
+href="../PUBLIC_DOCUMENTATION_INDEX.html">Public Documentation
+Index</a></li>
+<li>💬 <strong>Discord</strong>: <a
+href="https://discord.gg/tu7tg9eN">Join Community</a></li>
+<li>🐛 <strong>Issues</strong>: <a
+href="https://github.com/okjason-source/dist_agent_lang/issues">GitHub
+Issues</a></li>
+<li>📧 <strong>Email</strong>: <a
+href="mailto:jason.dinh.developer@gmail.com">jason.dinh.developer@gmail.com</a></li>
+</ul>
+<hr />
+<h2 id="-example-projects">📝 Example Projects</h2>
+<p>Check out complete examples in the <code>examples/</code>
+directory:</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> examples/</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Core language features</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run hello_world_demo.dal</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run enhanced_language_features.dal</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Services and smart contracts</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run smart_contract.dal</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run defi_nft_rwa_contract.dal</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="co"># AI and agents</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run ai_agent_examples.dal</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run agent_system_demo.dal</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Multi-chain</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run multi_chain_operations.dal</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run cross_chain_patterns.dal</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Web and APIs</span></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run simple_web_api_example.dal</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run web_framework_examples.dal</span></code></pre></div>
+<hr />
+<p><strong>🎉 Welcome to the DAL community! Let's build the future of
+decentralized applications together.</strong></p>
+<p><strong>Next:</strong> <a href="../syntax.html">Syntax Reference →</a>
+| <a href="../CLI_QUICK_REFERENCE.html">CLI Reference →</a> | <a
+href="../STDLIB_REFERENCE.html">Standard Library →</a></p>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SCATTER</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="scatter--runtime-time-to-do-work">Scatter — runtime “time to do
+work”</h1>
+<p>Scatter is a <strong>process-local</strong> timer registry in the
+dist_agent_lang stdlib (<code>scatter::</code>). It answers
+<em>when</em> something is due; your DAL code decides <em>what</em> to
+run by matching job ids.</p>
+<p><strong>Internals:</strong> a <strong>schedule</strong> map (per job
+id: next fire + once vs repeat), a <strong>min-heap</strong> of
+<code>(next fire time, id)</code> with lazy removal of stale entries
+when ids are rescheduled or cancelled, and a <strong>due queue</strong>
+(<code>VecDeque</code>) of ids ready to handle. A worker thread
+<strong>sleeps until the next due time</strong> or until a
+<strong>notify</strong> from <code>after_ms</code> /
+<code>every_ms</code> / <code>cancel</code>, then runs
+<strong>process_due</strong> to move fired ids into the due queue.</p>
+<h2 id="environment">Environment</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SCATTER_TICK_MS</code></td>
+<td><code>50</code></td>
+<td>Minimum sleep when many jobs fire at the same instant (avoids a hot
+loop). Clamped to <code>1</code>…<code>3600000</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="api-dal">API (DAL)</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Call</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>scatter::after_ms(ms, id)</code></td>
+<td><strong>Relative:</strong> one shot after <code>ms</code>
+milliseconds from now. Returns the id string.</td>
+</tr>
+<tr class="even">
+<td><code>scatter::after_at_unix_ms(unix_ms, id)</code></td>
+<td><strong>Absolute:</strong> one shot at wall-clock Unix ms (same as
+<code>after_ms(delay, id)</code> where
+<code>delay = time::delay_ms_until_unix_ms(unix_ms)</code>). See <a
+href="TIME.html"><code>TIME.md</code></a>.</td>
+</tr>
+<tr class="odd">
+<td><code>scatter::every_ms(ms, id)</code></td>
+<td>Repeats every <code>ms</code> ms (<code>ms</code> must be &gt; 0).
+Returns the id string.</td>
+</tr>
+<tr class="even">
+<td><code>scatter::cancel(id)</code></td>
+<td>Remove a scheduled job. Returns whether it existed.</td>
+</tr>
+<tr class="odd">
+<td><code>scatter::pending()</code></td>
+<td>Drain the <strong>due queue</strong>: array of job ids (FIFO) since
+last call. <strong>Use this for dispatch.</strong></td>
+</tr>
+<tr class="even">
+<td><code>scatter::peek_pending()</code></td>
+<td>Copy due ids <strong>without</strong> draining (debug / dashboards
+only).</td>
+</tr>
+<tr class="odd">
+<td><code>scatter::scheduled_count()</code></td>
+<td>Entries still in the <strong>schedule</strong> (not ids sitting in
+the due queue).</td>
+</tr>
+<tr class="even">
+<td><code>scatter::next_due_ms()</code></td>
+<td>Ms until the next heap entry fires, or null if none (<code>0</code>
+if already due).</td>
+</tr>
+</tbody>
+</table>
+<p>Duplicate <code>id</code> replaces an existing schedule entry.</p>
+<p><strong>Wall-clock:</strong> use <a
+href="TIME.html"><code>time::</code></a>
+(<code>parse_rfc3339_unix_ms</code>, <code>unix_ms_now</code>,
+<code>delay_ms_until_unix_ms</code>) for deterministic parsing; the
+<strong>app</strong> maps LLM output to those inputs.</p>
+<h2 id="pattern">Pattern</h2>
+<ol type="1">
+<li>Register jobs with <code>after_ms</code> /
+<code>after_at_unix_ms</code> / <code>every_ms</code>.</li>
+<li>On each turn of your control loop (e.g. HTTP handler, CLI loop, or a
+route dedicated to polling), call <code>scatter::pending()</code> and
+branch on each id to run work.</li>
+</ol>
+<h2 id="developer-experience">Developer experience</h2>
+<p>Scatter is <strong>process-local</strong>: timers run only while the
+interpreter process stays alive. That shapes how you demo and ship
+scheduling:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Goal</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Try <code>time::</code> + <code>scatter::</code> in one
+shot</strong></td>
+<td><code>dal run</code> a script that calls
+<code>time::unix_ms_now()</code>, <code>scatter::after_ms(...)</code>,
+etc. The process may exit <strong>before</strong> a short timer fires;
+that is expected.</td>
+</tr>
+<tr class="even">
+<td><strong>See <code>pending()</code> actually drain</strong></td>
+<td>Use <strong><code>dal serve</code></strong> with a long-lived
+process and poll in a handler (e.g. <code>GET /health</code> that calls
+<code>scatter::pending()</code>), or any loop that keeps calling
+<code>pending()</code> while the VM runs.</td>
+</tr>
+<tr class="odd">
+<td><strong>Wall-clock deadlines</strong></td>
+<td>Use <a href="TIME.html"><code>TIME.md</code></a>
+(<code>parse_rfc3339_unix_ms</code>,
+<code>delay_ms_until_unix_ms</code>) and
+<code>scatter::after_at_unix_ms</code> or
+<code>after_ms(delay, id)</code>.</td>
+</tr>
+<tr class="even">
+<td><strong>Natural-language → schedule</strong></td>
+<td>Your app or agent turns chat into RFC3339 or Unix ms; the runtime
+only sees typed values. Optional: <strong>recommendations → human
+approval → host</strong> arms <code>time::</code> /
+<code>scatter::</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Copy-paste example:</strong>
+<code>examples/scatter_time_scheduling.dal</code> — <code>dal run</code>
+for logs, or <code>dal serve … --port 4040</code> and
+<code>curl http://127.0.0.1:4040/health</code> (call again after the
+delay to see ids in <code>due_this_poll</code>).</p>
+<h2 id="fleets">Fleets</h2>
+<p><strong>Fleets</strong> name groups of agent ids and optional deploy
+tasks (see <code>fleet::</code> and
+<code>docs/FLEET_DEPLOYMENT.md</code>). Scatter does
+<strong>not</strong> deliver timers to other processes.</p>
+<p>Sensible composition:</p>
+<ul>
+<li>Use Scatter in the <strong>coordinator</strong> process for cadence
+(e.g. <code>"fleet:tick"</code>, <code>"reconcile"</code>).</li>
+<li>In the handler for that id, call <code>fleet::run(...)</code>,
+<code>fleet::deploy(...)</code>, or your own orchestration.</li>
+</ul>
+<p>So Scatter “fits” fleets as <strong>clock + policy in one
+VM</strong>; cross-node fleet execution stays a separate concern (HTTP,
+queues, etc.).</p>
+</body>
+</html>

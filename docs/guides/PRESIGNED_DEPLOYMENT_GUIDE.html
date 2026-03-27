@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PRESIGNED_DEPLOYMENT_GUIDE</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="pre-signed-contract-deployment-with-dal">Pre-signed contract
+deployment with DAL</h1>
+<p>This guide explains how to <strong>build</strong> a pre-signed
+deployment transaction (outside DAL) and <strong>submit</strong> it from
+DAL with <code>chain::deploy</code>. Real on-chain deployment only
+occurs when you pass a signed tx; otherwise DAL returns a mock address
+for demos.</p>
+<hr />
+<h2 id="does-dal-compile-to-evm">Does DAL compile to EVM?</h2>
+<p><strong>Yes, in a limited way.</strong> DAL has a <strong>blockchain
+compile target</strong> that:</p>
+<ol type="1">
+<li><strong>Transpiles</strong> a DAL service (with
+<code>@compile_target("blockchain")</code>) to <strong>Solidity</strong>
+— contract name, state variables, function signatures, and events.
+Function <strong>bodies</strong> are emitted as stubs:
+<code>revert("DAL transpiled; implement in Solidity")</code>.</li>
+<li>Runs <strong>solc</strong> on that Solidity to produce <strong>EVM
+bytecode</strong> (<code>.bin</code>) and <strong>ABI</strong>
+(<code>.abi</code>).</li>
+</ol>
+<p>So the pipeline is: <strong>DAL service → Solidity (skeleton) → solc
+→ EVM bytecode + ABI.</strong> You get deployable bytecode, but the
+on-chain logic is only the revert stub until you either hand-edit the
+generated <code>.sol</code> and recompile, or use the output as a
+template. The runtime does <strong>not</strong> compile or sign; that’s
+done at <strong>build</strong> time
+(<code>dal build &lt;file.dal&gt; --target blockchain</code>) and/or in
+Foundry/Hardhat when building the actual deploy transaction.</p>
+<hr />
+<h2
+id="hybrid-use-case-dal-shape--bytecode--pre-signed-deploy--orchestration">Hybrid
+use case: DAL shape → bytecode → pre-signed deploy → orchestration</h2>
+<p>A practical hybrid flow is:</p>
+<ol type="1">
+<li><strong>Define the contract shape in DAL</strong> — one service with
+<code>@compile_target("blockchain")</code>, state fields, and method
+signatures (and optionally events).</li>
+<li><strong>Build to EVM:</strong><br />
+<code>dal build contract.dal --target blockchain --output out/</code><br />
+This produces <code>out/ServiceName.sol</code>,
+<code>out/ServiceName.bin</code>, <code>out/ServiceName.abi</code>.</li>
+<li><strong>Option A — use as template:</strong> Edit
+<code>ServiceName.sol</code> to implement the function bodies, then run
+solc (or Foundry/Hardhat) to get final bytecode. Use Foundry/Hardhat to
+build the deployment tx and sign it.</li>
+<li><strong>Option B — use stub bytecode for flow testing:</strong>
+Build the deploy tx from the generated <code>.bin</code> (e.g. with
+<code>cast</code> or a small script), sign it, and pass the signed tx to
+DAL to test deploy + orchestration without real logic on-chain.</li>
+<li><strong>Orchestration in DAL:</strong> A separate DAL script (or the
+same codebase, different entry) receives the <strong>signed deployment
+tx</strong> (e.g. from env, CI, or a deploy service), calls
+<code>chain::deploy(chain_id, "ServiceName", { "raw_transaction": hex })</code>,
+and uses the returned address for:
+<ul>
+<li><code>chain::call(chain_id, address, "methodName", args)</code> for
+subsequent calls</li>
+<li>Logging, multi-chain registration, or agent workflows</li>
+</ul></li>
+</ol>
+<p>So: <strong>one language (DAL) for both the contract
+interface/skeleton and the deploy/call orchestration</strong>; Solidity
+(generated or hand-filled) + solc give you EVM bytecode; external
+tooling builds and signs the deploy tx; DAL submits and
+orchestrates.</p>
+<hr />
+<h2 id="practical-uses-for-the-stub-oracles-nft-modules">Practical uses
+for the stub (oracles, NFT modules)</h2>
+<p>The generated stub has the <strong>right interface</strong> (state
+vars, function selectors, events) but every method
+<strong>reverts</strong>. That makes it useful in a few concrete
+ways.</p>
+<h3 id="1-placeholder--reserved-address-oracles-and-modules">1.
+Placeholder / reserved address (oracles and modules)</h3>
+<p>Deploy the stub so your system has a <strong>fixed address</strong>
+for “the oracle” or “the NFT module” before the real implementation
+exists:</p>
+<ul>
+<li><strong>Oracles:</strong> Your app or DAL script points to
+<code>oracle_address</code>. If that address is the stub, any call (e.g.
+<code>getPrice(id)</code>) <strong>reverts</strong> instead of returning
+bad or stale data. So “oracle not yet live” or “module disabled” is
+explicit and safe. When the real oracle is ready, you switch config to
+the new address (or upgrade via proxy).</li>
+<li><strong>NFT / module:</strong> Same idea. The stub has
+<code>mint</code>, <code>transfer</code>, etc. with the correct
+selectors but they revert. You can deploy “NFT module at 0x…” and have
+registries or DAL hold that address; no one can mint or transfer until
+you deploy the real implementation. Useful for (a) deployment order —
+registry points to stub, then you deploy the real contract and update
+the registry — or (b) feature flags — point to stub = disabled, point to
+real = enabled.</li>
+</ul>
+<p>So the stub is a <strong>safe, interface-correct
+placeholder</strong>: correct ABI and selectors, no behavior until you
+replace or upgrade.</p>
+<h3 id="2-interface-validation-off-chain">2. Interface validation
+(off-chain)</h3>
+<p>The stub does <strong>not</strong> validate oracle data or NFT
+metadata on-chain. You use the <strong>generated ABI</strong> (and
+optionally bytecode) <strong>off-chain</strong> for validation:</p>
+<ul>
+<li><strong>Oracle responses:</strong> DAL (or another tool) loads the
+<code>.abi</code> from the same DAL contract definition and checks that
+an oracle response or an on-chain return value matches the expected
+shape (e.g. <code>getPrice(bytes32) returns (uint256)</code>). One
+source of truth in DAL for the oracle interface; the ABI drives
+validation in your orchestrator or tests.</li>
+<li><strong>Contract compatibility:</strong> Check that a contract at
+some address exposes the expected selectors (e.g. for a “NFT module”
+interface). The stub’s ABI defines the canonical interface; you don’t
+need the stub deployed to validate that another contract is
+compatible.</li>
+</ul>
+<p>So: <strong>stub on-chain = placeholder; ABI from same build =
+validation and compatibility checks.</strong></p>
+<h3 id="3-when-its-practical">3. When it’s practical</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Use</th>
+<th>Practical?</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Deploy stub as “oracle not live” / “module disabled”</td>
+<td>Yes</td>
+<td>Safe placeholder with correct interface; revert instead of wrong
+data or accidental mint.</td>
+</tr>
+<tr class="even">
+<td>Deploy stub first, then replace with real contract</td>
+<td>Yes</td>
+<td>Fixed address and interface from day one; swap implementation or
+config later.</td>
+</tr>
+<tr class="odd">
+<td>Use generated ABI to validate oracle responses or contract
+interfaces</td>
+<td>Yes</td>
+<td>Single DAL definition → ABI → validation in DAL or tooling; no stub
+deployment required for validation.</td>
+</tr>
+<tr class="even">
+<td>Stub “validates” oracle data on-chain</td>
+<td>No</td>
+<td>Stub has no logic; validation happens off-chain using the ABI or in
+a separate contract you implement.</td>
+</tr>
+<tr class="odd">
+<td>Stub as full oracle or NFT implementation</td>
+<td>No</td>
+<td>Stub always reverts; for real behavior, implement in Solidity and
+deploy that bytecode.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Summary:</strong> Use the stub for <strong>placeholders and
+reserved addresses</strong> (oracles, NFT modules); use the
+<strong>ABI</strong> from the same DAL build for <strong>validating
+oracles or module interfaces</strong> off-chain. That combination is
+practical; relying on the stub to “validate” or implement behavior
+on-chain is not.</p>
+<hr />
+<h2 id="why-pre-signed">Why pre-signed?</h2>
+<p>At <strong>runtime</strong>, DAL does not compile Solidity or build
+deployment transactions. ABI encoding and signing stay in your build
+pipeline or tooling (Foundry, Hardhat, Node). DAL’s role at runtime is
+to:</p>
+<ul>
+<li><strong>Submit</strong> a signed deployment tx via
+<code>eth_sendRawTransaction</code></li>
+<li><strong>Wait</strong> for the receipt and return the contract
+address</li>
+<li><strong>Orchestrate</strong> multi-chain, CI/CD, or agent-driven
+flows that consume that address</li>
+</ul>
+<p>So the flow is: <strong>build + sign tx (using DAL-generated bytecode
+or hand-written Solidity) → pass raw hex to DAL →
+<code>chain::deploy</code> sends it.</strong></p>
+<hr />
+<h2 id="how-to-build-a-pre-signed-deployment-tx">How to build a
+pre-signed deployment tx</h2>
+<h3 id="option-a-foundry-cast--script">Option A: Foundry (Cast +
+script)</h3>
+<p><strong>1. Compile and get bytecode + constructor args</strong></p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">forge</span> build</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Encode constructor calldata (example: ERC20 name, symbol, totalSupply)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cast</span> calldata <span class="st">&quot;constructor(string,string,uint256)&quot;</span> <span class="st">&quot;KEYS Token&quot;</span> <span class="st">&quot;KEYS&quot;</span> 120000000000000000000000000</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># → 0x... (use this as data for contract creation)</span></span></code></pre></div>
+<p><strong>2. Create and sign the deployment transaction</strong></p>
+<p>Use a script (e.g. <code>script/Deploy.s.sol</code>) that builds the
+deployment tx and signs it with a key from env:</p>
+<pre class="solidity"><code>// script/Deploy.s.sol (Foundry)
+pragma solidity ^0.8.19;
+
+import &quot;forge-std/Script.sol&quot;;
+import &quot;../src/KEYS_Token.sol&quot;;
+
+contract DeployScript is Script {
+    function run() external returns (address) {
+        uint256 deployerPrivateKey = vm.envUint(&quot;PRIVATE_KEY&quot;);
+        vm.startBroadcast(deployerPrivateKey);
+
+        KEYS_Token token = new KEYS_Token(&quot;KEYS Token&quot;, &quot;KEYS&quot;, 120_000_000 * 1e18);
+        address addr = address(token);
+
+        vm.stopBroadcast();
+        return addr;
+    }
+}</code></pre>
+<p>Then export the <strong>signed raw transaction</strong> (hex) instead
+of broadcasting:</p>
+<ul>
+<li>Use Foundry’s <code>--broadcast</code> with a custom serializer,
+or</li>
+<li>A small Node/script that uses <code>ethers</code> /
+<code>viem</code> to build the same deployment, sign it, and print
+<code>serializedTransaction</code> (hex).</li>
+</ul>
+<p><strong>3. Minimal Node script to output raw deploy tx (ethers
+v6)</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// scripts/build-deploy-tx.js (Node + ethers v6)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> { ethers } <span class="op">=</span> <span class="pp">require</span>(<span class="st">&quot;ethers&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> fs <span class="op">=</span> <span class="pp">require</span>(<span class="st">&quot;fs&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">main</span>() {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> factory <span class="op">=</span> <span class="cf">await</span> ethers<span class="op">.</span><span class="fu">getContractFactory</span>(<span class="st">&quot;KEYS_Token&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> deployTx <span class="op">=</span> <span class="cf">await</span> factory<span class="op">.</span><span class="fu">getDeployTransaction</span>(</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;KEYS Token&quot;</span><span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;KEYS&quot;</span><span class="op">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    ethers<span class="op">.</span><span class="fu">parseEther</span>(<span class="st">&quot;120000000&quot;</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  )<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> wallet <span class="op">=</span> <span class="kw">new</span> ethers<span class="op">.</span><span class="fu">Wallet</span>(</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">PRIVATE_KEY</span><span class="op">,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> ethers<span class="op">.</span><span class="fu">JsonRpcProvider</span>(<span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">RPC_URL</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  )<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> signed <span class="op">=</span> <span class="cf">await</span> wallet<span class="op">.</span><span class="fu">signTransaction</span>({</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span>deployTx<span class="op">,</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">chainId</span><span class="op">:</span> <span class="pp">parseInt</span>(<span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">CHAIN_ID</span> <span class="op">||</span> <span class="st">&quot;1&quot;</span>)<span class="op">,</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">gasLimit</span><span class="op">:</span> deployTx<span class="op">.</span><span class="at">gasLimit</span> <span class="op">||</span> <span class="dv">5_000_000</span><span class="op">,</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Output hex for DAL (no 0x prefix is ok; DAL accepts with or without)</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(signed)<span class="op">;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="fu">main</span>()<span class="op">.</span><span class="fu">catch</span>(<span class="bu">console</span><span class="op">.</span><span class="fu">error</span>)<span class="op">;</span></span></code></pre></div>
+<p>Run:
+<code>PRIVATE_KEY=... RPC_URL=... CHAIN_ID=1 node scripts/build-deploy-tx.js</code>
+and use the printed hex in DAL.</p>
+<h3 id="option-b-hardhat">Option B: Hardhat</h3>
+<p>In a Hardhat script, build the deploy tx, sign it with the deployer
+wallet, and print the serialized tx:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// scripts/buildDeployTx.js</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> hre <span class="op">=</span> <span class="pp">require</span>(<span class="st">&quot;hardhat&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">main</span>() {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> [deployer] <span class="op">=</span> <span class="cf">await</span> ethers<span class="op">.</span><span class="fu">getSigners</span>()<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> Factory <span class="op">=</span> <span class="cf">await</span> ethers<span class="op">.</span><span class="fu">getContractFactory</span>(<span class="st">&quot;KEYS_Token&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> tx <span class="op">=</span> <span class="cf">await</span> Factory<span class="op">.</span><span class="fu">getDeployTransaction</span>(</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;KEYS Token&quot;</span><span class="op">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;KEYS&quot;</span><span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    ethers<span class="op">.</span><span class="fu">parseEther</span>(<span class="st">&quot;120000000&quot;</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  )<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> signed <span class="op">=</span> <span class="cf">await</span> deployer<span class="op">.</span><span class="fu">signTransaction</span>({</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span>tx<span class="op">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">chainId</span><span class="op">:</span> (<span class="cf">await</span> ethers<span class="op">.</span><span class="at">provider</span><span class="op">.</span><span class="fu">getNetwork</span>())<span class="op">.</span><span class="at">chainId</span><span class="op">,</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">gasLimit</span><span class="op">:</span> tx<span class="op">.</span><span class="at">gasLimit</span> <span class="op">||</span> <span class="dv">5000000</span><span class="op">,</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(signed)<span class="op">;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="fu">main</span>()<span class="op">;</span></span></code></pre></div>
+<p>Run:
+<code>npx hardhat run scripts/buildDeployTx.js --network mainnet</code>
+(or use a custom RPC). Use the printed hex in DAL as
+<code>raw_transaction</code> or <code>signed_tx</code>.</p>
+<hr />
+<h2 id="using-the-raw-tx-in-dal">Using the raw tx in DAL</h2>
+<p>Once you have the hex string (with or without <code>0x</code>), pass
+it in the constructor-args map under
+<strong><code>raw_transaction</code></strong> or
+<strong><code>signed_tx</code></strong>:</p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service Deployer {
+    fn deploy_with_presigned(raw_tx_hex: string) -&gt; string {
+        let address = chain::deploy(
+            1,
+            &quot;KEYS_Token&quot;,
+            {
+                &quot;raw_transaction&quot;: raw_tx_hex
+            }
+        );
+        return address;
+    }
+}</code></pre>
+<ul>
+<li>If the runtime has <code>http-interface</code> and the chain is
+configured, <code>chain::deploy</code> will call
+<code>eth_sendRawTransaction</code>, wait for the receipt, and return
+the real <code>contractAddress</code>.</li>
+<li>If <code>raw_transaction</code> / <code>signed_tx</code> is missing,
+DAL returns a <strong>mock</strong> address (no real deploy).</li>
+</ul>
+<hr />
+<h2 id="use-cases">Use cases</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Use case</th>
+<th>How pre-signed helps</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>DAL → EVM hybrid</strong></td>
+<td>Define contract shape in DAL;
+<code>dal build --target blockchain</code> gives Solidity + bytecode.
+Build and sign the deploy tx from that bytecode (or from hand-edited
+Solidity). DAL script receives the signed tx and submits via
+<code>chain::deploy</code>, then orchestrates <code>chain::call</code>
+and logging with the deployed address. One codebase for interface +
+orchestration.</td>
+</tr>
+<tr class="even">
+<td><strong>CI/CD</strong></td>
+<td>Build and sign the deploy tx in CI (e.g. GitHub Actions with a
+stored key or HSM). DAL script receives the hex (e.g. from env or a
+secure artifact) and submits it. No private key in DAL.</td>
+</tr>
+<tr class="odd">
+<td><strong>Multi-chain from one DAL script</strong></td>
+<td>Build one signed tx per chain in a small script (or per-chain CI
+step). DAL calls
+<code>chain::deploy(chain_id, name, { "raw_transaction": tx_hex })</code>
+for each chain and records addresses.</td>
+</tr>
+<tr class="even">
+<td><strong>Governance / approval</strong></td>
+<td>Off-chain process (governance UI, multisig) produces the signed
+deploy tx. Once approved, DAL only submits it; no signing inside
+DAL.</td>
+</tr>
+<tr class="odd">
+<td><strong>Agent-driven deploy</strong></td>
+<td>Agent asks an external “deploy service” (API or script) for a signed
+tx; the service compiles, builds, and signs. Agent passes the hex to
+<code>chain::deploy</code> and uses the returned address in later
+steps.</td>
+</tr>
+<tr class="even">
+<td><strong>Testing / staging</strong></td>
+<td>Same DAL script works in tests with a mock (no
+<code>raw_transaction</code>) and in staging/production with a real
+signed tx from your pipeline.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="security-notes">Security notes</h2>
+<ul>
+<li><strong>Never</strong> put a private key in DAL source or in
+constructor args. Signing must happen in Foundry/Hardhat/Node or in a
+secure service.</li>
+<li>Pre-signed tx should be passed in via <strong>environment</strong>,
+<strong>secure config</strong>, or <strong>API</strong> (e.g. from a
+deploy service the agent calls).</li>
+<li>Prefer short-lived tokens or one-time deploy keys in CI; rotate and
+restrict RPC and key access.</li>
+</ul>
+<hr />
+<h2 id="summary">Summary</h2>
+<ol type="1">
+<li><strong>Build</strong> the deployment transaction (bytecode +
+constructor args) and <strong>sign</strong> it in Foundry, Hardhat, or
+Node.</li>
+<li><strong>Output</strong> the signed serialized tx as hex.</li>
+<li><strong>Pass</strong> that hex to DAL as
+<code>chain::deploy(chain_id, contract_name, { "raw_transaction": hex })</code>
+(or <code>signed_tx</code>).</li>
+<li>DAL submits it and returns the deployed contract address when
+<code>http-interface</code> and chain config are available.</li>
+</ol>
+<p>See also: <a
+href="../design/CHAIN_NAMESPACE_GAPS_AND_FIXES.html">CHAIN_NAMESPACE_GAPS_AND_FIXES.md</a>
+(deploy behavior), <a
+href="../SOLIDITY_INTEGRATION_GUIDE.html">SOLIDITY_INTEGRATION_GUIDE.md</a>
+(orchestrating Solidity from DAL).</p>
+</body>
+</html>

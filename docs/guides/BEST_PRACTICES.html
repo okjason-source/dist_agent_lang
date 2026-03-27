@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>BEST_PRACTICES</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="-best-practices-guide">📘 Best Practices Guide</h1>
+<blockquote>
+<p><strong>dist_agent_lang (DAL)</strong> — This guide uses <strong>DAL
+syntax and stdlib</strong>. Services use <code>@trust</code>,
+<code>@chain</code>, <code>@secure</code>; functions use
+<code>fn</code>; chain and oracle calls use the actual
+<code>chain::</code> and <code>oracle::</code> APIs. See <a
+href="../syntax.html">syntax.md</a>, <a
+href="../attributes.html">attributes.md</a>, and <a
+href="../STDLIB_REFERENCE.html">STDLIB_REFERENCE.md</a>.</p>
+</blockquote>
+<p>Comprehensive guide to writing secure, efficient, and maintainable
+<strong>dist_agent_lang</strong> code.</p>
+<hr />
+<h2 id="-table-of-contents">📋 Table of Contents</h2>
+<ol type="1">
+<li><a href="#security-best-practices">Security Best Practices</a></li>
+<li><a href="#performance-and-code-organization">Performance and Code
+Organization</a></li>
+<li><a href="#error-handling">Error Handling</a></li>
+<li><a href="#testing-strategies">Testing Strategies</a></li>
+<li><a href="#chain-and-gas-usage">Chain and Gas Usage</a></li>
+<li><a href="#oracle-integration">Oracle Integration</a></li>
+<li><a href="#multi-chain-development">Multi-Chain Development</a></li>
+<li><a href="#common-patterns">Common Patterns</a></li>
+<li><a href="#anti-patterns-what-to-avoid">Anti-Patterns (What to
+Avoid)</a></li>
+</ol>
+<hr />
+<h2 id="-security-best-practices">🔒 Security Best Practices</h2>
+<h3 id="1-use-service-attributes-for-chain-and-trust">1. Use service
+attributes for chain and trust</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+@secure
+service SecureService {
+    balances: map&lt;string, int&gt; = {};
+    fn transfer(to: string, amount: int) -&gt; bool {
+        let caller = chain::caller();
+        if (amount &lt;= 0 || !self.balances.contains_key(caller)) { throw &quot;Invalid transfer&quot;; }
+        if (self.balances[caller] &lt; amount) { throw &quot;Insufficient balance&quot;; }
+        self.balances[caller] = self.balances[caller] - amount;
+        if (!self.balances.contains_key(to)) { self.balances[to] = 0; }
+        self.balances[to] = self.balances[to] + amount;
+        return true;
+    }
+}</code></pre>
+<p><strong>❌ DON'T:</strong></p>
+<pre class="dal"><code>service Vulnerable {
+    // No @trust, @chain, @secure — chain access and auth not enforced
+}</code></pre>
+<p><code>@secure</code> enables authentication (caller must be set),
+reentrancy guard, and audit logging. Use <code>@public</code> only for
+read-only or unauthenticated endpoints; do not combine
+<code>@secure</code> and <code>@public</code> on the same service or
+function.</p>
+<h3 id="2-validate-inputs-before-state-changes">2. Validate inputs
+before state changes</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+@secure
+service Token {
+    balances: map&lt;string, int&gt; = {};
+    fn transfer(to: string, amount: int) -&gt; bool {
+        if (to == &quot;&quot; || to == &quot;0x0000000000000000000000000000000000000000&quot;) {
+            throw &quot;Invalid address&quot;;
+        }
+        if (amount &lt;= 0) { throw &quot;Amount must be positive&quot;; }
+        let caller = chain::caller();
+        if (!self.balances.contains_key(caller) || self.balances[caller] &lt; amount) {
+            throw &quot;Insufficient balance&quot;;
+        }
+        self.balances[caller] = self.balances[caller] - amount;
+        if (!self.balances.contains_key(to)) { self.balances[to] = 0; }
+        self.balances[to] = self.balances[to] + amount;
+        return true;
+    }
+}</code></pre>
+<p><strong>❌ DON'T:</strong></p>
+<pre class="dal"><code>fn transfer(to: string, amount: int) {
+    self.balances[caller] = self.balances[caller] - amount;
+    self.balances[to] = self.balances[to] + amount;
+}</code></pre>
+<h3
+id="3-update-state-before-external-chain-calls-checkseffectsinteractions">3.
+Update state before external chain calls
+(checks–effects–interactions)</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>@txn
+@secure
+fn withdraw(amount: int) {
+    let caller = chain::caller();
+    if (!self.pending.contains_key(caller) || self.pending[caller] &lt; amount) {
+        throw &quot;Insufficient pending&quot;;
+    }
+    self.pending[caller] = self.pending[caller] - amount;
+    let result = chain::call(chain_id, self.vault_address, &quot;withdraw&quot;, { &quot;amount&quot;: amount.to_string() });
+    if (!result.contains(&quot;success&quot;)) { throw &quot;Withdraw failed&quot;; }
+}</code></pre>
+<p><strong>❌ DON'T:</strong> Call <code>chain::call</code> (or any
+external interaction) before updating service state; that can create
+reentrancy risk.</p>
+<h3 id="4-use-events-and-logging-for-important-actions">4. Use events
+and logging for important actions</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>event Transfer { from: string, to: string, amount: int };
+
+fn transfer(to: string, amount: int) {
+    // ... transfer logic ...
+    event Transfer { from: chain::caller(), to: to, amount: amount };
+    log::info(&quot;transfer&quot;, { &quot;to&quot;: to, &quot;amount&quot;: amount });
+    return true;
+}</code></pre>
+<h3 id="5-secure-oracle-usage">5. Secure oracle usage</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>let query = oracle::create_query(&quot;BTC/USD&quot;);
+let result = oracle::fetch_with_consensus(
+    [&quot;source1&quot;, &quot;source2&quot;, &quot;source3&quot;],
+    query,
+    0.66
+);
+if (result == null) { throw &quot;Oracle consensus failed&quot;; }
+let price = result.data;
+let ts = chain::get_block_timestamp(1);
+if (result.timestamp != null &amp;&amp; ts - result.timestamp &gt; 300) {
+    throw &quot;Price too old&quot;;
+}</code></pre>
+<p><strong>❌ DON'T:</strong> Rely on a single oracle source without
+consensus or freshness checks when handling value or critical
+decisions.</p>
+<hr />
+<h2 id="-performance-and-code-organization">⚡ Performance and Code
+Organization</h2>
+<h3 id="1-batch-work-and-limit-chain-calls">1. Batch work and limit
+chain calls</h3>
+<p>Prefer computing totals or payloads in memory, then one or few
+<code>chain::call</code> / <code>chain::deploy</code> invocations. Use
+<code>@limit(n)</code> on services or functions to cap resource use.</p>
+<h3 id="2-cache-expensive-or-remote-data">2. Cache expensive or remote
+data</h3>
+<p>Use service fields to cache oracle or chain data when validity
+windows allow (e.g. block timestamp or TTL). Use
+<code>chain::get_block_timestamp(chain_id)</code> for time; avoid
+calling oracle or RPC in a tight loop.</p>
+<h3 id="3-project-structure">3. Project structure</h3>
+<pre><code>my-project/
+├── main.dal or lib.dal    # Entry; services and top-level fns
+├── core/                  # Core services (e.g. token.dal, marketplace.dal)
+├── tests/
+│   └── *.test.dal        # describe/it, test::expect_*, expect_throws
+├── scripts/
+│   └── deploy.sh         # Build + sign tx; see PRESIGNED_DEPLOYMENT_GUIDE.md
+├── docs/
+├── .env.example
+└── README.md</code></pre>
+<h3 id="4-service-layout">4. Service layout</h3>
+<p>Use <code>@trust</code>, <code>@chain</code>, <code>@secure</code>
+(or <code>@public</code>) consistently. Put fields first, then methods;
+use events and <code>log::</code> for important state changes. Caller
+identity: <code>chain::caller()</code>.</p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;, &quot;polygon&quot;)
+@secure
+service WellOrganized {
+    total_supply: int = 0;
+    balances: map&lt;string, int&gt; = {};
+    event Transfer { from: string, to: string, amount: int };
+
+    fn transfer(to: string, amount: int) -&gt; bool {
+        if (amount &lt;= 0) { throw &quot;Invalid amount&quot;; }
+        let from = chain::caller();
+        if (!self.balances.contains_key(from) || self.balances[from] &lt; amount) {
+            throw &quot;Insufficient balance&quot;;
+        }
+        self.balances[from] = self.balances[from] - amount;
+        if (!self.balances.contains_key(to)) { self.balances[to] = 0; }
+        self.balances[to] = self.balances[to] + amount;
+        event Transfer { from: from, to: to, amount: amount };
+        return true;
+    }
+
+    fn balance_of(account: string) -&gt; int {
+        if (self.balances.contains_key(account)) { return self.balances[account]; }
+        return 0;
+    }
+}</code></pre>
+<hr />
+<h2 id="-error-handling">🚨 Error Handling</h2>
+<h3 id="1-use-descriptive-messages-with-throw">1. Use descriptive
+messages with throw</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>fn withdraw(amount: int) {
+    if (amount &lt;= 0) { throw &quot;Withdrawal amount must be greater than zero&quot;; }
+    let caller = chain::caller();
+    if (!self.balances.contains_key(caller) || self.balances[caller] &lt; amount) {
+        throw &quot;Insufficient balance&quot;;
+    }
+    if (self.paused) { throw &quot;Contract is paused&quot;; }
+    self.balances[caller] = self.balances[caller] - amount;
+    // ... complete withdrawal ...
+}</code></pre>
+<p><strong>❌ DON'T:</strong> Use empty or vague messages:
+<code>throw "Error";</code> — be specific so callers and logs are
+actionable.</p>
+<h3 id="2-use-result-for-recoverable-failures">2. Use Result for
+recoverable failures</h3>
+<p><strong>✅ DO:</strong> Return <code>Result&lt;T, string&gt;</code>
+and use <code>Ok</code>/<code>Err</code> when the caller should handle
+failure without aborting.</p>
+<pre class="dal"><code>fn try_transfer(to: string, amount: int) -&gt; Result&lt;bool, string&gt; {
+    if (to == &quot;&quot;) { return Err(&quot;Invalid address&quot;); }
+    if (amount &lt;= 0) { return Err(&quot;Invalid amount&quot;); }
+    let from = chain::caller();
+    if (!self.balances.contains_key(from) || self.balances[from] &lt; amount) {
+        return Err(&quot;Insufficient balance&quot;);
+    }
+    self.balances[from] = self.balances[from] - amount;
+    if (!self.balances.contains_key(to)) { self.balances[to] = 0; }
+    self.balances[to] = self.balances[to] + amount;
+    return Ok(true);
+}</code></pre>
+<h3 id="3-handle-chain-and-external-call-results">3. Handle chain and
+external call results</h3>
+<p><strong>✅ DO:</strong> Check return values from
+<code>chain::call</code> and other stdlib calls; throw or return Err on
+failure.</p>
+<pre class="dal"><code>let result = chain::call(chain_id, contract_address, &quot;withdraw&quot;, { &quot;amount&quot;: amount.to_string() });
+if (result == null || !result.contains(&quot;success&quot;)) {
+    throw &quot;External call failed: &quot; + (result ?? &quot;null&quot;);
+}</code></pre>
+<p>Use <strong>try/catch</strong> when you want to handle thrown errors
+and continue:</p>
+<pre class="dal"><code>try {
+    self.do_risky_operation();
+} catch (e) {
+    log::error(&quot;operation&quot;, { &quot;error&quot;: e });
+    return false;
+}</code></pre>
+<hr />
+<h2 id="-testing-strategies">🧪 Testing Strategies</h2>
+<p>Use the <strong>three-layer</strong> approach: (1) Rust unit tests
+for parsing/syntax, (2) semantic validators in <code>test::</code>, (3)
+DAL test files (<code>.test.dal</code>) for behavior. See <a
+href="../TESTING_QUICK_REFERENCE.html">TESTING_QUICK_REFERENCE.md</a>.</p>
+<h3 id="1-dal-test-files-describe--it--expect">1. DAL test files:
+describe / it / expect</h3>
+<p><strong>✅ DO:</strong></p>
+<pre class="dal"><code>// tests/token.test.dal
+describe(&quot;Token&quot;, fn() {
+    let token;
+    beforeEach(fn() {
+        token = MyToken::new();
+        token.deposit(chain::caller(), 1000000);
+    });
+    it(&quot;transfers correctly&quot;, fn() {
+        token.transfer(&quot;0xRecipient&quot;, 1000);
+        expect(token.balance_of(&quot;0xRecipient&quot;)).to_equal(1000);
+    });
+    it(&quot;fails on insufficient balance&quot;, fn() {
+        expect_throws(fn() { token.transfer(&quot;0xRecipient&quot;, 2000000); }, &quot;Insufficient balance&quot;);
+    });
+});</code></pre>
+<h3 id="2-semantic-validation-test">2. Semantic validation (test::)</h3>
+<p><strong>✅ DO:</strong> Use <code>test::expect_*</code> for types,
+ranges, and structure in DAL tests or validators.</p>
+<pre class="dal"><code>test::expect_type(&amp;result, &quot;number&quot;);
+test::expect_in_range(price, 0.0, 1000000.0);
+test::expect_has_key(config, &quot;chain_id&quot;);
+test::expect_valid_trust_model(&quot;hybrid&quot;);
+test::expect_valid_chain(&quot;ethereum&quot;);</code></pre>
+<h3 id="3-integration-and-rust-tests">3. Integration and Rust tests</h3>
+<p>Run full flows with <code>dal run file.test.dal</code>. For
+parser/AST and example-file validation, use <code>cargo test</code>
+(e.g. <code>cargo test --test example_tests</code>).</p>
+<hr />
+<h2 id="-chain-and-gas-usage">⛽ Chain and Gas Usage</h2>
+<h3 id="1-use-chain-stdlib-for-gas-and-cost">1. Use chain stdlib for gas
+and cost</h3>
+<p><strong>✅ DO:</strong> Use
+<code>chain::estimate_gas(chain_id, operation)</code> and
+<code>chain::get_gas_price(chain_id)</code> (or
+<code>chain::get_current_gas_price(chain_id)</code>) to compare chains
+or warn users.</p>
+<pre class="dal"><code>let eth_gas = chain::estimate_gas(1, &quot;transfer&quot;);
+let poly_gas = chain::estimate_gas(137, &quot;transfer&quot;);
+let eth_price = chain::get_gas_price(1);
+let poly_price = chain::get_gas_price(137);
+if (poly_gas * poly_price &lt; eth_gas * eth_price) {
+    log::info(&quot;gas&quot;, &quot;Polygon is cheaper for this operation&quot;);
+}</code></pre>
+<h3 id="2-batch-chain-operations">2. Batch chain operations</h3>
+<p>Prefer one <code>chain::call</code> with batched args (or a contract
+that batches on-chain) over many small calls. Use
+<code>chain::get_chain_config(chain_id)</code> and
+<code>chain::get_supported_chains()</code> when building multi-chain
+flows.</p>
+<h3 id="3-pre-signed-deployment">3. Pre-signed deployment</h3>
+<p>For real contract deployment, use pre-signed transactions (see <a
+href="PRESIGNED_DEPLOYMENT_GUIDE.html">PRESIGNED_DEPLOYMENT_GUIDE.md</a>);
+avoid putting private keys in DAL.</p>
+<hr />
+<h2 id="-oracle-integration">🔮 Oracle Integration</h2>
+<h3 id="1-multi-source-consensus">1. Multi-source consensus</h3>
+<p><strong>✅ DO:</strong> Use <code>oracle::create_query</code> and
+<code>oracle::fetch_with_consensus</code> with multiple sources and a
+threshold.</p>
+<pre class="dal"><code>let query = oracle::create_query(&quot;ETH/USD&quot;);
+let result = oracle::fetch_with_consensus(
+    [&quot;source1&quot;, &quot;source2&quot;, &quot;source3&quot;],
+    query,
+    0.66
+);
+if (result == null) { throw &quot;Oracle consensus failed&quot;; }
+self.eth_price = result.data;
+self.last_update = chain::get_block_timestamp(1);</code></pre>
+<h3 id="2-freshness-and-verification">2. Freshness and verification</h3>
+<p><strong>✅ DO:</strong> Check age with
+<code>chain::get_block_timestamp(chain_id)</code>; use
+<code>oracle::verify(data, signature)</code> when signatures are
+available. Reject or refresh when data is too old (e.g. &gt; 300 seconds
+for prices).</p>
+<hr />
+<h2 id="-multi-chain-development">🌍 Multi-Chain Development</h2>
+<h3 id="1-declare-supported-chains">1. Declare supported chains</h3>
+<p><strong>✅ DO:</strong> Use
+<code>@chain("ethereum", "polygon", ...)</code> and pass
+<code>chain_id</code> explicitly in <code>chain::</code> calls so the
+same service can run on multiple chains.</p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;, &quot;polygon&quot;, &quot;arbitrum&quot;)
+@secure
+service MultiChain {
+    fn transfer(chain_id: int, to: string, amount: int) -&gt; bool {
+        let caller = chain::caller();
+        if (self.balances[caller] &lt; amount) { throw &quot;Insufficient balance&quot;; }
+        self.balances[caller] = self.balances[caller] - amount;
+        if (!self.balances.contains_key(to)) { self.balances[to] = 0; }
+        self.balances[to] = self.balances[to] + amount;
+        return true;
+    }
+}</code></pre>
+<h3 id="2-chain-specific-logic">2. Chain-specific logic</h3>
+<p><strong>✅ DO:</strong> Use
+<code>chain::get_chain_config(chain_id)</code> and
+<code>chain::get_gas_price(chain_id)</code> (or
+<code>chain::get_current_gas_price(chain_id)</code>) when you need
+chain-dependent behavior (e.g. gas pricing, RPC, explorer).</p>
+<pre class="dal"><code>fn get_gas_cost(chain_id: int) -&gt; float {
+    let gas = chain::estimate_gas(chain_id, &quot;transfer&quot;);
+    let price = chain::get_gas_price(chain_id);
+    return gas * price;
+}</code></pre>
+<hr />
+<h2 id="-common-patterns">🎯 Common Patterns</h2>
+<h3 id="1-pull-over-push-for-withdrawals">1. Pull over push for
+withdrawals</h3>
+<p><strong>✅ DO:</strong> Update pending state first, then perform the
+external transfer or chain call so reentrancy cannot drain more than the
+cleared amount.</p>
+<pre class="dal"><code>pending: map&lt;string, int&gt; = {};
+fn withdraw() {
+    let caller = chain::caller();
+    let amount = 0;
+    if (self.pending.contains_key(caller)) { amount = self.pending[caller]; }
+    if (amount &lt;= 0) { throw &quot;No funds to withdraw&quot;; }
+    self.pending[caller] = 0;
+    let result = chain::call(chain_id, vault, &quot;withdraw&quot;, { &quot;amount&quot;: amount.to_string() });
+    if (!result.contains(&quot;success&quot;)) { throw &quot;Withdraw failed&quot;; }
+}</code></pre>
+<h3 id="2-pause--admin-guard">2. Pause / admin guard</h3>
+<p><strong>✅ DO:</strong> Use a <code>paused</code> field and an
+owner/caller check; throw at the start of sensitive methods when paused
+or when caller is not allowed.</p>
+<pre class="dal"><code>paused: bool = false;
+owner: string = &quot;0x...&quot;;
+fn pause() {
+    if (chain::caller() != self.owner) { throw &quot;Not owner&quot;; }
+    self.paused = true;
+}
+fn critical_operation() {
+    if (self.paused) { throw &quot;Contract is paused&quot;; }
+    // ...
+}</code></pre>
+<hr />
+<h2 id="-anti-patterns-what-to-avoid">❌ Anti-Patterns (What to
+Avoid)</h2>
+<h3 id="1-dont-use-origincaller-for-auth-without-validation">1. Don't
+use origin/caller for auth without validation</h3>
+<p>Use <code>chain::caller()</code> for the current caller and validate
+against a stored owner or capability; don't rely on unvalidated identity
+for privileged actions.</p>
+<h3 id="2-dont-ignore-chain-or-oracle-return-values">2. Don't ignore
+chain or oracle return values</h3>
+<p><strong>❌ DON'T:</strong> Call <code>chain::call</code> or
+<code>oracle::fetch</code> and ignore the result. <strong>✅
+DO:</strong> Check the return value and throw or return Err when the
+call failed or returned invalid data.</p>
+<h3 id="3-dont-use-block-or-time-for-randomness">3. Don't use block or
+time for randomness</h3>
+<p><strong>❌ DON'T:</strong> Use
+<code>chain::get_block_timestamp</code> or block-derived values as the
+sole source of randomness for value-bearing logic (manipulable).
+<strong>✅ DO:</strong> Use an oracle or verifiable randomness source
+(e.g. oracle::fetch with a VRF source) when you need randomness.</p>
+<h3 id="4-dont-put-secrets-in-source">4. Don't put secrets in
+source</h3>
+<p>Never put private keys or long-lived secrets in DAL source or in
+constructor args. Use env, config, or a secure deploy pipeline; see <a
+href="PRESIGNED_DEPLOYMENT_GUIDE.html">PRESIGNED_DEPLOYMENT_GUIDE.md</a>.</p>
+<hr />
+<h2 id="-additional-resources">📚 Additional Resources</h2>
+<ul>
+<li><a href="../syntax.html">Syntax Reference</a> — Grammar and
+structure</li>
+<li><a href="../attributes.html">Attributes Reference</a> —
+<code>@trust</code>, <code>@chain</code>, <code>@secure</code>,
+<code>@txn</code>, <code>@limit</code>, <code>@compile_target</code>,
+etc.</li>
+<li><a href="../STDLIB_REFERENCE.html">STDLIB_REFERENCE.md</a> — All
+stdlib modules and functions</li>
+<li><a href="API_REFERENCE.html">API Reference</a> — Grouped API
+overview</li>
+<li><a
+href="PRESIGNED_DEPLOYMENT_GUIDE.html">PRESIGNED_DEPLOYMENT_GUIDE.md</a> —
+Real contract deployment with DAL</li>
+<li><a
+href="../TESTING_QUICK_REFERENCE.html">TESTING_QUICK_REFERENCE.md</a> —
+Three-layer testing, describe/it, test::expect_*</li>
+<li><a
+href="../ADVANCED_SECURITY_BEST_PRACTICES.html">ADVANCED_SECURITY_BEST_PRACTICES.md</a>
+— Security deep dive</li>
+<li><a href="../tutorials.html">Tutorials</a> — Learn by building</li>
+</ul>
+<hr />
+<p><strong>Next:</strong> <a href="API_REFERENCE.html">API Reference
+→</a></p>
+</body>
+</html>

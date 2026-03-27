@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ADVANCED_SECURITY_BLOCKING_BEHAVIOR</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="advanced_security-blocking-behavior"><code>@advanced_security</code>
+Blocking Behavior</h1>
+<h2 id="how-it-blocks-unprotected-execution-code">How It Blocks
+Unprotected Execution Code</h2>
+<p>The <code>@advanced_security</code> attribute <strong>DOES
+block</strong> execution code that:</p>
+<ol type="1">
+<li>Contains MEV-related patterns (arbitrage, frontrun, sandwich,
+etc.)</li>
+<li><strong>AND</strong> is execution code (not monitoring)</li>
+<li><strong>AND</strong> lacks protection patterns</li>
+</ol>
+<hr />
+<h2 id="blocking-logic">Blocking Logic</h2>
+<h3 id="decision-tree">Decision Tree</h3>
+<pre><code>MEV Pattern Detected?
+├─ Yes → Is it monitoring code? (find_*, detect_*, analyze_*)
+│   ├─ Yes → ✅ ALLOW (monitoring is OK)
+│   └─ No → Has protection patterns? (commit-reveal, slippage, oracle)
+│       ├─ Yes → ✅ ALLOW (already protected)
+│       └─ No → ❌ BLOCK (unprotected execution)
+└─ No → ✅ ALLOW</code></pre>
+<hr />
+<h2 id="examples">Examples</h2>
+<h3 id="-example-1-monitoring-code-not-blocked">✅ Example 1: Monitoring
+Code (NOT Blocked)</h3>
+<pre class="dal"><code>@advanced_security
+service Service {
+    fn find_arbitrage_opportunities() {
+        // ✅ ALLOWED
+        // Reason: &quot;find_&quot; prefix detected = monitoring code
+        // Monitoring code is always allowed
+    }
+    
+    fn detect_price_differences() {
+        // ✅ ALLOWED
+        // Reason: &quot;detect_&quot; prefix detected = monitoring code
+    }
+}</code></pre>
+<p><strong>Result</strong>: ✅ Executes successfully</p>
+<hr />
+<h3 id="-example-2-protected-execution-not-blocked">✅ Example 2:
+Protected Execution (NOT Blocked)</h3>
+<pre class="dal"><code>@advanced_security
+service DeFiService {
+    fn execute_swap(token_in: string, token_out: string, amount: float) {
+        // ✅ ALLOWED
+        // Reason: Protection patterns detected:
+        
+        // Protection 1: Commit-reveal
+        let commitment_hash = crypto::hash(...);
+        
+        // Protection 2: Slippage protection
+        let min_amount_out = amount * 0.99;  // 1% slippage limit
+        
+        // Protection 3: Oracle validation
+        let oracle_price = self.get_oracle_price(...);
+        
+        // System detects these patterns and allows execution
+    }
+}</code></pre>
+<p><strong>Result</strong>: ✅ Executes successfully (protection
+detected)</p>
+<hr />
+<h3 id="-example-3-unprotected-execution-blocked">❌ Example 3:
+Unprotected Execution (BLOCKED)</h3>
+<pre class="dal"><code>@advanced_security
+service VulnerableService {
+    fn execute_swap(token_in: string, token_out: string, amount: float) {
+        // ❌ BLOCKED
+        // Reason: 
+        // 1. Contains MEV pattern (swap = potential arbitrage)
+        // 2. Is execution code (not monitoring)
+        // 3. No protection patterns detected
+        
+        // Unprotected swap code
+        chain::swap(token_in, token_out, amount);
+    }
+}</code></pre>
+<p><strong>Error Message</strong>:</p>
+<pre><code>Runtime error: Potential MEV attack detected: arbitrage. 
+Consider adding protection patterns (commit-reveal, slippage checks, oracle validation)</code></pre>
+<p><strong>Result</strong>: ❌ Execution blocked</p>
+<hr />
+<h3 id="-example-4-explicit-mev-pattern-blocked">❌ Example 4: Explicit
+MEV Pattern (BLOCKED)</h3>
+<pre class="dal"><code>@advanced_security
+service Service {
+    fn arbitrage_trade(token_a: string, token_b: string) {
+        // ❌ BLOCKED
+        // Reason:
+        // 1. Contains &quot;arbitrage&quot; keyword
+        // 2. Is execution code (not monitoring - no &quot;find_&quot; prefix)
+        // 3. No protection patterns detected
+        
+        // Unprotected arbitrage code
+    }
+}</code></pre>
+<p><strong>Error Message</strong>:</p>
+<pre><code>Runtime error: Potential MEV attack detected: arbitrage. 
+Consider adding protection patterns (commit-reveal, slippage checks, oracle validation)</code></pre>
+<p><strong>Result</strong>: ❌ Execution blocked</p>
+<hr />
+<h2 id="how-to-fix-blocked-code">How to Fix Blocked Code</h2>
+<h3 id="option-1-add-protection-patterns">Option 1: Add Protection
+Patterns</h3>
+<pre class="dal"><code>@advanced_security
+service Service {
+    fn execute_swap(...) {
+        // Add protection patterns:
+        
+        // 1. Commit-reveal
+        let commitment_hash = crypto::hash(...);
+        
+        // 2. Slippage protection
+        let min_amount_out = ...;
+        if (actual_out &lt; min_amount_out) {
+            throw &quot;Slippage too high&quot;;
+        }
+        
+        // 3. Oracle validation
+        let oracle_price = self.get_oracle_price(...);
+        
+        // Now protected - will execute ✅
+    }
+}</code></pre>
+<h3 id="option-2-rename-to-monitoring-function">Option 2: Rename to
+Monitoring Function</h3>
+<pre class="dal"><code>@advanced_security
+service Service {
+    // Change from execution to monitoring
+    fn find_swap_opportunities() {  // ✅ Allowed (monitoring)
+        // Monitoring code - no protection needed
+    }
+    
+    // Separate protected execution
+    fn execute_protected_swap() {  // ✅ Allowed (has protection)
+        // Has protection patterns
+    }
+}</code></pre>
+<h3 id="option-3-remove-advanced_security">Option 3: Remove
+<code>@advanced_security</code></h3>
+<pre class="dal"><code>// No @advanced_security = no MEV detection
+service Service {
+    fn execute_swap(...) {
+        // No MEV detection runs
+        // You&#39;re responsible for your own protection
+    }
+}</code></pre>
+<hr />
+<h2 id="protection-pattern-detection">Protection Pattern Detection</h2>
+<p>The system recognizes these patterns as "protection":</p>
+<h3 id="commit-reveal">Commit-Reveal</h3>
+<ul>
+<li><code>commit_reveal</code>, <code>commit-reveal</code></li>
+<li><code>commitment_hash</code>, <code>commitment</code></li>
+<li><code>reveal_swap</code>, <code>commit_swap</code></li>
+</ul>
+<h3 id="slippage-protection">Slippage Protection</h3>
+<ul>
+<li><code>slippage</code>, <code>min_amount_out</code>,
+<code>max_slippage</code></li>
+<li><code>slippage_protection</code>, <code>slippage_check</code></li>
+</ul>
+<h3 id="oracle-validation">Oracle Validation</h3>
+<ul>
+<li><code>oracle_price</code>, <code>get_oracle_price</code></li>
+<li><code>price_oracle</code>, <code>oracle_validation</code></li>
+</ul>
+<h3 id="fair-batching">Fair Batching</h3>
+<ul>
+<li><code>fair_batch</code>, <code>fair_ordering</code></li>
+<li><code>batch_pool</code>, <code>shuffle</code></li>
+</ul>
+<h3 id="time-delays">Time Delays</h3>
+<ul>
+<li><code>time_delay</code>, <code>delayed_execution</code></li>
+<li><code>execute_delayed</code></li>
+</ul>
+<hr />
+<h2 id="summary">Summary</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Code Type</th>
+<th>Has Protection?</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Monitoring (<code>find_*</code>, <code>detect_*</code>)</td>
+<td>N/A</td>
+<td>✅ <strong>ALLOWED</strong></td>
+</tr>
+<tr class="even">
+<td>Execution</td>
+<td>✅ Yes</td>
+<td>✅ <strong>ALLOWED</strong></td>
+</tr>
+<tr class="odd">
+<td>Execution</td>
+<td>❌ No</td>
+<td>❌ <strong>BLOCKED</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Purpose</strong>: Prevent developers from accidentally
+deploying vulnerable code without MEV protection.</p>
+<hr />
+<p><strong>Last Updated</strong>: February 2026</p>
+</body>
+</html>

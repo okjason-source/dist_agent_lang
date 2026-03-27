@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>API_REFERENCE</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="api-reference---standard-library-v108">API Reference - Standard
+Library (v1.0.8)</h1>
+<blockquote>
+<p><strong>Beta Release v1.0.8:</strong> Actively maintained with
+consistent updates. Test thoroughly before production use. <strong>Beta
+testing contributions appreciated!</strong></p>
+</blockquote>
+<p>Complete reference for all <strong>standard library modules</strong>
+in dist_agent_lang.</p>
+<hr />
+<h2 id="-table-of-contents">📋 Table of Contents</h2>
+<h3 id="core-modules">Core Modules</h3>
+<ol type="1">
+<li><a href="#1-chain-blockchain-operations">chain:: - Blockchain
+Operations</a></li>
+<li><a href="#2-oracle-external-data-integration">oracle:: - External
+Data Integration</a></li>
+<li><a href="#3-service-service-integration">service:: - Service
+Integration</a></li>
+<li><a href="#4-auth-authentication">auth:: - Authentication</a></li>
+<li><a href="#5-crypto-cryptography">crypto:: - Cryptography</a></li>
+</ol>
+<h3 id="advanced-features">Advanced Features</h3>
+<ol start="6" type="1">
+<li><a href="#6-ai-aiml-integration">ai:: - AI/ML Integration</a></li>
+<li><a href="#7-database-database-operations">database:: - Database
+Operations</a></li>
+<li><a href="#8-web-http-server">web:: - HTTP Server</a></li>
+<li><a href="#9-agent-agent-orchestration">agent:: - Agent
+Orchestration</a></li>
+<li><a href="#10-mold-agent-molds">mold:: - Agent Molds</a></li>
+</ol>
+<h3 id="security--trust">Security &amp; Trust</h3>
+<ol start="11" type="1">
+<li><a href="#11-cloudadmin-cloudadmin-security">cloudadmin:: -
+CloudAdmin Security</a></li>
+<li><a href="#12-admin-process-management">admin:: - Process
+Management</a></li>
+<li><a href="#13-trust-trust--permissions">trust:: - Trust &amp;
+Permissions</a></li>
+<li><a href="#14-key-capability-based-access-control">key:: -
+Capability-Based Access Control</a></li>
+<li><a href="#15-kyc-know-your-customer">kyc:: - Know Your
+Customer</a></li>
+<li><a href="#16-aml-anti-money-laundering">aml:: - Anti-Money
+Laundering</a></li>
+</ol>
+<h3 id="infrastructure">Infrastructure</h3>
+<ol start="17" type="1">
+<li><a href="#17-iot-iot-device-integration">iot:: - IoT Device
+Integration</a></li>
+<li><a href="#18-mobile-mobile-integration">mobile:: - Mobile
+Integration</a></li>
+<li><a href="#19-sync-data-synchronization">sync:: - Data
+Synchronization</a></li>
+<li><a href="#20-config-configuration">config:: - Configuration</a></li>
+</ol>
+<h3 id="utility-modules">Utility Modules</h3>
+<ol start="21" type="1">
+<li><a href="#21-log-logging">log:: - Logging</a></li>
+<li><a href="#22-test-testing-framework">test:: - Testing
+Framework</a></li>
+</ol>
+<hr />
+<h2 id="1-chain---blockchain-operations">1. chain:: - Blockchain
+Operations</h2>
+<p>Core blockchain interaction functions for deploying contracts, making
+calls, and managing assets.</p>
+<h3 id="functions">Functions</h3>
+<h4
+id="chaindeploychain_id-int-contract_name-string-constructor_args-mapstring-string---string"><code>chain::deploy(chain_id: int, contract_name: string, constructor_args: map&lt;string, string&gt;) -&gt; string</code></h4>
+<p>Deploy a smart contract to the blockchain.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>chain_id</code>: Blockchain chain ID (1=Ethereum, 137=Polygon,
+42161=Arbitrum, etc.)</li>
+<li><code>contract_name</code>: Name of the contract to deploy</li>
+<li><code>constructor_args</code>: Map of constructor argument names to
+values</li>
+</ul>
+<p><strong>Returns:</strong> Contract address as string</p>
+<pre class="dal"><code>let args = {
+    &quot;name&quot;: &quot;MyToken&quot;,
+    &quot;symbol&quot;: &quot;MTK&quot;
+};
+let address = chain::deploy(1, &quot;TokenContract&quot;, args);
+log::info(&quot;chain&quot;, &quot;Contract deployed at: &quot; + address);</code></pre>
+<hr />
+<h4
+id="chaincallchain_id-int-contract_address-string-function_name-string-args-string---any"><code>chain::call(chain_id: int, contract_address: string, function_name: string, args: string) -&gt; any</code></h4>
+<p>Call a function on a deployed contract.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>chain_id</code>: Blockchain chain ID</li>
+<li><code>contract_address</code>: Address of the deployed contract</li>
+<li><code>function_name</code>: Name of the function to call</li>
+<li><code>args</code>: JSON string of function arguments</li>
+</ul>
+<p><strong>Returns:</strong> Function call result</p>
+<pre class="dal"><code>let args_json = json::stringify({&quot;to&quot;: &quot;0xabc...&quot;, &quot;amount&quot;: 100});
+let result = chain::call(1, &quot;0x742d35...&quot;, &quot;transfer&quot;, args_json);</code></pre>
+<hr />
+<h4
+id="chainget_balancechain_id-int-address-string---int"><code>chain::get_balance(chain_id: int, address: string) -&gt; int</code></h4>
+<p>Get the native token balance of an address.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>chain_id</code>: Blockchain chain ID</li>
+<li><code>address</code>: Wallet address to query</li>
+</ul>
+<p><strong>Returns:</strong> Balance in wei (smallest denomination)</p>
+<pre class="dal"><code>let balance = chain::get_balance(1, &quot;0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0&quot;);
+log::info(&quot;chain&quot;, &quot;Balance: &quot; + balance.to_string());</code></pre>
+<hr />
+<h4
+id="chainget_gas_pricechain_id-int---float"><code>chain::get_gas_price(chain_id: int) -&gt; float</code></h4>
+<p>Get current gas price for a chain.</p>
+<p><strong>Returns:</strong> Gas price in gwei</p>
+<pre class="dal"><code>let gas_price = chain::get_gas_price(1);
+log::info(&quot;chain&quot;, &quot;Gas price: &quot; + gas_price.to_string() + &quot; gwei&quot;);</code></pre>
+<hr />
+<h4
+id="chainestimate_gaschain_id-int-operation-string---int"><code>chain::estimate_gas(chain_id: int, operation: string) -&gt; int</code></h4>
+<p>Estimate gas cost for an operation.</p>
+<p><strong>Returns:</strong> Estimated gas units</p>
+<pre class="dal"><code>let estimated_gas = chain::estimate_gas(1, &quot;transfer&quot;);
+log::info(&quot;chain&quot;, &quot;Estimated gas: &quot; + estimated_gas.to_string());</code></pre>
+<hr />
+<h4
+id="chainget_transaction_statuschain_id-int-tx_hash-string---string"><code>chain::get_transaction_status(chain_id: int, tx_hash: string) -&gt; string</code></h4>
+<p>Get status of a transaction.</p>
+<p><strong>Returns:</strong> Status string ("pending", "confirmed",
+"failed")</p>
+<pre class="dal"><code>let status = chain::get_transaction_status(1, &quot;0x123...&quot;);
+if status == &quot;confirmed&quot; {
+    log::info(&quot;chain&quot;, &quot;Transaction confirmed&quot;);
+}</code></pre>
+<hr />
+<h4
+id="chainget_block_timestampchain_id-int---int"><code>chain::get_block_timestamp(chain_id: int) -&gt; int</code></h4>
+<p>Get latest block timestamp.</p>
+<p><strong>Returns:</strong> Unix timestamp</p>
+<pre class="dal"><code>let timestamp = chain::get_block_timestamp(1);
+log::info(&quot;chain&quot;, &quot;Block timestamp: &quot; + timestamp.to_string());</code></pre>
+<hr />
+<h4
+id="chainget_chain_configchain_id-int---mapstring-any"><code>chain::get_chain_config(chain_id: int) -&gt; map&lt;string, any&gt;</code></h4>
+<p>Get blockchain configuration.</p>
+<p><strong>Returns:</strong> Configuration map with chain details</p>
+<pre class="dal"><code>let config = chain::get_chain_config(1);
+log::info(&quot;chain&quot;, &quot;Chain name: &quot; + config.get(&quot;name&quot;, &quot;&quot;));</code></pre>
+<hr />
+<h4
+id="chainget_supported_chains---listmapstring-any"><code>chain::get_supported_chains() -&gt; list&lt;map&lt;string, any&gt;&gt;</code></h4>
+<p>Get list of supported blockchains.</p>
+<p><strong>Returns:</strong> List of chain configurations</p>
+<pre class="dal"><code>let chains = chain::get_supported_chains();
+for chain in chains {
+    log::info(&quot;chain&quot;, &quot;Supported chain: &quot; + chain.get(&quot;name&quot;, &quot;&quot;));
+}</code></pre>
+<hr />
+<h2 id="2-oracle---external-data-integration">2. oracle:: - External
+Data Integration</h2>
+<p>Secure oracle integration with multi-source validation.</p>
+<h3 id="types">Types</h3>
+<pre class="dal"><code>// OracleSource structure
+{
+    name: string,
+    url: string,
+    api_key: string?,
+    rate_limit: int?,
+    trusted: bool,
+    public_key: string?
+}
+
+// OracleQuery structure
+{
+    query_type: string,
+    parameters: map&lt;string, any&gt;,
+    timeout: int?,
+    require_signature: bool,
+    min_confirmations: int?
+}
+
+// OracleResponse structure
+{
+    data: any,
+    timestamp: int,
+    source: string,
+    signature: string?,
+    verified: bool,
+    confidence_score: float
+}</code></pre>
+<h3 id="functions-1">Functions</h3>
+<h4
+id="oraclecreate_sourcename-string-url-string---oraclesource"><code>oracle::create_source(name: string, url: string) -&gt; OracleSource</code></h4>
+<p>Create a new oracle source.</p>
+<pre class="dal"><code>let chainlink = oracle::create_source(&quot;chainlink&quot;, &quot;https://api.chainlink.org&quot;);</code></pre>
+<hr />
+<h4
+id="oraclecreate_queryquery_type-string---oraclequery"><code>oracle::create_query(query_type: string) -&gt; OracleQuery</code></h4>
+<p>Create a new oracle query.</p>
+<pre class="dal"><code>let query = oracle::create_query(&quot;BTC/USD&quot;);</code></pre>
+<hr />
+<h4
+id="oraclefetchsource-string-query-oraclequery---resultoracleresponse-string"><code>oracle::fetch(source: string, query: OracleQuery) -&gt; Result&lt;OracleResponse, string&gt;</code></h4>
+<p>Fetch data from an oracle source.</p>
+<pre class="dal"><code>let query = oracle::create_query(&quot;ETH/USD&quot;);
+let result = oracle::fetch(&quot;chainlink&quot;, query);
+
+if result.is_ok() {
+    let response = result.unwrap();
+    if response.verified {
+        let price = response.data;
+        log::info(&quot;oracle&quot;, &quot;ETH price: &quot; + price.to_string());
+    }
+}</code></pre>
+<hr />
+<h4
+id="oraclefetch_with_consensussources-liststring-query-oraclequery-threshold-float---resultoracleresponse-string"><code>oracle::fetch_with_consensus(sources: list&lt;string&gt;, query: OracleQuery, threshold: float) -&gt; Result&lt;OracleResponse, string&gt;</code></h4>
+<p>Fetch data from multiple sources and require consensus.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sources</code>: List of oracle source names</li>
+<li><code>query</code>: Oracle query</li>
+<li><code>threshold</code>: Minimum agreement percentage (0.0 to
+1.0)</li>
+</ul>
+<p><strong>Returns:</strong> OracleResponse with consensus data</p>
+<pre class="dal"><code>let query = oracle::create_query(&quot;ETH/USD&quot;);
+let result = oracle::fetch_with_consensus(
+    [&quot;chainlink&quot;, &quot;uniswap&quot;, &quot;band&quot;],
+    query,
+    0.66  // 66% must agree
+);
+
+if result.is_ok() {
+    let response = result.unwrap();
+    log::info(&quot;oracle&quot;, &quot;Consensus price: &quot; + response.data.to_string());
+    log::info(&quot;oracle&quot;, &quot;Confidence: &quot; + response.confidence_score.to_string());
+}</code></pre>
+<hr />
+<h4
+id="oracleverifydata-any-signature-string---bool"><code>oracle::verify(data: any, signature: string) -&gt; bool</code></h4>
+<p>Verify oracle data signature.</p>
+<pre class="dal"><code>let is_valid = oracle::verify(price_data, signature);
+if is_valid {
+    log::info(&quot;oracle&quot;, &quot;Data signature verified&quot;);
+}</code></pre>
+<hr />
+<h4
+id="oraclestreamsource-string-callback-string---resultstring-string"><code>oracle::stream(source: string, callback: string) -&gt; Result&lt;string, string&gt;</code></h4>
+<p>Stream real-time data from an oracle.</p>
+<pre class="dal"><code>let stream_result = oracle::stream(&quot;chainlink&quot;, &quot;onPriceUpdate&quot;);
+if stream_result.is_ok() {
+    let stream_id = stream_result.unwrap();
+    log::info(&quot;oracle&quot;, &quot;Stream started: &quot; + stream_id);
+}</code></pre>
+<hr />
+<h2 id="3-service---service-integration">3. service:: - Service
+Integration</h2>
+<p>HTTP service integration and external API calls.</p>
+<h3 id="functions-2">Functions</h3>
+<h4
+id="servicehttp_geturl-string---resultstring-string"><code>service::http_get(url: string) -&gt; Result&lt;string, string&gt;</code></h4>
+<p>Make an HTTP GET request.</p>
+<pre class="dal"><code>let result = service::http_get(&quot;https://api.example.com/data&quot;);
+if result.is_ok() {
+    let response = result.unwrap();
+    log::info(&quot;service&quot;, &quot;Response: &quot; + response);
+}</code></pre>
+<hr />
+<h4
+id="servicehttp_posturl-string-body-string---resultstring-string"><code>service::http_post(url: string, body: string) -&gt; Result&lt;string, string&gt;</code></h4>
+<p>Make an HTTP POST request.</p>
+<pre class="dal"><code>let body = json::stringify({&quot;key&quot;: &quot;value&quot;});
+let result = service::http_post(&quot;https://api.example.com/submit&quot;, body);
+if result.is_ok() {
+    let response = result.unwrap();
+    log::info(&quot;service&quot;, &quot;Response: &quot; + response);
+}</code></pre>
+<hr />
+<h4
+id="servicecallservice_name-string-method-string-args-listany---any"><code>service::call(service_name: string, method: string, args: list&lt;any&gt;) -&gt; any</code></h4>
+<p>Call an external service.</p>
+<pre class="dal"><code>let result = service::call(
+    &quot;payment_processor&quot;,
+    &quot;processPayment&quot;,
+    [1000, &quot;USD&quot;]
+);</code></pre>
+<hr />
+<h2 id="4-auth---authentication">4. auth:: - Authentication</h2>
+<p>Secure authentication and access control.</p>
+<h3 id="functions-3">Functions</h3>
+<h4
+id="authcreate_userusername-string-password-string-email-string-roles-liststring---resultstring-string"><code>auth::create_user(username: string, password: string, email: string, roles: list&lt;string&gt;) -&gt; Result&lt;string, string&gt;</code></h4>
+<p>Create a new user account.</p>
+<p><strong>Returns:</strong> User ID on success</p>
+<pre class="dal"><code>let result = auth::create_user(
+    &quot;alice&quot;,
+    &quot;secure_password&quot;,
+    &quot;alice@example.com&quot;,
+    [&quot;user&quot;, &quot;trader&quot;]
+);
+
+if result.is_ok() {
+    let user_id = result.unwrap();
+    log::info(&quot;auth&quot;, &quot;User created: &quot; + user_id);
+}</code></pre>
+<hr />
+<h4
+id="authauthenticateusername-string-password-string---resultsession-string"><code>auth::authenticate(username: string, password: string) -&gt; Result&lt;Session, string&gt;</code></h4>
+<p>Authenticate user and create secure session.</p>
+<p><strong>Returns:</strong> Session object on success</p>
+<pre class="dal"><code>let result = auth::authenticate(&quot;alice&quot;, &quot;secure_password&quot;);
+if result.is_ok() {
+    let session = result.unwrap();
+    log::info(&quot;auth&quot;, &quot;Session created: &quot; + session.id);
+    log::info(&quot;auth&quot;, &quot;User ID: &quot; + session.user_id);
+    log::info(&quot;auth&quot;, &quot;Roles: &quot; + json::stringify(session.roles));
+}</code></pre>
+<hr />
+<h4
+id="authvalidate_tokentoken-string---optionsession"><code>auth::validate_token(token: string) -&gt; Option&lt;Session&gt;</code></h4>
+<p>Validate a session token.</p>
+<p><strong>Returns:</strong> Session object if valid, null otherwise</p>
+<pre class="dal"><code>let session = auth::validate_token(session_token);
+if session != null {
+    log::info(&quot;auth&quot;, &quot;Session valid for user: &quot; + session.user_id);
+} else {
+    log::warn(&quot;auth&quot;, &quot;Invalid session token&quot;);
+}</code></pre>
+<hr />
+<h4
+id="authhas_permissionsession-session-permission-string---bool"><code>auth::has_permission(session: Session, permission: string) -&gt; bool</code></h4>
+<p>Check if session has a specific permission.</p>
+<pre class="dal"><code>let session = auth::validate_token(token);
+if session != null {
+    if auth::has_permission(session, &quot;write&quot;) {
+        // User has write permission
+    }
+}</code></pre>
+<hr />
+<h4
+id="authhas_rolesession-session-role-string---bool"><code>auth::has_role(session: Session, role: string) -&gt; bool</code></h4>
+<p>Check if session has a specific role.</p>
+<pre class="dal"><code>let session = auth::validate_token(token);
+if session != null {
+    if auth::has_role(session, &quot;admin&quot;) {
+        // User has admin role
+    }
+}</code></pre>
+<hr />
+<h2 id="5-crypto---cryptography">5. crypto:: - Cryptography</h2>
+<p>Cryptographic operations including hashing, signing, and
+encryption.</p>
+<h3 id="functions-4">Functions</h3>
+<h4
+id="cryptohashdata-string-algorithm-string---string"><code>crypto::hash(data: string, algorithm: string) -&gt; string</code></h4>
+<p>Hash data using specified algorithm.</p>
+<p><strong>Supported algorithms:</strong> "sha256", "keccak256",
+"md5"</p>
+<pre class="dal"><code>let sha256_hash = crypto::hash(data, &quot;sha256&quot;);
+let keccak256_hash = crypto::hash(data, &quot;keccak256&quot;);</code></pre>
+<hr />
+<h4
+id="cryptosigndata-string-private_key-string-algorithm-string---string"><code>crypto::sign(data: string, private_key: string, algorithm: string) -&gt; string</code></h4>
+<p>Sign data with a private key.</p>
+<p><strong>Supported algorithms:</strong> "ecdsa", "eddsa"</p>
+<pre class="dal"><code>let signature = crypto::sign(message, private_key, &quot;ecdsa&quot;);</code></pre>
+<hr />
+<h4
+id="cryptoverifydata-string-signature-string-public_key-string-algorithm-string---bool"><code>crypto::verify(data: string, signature: string, public_key: string, algorithm: string) -&gt; bool</code></h4>
+<p>Verify a signature.</p>
+<pre class="dal"><code>let is_valid = crypto::verify(message, signature, public_key, &quot;ecdsa&quot;);
+if is_valid {
+    log::info(&quot;crypto&quot;, &quot;Signature verified&quot;);
+}</code></pre>
+<hr />
+<h4
+id="cryptogenerate_keypairalgorithm-string---mapstring-string"><code>crypto::generate_keypair(algorithm: string) -&gt; map&lt;string, string&gt;</code></h4>
+<p>Generate a cryptographic keypair.</p>
+<p><strong>Returns:</strong> Map with "private_key" and "public_key"</p>
+<pre class="dal"><code>let keypair = crypto::generate_keypair(&quot;ecdsa&quot;);
+let private_key = keypair.get(&quot;private_key&quot;, &quot;&quot;);
+let public_key = keypair.get(&quot;public_key&quot;, &quot;&quot;);</code></pre>
+<hr />
+<h4
+id="cryptoencryptdata-string-public_key-string---string"><code>crypto::encrypt(data: string, public_key: string) -&gt; string</code></h4>
+<p>Encrypt data with a public key.</p>
+<pre class="dal"><code>let encrypted = crypto::encrypt(&quot;sensitive data&quot;, public_key);</code></pre>
+<hr />
+<h4
+id="cryptodecryptencrypted_data-string-private_key-string---optionstring"><code>crypto::decrypt(encrypted_data: string, private_key: string) -&gt; Option&lt;string&gt;</code></h4>
+<p>Decrypt data with a private key.</p>
+<pre class="dal"><code>let decrypted = crypto::decrypt(encrypted, private_key);
+if decrypted != null {
+    log::info(&quot;crypto&quot;, &quot;Decrypted: &quot; + decrypted);
+}</code></pre>
+<hr />
+<h4
+id="cryptoencrypt_aes256data-string-key-string---resultstring-string"><code>crypto::encrypt_aes256(data: string, key: string) -&gt; Result&lt;string, string&gt;</code></h4>
+<p>Encrypt data using AES-256.</p>
+<pre class="dal"><code>let result = crypto::encrypt_aes256(&quot;data&quot;, &quot;encryption_key&quot;);
+if result.is_ok() {
+    let encrypted = result.unwrap();
+    log::info(&quot;crypto&quot;, &quot;Encrypted: &quot; + encrypted);
+}</code></pre>
+<hr />
+<h4
+id="cryptodecrypt_aes256encrypted_data-string-key-string---resultstring-string"><code>crypto::decrypt_aes256(encrypted_data: string, key: string) -&gt; Result&lt;string, string&gt;</code></h4>
+<p>Decrypt data using AES-256.</p>
+<pre class="dal"><code>let result = crypto::decrypt_aes256(encrypted, &quot;encryption_key&quot;);
+if result.is_ok() {
+    let decrypted = result.unwrap();
+    log::info(&quot;crypto&quot;, &quot;Decrypted: &quot; + decrypted);
+}</code></pre>
+<hr />
+<h2 id="6-ai---aiml-integration">6. ai:: - AI/ML Integration</h2>
+<p>AI agent framework for building intelligent, autonomous agents.</p>
+<h3 id="agent-lifecycle">Agent Lifecycle</h3>
+<h4
+id="aispawn_agentconfig-mapstring-any---resultagent-string"><code>ai::spawn_agent(config: map&lt;string, any&gt;) -&gt; Result&lt;Agent, string&gt;</code></h4>
+<p>Create and spawn a new AI agent.</p>
+<p><strong>Config fields:</strong></p>
+<ul>
+<li><code>agent_id</code>: Unique agent identifier</li>
+<li><code>name</code>: Agent name</li>
+<li><code>role</code>: Agent role (e.g., "market_analyzer",
+"trading_agent")</li>
+<li><code>capabilities</code>: List of capabilities</li>
+<li><code>memory_size</code>: Memory size in bytes</li>
+<li><code>max_concurrent_tasks</code>: Maximum concurrent tasks</li>
+<li><code>trust_level</code>: Trust level ("high", "medium", "low")</li>
+<li><code>communication_protocols</code>: List of protocols</li>
+<li><code>ai_models</code>: List of AI models to use</li>
+</ul>
+<pre class="dal"><code>let config = {
+    &quot;agent_id&quot;: &quot;trader_001&quot;,
+    &quot;name&quot;: &quot;Trading Agent&quot;,
+    &quot;role&quot;: &quot;market_analyzer&quot;,
+    &quot;capabilities&quot;: [&quot;text_analysis&quot;, &quot;trading&quot;],
+    &quot;memory_size&quot;: 1024,
+    &quot;max_concurrent_tasks&quot;: 5,
+    &quot;trust_level&quot;: &quot;high&quot;,
+    &quot;communication_protocols&quot;: [&quot;secure&quot;],
+    &quot;ai_models&quot;: [&quot;sentiment&quot;, &quot;predictor&quot;]
+};
+
+let result = ai::spawn_agent(config);
+if result.is_ok() {
+    let agent = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Agent created: &quot; + agent.id);
+}</code></pre>
+<hr />
+<h4
+id="aiget_agent_statusagent-agent---string"><code>ai::get_agent_status(agent: Agent) -&gt; string</code></h4>
+<p>Get the current status of an agent.</p>
+<p><strong>Returns:</strong> "idle", "active", "busy", "error", or
+"terminated"</p>
+<pre class="dal"><code>let status = ai::get_agent_status(agent);
+log::info(&quot;ai&quot;, &quot;Agent status: &quot; + status);</code></pre>
+<hr />
+<h4
+id="aiterminate_agentagent-agent---resultbool-string"><code>ai::terminate_agent(agent: Agent) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Terminate an agent and clean up resources.</p>
+<pre class="dal"><code>let result = ai::terminate_agent(agent);
+if result.is_ok() {
+    log::info(&quot;ai&quot;, &quot;Agent terminated&quot;);
+}</code></pre>
+<hr />
+<h3 id="ai-processing-functions">AI Processing Functions</h3>
+<h4
+id="aianalyze_texttext-string---resulttextanalysis-string"><code>ai::analyze_text(text: string) -&gt; Result&lt;TextAnalysis, string&gt;</code></h4>
+<p>Analyze text and extract insights.</p>
+<p><strong>TextAnalysis includes:</strong></p>
+<ul>
+<li><code>sentiment</code>: float (0.0 to 1.0)</li>
+<li><code>entities</code>: list of Entity objects</li>
+<li><code>keywords</code>: list of strings</li>
+<li><code>summary</code>: string</li>
+<li><code>language</code>: string</li>
+<li><code>confidence</code>: float</li>
+</ul>
+<pre class="dal"><code>let result = ai::analyze_text(&quot;This is a great product!&quot;);
+if result.is_ok() {
+    let analysis = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Sentiment: &quot; + analysis.sentiment.to_string());
+    log::info(&quot;ai&quot;, &quot;Confidence: &quot; + analysis.confidence.to_string());
+}</code></pre>
+<hr />
+<h4
+id="aigenerate_textprompt-string---resultstring-string"><code>ai::generate_text(prompt: string) -&gt; Result&lt;string, string&gt;</code></h4>
+<p>Generate text based on a prompt.</p>
+<pre class="dal"><code>let result = ai::generate_text(&quot;Analyze this market data: &quot; + data);
+if result.is_ok() {
+    let response = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Generated: &quot; + response);
+}</code></pre>
+<hr />
+<h4
+id="aiclassifymodel-string-input-string---resultstring-string"><code>ai::classify(model: string, input: string) -&gt; Result&lt;string, string&gt;</code></h4>
+<p>Classify text using a named model (simplified API).</p>
+<pre class="dal"><code>let result = ai::classify(&quot;sentiment_model&quot;, &quot;This is great!&quot;);
+if result.is_ok() {
+    let classification = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Classification: &quot; + classification);
+}</code></pre>
+<hr />
+<h4
+id="aigeneratemodel-string-prompt-string---resultstring-string"><code>ai::generate(model: string, prompt: string) -&gt; Result&lt;string, string&gt;</code></h4>
+<p>Generate text using a specific model (simplified API).</p>
+<pre class="dal"><code>let result = ai::generate(&quot;gpt-4&quot;, &quot;Write a summary&quot;);
+if result.is_ok() {
+    let text = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Generated: &quot; + text);
+}</code></pre>
+<hr />
+<h4
+id="aiembedtext-string---resultlistfloat-string"><code>ai::embed(text: string) -&gt; Result&lt;list&lt;float&gt;, string&gt;</code></h4>
+<p>Generate embeddings for text.</p>
+<pre class="dal"><code>let result = ai::embed(&quot;sample text&quot;);
+if result.is_ok() {
+    let embeddings = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Embeddings length: &quot; + embeddings.len().to_string());
+}</code></pre>
+<hr />
+<h4
+id="aianalyze_imageimage_data-listint---resultimageanalysis-string"><code>ai::analyze_image(image_data: list&lt;int&gt;) -&gt; Result&lt;ImageAnalysis, string&gt;</code></h4>
+<p>Analyze image and detect objects, faces, text.</p>
+<p><strong>ImageAnalysis includes:</strong></p>
+<ul>
+<li><code>objects</code>: list of DetectedObject</li>
+<li><code>faces</code>: list of Face</li>
+<li><code>text</code>: list of strings</li>
+<li><code>colors</code>: list of strings</li>
+<li><code>quality_score</code>: float</li>
+</ul>
+<pre class="dal"><code>let result = ai::analyze_image(image_bytes);
+if result.is_ok() {
+    let analysis = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Quality score: &quot; + analysis.quality_score.to_string());
+}</code></pre>
+<hr />
+<h4
+id="aidetect_anomalydata-listfloat-new_value-float---resultbool-string"><code>ai::detect_anomaly(data: list&lt;float&gt;, new_value: float) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Detect anomalies in data.</p>
+<pre class="dal"><code>let historical_data = [1.0, 2.0, 3.0, 4.0, 5.0];
+let result = ai::detect_anomaly(historical_data, 100.0);
+if result.is_ok() &amp;&amp; result.unwrap() {
+    log::warn(&quot;ai&quot;, &quot;Anomaly detected!&quot;);
+}</code></pre>
+<hr />
+<h3 id="task-management">Task Management</h3>
+<h4
+id="aicreate_taskagent-agent-task_type-string-description-string-params-mapstring-any---resulttask-string"><code>ai::create_task(agent: Agent, task_type: string, description: string, params: map&lt;string, any&gt;) -&gt; Result&lt;Task, string&gt;</code></h4>
+<p>Create a task for an agent.</p>
+<pre class="dal"><code>let params = {
+    &quot;text&quot;: &quot;Analyze this data&quot;
+};
+let result = ai::create_task(agent, &quot;text_analysis&quot;, &quot;Analyze data&quot;, params);
+if result.is_ok() {
+    let task = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Task created: &quot; + task.id);
+}</code></pre>
+<hr />
+<h4
+id="aiexecute_taskagent-agent-task_id-string---resultany-string"><code>ai::execute_task(agent: Agent, task_id: string) -&gt; Result&lt;any, string&gt;</code></h4>
+<p>Execute a task and return results.</p>
+<pre class="dal"><code>let result = ai::execute_task(agent, task_id);
+if result.is_ok() {
+    let task_result = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Task completed: &quot; + json::stringify(task_result));
+}</code></pre>
+<hr />
+<h3 id="message-passing">Message Passing</h3>
+<h4
+id="aisend_messagefrom_agent-string-to_agent-string-message_type-string-content-any-priority-string---resultmessage-string"><code>ai::send_message(from_agent: string, to_agent: string, message_type: string, content: any, priority: string) -&gt; Result&lt;Message, string&gt;</code></h4>
+<p>Send a message between agents.</p>
+<p><strong>Priority:</strong> "low", "normal", "high", "urgent"</p>
+<pre class="dal"><code>let result = ai::send_message(
+    &quot;agent_1&quot;,
+    &quot;agent_2&quot;,
+    &quot;task_assignment&quot;,
+    &quot;Process this data&quot;,
+    &quot;high&quot;
+);
+if result.is_ok() {
+    let message = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Message sent: &quot; + message.id);
+}</code></pre>
+<hr />
+<h4
+id="aiprocess_message_queueagent-agent---resultlistany-string"><code>ai::process_message_queue(agent: Agent) -&gt; Result&lt;list&lt;any&gt;, string&gt;</code></h4>
+<p>Process all queued messages for an agent.</p>
+<pre class="dal"><code>let result = ai::process_message_queue(agent);
+if result.is_ok() {
+    let results = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Processed &quot; + results.len().to_string() + &quot; messages&quot;);
+}</code></pre>
+<hr />
+<h3 id="multi-agent-coordination">Multi-Agent Coordination</h3>
+<h4
+id="aicreate_coordinatorcoordinator_id-string---agentcoordinator"><code>ai::create_coordinator(coordinator_id: string) -&gt; AgentCoordinator</code></h4>
+<p>Create a coordinator for managing multiple agents.</p>
+<pre class="dal"><code>let coordinator = ai::create_coordinator(&quot;main_coordinator&quot;);
+log::info(&quot;ai&quot;, &quot;Coordinator created: &quot; + coordinator.coordinator_id);</code></pre>
+<hr />
+<h4
+id="aiadd_agent_to_coordinatorcoordinator-agentcoordinator-agent-agent"><code>ai::add_agent_to_coordinator(coordinator: AgentCoordinator, agent: Agent)</code></h4>
+<p>Add an agent to a coordinator.</p>
+<pre class="dal"><code>ai::add_agent_to_coordinator(coordinator, agent);
+log::info(&quot;ai&quot;, &quot;Agent added to coordinator&quot;);</code></pre>
+<hr />
+<h4
+id="aicreate_workflowcoordinator-agentcoordinator-name-string-steps-listworkflowstep---resultworkflow-string"><code>ai::create_workflow(coordinator: AgentCoordinator, name: string, steps: list&lt;WorkflowStep&gt;) -&gt; Result&lt;Workflow, string&gt;</code></h4>
+<p>Create a multi-agent workflow.</p>
+<pre class="dal"><code>let steps = [
+    {
+        &quot;step_id&quot;: &quot;step_1&quot;,
+        &quot;agent_id&quot;: &quot;analyst_agent&quot;,
+        &quot;task_type&quot;: &quot;analysis&quot;,
+        &quot;dependencies&quot;: []
+    }
+];
+let result = ai::create_workflow(coordinator, &quot;Analysis Workflow&quot;, steps);
+if result.is_ok() {
+    let workflow = result.unwrap();
+    log::info(&quot;ai&quot;, &quot;Workflow created: &quot; + workflow.workflow_id);
+}</code></pre>
+<hr />
+<h4
+id="aiexecute_workflowcoordinator-agentcoordinator-workflow_id-string---resultbool-string"><code>ai::execute_workflow(coordinator: AgentCoordinator, workflow_id: string) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Execute a workflow.</p>
+<pre class="dal"><code>let result = ai::execute_workflow(coordinator, workflow_id);
+if result.is_ok() &amp;&amp; result.unwrap() {
+    log::info(&quot;ai&quot;, &quot;Workflow executed successfully&quot;);
+}</code></pre>
+<hr />
+<h2 id="7-database---database-operations">7. database:: - Database
+Operations</h2>
+<p>Database integration for off-chain storage.</p>
+<h3 id="functions-5">Functions</h3>
+<h4
+id="databaseconnectconnection_string-string---resultdbconnection-string"><code>database::connect(connection_string: string) -&gt; Result&lt;DbConnection, string&gt;</code></h4>
+<p>Connect to a database.</p>
+<pre class="dal"><code>let result = database::connect(&quot;postgresql://user:pass@localhost/db&quot;);
+if result.is_ok() {
+    let db = result.unwrap();
+    log::info(&quot;database&quot;, &quot;Connected to database&quot;);
+}</code></pre>
+<hr />
+<h4
+id="databasequeryconn-dbconnection-sql-string-params-listany---resultlistmapstring-any-string"><code>database::query(conn: DbConnection, sql: string, params: list&lt;any&gt;) -&gt; Result&lt;list&lt;map&lt;string, any&gt;&gt;, string&gt;</code></h4>
+<p>Execute a SQL query.</p>
+<pre class="dal"><code>let result = database::query(
+    db,
+    &quot;SELECT * FROM users WHERE age &gt; $1&quot;,
+    [18]
+);
+if result.is_ok() {
+    let rows = result.unwrap();
+    log::info(&quot;database&quot;, &quot;Found &quot; + rows.len().to_string() + &quot; rows&quot;);
+}</code></pre>
+<hr />
+<h4
+id="databaseexecuteconn-dbconnection-sql-string-params-listany---resultint-string"><code>database::execute(conn: DbConnection, sql: string, params: list&lt;any&gt;) -&gt; Result&lt;int, string&gt;</code></h4>
+<p>Execute a SQL statement (INSERT/UPDATE/DELETE).</p>
+<p><strong>Returns:</strong> Number of rows affected</p>
+<pre class="dal"><code>let result = database::execute(
+    db,
+    &quot;INSERT INTO users (name, email) VALUES ($1, $2)&quot;,
+    [&quot;Alice&quot;, &quot;alice@example.com&quot;]
+);
+if result.is_ok() {
+    let rows_affected = result.unwrap();
+    log::info(&quot;database&quot;, &quot;Inserted &quot; + rows_affected.to_string() + &quot; rows&quot;);
+}</code></pre>
+<hr />
+<h2 id="8-web---http-server">8. web:: - HTTP Server</h2>
+<p>Built-in HTTP server for APIs.</p>
+<h3 id="functions-6">Functions</h3>
+<h4
+id="webcreate_serverport-int---httpserver"><code>web::create_server(port: int) -&gt; HttpServer</code></h4>
+<p>Create a new HTTP server.</p>
+<pre class="dal"><code>let server = web::create_server(8080);
+log::info(&quot;web&quot;, &quot;Server created on port 8080&quot;);</code></pre>
+<hr />
+<h4
+id="webrouteserver-httpserver-path-string-handler-function"><code>web::route(server: HttpServer, path: string, handler: function)</code></h4>
+<p>Add a route to the server.</p>
+<pre class="dal"><code>web::route(server, &quot;/api/health&quot;, fn(req, res) {
+    res.send(json::stringify({&quot;status&quot;: &quot;healthy&quot;}));
+});</code></pre>
+<hr />
+<h4
+id="webstartserver-httpserver"><code>web::start(server: HttpServer)</code></h4>
+<p>Start the HTTP server.</p>
+<pre class="dal"><code>web::start(server);
+log::info(&quot;web&quot;, &quot;Server listening on port 8080&quot;);</code></pre>
+<hr />
+<h2 id="9-agent---agent-orchestration">9. agent:: - Agent
+Orchestration</h2>
+<p>Agent lifecycle and coordination. For full setup, CLI, and HTTP
+server, see <a
+href="AGENT_SETUP_AND_USAGE.html">AGENT_SETUP_AND_USAGE.md</a>.</p>
+<h3 id="functions-7">Functions</h3>
+<h4
+id="agentspawnconfig-mapstring-any---string"><code>agent::spawn(config: map&lt;string, any&gt;) -&gt; string</code></h4>
+<p>Create and spawn a new agent. Returns the agent ID.</p>
+<pre class="dal"><code>let config = {
+    &quot;name&quot;: &quot;MyAgent&quot;,
+    &quot;type&quot;: &quot;worker&quot;,
+    &quot;role&quot;: &quot;Processor&quot;,
+    &quot;capabilities&quot;: [&quot;process&quot;, &quot;analyze&quot;]
+};
+let agent_id = agent::spawn(config);
+agent::set_serve_agent(agent_id);  // when using dal agent serve with a behavior script</code></pre>
+<p>Config: <code>name</code>, <code>type</code> (ai | system | worker |
+custom:name), optional <code>role</code>, <code>capabilities</code>,
+<code>trust_level</code>, <code>metadata</code>.</p>
+<hr />
+<h4
+id="agentset_serve_agentagent_id-string"><code>agent::set_serve_agent(agent_id: string)</code></h4>
+<p>Register this agent as the one served via HTTP when using
+<code>dal agent serve</code> with a behavior script.</p>
+<hr />
+<h4
+id="agentcoordinateagent_id-string-task_description-string-coordination_type-string---resultstring-error"><code>agent::coordinate(agent_id: string, task_description: string, coordination_type: string) -&gt; Result&lt;string, error&gt;</code></h4>
+<p>Assign a task to an agent. Coordination type e.g.
+<code>"task_distribution"</code>.</p>
+<pre class="dal"><code>let _ = agent::coordinate(agent_id, &quot;Process the batch&quot;, &quot;task_distribution&quot;);</code></pre>
+<hr />
+<h4
+id="agentcommunicatesender_id-string-receiver_id-string-message-any---resultstring-error"><code>agent::communicate(sender_id: string, receiver_id: string, message: any) -&gt; Result&lt;string, error&gt;</code></h4>
+<p>Send a message between agents. Build the message with
+<code>agent::create_message(sender_id, receiver_id, message_type, content)</code>
+or use the three-arg form (runtime creates message with generated
+id).</p>
+<hr />
+<h4
+id="agentcreate_messagesender_id-receiver_id-message_type-content--agentcreate_taskdescription-priority"><code>agent::create_message(sender_id, receiver_id, message_type, content)</code>
+/ <code>agent::create_task(description, priority?)</code></h4>
+<p>Helpers to create message and task values for use with
+<code>communicate</code> and coordination.</p>
+<hr />
+<h2 id="10-mold---agent-molds">10. mold:: - Agent Molds</h2>
+<p>Load and spawn agents from mold configurations.</p>
+<h3 id="functions-8">Functions</h3>
+<h4
+id="moldlist---liststring"><code>mold::list() -&gt; list&lt;string&gt;</code></h4>
+<p>List local mold file paths.</p>
+<pre class="dal"><code>let paths = mold::list();
+for path in paths {
+    log::info(&quot;mold&quot;, &quot;Found mold: &quot; + path);
+}</code></pre>
+<hr />
+<h4
+id="moldloadpath_or_name-string---resultmapstring-any-string"><code>mold::load(path_or_name: string) -&gt; Result&lt;map&lt;string, any&gt;, string&gt;</code></h4>
+<p>Load a mold configuration by path, name, or IPFS CID.</p>
+<pre class="dal"><code>let result = mold::load(&quot;verify_mold&quot;);
+if result.is_ok() {
+    let config = result.unwrap();
+    log::info(&quot;mold&quot;, &quot;Mold loaded: &quot; + config.get(&quot;name&quot;, &quot;&quot;));
+}</code></pre>
+<hr />
+<h4
+id="moldspawn_frompath_or_name-string-agent_name-string---resultstring-string"><code>mold::spawn_from(path_or_name: string, agent_name: string) -&gt; Result&lt;string, string&gt;</code></h4>
+<p>Spawn an agent from a mold; returns the new agent ID.</p>
+<pre class="dal"><code>let result = mold::spawn_from(&quot;verify_mold&quot;, &quot;MyAgent&quot;);
+if result.is_ok() {
+    let agent_id = result.unwrap();
+    log::info(&quot;mold&quot;, &quot;Agent spawned: &quot; + agent_id);
+}</code></pre>
+<hr />
+<h2 id="11-cloudadmin---cloudadmin-security">11. cloudadmin:: -
+CloudAdmin Security</h2>
+<p>Hybrid trust and administrative control. See <a
+href="CLOUDADMIN_GUIDE.html">CloudAdmin Guide</a> for complete
+documentation.</p>
+<h3 id="functions-9">Functions</h3>
+<h4
+id="cloudadminauthorizeadmin_id-string-operation-string-resource-string---bool"><code>cloudadmin::authorize(admin_id: string, operation: string, resource: string) -&gt; bool</code></h4>
+<p>Check if admin is authorized for operation on resource.</p>
+<p><strong>Operations:</strong> "read" (all), "write" (admin+), "delete"
+(superadmin only)</p>
+<pre class="dal"><code>let can_write = cloudadmin::authorize(&quot;admin_001&quot;, &quot;write&quot;, &quot;/data/config&quot;);
+if can_write {
+    // Execute write operation
+}</code></pre>
+<hr />
+<h4
+id="cloudadminenforce_policypolicy_name-string-context-admincontext---resultbool-string"><code>cloudadmin::enforce_policy(policy_name: string, context: AdminContext) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Enforce admin policy based on context.</p>
+<p><strong>Policies:</strong> "strict" (superadmin), "moderate"
+(admin+), "permissive" (all)</p>
+<pre class="dal"><code>let context = cloudadmin::create_admin_context(&quot;admin_001&quot;, &quot;admin&quot;);
+if context != null {
+    let result = cloudadmin::enforce_policy(&quot;moderate&quot;, context);
+    if result.is_ok() &amp;&amp; result.unwrap() {
+        // Execute operation
+    }
+}</code></pre>
+<hr />
+<h4
+id="cloudadminvalidate_hybrid_trustadmin_trust-string-user_trust-string---bool"><code>cloudadmin::validate_hybrid_trust(admin_trust: string, user_trust: string) -&gt; bool</code></h4>
+<p>Validate hybrid trust between admin and user. Both must be
+"valid".</p>
+<pre class="dal"><code>let is_trusted = cloudadmin::validate_hybrid_trust(&quot;valid&quot;, &quot;valid&quot;);
+if is_trusted {
+    // Both trusts are valid
+}</code></pre>
+<hr />
+<h4
+id="cloudadminbridge_trustscentralized_trust-string-decentralized_trust-string---bool"><code>cloudadmin::bridge_trusts(centralized_trust: string, decentralized_trust: string) -&gt; bool</code></h4>
+<p>Bridge centralized admin trust with decentralized user trust.</p>
+<p><strong>Requirements:</strong> centralized = "admin" AND
+decentralized = "user"</p>
+<pre class="dal"><code>let can_bridge = cloudadmin::bridge_trusts(&quot;admin&quot;, &quot;user&quot;);
+if can_bridge {
+    // Trusts are bridged
+}</code></pre>
+<hr />
+<h4
+id="cloudadmincreate_admin_contextadmin_id-string-level-string---optionadmincontext"><code>cloudadmin::create_admin_context(admin_id: string, level: string) -&gt; Option&lt;AdminContext&gt;</code></h4>
+<p>Create admin context with specified level.</p>
+<p><strong>Levels:</strong> "superadmin", "admin", "moderator",
+"user"</p>
+<pre class="dal"><code>let context = cloudadmin::create_admin_context(&quot;admin_001&quot;, &quot;admin&quot;);
+if context != null {
+    // Use context
+}</code></pre>
+<hr />
+<h2 id="12-admin---process-management">12. admin:: - Process
+Management</h2>
+<p>Administrative control over system processes. See <a
+href="CLOUDADMIN_GUIDE.html">CloudAdmin Guide</a> for complete
+documentation.</p>
+<h3 id="functions-10">Functions</h3>
+<h4
+id="adminkillprocess_id-string-reason-string---resultbool-string"><code>admin::kill(process_id: string, reason: string) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Terminate process or agent. Reason is required.</p>
+<pre class="dal"><code>let result = admin::kill(&quot;agent_123&quot;, &quot;resource_violation&quot;);
+if result.is_ok() {
+    log::info(&quot;admin&quot;, &quot;Process terminated&quot;);
+}</code></pre>
+<hr />
+<h4
+id="adminget_process_infoprocess_id-string---resultprocessinfo-string"><code>admin::get_process_info(process_id: string) -&gt; Result&lt;ProcessInfo, string&gt;</code></h4>
+<p>Get detailed process information.</p>
+<pre class="dal"><code>let result = admin::get_process_info(&quot;agent_123&quot;);
+if result.is_ok() {
+    let info = result.unwrap();
+    log::info(&quot;admin&quot;, &quot;Process: &quot; + info.name);
+    log::info(&quot;admin&quot;, &quot;Status: &quot; + info.status);
+}</code></pre>
+<hr />
+<h4
+id="adminlist_processes---listprocessinfo"><code>admin::list_processes() -&gt; list&lt;ProcessInfo&gt;</code></h4>
+<p>List all running processes.</p>
+<pre class="dal"><code>let processes = admin::list_processes();
+for process in processes {
+    log::info(&quot;admin&quot;, &quot;Process: &quot; + process.process_id);
+}</code></pre>
+<hr />
+<h2 id="13-trust---trust--permissions">13. trust:: - Trust &amp;
+Permissions</h2>
+<p>Trust and permission management functions.</p>
+<h3 id="functions-11">Functions</h3>
+<h4
+id="trustauthorizeadmin_id-string-operation-string-resource-string---bool"><code>trust::authorize(admin_id: string, operation: string, resource: string) -&gt; bool</code></h4>
+<p>Authorize admin operation (delegates to key registry and admin
+registry).</p>
+<pre class="dal"><code>let authorized = trust::authorize(&quot;admin_001&quot;, &quot;read&quot;, &quot;/data&quot;);
+if authorized {
+    // Access granted
+}</code></pre>
+<hr />
+<h4
+id="trustenforce_policypolicy_name-string-context-admincontext---resultbool-string"><code>trust::enforce_policy(policy_name: string, context: AdminContext) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Enforce trust policy.</p>
+<pre class="dal"><code>let context = trust::create_admin_context(&quot;admin_001&quot;, &quot;admin&quot;);
+if context != null {
+    let result = trust::enforce_policy(&quot;moderate&quot;, context);
+    if result.is_ok() &amp;&amp; result.unwrap() {
+        // Policy enforced
+    }
+}</code></pre>
+<hr />
+<h4
+id="trustregister_adminadmin_id-string-level-adminlevel-permissions-liststring"><code>trust::register_admin(admin_id: string, level: AdminLevel, permissions: list&lt;string&gt;)</code></h4>
+<p>Register an admin in the registry.</p>
+<pre class="dal"><code>trust::register_admin(&quot;admin_001&quot;, &quot;admin&quot;, [&quot;read&quot;, &quot;write&quot;]);</code></pre>
+<hr />
+<h2 id="14-key---capability-based-access-control">14. key:: -
+Capability-Based Access Control</h2>
+<p>Capability-based access control using keys to resources.</p>
+<h3 id="functions-12">Functions</h3>
+<h4
+id="keycreate_capability_requestresource-string-operation-string-principal-string---capabilityrequest"><code>key::create_capability_request(resource: string, operation: string, principal: string) -&gt; CapabilityRequest</code></h4>
+<p>Create a capability request.</p>
+<pre class="dal"><code>let request = key::create_capability_request(&quot;/data&quot;, &quot;read&quot;, &quot;user_001&quot;);</code></pre>
+<hr />
+<h4
+id="keycheckrequest-capabilityrequest---resultbool-string"><code>key::check(request: CapabilityRequest) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Check if a capability is granted.</p>
+<pre class="dal"><code>let request = key::create_capability_request(&quot;/data&quot;, &quot;read&quot;, &quot;user_001&quot;);
+let result = key::check(request);
+if result.is_ok() &amp;&amp; result.unwrap() {
+    // Access granted
+}</code></pre>
+<hr />
+<h2 id="15-kyc---know-your-customer">15. kyc:: - Know Your Customer</h2>
+<p>KYC verification functions.</p>
+<h3 id="functions-13">Functions</h3>
+<h4
+id="kycverifyuser_id-string-documents-listany---resultbool-string"><code>kyc::verify(user_id: string, documents: list&lt;any&gt;) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Verify KYC for a user.</p>
+<pre class="dal"><code>let result = kyc::verify(&quot;user_001&quot;, documents);
+if result.is_ok() &amp;&amp; result.unwrap() {
+    log::info(&quot;kyc&quot;, &quot;KYC verified&quot;);
+}</code></pre>
+<hr />
+<h4
+id="kycget_verificationuser_id-string---optionmapstring-any"><code>kyc::get_verification(user_id: string) -&gt; Option&lt;map&lt;string, any&gt;&gt;</code></h4>
+<p>Get KYC verification status.</p>
+<pre class="dal"><code>let verification = kyc::get_verification(&quot;user_001&quot;);
+if verification != null {
+    log::info(&quot;kyc&quot;, &quot;Verification status: &quot; + verification.get(&quot;status&quot;, &quot;&quot;));
+}</code></pre>
+<hr />
+<h2 id="16-aml---anti-money-laundering">16. aml:: - Anti-Money
+Laundering</h2>
+<p>AML compliance functions.</p>
+<h3 id="functions-14">Functions</h3>
+<h4
+id="amlperform_checkaddress-string---resultbool-string"><code>aml::perform_check(address: string) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Perform AML check on an address.</p>
+<pre class="dal"><code>let result = aml::perform_check(&quot;0x742d35...&quot;);
+if result.is_ok() &amp;&amp; result.unwrap() {
+    log::info(&quot;aml&quot;, &quot;AML check passed&quot;);
+}</code></pre>
+<hr />
+<h4
+id="amlget_statusaddress-string---string"><code>aml::get_status(address: string) -&gt; string</code></h4>
+<p>Get AML status for an address.</p>
+<pre class="dal"><code>let status = aml::get_status(&quot;0x742d35...&quot;);
+log::info(&quot;aml&quot;, &quot;AML status: &quot; + status);</code></pre>
+<hr />
+<h2 id="17-iot---iot-device-integration">17. iot:: - IoT Device
+Integration</h2>
+<p>IoT device management functions.</p>
+<h3 id="functions-15">Functions</h3>
+<h4
+id="iotsend_commanddevice_id-string-command-string-params-mapstring-any---resultbool-string"><code>iot::send_command(device_id: string, command: string, params: map&lt;string, any&gt;) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Send command to IoT device.</p>
+<pre class="dal"><code>let params = {&quot;duration&quot;: 30};
+let result = iot::send_command(&quot;device_12345&quot;, &quot;unlock&quot;, params);
+if result.is_ok() &amp;&amp; result.unwrap() {
+    log::info(&quot;iot&quot;, &quot;Command sent&quot;);
+}</code></pre>
+<hr />
+<h2 id="18-mobile---mobile-integration">18. mobile:: - Mobile
+Integration</h2>
+<p>Mobile app integration functions.</p>
+<h3 id="functions-16">Functions</h3>
+<h4
+id="mobilepush_notificationtoken-string-title-string-body-string---resultbool-string"><code>mobile::push_notification(token: string, title: string, body: string) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Send push notification.</p>
+<pre class="dal"><code>let result = mobile::push_notification(
+    device_token,
+    &quot;Transaction Confirmed&quot;,
+    &quot;Your transfer was successful&quot;
+);
+if result.is_ok() &amp;&amp; result.unwrap() {
+    log::info(&quot;mobile&quot;, &quot;Notification sent&quot;);
+}</code></pre>
+<hr />
+<h2 id="19-sync---data-synchronization">19. sync:: - Data
+Synchronization</h2>
+<p>Data synchronization functions.</p>
+<h3 id="functions-17">Functions</h3>
+<h4
+id="syncsync_datasource-string-destination-string-options-mapstring-any---resultbool-string"><code>sync::sync_data(source: string, destination: string, options: map&lt;string, any&gt;) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Synchronize data between sources.</p>
+<pre class="dal"><code>let options = {&quot;mode&quot;: &quot;bidirectional&quot;};
+let result = sync::sync_data(&quot;source_db&quot;, &quot;dest_db&quot;, options);
+if result.is_ok() &amp;&amp; result.unwrap() {
+    log::info(&quot;sync&quot;, &quot;Data synchronized&quot;);
+}</code></pre>
+<hr />
+<h2 id="20-config---configuration">20. config:: - Configuration</h2>
+<p>Configuration management functions.</p>
+<h3 id="functions-18">Functions</h3>
+<h4
+id="configget_envkey-string---optionstring"><code>config::get_env(key: string) -&gt; Option&lt;string&gt;</code></h4>
+<p>Get environment variable.</p>
+<pre class="dal"><code>let api_key = config::get_env(&quot;API_KEY&quot;);
+if api_key != null {
+    log::info(&quot;config&quot;, &quot;API key found&quot;);
+}</code></pre>
+<hr />
+<h4
+id="configget_database_config---mapstring-any"><code>config::get_database_config() -&gt; map&lt;string, any&gt;</code></h4>
+<p>Get database configuration.</p>
+<pre class="dal"><code>let db_config = config::get_database_config();
+let host = db_config.get(&quot;host&quot;, &quot;&quot;);
+log::info(&quot;config&quot;, &quot;Database host: &quot; + host);</code></pre>
+<hr />
+<h2 id="21-log---logging">21. log:: - Logging</h2>
+<p>Logging functions for debugging and audit trails.</p>
+<h3 id="functions-19">Functions</h3>
+<h4
+id="loginfomessage-string-data-mapstring-any-source-string"><code>log::info(message: string, data: map&lt;string, any&gt;, source: string?)</code></h4>
+<p>Log an info message.</p>
+<pre class="dal"><code>log::info(&quot;Operation completed&quot;, {&quot;operation&quot;: &quot;transfer&quot;, &quot;amount&quot;: 100}, &quot;service&quot;);</code></pre>
+<hr />
+<h4
+id="logwarningmessage-string-data-mapstring-any-source-string"><code>log::warning(message: string, data: map&lt;string, any&gt;, source: string?)</code></h4>
+<p>Log a warning.</p>
+<pre class="dal"><code>log::warning(&quot;Low balance detected&quot;, {&quot;balance&quot;: 50}, &quot;wallet&quot;);</code></pre>
+<hr />
+<h4
+id="logerrormessage-string-data-mapstring-any-source-string"><code>log::error(message: string, data: map&lt;string, any&gt;, source: string?)</code></h4>
+<p>Log an error.</p>
+<pre class="dal"><code>log::error(&quot;Transaction failed&quot;, {&quot;error&quot;: &quot;insufficient_funds&quot;}, &quot;chain&quot;);</code></pre>
+<hr />
+<h4
+id="logauditevent-string-data-mapstring-any-source-string"><code>log::audit(event: string, data: map&lt;string, any&gt;, source: string?)</code></h4>
+<p>Log an audit event.</p>
+<pre class="dal"><code>log::audit(&quot;user_login&quot;, {&quot;user_id&quot;: &quot;user_001&quot;}, &quot;auth&quot;);</code></pre>
+<hr />
+<h4
+id="logdebugmessage-string-data-mapstring-any-source-string"><code>log::debug(message: string, data: map&lt;string, any&gt;, source: string?)</code></h4>
+<p>Log a debug message.</p>
+<pre class="dal"><code>log::debug(&quot;Processing request&quot;, {&quot;request_id&quot;: &quot;req_001&quot;}, &quot;api&quot;);</code></pre>
+<hr />
+<h4
+id="logget_entries---listlogentry"><code>log::get_entries() -&gt; list&lt;LogEntry&gt;</code></h4>
+<p>Get all log entries.</p>
+<pre class="dal"><code>let entries = log::get_entries();
+log::info(&quot;log&quot;, &quot;Total entries: &quot; + entries.len().to_string());</code></pre>
+<hr />
+<h4
+id="logget_entries_by_levellevel-string---listlogentry"><code>log::get_entries_by_level(level: string) -&gt; list&lt;LogEntry&gt;</code></h4>
+<p>Get log entries by level.</p>
+<pre class="dal"><code>let errors = log::get_entries_by_level(&quot;error&quot;);
+log::info(&quot;log&quot;, &quot;Error count: &quot; + errors.len().to_string());</code></pre>
+<hr />
+<h4 id="logclear"><code>log::clear()</code></h4>
+<p>Clear all log entries.</p>
+<pre class="dal"><code>log::clear();
+log::info(&quot;log&quot;, &quot;Logs cleared&quot;);</code></pre>
+<hr />
+<h2 id="22-test---testing-framework">22. test:: - Testing Framework</h2>
+<p>Testing framework for DAL code.</p>
+<h3 id="functions-20">Functions</h3>
+<h4
+id="testruntest_suite-testsuite---testresult"><code>test::run(test_suite: TestSuite) -&gt; TestResult</code></h4>
+<p>Run a test suite.</p>
+<pre class="dal"><code>let suite = test::create_suite(&quot;MyTests&quot;);
+let result = test::run(suite);
+log::info(&quot;test&quot;, &quot;Tests passed: &quot; + result.passed.to_string());</code></pre>
+<hr />
+<h2 id="-usage-examples">📖 Usage Examples</h2>
+<p>See complete examples in:</p>
+<ul>
+<li><a href="QUICK_START.html">Quick Start</a> - Basic usage</li>
+<li><a href="AI_FEATURES_GUIDE.html">AI Features Guide</a> - AI
+capabilities</li>
+<li><a href="CLOUDADMIN_GUIDE.html">CloudAdmin Guide</a> - Security and
+admin</li>
+<li><a href="BEST_PRACTICES.html">Best Practices</a> - Production
+patterns</li>
+</ul>
+<hr />
+<h2 id="-related-documentation">📚 Related Documentation</h2>
+<ul>
+<li><a href="../STDLIB_REFERENCE.html">Standard Library Reference</a> -
+Machine-readable API reference</li>
+<li><a href="../syntax.html">Syntax Reference</a> - DAL language
+syntax</li>
+<li><a href="../attributes.html">Attributes Reference</a> - Service and
+function attributes</li>
+</ul>
+<hr />
+<p><strong>Version</strong>: v1.0.8 (Beta)<br />
+<strong>Last Updated</strong>: 2026-02-17</p>
+</body>
+</html>

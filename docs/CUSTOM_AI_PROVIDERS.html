@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CUSTOM_AI_PROVIDERS</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="custom-ai-provider-support">Custom AI Provider Support</h1>
+<p><strong>Use ANY AI Provider with DAL - Not Just OpenAI and
+Anthropic!</strong></p>
+<p>DAL supports <strong>built-in and custom AI providers</strong>,
+giving you complete flexibility to choose any LLM service or host your
+own models.</p>
+<hr />
+<h2 id="supported-providers">Supported Providers</h2>
+<h3 id="-built-in-native-support">✅ Built-In (Native Support)</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Provider</th>
+<th>Type</th>
+<th>Configuration</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>OpenAI</strong></td>
+<td>Cloud</td>
+<td><code>OPENAI_API_KEY</code></td>
+<td>Production, GPT-4</td>
+</tr>
+<tr class="even">
+<td><strong>Anthropic</strong></td>
+<td>Cloud</td>
+<td><code>ANTHROPIC_API_KEY</code></td>
+<td>Long context, Claude</td>
+</tr>
+<tr class="odd">
+<td><strong>Ollama</strong></td>
+<td>Local</td>
+<td><code>DAL_AI_ENDPOINT</code></td>
+<td>Free, offline, privacy</td>
+</tr>
+</tbody>
+</table>
+<h3 id="-custom-providers-full-support">✅ Custom Providers (Full
+Support)</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Provider</th>
+<th>Type</th>
+<th>Configuration</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Cohere</strong></td>
+<td>Cloud</td>
+<td>Custom config</td>
+<td>Multilingual, embeddings</td>
+</tr>
+<tr class="even">
+<td><strong>HuggingFace</strong></td>
+<td>Cloud/Self-hosted</td>
+<td>Custom config</td>
+<td>Open models, flexibility</td>
+</tr>
+<tr class="odd">
+<td><strong>Azure OpenAI</strong></td>
+<td>Cloud</td>
+<td>Custom config</td>
+<td>Enterprise, Microsoft</td>
+</tr>
+<tr class="even">
+<td><strong>Replicate</strong></td>
+<td>Cloud</td>
+<td>Custom config</td>
+<td>Easy model hosting</td>
+</tr>
+<tr class="odd">
+<td><strong>Together AI</strong></td>
+<td>Cloud</td>
+<td>Custom config</td>
+<td>Fast inference</td>
+</tr>
+<tr class="even">
+<td><strong>OpenRouter</strong></td>
+<td>Cloud</td>
+<td>Custom config</td>
+<td>Multi-model access</td>
+</tr>
+<tr class="odd">
+<td><strong>Any OpenAI-compatible</strong></td>
+<td>Any</td>
+<td>Custom config</td>
+<td>Self-hosted, custom</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quick-start-custom-providers">Quick Start: Custom Providers</h2>
+<h3 id="method-1-environment-variables">Method 1: Environment
+Variables</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generic custom provider</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_PROVIDER</span><span class="op">=</span><span class="st">&quot;cohere&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;https://api.cohere.ai/v1/generate&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;your-cohere-key&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;command&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;Create a token contract&quot;</span></span></code></pre></div>
+<h3 id="method-2-config-file">Method 2: Config File</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .dal/ai_config.toml</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">provider</span> <span class="op">=</span> <span class="st">&quot;cohere&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">endpoint</span> <span class="op">=</span> <span class="st">&quot;https://api.cohere.ai/v1/generate&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">api_key</span> <span class="op">=</span> <span class="st">&quot;your-cohere-key&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">model</span> <span class="op">=</span> <span class="st">&quot;command&quot;</span></span></code></pre></div>
+<h3 id="method-3-runtime-configuration">Method 3: Runtime
+Configuration</h3>
+<pre class="dal"><code>// In DAL code
+ai.configure_custom(
+    &quot;cohere&quot;,                                    // provider name
+    &quot;https://api.cohere.ai/v1/generate&quot;,        // endpoint
+    &quot;your-cohere-key&quot;,                          // API key
+    &quot;command&quot;                                   // model (optional)
+)
+
+let code = ai.generate_text(&quot;Create a function&quot;)</code></pre>
+<hr />
+<h2 id="provider-specific-guides">Provider-Specific Guides</h2>
+<h3 id="cohere">Cohere</h3>
+<p><strong>Setup:</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get API key from https://cohere.com</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_PROVIDER</span><span class="op">=</span><span class="st">&quot;cohere&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;https://api.cohere.ai/v1/generate&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;your-cohere-api-key&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;command&quot;</span>  <span class="co"># or &quot;command-light&quot;</span></span></code></pre></div>
+<p><strong>Or in code:</strong></p>
+<pre class="dal"><code>ai.configure_cohere(&quot;your-api-key&quot;, &quot;command&quot;)</code></pre>
+<p><strong>Models:</strong></p>
+<ul>
+<li><code>command</code> - Most capable</li>
+<li><code>command-light</code> - Faster, cheaper</li>
+<li><code>command-nightly</code> - Latest features</li>
+</ul>
+<hr />
+<h3 id="huggingface-inference-api">HuggingFace Inference API</h3>
+<p><strong>Setup:</strong></p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get API key from https://huggingface.co/settings/tokens</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_PROVIDER</span><span class="op">=</span><span class="st">&quot;huggingface&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;https://api-inference.huggingface.co/models/codellama/CodeLlama-13b-Instruct-hf&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;hf_...&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;codellama/CodeLlama-13b-Instruct-hf&quot;</span></span></code></pre></div>
+<p><strong>Or in code:</strong></p>
+<pre class="dal"><code>ai.configure_huggingface(
+    &quot;hf_your_token&quot;,
+    &quot;codellama/CodeLlama-13b-Instruct-hf&quot;
+)</code></pre>
+<p><strong>Popular Models:</strong></p>
+<ul>
+<li><code>codellama/CodeLlama-13b-Instruct-hf</code> - Code
+generation</li>
+<li><code>mistralai/Mistral-7B-Instruct-v0.2</code> - General
+purpose</li>
+<li><code>meta-llama/Llama-2-7b-chat-hf</code> - Chat</li>
+<li><code>bigcode/starcoder</code> - Code completion</li>
+</ul>
+<hr />
+<h3 id="azure-openai">Azure OpenAI</h3>
+<p><strong>Setup:</strong></p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get from Azure Portal</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_PROVIDER</span><span class="op">=</span><span class="st">&quot;azure-openai&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2023-05-15&quot;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;your-azure-key&quot;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;gpt-4&quot;</span></span></code></pre></div>
+<p><strong>Or in code:</strong></p>
+<pre class="dal"><code>ai.configure_azure_openai(
+    &quot;https://your-resource.openai.azure.com/openai/deployments/gpt-4/chat/completions?api-version=2023-05-15&quot;,
+    &quot;your-azure-key&quot;,
+    &quot;gpt-4&quot;
+)</code></pre>
+<hr />
+<h3 id="replicate">Replicate</h3>
+<p><strong>Setup:</strong></p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get API key from https://replicate.com</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_PROVIDER</span><span class="op">=</span><span class="st">&quot;replicate&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;https://api.replicate.com/v1/predictions&quot;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;r8_...&quot;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;meta/llama-2-70b-chat:latest&quot;</span></span></code></pre></div>
+<p><strong>Or in code:</strong></p>
+<pre class="dal"><code>ai.configure_replicate(
+    &quot;r8_your_token&quot;,
+    &quot;meta/llama-2-70b-chat:latest&quot;
+)</code></pre>
+<p><strong>Popular Models:</strong></p>
+<ul>
+<li><code>meta/llama-2-70b-chat</code> - Most capable Llama</li>
+<li><code>mistralai/mixtral-8x7b-instruct-v0.1</code> - Strong
+performance</li>
+<li><code>google-deepmind/gemma-7b-it</code> - Google's model</li>
+</ul>
+<hr />
+<h3 id="together-ai">Together AI</h3>
+<p><strong>Setup:</strong></p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get API key from https://together.ai</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_PROVIDER</span><span class="op">=</span><span class="st">&quot;together-ai&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;https://api.together.xyz/v1/chat/completions&quot;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;your-together-key&quot;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;mistralai/Mixtral-8x7B-Instruct-v0.1&quot;</span></span></code></pre></div>
+<p><strong>Or in code:</strong></p>
+<pre class="dal"><code>ai.configure_together_ai(
+    &quot;your-api-key&quot;,
+    &quot;mistralai/Mixtral-8x7B-Instruct-v0.1&quot;
+)</code></pre>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>Fast inference</li>
+<li>Competitive pricing</li>
+<li>Many models available</li>
+</ul>
+<hr />
+<h3 id="openrouter">OpenRouter</h3>
+<p><strong>Setup:</strong></p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get API key from https://openrouter.ai</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_PROVIDER</span><span class="op">=</span><span class="st">&quot;openrouter&quot;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;https://openrouter.ai/api/v1/chat/completions&quot;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-or-...&quot;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;anthropic/claude-3.5-sonnet&quot;</span></span></code></pre></div>
+<p><strong>Or in code:</strong></p>
+<pre class="dal"><code>ai.configure_openrouter(
+    &quot;sk-or-your-key&quot;,
+    &quot;anthropic/claude-3.5-sonnet&quot;
+)</code></pre>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>Access to multiple providers through one API</li>
+<li>Compare models easily</li>
+<li>Pay-as-you-go</li>
+</ul>
+<hr />
+<h3 id="self-hosted--custom-api">Self-Hosted / Custom API</h3>
+<p><strong>For any OpenAI-compatible API:</strong></p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># vLLM, LocalAI, text-generation-webui, etc.</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_PROVIDER</span><span class="op">=</span><span class="st">&quot;custom&quot;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;http://your-server:8000/v1/chat/completions&quot;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;optional-if-auth-required&quot;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;your-model-name&quot;</span></span></code></pre></div>
+<p><strong>Or in code:</strong></p>
+<pre class="dal"><code>ai.configure_custom(
+    &quot;my-custom-api&quot;,
+    &quot;http://my-server:8000/v1/chat/completions&quot;,
+    &quot;optional-api-key&quot;,
+    &quot;llama-2-13b&quot;
+)</code></pre>
+<hr />
+<h2 id="configuration-methods">Configuration Methods</h2>
+<h3 id="full-configuration-object">Full Configuration Object</h3>
+<pre class="dal"><code>// Complete control over all settings
+ai.set_ai_config({
+    provider: &quot;cohere&quot;,                           // custom provider name
+    api_key: &quot;your-key&quot;,                         // authentication
+    endpoint: &quot;https://api.cohere.ai/v1/generate&quot;, // API endpoint
+    model: &quot;command&quot;,                            // model name
+    temperature: 0.8,                            // creativity (0-1)
+    max_tokens: 3000,                            // response length
+    timeout_seconds: 60                          // request timeout
+})</code></pre>
+<h3 id="environment-variables-complete-list">Environment Variables
+(Complete List)</h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Provider configuration</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_PROVIDER</span><span class="op">=</span><span class="st">&quot;provider-name&quot;</span>      <span class="co"># Required for custom</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;https://...&quot;</span>        <span class="co"># Required for custom</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;your-key&quot;</span>           <span class="co"># Usually required</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;model-name&quot;</span>           <span class="co"># Optional</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Generation parameters</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_TEMPERATURE</span><span class="op">=</span><span class="st">&quot;0.7&quot;</span>            <span class="co"># Default: 0.7</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MAX_TOKENS</span><span class="op">=</span><span class="st">&quot;2000&quot;</span>            <span class="co"># Default: 2000</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_TIMEOUT</span><span class="op">=</span><span class="st">&quot;30&quot;</span>                 <span class="co"># Default: 30 seconds</span></span></code></pre></div>
+<h3 id="config-file-complete">Config File (Complete)</h3>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .dal/ai_config.toml</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Provider settings</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="dt">provider</span> <span class="op">=</span> <span class="st">&quot;cohere&quot;</span>  <span class="co"># or any provider name</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="dt">endpoint</span> <span class="op">=</span> <span class="st">&quot;https://api.cohere.ai/v1/generate&quot;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="dt">api_key</span> <span class="op">=</span> <span class="st">&quot;your-key&quot;</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="dt">model</span> <span class="op">=</span> <span class="st">&quot;command&quot;</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Generation parameters</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="dt">temperature</span> <span class="op">=</span> <span class="fl">0.7</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="dt">max_tokens</span> <span class="op">=</span> <span class="dv">2000</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="dt">timeout_seconds</span> <span class="op">=</span> <span class="dv">30</span></span></code></pre></div>
+<hr />
+<h2 id="adding-new-providers">Adding New Providers</h2>
+<h3 id="step-1-identify-api-format">Step 1: Identify API Format</h3>
+<p>DAL auto-detects these formats:</p>
+<ul>
+<li><strong>OpenAI-compatible</strong> - Most common format</li>
+<li><strong>Cohere</strong> - Cohere API format</li>
+<li><strong>HuggingFace</strong> - Inference API format</li>
+<li><strong>Azure OpenAI</strong> - Azure-specific auth</li>
+<li><strong>Replicate</strong> - Replicate API format</li>
+<li><strong>Generic</strong> - Falls back to OpenAI-compatible</li>
+</ul>
+<h3 id="step-2-configure-provider">Step 2: Configure Provider</h3>
+<pre class="dal"><code>// If your provider uses OpenAI-compatible format:
+ai.configure_custom(
+    &quot;my-provider&quot;,
+    &quot;https://my-api.com/v1/chat/completions&quot;,
+    &quot;my-api-key&quot;,
+    &quot;my-model&quot;
+)
+
+// DAL will automatically use OpenAI format</code></pre>
+<h3 id="step-3-test">Step 3: Test</h3>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;hello world&quot;</span></span></code></pre></div>
+<hr />
+<h2 id="format-detection">Format Detection</h2>
+<p>DAL automatically handles different API formats based on provider
+name:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Provider Name</th>
+<th>Format Used</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>cohere</code></td>
+<td>Cohere API format</td>
+</tr>
+<tr class="even">
+<td><code>huggingface</code>, <code>hf</code></td>
+<td>HuggingFace format</td>
+</tr>
+<tr class="odd">
+<td><code>azure</code>, <code>azure-openai</code></td>
+<td>Azure OpenAI format</td>
+</tr>
+<tr class="even">
+<td><code>replicate</code></td>
+<td>Replicate format</td>
+</tr>
+<tr class="odd">
+<td><code>together</code>, <code>together-ai</code></td>
+<td>OpenAI-compatible</td>
+</tr>
+<tr class="even">
+<td><code>openrouter</code></td>
+<td>OpenAI-compatible</td>
+</tr>
+<tr class="odd">
+<td><strong>Anything else</strong></td>
+<td>OpenAI-compatible (default)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>This means most custom providers "just work"</strong> if they
+use OpenAI-compatible format!</p>
+<hr />
+<h2 id="examples">Examples</h2>
+<h3 id="example-1-try-multiple-providers">Example 1: Try Multiple
+Providers</h3>
+<pre class="dal"><code>// Try HuggingFace
+ai.configure_huggingface(&quot;hf_token&quot;, &quot;codellama/CodeLlama-13b-Instruct-hf&quot;)
+let result1 = ai.generate_text(&quot;Create a function&quot;)
+
+// Try Cohere
+ai.configure_cohere(&quot;cohere-key&quot;, &quot;command&quot;)
+let result2 = ai.generate_text(&quot;Create a function&quot;)
+
+// Compare results
+print(&quot;HuggingFace: &quot; + result1)
+print(&quot;Cohere: &quot; + result2)</code></pre>
+<h3 id="example-2-self-hosted-with-fallback">Example 2: Self-Hosted with
+Fallback</h3>
+<pre class="dal"><code>// Try self-hosted first
+ai.configure_custom(
+    &quot;local-llm&quot;,
+    &quot;http://localhost:8080/v1/chat/completions&quot;,
+    &quot;&quot;,
+    &quot;llama-2-13b&quot;
+)
+
+// If it fails, DAL will fall back to other configured providers
+// or basic mode
+let code = ai.generate_text(&quot;Create API&quot;)</code></pre>
+<h3 id="example-3-cost-optimization">Example 3: Cost Optimization</h3>
+<pre class="dal"><code>// Use cheap provider for simple tasks
+fn simple_task(prompt: string) -&gt; string {
+    ai.configure_cohere(&quot;key&quot;, &quot;command-light&quot;)  // Cheaper
+    return ai.generate_text(prompt)
+}
+
+// Use expensive provider for complex tasks
+fn complex_task(prompt: string) -&gt; string {
+    ai.configure_openai(&quot;key&quot;, &quot;gpt-4&quot;)  // More capable
+    return ai.generate_text(prompt)
+}</code></pre>
+<hr />
+<h2 id="pricing-comparison">Pricing Comparison</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Provider</th>
+<th>Cost (per 1M tokens)</th>
+<th>Speed</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>OpenAI GPT-4</strong></td>
+<td>$30-60</td>
+<td>Medium</td>
+<td>Highest quality</td>
+</tr>
+<tr class="even">
+<td><strong>OpenAI GPT-3.5</strong></td>
+<td>$1.5-2</td>
+<td>Fast</td>
+<td>General use</td>
+</tr>
+<tr class="odd">
+<td><strong>Anthropic Claude Sonnet</strong></td>
+<td>$3-15</td>
+<td>Medium</td>
+<td>Long context</td>
+</tr>
+<tr class="even">
+<td><strong>Cohere Command</strong></td>
+<td>$1-2</td>
+<td>Fast</td>
+<td>Multilingual</td>
+</tr>
+<tr class="odd">
+<td><strong>HuggingFace</strong></td>
+<td>$0-2</td>
+<td>Varies</td>
+<td>Flexibility</td>
+</tr>
+<tr class="even">
+<td><strong>Together AI</strong></td>
+<td>$0.2-1</td>
+<td>Fast</td>
+<td>Cost-effective</td>
+</tr>
+<tr class="odd">
+<td><strong>OpenRouter</strong></td>
+<td>Varies</td>
+<td>Fast</td>
+<td>Multi-provider</td>
+</tr>
+<tr class="even">
+<td><strong>Self-Hosted</strong></td>
+<td>$0</td>
+<td>Varies</td>
+<td>Privacy, control</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="common-use-cases">Common Use Cases</h2>
+<h3 id="use-case-1-privacy-first-self-hosted-only">Use Case 1:
+Privacy-First (Self-Hosted Only)</h3>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .dal/ai_config.toml</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="dt">provider</span> <span class="op">=</span> <span class="st">&quot;custom&quot;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="dt">endpoint</span> <span class="op">=</span> <span class="st">&quot;http://internal-server:8080/v1/chat/completions&quot;</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="dt">model</span> <span class="op">=</span> <span class="st">&quot;llama-2-70b&quot;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co"># No API key needed for internal service</span></span></code></pre></div>
+<h3 id="use-case-2-multi-region-azure">Use Case 2: Multi-Region
+(Azure)</h3>
+<pre class="dal"><code>// Use different Azure regions for redundancy
+let regions = [
+    &quot;https://eastus.openai.azure.com/...&quot;,
+    &quot;https://westus.openai.azure.com/...&quot;,
+    &quot;https://europe.openai.azure.com/...&quot;
+]
+
+for region in regions {
+    ai.configure_azure_openai(region, &quot;key&quot;, &quot;gpt-4&quot;)
+    try {
+        return ai.generate_text(prompt)
+    } catch {
+        continue  // Try next region
+    }
+}</code></pre>
+<h3 id="use-case-3-cost-optimization">Use Case 3: Cost Optimization</h3>
+<pre class="dal"><code>// Start with cheap provider
+ai.configure_together_ai(&quot;key&quot;, &quot;mixtral-8x7b&quot;)
+let result = ai.generate_text(prompt)
+
+// If quality isn&#39;t good enough, upgrade
+if quality_score(result) &lt; 0.8 {
+    ai.configure_openai(&quot;key&quot;, &quot;gpt-4&quot;)
+    result = ai.generate_text(prompt)
+}</code></pre>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="custom-provider-failed">"Custom provider failed"</h3>
+<p><strong>Check:</strong></p>
+<ol type="1">
+<li>Endpoint URL is correct</li>
+<li>API key is valid</li>
+<li>Model name is correct</li>
+<li>Provider name matches supported format</li>
+</ol>
+<p><strong>Debug:</strong></p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="va">RUST_LOG</span><span class="op">=</span>debug <span class="ex">dal</span> ai code <span class="st">&quot;test&quot;</span></span></code></pre></div>
+<h3 id="invalid-response-format">"Invalid response format"</h3>
+<p>If DAL can't parse the response:</p>
+<ol type="1">
+<li>Your provider might use a custom format</li>
+<li>Check the response structure</li>
+<li>File an issue or implement custom parsing</li>
+</ol>
+<h3 id="connection-timeout">"Connection timeout"</h3>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Increase timeout</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_TIMEOUT</span><span class="op">=</span><span class="st">&quot;120&quot;</span>  <span class="co"># 2 minutes</span></span></code></pre></div>
+<hr />
+<h2 id="advanced-adding-custom-response-parsers">Advanced: Adding Custom
+Response Parsers</h2>
+<p>If your provider uses a completely custom format, you can extend
+DAL:</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In ai.rs, add to extract_response_text():</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;myprovider&quot;</span> <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Custom parsing logic</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    json[<span class="st">&quot;my_custom_field&quot;</span>][<span class="st">&quot;nested_text&quot;</span>]</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>as_str()</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>map(<span class="op">|</span>s<span class="op">|</span> s<span class="op">.</span>trim()<span class="op">.</span>to_string())</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>ok_or_else(<span class="op">||</span> <span class="st">&quot;Invalid format&quot;</span><span class="op">.</span>to_string())</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="provider-recommendations">Provider Recommendations</h2>
+<h3 id="for-production">For Production</h3>
+<ol type="1">
+<li><strong>OpenAI GPT-4</strong> - Highest quality</li>
+<li><strong>Anthropic Claude</strong> - Long context, safety</li>
+<li><strong>Azure OpenAI</strong> - Enterprise SLA</li>
+</ol>
+<h3 id="for-development">For Development</h3>
+<ol type="1">
+<li><strong>Ollama (local)</strong> - Free, fast iteration</li>
+<li><strong>HuggingFace</strong> - Open models</li>
+<li><strong>Together AI</strong> - Good quality/price</li>
+</ol>
+<h3 id="for-privacy">For Privacy</h3>
+<ol type="1">
+<li><strong>Self-hosted (vLLM, LocalAI)</strong> - Complete control</li>
+<li><strong>Ollama</strong> - Easy local setup</li>
+<li><strong>On-premise Azure</strong> - Enterprise option</li>
+</ol>
+<h3 id="for-cost">For Cost</h3>
+<ol type="1">
+<li><strong>Together AI</strong> - Cheapest cloud</li>
+<li><strong>Cohere</strong> - Good value</li>
+<li><strong>OpenRouter</strong> - Price comparison</li>
+</ol>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>DAL supports ANY AI provider:</strong></p>
+<p>✅ <strong>Built-in:</strong> OpenAI, Anthropic, Ollama ✅
+<strong>Pre-configured:</strong> Cohere, HuggingFace, Azure, Replicate,
+Together AI, OpenRouter ✅ <strong>Custom:</strong> Any
+OpenAI-compatible API ✅ <strong>Self-hosted:</strong> vLLM, LocalAI,
+text-generation-webui, etc.</p>
+<p><strong>Configuration methods:</strong></p>
+<ol type="1">
+<li>Environment variables</li>
+<li>Config file</li>
+<li>Runtime configuration</li>
+<li>.env file</li>
+<li>Mixed/hybrid</li>
+</ol>
+<p><strong>Choose based on your needs:</strong></p>
+<ul>
+<li>Quality → OpenAI, Anthropic</li>
+<li>Cost → Together AI, Self-hosted</li>
+<li>Privacy → Self-hosted, Ollama</li>
+<li>Flexibility → HuggingFace, Custom</li>
+</ul>
+<p><strong>It just works!</strong> Most providers use OpenAI-compatible
+format, so they work automatically.</p>
+<hr />
+<h2 id="related-documentation">Related Documentation</h2>
+<ul>
+<li><a href="./AI_PROVIDER_SETUP.html">AI_PROVIDER_SETUP.md</a> - Quick
+setup for OpenAI, Anthropic, Ollama</li>
+<li><a
+href="./AI_CONFIGURATION_METHODS.html">AI_CONFIGURATION_METHODS.md</a> -
+All configuration methods</li>
+<li><a
+href="./development/AI_API_INTEGRATION.html">AI_API_INTEGRATION.md</a> -
+Technical implementation</li>
+<li><a
+href="./development/CLI_PHASE3_COMPLETE.html">CLI_PHASE3_COMPLETE.md</a> -
+AI commands documentation</li>
+</ul>
+</body>
+</html>

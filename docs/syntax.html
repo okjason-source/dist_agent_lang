@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>syntax</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="dist_agent_lang-syntax-reference">dist_agent_lang Syntax
+Reference</h1>
+<p>DAL (dist_agent_lang) is a <strong>networking-oriented
+language</strong> that is built with <strong>Rust</strong>: services,
+agents, messages, and spawn are first-class; syntax uses
+<strong><code>fn</code></strong>, <strong><code>let</code></strong>,
+blocks, <strong><code>::</code></strong> namespacing, and type
+annotations in a Rust-friendly way. This document reflects the
+<strong>parser and AST</strong> as implemented and how DAL connects to
+<strong>libraries and <code>src/</code></strong>: standard library calls
+use <strong><code>namespace::function(args)</code></strong>, implemented
+in <strong><code>src/stdlib/</code></strong> and dispatched in
+<strong><code>src/runtime/engine.rs</code></strong>. See <a
+href="TESTING_QUICK_REFERENCE.html">Testing Quick Reference</a> and <a
+href="attributes.html">Attributes Reference</a> for patterns and
+pitfalls.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#basic-syntax">Basic Syntax</a></li>
+<li><a href="#data-types">Data Types</a></li>
+<li><a href="#variables">Variables</a></li>
+<li><a href="#functions">Functions</a></li>
+<li><a href="#services">Services</a></li>
+<li><a href="#agents">Agents</a></li>
+<li><a href="#control-flow">Control Flow</a></li>
+<li><a href="#operators">Operators</a></li>
+<li><a href="#expressions">Expressions</a></li>
+<li><a href="#libraries-and-standard-namespaces">Libraries and Standard
+Namespaces</a></li>
+<li><a href="#comments">Comments</a></li>
+<li><a href="#keywords">Keywords</a></li>
+</ul>
+<hr />
+<h2 id="basic-syntax">Basic Syntax</h2>
+<h3 id="program-structure">Program Structure</h3>
+<p>A DAL program is a sequence of <strong>top-level statements</strong>;
+there is no single “main” entry point. The language is built around
+<strong>networking</strong> and <strong>Rust-like</strong>
+structure:</p>
+<ul>
+<li>Service declarations (<code>service Name { ... }</code>)</li>
+<li>Function declarations (<code>fn name(...) { ... }</code>)</li>
+<li>Variable declarations (<code>let x = ...;</code>)</li>
+<li>Agent declarations
+(<code>agent name:type { ... } { ... }</code>)</li>
+<li>Spawn statements
+(<code>spawn name [: type] [{ config }] { body }</code>)</li>
+<li>Message and event statements (<code>msg</code> /
+<code>event</code>)</li>
+<li>Control flow (<code>if</code>, <code>while</code>, <code>for</code>,
+<code>try</code>)</li>
+<li>Expression statements (e.g. calls, assignments)</li>
+</ul>
+<h3 id="statements-and-semicolons">Statements and Semicolons</h3>
+<ul>
+<li><strong><code>let</code></strong> and
+<strong><code>return</code></strong> statements <strong>must</strong>
+end with a semicolon.</li>
+<li>Expression statements (including assignments and calls) are
+terminated by semicolons when used as statements.</li>
+<li>Block bodies <code>{ ... }</code> do not use a semicolon after the
+closing <code>}</code>.</li>
+</ul>
+<pre class="dal"><code>let x = 10;
+print(&quot;Hello&quot;);
+return result;</code></pre>
+<hr />
+<h2 id="data-types">Data Types</h2>
+<h3 id="primitive-types">Primitive Types</h3>
+<ul>
+<li><strong><code>int</code></strong> – integers: <code>42</code>,
+<code>-10</code>, <code>1000</code></li>
+<li><strong><code>float</code></strong> – floating point:
+<code>3.14</code>, <code>-0.5</code>, <code>2.0</code></li>
+<li><strong><code>string</code></strong> – text: <code>"Hello"</code>,
+<code>"World"</code></li>
+<li><strong><code>bool</code></strong> – booleans: <code>true</code>,
+<code>false</code></li>
+<li><strong><code>null</code></strong> – null value:
+<code>null</code></li>
+</ul>
+<h3 id="collection-and-generic-types">Collection and Generic Types</h3>
+<p>Type annotations use identifiers or type keywords with optional
+generic parameters:</p>
+<ul>
+<li><strong><code>vector&lt;T&gt;</code></strong> or
+<strong><code>list&lt;T&gt;</code></strong> – lists (e.g.
+<code>list&lt;int&gt;</code>, <code>vector&lt;string&gt;</code>). The
+parser recognizes the <strong><code>list</code></strong> keyword;
+<strong><code>vector</code></strong> is accepted as an identifier type
+name.</li>
+<li><strong><code>map&lt;K, V&gt;</code></strong> – maps (e.g.
+<code>map&lt;string, int&gt;</code>). <strong><code>map</code></strong>
+is a keyword.</li>
+<li><strong><code>any</code></strong> – dynamic type (identifier).</li>
+</ul>
+<p><strong>Examples:</strong></p>
+<pre class="dal"><code>let numbers: list&lt;int&gt; = [1, 2, 3];
+let items: vector&lt;string&gt; = [&quot;a&quot;, &quot;b&quot;];
+let user: map&lt;string, any&gt; = { name: &quot;Alice&quot;, age: 30 };</code></pre>
+<hr />
+<h2 id="variables">Variables</h2>
+<h3 id="variable-declaration">Variable Declaration</h3>
+<pre class="dal"><code>let name = &quot;Alice&quot;;
+let age: int = 30;
+let is_active: bool = true;</code></pre>
+<p>The parser allows an optional <strong><code>mut</code></strong> after
+<code>let</code> (it is consumed but not reflected in the AST).</p>
+<h3 id="variable-assignment">Variable Assignment</h3>
+<p>Only <strong>simple assignment</strong> is supported:
+<strong><code>=</code></strong>. Compound assignment operators
+(<code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code>,
+etc.) are <strong>not</strong> parsed as assignments.</p>
+<pre class="dal"><code>let x = 10;
+x = 20;</code></pre>
+<h3 id="service-fields">Service Fields</h3>
+<p>Fields are declared with <strong>name</strong>,
+<strong>type</strong>, optional <strong>initial value</strong>, and a
+<strong>semicolon</strong>. Visibility modifiers (e.g.
+<code>public</code> / <code>private</code>) are <strong>not</strong>
+parsed; all fields are treated as public.</p>
+<pre class="dal"><code>service MyService {
+    count: int = 0;
+    name: string = &quot;default&quot;;
+
+    fn increment() {
+        self.count = self.count + 1;
+    }
+}</code></pre>
+<h3 id="service-instantiation">Service Instantiation</h3>
+<p><strong>Syntax 1 – type name as namespace:</strong></p>
+<pre class="dal"><code>let instance = MyService::new();
+instance.increment();</code></pre>
+<p><strong>Syntax 2 – <code>service</code> namespace:</strong></p>
+<pre class="dal"><code>let instance = service::new(&quot;MyService&quot;);
+instance.increment();</code></pre>
+<p>Both create a new instance of the service.</p>
+<h3 id="service-method-calls-and-field-access">Service Method Calls and
+Field Access</h3>
+<p>Within service methods, use <strong><code>self.field</code></strong>
+to read and assign fields. Method calls use
+<strong><code>instance.method(args)</code></strong> or
+<strong><code>namespace::function(args)</code></strong>.</p>
+<pre class="dal"><code>service TokenContract {
+    balances: map&lt;string, int&gt; = {};
+
+    fn initialize(owner: string) {
+        self.balances[owner] = 1000;
+    }
+
+    fn transfer(to: string, amount: int) {
+        self.balances[to] = self.balances[to] + amount;
+    }
+}
+
+let token = TokenContract::new();
+token.initialize(&quot;0x123...&quot;);
+token.transfer(&quot;0x456...&quot;, 100);</code></pre>
+<h3 id="indexed-access-and-assignment">Indexed Access and
+Assignment</h3>
+<p>Map and array indexing use <strong><code>expr[index]</code></strong>.
+Assignment to an index is
+<strong><code>expr[index] = value</code></strong> (parsed as a special
+assignment form).</p>
+<pre class="dal"><code>self.balances[address] = amount;
+return self.balances[address];
+self.items[0] = item;</code></pre>
+<hr />
+<h2 id="functions">Functions</h2>
+<h3 id="function-declaration">Function Declaration</h3>
+<pre class="dal"><code>fn function_name(param1: type, param2: type) -&gt; return_type {
+    return value;
+}</code></pre>
+<ul>
+<li>Parameters: <strong><code>name</code></strong> or
+<strong><code>name: type</code></strong>.</li>
+<li>Return type is optional:
+<strong><code>-&gt; return_type</code></strong> after the closing
+<code>)</code>.</li>
+<li>Body is a block <strong>`{ ... }</strong>.</li>
+</ul>
+<h3 id="function-examples">Function Examples</h3>
+<pre class="dal"><code>fn greet(name: string) -&gt; string {
+    return &quot;Hello, &quot; + name;
+}
+
+fn print_message(msg: string) {
+    print(msg);
+}
+
+fn get_current_time() -&gt; int {
+    return 1234567890;
+}</code></pre>
+<h3 id="async-functions">Async Functions</h3>
+<p><strong><code>async fn</code></strong> is supported at the top level
+or inside a service. The parser accepts
+<strong><code>async fn name(...) [ -&gt; type ] { body }</code></strong>.
+Attributes (e.g. <strong><code>@async</code></strong>) may appear before
+<strong><code>fn</code></strong> or
+<strong><code>async fn</code></strong> when allowed by the parser.</p>
+<pre class="dal"><code>async fn fetch_data(url: string) -&gt; string {
+    return await http::get(url);
+}</code></pre>
+<hr />
+<h2 id="services">Services</h2>
+<h3 id="service-declaration">Service Declaration</h3>
+<p>Services can be preceded by <strong>attributes</strong> (e.g.
+<strong><code>@trust</code></strong>,
+<strong><code>@chain</code></strong>,
+<strong><code>@secure</code></strong>,
+<strong><code>@compile_target</code></strong>). See <a
+href="attributes.html">Attributes Reference</a>.</p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service MyService {
+    balance: int = 0;
+
+    fn deposit(amount: int) {
+        self.balance = self.balance + amount;
+    }
+
+    fn get_balance() -&gt; int {
+        return self.balance;
+    }
+}</code></pre>
+<h3 id="service-members">Service Members</h3>
+<ul>
+<li><strong>Fields:</strong>
+<strong><code>name: type [ = value ];</code></strong></li>
+<li><strong>Methods:</strong>
+<strong><code>fn name(params) [ -&gt; type ] { body }</code></strong></li>
+<li><strong>Events:</strong> Optional
+<strong><code>event</code></strong> declarations (see parser for exact
+form).</li>
+</ul>
+<p>Field visibility is not parsed; all fields are effectively
+public.</p>
+<hr />
+<h2 id="agents">Agents</h2>
+<p>Agents can be created in two ways: <strong>language syntax</strong>
+(<code>spawn</code> / <code>agent</code>) and <strong>stdlib
+API</strong> (<code>ai::create_agent</code>).</p>
+<h3 id="create-agent-stdlib-api">Create agent (stdlib API)</h3>
+<p>The <strong><code>ai::create_agent(config)</code></strong> function
+creates an agent instance at runtime.
+<strong><code>config</code></strong> is a literal (e.g. role,
+capabilities). This is the usual pattern in examples and scripts.</p>
+<pre class="dal"><code>let agent_config = {
+    role: &quot;assistant&quot;,
+    capabilities: [&quot;analysis&quot;, &quot;reasoning&quot;]
+};
+let agent_instance = ai::create_agent(agent_config);</code></pre>
+<p>For coordinators:
+<strong><code>ai::create_agent_coordinator()</code></strong>.</p>
+<h3 id="spawn-statement">Spawn Statement</h3>
+<p><strong><code>spawn</code></strong> as a <strong>statement</strong>
+has one of these forms:</p>
+<ol type="1">
+<li><strong><code>spawn agent_name { body }</code></strong> – body block
+is <strong>required</strong>.</li>
+<li><strong><code>spawn agent_name : type { body }</code></strong> –
+optional type (e.g. <code>ai</code>, <code>worker</code>).</li>
+<li><strong><code>spawn agent_name : type { config } { body }</code></strong>
+– config is a struct literal; body required.</li>
+</ol>
+<p>Config follows literal rules: keys are identifiers or string
+literals, colon, then expression.</p>
+<pre class="dal"><code>spawn agent_name:ai {
+    role: &quot;assistant&quot;,
+    capabilities: [&quot;analysis&quot;, &quot;reasoning&quot;]
+} {
+    log::info(&quot;agent&quot;, &quot;Agent started&quot;);
+}</code></pre>
+<h3 id="spawn-expression">Spawn Expression</h3>
+<p><strong><code>spawn</code></strong> can also be used as an
+<strong>expression</strong>: <strong><code>spawn expr</code></strong>.
+For example, spawning the result of a call:</p>
+<pre class="dal"><code>let handle = spawn worker_process(i);</code></pre>
+<p>The parser treats <strong><code>spawn</code></strong> in expression
+context as a unary operator: <strong><code>spawn</code></strong>
+followed by an expression (e.g. a function call).</p>
+<h3 id="agent-declaration">Agent Declaration</h3>
+<p><strong><code>agent name : type { config } [ with capabilities ] { body }</code></strong>
+defines an agent <strong>type</strong> (name, type, config, and body).
+It does not create a running instance.</p>
+<ul>
+<li><strong><code>type</code></strong> is required (e.g.
+<strong><code>ai</code></strong>, <strong><code>system</code></strong>,
+<strong><code>worker</code></strong>, or a custom identifier).</li>
+<li><strong><code>config</code></strong> is a literal
+<strong><code>{ key: value, ... }</code></strong>.</li>
+<li>Optional <strong><code>with</code></strong> clause for capabilities
+(parser-dependent).</li>
+<li><strong><code>body</code></strong> is a block
+<strong><code>{ ... }</code></strong>.</li>
+</ul>
+<pre class="dal"><code>agent MyAgent:ai {
+    role: &quot;worker&quot;,
+    capabilities: [&quot;processing&quot;]
+} {
+    fn process() {
+        // Agent logic
+    }
+}</code></pre>
+<h3 id="message-statement">Message Statement</h3>
+<p><strong><code>msg recipient { data } ;</code></strong></p>
+<ul>
+<li><strong><code>recipient</code></strong> is an identifier.</li>
+<li><strong><code>data</code></strong> is a single
+<strong><code>{ ... }</code></strong> block. Keys in the data block are
+<strong>identifiers</strong>; each key is followed by
+<strong><code>:</code></strong> and an expression. Comma-separated.</li>
+</ul>
+<pre class="dal"><code>msg agent_name {
+    type: &quot;task&quot;,
+    data: { key: &quot;value&quot; }
+};</code></pre>
+<h3 id="event-statement">Event Statement</h3>
+<p><strong><code>event event_name { data } ;</code></strong></p>
+<ul>
+<li><strong><code>event_name</code></strong> is an
+<strong>identifier</strong> (not a string literal in the current
+parser).</li>
+<li><strong><code>data</code></strong> is the same as for
+<strong><code>msg</code></strong>:
+<strong><code>{ key: value, ... }</code></strong> with identifier keys
+and colons.</li>
+</ul>
+<pre class="dal"><code>event task_completed {
+    result: &quot;success&quot;,
+    count: 42
+};</code></pre>
+<hr />
+<h2 id="control-flow">Control Flow</h2>
+<h3 id="if-statements">If Statements</h3>
+<p><strong>Parentheses around the condition are required.</strong> Use
+<strong><code>if (condition) { ... }</code></strong>, not
+<strong><code>if condition</code></strong>.</p>
+<pre class="dal"><code>if (x &gt; 10) {
+    print(&quot;Large&quot;);
+} else if (x &gt; 0) {
+    print(&quot;Positive&quot;);
+} else {
+    print(&quot;Small&quot;);
+}</code></pre>
+<ul>
+<li><strong><code>else if (condition) { block }</code></strong> is
+supported (parsed as <strong><code>else</code></strong> followed by an
+<strong><code>if</code></strong> statement in a block).</li>
+<li><strong><code>else { block }</code></strong> is optional.</li>
+</ul>
+<h3 id="for-loops">For Loops</h3>
+<p>Only <strong>for-in</strong> is supported:
+<strong><code>for variable in iterable { body }</code></strong>.
+<strong><code>variable</code></strong> can be an identifier or keyword
+used as identifier; <strong><code>iterable</code></strong> is an
+expression.</p>
+<pre class="dal"><code>for item in [1, 2, 3] {
+    print(item);
+}</code></pre>
+<h3 id="while-loops">While Loops</h3>
+<p><strong><code>while (condition) { body }</code></strong>. Parentheses
+around the condition are required.</p>
+<pre class="dal"><code>while (count &gt; 0) {
+    count = count - 1;
+    process(count);
+}</code></pre>
+<h3 id="try-catch-finally">Try-Catch-Finally</h3>
+<pre class="dal"><code>try {
+    risky_operation();
+} catch (error_type error_var) {
+    log::info(&quot;main&quot;, error_var);
+} finally {
+    cleanup();
+}</code></pre>
+<ul>
+<li><strong><code>try</code></strong> is followed by a single block
+<strong><code>{ ... }</code></strong>.</li>
+<li>Zero or more <strong><code>catch</code></strong> blocks.
+<strong><code>catch</code></strong> can be
+<strong><code>catch { body }</code></strong> or
+<strong><code>catch (ErrorType var) { body }</code></strong> (error type
+and variable are optional in the grammar).</li>
+<li>Optional single <strong><code>finally { body }</code></strong> after
+all <strong><code>catch</code></strong> blocks.</li>
+</ul>
+<h3 id="break-statement">Break Statement</h3>
+<p><strong><code>break [ expression ] ;</code></strong></p>
+<p>Exit the innermost loop (<code>while</code>, <code>for</code>, or
+<code>loop</code>). Optionally returns a value from the loop.</p>
+<pre class="dal"><code>let count = 0;
+while (count &lt; 10) {
+    count = count + 1;
+    if (count == 5) {
+        break;  // Exit loop
+    }
+}
+
+// Break with value
+let result = 0;
+loop {
+    result = result + 1;
+    if (result == 42) {
+        break result;  // Exit loop and return value
+    }
+}</code></pre>
+<h3 id="continue-statement">Continue Statement</h3>
+<p><strong><code>continue;</code></strong></p>
+<p>Skip to the next iteration of the innermost loop (<code>while</code>,
+<code>for</code>, or <code>loop</code>).</p>
+<pre class="dal"><code>let sum = 0;
+for item in [1, 2, 3, 4, 5] {
+    if (item % 2 == 0) {
+        continue;  // Skip even numbers
+    }
+    sum = sum + item;
+}</code></pre>
+<h3 id="loop-statement">Loop Statement</h3>
+<p><strong><code>loop { body }</code></strong></p>
+<p>Infinite loop that can be exited with <code>break</code>. Includes
+timeout protection to prevent infinite execution.</p>
+<pre class="dal"><code>let count = 0;
+loop {
+    count = count + 1;
+    if (count == 10) {
+        break;
+    }
+}</code></pre>
+<h3 id="match-statement">Match Statement</h3>
+<p><strong><code>match expression { case1 =&gt; body1, case2 =&gt; body2, default =&gt; body }</code></strong></p>
+<p>Pattern matching expression. Matches the expression against patterns
+and executes the first matching case.</p>
+<p><strong>Patterns:</strong></p>
+<ul>
+<li><strong>Literal</strong>: <code>42</code>, <code>"hello"</code>,
+<code>true</code>, <code>null</code> - matches exact value</li>
+<li><strong>Identifier</strong>: <code>x</code> - matches anything and
+binds to variable <code>x</code></li>
+<li><strong>Wildcard</strong>: <code>_</code> - matches anything (no
+binding)</li>
+<li><strong>Range</strong>: <code>start..end</code> - matches numeric
+values in range (inclusive)</li>
+</ul>
+<pre class="dal"><code>// Literal patterns
+let status = &quot;success&quot;;
+match status {
+    &quot;success&quot; =&gt; 1,
+    &quot;error&quot; =&gt; 0,
+    default =&gt; -1
+}
+
+// Identifier pattern (binds value)
+let value = 42;
+match value {
+    x =&gt; x * 2  // x is bound to 42, returns 84
+}
+
+// Range pattern
+let score = 85;
+match score {
+    90..100 =&gt; &quot;A&quot;,
+    80..89 =&gt; &quot;B&quot;,
+    70..79 =&gt; &quot;C&quot;,
+    default =&gt; &quot;F&quot;
+}
+
+// Wildcard pattern
+match value {
+    _ =&gt; &quot;matched&quot;
+}</code></pre>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>Cases are evaluated in order; first match wins</li>
+<li><code>default</code> case is optional; if no case matches and no
+default, returns <code>null</code></li>
+<li>Pattern bindings (identifier patterns) are scoped to the case
+body</li>
+<li>Range patterns work with integer values only</li>
+</ul>
+<h3 id="return-statement">Return Statement</h3>
+<p><strong><code>return [ expression ] ;</code></strong></p>
+<pre class="dal"><code>fn calculate() -&gt; int {
+    return 42;
+}
+
+if (condition) {
+    return;
+}</code></pre>
+<hr />
+<h2 id="operators">Operators</h2>
+<h3 id="arithmetic">Arithmetic</h3>
+<ul>
+<li><strong><code>+</code></strong> <strong><code>-</code></strong>
+<strong><code>*</code></strong> <strong><code>/</code></strong>
+<strong><code>%</code></strong></li>
+</ul>
+<pre class="dal"><code>let sum = 10 + 5;
+let diff = 10 - 5;
+let prod = 10 * 5;
+let quot = 10 / 5;
+let rem = 10 % 3;</code></pre>
+<h3 id="comparison">Comparison</h3>
+<ul>
+<li><strong><code>==</code></strong> <strong><code>!=</code></strong>
+<strong><code>&lt;</code></strong> <strong><code>&lt;=</code></strong>
+<strong><code>&gt;</code></strong>
+<strong><code>&gt;=</code></strong></li>
+</ul>
+<pre class="dal"><code>if (x == 10) { }
+if (x != 10) { }
+if (x &lt; 10) { }
+if (x &lt;= 10) { }
+if (x &gt; 10) { }
+if (x &gt;= 10) { }</code></pre>
+<h3 id="logical">Logical</h3>
+<ul>
+<li><strong><code>&amp;&amp;</code></strong>
+<strong><code>||</code></strong> <strong><code>!</code></strong></li>
+</ul>
+<pre class="dal"><code>if (x &gt; 0 &amp;&amp; x &lt; 10) { }
+if (x &lt; 0 || x &gt; 10) { }
+if (!is_empty) { }</code></pre>
+<h3 id="assignment">Assignment</h3>
+<ul>
+<li><strong><code>=</code></strong> – simple assignment.
+<strong>Compound assignment</strong> (<strong><code>+=</code></strong>,
+<strong><code>-=</code></strong>, <strong><code>*=</code></strong>,
+<strong><code>/=</code></strong>, etc.) is <strong>not</strong> parsed
+as assignment; use <strong><code>x = x + 1</code></strong> etc.</li>
+</ul>
+<pre class="dal"><code>let x = 10;
+x = 20;</code></pre>
+<hr />
+<h2 id="expressions">Expressions</h2>
+<h3 id="literals">Literals</h3>
+<ul>
+<li>Integers, floats, strings (double-quoted),
+<strong><code>true</code></strong> /
+<strong><code>false</code></strong>,
+<strong><code>null</code></strong>.</li>
+</ul>
+<pre class="dal"><code>42
+3.14
+&quot;Hello&quot;
+true
+false
+null</code></pre>
+<h3 id="array-literals">Array Literals</h3>
+<p><strong><code>[ expr1, expr2, ... ]</code></strong></p>
+<pre class="dal"><code>[1, 2, 3]
+[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+[]</code></pre>
+<h3 id="literals-1">Literals</h3>
+<p><strong><code>{ key: value, ... }</code></strong></p>
+<p>DAL uses <strong>key-value</strong> pairs inside
+<strong><code>{ }</code></strong> for literals: agent/spawn config,
+message/event data, and any expression. The form is always <strong>key :
+value</strong> (colon between key and value).</p>
+<p><strong>Is the colon required?</strong> <strong>Yes.</strong> The
+parser requires a <strong>colon</strong> after each key; without it you
+get an error (except in one narrow compatibility case when the value
+starts with <code>this</code>).</p>
+<table>
+<thead>
+<tr class="header">
+<th>Context</th>
+<th>Key allowed</th>
+<th>Colon</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Literal</strong> (expression)</td>
+<td>Identifier or string literal</td>
+<td>Required</td>
+<td><code>{ name: "Alice", age: 30 }</code> or
+<code>{ "name": "Alice" }</code></td>
+</tr>
+<tr class="even">
+<td><strong><code>msg</code> / <code>event</code> data</strong></td>
+<td>Identifier only</td>
+<td>Required</td>
+<td><code>msg x { type: "task", id: 1 };</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Keys</strong>: In <strong>literals</strong> (e.g. config,
+payloads), keys can be an <strong>identifier</strong>
+(<code>name</code>) or a <strong>string literal</strong>
+(<code>"name"</code>). In <strong><code>msg</code></strong> and
+<strong><code>event</code></strong> data blocks, keys must be
+<strong>identifiers</strong>.</li>
+<li><strong>Values</strong>: Any expression after the colon.</li>
+<li><strong>Commas</strong>: Between pairs, optional in literals; in
+<code>msg</code>/<code>event</code> data, a comma is required between
+entries.</li>
+</ul>
+<pre class="dal"><code>{ key: &quot;value&quot; }
+{ name: &quot;Alice&quot;, age: 30 }
+{}</code></pre>
+<h3 id="function-calls">Function Calls</h3>
+<ul>
+<li><strong><code>name(args)</code></strong> – direct call.</li>
+<li><strong><code>namespace::function(args)</code></strong> – namespace
+call into the standard library (e.g.
+<strong><code>chain::deploy(1, "Contract", {})</code></strong>,
+<strong><code>log::info("tag", "message")</code></strong>). Namespaces
+are implemented in <strong><code>src/stdlib/</code></strong> and
+dispatched in <strong><code>src/runtime/engine.rs</code></strong>; see
+<a href="#libraries-and-standard-namespaces">Libraries and Standard
+Namespaces</a>.</li>
+<li><strong><code>expr.method(args)</code></strong> – method call
+(parsed as a call with a compound name).</li>
+</ul>
+<pre class="dal"><code>print(&quot;Hello&quot;);
+chain::deploy(1, &quot;Contract&quot;, {});
+instance.method(arg1, arg2);</code></pre>
+<h3 id="inline-closures-call-argument-only">Inline Closures
+(Call-Argument Only)</h3>
+<p>Inside a <strong>function argument list</strong>, the parser accepts
+a <strong>single-parameter closure</strong> with block body:</p>
+<p><strong><code>( param =&gt; { body } )</code></strong></p>
+<ul>
+<li><strong>Single parameter</strong> (identifier).</li>
+<li><strong>Block body</strong> only; <strong>expression bodies</strong>
+(e.g. <strong><code>r =&gt; r.success</code></strong>) are
+<strong>not</strong> supported. Use
+<strong><code>param =&gt; { return expr; }</code></strong>.</li>
+</ul>
+<pre class="dal"><code>handler.process(items, r =&gt; { return r.success; });</code></pre>
+<p>Closures are only recognized as the last (or only) argument in a
+<strong><code>(...)</code></strong> list, immediately after a single
+identifier and <strong><code>=&gt;</code></strong>.</p>
+<h3 id="field-and-index-access">Field and Index Access</h3>
+<ul>
+<li><strong><code>expr.field</code></strong> – field access (literal or
+service).</li>
+<li><strong><code>expr[index]</code></strong> – index access
+(maps/arrays).</li>
+<li><strong><code>self.field</code></strong> – service field (identifier
+<strong><code>self</code></strong> plus field).</li>
+</ul>
+<pre class="dal"><code>self.field
+value.field
+map[&quot;key&quot;]
+arr[i]</code></pre>
+<h3 id="unary-and-binary-operations">Unary and Binary Operations</h3>
+<ul>
+<li>Unary: <strong><code>!expr</code></strong>,
+<strong><code>-expr</code></strong>,
+<strong><code>await expr</code></strong>,
+<strong><code>spawn expr</code></strong>,
+<strong><code>throw expr</code></strong>.</li>
+<li>Binary: arithmetic, comparison, and logical operators as above.</li>
+</ul>
+<pre class="dal"><code>!condition
+-amount
+await async_call()
+spawn worker(i)
+throw error_expr</code></pre>
+<hr />
+<h2 id="libraries-and-standard-namespaces">Libraries and Standard
+Namespaces</h2>
+<p>DAL code calls into the <strong>standard library</strong> using the
+<strong><code>namespace::function(args)</code></strong> syntax. The
+runtime resolves these calls in
+<strong><code>src/runtime/engine.rs</code></strong> (see
+<code>call_namespace_function</code>) and delegates to the corresponding
+module under <strong><code>src/stdlib/</code></strong>. Any
+<strong>DAL-specific syntax</strong> you use for libraries is this call
+form plus the argument shapes each namespace expects.</p>
+<h3 id="namespace--implementation-mapping">Namespace → implementation
+mapping</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Namespace</th>
+<th>Implementation</th>
+<th>Typical DAL usage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong><code>service</code></strong></td>
+<td><code>src/stdlib/service.rs</code></td>
+<td><code>service::new("ServiceName")</code> – create instance by
+name</td>
+</tr>
+<tr class="even">
+<td><strong><code>ai</code></strong></td>
+<td><code>src/stdlib/ai.rs</code></td>
+<td><code>ai::create_agent(config)</code>,
+<code>ai::create_agent_coordinator()</code></td>
+</tr>
+<tr class="odd">
+<td><strong><code>agent</code></strong></td>
+<td><code>src/stdlib/agent.rs</code></td>
+<td><code>agent::create_agent_message(...)</code>,
+<code>agent::create_agent_task(...)</code></td>
+</tr>
+<tr class="even">
+<td><strong><code>log</code></strong></td>
+<td><code>src/stdlib/log.rs</code></td>
+<td><code>log::info("tag", message)</code>,
+<code>log::audit("tag", message)</code></td>
+</tr>
+<tr class="odd">
+<td><strong><code>auth</code></strong></td>
+<td><code>src/stdlib/auth.rs</code></td>
+<td><code>auth::session(user_id, roles)</code> – returns a session
+value; use its fields (e.g. <code>user_id</code>) as in <a
+href="api_reference.html">API Reference</a></td>
+</tr>
+<tr class="even">
+<td><strong><code>chain</code></strong></td>
+<td><code>src/stdlib/chain.rs</code></td>
+<td><code>chain::deploy(chain_id, contract_name, {})</code>,
+<code>chain::estimate_gas(...)</code></td>
+</tr>
+<tr class="odd">
+<td><strong><code>oracle</code></strong></td>
+<td><code>src/stdlib/oracle.rs</code></td>
+<td><code>oracle::fetch(...)</code>,
+<code>oracle::create_query(...)</code></td>
+</tr>
+<tr class="even">
+<td><strong><code>crypto</code></strong></td>
+<td><code>src/stdlib/crypto.rs</code></td>
+<td><code>crypto::hash(...)</code>, <code>crypto::sign(...)</code>,
+<code>crypto::verify(...)</code></td>
+</tr>
+<tr class="odd">
+<td><strong><code>database</code></strong></td>
+<td><code>src/stdlib/database.rs</code></td>
+<td>DB helpers (see <a href="api_reference.html">API Reference</a>)</td>
+</tr>
+<tr class="even">
+<td><strong><code>web</code></strong></td>
+<td><code>src/stdlib/web.rs</code></td>
+<td>Web/server helpers</td>
+</tr>
+<tr class="odd">
+<td><strong><code>sync</code></strong>,
+<strong><code>key</code></strong>, <strong><code>kyc</code></strong>,
+<strong><code>aml</code></strong>, <strong><code>admin</code></strong>,
+<strong><code>cloudadmin</code></strong>,
+<strong><code>config</code></strong>,
+<strong><code>trust</code></strong>,
+<strong><code>mobile</code></strong>,
+<strong><code>desktop</code></strong>,
+<strong><code>iot</code></strong></td>
+<td><code>src/stdlib/&lt;name&gt;.rs</code></td>
+<td>Same pattern: <code>namespace::function(args)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="dal-specific-library-syntax">DAL-specific library syntax</h3>
+<ul>
+<li><strong>Service instances</strong>
+<ul>
+<li><strong><code>ServiceName::new()</code></strong> – parser allows
+<strong><code>identifier::identifier</code></strong>; runtime treats a
+known service name as namespace and <strong><code>new</code></strong> as
+constructor. Implemented in <code>engine.rs</code>
+(<code>call_service_instance_method</code> /
+<code>call_service_function</code>).</li>
+<li><strong><code>service::new("ServiceName")</code></strong> –
+string-based constructor; same runtime path for creating an
+instance.</li>
+</ul></li>
+<li><strong>Logging</strong>
+<ul>
+<li><strong><code>log::info("tag", message)</code></strong> – two
+arguments (tag string, message).
+<strong><code>log::audit("tag", message)</code></strong> – same shape.
+Other <code>log::*</code> functions are only available if implemented in
+the engine.</li>
+</ul></li>
+<li><strong>Auth</strong>
+<ul>
+<li><strong><code>auth::session(user_id, roles)</code></strong> –
+<code>roles</code> is an array of strings. Returns a session value; use
+its fields (e.g. <code>user_id</code>) as documented in <a
+href="api_reference.html">API Reference</a>.</li>
+</ul></li>
+<li><strong>Chain</strong>
+<ul>
+<li><strong><code>chain::deploy(chain_id, contract_name, constructor_args)</code></strong>
+– <code>chain_id</code> int, <code>contract_name</code> string, third
+argument a literal. Chain access is subject to trust validation in the
+runtime.</li>
+</ul></li>
+<li><strong>AI / agents</strong>
+<ul>
+<li><strong><code>ai::create_agent(config)</code></strong> –
+<code>config</code> is a literal (e.g. <code>role</code>,
+<code>capabilities</code>).
+<strong><code>ai::create_agent_coordinator()</code></strong> – no
+arguments. Full list of <code>ai::*</code> and <code>agent::*</code>
+functions is in <a href="api_reference.html">API Reference</a>.</li>
+</ul></li>
+</ul>
+<p>For full signatures and behavior, see <strong><a
+href="api_reference.html">API Reference</a></strong>. For where each
+namespace is wired and executed, see
+<strong><code>src/runtime/engine.rs</code></strong> (e.g.
+<code>call_ai_function</code>, <code>call_log_function</code>,
+<code>call_auth_function</code>, <code>call_chain_function</code>) and
+the corresponding <strong><code>src/stdlib/*.rs</code></strong>
+modules.</p>
+<hr />
+<h2 id="comments">Comments</h2>
+<ul>
+<li><strong>Single-line:</strong> <strong><code>// ...</code></strong>
+to end of line.</li>
+<li><strong>Multi-line:</strong>
+<strong><code>/* ... */</code></strong>.</li>
+</ul>
+<pre class="dal"><code>// This is a comment
+let x = 10; // Inline comment
+
+/* Multi-line
+   comment */</code></pre>
+<hr />
+<h2 id="keywords">Keywords</h2>
+<h3 id="declaration-and-structure">Declaration and Structure</h3>
+<ul>
+<li><strong><code>service</code></strong>
+<strong><code>fn</code></strong> <strong><code>let</code></strong>
+<strong><code>agent</code></strong> <strong><code>spawn</code></strong>
+<strong><code>msg</code></strong>
+<strong><code>event</code></strong></li>
+</ul>
+<h3 id="control-flow-1">Control Flow</h3>
+<ul>
+<li><strong><code>if</code></strong> <strong><code>else</code></strong>
+<strong><code>while</code></strong> <strong><code>for</code></strong>
+<strong><code>in</code></strong> <strong><code>return</code></strong>
+<strong><code>try</code></strong> <strong><code>catch</code></strong>
+<strong><code>finally</code></strong>
+<strong><code>throw</code></strong></li>
+<li><strong><code>break</code></strong>
+<strong><code>continue</code></strong>
+<strong><code>loop</code></strong> <strong><code>match</code></strong>
+<strong><code>default</code></strong> – implemented and functional</li>
+</ul>
+<h3 id="async">Async</h3>
+<ul>
+<li><strong><code>async</code></strong>
+<strong><code>await</code></strong></li>
+</ul>
+<h3 id="types-and-modifiers">Types and Modifiers</h3>
+<ul>
+<li><strong><code>list</code></strong> <strong><code>map</code></strong>
+– type keywords for generics.</li>
+<li><strong><code>int</code></strong>
+<strong><code>float</code></strong> <strong><code>string</code></strong>
+<strong><code>bool</code></strong> <strong><code>null</code></strong> –
+used in type annotations (as identifiers or literals where
+applicable).</li>
+<li><strong><code>mut</code></strong> – consumed after
+<strong><code>let</code></strong> but not stored in the AST.</li>
+</ul>
+<h3 id="attributes-and-targets">Attributes and Targets</h3>
+<ul>
+<li><strong><code>@trust</code></strong>
+<strong><code>@chain</code></strong>
+<strong><code>@secure</code></strong>
+<strong><code>@compile_target</code></strong>
+<strong><code>@interface</code></strong> etc. – see <a
+href="attributes.html">Attributes Reference</a>.</li>
+</ul>
+<hr />
+<h2 id="cross-reference">Cross-Reference</h2>
+<ul>
+<li><strong><a href="#libraries-and-standard-namespaces">Libraries and
+Standard Namespaces</a></strong> – DAL
+<strong><code>namespace::function(args)</code></strong> syntax, mapping
+to <strong><code>src/stdlib/</code></strong> and
+<strong><code>src/runtime/engine.rs</code></strong>.</li>
+<li><strong><a href="TESTING_QUICK_REFERENCE.html">Testing Quick
+Reference</a></strong> – test commands and patterns; required syntax
+(e.g. parentheses in <strong><code>if</code></strong>) and common
+mistakes are in this document.</li>
+<li><strong><a href="attributes.html">Attributes Reference</a></strong> –
+service and function attributes.</li>
+<li><strong><a href="api_reference.html">API Reference</a></strong> – full
+standard library APIs.</li>
+</ul>
+</body>
+</html>

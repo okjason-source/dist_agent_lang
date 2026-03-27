@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>WORKFLOWS</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="workflows-in-dist_agent_lang">Workflows in dist_agent_lang</h1>
+<p>How to run multi-step agent workflows and how this relates to the
+<code>ai::</code> namespace.</p>
+<hr />
+<h2 id="production-path-use-workflowsdal-and-wfrun">Production path: use
+<code>workflows.dal</code> and <code>wf::run(...)</code></h2>
+<p>For <strong>multi-step agent workflows</strong> (research →
+summarize, code → review, etc.), use the <strong>DAL workflow
+layer</strong>:</p>
+<ol type="1">
+<li><p><strong>Import the workflow module</strong> (e.g. from your agent
+or app):</p>
+<pre class="dal"><code>import &quot;./workflows.dal&quot; as wf;</code></pre></li>
+<li><p><strong>Run a built-in or custom workflow by name</strong>:</p>
+<pre class="dal"><code>let result = wf::run(&quot;research_and_summarize&quot;, &quot;latest trends in AI agents&quot;);
+let result = wf::run(&quot;code_and_review&quot;, &quot;implement a retry helper&quot;);</code></pre></li>
+<li><p><strong>Built-in workflows</strong> (see
+<code>workflows.dal</code> in your project):</p>
+<ul>
+<li><code>research_and_summarize</code> — researcher gathers info,
+reviewer summarizes</li>
+<li><code>code_and_review</code> — coder writes code, reviewer checks
+quality</li>
+<li><code>deep_research</code> — researcher → coder (commands) →
+reviewer (report)</li>
+</ul></li>
+<li><p><strong>Custom workflows</strong> can be defined via the API
+(e.g. <code>POST /api/workflow/define</code> with a steps array) and are
+then runnable by name via <code>wf::run(name, input)</code>.</p></li>
+</ol>
+<p>This layer uses <code>agents::run_with_agent(role, prompt)</code>
+under the hood and returns structured results (<code>ok</code>,
+<code>workflow</code>, <code>steps</code>, <code>final_result</code>).
+This is the <strong>supported, production-ready</strong> way to run
+workflows in DAL.</p>
+<hr />
+<h2
+id="ai-workflow-apis-coordinator--workflow--execute-wired-in-runtime"><code>ai::</code>
+workflow APIs: coordinator / workflow / execute (wired in runtime)</h2>
+<p>The <strong>standard library</strong> in <code>ai.rs</code> defines a
+lower-level workflow model:</p>
+<ul>
+<li><strong>Types:</strong> <code>AgentCoordinator</code>,
+<code>Workflow</code>, <code>WorkflowStep</code>,
+<code>WorkflowStatus</code>, <code>StepStatus</code></li>
+<li><strong>Functions:</strong> <code>ai::create_coordinator</code>,
+<code>ai::add_agent_to_coordinator</code>,
+<code>ai::create_workflow</code>, <code>ai::execute_workflow</code>,
+<code>ai::get_coordinator_metrics</code>, etc.</li>
+</ul>
+<p>The <strong>DAL runtime</strong> wires these to the real
+implementation:</p>
+<ol type="1">
+<li><strong>ai::spawn_agent(config)</strong> — Creates an
+<code>Agent</code> and stores it for use with coordinators. Pass a
+map/struct with <code>name</code>, <code>role</code>, optional
+<code>capabilities</code>.</li>
+<li><strong>ai::create_coordinator(coordinator_id)</strong> — Creates a
+coordinator and stores it; returns the id.</li>
+<li><strong>ai::add_agent_to_coordinator(coordinator_id,
+agent_id)</strong> — Adds an agent (from spawn_agent) to the
+coordinator.</li>
+<li><strong>ai::create_workflow(coordinator_id, name, steps)</strong> —
+Adds a workflow. <code>steps</code> is a list of maps with
+<code>step_id</code>, <code>agent_id</code>, <code>task_type</code>,
+optional <code>dependencies</code>.</li>
+<li><strong>ai::execute_workflow(coordinator_id, workflow_id)</strong> —
+Runs the workflow (steps in dependency order, tasks on agents); returns
+a boolean.</li>
+<li><strong>ai::get_coordinator_metrics(coordinator_id)</strong> —
+Returns a map with <code>agents_count</code>,
+<code>workflows_count</code>, etc.</li>
+</ol>
+<p>Use <strong>workflows.dal</strong> and <strong>wf::run(...)</strong>
+for the higher-level, role-based chains (research_and_summarize,
+code_and_review, etc.). Use <strong>ai::</strong> when you need explicit
+coordinator/workflow/step control and dependency ordering.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Need</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Multi-step agent workflows (research, code+review, custom
+chains)</td>
+<td><strong>workflows.dal</strong> + <strong>wf::run(workflow_name,
+input)</strong></td>
+</tr>
+<tr class="even">
+<td>Low-level coordinator/workflow/step control (steps, dependencies,
+explicit agents)</td>
+<td><strong>ai::</strong> — create_coordinator, spawn_agent,
+add_agent_to_coordinator, create_workflow, execute_workflow</td>
+</tr>
+</tbody>
+</table>
+<p>See also: <a href="PRODUCTION_GRADE_CHECKLIST.html">Production grade
+checklist</a>, <a href="guides/AGENT_SETUP_AND_USAGE.html">Agent Setup and
+Usage</a>.</p>
+</body>
+</html>

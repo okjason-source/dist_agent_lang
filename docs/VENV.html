@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>VENV</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="dal-venv--user-guide">DAL Venv — User Guide</h1>
+<p><strong>Venvs</strong> are named, reusable execution environments for
+DAL. Each venv has a <strong>project root</strong>, a <strong>dependency
+set</strong> (from that project’s <code>dal.toml</code> /
+<code>dal.lock</code>), and a <strong>security profile</strong>. Running
+a script “in a venv” uses that environment every time, so you get
+consistent deps and clear security boundaries.</p>
+<hr />
+<h2 id="quick-start">Quick start</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a venv for the current directory (default profile: relaxed)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv create myvenv</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run a script inside that venv (script path is relative to your current directory)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv run myvenv ./scripts/task.dal</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># List venvs</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv list</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Show one venv</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv show myvenv</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove a venv (does not delete files on disk)</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv delete myvenv</span></code></pre></div>
+<hr />
+<h2 id="what-is-a-venv">What is a venv?</h2>
+<p>A <strong>venv</strong> is a named environment that defines:</p>
+<table>
+<thead>
+<tr class="header">
+<th>What</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Root</strong></td>
+<td>A project directory. Imports and dependency resolution use this as
+the project root.</td>
+</tr>
+<tr class="even">
+<td><strong>Dependencies</strong></td>
+<td>Resolved from that root’s <code>dal.toml</code> and
+<code>dal.lock</code> when you run a script.</td>
+</tr>
+<tr class="odd">
+<td><strong>Profile</strong></td>
+<td>Security rules: which built-in namespaces are allowed (see <a
+href="#profiles">Profiles</a>).</td>
+</tr>
+</tbody>
+</table>
+<p>When you run <code>dal venv run myapp script.dal</code>, DAL uses
+<strong>myapp</strong>’s root and dependencies to resolve imports, and
+applies <strong>myapp</strong>’s profile. The script file itself is
+located relative to your <strong>current working directory</strong>;
+only imports inside the script use the venv’s root and deps.</p>
+<hr />
+<h2 id="commands">Commands</h2>
+<p>All venv commands live under <code>dal venv</code>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal venv create &lt;name&gt; [--dir &lt;path&gt;] [--profile strict|relaxed]</code></td>
+<td>Create a venv. <code>--dir</code> defaults to the current directory.
+<code>--profile</code> defaults to <strong>relaxed</strong>.</td>
+</tr>
+<tr class="even">
+<td><code>dal venv list</code></td>
+<td>List venvs (project-local, then global if configured).</td>
+</tr>
+<tr class="odd">
+<td><code>dal venv show &lt;name&gt;</code></td>
+<td>Show a venv’s root and profile.</td>
+</tr>
+<tr class="even">
+<td><code>dal venv run &lt;name&gt; &lt;script.dal&gt;</code></td>
+<td>Run a script inside the venv.</td>
+</tr>
+<tr class="odd">
+<td><code>dal venv delete &lt;name&gt;</code></td>
+<td>Remove the venv from the registry (no files are deleted).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Serve with a venv:</strong> You can run the HTTP server in a
+venv so that the served DAL file and its imports use the venv’s root and
+profile:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal serve &lt;file.dal&gt; [--port N] --venv &lt;name&gt;</code></td>
+<td>Serve the DAL file’s HTTP handlers using the named venv (root for
+imports, profile for runtime).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="create">Create</h3>
+<ul>
+<li><strong>&lt;name&gt;</strong> is a unique label (e.g.
+<code>myapp</code>, <code>ci</code>).</li>
+<li><strong>--dir</strong> is the project root. If omitted, the current
+directory is used. Can be relative (e.g. <code>./other-project</code>)
+or absolute.</li>
+<li><strong>--profile</strong> can be <code>strict</code> or
+<code>relaxed</code> (default: <code>relaxed</code>).</li>
+</ul>
+<p>If the root has no <code>dal.toml</code>, you’ll get a warning;
+dependency resolution may fail when you run scripts until you add one
+(e.g. <code>dal init</code>).</p>
+<h3 id="run">Run</h3>
+<ul>
+<li><strong>&lt;script.dal&gt;</strong> is the script to run. It is
+resolved relative to your <strong>current directory</strong> when you
+invoke <code>dal</code>, not relative to the venv root.</li>
+<li>Imports inside that script are resolved using the <strong>venv’s
+root</strong> and the venv’s <strong>resolved
+dependencies</strong>.</li>
+</ul>
+<p>Example: from <code>/home/me</code>, running
+<code>dal venv run myapp ./work/task.dal</code> runs
+<code>/home/me/work/task.dal</code>; any <code>import foo</code> in
+<code>task.dal</code> is resolved from the <strong>myapp</strong> venv’s
+project root and its lockfile.</p>
+<hr />
+<h2 id="profiles">Profiles</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Profile</th>
+<th>Use case</th>
+<th>What’s allowed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>relaxed</strong></td>
+<td>Normal development, trusted scripts</td>
+<td>All stdlib namespaces (current default behavior). Shell and FFI
+follow your normal config.</td>
+</tr>
+<tr class="even">
+<td><strong>strict</strong></td>
+<td>CI, untrusted code, least privilege</td>
+<td>Only a fixed set of stdlib namespaces (e.g. <code>chain</code>,
+<code>crypto</code>, <code>log</code>, <code>config</code>,
+<code>key</code>, <code>auth</code>, <code>evolve</code>,
+<code>sync</code>, <code>json</code>, <code>test</code>). No
+<code>sh</code>, no stdlib <code>service</code>. User-defined services
+(your own types) are still allowed.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>relaxed</strong> is the default when you create a venv
+without <code>--profile</code>.</li>
+<li>Use <strong>strict</strong> when you want a small, auditable surface
+(e.g. a script that only needs chain/crypto/log). If the script calls a
+disallowed namespace, you’ll get a clear error:
+<code>namespace 'X' not allowed in this venv profile (strict)</code>.</li>
+</ul>
+<hr />
+<h2 id="where-venvs-are-stored">Where venvs are stored</h2>
+<ul>
+<li><strong>Project-local (default):</strong>
+<code>.dal/venvs.json</code> in the directory where you run
+<code>dal venv create</code>. That file maps venv names to
+<code>root</code> and <code>profile</code>.</li>
+<li><strong>Global (optional):</strong> Set
+<code>DAL_VENV_REGISTRY</code> to a file path, or use the default
+<code>~/.config/dal/venvs.json</code> (or your platform’s config dir).
+When you run <code>dal venv run &lt;name&gt;</code>, DAL looks up the
+name in project-local first, then in the global registry.</li>
+</ul>
+<p>So “create once, run many” means: create a venv (stored in
+<code>.dal/venvs.json</code> or the global registry), then run any
+script in that venv with
+<code>dal venv run &lt;name&gt; &lt;script.dal&gt;</code>.</p>
+<hr />
+<h2 id="examples">Examples</h2>
+<p><strong>Create a venv for the current project (relaxed):</strong></p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv create myvenv</span></code></pre></div>
+<p><strong>Create a strict venv for CI:</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv create ci-env <span class="at">--dir</span> . <span class="at">--profile</span> strict</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv run ci-env ./tests/suite.dal</span></code></pre></div>
+<p><strong>Create a venv for another project:</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv create other <span class="at">--dir</span> ../other-project <span class="at">--profile</span> relaxed</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv run other ./scripts/run.dal</span></code></pre></div>
+<p><strong>List and inspect:</strong></p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv list</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv show myvenv</span></code></pre></div>
+<p><strong>Delete a venv:</strong></p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv delete myvenv</span></code></pre></div>
+<p><strong>Serve an HTTP app in a venv:</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> venv create myapp</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> serve server.dal <span class="at">--port</span> 4040 <span class="at">--venv</span> myapp</span></code></pre></div>
+<hr />
+<h2 id="security-and-boundaries">Security and boundaries</h2>
+<ul>
+<li><strong>Blast radius:</strong> A script run in a venv only uses that
+venv’s root and dependencies; it doesn’t see other projects’ code or
+arbitrary paths outside that setup.</li>
+<li><strong>Auditability:</strong> You can document “this job always
+runs in venv X with profile Y” and review what that allows.</li>
+<li><strong>Strict profile:</strong> Use it to lock down which stdlib a
+script can call (no shell, no service namespace, etc.) while still
+allowing your own service types and the allow-listed namespaces.</li>
+</ul>
+<hr />
+<h2 id="see-also">See also</h2>
+<ul>
+<li><strong><a
+href="VENV_FIRST_CLASS_DESIGN.html">VENV_FIRST_CLASS_DESIGN.md</a></strong>
+— Design and implementation details.</li>
+<li><strong><a href="VENV_CONCEPT.html">VENV_CONCEPT.md</a></strong> —
+Rationale and security benefits.</li>
+</ul>
+</body>
+</html>

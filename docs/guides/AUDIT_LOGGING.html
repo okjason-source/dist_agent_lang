@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AUDIT_LOGGING</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="audit-logging-guide">Audit Logging Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>DAL provides <strong>persistent file-based audit logging</strong> for
+security-critical operations, especially for services using the
+<code>@secure</code> attribute. All audit events are automatically
+logged to files for compliance, security analysis, and incident
+response.</p>
+<hr />
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="enable-file-logging">Enable File Logging</h3>
+<p>Set environment variables before running your DAL application:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable file logging</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_SINK</span><span class="op">=</span>both          <span class="co"># Options: console, file, both, none</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_DIR</span><span class="op">=</span>./logs          <span class="co"># Directory for log files (default: ./logs)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_FILE</span><span class="op">=</span>./logs/audit.log  <span class="co"># Specific log file (optional, defaults to LOG_DIR/audit.log)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: Configure rotation and retention</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_ROTATE_SIZE</span><span class="op">=</span>10485760   <span class="co"># Rotate at 10MB (default: 10MB)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_RETENTION_DAYS</span><span class="op">=</span>30      <span class="co"># Keep logs for 30 days (default: 30)</span></span></code></pre></div>
+<h3 id="automatic-audit-logging">Automatic Audit Logging</h3>
+<p>When you use <code>@secure</code> on a service, audit logs are
+<strong>automatically created</strong>:</p>
+<pre class="dal"><code>@secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service SecureService {
+    fn update_data(data: map&lt;string, any&gt;) {
+        // This access is automatically logged to file
+        // No manual logging needed!
+    }
+}</code></pre>
+<hr />
+<h2 id="configuration">Configuration</h2>
+<h3 id="environment-variables">Environment Variables</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>LOG_SINK</code></td>
+<td><code>console</code></td>
+<td>Output destination: <code>console</code>, <code>file</code>,
+<code>both</code>, or <code>none</code></td>
+</tr>
+<tr class="even">
+<td><code>LOG_DIR</code></td>
+<td><code>./logs</code></td>
+<td>Directory where log files are stored</td>
+</tr>
+<tr class="odd">
+<td><code>LOG_FILE</code></td>
+<td><code>./logs/audit.log</code></td>
+<td>Specific log file path (overrides LOG_DIR)</td>
+</tr>
+<tr class="even">
+<td><code>LOG_ROTATE_SIZE</code></td>
+<td><code>10485760</code></td>
+<td>Rotate log file when it exceeds this size (bytes)</td>
+</tr>
+<tr class="odd">
+<td><code>LOG_RETENTION_DAYS</code></td>
+<td><code>30</code></td>
+<td>Keep log files for this many days</td>
+</tr>
+<tr class="even">
+<td><code>LOG_LEVEL</code></td>
+<td><code>debug</code></td>
+<td>Minimum log level: <code>debug</code>, <code>info</code>,
+<code>warning</code>, <code>error</code>, <code>audit</code></td>
+</tr>
+<tr class="odd">
+<td><code>LOG_MAX_ENTRIES</code></td>
+<td><code>1000</code></td>
+<td>Maximum in-memory log entries</td>
+</tr>
+</tbody>
+</table>
+<h3 id="log-sink-options">Log Sink Options</h3>
+<ul>
+<li><strong><code>console</code></strong> (default): Logs only to
+stdout/stderr</li>
+<li><strong><code>file</code></strong>: Logs only to file (no console
+output)</li>
+<li><strong><code>both</code></strong>: Logs to both console and file
+(recommended for development)</li>
+<li><strong><code>none</code></strong>: Disables all logging output</li>
+</ul>
+<hr />
+<h2 id="log-file-format">Log File Format</h2>
+<p>Audit logs are written as <strong>JSON Lines</strong> (one JSON
+object per line) for easy parsing:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span><span class="dv">1707234567</span><span class="fu">,</span><span class="dt">&quot;level&quot;</span><span class="fu">:</span><span class="st">&quot;Audit&quot;</span><span class="fu">,</span><span class="dt">&quot;message&quot;</span><span class="fu">:</span><span class="st">&quot;secure_service_access&quot;</span><span class="fu">,</span><span class="dt">&quot;source&quot;</span><span class="fu">:</span><span class="st">&quot;runtime&quot;</span><span class="fu">,</span><span class="dt">&quot;data&quot;</span><span class="fu">:{</span><span class="dt">&quot;service&quot;</span><span class="fu">:</span><span class="st">&quot;UserService&quot;</span><span class="fu">,</span><span class="dt">&quot;method&quot;</span><span class="fu">:</span><span class="st">&quot;update_profile&quot;</span><span class="fu">,</span><span class="dt">&quot;caller&quot;</span><span class="fu">:</span><span class="st">&quot;0x1234...&quot;</span><span class="fu">,</span><span class="dt">&quot;result&quot;</span><span class="fu">:</span><span class="st">&quot;allowed&quot;</span><span class="fu">}}</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span><span class="dv">1707234568</span><span class="fu">,</span><span class="dt">&quot;level&quot;</span><span class="fu">:</span><span class="st">&quot;Audit&quot;</span><span class="fu">,</span><span class="dt">&quot;message&quot;</span><span class="fu">:</span><span class="st">&quot;secure_service_access_denied&quot;</span><span class="fu">,</span><span class="dt">&quot;source&quot;</span><span class="fu">:</span><span class="st">&quot;runtime&quot;</span><span class="fu">,</span><span class="dt">&quot;data&quot;</span><span class="fu">:{</span><span class="dt">&quot;service&quot;</span><span class="fu">:</span><span class="st">&quot;AdminService&quot;</span><span class="fu">,</span><span class="dt">&quot;method&quot;</span><span class="fu">:</span><span class="st">&quot;delete_user&quot;</span><span class="fu">,</span><span class="dt">&quot;caller&quot;</span><span class="fu">:</span><span class="st">&quot;unauthenticated&quot;</span><span class="fu">,</span><span class="dt">&quot;result&quot;</span><span class="fu">:</span><span class="st">&quot;denied&quot;</span><span class="fu">}}</span></span></code></pre></div>
+<h3 id="log-entry-structure">Log Entry Structure</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="dv">1707234567</span><span class="fu">,</span>        <span class="er">//</span> <span class="er">Unix</span> <span class="er">timestamp</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;level&quot;</span><span class="fu">:</span> <span class="st">&quot;Audit&quot;</span><span class="fu">,</span>               <span class="er">//</span> <span class="er">Log</span> <span class="er">level</span> <span class="er">(Info</span><span class="fu">,</span> <span class="er">Warning</span><span class="fu">,</span> <span class="er">Error</span><span class="fu">,</span> <span class="er">Audit</span><span class="fu">,</span> <span class="er">Debug)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;secure_service_access&quot;</span><span class="fu">,</span>  <span class="er">//</span> <span class="er">Event</span> <span class="er">name</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;runtime&quot;</span><span class="fu">,</span>            <span class="er">//</span> <span class="er">Source</span> <span class="er">identifier</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;data&quot;</span><span class="fu">:</span> <span class="fu">{</span>                       <span class="er">//</span> <span class="er">Event-specific</span> <span class="er">data</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;service&quot;</span><span class="fu">:</span> <span class="st">&quot;UserService&quot;</span><span class="fu">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;method&quot;</span><span class="fu">:</span> <span class="st">&quot;update_profile&quot;</span><span class="fu">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;caller&quot;</span><span class="fu">:</span> <span class="st">&quot;0x1234...&quot;</span><span class="fu">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;result&quot;</span><span class="fu">:</span> <span class="st">&quot;allowed&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<hr />
+<h2 id="automatic-audit-events">Automatic Audit Events</h2>
+<h3 id="secure-service-access"><code>@secure</code> Service Access</h3>
+<p>When a service has <code>@secure</code>, the runtime automatically
+logs:</p>
+<ol type="1">
+<li><p><strong><code>secure_service_access</code></strong> - Successful
+authenticated access</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;secure_service_access&quot;</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;data&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;service&quot;</span><span class="fu">:</span> <span class="st">&quot;UserService&quot;</span><span class="fu">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;method&quot;</span><span class="fu">:</span> <span class="st">&quot;update_profile&quot;</span><span class="fu">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;caller&quot;</span><span class="fu">:</span> <span class="st">&quot;0x1234...&quot;</span><span class="fu">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;result&quot;</span><span class="fu">:</span> <span class="st">&quot;allowed&quot;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div></li>
+<li><p><strong><code>secure_service_access_denied</code></strong> -
+Unauthorized access attempt</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;secure_service_access_denied&quot;</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;data&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;service&quot;</span><span class="fu">:</span> <span class="st">&quot;AdminService&quot;</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;method&quot;</span><span class="fu">:</span> <span class="st">&quot;delete_user&quot;</span><span class="fu">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;caller&quot;</span><span class="fu">:</span> <span class="st">&quot;unauthenticated&quot;</span><span class="fu">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;result&quot;</span><span class="fu">:</span> <span class="st">&quot;denied&quot;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div></li>
+</ol>
+<hr />
+<h2 id="log-rotation">Log Rotation</h2>
+<p>Log files are automatically rotated when they exceed the size
+limit:</p>
+<ul>
+<li><strong>Rotation trigger</strong>: File size &gt;=
+<code>LOG_ROTATE_SIZE</code> (default: 10MB)</li>
+<li><strong>Rotated filename</strong>:
+<code>audit.log.{timestamp}</code> (e.g.,
+<code>audit.log.1707234567</code>)</li>
+<li><strong>New file</strong>: A fresh <code>audit.log</code> is
+created</li>
+<li><strong>Old file cleanup</strong>: Files older than
+<code>LOG_RETENTION_DAYS</code> are automatically deleted</li>
+</ul>
+<h3 id="example-rotation">Example Rotation</h3>
+<pre><code>logs/
+  ├── audit.log              # Current log file
+  ├── audit.log.1707148167   # Rotated file (older)
+  └── audit.log.1707051767   # Rotated file (oldest, will be cleaned up)</code></pre>
+<hr />
+<h2 id="manual-audit-logging">Manual Audit Logging</h2>
+<p>You can also manually log audit events:</p>
+<pre class="dal"><code>log::audit(&quot;user_login&quot;, {
+    &quot;user_id&quot;: &quot;123&quot;,
+    &quot;ip&quot;: &quot;192.168.1.1&quot;,
+    &quot;success&quot;: true
+}, Some(&quot;auth&quot;));</code></pre>
+<p>All <code>log::audit()</code> calls are automatically written to the
+audit log file when file logging is enabled.</p>
+<hr />
+<h2 id="querying-audit-logs">Querying Audit Logs</h2>
+<h3 id="using-command-line-tools">Using Command Line Tools</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View all audit logs</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> logs/audit.log <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.&#39;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter by event type</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> logs/audit.log <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;select(.message == &quot;secure_service_access_denied&quot;)&#39;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter by service</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> logs/audit.log <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;select(.data.service == &quot;UserService&quot;)&#39;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter by time range (last hour)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> logs/audit.log <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&quot;select(.timestamp &gt; </span><span class="va">$(</span><span class="fu">date</span> <span class="at">-d</span> <span class="st">&#39;1 hour ago&#39;</span> +%s<span class="va">)</span><span class="st">)&quot;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Count denied access attempts</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> logs/audit.log <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;select(.message == &quot;secure_service_access_denied&quot;)&#39;</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div>
+<h3 id="using-dal-runtime">Using DAL Runtime</h3>
+<pre class="dal"><code>// Get all audit entries
+let audit_entries = log::get_entries_by_level(LogLevel::Audit);
+
+// Get entries by source
+let runtime_audits = log::get_entries_by_source(&quot;runtime&quot;);
+
+// Get log statistics
+let stats = log::get_stats();
+// Returns: {&quot;total_entries&quot;: 150, &quot;count_audit&quot;: 45, &quot;source_runtime&quot;: 30, ...}</code></pre>
+<hr />
+<h2 id="production-best-practices">Production Best Practices</h2>
+<h3 id="1-enable-file-logging-in-production">1. <strong>Enable File
+Logging in Production</strong></h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_SINK</span><span class="op">=</span>file          <span class="co"># File only (no console spam)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_DIR</span><span class="op">=</span>/var/log/dal   <span class="co"># Use system log directory</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_RETENTION_DAYS</span><span class="op">=</span>90  <span class="co"># Keep logs longer for compliance</span></span></code></pre></div>
+<h3 id="2-secure-log-directory">2. <strong>Secure Log
+Directory</strong></h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create log directory with proper permissions</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/log/dal</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown dal:dal /var/log/dal</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 750 /var/log/dal</span></code></pre></div>
+<h3 id="3-monitor-log-size">3. <strong>Monitor Log Size</strong></h3>
+<p>Set appropriate rotation size based on your volume:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># High-volume: Rotate more frequently</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_ROTATE_SIZE</span><span class="op">=</span>5242880   <span class="co"># 5MB</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Low-volume: Rotate less frequently</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_ROTATE_SIZE</span><span class="op">=</span>52428800  <span class="co"># 50MB</span></span></code></pre></div>
+<h3 id="4-integrate-with-log-aggregation">4. <strong>Integrate with Log
+Aggregation</strong></h3>
+<p>Forward audit logs to your log aggregation system:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example: Forward to syslog</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-f</span> /var/log/dal/audit.log <span class="kw">|</span> <span class="ex">logger</span> <span class="at">-t</span> dal-audit</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Example: Forward to ELK stack</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="ex">filebeat</span> <span class="at">-c</span> filebeat.yml</span></code></pre></div>
+<h3 id="5-regular-audit-review">5. <strong>Regular Audit
+Review</strong></h3>
+<p>Set up alerts for security events:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Alert on denied access attempts</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">&quot;secure_service_access_denied&quot;</span> /var/log/dal/audit.log <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">mail</span> <span class="at">-s</span> <span class="st">&quot;Security Alert&quot;</span> admin@example.com</span></code></pre></div>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="logs-not-being-written">Logs Not Being Written</h3>
+<p><strong>Check:</strong></p>
+<ol type="1">
+<li><code>LOG_SINK</code> is set to <code>file</code> or
+<code>both</code></li>
+<li><code>LOG_DIR</code> directory exists and is writable</li>
+<li>Application has permissions to write to log directory</li>
+</ol>
+<p><strong>Test:</strong></p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_SINK</span><span class="op">=</span>both</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_DIR</span><span class="op">=</span>./test_logs</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run your_service.dal</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> test_logs/audit.log</span></code></pre></div>
+<h3 id="log-file-too-large">Log File Too Large</h3>
+<p><strong>Solution:</strong> Reduce <code>LOG_ROTATE_SIZE</code> or
+increase rotation frequency:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_ROTATE_SIZE</span><span class="op">=</span>1048576  <span class="co"># 1MB (rotate more frequently)</span></span></code></pre></div>
+<h3 id="old-logs-not-being-cleaned">Old Logs Not Being Cleaned</h3>
+<p><strong>Check:</strong> <code>LOG_RETENTION_DAYS</code> is set
+correctly:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_RETENTION_DAYS</span><span class="op">=</span>7  <span class="co"># Keep only 7 days</span></span></code></pre></div>
+<h3 id="performance-impact">Performance Impact</h3>
+<p>File logging is <strong>asynchronous</strong> and should have minimal
+performance impact. If you experience issues:</p>
+<ol type="1">
+<li>Use <code>LOG_SINK=file</code> (disable console output)</li>
+<li>Increase <code>LOG_ROTATE_SIZE</code> to reduce rotation
+frequency</li>
+<li>Consider using a faster storage backend (SSD)</li>
+</ol>
+<hr />
+<h2 id="integration-examples">Integration Examples</h2>
+<h3 id="docker">Docker</h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode dockerfile"><code class="sourceCode dockerfile"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">ENV</span> LOG_SINK=file</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ENV</span> LOG_DIR=/app/logs</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">VOLUME</span> /app/logs</span></code></pre></div>
+<h3 id="kubernetes">Kubernetes</h3>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> LOG_SINK</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">value</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;file&quot;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> LOG_DIR</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">value</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/var/log/dal&quot;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="fu">volumeMounts</span><span class="kw">:</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> audit-logs</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">mountPath</span><span class="kw">:</span><span class="at"> /var/log/dal</span></span></code></pre></div>
+<h3 id="systemd-service">Systemd Service</h3>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Environment</span><span class="ot">=</span><span class="st">&quot;LOG_SINK=file&quot;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Environment</span><span class="ot">=</span><span class="st">&quot;LOG_DIR=/var/log/dal&quot;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Environment</span><span class="ot">=</span><span class="st">&quot;LOG_RETENTION_DAYS=90&quot;</span></span></code></pre></div>
+<hr />
+<h2 id="security-considerations">Security Considerations</h2>
+<ol type="1">
+<li><strong>Log File Permissions</strong>: Restrict access to audit logs
+(chmod 600)</li>
+<li><strong>Encryption</strong>: Consider encrypting log files at rest
+for sensitive data</li>
+<li><strong>Backup</strong>: Regularly backup audit logs for
+compliance</li>
+<li><strong>Monitoring</strong>: Set up alerts for suspicious patterns
+(many denied attempts)</li>
+<li><strong>Retention</strong>: Comply with data retention requirements
+(GDPR, SOC2, etc.)</li>
+</ol>
+<hr />
+<h2 id="summary">Summary</h2>
+<ul>
+<li>✅ <strong>Automatic</strong>: <code>@secure</code> services
+automatically generate audit logs</li>
+<li>✅ <strong>Persistent</strong>: Logs are written to files for
+long-term storage</li>
+<li>✅ <strong>Configurable</strong>: Control via environment
+variables</li>
+<li>✅ <strong>Rotated</strong>: Automatic log rotation prevents disk
+space issues</li>
+<li>✅ <strong>Queryable</strong>: JSON format enables easy analysis and
+filtering</li>
+</ul>
+<p>Audit logging is <strong>implemented</strong> and provides the
+foundation for security compliance and incident response.</p>
+</body>
+</html>

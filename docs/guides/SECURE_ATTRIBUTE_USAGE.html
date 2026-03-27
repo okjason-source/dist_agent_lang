@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SECURE_ATTRIBUTE_USAGE</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="using-secure-in-dal-development-guide">Using
+<code>@secure</code> in DAL: Development Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>The <code>@secure</code> attribute provides <strong>automatic runtime
+enforcement</strong> of authentication, reentrancy protection, and audit
+logging for DAL services. This guide explains how to use it effectively
+based on DAL's design philosophy and your development needs.</p>
+<hr />
+<h2 id="core-principles">Core Principles</h2>
+<h3 id="0-secure-vs-private---important-distinction">0.
+<strong><code>@secure</code> vs "Private" - Important
+Distinction</strong></h3>
+<p><strong><code>@secure</code> is NOT the same as
+"private":</strong></p>
+<ul>
+<li><p><strong><code>@secure</code></strong> =
+<strong>Authentication/Authorization + Reentrancy
+Protection</strong></p>
+<ul>
+<li>Method is <strong>callable</strong> if user is authenticated</li>
+<li>Requires <code>current_caller</code> to be set</li>
+<li>Enforces authentication + reentrancy protection + audit logging</li>
+</ul></li>
+<li><p><strong><code>@public</code></strong> = <strong>No Authentication
+Required</strong> (anyone can call it)</p>
+<ul>
+<li>Method is <strong>callable</strong> without authentication</li>
+<li>No auth checks performed</li>
+</ul></li>
+<li><p><strong>"Private"</strong> (if it existed) =
+<strong>Visibility</strong> (not callable from outside at all)</p>
+<ul>
+<li>Method would be <strong>not callable</strong> externally</li>
+<li>Internal-only access</li>
+</ul></li>
+</ul>
+<p><strong>In DAL:</strong></p>
+<ul>
+<li><code>@secure</code> = "Requires authentication to call" (still
+callable, just needs auth)</li>
+<li><code>@public</code> = "No authentication needed" (callable by
+anyone)</li>
+<li>DAL doesn't have a traditional "private" visibility modifier for
+services/methods</li>
+</ul>
+<p><strong>Think of it this way:</strong></p>
+<pre class="dal"><code>@secure    // = &quot;Callable if authenticated&quot; (like a protected API endpoint)
+@public    // = &quot;Callable by anyone&quot; (like a public website)
+// No @private in DAL - methods are always callable if you have access to the service</code></pre>
+<h3 id="1-declarative-security-by-default">1. <strong>Declarative
+Security by Default</strong></h3>
+<p>DAL emphasizes <strong>declarative security</strong> through
+attributes rather than manual checks. Use <code>@secure</code> to
+automatically enforce security requirements:</p>
+<pre class="dal"><code>// ✅ GOOD: Declarative security
+@secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service UserManagementService {
+    fn update_profile(user_id: string, data: map&lt;string, any&gt;) {
+        // Authentication automatically enforced
+        // Reentrancy protection automatically enabled
+        // Audit logging automatically enabled
+    }
+}
+
+// ❌ AVOID: Manual security checks (redundant with @secure)
+@secure
+service RedundantService {
+    fn update_profile(user_id: string, data: map&lt;string, any&gt;) {
+        // Don&#39;t manually check auth - @secure handles it
+        if (!auth::is_authenticated()) {  // Redundant!
+            return;
+        }
+    }
+}</code></pre>
+<h3 id="2-mutual-exclusivity-secure-vs-public">2. <strong>Mutual
+Exclusivity: <code>@secure</code> vs <code>@public</code></strong></h3>
+<p>These attributes are <strong>mutually exclusive</strong> - choose
+based on your access model:</p>
+<pre class="dal"><code>// ✅ Public API - no authentication required
+@public
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service PublicAPIService {
+    fn get_public_data() -&gt; map&lt;string, any&gt; {
+        // Anyone can call this
+        return {&quot;status&quot;: &quot;ok&quot;};
+    }
+}
+
+// ✅ Secure API - authentication required
+@secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service SecureAPIService {
+    fn get_user_data(user_id: string) -&gt; map&lt;string, any&gt; {
+        // Only authenticated users can call this
+        // Audit log automatically created
+        return {&quot;user_id&quot;: user_id};
+    }
+}
+
+// ❌ INVALID: Cannot combine both
+@secure
+@public  // Parser error: mutually exclusive
+service InvalidService {
+}</code></pre>
+<h3 id="3-function-level-secure-granular-control">3.
+<strong>Function-Level <code>@secure</code> (Granular
+Control)</strong></h3>
+<p>You can apply <code>@secure</code> at the function level for
+fine-grained security control. Function-level attributes
+<strong>override</strong> service-level attributes:</p>
+<p><strong>Precedence Rules:</strong></p>
+<ol type="1">
+<li><strong>Function-level <code>@public</code></strong> overrides
+service-level <code>@secure</code> (makes function public)</li>
+<li><strong>Function-level <code>@secure</code></strong> overrides
+service-level (makes function secure even if service is public)</li>
+<li><strong>If function has no attributes</strong>, it
+<strong>inherits</strong> from service-level (<code>@secure</code> or
+<code>@public</code>)</li>
+<li>If neither function nor service has <code>@secure</code>, no
+protection is applied</li>
+</ol>
+<p><strong>Examples:</strong></p>
+<pre class="dal"><code>// ✅ Mixed security: Some methods secure, some public
+service MixedService {
+    fn public_read() -&gt; map&lt;string, any&gt; {
+        // ✅ Public access (no @secure)
+        return {&quot;data&quot;: &quot;public&quot;};
+    }
+    
+    @secure
+    fn admin_write(data: map&lt;string, any&gt;) {
+        // ✅ Requires authentication (function-level @secure)
+        // Reentrancy protection enabled
+        // Audit logging enabled
+    }
+}
+
+// ✅ Service-level secure with function-level override
+@secure  // All methods secure by default (inherited by functions without attributes)
+service SecureService {
+    fn secure_method() {
+        // ✅ Protected (inherits from service @secure - no function attribute needed)
+    }
+    
+    fn another_secure_method() {
+        // ✅ Also protected (inherits from service @secure)
+    }
+    
+    @public
+    fn public_method() {
+        // ✅ Public (function-level @public overrides service @secure)
+    }
+    
+    @secure
+    fn explicitly_secure() {
+        // ✅ Protected (explicit function-level, same as inheriting from service)
+        // Note: Redundant but allowed for clarity
+    }
+}
+
+// ❌ INVALID: Function cannot have both @secure and @public
+service InvalidService {
+    @secure
+    @public  // Parser error: mutually exclusive
+    fn invalid_method() {
+    }
+}</code></pre>
+<p><strong>When to Use Function-Level <code>@secure</code>:</strong></p>
+<ul>
+<li>✅ You need <strong>mixed security</strong> in a single service
+(some public, some secure methods)</li>
+<li>✅ You want to <strong>override</strong> service-level security for
+specific methods</li>
+<li>✅ You prefer <strong>granular control</strong> over creating
+separate services</li>
+</ul>
+<p><strong>When to Use Service-Level <code>@secure</code>:</strong></p>
+<ul>
+<li>✅ <strong>All methods</strong> in the service require
+authentication</li>
+<li>✅ You want <strong>simpler code</strong> (one attribute instead of
+many)</li>
+<li>✅ The service has a <strong>single security model</strong></li>
+</ul>
+<hr />
+<h2 id="when-to-use-secure">When to Use <code>@secure</code></h2>
+<h3 id="-use-secure-for">✅ <strong>Use <code>@secure</code>
+for:</strong></h3>
+<ol type="1">
+<li><p><strong>User Data Operations</strong></p>
+<pre class="dal"><code>@secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service UserService {
+    fn update_email(user_id: string, email: string) {
+        // Sensitive user data changes
+    }
+    
+    fn delete_account(user_id: string) {
+        // Destructive operations
+    }
+}</code></pre></li>
+<li><p><strong>Financial Transactions</strong></p>
+<pre class="dal"><code>@secure
+@trust(&quot;decentralized&quot;)
+@chain(&quot;ethereum&quot;, &quot;polygon&quot;)
+service PaymentService {
+    fn transfer_funds(from: string, to: string, amount: int) {
+        // Financial operations require authentication
+    }
+}</code></pre></li>
+<li><p><strong>Admin Operations</strong></p>
+<pre class="dal"><code>@secure
+@trust(&quot;centralized&quot;)
+@chain(&quot;ethereum&quot;)
+service AdminService {
+    fn configure_system(config: map&lt;string, any&gt;) {
+        // Administrative changes
+    }
+}</code></pre></li>
+<li><p><strong>Data Modification</strong></p>
+<pre class="dal"><code>@secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service DatabaseService {
+    fn create_record(data: map&lt;string, any&gt;) {
+        // Write operations
+    }
+    
+    fn update_record(id: string, data: map&lt;string, any&gt;) {
+        // Updates require authentication
+    }
+}</code></pre></li>
+</ol>
+<h3 id="-dont-use-secure-for">❌ <strong>Don't Use <code>@secure</code>
+for:</strong></h3>
+<ol type="1">
+<li><p><strong>Public Read Operations</strong> (use <code>@public</code>
+instead)</p>
+<pre class="dal"><code>@public  // Not @secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service PublicDataService {
+    fn get_product_catalog() -&gt; list&lt;any&gt; {
+        // Public read access
+    }
+}</code></pre></li>
+<li><p><strong>Internal/Private Services</strong> (no attribute needed
+if not exposed)</p>
+<pre class="dal"><code>// No @secure needed for internal-only services
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service InternalService {
+    fn internal_helper() {
+        // Not exposed externally
+    }
+}</code></pre></li>
+</ol>
+<hr />
+<h2 id="combining-secure-with-other-attributes">Combining
+<code>@secure</code> with Other Attributes</h2>
+<h3 id="standard-secure-service-pattern">Standard Secure Service
+Pattern</h3>
+<pre class="dal"><code>@secure                    // Authentication + audit logging
+@trust(&quot;hybrid&quot;)          // Trust model
+@chain(&quot;ethereum&quot;)        // When service uses blockchain
+@compile_target(&quot;webassembly&quot;)  // Deployment target
+@interface(&quot;typescript&quot;)  // Client interface generation
+service SecureWebService {
+    // All methods inherit @secure
+}</code></pre>
+<h3 id="defiblockchain-services">DeFi/Blockchain Services</h3>
+<pre class="dal"><code>@secure
+@trust(&quot;decentralized&quot;)   // Fully decentralized
+@chain(&quot;ethereum&quot;, &quot;polygon&quot;, &quot;arbitrum&quot;)  // Multi-chain
+@compile_target(&quot;blockchain&quot;)
+service DeFiService {
+    fn swap_tokens(from: string, to: string, amount: int) {
+        // Secure, multi-chain token swaps
+    }
+}</code></pre>
+<h3 id="hybrid-trust-services">Hybrid Trust Services</h3>
+<pre class="dal"><code>@secure
+@trust(&quot;hybrid&quot;)          // Centralized + decentralized
+@chain(&quot;ethereum&quot;)
+@ai                       // AI capabilities
+service HybridAIService {
+    fn analyze_sensitive_data(data: string) -&gt; map&lt;string, any&gt; {
+        // Secure AI operations with hybrid trust
+    }
+}</code></pre>
+<hr />
+<h2 id="trust-model-considerations">Trust Model Considerations</h2>
+<h3 id="centralized-services-trustcentralized">Centralized Services
+(<code>@trust("centralized")</code>)</h3>
+<p><strong>Best for:</strong> Traditional web APIs, admin panels,
+enterprise systems</p>
+<pre class="dal"><code>@secure
+@trust(&quot;centralized&quot;)
+@chain(&quot;ethereum&quot;)
+service EnterpriseService {
+    // Centralized authentication
+    // Audit logs stored centrally
+}</code></pre>
+<p><strong>Characteristics:</strong></p>
+<ul>
+<li>Single source of truth for authentication</li>
+<li>Centralized audit logging</li>
+<li>Traditional session management</li>
+</ul>
+<h3 id="hybrid-services-trusthybrid">Hybrid Services
+(<code>@trust("hybrid")</code>)</h3>
+<p><strong>Best for:</strong> Most DAL applications - combines benefits
+of both models</p>
+<pre class="dal"><code>@secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service HybridService {
+    // Can use both centralized and decentralized auth
+    // Flexible audit logging
+}</code></pre>
+<p><strong>Characteristics:</strong></p>
+<ul>
+<li>Supports both centralized and blockchain-based auth</li>
+<li>Flexible trust model</li>
+<li>Best of both worlds</li>
+</ul>
+<h3 id="decentralized-services-trustdecentralized">Decentralized
+Services (<code>@trust("decentralized")</code>)</h3>
+<p><strong>Best for:</strong> DeFi, DAOs, fully decentralized
+applications</p>
+<pre class="dal"><code>@secure
+@trust(&quot;decentralized&quot;)
+@chain(&quot;ethereum&quot;, &quot;polygon&quot;)
+service DeFiService {
+    // Blockchain-based authentication
+    // On-chain audit logs
+}</code></pre>
+<p><strong>Characteristics:</strong></p>
+<ul>
+<li>Wallet-based authentication (msg.sender)</li>
+<li>On-chain audit trail</li>
+<li>No central authority</li>
+</ul>
+<hr />
+<h2 id="development-workflow">Development Workflow</h2>
+<h3 id="1-start-with-public-for-development">1. <strong>Start with
+<code>@public</code> for Development</strong></h3>
+<p>During development, use <code>@public</code> to avoid authentication
+overhead:</p>
+<pre class="dal"><code>@public  // Development mode
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service DevelopmentService {
+    fn test_endpoint() {
+        // No auth needed during development
+    }
+}</code></pre>
+<h3 id="2-switch-to-secure-before-production">2. <strong>Switch to
+<code>@secure</code> Before Production</strong></h3>
+<p>Before deploying, change to <code>@secure</code>:</p>
+<pre class="dal"><code>@secure  // Production mode
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service ProductionService {
+    fn production_endpoint() {
+        // Auth enforced in production
+    }
+}</code></pre>
+<h3 id="3-set-authentication-context">3. <strong>Set Authentication
+Context</strong></h3>
+<p>When calling <code>@secure</code> services, ensure
+<code>current_caller</code> is set:</p>
+<pre class="dal"><code>// In your runtime/client code:
+runtime.set_current_caller(&quot;0x1234...&quot;);  // Set authenticated user
+let result = runtime.call_service_method(&quot;SecureService&quot;, &quot;updateProfile&quot;, args);</code></pre>
+<h3 id="4-monitor-audit-logs">4. <strong>Monitor Audit
+Logs</strong></h3>
+<p>All <code>@secure</code> service access is automatically logged:</p>
+<pre class="dal"><code>// Audit logs are automatically created:
+// - secure_service_access: Successful authenticated access
+// - secure_service_access_denied: Unauthorized access attempts</code></pre>
+<p><strong>Persistent File Logging</strong>: Audit logs are
+automatically written to files when <code>LOG_SINK=file</code> or
+<code>LOG_SINK=both</code> is set. See <a
+href="./AUDIT_LOGGING.html">Audit Logging Guide</a> for details.</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable persistent audit logging</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_SINK</span><span class="op">=</span>both</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LOG_DIR</span><span class="op">=</span>./logs</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run your_service.dal</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="co"># View audit logs</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> logs/audit.log <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.&#39;</span></span></code></pre></div>
+<hr />
+<h2 id="common-patterns">Common Patterns</h2>
+<h3 id="pattern-1-secure-crud-service">Pattern 1: Secure CRUD
+Service</h3>
+<pre class="dal"><code>@secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service SecureCRUDService {
+    data_store: map&lt;string, any&gt;;
+    
+    fn create(key: string, value: any) {
+        // Authentication automatically enforced
+        self.data_store[key] = value;
+    }
+    
+    fn read(key: string) -&gt; any {
+        // Authentication automatically enforced
+        return self.data_store[key];
+    }
+    
+    fn update(key: string, value: any) {
+        // Authentication automatically enforced
+        self.data_store[key] = value;
+    }
+    
+    fn delete(key: string) {
+        // Authentication automatically enforced
+        self.data_store.remove(key);
+    }
+}</code></pre>
+<h3 id="pattern-2-mixed-publicsecure-service">Pattern 2: Mixed
+Public/Secure Service</h3>
+<pre class="dal"><code>// Use separate services for different access levels
+@public
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service PublicService {
+    fn get_public_info() -&gt; map&lt;string, any&gt; {
+        return {&quot;version&quot;: &quot;1.0&quot;};
+    }
+}
+
+@secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service SecureService {
+    fn get_user_info(user_id: string) -&gt; map&lt;string, any&gt; {
+        return {&quot;user_id&quot;: user_id, &quot;private&quot;: true};
+    }
+}</code></pre>
+<h3 id="pattern-3-secure-service-with-transaction-support">Pattern 3:
+Secure Service with Transaction Support</h3>
+<pre class="dal"><code>@secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service SecureTransactionService {
+    @txn  // Transaction support
+    fn transfer_assets(from: string, to: string, amount: int) {
+        // Secure + transactional
+        // Both auth and transaction safety enforced
+    }
+}</code></pre>
+<hr />
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="-do">✅ <strong>DO:</strong></h3>
+<ol type="1">
+<li><p><strong>Use <code>@secure</code> by default for write
+operations</strong></p>
+<pre class="dal"><code>@secure  // Default for modifications
+service WriteService {
+    fn modify_data() { }
+}</code></pre></li>
+<li><p><strong>Combine with appropriate trust model</strong></p>
+<pre class="dal"><code>@secure
+@trust(&quot;hybrid&quot;)  // Match your trust requirements
+@chain(&quot;ethereum&quot;)
+service SecureService { }</code></pre></li>
+<li><p><strong>Add <code>@chain</code> when the service interacts with a
+blockchain</strong></p>
+<pre class="dal"><code>@secure
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)  // When using chain:: or deploying/calling contracts
+service SecureService { }</code></pre></li>
+<li><p><strong>Use <code>@public</code> explicitly for public
+endpoints</strong></p>
+<pre class="dal"><code>@public  // Explicitly mark public APIs
+service PublicService { }</code></pre></li>
+</ol>
+<h3 id="-dont">❌ <strong>DON'T:</strong></h3>
+<ol type="1">
+<li><p><strong>Don't manually check authentication in
+<code>@secure</code> services</strong></p>
+<pre class="dal"><code>@secure
+service Service {
+    fn method() {
+        // ❌ Redundant - @secure already enforces this
+        if (!auth::is_authenticated()) {
+            return;
+        }
+    }
+}</code></pre></li>
+<li><p><strong>Don't use <code>@secure</code> and <code>@public</code>
+together</strong></p>
+<pre class="dal"><code>@secure
+@public  // ❌ Parser error - mutually exclusive
+service InvalidService { }</code></pre></li>
+</ol>
+<hr />
+<h2 id="migration-guide">Migration Guide</h2>
+<h3 id="migrating-from-manual-auth-checks">Migrating from Manual Auth
+Checks</h3>
+<p><strong>Before (Manual):</strong></p>
+<pre class="dal"><code>service OldService {
+    fn update_data(data: any) {
+        if (!auth::is_authenticated()) {
+            return;
+        }
+        log::audit(&quot;update_data&quot;, {&quot;data&quot;: data}, Some(&quot;service&quot;));
+        // ... update logic
+    }
+}</code></pre>
+<p><strong>After (Declarative):</strong></p>
+<pre class="dal"><code>@secure  // Automatic auth + audit
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service NewService {
+    fn update_data(data: any) {
+        // Auth automatically enforced
+        // Audit automatically logged
+        // ... update logic
+    }
+}</code></pre>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="issue-access-denied-errors">Issue: "Access Denied" errors</h3>
+<p><strong>Cause:</strong> <code>current_caller</code> not set or set to
+default/null address</p>
+<p><strong>Solution:</strong></p>
+<pre class="dal"><code>// Ensure caller is set before calling @secure service
+runtime.set_current_caller(&quot;0x1234...&quot;);  // Valid address
+// Not: &quot;0x0000000000000000000000000000000000000000&quot;</code></pre>
+<h3 id="issue-missing-audit-logs">Issue: Missing audit logs</h3>
+<p><strong>Check:</strong></p>
+<ul>
+<li>Verify <code>@secure</code> attribute is present</li>
+<li>Check log level configuration (<code>LOG_LEVEL=audit</code>)</li>
+<li>Ensure log sink is enabled (<code>LOG_SINK=console</code>)</li>
+</ul>
+<h3 id="issue-parser-errors-with-secure">Issue: Parser errors with
+<code>@secure</code></h3>
+<p><strong>Common causes:</strong></p>
+<ul>
+<li><code>@secure</code> and <code>@public</code> used together
+(mutually exclusive)</li>
+<li>Invalid trust model value</li>
+</ul>
+<hr />
+<h2 id="summary">Summary</h2>
+<ul>
+<li><strong>Use <code>@secure</code></strong> for services requiring
+authentication</li>
+<li><strong>Use <code>@public</code></strong> for public APIs (mutually
+exclusive)</li>
+<li><strong>Use <code>@trust</code></strong> for trust model; add
+<strong><code>@chain</code></strong> when using blockchain</li>
+<li><strong>Let DAL handle</strong> authentication and audit logging
+automatically</li>
+<li><strong>Set <code>current_caller</code></strong> when calling
+<code>@secure</code> services</li>
+<li><strong>Monitor audit logs</strong> for security insights</li>
+</ul>
+<p>The <code>@secure</code> attribute provides <strong>declarative,
+automatic security enforcement</strong> that aligns with DAL's
+philosophy of making security simple and consistent across your
+distributed applications.</p>
+</body>
+</html>

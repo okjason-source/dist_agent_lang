@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AI_FEATURES_GUIDE</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="ai-features-guide---dist_agent_lang-v108">AI Features Guide -
+dist_agent_lang (v1.0.8)</h1>
+<blockquote>
+<p><strong>Beta Release v1.0.8:</strong> Includes comprehensive AI agent
+framework with persistent memory and extensible skills. Actively
+maintained. Test AI features thoroughly. <strong>Beta testing feedback
+appreciated!</strong></p>
+</blockquote>
+<p>Complete guide to building <strong>AI-powered smart
+contracts</strong> and <strong>intelligent agents</strong> with
+dist_agent_lang.</p>
+<hr />
+<h2 id="-table-of-contents">📋 Table of Contents</h2>
+<ol type="1">
+<li><a href="#why-ai--blockchain">Why AI + Blockchain?</a></li>
+<li><a href="#ai-capabilities-overview">AI Capabilities
+Overview</a></li>
+<li><a href="#ai-stdlib-module">AI stdlib Module</a></li>
+<li><a href="#building-ai-agents">Building AI Agents</a></li>
+<li><a href="#ai--oracle-integration">AI + Oracle Integration</a></li>
+<li><a href="#ai--defi-integration">AI + DeFi Integration</a></li>
+<li><a href="#performance--cost">Performance &amp; Cost</a></li>
+<li><a href="#security-considerations">Security Considerations</a></li>
+<li><a href="#real-world-use-cases">Real-World Use Cases</a></li>
+</ol>
+<hr />
+<h2 id="-why-ai--blockchain">🎯 Why AI + Blockchain?</h2>
+<h3 id="the-perfect-combination">The Perfect Combination</h3>
+<p><strong>Blockchain provides:</strong></p>
+<ul>
+<li>Immutability and transparency</li>
+<li>Decentralized execution</li>
+<li>Trustless operations</li>
+<li>Verifiable transactions</li>
+</ul>
+<p><strong>AI provides:</strong></p>
+<ul>
+<li>Intelligent decision-making</li>
+<li>Pattern recognition</li>
+<li>Natural language processing</li>
+<li>Predictive analytics</li>
+<li>Automated reasoning</li>
+</ul>
+<p><strong>Together they enable:</strong></p>
+<ul>
+<li>🤖 <strong>Autonomous smart contracts</strong> that adapt to
+conditions</li>
+<li>🧠 <strong>Intelligent trading bots</strong> with ML-powered
+strategies</li>
+<li>💬 <strong>Natural language DeFi</strong> - interact with contracts
+using plain English</li>
+<li>🔮 <strong>Predictive governance</strong> - AI-powered DAO
+decisions</li>
+<li>🎨 <strong>AI-generated NFTs</strong> - dynamic, evolving digital
+assets</li>
+<li>📊 <strong>Automated risk assessment</strong> for DeFi
+protocols</li>
+</ul>
+<hr />
+<h2 id="-ai-capabilities-overview">🚀 AI Capabilities Overview</h2>
+<h3 id="what-you-can-build-with-dals-ai-features">What You Can Build
+with DAL's AI Features</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Description</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Text Classification</strong></td>
+<td>Classify text into categories</td>
+<td>Sentiment analysis, spam detection, content moderation</td>
+</tr>
+<tr class="even">
+<td><strong>Text Generation</strong></td>
+<td>Generate human-like text</td>
+<td>Automated responses, report generation, documentation</td>
+</tr>
+<tr class="odd">
+<td><strong>Embeddings</strong></td>
+<td>Convert text to vector representations</td>
+<td>Semantic search, similarity matching, clustering</td>
+</tr>
+<tr class="even">
+<td><strong>Image Analysis</strong></td>
+<td>Analyze and classify images</td>
+<td>NFT verification, content moderation, art analysis</td>
+</tr>
+<tr class="odd">
+<td><strong>Prediction</strong></td>
+<td>Make predictions based on historical data</td>
+<td>Price forecasting, risk assessment, trend analysis</td>
+</tr>
+<tr class="even">
+<td><strong>Recommendation</strong></td>
+<td>Suggest items based on preferences</td>
+<td>Token recommendations, NFT suggestions, strategy tips</td>
+</tr>
+<tr class="odd">
+<td><strong>Anomaly Detection</strong></td>
+<td>Identify unusual patterns</td>
+<td>Fraud detection, security monitoring, outlier detection</td>
+</tr>
+<tr class="even">
+<td><strong>Natural Language Understanding</strong></td>
+<td>Parse and understand user intent</td>
+<td>Conversational DeFi, chatbot contracts, voice commands</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="-ai-stdlib-module---agent-framework">📚 AI stdlib Module - Agent
+Framework</h2>
+<h3 id="current-implementation-phase-1">Current Implementation (Phase
+1)</h3>
+<p>The AI module currently implements a <strong>comprehensive agent
+framework</strong> for building intelligent, autonomous agents.</p>
+<h4 id="agent-lifecycle-management">Agent Lifecycle Management</h4>
+<pre class="dal"><code>// Create and spawn a new AI agent
+service AgentManager {
+    fn create_intelligent_agent() {
+        let config = {
+            &quot;agent_id&quot;: &quot;trader_001&quot;,
+            &quot;name&quot;: &quot;Trading Agent&quot;,
+            &quot;role&quot;: &quot;market_analyzer&quot;,
+            &quot;capabilities&quot;: [&quot;text_analysis&quot;, &quot;data_processing&quot;, &quot;trading&quot;],
+            &quot;memory_size&quot;: 1024,
+            &quot;max_concurrent_tasks&quot;: 5,
+            &quot;trust_level&quot;: &quot;high&quot;,
+            &quot;communication_protocols&quot;: [&quot;secure_message&quot;],
+            &quot;ai_models&quot;: [&quot;sentiment_analyzer&quot;, &quot;price_predictor&quot;]
+        };
+        
+        let agent_result = ai::spawn_agent(config);
+        if agent_result.is_ok() {
+            let agent = agent_result.unwrap();
+            log::info(&quot;ai&quot;, &quot;Agent created: &quot; + agent.id);
+        }
+    }
+    
+    // Get agent status
+    fn check_agent_status(agent_id: string) -&gt; string {
+        // Note: In actual implementation, you&#39;d need to store agent reference
+        // This is a simplified example
+        return &quot;idle&quot;; // Returns: &quot;idle&quot;, &quot;active&quot;, &quot;busy&quot;, &quot;error&quot;, or &quot;terminated&quot;
+    }
+    
+    // Terminate agent when done
+    fn shutdown_agent(agent_id: string) {
+        // Note: In actual implementation, you&#39;d need agent reference
+        log::info(&quot;ai&quot;, &quot;Shutting down agent: &quot; + agent_id);
+    }
+}</code></pre>
+<h4 id="text-analysis-built-in">Text Analysis (Built-in)</h4>
+<pre class="dal"><code>service TextAnalyzer {
+    // Analyze text with AI
+    fn analyze_text(text: string) {
+        let analysis_result = ai::analyze_text(text);
+        
+        if analysis_result.is_ok() {
+            let analysis = analysis_result.unwrap();
+            
+            // TextAnalysis includes:
+            // - sentiment: float (0.0 to 1.0)
+            // - entities: list of Entity objects
+            // - keywords: list of strings
+            // - summary: string
+            // - language: string
+            // - confidence: float
+            
+            log::info(&quot;ai&quot;, &quot;Sentiment: &quot; + analysis.sentiment.to_string());
+            log::info(&quot;ai&quot;, &quot;Confidence: &quot; + analysis.confidence.to_string());
+        }
+    }
+}</code></pre>
+<h4 id="text-generation-built-in">Text Generation (Built-in)</h4>
+<pre class="dal"><code>service TextGenerator {
+    // Generate text response
+    fn generate_response(prompt: string) -&gt; string {
+        let result = ai::generate_text(prompt);
+        if result.is_ok() {
+            return result.unwrap();
+        }
+        return &quot;&quot;;
+    }
+}</code></pre>
+<h4 id="simplified-api-functions">Simplified API Functions</h4>
+<pre class="dal"><code>service SimplifiedAI {
+    // Classify text using simplified API
+    fn classify_text(input: string) -&gt; string {
+        let result = ai::classify(&quot;sentiment_model&quot;, input);
+        return result.unwrap_or(&quot;&quot;);
+    }
+    
+    // Generate text using simplified API
+    fn generate_text(prompt: string) -&gt; string {
+        let result = ai::generate(&quot;gpt-4&quot;, prompt);
+        return result.unwrap_or(&quot;&quot;);
+    }
+    
+    // Generate embeddings
+    fn get_embeddings(text: string) -&gt; list&lt;float&gt; {
+        let result = ai::embed(text);
+        return result.unwrap_or([]);
+    }
+    
+    // Detect anomalies
+    fn check_anomaly(data: list&lt;float&gt;, new_value: float) -&gt; bool {
+        let result = ai::detect_anomaly(data, new_value);
+        return result.unwrap_or(false);
+    }
+}</code></pre>
+<h4 id="task-management">Task Management</h4>
+<pre class="dal"><code>service TaskManager {
+    fn create_analysis_task(agent_id: string, data: string) {
+        // Note: In actual implementation, you&#39;d need agent reference
+        // This shows the concept
+        
+        let params = {
+            &quot;text&quot;: data
+        };
+        
+        // Create task would require agent reference
+        // let task = ai::create_task(agent, &quot;text_analysis&quot;, &quot;Analyze market sentiment&quot;, params);
+        
+        log::info(&quot;ai&quot;, &quot;Task created for agent: &quot; + agent_id);
+    }
+    
+    // Execute task and get results
+    fn execute_analysis(agent_id: string, task_id: string) {
+        // Note: In actual implementation, you&#39;d need agent reference
+        // let result = ai::execute_task(agent, task_id);
+        
+        log::info(&quot;ai&quot;, &quot;Task executed: &quot; + task_id);
+    }
+}</code></pre>
+<h4 id="image-analysis-built-in">Image Analysis (Built-in)</h4>
+<pre class="dal"><code>service ImageAnalyzer {
+    // Analyze image data
+    fn analyze_nft_image(image_data: list&lt;int&gt;) {
+        // Convert list&lt;int&gt; to Vec&lt;u8&gt; internally
+        let result = ai::analyze_image(image_data);
+        
+        if result.is_ok() {
+            let analysis = result.unwrap();
+            
+            // ImageAnalysis includes:
+            // - objects: list of DetectedObject
+            // - faces: list of Face
+            // - text: list of strings
+            // - colors: list of strings
+            // - quality_score: float
+            
+            log::info(&quot;ai&quot;, &quot;Quality score: &quot; + analysis.quality_score.to_string());
+        }
+    }
+    
+    // Analyze image from URL
+    fn analyze_image_url(url: string) {
+        let result = ai::analyze_image_url(url);
+        if result.is_ok() {
+            let analysis = result.unwrap();
+            log::info(&quot;ai&quot;, &quot;Image analyzed from URL&quot;);
+        }
+    }
+}</code></pre>
+<h4 id="ai-model-training--prediction">AI Model Training &amp;
+Prediction</h4>
+<pre class="dal"><code>service ModelTrainer {
+    // Train a custom model
+    fn train_custom_model(data_type: string, samples: list&lt;any&gt;, labels: list&lt;any&gt;) {
+        let training_data = {
+            &quot;data_type&quot;: data_type,
+            &quot;samples&quot;: samples,
+            &quot;labels&quot;: labels
+        };
+        
+        let result = ai::train_model(training_data);
+        if result.is_ok() {
+            let model = result.unwrap();
+            log::info(&quot;ai&quot;, &quot;Model trained: &quot; + model.model_id);
+        }
+    }
+    
+    // Make predictions with trained model
+    fn make_prediction(model_id: string, input: any) {
+        // Note: Would need model reference in actual implementation
+        // let prediction = ai::predict(model, input);
+        
+        log::info(&quot;ai&quot;, &quot;Making prediction with model: &quot; + model_id);
+    }
+    
+    // Simplified prediction API
+    fn predict_with_model(model_name: string, input: any) {
+        let result = ai::predict_with_model(model_name, input);
+        if result.is_ok() {
+            let prediction = result.unwrap();
+            log::info(&quot;ai&quot;, &quot;Prediction made&quot;);
+        }
+    }
+}</code></pre>
+<hr />
+<h2 id="-building-ai-agents">🤖 Building AI Agents</h2>
+<h3 id="agent-architecture-actual-implementation">Agent Architecture
+(Actual Implementation)</h3>
+<pre class="dal"><code>@ai
+@chain(&quot;ethereum&quot;)
+service IntelligentTradingSystem {
+    // Agent storage
+    user_agents: map&lt;string, string&gt; = {}; // user_id -&gt; agent_id
+    
+    // Create a trading agent using the AI framework
+    fn create_trading_agent(user_id: string, name: string, strategy: string) {
+        // Create agent configuration
+        let config = {
+            &quot;agent_id&quot;: &quot;trader_&quot; + user_id,
+            &quot;name&quot;: name,
+            &quot;role&quot;: &quot;trading_agent&quot;,
+            &quot;capabilities&quot;: [&quot;text_analysis&quot;, &quot;market_analysis&quot;, &quot;trading&quot;],
+            &quot;memory_size&quot;: 2048,
+            &quot;max_concurrent_tasks&quot;: 10,
+            &quot;trust_level&quot;: &quot;high&quot;,
+            &quot;communication_protocols&quot;: [&quot;secure&quot;],
+            &quot;ai_models&quot;: [&quot;sentiment&quot;, &quot;predictor&quot;]
+        };
+        
+        // Spawn the agent
+        let agent_result = ai::spawn_agent(config);
+        if agent_result.is_ok() {
+            let agent = agent_result.unwrap();
+            user_agents[user_id] = agent.id;
+            log::info(&quot;ai&quot;, &quot;Trading agent created: &quot; + agent.id);
+        }
+    }
+    
+    // AI-powered decision making using actual framework
+    fn analyze_market_sentiment(market_data: string) -&gt; string {
+        // Use AI to analyze text
+        let analysis_result = ai::analyze_text(market_data);
+        
+        if analysis_result.is_ok() {
+            let analysis = analysis_result.unwrap();
+            
+            // sentiment is a float: positive &gt; 0.5, negative &lt; 0.5
+            if analysis.sentiment &gt; 0.7 {
+                return &quot;bullish&quot;;
+            } else if analysis.sentiment &lt; 0.3 {
+                return &quot;bearish&quot;;
+            } else {
+                return &quot;neutral&quot;;
+            }
+        }
+        
+        return &quot;unknown&quot;;
+    }
+    
+    // Generate trading recommendation
+    fn get_trade_recommendation(prompt: string) -&gt; string {
+        // Generate text recommendation
+        let result = ai::generate_text(prompt);
+        if result.is_ok() {
+            return result.unwrap();
+        }
+        return &quot;&quot;;
+    }
+}</code></pre>
+<h3 id="multi-agent-coordination-actual-framework">Multi-Agent
+Coordination (Actual Framework)</h3>
+<pre class="dal"><code>@ai
+@chain(&quot;ethereum&quot;)
+service MultiAgentCoordinator {
+    coordinator_id: string = &quot;&quot;;
+    
+    fn initialize_coordinator() {
+        let coordinator = ai::create_coordinator(&quot;dao_coordinator&quot;);
+        coordinator_id = coordinator.coordinator_id;
+        log::info(&quot;ai&quot;, &quot;Coordinator created: &quot; + coordinator_id);
+    }
+    
+    fn add_specialized_agent(role: string, name: string) {
+        // Create agent config for specific role
+        let config = {
+            &quot;agent_id&quot;: role + &quot;_agent&quot;,
+            &quot;name&quot;: name,
+            &quot;role&quot;: role, // &quot;analyst&quot;, &quot;trader&quot;, &quot;risk_manager&quot;
+            &quot;capabilities&quot;: get_role_capabilities(role),
+            &quot;memory_size&quot;: 2048,
+            &quot;max_concurrent_tasks&quot;: 5,
+            &quot;trust_level&quot;: &quot;high&quot;,
+            &quot;communication_protocols&quot;: [&quot;secure&quot;],
+            &quot;ai_models&quot;: get_role_models(role)
+        };
+        
+        // Spawn and add to coordinator
+        let agent_result = ai::spawn_agent(config);
+        if agent_result.is_ok() {
+            let agent = agent_result.unwrap();
+            log::info(&quot;ai&quot;, &quot;Agent added: &quot; + agent.id);
+        }
+    }
+    
+    fn get_role_capabilities(role: string) -&gt; list&lt;string&gt; {
+        if role == &quot;analyst&quot; {
+            return [&quot;text_analysis&quot;, &quot;data_analysis&quot;];
+        } else if role == &quot;trader&quot; {
+            return [&quot;trading&quot;, &quot;market_analysis&quot;];
+        } else if role == &quot;risk_manager&quot; {
+            return [&quot;risk_assessment&quot;, &quot;validation&quot;];
+        }
+        return [&quot;general&quot;];
+    }
+    
+    fn get_role_models(role: string) -&gt; list&lt;string&gt; {
+        return [&quot;sentiment_analyzer&quot;, &quot;text_generator&quot;];
+    }
+}</code></pre>
+<hr />
+<h2 id="-ai--oracle-integration">🔮 AI + Oracle Integration</h2>
+<h3 id="intelligent-price-feeds-with-anomaly-detection">Intelligent
+Price Feeds with Anomaly Detection</h3>
+<pre class="dal"><code>@ai
+@chain(&quot;ethereum&quot;)
+service IntelligentOracle {
+    current_price: int = 0;
+    price_history: list&lt;int&gt; = [];
+    max_history: int = 100;
+    
+    fn update_price_with_validation() {
+        // Fetch from oracle
+        let oracle_result = oracle::fetch(&quot;chainlink&quot;, &quot;ETH/USD&quot;);
+        
+        if oracle_result.is_ok() {
+            let price_data = oracle_result.unwrap();
+            let new_price = price_data.data;
+            
+            // Use AI to detect anomalies
+            price_history.push(new_price);
+            if price_history.len() &gt; max_history {
+                // Remove oldest
+                price_history = price_history.slice(1);
+            }
+            
+            // AI anomaly detection
+            let history_floats: list&lt;float&gt; = [];
+            for price in price_history {
+                history_floats.push(price.to_float());
+            }
+            
+            let anomaly_result = ai::detect_anomaly(history_floats, new_price.to_float());
+            
+            if anomaly_result.is_ok() &amp;&amp; anomaly_result.unwrap() {
+                // Price is unusual - require additional validation
+                log::warn(&quot;oracle&quot;, &quot;Anomalous price detected: &quot; + new_price.to_string());
+                
+                // Use AI to analyze if this is a real market event
+                let market_data = json::stringify({
+                    &quot;historical&quot;: price_history,
+                    &quot;new&quot;: new_price
+                });
+                
+                let analysis = ai::generate_text(&quot;Is this price movement legitimate? &quot; + market_data);
+                let legitimacy = ai::classify(&quot;legitimacy_classifier&quot;, analysis);
+                
+                if legitimacy != &quot;legitimate&quot; {
+                    log::error(&quot;oracle&quot;, &quot;Suspicious price movement detected&quot;);
+                    return;
+                }
+            }
+            
+            current_price = new_price;
+            log::info(&quot;oracle&quot;, &quot;Price updated: &quot; + current_price.to_string());
+        }
+    }
+}</code></pre>
+<hr />
+<h2 id="-ai--defi-integration">💰 AI + DeFi Integration</h2>
+<h3 id="ai-powered-automated-market-maker-amm">AI-Powered Automated
+Market Maker (AMM)</h3>
+<pre class="dal"><code>@ai
+@chain(&quot;ethereum&quot;)
+service IntelligentAMM {
+    // Dynamic fee adjustment based on market conditions
+    fn get_swap_fee(token_in: string, token_out: string, amount_in: int) -&gt; int {
+        // Get market volatility
+        let volatility = calculate_volatility(token_in, token_out);
+        
+        // Get AI recommendation for fee
+        let market_data = json::stringify({
+            &quot;token_in&quot;: token_in,
+            &quot;token_out&quot;: token_out,
+            &quot;amount&quot;: amount_in,
+            &quot;volatility&quot;: volatility,
+            &quot;pool_tvl&quot;: get_total_value_locked(),
+            &quot;recent_volume&quot;: get_recent_volume()
+        });
+        
+        let fee_recommendation = ai::generate(&quot;fee_optimizer&quot;, &quot;Recommend optimal swap fee for these conditions: &quot; + market_data);
+        
+        if fee_recommendation.is_ok() {
+            // Parse AI recommendation (e.g., &quot;0.3%&quot;)
+            let recommended_fee = parse_fee_bps(fee_recommendation.unwrap());
+            
+            // Ensure fee is within acceptable range
+            let min_fee = 10;  // 0.1%
+            let max_fee = 100; // 1%
+            
+            if recommended_fee &lt; min_fee {
+                return min_fee;
+            }
+            if recommended_fee &gt; max_fee {
+                return max_fee;
+            }
+            
+            return recommended_fee;
+        }
+        
+        return 30; // Default 0.3%
+    }
+    
+    fn calculate_volatility(token_in: string, token_out: string) -&gt; float {
+        // Simplified volatility calculation
+        return 0.05; // 5% volatility
+    }
+    
+    fn get_total_value_locked() -&gt; int {
+        return 1000000; // Simplified
+    }
+    
+    fn get_recent_volume() -&gt; int {
+        return 50000; // Simplified
+    }
+    
+    fn parse_fee_bps(fee_text: string) -&gt; int {
+        // Parse fee from text (simplified)
+        return 30; // Default
+    }
+}</code></pre>
+<h3 id="ai-driven-lending-protocol">AI-Driven Lending Protocol</h3>
+<pre class="dal"><code>@ai
+@chain(&quot;ethereum&quot;)
+service SmartLendingPool {
+    // AI-powered credit scoring
+    fn get_credit_score(user_address: string) -&gt; int {
+        // Gather user&#39;s on-chain history
+        let transaction_history = get_user_transactions(user_address);
+        let borrow_history = get_user_borrow_history(user_address);
+        let collateral_history = get_user_collateral_history(user_address);
+        
+        // Prepare data for AI model
+        let user_data = json::stringify({
+            &quot;address&quot;: user_address,
+            &quot;tx_count&quot;: transaction_history.len(),
+            &quot;borrow_history&quot;: borrow_history,
+            &quot;collateral_history&quot;: collateral_history,
+            &quot;account_age&quot;: get_account_age(user_address)
+        });
+        
+        // AI credit score (0-1000)
+        let score_result = ai::generate(&quot;credit_scorer&quot;, &quot;Calculate credit score for this user: &quot; + user_data);
+        
+        if score_result.is_ok() {
+            return parse_credit_score(score_result.unwrap());
+        }
+        
+        return 500; // Default score
+    }
+    
+    // Dynamic interest rates based on risk
+    fn get_interest_rate(user_address: string, amount: int) -&gt; int {
+        let credit_score = get_credit_score(user_address);
+        let pool_utilization = get_utilization_rate();
+        
+        // AI-powered rate calculation
+        let rate_data = json::stringify({
+            &quot;credit_score&quot;: credit_score,
+            &quot;utilization&quot;: pool_utilization,
+            &quot;borrow_amount&quot;: amount,
+            &quot;market_conditions&quot;: get_current_market_conditions()
+        });
+        
+        let rate_result = ai::predict_with_model(&quot;interest_rate_model&quot;, rate_data);
+        
+        if rate_result.is_ok() {
+            let rate_value = rate_result.unwrap();
+            // Extract rate from Value (simplified)
+            return 500; // 5% APR in basis points
+        }
+        
+        return 500; // Default rate
+    }
+    
+    fn get_user_transactions(address: string) -&gt; list&lt;any&gt; {
+        return [];
+    }
+    
+    fn get_user_borrow_history(address: string) -&gt; list&lt;any&gt; {
+        return [];
+    }
+    
+    fn get_user_collateral_history(address: string) -&gt; list&lt;any&gt; {
+        return [];
+    }
+    
+    fn get_account_age(address: string) -&gt; int {
+        return 86400; // 1 day
+    }
+    
+    fn get_utilization_rate() -&gt; float {
+        return 0.75; // 75%
+    }
+    
+    fn get_current_market_conditions() -&gt; string {
+        return &quot;stable&quot;;
+    }
+    
+    fn parse_credit_score(score_text: string) -&gt; int {
+        // Parse score from text (simplified)
+        return 600;
+    }
+}</code></pre>
+<hr />
+<h2 id="-ai--nft-integration">🎨 AI + NFT Integration</h2>
+<h3 id="dynamic-ai-generated-nfts">Dynamic AI-Generated NFTs</h3>
+<pre class="dal"><code>@ai
+@chain(&quot;ethereum&quot;)
+service DynamicNFT {
+    nft_data: map&lt;int, map&lt;string, any&gt;&gt; = {};
+    next_token_id: int = 1;
+    
+    // Mint NFT with AI-generated art
+    fn mint_ai_nft(prompt: string) -&gt; int {
+        let token_id = next_token_id;
+        next_token_id = next_token_id + 1;
+        
+        // Generate image using AI
+        let image_result = ai::generate_image(&quot;stable_diffusion&quot;, prompt);
+        
+        if image_result.is_ok() {
+            let image_url = image_result.unwrap();
+            
+            // Store metadata
+            let metadata = json::stringify({
+                &quot;name&quot;: &quot;AI NFT #&quot; + token_id.to_string(),
+                &quot;description&quot;: &quot;AI-generated NFT that evolves over time&quot;,
+                &quot;image&quot;: image_url,
+                &quot;prompt&quot;: prompt,
+                &quot;created&quot;: time::now()
+            });
+            
+            nft_data[token_id] = {
+                &quot;token_id&quot;: token_id,
+                &quot;base_prompt&quot;: prompt,
+                &quot;last_evolution&quot;: time::now(),
+                &quot;evolution_count&quot;: 0,
+                &quot;metadata&quot;: metadata
+            };
+            
+            log::info(&quot;nft&quot;, &quot;NFT minted: &quot; + token_id.to_string());
+            return token_id;
+        }
+        
+        return 0;
+    }
+    
+    // NFT evolves over time using AI
+    fn evolve_nft(token_id: int) {
+        if !nft_data.has(token_id) {
+            log::error(&quot;nft&quot;, &quot;NFT not found&quot;);
+            return;
+        }
+        
+        let nft = nft_data[token_id];
+        let last_evolution = nft.get(&quot;last_evolution&quot;, 0);
+        let evolution_count = nft.get(&quot;evolution_count&quot;, 0);
+        
+        // Check cooldown (30 days)
+        if time::now() - last_evolution &lt; 2592000 {
+            log::error(&quot;nft&quot;, &quot;Evolution cooldown&quot;);
+            return;
+        }
+        
+        // Generate evolved version using AI
+        let base_prompt = nft.get(&quot;base_prompt&quot;, &quot;&quot;);
+        let evolution_prompt = base_prompt + &quot;, evolved form, iteration &quot; + (evolution_count + 1).to_string();
+        
+        let new_image_result = ai::generate_image(&quot;stable_diffusion&quot;, evolution_prompt);
+        
+        if new_image_result.is_ok() {
+            let new_image_url = new_image_result.unwrap();
+            
+            // Update metadata
+            let new_metadata = json::stringify({
+                &quot;name&quot;: &quot;AI NFT #&quot; + token_id.to_string(),
+                &quot;description&quot;: &quot;AI-generated NFT - Evolution &quot; + (evolution_count + 1).to_string(),
+                &quot;image&quot;: new_image_url,
+                &quot;prompt&quot;: evolution_prompt,
+                &quot;created&quot;: time::now(),
+                &quot;evolution&quot;: evolution_count + 1
+            });
+            
+            nft_data[token_id] = {
+                &quot;token_id&quot;: token_id,
+                &quot;base_prompt&quot;: base_prompt,
+                &quot;last_evolution&quot;: time::now(),
+                &quot;evolution_count&quot;: evolution_count + 1,
+                &quot;metadata&quot;: new_metadata
+            };
+            
+            log::info(&quot;nft&quot;, &quot;NFT evolved: &quot; + token_id.to_string());
+        }
+    }
+}</code></pre>
+<hr />
+<h2 id="-performance--cost">⚡ Performance &amp; Cost</h2>
+<h3 id="gas-optimization-for-ai-operations">Gas Optimization for AI
+Operations</h3>
+<p><strong>AI operations are executed off-chain but verified
+on-chain:</strong></p>
+<pre class="dal"><code>@ai
+@chain(&quot;ethereum&quot;)
+service OptimizedAIContract {
+    // Cache AI results to save gas
+    ai_result_cache: map&lt;string, string&gt; = {};
+    cache_timestamp: map&lt;string, int&gt; = {};
+    cache_duration: int = 3600; // 1 hour
+    
+    fn get_cached_ai_result(input: string) -&gt; string {
+        let cache_key = crypto::hash(input);
+        
+        // Check cache first
+        let timestamp = cache_timestamp.get(cache_key, 0);
+        if timestamp &gt; 0 &amp;&amp; time::now() - timestamp &lt; cache_duration {
+            return ai_result_cache.get(cache_key, &quot;&quot;);
+        }
+        
+        // Cache miss - would need new AI call
+        return &quot;&quot;;
+    }
+    
+    fn get_ai_result_with_cache(input: string) -&gt; string {
+        let cache_key = crypto::hash(input);
+        
+        // Try cache first
+        let cached = get_cached_ai_result(input);
+        if cached != &quot;&quot; {
+            return cached;
+        }
+        
+        // Generate new result
+        let result = ai::classify(&quot;model&quot;, input);
+        if result.is_ok() {
+            let result_value = result.unwrap();
+            
+            // Update cache
+            ai_result_cache[cache_key] = result_value;
+            cache_timestamp[cache_key] = time::now();
+            
+            return result_value;
+        }
+        
+        return &quot;&quot;;
+    }
+}</code></pre>
+<h3 id="cost-comparison">Cost Comparison</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>On-Chain Gas</th>
+<th>With AI Cache</th>
+<th>Savings</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Text Classification</td>
+<td>~50,000 gas</td>
+<td>~25,000 gas</td>
+<td>50%</td>
+</tr>
+<tr class="even">
+<td>Price Prediction</td>
+<td>~75,000 gas</td>
+<td>~30,000 gas</td>
+<td>60%</td>
+</tr>
+<tr class="odd">
+<td>Image Analysis</td>
+<td>~100,000 gas</td>
+<td>~40,000 gas</td>
+<td>60%</td>
+</tr>
+<tr class="even">
+<td>Multi-Agent Decision</td>
+<td>~200,000 gas</td>
+<td>~80,000 gas</td>
+<td>60%</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="-security-considerations">🔒 Security Considerations</h2>
+<h3 id="1-ai-model-trust">1. AI Model Trust</h3>
+<pre class="dal"><code>// Always verify AI outputs
+service SecureAI {
+    fn execute_ai_decision(decision: string) {
+        // Parse AI decision
+        let action = parse_action(decision);
+        
+        // Validate action is reasonable
+        if !is_valid_action(action) {
+            log::error(&quot;ai&quot;, &quot;Invalid AI decision&quot;);
+            return;
+        }
+        if !is_within_risk_limits(action) {
+            log::error(&quot;ai&quot;, &quot;Action exceeds risk limits&quot;);
+            return;
+        }
+        
+        // Execute with additional safety checks
+        execute_with_safety(action);
+    }
+    
+    fn parse_action(decision: string) -&gt; string {
+        return decision; // Simplified
+    }
+    
+    fn is_valid_action(action: string) -&gt; bool {
+        return action != &quot;&quot;;
+    }
+    
+    fn is_within_risk_limits(action: string) -&gt; bool {
+        return true; // Simplified
+    }
+    
+    fn execute_with_safety(action: string) {
+        log::info(&quot;ai&quot;, &quot;Executing: &quot; + action);
+    }
+}</code></pre>
+<h3 id="2-oracle--ai-validation">2. Oracle + AI Validation</h3>
+<pre class="dal"><code>// Combine oracle data with AI validation
+service SecureOracle {
+    current_price: int = 0;
+    
+    fn update_price_secure() {
+        // Get oracle price
+        let oracle_result = oracle::fetch(&quot;chainlink&quot;, &quot;ETH/USD&quot;);
+        
+        if oracle_result.is_ok() {
+            let oracle_data = oracle_result.unwrap();
+            let oracle_price = oracle_data.data;
+            
+            // AI sanity check
+            let validation = ai::classify(&quot;price_validator&quot;, oracle_price.to_string());
+            
+            if validation != &quot;valid&quot; {
+                log::error(&quot;oracle&quot;, &quot;AI detected suspicious price&quot;);
+                return;
+            }
+            
+            // Additional checks
+            if oracle_price &lt;= 0 {
+                log::error(&quot;oracle&quot;, &quot;Invalid price&quot;);
+                return;
+            }
+            
+            current_price = oracle_price;
+            log::info(&quot;oracle&quot;, &quot;Price updated: &quot; + current_price.to_string());
+        }
+    }
+}</code></pre>
+<h3 id="3-rate-limiting-ai-calls">3. Rate Limiting AI Calls</h3>
+<pre class="dal"><code>service RateLimitedAI {
+    last_ai_call: map&lt;string, int&gt; = {};
+    ai_cooldown: int = 60; // 60 seconds
+    
+    fn make_ai_decision(user_id: string, input: string) {
+        let current_time = time::now();
+        let last_call = last_ai_call.get(user_id, 0);
+        
+        if current_time - last_call &lt; ai_cooldown {
+            log::error(&quot;ai&quot;, &quot;AI call rate limit exceeded&quot;);
+            return;
+        }
+        
+        last_ai_call[user_id] = current_time;
+        
+        // AI operations
+        let result = ai::classify(&quot;model&quot;, input);
+        if result.is_ok() {
+            process_result(result.unwrap());
+        }
+    }
+    
+    fn process_result(result: string) {
+        log::info(&quot;ai&quot;, &quot;Result: &quot; + result);
+    }
+}</code></pre>
+<hr />
+<h2 id="-real-world-use-cases">🌟 Real-World Use Cases</h2>
+<h3 id="1-ai-powered-trading-bot">1. AI-Powered Trading Bot</h3>
+<ul>
+<li>Analyzes market sentiment from social media</li>
+<li>Predicts price movements using ML models</li>
+<li>Executes trades automatically based on AI recommendations</li>
+<li>Adjusts strategy based on performance</li>
+</ul>
+<h3 id="2-intelligent-dao-governance">2. Intelligent DAO Governance</h3>
+<ul>
+<li>AI analyzes proposals for potential risks</li>
+<li>Simulates outcomes before voting</li>
+<li>Provides voting recommendations to members</li>
+<li>Detects malicious proposals</li>
+</ul>
+<h3 id="3-dynamic-nft-marketplace">3. Dynamic NFT Marketplace</h3>
+<ul>
+<li>AI-powered price recommendations</li>
+<li>Automatic tagging and categorization</li>
+<li>Fraud detection for fake NFTs</li>
+<li>Personalized recommendations</li>
+</ul>
+<h3 id="4-ai-credit-scoring-for-defi">4. AI Credit Scoring for DeFi</h3>
+<ul>
+<li>On-chain credit scores using ML</li>
+<li>Dynamic interest rates based on risk</li>
+<li>Automated loan approvals</li>
+<li>Fraud prevention</li>
+</ul>
+<h3 id="5-conversational-defi">5. Conversational DeFi</h3>
+<ul>
+<li>Natural language interface to smart contracts</li>
+<li>"Send 100 USDC to Alice" → AI parses and executes</li>
+<li>Voice-activated transactions</li>
+<li>AI-powered customer support</li>
+</ul>
+<hr />
+<h2 id="-important-notes">📝 Important Notes</h2>
+<h3 id="current-implementation-status">Current Implementation
+Status</h3>
+<p>The AI module (<code>src/stdlib/ai.rs</code>) currently provides:</p>
+<p>✅ <strong>Fully Implemented</strong>:</p>
+<ul>
+<li>Agent lifecycle management (<code>spawn_agent</code>,
+<code>terminate_agent</code>, <code>get_agent_status</code>)</li>
+<li>Message passing system (<code>send_message</code>,
+<code>receive_message</code>, <code>process_message_queue</code>)</li>
+<li>Task management (<code>create_task</code>,
+<code>execute_task</code>)</li>
+<li>Text analysis (<code>analyze_text</code> - returns TextAnalysis
+struct)</li>
+<li>Image analysis (<code>analyze_image</code>,
+<code>analyze_image_url</code> - returns ImageAnalysis struct)</li>
+<li>Text generation (<code>generate_text</code>)</li>
+<li>Simplified API (<code>classify</code>, <code>generate</code>,
+<code>embed</code>, <code>detect_anomaly</code>,
+<code>predict_with_model</code>)</li>
+<li>Model training (<code>train_model</code>)</li>
+<li>Prediction (<code>predict</code>)</li>
+<li>Agent coordination (<code>create_coordinator</code>,
+<code>create_workflow</code>, <code>execute_workflow</code>)</li>
+<li>Image generation (<code>generate_image</code>)</li>
+<li>Recommendations (<code>recommend</code>)</li>
+</ul>
+<h3 id="configuration">Configuration</h3>
+<p>AI providers can be configured via environment variables or runtime
+configuration:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># OpenAI</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span>your_key_here</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_BASE_URL</span><span class="op">=</span>https://api.openai.com/v1  <span class="co"># Optional</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Anthropic</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span>your_key_here</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Custom providers</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AI_PROVIDER</span><span class="op">=</span>custom</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AI_ENDPOINT</span><span class="op">=</span>https://your-endpoint.com</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AI_API_KEY</span><span class="op">=</span>your_key_here</span></code></pre></div>
+<p>Or programmatically:</p>
+<pre class="dal"><code>// Configure OpenAI
+ai::configure_openai(&quot;your-api-key&quot;, Some(&quot;gpt-4&quot;));
+
+// Configure Anthropic
+ai::configure_anthropic(&quot;your-api-key&quot;, Some(&quot;claude-3&quot;));
+
+// Configure custom provider
+ai::configure_custom(&quot;provider-name&quot;, &quot;https://endpoint.com&quot;, &quot;api-key&quot;, Some(&quot;model&quot;));</code></pre>
+<h3 id="how-to-use">How to Use</h3>
+<p>When building with the AI framework:</p>
+<ol type="1">
+<li>Configure AI provider (environment variables or
+<code>ai::configure_*</code> functions)</li>
+<li>Use simplified API for quick operations (<code>ai::classify</code>,
+<code>ai::generate</code>, <code>ai::embed</code>)</li>
+<li>For complex agent systems, use the full agent framework
+(<code>spawn_agent</code>, <code>create_task</code>, etc.)</li>
+<li>Use built-in analysis functions (<code>analyze_text</code>,
+<code>analyze_image</code>, <code>generate_text</code>)</li>
+</ol>
+<p>For multi-agent systems:</p>
+<ol type="1">
+<li>Create coordinator with <code>ai::create_coordinator()</code></li>
+<li>Spawn agents with <code>ai::spawn_agent()</code></li>
+<li>Create tasks with <code>ai::create_task()</code></li>
+<li>Execute tasks with <code>ai::execute_task()</code></li>
+<li>Define workflows with <code>ai::create_workflow()</code></li>
+<li>Execute workflows with <code>ai::execute_workflow()</code></li>
+</ol>
+<hr />
+<h2 id="-next-steps">📚 Next Steps</h2>
+<ol type="1">
+<li><strong><a href="AI_BEST_PRACTICES.html">AI Best
+Practices</a></strong> - Security and optimization</li>
+<li><strong><a href="../STDLIB_REFERENCE.html#ai-module">Standard Library
+Reference</a></strong> - Complete AI API docs</li>
+<li><strong><a href="../../src/stdlib/ai.rs">Full AI
+Implementation</a></strong> - See the actual code</li>
+<li><strong><a href="../CLI_QUICK_REFERENCE.html#ai-commands">CLI
+Commands</a></strong> - Command-line AI tools</li>
+</ol>
+<hr />
+<p><strong>Ready to build intelligent contracts? Start with <a
+href="AI_BEST_PRACTICES.html">AI Best Practices →</a></strong></p>
+</body>
+</html>

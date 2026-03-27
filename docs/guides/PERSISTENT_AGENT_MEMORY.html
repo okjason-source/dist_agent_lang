@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PERSISTENT_AGENT_MEMORY</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="persistent-agent-memory-guide">Persistent agent memory
+guide</h1>
+<p>This guide describes how agent memory, tasks, messages, and runtime
+state persist across restarts in dist_agent_lang. Persistence is
+<strong>on by default</strong> — no setup required. This guide covers
+configuration, backends, and troubleshooting.</p>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-overview">Overview</a></li>
+<li><a href="#2-what-persists">What persists</a></li>
+<li><a href="#3-configuration">Configuration</a></li>
+<li><a href="#4-backends">Backends</a></li>
+<li><a href="#5-how-it-works">How it works</a></li>
+<li><a href="#6-disabling-persistence">Disabling persistence</a></li>
+<li><a href="#7-backup-and-recovery">Backup and recovery</a></li>
+<li><a href="#8-troubleshooting">Troubleshooting</a></li>
+<li><a href="#9-references">References</a></li>
+</ol>
+<hr />
+<h2 id="1-overview">1. Overview</h2>
+<p>When you run <code>dal agent serve</code> or execute agent DAL
+scripts, the agent accumulates state: key-value memory, pending tasks,
+queued messages, evolution data, and registered skills. By default, all
+of this is saved to disk after every change and restored automatically
+when the process restarts.</p>
+<p>This means:</p>
+<ul>
+<li><strong>Deploys and restarts</strong> don't wipe agent state.</li>
+<li><strong>Agent memory</strong> (<code>store_memory</code>) carries
+across sessions.</li>
+<li><strong>Pending tasks and messages</strong> survive crashes.</li>
+<li><strong>Runtime-registered skills</strong> are restored without
+re-registering.</li>
+</ul>
+<p>Conversation history (evolve) is already file-based and unaffected by
+this system.</p>
+<hr />
+<h2 id="2-what-persists">2. What persists</h2>
+<table>
+<thead>
+<tr class="header">
+<th>State</th>
+<th>Persists?</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Conversation / context</td>
+<td>Yes (already)</td>
+<td><code>evolve.md</code></td>
+</tr>
+<tr class="even">
+<td>Agent memory (key-value)</td>
+<td><strong>Yes</strong></td>
+<td>Snapshot file or SQLite</td>
+</tr>
+<tr class="odd">
+<td>Task queue</td>
+<td><strong>Yes</strong></td>
+<td>Snapshot file or SQLite</td>
+</tr>
+<tr class="even">
+<td>Message bus</td>
+<td><strong>Yes</strong></td>
+<td>Snapshot file or SQLite</td>
+</tr>
+<tr class="odd">
+<td>Evolution store</td>
+<td><strong>Yes</strong></td>
+<td>Snapshot file or SQLite</td>
+</tr>
+<tr class="even">
+<td>Agent contexts (registry)</td>
+<td><strong>Yes</strong></td>
+<td>Snapshot file or SQLite</td>
+</tr>
+<tr class="odd">
+<td>Runtime-registered skills</td>
+<td><strong>Yes</strong></td>
+<td>Snapshot file or SQLite</td>
+</tr>
+<tr class="even">
+<td>Serve agent ID</td>
+<td><strong>Yes</strong></td>
+<td>Snapshot file or SQLite</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-configuration">3. Configuration</h2>
+<h3 id="environment-variables">Environment variables</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DAL_AGENT_RUNTIME_PERSIST</code></td>
+<td><code>1</code> (enabled)</td>
+<td>Set to <code>0</code> or <code>false</code> to disable</td>
+</tr>
+<tr class="even">
+<td><code>DAL_AGENT_RUNTIME_BACKEND</code></td>
+<td><code>file</code></td>
+<td><code>file</code> for JSON, <code>sqlite</code> for SQLite</td>
+</tr>
+<tr class="odd">
+<td><code>DAL_AGENT_RUNTIME_PATH</code></td>
+<td>auto-derived</td>
+<td>Override the snapshot path</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agenttoml--daltoml">agent.toml / dal.toml</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[agent]</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">runtime_persist</span> <span class="op">=</span> <span class="cn">true</span>                          <span class="co"># false to disable</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">runtime_path</span> <span class="op">=</span> <span class="st">&quot;.dal/agent_runtime.json&quot;</span>        <span class="co"># override path</span></span></code></pre></div>
+<h3 id="path-resolution">Path resolution</h3>
+<p>The snapshot path is resolved in this order:</p>
+<ol type="1">
+<li><strong><code>DAL_AGENT_RUNTIME_PATH</code></strong> env var (used
+directly if set)</li>
+<li><strong><code>[agent] runtime_path</code></strong> in
+<code>agent.toml</code> or <code>dal.toml</code> (resolved relative to
+cwd if not absolute)</li>
+<li><strong>Default</strong>: <code>.dal/agent_runtime.json</code> (file
+backend) or <code>.dal/agent_runtime.db</code> (SQLite backend) under
+the current working directory</li>
+</ol>
+<hr />
+<h2 id="4-backends">4. Backends</h2>
+<h3 id="file-backend-default">File backend (default)</h3>
+<ul>
+<li><strong>Format</strong>: Pretty-printed JSON</li>
+<li><strong>File</strong>: <code>agent_runtime.json</code></li>
+<li><strong>Writes</strong>: Atomic (temp file + rename) — safe against
+partial writes and crashes</li>
+<li><strong>Concurrency</strong>: Single writer per path</li>
+<li><strong>Best for</strong>: Most use cases; human-readable, easy to
+inspect and back up</li>
+</ul>
+<h3 id="sqlite-backend">SQLite backend</h3>
+<ul>
+<li><strong>Format</strong>: SQLite database with WAL mode</li>
+<li><strong>File</strong>: <code>agent_runtime.db</code></li>
+<li><strong>Writes</strong>: ACID-guaranteed; immediate commit per
+mutation</li>
+<li><strong>Concurrency</strong>: WAL mode allows concurrent readers;
+writes are serialized via Mutex</li>
+<li><strong>Best for</strong>: High write throughput, multi-threaded
+access, ACID requirements</li>
+<li><strong>Requires</strong>: Build with
+<code>--features sqlite-storage</code></li>
+</ul>
+<p>Select the backend:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># File backend (default)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AGENT_RUNTIME_BACKEND</span><span class="op">=</span>file</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># SQLite backend</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AGENT_RUNTIME_BACKEND</span><span class="op">=</span>sqlite</span></code></pre></div>
+<hr />
+<h2 id="5-how-it-works">5. How it works</h2>
+<h3 id="startup">Startup</h3>
+<p>When the agent runtime is first accessed, the persistence layer:</p>
+<ol type="1">
+<li>Reads the config (env vars, then agent.toml/dal.toml)</li>
+<li>Opens the snapshot file or database</li>
+<li>Deserializes the snapshot and populates the in-memory runtime</li>
+<li>Restores runtime-registered skills into the global skill
+registry</li>
+</ol>
+<p>If the file is missing, the runtime starts empty (no error). If the
+file is corrupt, a warning is logged and the runtime starts empty.</p>
+<h3 id="during-execution">During execution</h3>
+<p>Every mutation triggers an immediate save:</p>
+<ul>
+<li>Spawning an agent</li>
+<li>Setting the serve agent</li>
+<li>Coordinating tasks</li>
+<li>Receiving pending tasks</li>
+<li>Sending or receiving messages</li>
+<li>Evolving an agent</li>
+<li>Registering runtime skills</li>
+</ul>
+<h3 id="limits">Limits</h3>
+<ul>
+<li>Task queue and message bus are capped at <strong>10,000
+items</strong> in the snapshot to prevent unbounded disk growth</li>
+<li>Oldest items beyond the cap are dropped during save</li>
+</ul>
+<h3 id="schema-versioning">Schema versioning</h3>
+<p>The snapshot includes a <code>version</code> field (currently
+<code>1</code>). If you upgrade to a newer version of dist_agent_lang
+that changes the schema, the runtime automatically migrates old
+snapshots. Snapshots from a <em>newer</em> version than the runtime
+supports are rejected (runtime starts empty with a warning).</p>
+<hr />
+<h2 id="6-disabling-persistence">6. Disabling persistence</h2>
+<p>To opt out of persistence entirely:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AGENT_RUNTIME_PERSIST</span><span class="op">=</span>0</span></code></pre></div>
+<p>Or in <code>agent.toml</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[agent]</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dt">runtime_persist</span> <span class="op">=</span> <span class="cn">false</span></span></code></pre></div>
+<p>When disabled:</p>
+<ul>
+<li>No snapshot file is read or written</li>
+<li>All state is in-memory only (original behavior)</li>
+<li>Restarts clear everything except evolve (which is independent)</li>
+</ul>
+<hr />
+<h2 id="7-backup-and-recovery">7. Backup and recovery</h2>
+<h3 id="backup">Backup</h3>
+<p>Copy the snapshot file:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> .dal/agent_runtime.json .dal/agent_runtime.json.bak</span></code></pre></div>
+<p>For SQLite:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> .dal/agent_runtime.db .dal/agent_runtime.db.bak</span></code></pre></div>
+<h3 id="recovery">Recovery</h3>
+<p>If the snapshot is corrupt:</p>
+<ol type="1">
+<li>The runtime starts with empty state and logs a warning</li>
+<li>Evolve history is unaffected (separate file)</li>
+<li>To restore from backup, replace the snapshot file with your backup
+and restart</li>
+</ol>
+<h3 id="inspecting-state">Inspecting state</h3>
+<p>The JSON snapshot is human-readable:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> .dal/agent_runtime.json <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
+<p>For SQLite:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sqlite3</span> .dal/agent_runtime.db <span class="st">&quot;SELECT data FROM agent_runtime_snapshot WHERE id = 1&quot;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
+<hr />
+<h2 id="8-troubleshooting">8. Troubleshooting</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Symptom</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>State lost after restart</td>
+<td>Persistence disabled</td>
+<td>Check <code>DAL_AGENT_RUNTIME_PERSIST</code> and
+<code>agent.toml</code></td>
+</tr>
+<tr class="even">
+<td>"Corrupt snapshot" warning</td>
+<td>Invalid JSON or schema mismatch</td>
+<td>Delete or restore snapshot from backup</td>
+</tr>
+<tr class="odd">
+<td>"Version &gt; supported" warning</td>
+<td>Snapshot from newer dist_agent_lang</td>
+<td>Upgrade dist_agent_lang or delete snapshot</td>
+</tr>
+<tr class="even">
+<td>Permission errors</td>
+<td>Cannot write to <code>.dal/</code></td>
+<td>Check directory permissions</td>
+</tr>
+<tr class="odd">
+<td>SQLite errors</td>
+<td>Missing <code>sqlite-storage</code> feature</td>
+<td>Rebuild with <code>--features sqlite-storage</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-references">9. References</h2>
+<ul>
+<li><a
+href="../PERSISTENT_AGENT_MEMORY_PLAN.html">PERSISTENT_AGENT_MEMORY_PLAN.md</a>
+— Implementation plan and architecture details</li>
+<li><a href="SKILLS_AND_REGISTRY.html">SKILLS_AND_REGISTRY.md</a> —
+User-defined skills (works alongside persistent memory)</li>
+<li><a href="AGENT_SETUP_AND_USAGE.html">AGENT_SETUP_AND_USAGE.md</a> —
+Agent setup, CLI, serve, molds</li>
+<li><code>src/stdlib/agent_persist.rs</code> — Persistence
+implementation</li>
+<li><code>src/stdlib/agent.rs</code> — Agent runtime with integrated
+persistence</li>
+</ul>
+</body>
+</html>

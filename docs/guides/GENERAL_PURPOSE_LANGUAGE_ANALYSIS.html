@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>GENERAL_PURPOSE_LANGUAGE_ANALYSIS</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="dist_agent_lang-language-vision-and-roadmap">dist_agent_lang:
+Language vision and roadmap</h1>
+<blockquote>
+<p><strong>Status: Vision document.</strong> This describes the
+long-term direction for dist_agent_lang. For current capabilities, see
+<a href="AGENT_SETUP_AND_USAGE.html">AGENT_SETUP_AND_USAGE.md</a> and the
+<a href="../../README.html">root README</a>.</p>
+</blockquote>
+<hr />
+<h2 id="what-dist_agent_lang-is-today">What dist_agent_lang is
+today</h2>
+<p>dist_agent_lang (DAL) is a domain-specific language executed by a
+<strong>tree-walking interpreter written in Rust</strong>. It is
+designed around two primary differentiators: <strong>autonomous agent
+orchestration</strong> and <strong>blockchain-native
+programming</strong>.</p>
+<h3 id="current-capabilities">Current capabilities</h3>
+<ul>
+<li><strong>Interpreter</strong>: <code>dal run &lt;file.dal&gt;</code>
+executes programs via the Rust-hosted tree-walking interpreter.</li>
+<li><strong>Standard library</strong>: ~30 modules covering math,
+string, collections, I/O, crypto, HTTP, JSON, and more.</li>
+<li><strong>Agent framework</strong>: First-class primitives to spawn,
+coordinate, communicate with, and evolve autonomous agents, including
+persistent memory and a skills registry.</li>
+<li><strong>Blockchain integration</strong>: Solidity converter, trust
+model annotations (<code>@trust</code>), and chain interaction
+primitives.</li>
+<li><strong>HTTP server</strong>: Built-in <code>dal serve</code> for
+hosting agent endpoints and web services.</li>
+<li><strong>Molds</strong>: Reusable agent configuration modules
+(<code>.mold.dal</code>).</li>
+<li><strong>CLI toolchain</strong>: <code>dal run</code>,
+<code>dal serve</code>, <code>dal test</code>, <code>dal fmt</code>, and
+related commands.</li>
+</ul>
+<h3 id="current-execution-model">Current execution model</h3>
+<p>DAL source is parsed into an AST and evaluated directly by the
+interpreter. There is no compilation to machine code, bytecode, or
+intermediate representation in the current release. The Rust host
+provides memory safety and performance for the interpreter itself, but
+DAL programs run at interpreted speed.</p>
+<p>Compile targets (<code>@compile_target("solidity")</code>, etc.)
+exist as <strong>transpilation / code-generation backends</strong> --
+they emit source code for other platforms rather than producing native
+binaries.</p>
+<hr />
+<h2 id="primary-differentiators">Primary differentiators</h2>
+<h3 id="agents-as-a-language-primitive">Agents as a language
+primitive</h3>
+<p>Most languages treat agents as an application-layer concern. DAL
+provides agent lifecycle management -- spawn, message-passing,
+coordination, evolution, and persistent memory -- as built-in language
+constructs. This makes multi-agent systems expressible in tens of lines
+rather than hundreds.</p>
+<pre><code>agent Coordinator {
+    fn on_message(msg) {
+        let workers = spawn_agents(&quot;Worker&quot;, 3);
+        broadcast(workers, msg);
+        let results = collect_responses(workers);
+        return aggregate(results);
+    }
+}</code></pre>
+<h3 id="blockchain-native-semantics">Blockchain-native semantics</h3>
+<p>DAL includes trust-model annotations, on-chain/off-chain separation,
+and a Solidity transpiler. Smart contract logic can be written in DAL
+syntax and converted to deployable Solidity, reducing context-switching
+for teams that work across application and contract layers.</p>
+<pre><code>@trust(&quot;hybrid&quot;)
+service TokenTransfer {
+    fn transfer(from, to, amount) {
+        let tx = chain::send_transaction({
+            &quot;from&quot;: from, &quot;to&quot;: to, &quot;amount&quot;: amount
+        });
+        log::info(&quot;transfer&quot;, {&quot;tx_hash&quot;: tx.hash});
+        return tx;
+    }
+}</code></pre>
+<hr />
+<h2 id="vision-multi-domain-cross-platform-language">Vision:
+multi-domain, cross-platform language</h2>
+<p>The following sections describe <strong>planned capabilities</strong>
+that do not yet exist. They represent the long-term direction for
+DAL.</p>
+<h3 id="vision-native-compilation">Vision: native compilation</h3>
+<p>A future compiler pipeline would lower DAL programs to machine code
+(likely via Cranelift or LLVM), enabling:</p>
+<ul>
+<li>Ahead-of-time compilation to native binaries</li>
+<li>Competitive runtime performance with systems languages</li>
+<li>Deployment without requiring the Rust interpreter host</li>
+</ul>
+<p><strong>Status</strong>: Not started. The interpreter remains the
+sole execution path.</p>
+<h3 id="vision-webassembly-target">Vision: WebAssembly target</h3>
+<p>A WASM compilation target would allow DAL programs to run in browsers
+and edge runtimes. Combined with the agent framework, this could enable
+client-side autonomous agents with near-native performance.</p>
+<p><strong>Status</strong>: Not started. The Solidity transpiler
+demonstrates the code-generation architecture that a WASM backend would
+follow.</p>
+<h3 id="vision-mobile-and-edge-targets">Vision: mobile and edge
+targets</h3>
+<p>Cross-compilation to iOS, Android, and resource-constrained edge
+devices would extend DAL's agent and blockchain primitives to mobile and
+IoT contexts.</p>
+<p><strong>Status</strong>: Not started. Depends on the native
+compilation pipeline.</p>
+<h3
+id="vision-zero-cost-abstractions-and-memory-safety-guarantees">Vision:
+zero-cost abstractions and memory safety guarantees</h3>
+<p>Future compiler work could introduce ownership analysis or
+region-based memory management, providing compile-time safety guarantees
+beyond what the interpreter currently offers. Today, memory safety is
+inherited from the Rust interpreter host -- DAL programs themselves do
+not have independent memory safety properties.</p>
+<p><strong>Status</strong>: Research phase. No concrete design exists
+yet.</p>
+<h3 id="vision-cross-platform-single-codebase-development">Vision:
+cross-platform single-codebase development</h3>
+<p>The end-state goal is a single DAL codebase that compiles to server
+(native), browser (WASM), mobile, and edge targets, with the agent and
+blockchain primitives available on all platforms.</p>
+<pre><code>@compile_target(&quot;wasm&quot;)      // Browser
+@compile_target(&quot;native&quot;)    // Server
+@compile_target(&quot;mobile&quot;)    // iOS / Android
+@compile_target(&quot;edge&quot;)      // IoT / edge devices</code></pre>
+<p><strong>Status</strong>: Aspirational. Each target depends on the
+compilation pipeline described above.</p>
+<hr />
+<h2 id="roadmap-summary">Roadmap summary</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Capability</th>
+<th>Status</th>
+<th>Dependencies</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Tree-walking interpreter</td>
+<td><strong>Exists</strong></td>
+<td>--</td>
+</tr>
+<tr class="even">
+<td>30-module stdlib</td>
+<td><strong>Exists</strong></td>
+<td>--</td>
+</tr>
+<tr class="odd">
+<td>Agent framework (spawn/coordinate/evolve)</td>
+<td><strong>Exists</strong></td>
+<td>--</td>
+</tr>
+<tr class="even">
+<td>Persistent agent memory</td>
+<td><strong>Exists</strong></td>
+<td>--</td>
+</tr>
+<tr class="odd">
+<td>Skills registry</td>
+<td><strong>Exists</strong></td>
+<td>--</td>
+</tr>
+<tr class="even">
+<td>HTTP server (<code>dal serve</code>)</td>
+<td><strong>Exists</strong></td>
+<td>--</td>
+</tr>
+<tr class="odd">
+<td>Solidity transpiler</td>
+<td><strong>Exists</strong></td>
+<td>--</td>
+</tr>
+<tr class="even">
+<td>Molds (module system)</td>
+<td><strong>Exists</strong></td>
+<td>--</td>
+</tr>
+<tr class="odd">
+<td>CLI toolchain</td>
+<td><strong>Exists</strong></td>
+<td>--</td>
+</tr>
+<tr class="even">
+<td>Compile-time memory safety</td>
+<td>Research</td>
+<td>Ownership model design</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="who-dal-is-for-today">Who DAL is for today</h2>
+<ul>
+<li><strong>Agent system builders</strong> who want first-class agent
+primitives.</li>
+<li><strong>Blockchain developers</strong> who need integrated
+on-chain/off-chain logic with Solidity output.</li>
+<li><strong>Rapid prototypers</strong> who benefit from a concise syntax
+with a large stdlib and built-in HTTP serving.</li>
+</ul>
+<p>For general-purpose compiled application development, DAL is not yet
+a substitute for Rust, Go, or TypeScript. The roadmap above describes
+the path toward that goal.</p>
+</body>
+</html>

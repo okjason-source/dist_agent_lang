@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CONFIGURATION_GUIDE</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="-configuration-management-guide-for-dist_agent_lang">🔐
+Configuration Management Guide for dist_agent_lang</h1>
+<h2 id="overview">Overview</h2>
+<p>This guide covers the comprehensive configuration management system
+in <code>dist_agent_lang</code>, including secure environment variable
+handling, encrypted secrets management, and configuration validation.
+The system is designed to provide type-safe, secure, and flexible
+configuration management for both development and production
+environments.</p>
+<hr />
+<h2 id="️-core-components">🏗️ <strong>Core Components</strong></h2>
+<h3 id="1-configuration-manager-configconfigmanager"><strong>1.
+Configuration Manager (<code>config::ConfigManager</code>)</strong></h3>
+<ul>
+<li><strong>Environment variable access</strong> with type safety and
+validation</li>
+<li><strong>Encrypted secrets storage</strong> using AES-256-GCM
+encryption</li>
+<li><strong>Configuration caching</strong> for performance
+optimization</li>
+<li><strong>Validation rules</strong> for data integrity</li>
+</ul>
+<h3 id="2-validation-system"><strong>2. Validation System</strong></h3>
+<ul>
+<li><strong>Type validation</strong> (String, Integer, Float, Boolean,
+URL, Email, PrivateKey, JWT)</li>
+<li><strong>Length constraints</strong> (min/max length)</li>
+<li><strong>Value constraints</strong> (allowed values, regex
+patterns)</li>
+<li><strong>Required field validation</strong></li>
+</ul>
+<h3 id="3-secrets-management"><strong>3. Secrets
+Management</strong></h3>
+<ul>
+<li><strong>Encrypted storage</strong> of sensitive data</li>
+<li><strong>Access logging</strong> for audit trails</li>
+<li><strong>Secret rotation</strong> capabilities</li>
+<li><strong>Metadata tracking</strong> (creation time, access count,
+etc.)</li>
+</ul>
+<hr />
+<h2 id="-quick-start">🚀 <strong>Quick Start</strong></h2>
+<h3 id="basic-environment-variable-usage"><strong>Basic Environment
+Variable Usage</strong></h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get required environment variable</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> db_host <span class="op">=</span> <span class="pp">config::</span>get_required_env(<span class="st">&quot;DB_HOST&quot;</span>)<span class="op">?;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Get environment variable with default</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> db_port <span class="op">=</span> <span class="pp">config::</span>get_env_or_default(<span class="st">&quot;DB_PORT&quot;</span><span class="op">,</span> <span class="pp">Value::</span>Int(<span class="dv">5432</span>))<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Get optional environment variable</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> api_key <span class="op">=</span> <span class="pp">config::</span>get_env(<span class="st">&quot;API_KEY&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="database-configuration"><strong>Database
+Configuration</strong></h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get complete database configuration</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> db_config <span class="op">=</span> <span class="pp">config::</span>get_database_config()<span class="op">?;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Use in database connection</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> connection <span class="op">=</span> <span class="pp">database::</span>connect(<span class="st">&quot;postgresql&quot;</span><span class="op">,</span> db_config)<span class="op">;</span></span></code></pre></div>
+<h3 id="api-configuration"><strong>API Configuration</strong></h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get API configuration with defaults</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> api_config <span class="op">=</span> <span class="pp">config::</span>get_api_config()<span class="op">?;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Create HTTP client</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> client <span class="op">=</span> <span class="pp">web::</span>create_http_client(api_config)<span class="op">;</span></span></code></pre></div>
+<hr />
+<h2 id="-environment-variables">🔧 <strong>Environment
+Variables</strong></h2>
+<h3 id="required-environment-variables"><strong>Required Environment
+Variables</strong></h3>
+<table>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DB_HOST</code></td>
+<td>Database host address</td>
+<td><code>localhost</code></td>
+</tr>
+<tr class="even">
+<td><code>DB_NAME</code></td>
+<td>Database name</td>
+<td><code>myapp</code></td>
+</tr>
+<tr class="odd">
+<td><code>DB_USER</code></td>
+<td>Database username</td>
+<td><code>app_user</code></td>
+</tr>
+<tr class="even">
+<td><code>DB_PASSWORD</code></td>
+<td>Database password</td>
+<td><code>secure_password</code></td>
+</tr>
+<tr class="odd">
+<td><code>API_BASE_URL</code></td>
+<td>API base URL</td>
+<td><code>https://api.example.com</code></td>
+</tr>
+<tr class="even">
+<td><code>BLOCKCHAIN_RPC_URL</code></td>
+<td>Blockchain RPC endpoint</td>
+<td><code>https://mainnet.infura.io/v3/...</code></td>
+</tr>
+<tr class="odd">
+<td><code>BLOCKCHAIN_CHAIN_ID</code></td>
+<td>Blockchain chain ID</td>
+<td><code>1</code> (Ethereum)</td>
+</tr>
+<tr class="even">
+<td><code>BLOCKCHAIN_PRIVATE_KEY</code></td>
+<td>Wallet private key</td>
+<td><code>0x1234...</code></td>
+</tr>
+<tr class="odd">
+<td><code>MASTER_ENCRYPTION_KEY</code></td>
+<td>Master encryption key</td>
+<td><code>32+ character key</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="optional-environment-variables"><strong>Optional Environment
+Variables</strong></h3>
+<table>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DIST_AGENT_ENV</code></td>
+<td>Environment name</td>
+<td><code>development</code></td>
+</tr>
+<tr class="even">
+<td><code>DB_PORT</code></td>
+<td>Database port</td>
+<td><code>5432</code></td>
+</tr>
+<tr class="odd">
+<td><code>DB_SSL_MODE</code></td>
+<td>Database SSL mode</td>
+<td><code>require</code></td>
+</tr>
+<tr class="even">
+<td><code>API_TIMEOUT</code></td>
+<td>API timeout (ms)</td>
+<td><code>30000</code></td>
+</tr>
+<tr class="odd">
+<td><code>API_RETRY_COUNT</code></td>
+<td>API retry count</td>
+<td><code>3</code></td>
+</tr>
+<tr class="even">
+<td><code>AI_MODEL</code></td>
+<td>AI model name</td>
+<td><code>gpt-4</code></td>
+</tr>
+<tr class="odd">
+<td><code>AI_TEMPERATURE</code></td>
+<td>AI temperature</td>
+<td><code>0.7</code></td>
+</tr>
+<tr class="even">
+<td><code>AI_MAX_TOKENS</code></td>
+<td>AI max tokens</td>
+<td><code>1000</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="-secrets-management">🔐 <strong>Secrets Management</strong></h2>
+<h3 id="storing-encrypted-secrets"><strong>Storing Encrypted
+Secrets</strong></h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize secrets management</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> config_manager <span class="op">=</span> <span class="pp">config::ConfigManager::</span>new()<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Store sensitive data encrypted</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>config_manager<span class="op">.</span>store_secret(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;stripe_secret_key&quot;</span><span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;sk_test_123456789&quot;</span><span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    master_encryption_key</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>)<span class="op">?;</span></span></code></pre></div>
+<h3 id="retrieving-encrypted-secrets"><strong>Retrieving Encrypted
+Secrets</strong></h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Retrieve decrypted secret</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> stripe_key <span class="op">=</span> config_manager<span class="op">.</span>get_secret(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;stripe_secret_key&quot;</span><span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    master_encryption_key</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)<span class="op">?;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Use in API client</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> client <span class="op">=</span> <span class="pp">web::</span>create_http_client(<span class="op">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;base_url&quot;</span><span class="op">:</span> <span class="st">&quot;https://api.stripe.com/v1&quot;</span><span class="op">,</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;headers&quot;</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;Authorization&quot;</span><span class="op">:</span> <span class="pp">format!</span>(<span class="st">&quot;Bearer {}&quot;</span><span class="op">,</span> stripe_key)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="secret-rotation"><strong>Secret Rotation</strong></h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Rotate secret with new value</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>secrets_service<span class="op">.</span>rotate_secret(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;api_key&quot;</span><span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;new_secret_value&quot;</span><span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    master_encryption_key</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)<span class="op">?;</span></span></code></pre></div>
+<hr />
+<h2 id="-configuration-validation">✅ <strong>Configuration
+Validation</strong></h2>
+<h3 id="validation-rules"><strong>Validation Rules</strong></h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Define validation rules</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> db_host_rule <span class="op">=</span> ConfigValidationRule <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    required<span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    validation_type<span class="op">:</span> <span class="pp">ValidationType::</span><span class="dt">String</span><span class="op">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    min_length<span class="op">:</span> <span class="cn">Some</span>(<span class="dv">1</span>)<span class="op">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    max_length<span class="op">:</span> <span class="cn">Some</span>(<span class="dv">255</span>)<span class="op">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    allowed_values<span class="op">:</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    regex_pattern<span class="op">:</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> db_port_rule <span class="op">=</span> ConfigValidationRule <span class="op">{</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    required<span class="op">:</span> <span class="cn">false</span><span class="op">,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    validation_type<span class="op">:</span> <span class="pp">ValidationType::</span>Integer<span class="op">,</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    default_value<span class="op">:</span> <span class="cn">Some</span>(<span class="pp">Value::</span>Int(<span class="dv">5432</span>))<span class="op">,</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    min_length<span class="op">:</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    max_length<span class="op">:</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    allowed_values<span class="op">:</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    regex_pattern<span class="op">:</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> private_key_rule <span class="op">=</span> ConfigValidationRule <span class="op">{</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    required<span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    validation_type<span class="op">:</span> <span class="pp">ValidationType::</span>PrivateKey<span class="op">,</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    min_length<span class="op">:</span> <span class="cn">Some</span>(<span class="dv">66</span>)<span class="op">,</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    max_length<span class="op">:</span> <span class="cn">Some</span>(<span class="dv">66</span>)<span class="op">,</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    allowed_values<span class="op">:</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    regex_pattern<span class="op">:</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<h3 id="validation-types"><strong>Validation Types</strong></h3>
+<table>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Description</th>
+<th>Validation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>String</code></td>
+<td>Basic string validation</td>
+<td>Length constraints</td>
+</tr>
+<tr class="even">
+<td><code>Integer</code></td>
+<td>Integer validation</td>
+<td>Range constraints</td>
+</tr>
+<tr class="odd">
+<td><code>Float</code></td>
+<td>Float validation</td>
+<td>Range constraints</td>
+</tr>
+<tr class="even">
+<td><code>Boolean</code></td>
+<td>Boolean validation</td>
+<td>true/false/1/0</td>
+</tr>
+<tr class="odd">
+<td><code>URL</code></td>
+<td>URL validation</td>
+<td>Protocol, format</td>
+</tr>
+<tr class="even">
+<td><code>Email</code></td>
+<td>Email validation</td>
+<td>@ symbol, domain</td>
+</tr>
+<tr class="odd">
+<td><code>PrivateKey</code></td>
+<td>Private key validation</td>
+<td>0x prefix, 66 chars</td>
+</tr>
+<tr class="even">
+<td><code>PublicKey</code></td>
+<td>Public key validation</td>
+<td>0x prefix, 130 chars</td>
+</tr>
+<tr class="odd">
+<td><code>JWT</code></td>
+<td>JWT token validation</td>
+<td>3 parts separated by dots</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="-environment-specific-configuration">🌍
+<strong>Environment-Specific Configuration</strong></h2>
+<h3 id="development-environment"><strong>Development
+Environment</strong></h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Development configuration</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> dev_config <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;database&quot;</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;host&quot;</span><span class="op">:</span> <span class="st">&quot;localhost&quot;</span><span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;port&quot;</span><span class="op">:</span> <span class="dv">5432</span><span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ssl_mode&quot;</span><span class="op">:</span> <span class="st">&quot;disable&quot;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;api&quot;</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;timeout&quot;</span><span class="op">:</span> <span class="dv">5000</span><span class="op">,</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;retry_count&quot;</span><span class="op">:</span> <span class="dv">1</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;logging&quot;</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;level&quot;</span><span class="op">:</span> <span class="st">&quot;debug&quot;</span><span class="op">,</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;output&quot;</span><span class="op">:</span> <span class="st">&quot;console&quot;</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;security&quot;</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;encryption_enabled&quot;</span><span class="op">:</span> <span class="cn">false</span><span class="op">,</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;rate_limiting&quot;</span><span class="op">:</span> <span class="cn">false</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<h3 id="production-environment"><strong>Production
+Environment</strong></h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Production configuration</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> prod_config <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;database&quot;</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;host&quot;</span><span class="op">:</span> <span class="st">&quot;prod-db.example.com&quot;</span><span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;port&quot;</span><span class="op">:</span> <span class="dv">5432</span><span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ssl_mode&quot;</span><span class="op">:</span> <span class="st">&quot;require&quot;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;api&quot;</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;timeout&quot;</span><span class="op">:</span> <span class="dv">30000</span><span class="op">,</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;retry_count&quot;</span><span class="op">:</span> <span class="dv">3</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;logging&quot;</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;level&quot;</span><span class="op">:</span> <span class="st">&quot;warn&quot;</span><span class="op">,</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;output&quot;</span><span class="op">:</span> <span class="st">&quot;syslog&quot;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;security&quot;</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;encryption_enabled&quot;</span><span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;rate_limiting&quot;</span><span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;audit_logging&quot;</span><span class="op">:</span> <span class="cn">true</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<hr />
+<h2 id="-security-best-practices">🔒 <strong>Security Best
+Practices</strong></h2>
+<h3 id="1-encryption-key-management"><strong>1. Encryption Key
+Management</strong></h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Use strong master encryption key</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> master_key <span class="op">=</span> <span class="pp">config::</span>get_required_env(<span class="st">&quot;MASTER_ENCRYPTION_KEY&quot;</span>)<span class="op">?;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate key strength</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> master_key<span class="op">.</span>as_string()<span class="op">?.</span>length() <span class="op">&lt;</span> <span class="dv">32</span> <span class="op">{</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="cn">Err</span>(<span class="bu">Error</span><span class="pp">::</span>new(<span class="st">&quot;WeakEncryptionKey&quot;</span><span class="op">,</span> <span class="st">&quot;Master key must be at least 32 characters&quot;</span>))<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="2-environment-variable-security"><strong>2. Environment Variable
+Security</strong></h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Never log sensitive values</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="pp">log::</span>info(<span class="st">&quot;config&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;database_configured&quot;</span><span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;host&quot;</span><span class="op">:</span> db_config[<span class="st">&quot;host&quot;</span>]<span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Don&#39;t log: &quot;password&quot;: db_config[&quot;password&quot;]</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Use environment-specific validation</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="pp">config::</span>get_env_or_default(<span class="st">&quot;DIST_AGENT_ENV&quot;</span><span class="op">,</span> <span class="pp">Value::</span><span class="dt">String</span>(<span class="st">&quot;development&quot;</span><span class="op">.</span>to_string()))<span class="op">.</span>as_string()<span class="op">?</span> <span class="op">==</span> <span class="st">&quot;production&quot;</span> <span class="op">{</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Stricter validation for production</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    validate_production_config()<span class="op">?;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="3-secret-access-logging"><strong>3. Secret Access
+Logging</strong></h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Log secret access for audit trails</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">self</span><span class="op">.</span>access_log<span class="op">.</span>push(<span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;secret_name&quot;</span><span class="op">:</span> secret_name<span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;accessed_at&quot;</span><span class="op">:</span> <span class="pp">chain::</span>get_block_timestamp()<span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;access_count&quot;</span><span class="op">:</span> secret_record<span class="op">.</span>access_count<span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;user_id&quot;</span><span class="op">:</span> current_user_id <span class="co">// If available</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="4-configuration-validation"><strong>4. Configuration
+Validation</strong></h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate all configuration on startup</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> validation_service <span class="op">=</span> <span class="pp">ConfigurationValidationService::</span>new()<span class="op">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>validation_service<span class="op">.</span>initialize()<span class="op">?;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> validation_results <span class="op">=</span> validation_service<span class="op">.</span>validate_configuration()<span class="op">?;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> validation_results<span class="op">.</span>size() <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>error(<span class="st">&quot;config&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;message&quot;</span><span class="op">:</span> <span class="st">&quot;Configuration validation failed&quot;</span><span class="op">,</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;errors&quot;</span><span class="op">:</span> validation_results</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="cn">Err</span>(<span class="bu">Error</span><span class="pp">::</span>new(<span class="st">&quot;ConfigurationError&quot;</span><span class="op">,</span> <span class="st">&quot;Invalid configuration&quot;</span>))<span class="op">;</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="-configuration-examples">📋 <strong>Configuration
+Examples</strong></h2>
+<h3 id="complete-service-configuration"><strong>Complete Service
+Configuration</strong></h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>trust(<span class="st">&quot;hybrid&quot;</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>secure</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>service SecureService <span class="op">{</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    config_manager<span class="op">:</span> any<span class="op">,</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> initialize() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Unit<span class="op">,</span> <span class="bu">Error</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Initialize configuration manager</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>config_manager <span class="op">=</span> <span class="pp">config::ConfigManager::</span>new()<span class="op">;</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Load and validate configuration</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>load_configuration()<span class="op">?;</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>validate_configuration()<span class="op">?;</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Setup encrypted secrets</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>setup_secrets()<span class="op">?;</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">Ok</span>(())<span class="op">;</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> load_configuration() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Unit<span class="op">,</span> <span class="bu">Error</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Database configuration</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> db_config <span class="op">=</span> <span class="pp">config::</span>get_database_config()<span class="op">?;</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>database <span class="op">=</span> <span class="pp">database::</span>connect(<span class="st">&quot;postgresql&quot;</span><span class="op">,</span> db_config)<span class="op">;</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>        <span class="co">// API configuration</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> api_config <span class="op">=</span> <span class="pp">config::</span>get_api_config()<span class="op">?;</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>api_client <span class="op">=</span> <span class="pp">web::</span>create_http_client(api_config)<span class="op">;</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Blockchain configuration</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> blockchain_config <span class="op">=</span> <span class="pp">config::</span>get_blockchain_config()<span class="op">?;</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>blockchain <span class="op">=</span> <span class="pp">chain::</span>connect(blockchain_config)<span class="op">;</span></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">Ok</span>(())<span class="op">;</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> setup_secrets() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Unit<span class="op">,</span> <span class="bu">Error</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> master_key <span class="op">=</span> <span class="pp">config::</span>get_required_env(<span class="st">&quot;MASTER_ENCRYPTION_KEY&quot;</span>)<span class="op">?;</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Store API keys encrypted</span></span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Ok</span>(stripe_key) <span class="op">=</span> <span class="pp">config::</span>get_env(<span class="st">&quot;STRIPE_SECRET_KEY&quot;</span>) <span class="op">{</span></span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>            <span class="kw">self</span><span class="op">.</span>config_manager<span class="op">.</span>store_secret(<span class="st">&quot;stripe&quot;</span><span class="op">,</span> stripe_key<span class="op">.</span>as_string()<span class="op">?,</span> master_key<span class="op">.</span>as_string()<span class="op">?</span>)<span class="op">?;</span></span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Ok</span>(openai_key) <span class="op">=</span> <span class="pp">config::</span>get_env(<span class="st">&quot;OPENAI_API_KEY&quot;</span>) <span class="op">{</span></span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>            <span class="kw">self</span><span class="op">.</span>config_manager<span class="op">.</span>store_secret(<span class="st">&quot;openai&quot;</span><span class="op">,</span> openai_key<span class="op">.</span>as_string()<span class="op">?,</span> master_key<span class="op">.</span>as_string()<span class="op">?</span>)<span class="op">?;</span></span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">Ok</span>(())<span class="op">;</span></span>
+<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="environment-specific-setup"><strong>Environment-Specific
+Setup</strong></h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// .env.development</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>DIST_AGENT_ENV<span class="op">=</span>development</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>DB_HOST<span class="op">=</span>localhost</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>DB_NAME<span class="op">=</span>myapp_dev</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>DB_USER<span class="op">=</span>dev_user</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>DB_PASSWORD<span class="op">=</span>dev_password</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>API_BASE_URL<span class="op">=</span>http<span class="op">:</span><span class="co">//localhost:3000</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>BLOCKCHAIN_RPC_URL<span class="op">=</span>https<span class="op">:</span><span class="co">//goerli.infura.io/v3/YOUR_PROJECT_ID</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>BLOCKCHAIN_CHAIN_ID<span class="op">=</span><span class="dv">5</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>BLOCKCHAIN_PRIVATE_KEY<span class="op">=</span><span class="dv">0x1234</span><span class="op">...</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>MASTER_ENCRYPTION_KEY<span class="op">=</span>dev_master_key_32_chars_minimum</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co">// .env.production</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>DIST_AGENT_ENV<span class="op">=</span>production</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>DB_HOST<span class="op">=</span>prod<span class="op">-</span>db<span class="op">.</span>example<span class="op">.</span>com</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>DB_NAME<span class="op">=</span>myapp_prod</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>DB_USER<span class="op">=</span>prod_user</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>DB_PASSWORD<span class="op">=</span>prod_secure_password</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>API_BASE_URL<span class="op">=</span>https<span class="op">:</span><span class="co">//api.example.com</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>BLOCKCHAIN_RPC_URL<span class="op">=</span>https<span class="op">:</span><span class="co">//mainnet.infura.io/v3/YOUR_PROJECT_ID</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>BLOCKCHAIN_CHAIN_ID<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>BLOCKCHAIN_PRIVATE_KEY<span class="op">=</span><span class="dv">0x5678</span><span class="op">...</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>MASTER_ENCRYPTION_KEY<span class="op">=</span>prod_master_key_very_secure_64_chars</span></code></pre></div>
+<hr />
+<h2 id="️-advanced-features">🛠️ <strong>Advanced Features</strong></h2>
+<h3 id="1-configuration-caching"><strong>1. Configuration
+Caching</strong></h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Cache frequently accessed configuration</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> cached_config <span class="op">=</span> config_manager<span class="op">.</span>config_cache<span class="op">.</span>get(<span class="st">&quot;database&quot;</span>)<span class="op">;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> cached_config <span class="op">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="cn">Ok</span>(cached_config)<span class="op">;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Load and cache configuration</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> db_config <span class="op">=</span> <span class="pp">config::</span>get_database_config()<span class="op">?;</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>config_manager<span class="op">.</span>config_cache<span class="op">.</span>insert(<span class="st">&quot;database&quot;</span><span class="op">.</span>to_string()<span class="op">,</span> <span class="pp">Value::</span>Map(db_config))<span class="op">;</span></span></code></pre></div>
+<h3 id="2-configuration-hot-reloading"><strong>2. Configuration Hot
+Reloading</strong></h3>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Monitor configuration changes</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> watch_configuration_changes() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Unit<span class="op">,</span> <span class="bu">Error</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> config_watcher <span class="op">=</span> <span class="pp">file_system::</span>watch_file(<span class="st">&quot;.env&quot;</span>)<span class="op">;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    config_watcher<span class="op">.</span>on_change(<span class="op">|</span>event<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> event<span class="op">.</span>file_path<span class="op">.</span>ends_with(<span class="st">&quot;.env&quot;</span>) <span class="op">{</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>            reload_configuration()<span class="op">?;</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="cn">Ok</span>(())<span class="op">;</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="3-configuration-exportimport"><strong>3. Configuration
+Export/Import</strong></h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Export configuration for backup</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> export_configuration() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="bu">Error</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> config_data <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;environment&quot;</span><span class="op">:</span> <span class="pp">config::</span>get_env_or_default(<span class="st">&quot;DIST_AGENT_ENV&quot;</span><span class="op">,</span> <span class="pp">Value::</span><span class="dt">String</span>(<span class="st">&quot;development&quot;</span><span class="op">.</span>to_string()))<span class="op">,</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;database&quot;</span><span class="op">:</span> <span class="pp">config::</span>get_database_config()<span class="op">?,</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;api&quot;</span><span class="op">:</span> <span class="pp">config::</span>get_api_config()<span class="op">?,</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;blockchain&quot;</span><span class="op">:</span> <span class="pp">config::</span>get_blockchain_config()<span class="op">?,</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ai&quot;</span><span class="op">:</span> <span class="pp">config::</span>get_ai_config()<span class="op">?</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="cn">Ok</span>(<span class="pp">json::</span>stringify(config_data))<span class="op">;</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Import configuration from backup</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> import_configuration(config_json<span class="op">:</span> <span class="dt">String</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Unit<span class="op">,</span> <span class="bu">Error</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> config_data <span class="op">=</span> <span class="pp">json::</span>parse(config_json)<span class="op">?;</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply imported configuration</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    <span class="pp">config::</span>export_to_env(<span class="op">&amp;</span>config_data)<span class="op">?;</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="cn">Ok</span>(())<span class="op">;</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="-troubleshooting">🔍 <strong>Troubleshooting</strong></h2>
+<h3 id="common-issues"><strong>Common Issues</strong></h3>
+<ol type="1">
+<li><p><strong>Environment Variable Not Found</strong></p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Environment variable &#39;DB_HOST&#39; not found</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Solution: Set the required environment variable</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>export DB_HOST<span class="op">=</span>localhost</span></code></pre></div></li>
+<li><p><strong>Invalid Configuration Type</strong></p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Value &#39;abc&#39; is not a valid integer</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Solution: Ensure environment variable contains valid integer</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>export DB_PORT<span class="op">=</span><span class="dv">5432</span>  <span class="co">// Not: export DB_PORT=abc</span></span></code></pre></div></li>
+<li><p><strong>Weak Encryption Key</strong></p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Master key must be at least 32 characters</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Solution: Use a strong encryption key</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>export MASTER_ENCRYPTION_KEY<span class="op">=</span>very_long_secure_key_at_least_32_characters</span></code></pre></div></li>
+<li><p><strong>Invalid Private Key Format</strong></p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Value &#39;123&#39; is not a valid private key</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Solution: Use proper private key format</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>export BLOCKCHAIN_PRIVATE_KEY<span class="op">=</span><span class="dv">0x1234567890abcdef</span><span class="op">...</span></span></code></pre></div></li>
+</ol>
+<h3 id="debug-configuration"><strong>Debug Configuration</strong></h3>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Enable debug logging for configuration</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="pp">log::</span>set_level(<span class="st">&quot;debug&quot;</span>)<span class="op">;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Log configuration loading process</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="pp">log::</span>debug(<span class="st">&quot;config&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;loading_database_config&quot;</span><span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;environment&quot;</span><span class="op">:</span> <span class="pp">config::</span>get_env_or_default(<span class="st">&quot;DIST_AGENT_ENV&quot;</span><span class="op">,</span> <span class="pp">Value::</span><span class="dt">String</span>(<span class="st">&quot;development&quot;</span><span class="op">.</span>to_string()))</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span></code></pre></div>
+<hr />
+<h2 id="-api-reference">📚 <strong>API Reference</strong></h2>
+<h3 id="core-functions"><strong>Core Functions</strong></h3>
+<table>
+<thead>
+<tr class="header">
+<th>Function</th>
+<th>Description</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>config::get_env(key)</code></td>
+<td>Get environment variable</td>
+<td><code>Result&lt;Value, String&gt;</code></td>
+</tr>
+<tr class="even">
+<td><code>config::get_env_or_default(key, default)</code></td>
+<td>Get env var with default</td>
+<td><code>Value</code></td>
+</tr>
+<tr class="odd">
+<td><code>config::get_required_env(key)</code></td>
+<td>Get required env var</td>
+<td><code>Result&lt;Value, String&gt;</code></td>
+</tr>
+<tr class="even">
+<td><code>config::get_database_config()</code></td>
+<td>Get database config</td>
+<td><code>Result&lt;HashMap&lt;String, Value&gt;, String&gt;</code></td>
+</tr>
+<tr class="odd">
+<td><code>config::get_api_config()</code></td>
+<td>Get API config</td>
+<td><code>Result&lt;HashMap&lt;String, Value&gt;, String&gt;</code></td>
+</tr>
+<tr class="even">
+<td><code>config::get_blockchain_config()</code></td>
+<td>Get blockchain config</td>
+<td><code>Result&lt;HashMap&lt;String, Value&gt;, String&gt;</code></td>
+</tr>
+<tr class="odd">
+<td><code>config::get_ai_config()</code></td>
+<td>Get AI config</td>
+<td><code>Result&lt;HashMap&lt;String, Value&gt;, String&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="configmanager-methods"><strong>ConfigManager
+Methods</strong></h3>
+<table>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Description</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>store_secret(key, value, encryption_key)</code></td>
+<td>Store encrypted secret</td>
+<td><code>Result&lt;(), String&gt;</code></td>
+</tr>
+<tr class="even">
+<td><code>get_secret(key, encryption_key)</code></td>
+<td>Retrieve decrypted secret</td>
+<td><code>Result&lt;String, String&gt;</code></td>
+</tr>
+<tr class="odd">
+<td><code>validate_value(value, rule)</code></td>
+<td>Validate configuration value</td>
+<td><code>Result&lt;(), String&gt;</code></td>
+</tr>
+<tr class="even">
+<td><code>load_from_file(path)</code></td>
+<td>Load config from file</td>
+<td><code>Result&lt;HashMap&lt;String, Value&gt;, String&gt;</code></td>
+</tr>
+<tr class="odd">
+<td><code>export_to_env(config)</code></td>
+<td>Export config to env vars</td>
+<td><code>Result&lt;(), String&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><strong>The configuration management system in
+<code>dist_agent_lang</code> provides enterprise-grade security and
+flexibility for managing application configuration across different
+environments.</strong> 🔐✨</p>
+</body>
+</html>

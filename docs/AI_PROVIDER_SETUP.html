@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AI_PROVIDER_SETUP</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="ai-provider-setup-guide">AI Provider Setup Guide</h1>
+<p><strong>Choose Your AI Provider - OpenAI, Anthropic, or Local
+Models</strong></p>
+<p>The <code>dal ai</code> commands support <strong>multiple AI
+providers</strong>. Choose what works best for you:</p>
+<hr />
+<h2 id="option-1-openai-gpt-4-gpt-35">Option 1: OpenAI (GPT-4,
+GPT-3.5)</h2>
+<p><strong>Best for:</strong> Production use, highest quality
+responses</p>
+<h3 id="setup">Setup</h3>
+<ol type="1">
+<li><p><strong>Get API Key</strong></p>
+<ul>
+<li>Go to <a
+href="https://platform.openai.com/api-keys">https://platform.openai.com/api-keys</a></li>
+<li>Click "Create new secret key"</li>
+<li>Copy the key (starts with <code>sk-proj-</code> or
+<code>sk-</code>)</li>
+</ul></li>
+<li><p><strong>Set Environment Variable</strong></p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-proj-...&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Add to your shell config for persistence</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;export OPENAI_API_KEY=&quot;sk-proj-...&quot;&#39;</span> <span class="op">&gt;&gt;</span> ~/.zshrc</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> ~/.zshrc</span></code></pre></div></li>
+<li><p><strong>Use DAL</strong></p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;Create a DeFi lending protocol&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai explain mycontract.dal</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai audit token.dal</span></code></pre></div></li>
+</ol>
+<h3 id="configuration">Configuration</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Choose model (default: gpt-4)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_MODEL</span><span class="op">=</span><span class="st">&quot;gpt-4&quot;</span>          <span class="co"># Most capable</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_MODEL</span><span class="op">=</span><span class="st">&quot;gpt-3.5-turbo&quot;</span>  <span class="co"># Faster, cheaper</span></span></code></pre></div>
+<h3 id="pricing">Pricing</h3>
+<ul>
+<li>GPT-4: ~<span
+class="math inline">0.03/1<em>K</em><em>i</em><em>n</em><em>p</em><em>u</em><em>t</em><em>t</em><em>o</em><em>k</em><em>e</em><em>n</em><em>s</em>, </span>0.06/1K
+output tokens</li>
+<li>GPT-3.5: ~<span
+class="math inline">0.0015/1<em>K</em><em>i</em><em>n</em><em>p</em><em>u</em><em>t</em><em>t</em><em>o</em><em>k</em><em>e</em><em>n</em><em>s</em>, </span>0.002/1K
+output tokens</li>
+</ul>
+<hr />
+<h2 id="option-2-anthropic-claude">Option 2: Anthropic (Claude)</h2>
+<p><strong>Best for:</strong> Long context, detailed analysis, code
+review</p>
+<h3 id="setup-1">Setup</h3>
+<ol type="1">
+<li><p><strong>Get API Key</strong></p>
+<ul>
+<li>Go to <a
+href="https://console.anthropic.com/">https://console.anthropic.com/</a></li>
+<li>Navigate to "API Keys"</li>
+<li>Create new key</li>
+<li>Copy the key (starts with <code>sk-ant-</code>)</li>
+</ul></li>
+<li><p><strong>Set Environment Variable</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-ant-...&quot;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Add to your shell config for persistence</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;export ANTHROPIC_API_KEY=&quot;sk-ant-...&quot;&#39;</span> <span class="op">&gt;&gt;</span> ~/.zshrc</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> ~/.zshrc</span></code></pre></div></li>
+<li><p><strong>Use DAL</strong></p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;Create a token contract&quot;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai review complex_system.dal</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai audit defi_protocol.dal</span></code></pre></div></li>
+</ol>
+<h3 id="configuration-1">Configuration</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Choose model (default: claude-3-5-sonnet-20241022)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_MODEL</span><span class="op">=</span><span class="st">&quot;claude-3-5-sonnet-20241022&quot;</span>  <span class="co"># Most capable</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_MODEL</span><span class="op">=</span><span class="st">&quot;claude-3-opus-20240229&quot;</span>     <span class="co"># Highest intelligence</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_MODEL</span><span class="op">=</span><span class="st">&quot;claude-3-haiku-20240307&quot;</span>    <span class="co"># Fastest, cheapest</span></span></code></pre></div>
+<h3 id="pricing-1">Pricing</h3>
+<ul>
+<li>Claude 3.5 Sonnet: ~<span
+class="math inline">0.003/1<em>K</em><em>i</em><em>n</em><em>p</em><em>u</em><em>t</em><em>t</em><em>o</em><em>k</em><em>e</em><em>n</em><em>s</em>, </span>0.015/1K
+output tokens</li>
+<li>Claude 3 Opus: ~<span
+class="math inline">0.015/1<em>K</em><em>i</em><em>n</em><em>p</em><em>u</em><em>t</em><em>t</em><em>o</em><em>k</em><em>e</em><em>n</em><em>s</em>, </span>0.075/1K
+output tokens</li>
+<li>Claude 3 Haiku: ~<span
+class="math inline">0.00025/1<em>K</em><em>i</em><em>n</em><em>p</em><em>u</em><em>t</em><em>t</em><em>o</em><em>k</em><em>e</em><em>n</em><em>s</em>, </span>0.00125/1K
+output tokens</li>
+</ul>
+<hr />
+<h2 id="option-3-local-models-ollama-lm-studio">Option 3: Local Models
+(Ollama, LM Studio)</h2>
+<p><strong>Best for:</strong> Privacy, offline use, free unlimited
+usage</p>
+<h3 id="setup-with-ollama">Setup with Ollama</h3>
+<ol type="1">
+<li><p><strong>Install Ollama</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install ollama</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSL</span> https://ollama.com/install.sh <span class="kw">|</span> <span class="fu">sh</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Windows</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Download from https://ollama.com/download</span></span></code></pre></div></li>
+<li><p><strong>Start Ollama Server</strong></p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> serve</span></code></pre></div></li>
+<li><p><strong>Download a Model</strong></p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Code generation models</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> pull codellama         <span class="co"># 7B, good for code</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> pull deepseek-coder    <span class="co"># Excellent for coding</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> pull phind-codellama   <span class="co"># Optimized for code</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># General purpose models</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> pull llama2            <span class="co"># Good all-around</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> pull mistral           <span class="co"># Fast and capable</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> pull llama3            <span class="co"># Latest, most capable</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Small/fast models</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> pull tinyllama         <span class="co"># Very fast</span></span></code></pre></div></li>
+<li><p><strong>Configure DAL</strong></p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;http://localhost:11434/api/generate&quot;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;codellama&quot;</span>  <span class="co"># or deepseek-coder, llama2, etc.</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add to shell config</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;export DAL_AI_ENDPOINT=&quot;http://localhost:11434/api/generate&quot;&#39;</span> <span class="op">&gt;&gt;</span> ~/.zshrc</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;export DAL_AI_MODEL=&quot;codellama&quot;&#39;</span> <span class="op">&gt;&gt;</span> ~/.zshrc</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> ~/.zshrc</span></code></pre></div></li>
+<li><p><strong>Use DAL (Offline!)</strong></p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;Create a REST API&quot;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai explain myfile.dal</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai test contract.dal</span></code></pre></div></li>
+</ol>
+<h3 id="model-recommendations">Model Recommendations</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th>Size</th>
+<th>Speed</th>
+<th>Quality</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>codellama</code></td>
+<td>7B</td>
+<td>Fast</td>
+<td>Good</td>
+<td>Code generation</td>
+</tr>
+<tr class="even">
+<td><code>deepseek-coder</code></td>
+<td>6.7B</td>
+<td>Fast</td>
+<td>Excellent</td>
+<td>Code, best quality</td>
+</tr>
+<tr class="odd">
+<td><code>llama3</code></td>
+<td>8B</td>
+<td>Medium</td>
+<td>Excellent</td>
+<td>General purpose</td>
+</tr>
+<tr class="even">
+<td><code>mistral</code></td>
+<td>7B</td>
+<td>Fast</td>
+<td>Good</td>
+<td>General purpose</td>
+</tr>
+<tr class="odd">
+<td><code>phind-codellama</code></td>
+<td>34B</td>
+<td>Slow</td>
+<td>Excellent</td>
+<td>Complex code (needs GPU)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pricing-2">Pricing</h3>
+<ul>
+<li><strong>FREE!</strong> Runs locally on your machine</li>
+<li>No API costs</li>
+<li>No rate limits</li>
+<li>Works offline</li>
+</ul>
+<hr />
+<h2 id="using-multiple-providers">Using Multiple Providers</h2>
+<p>You can configure <strong>all three</strong> and DAL will choose
+automatically:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set all three</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-...&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-ant-...&quot;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;http://localhost:11434/api/generate&quot;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Priority order: OpenAI &gt; Anthropic &gt; Local &gt; Fallback</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;test&quot;</span>  <span class="co"># Uses OpenAI (first priority)</span></span></code></pre></div>
+<h3 id="override-priority">Override Priority</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use Anthropic instead of OpenAI</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;&quot;</span> <span class="ex">dal</span> ai code <span class="st">&quot;test&quot;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Use local model</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;&quot;</span> <span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span><span class="st">&quot;&quot;</span> <span class="ex">dal</span> ai code <span class="st">&quot;test&quot;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Force fallback mode (no AI)</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;&quot;</span> <span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span><span class="st">&quot;&quot;</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;&quot;</span> <span class="ex">dal</span> ai code <span class="st">&quot;test&quot;</span></span></code></pre></div>
+<hr />
+<h2 id="switching-providers">Switching Providers</h2>
+<h3 id="team-a-openai-only">Team A: OpenAI Only</h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .env file</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="va">OPENAI_API_KEY</span><span class="op">=</span>sk-proj-...</span></code></pre></div>
+<h3 id="team-b-anthropic-only">Team B: Anthropic Only</h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .env file</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span>sk-ant-...</span></code></pre></div>
+<h3 id="team-c-local-only-privacy-focused">Team C: Local Only
+(Privacy-focused)</h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .env file</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span>http://localhost:11434/api/generate</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AI_MODEL</span><span class="op">=</span>codellama</span></code></pre></div>
+<h3 id="individual-developer-mix-and-match">Individual Developer: Mix
+and Match</h3>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use OpenAI for code generation (fast)</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-...&quot;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># But use local for security audits (private)</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;Create API&quot;</span>           <span class="co"># Uses OpenAI</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;&quot;</span> <span class="ex">dal</span> ai audit contract.dal  <span class="co"># Uses local (private)</span></span></code></pre></div>
+<hr />
+<h2 id="testing-your-setup">Testing Your Setup</h2>
+<h3 id="test-openai">Test OpenAI</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;your-key&quot;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;print hello world&quot;</span></span></code></pre></div>
+<h3 id="test-anthropic">Test Anthropic</h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span><span class="st">&quot;your-key&quot;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;print hello world&quot;</span></span></code></pre></div>
+<h3 id="test-local">Test Local</h3>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> serve</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;http://localhost:11434/api/generate&quot;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;codellama&quot;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;print hello world&quot;</span></span></code></pre></div>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="no-api-key-found">"No API key found"</h3>
+<ul>
+<li>Check environment variables: <code>echo $OPENAI_API_KEY</code></li>
+<li>Make sure to <code>export</code> the variable</li>
+<li>Try restarting your terminal</li>
+</ul>
+<h3 id="openai-api-error-401">"OpenAI API error 401"</h3>
+<ul>
+<li>Invalid API key</li>
+<li>Check key format: should start with <code>sk-proj-</code> or
+<code>sk-</code></li>
+<li>Regenerate key at <a
+href="https://platform.openai.com/api-keys">https://platform.openai.com/api-keys</a></li>
+</ul>
+<h3 id="connection-refused-local">"Connection refused" (Local)</h3>
+<ul>
+<li>Make sure Ollama is running: <code>ollama serve</code></li>
+<li>Check endpoint:
+<code>curl http://localhost:11434/api/generate</code></li>
+<li>Try different port if 11434 is blocked</li>
+</ul>
+<h3 id="rate-limit-exceeded">"Rate limit exceeded"</h3>
+<ul>
+<li>OpenAI: Upgrade your account or wait</li>
+<li>Anthropic: Check your usage limits</li>
+<li>Local: No rate limits!</li>
+</ul>
+<hr />
+<h2 id="cost-comparison">Cost Comparison</h2>
+<h3 id="small-project-100-requestsday">Small Project (100
+requests/day)</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Provider</th>
+<th>Model</th>
+<th>Monthly Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>OpenAI</td>
+<td>GPT-3.5</td>
+<td>~$5</td>
+</tr>
+<tr class="even">
+<td>OpenAI</td>
+<td>GPT-4</td>
+<td>~$50</td>
+</tr>
+<tr class="odd">
+<td>Anthropic</td>
+<td>Claude Haiku</td>
+<td>~$2</td>
+</tr>
+<tr class="even">
+<td>Anthropic</td>
+<td>Claude Sonnet</td>
+<td>~$15</td>
+</tr>
+<tr class="odd">
+<td>Anthropic</td>
+<td>Claude Opus</td>
+<td>~$75</td>
+</tr>
+<tr class="even">
+<td>Local</td>
+<td>Any</td>
+<td><strong>$0</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="medium-project-1000-requestsday">Medium Project (1000
+requests/day)</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Provider</th>
+<th>Model</th>
+<th>Monthly Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>OpenAI</td>
+<td>GPT-3.5</td>
+<td>~$50</td>
+</tr>
+<tr class="even">
+<td>OpenAI</td>
+<td>GPT-4</td>
+<td>~$500</td>
+</tr>
+<tr class="odd">
+<td>Anthropic</td>
+<td>Claude Haiku</td>
+<td>~$20</td>
+</tr>
+<tr class="even">
+<td>Anthropic</td>
+<td>Claude Sonnet</td>
+<td>~$150</td>
+</tr>
+<tr class="odd">
+<td>Local</td>
+<td>Any</td>
+<td><strong>$0</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="recommendation">Recommendation</h3>
+<ul>
+<li><strong>Development/Testing</strong>: Use local models (free)</li>
+<li><strong>Production/High Quality</strong>: Use OpenAI GPT-4 or Claude
+Sonnet</li>
+<li><strong>Budget Conscious</strong>: Use Claude Haiku or GPT-3.5</li>
+<li><strong>Privacy Sensitive</strong>: Use local models only</li>
+</ul>
+<hr />
+<h2 id="quick-reference">Quick Reference</h2>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># OpenAI</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-proj-...&quot;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_MODEL</span><span class="op">=</span><span class="st">&quot;gpt-4&quot;</span>  <span class="co"># optional</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Anthropic</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-ant-...&quot;</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_MODEL</span><span class="op">=</span><span class="st">&quot;claude-3-5-sonnet-20241022&quot;</span>  <span class="co"># optional</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Local (Ollama)</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;http://localhost:11434/api/generate&quot;</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AI_MODEL</span><span class="op">=</span><span class="st">&quot;codellama&quot;</span>  <span class="co"># optional</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Test</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;hello world&quot;</span></span></code></pre></div>
+<hr />
+<h2 id="security-best-practices">Security Best Practices</h2>
+<ol type="1">
+<li><p><strong>Never commit API keys to git</strong></p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;.env&quot;</span> <span class="op">&gt;&gt;</span> .gitignore</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;*.key&quot;</span> <span class="op">&gt;&gt;</span> .gitignore</span></code></pre></div></li>
+<li><p><strong>Use environment variables, not hard-coded
+keys</strong></p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Good</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-...&quot;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Bad - NEVER do this</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co"># let api_key = &quot;sk-...&quot;</span></span></code></pre></div></li>
+<li><p><strong>Rotate keys regularly</strong></p>
+<ul>
+<li>Regenerate API keys every 90 days</li>
+<li>Delete old keys after rotation</li>
+</ul></li>
+<li><p><strong>Use separate keys for dev/prod</strong></p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Development</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-dev-...&quot;</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Production</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-prod-...&quot;</span></span></code></pre></div></li>
+<li><p><strong>Monitor usage</strong></p>
+<ul>
+<li>Check OpenAI usage: <a
+href="https://platform.openai.com/usage">https://platform.openai.com/usage</a></li>
+<li>Check Anthropic usage: <a
+href="https://console.anthropic.com/">https://console.anthropic.com/</a></li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="support">Support</h2>
+<p><strong>Need Help?</strong></p>
+<ul>
+<li>Full integration guide:
+<code>docs/development/AI_API_INTEGRATION.md</code></li>
+<li>CLI reference: <code>docs/CLI_QUICK_REFERENCE.md</code></li>
+<li>Phase 3 documentation:
+<code>docs/development/CLI_PHASE3_COMPLETE.md</code></li>
+</ul>
+<p><strong>Can't get API keys?</strong></p>
+<ul>
+<li>Use local models (Ollama) - completely free and offline</li>
+<li>All commands work in fallback mode (basic templates)</li>
+</ul>
+<p><strong>Want to contribute?</strong></p>
+<ul>
+<li>Add support for more providers (Cohere, HuggingFace, etc.)</li>
+<li>Improve prompts for better code generation</li>
+<li>Add caching to reduce costs</li>
+</ul>
+</body>
+</html>

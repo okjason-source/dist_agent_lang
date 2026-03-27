@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PUBLIC_DOCUMENTATION_INDEX</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="dist_agent_lang--documentation-index">dist_agent_lang —
+Documentation index</h1>
+<p><strong>Version:</strong> 1.0.8 (Beta) <strong>Last updated:</strong>
+2026-03-03 <strong>License:</strong> Apache 2.0</p>
+<hr />
+<h2 id="quick-navigation">Quick navigation</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Section</th>
+<th>Description</th>
+<th>Start here if...</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="#getting-started">Getting started</a></td>
+<td>Install, first program, first agent</td>
+<td>You're new to DAL</td>
+</tr>
+<tr class="even">
+<td><a href="#agent-development">Agent development</a></td>
+<td>Agent setup, skills, persistent memory, molds</td>
+<td>You're building agents</td>
+</tr>
+<tr class="odd">
+<td><a href="#language-reference">Language reference</a></td>
+<td>Syntax, types, attributes</td>
+<td>You need syntax details</td>
+</tr>
+<tr class="even">
+<td><a href="#standard-library">Standard library</a></td>
+<td>All 30 stdlib modules</td>
+<td>You need API docs</td>
+</tr>
+<tr class="odd">
+<td><a href="#cli-reference">CLI reference</a></td>
+<td>All commands</td>
+<td>You need CLI help</td>
+</tr>
+<tr class="even">
+<td><a href="#blockchain-and-hybrid-trust">Blockchain and
+hybrid</a></td>
+<td>Multi-chain, trust models, security</td>
+<td>You're integrating blockchain</td>
+</tr>
+<tr class="odd">
+<td><a href="#ide-and-agent-integration">IDE and agent
+integration</a></td>
+<td>LSP, editor setup, agent tools</td>
+<td>You're setting up an editor</td>
+</tr>
+<tr class="even">
+<td><a href="#project-state-and-alignment-maintainers">Project
+state</a></td>
+<td>Shipped vs planned; gap checklist</td>
+<td>You maintain releases or audit docs</td>
+</tr>
+<tr class="odd">
+<td><a href="#configuration">Configuration</a></td>
+<td>Environment variables index</td>
+<td>You deploy or set keys / policies</td>
+</tr>
+<tr class="even">
+<td><a href="#examples">Examples</a></td>
+<td>Code samples and tutorials</td>
+<td>You learn by example</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="getting-started">Getting started</h2>
+<h3 id="installation">Installation</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From Cargo (recommended)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install <span class="at">--git</span> https://github.com/okjason-source/dist_agent_lang.git dist_agent_lang <span class="at">--bin</span> dal</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># From source</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/okjason-source/dist_agent_lang.git</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> dist_agent_lang <span class="kw">&amp;&amp;</span> <span class="ex">cargo</span> build <span class="at">--release</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># From binary</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Download from GitHub Releases: https://github.com/okjason-source/dist_agent_lang/releases/latest</span></span></code></pre></div>
+<p><strong>Requirements:</strong> Rust 1.70+ (<a
+href="https://rustup.rs/">Install Rust</a>)</p>
+<h3 id="first-program">First program</h3>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+service HelloWorld {
+    fn main() {
+        print(&quot;Hello, dist_agent_lang!&quot;);
+    }
+}</code></pre>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run hello.dal</span></code></pre></div>
+<h3 id="first-agent">First agent</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> my-agent <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> my-agent</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> init agent</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent serve</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Agent running at http://localhost:4040</span></span></code></pre></div>
+<p><strong>Guides:</strong></p>
+<ul>
+<li><a href="guides/QUICK_START.html">Quick Start</a> — Up and running in
+5 minutes</li>
+<li><a href="guides/AGENT_SETUP_AND_USAGE.html">Agent Setup and Usage</a>
+— Complete agent development guide</li>
+</ul>
+<hr />
+<h2 id="agent-development">Agent development</h2>
+<p>DAL is agent-first. Agents are native language constructs with
+lifecycle operations (spawn, coordinate, communicate, evolve),
+persistent memory, composable skills, and HTTP serving.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Guide</th>
+<th>What it covers</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="guides/AGENT_SETUP_AND_USAGE.html">Agent Setup and
+Usage</a></td>
+<td>Project setup, CLI, HTTP server, DAL APIs, molds, evolve
+context</td>
+</tr>
+<tr class="even">
+<td><a href="guides/SKILLS_AND_REGISTRY.html">Skills and Registry</a></td>
+<td>Built-in and custom skills, <code>.skill.dal</code> format,
+programmatic encouragement, runtime registration</td>
+</tr>
+<tr class="odd">
+<td><a href="guides/PERSISTENT_AGENT_MEMORY.html">Persistent Agent
+Memory</a></td>
+<td>Runtime persistence, backends (file/SQLite), configuration, schema
+versioning</td>
+</tr>
+<tr class="even">
+<td><a href="AGENT_CAPABILITIES.html">Agent Capabilities</a></td>
+<td>Capability definition, validation, and per-type/per-agent
+configuration</td>
+</tr>
+<tr class="odd">
+<td><a href="MOLD_FORMAT.html">Mold Format</a></td>
+<td><code>.mold.dal</code> syntax, lifecycle hooks, principal vs mold
+trust</td>
+</tr>
+<tr class="even">
+<td><a href="FLEET_DEPLOYMENT.html">Fleet deployment</a></td>
+<td>CLI walkthrough (<code>dal agent fleet …</code>),
+<code>.dal/fleets.json</code>, deploy/run/health/export</td>
+</tr>
+<tr class="odd">
+<td><a href="COMPREHENSIVE_AGENT_AND_MOLD_PLANS.html">Comprehensive Agent
+Plans</a></td>
+<td>Agent reasoning, fleet, mold config, off-chain implementation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-concepts">Key concepts</h3>
+<ul>
+<li><strong>Agent types</strong>: <code>ai</code>, <code>system</code>,
+<code>worker</code>, <code>custom:&lt;name&gt;</code></li>
+<li><strong>Skills</strong>: Named bundles of capabilities (tools +
+description). Built-in categories: development, creative, office, home.
+Users define custom skills in <code>.skill.dal</code> files.</li>
+<li><strong>Molds</strong>: Reusable agent configurations
+(<code>.mold.dal</code>). User-built, user-owned. Future licensing via
+on-chain smart registry.</li>
+<li><strong>Persistent memory</strong>: Agent state (memory, tasks,
+messages, evolution, skills) persists across restarts. On by
+default.</li>
+<li><strong>Evolve</strong>: File-based conversation and action history.
+Loaded into the agent prompt each turn.</li>
+</ul>
+<hr />
+<h2 id="language-reference">Language reference</h2>
+<h3 id="core-concepts">Core concepts</h3>
+<p>DAL is a multi-paradigm, dynamically-typed language hosted in a Rust
+interpreter. Programs are executed with <code>dal run</code>.</p>
+<ul>
+<li><strong>Services</strong>: Stateful constructs with attributes
+(<code>@trust</code>, <code>@chain</code>, <code>@secure</code>,
+<code>@txn</code>, <code>@limit</code>)</li>
+<li><strong>Functions</strong>: Named, closures, async</li>
+<li><strong>Types</strong>: int, float, string, bool, null, list, map,
+set, struct, result, option, closure</li>
+<li><strong>Error handling</strong>: try-catch-finally, Result
+types</li>
+<li><strong>Modules</strong>: import/export, stdlib namespaces</li>
+</ul>
+<h3 id="files">Files</h3>
+<ul>
+<li><a href="syntax.html">Syntax Reference</a> — Complete grammar and
+syntax</li>
+<li><a href="attributes.html">Attributes Reference</a> — Service and
+function attributes</li>
+<li><a href="Documentation.html">Documentation.md</a> — Architecture, type
+system, and internals</li>
+</ul>
+<hr />
+<h2 id="standard-library">Standard library</h2>
+<p>30 modules covering agents, AI, blockchain, data, web, IoT, security,
+and administration.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Module</th>
+<th>Purpose</th>
+<th>Key functions</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>agent</strong></td>
+<td>Agent lifecycle</td>
+<td><code>spawn()</code>, <code>coordinate()</code>,
+<code>communicate()</code>, <code>evolve()</code></td>
+</tr>
+<tr class="even">
+<td><strong>ai</strong></td>
+<td>AI/ML operations</td>
+<td><code>generate_text()</code>, <code>classify()</code>,
+<code>embed()</code>, <code>analyze_text()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>chain</strong></td>
+<td>Blockchain</td>
+<td><code>deploy()</code>, <code>call()</code>,
+<code>get_balance()</code>, <code>transfer()</code></td>
+</tr>
+<tr class="even">
+<td><strong>crypto</strong></td>
+<td>Cryptography</td>
+<td><code>hash()</code>, <code>sign()</code>, <code>verify()</code>,
+<code>encrypt()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>auth</strong></td>
+<td>Authentication</td>
+<td><code>create_user()</code>, <code>login()</code>,
+<code>validate_token()</code></td>
+</tr>
+<tr class="even">
+<td><strong>database</strong></td>
+<td>Database ops</td>
+<td><code>query()</code>, <code>connect()</code>,
+<code>migrate()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>evolve</strong></td>
+<td>Context management</td>
+<td><code>load()</code>, <code>append_conversation()</code>,
+<code>append_log()</code></td>
+</tr>
+<tr class="even">
+<td><strong>mold</strong></td>
+<td>Agent molds</td>
+<td><code>load()</code>, <code>spawn_from()</code>,
+<code>list()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>trust</strong></td>
+<td>Trust models</td>
+<td><code>validate_hybrid_trust()</code>, <code>authorize()</code></td>
+</tr>
+<tr class="even">
+<td><strong>oracle</strong></td>
+<td>Data feeds</td>
+<td><code>fetch()</code>, <code>stream()</code>,
+<code>verify()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>web</strong></td>
+<td>HTTP</td>
+<td><code>get_request()</code>, <code>post_request()</code></td>
+</tr>
+<tr class="even">
+<td><strong>log</strong></td>
+<td>Logging</td>
+<td><code>info()</code>, <code>warn()</code>, <code>error()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>cloudadmin</strong></td>
+<td>Cloud admin</td>
+<td><code>authorize()</code>, <code>grant()</code>,
+<code>audit_log()</code></td>
+</tr>
+<tr class="even">
+<td><strong>iot</strong></td>
+<td>IoT devices</td>
+<td><code>connect_device()</code>, <code>read_sensor()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>mobile</strong></td>
+<td>Mobile integration</td>
+<td>Platform-specific APIs</td>
+</tr>
+<tr class="even">
+<td><strong>desktop</strong></td>
+<td>Desktop integration</td>
+<td>System-level APIs</td>
+</tr>
+<tr class="odd">
+<td><strong>config</strong></td>
+<td>Configuration</td>
+<td><code>get_env()</code>, <code>get_database_config()</code></td>
+</tr>
+<tr class="even">
+<td><strong>aml</strong></td>
+<td>Anti-money laundering</td>
+<td><code>perform_check()</code>, <code>get_status()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>kyc</strong></td>
+<td>Know Your Customer</td>
+<td><code>verify()</code>, <code>get_verification()</code></td>
+</tr>
+<tr class="even">
+<td><strong>sh</strong></td>
+<td>Shell execution</td>
+<td><code>run()</code> with trust controls</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Full reference:</strong> <a
+href="STDLIB_REFERENCE.html">STDLIB_REFERENCE.md</a> — Machine-readable
+with complete signatures, parameters, return types, and examples.</p>
+<p><strong>Module guides:</strong></p>
+<ul>
+<li><a href="guides/API_REFERENCE.html">API Reference</a> — Grouped by
+module</li>
+<li><a href="guides/AI_FEATURES_GUIDE.html">AI Features Guide</a> — AI
+module details</li>
+<li><a href="guides/CLOUDADMIN_GUIDE.html">CloudAdmin Guide</a> — Hybrid
+trust and admin control</li>
+</ul>
+<hr />
+<h2 id="cli-reference">CLI reference</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal run &lt;file&gt;</code></td>
+<td>Execute a DAL file</td>
+</tr>
+<tr class="even">
+<td><code>dal agent serve</code></td>
+<td>Start agent HTTP server</td>
+</tr>
+<tr class="odd">
+<td><code>dal agent create &lt;type&gt; &lt;name&gt;</code></td>
+<td>Create an agent</td>
+</tr>
+<tr class="even">
+<td><code>dal agent chat [name]</code></td>
+<td>Interactive agent chat</td>
+</tr>
+<tr class="odd">
+<td><code>dal agent send &lt;from&gt; &lt;to&gt; "&lt;msg&gt;"</code></td>
+<td>Send message between agents</td>
+</tr>
+<tr class="even">
+<td><code>dal agent task assign &lt;id&gt; "&lt;desc&gt;"</code></td>
+<td>Assign task to agent</td>
+</tr>
+<tr class="odd">
+<td><code>dal agent mold list</code></td>
+<td>List local molds</td>
+</tr>
+<tr class="even">
+<td><code>dal init agent</code></td>
+<td>Initialize agent project</td>
+</tr>
+<tr class="odd">
+<td><code>dal check &lt;file&gt;</code></td>
+<td>Syntax check</td>
+</tr>
+<tr class="even">
+<td><code>dal fmt &lt;file&gt;</code></td>
+<td>Format code</td>
+</tr>
+<tr class="odd">
+<td><code>dal lint &lt;file&gt;</code></td>
+<td>Lint code</td>
+</tr>
+<tr class="even">
+<td><code>dal test</code></td>
+<td>Run tests</td>
+</tr>
+<tr class="odd">
+<td><code>dal parse &lt;file&gt;</code></td>
+<td>Show AST</td>
+</tr>
+<tr class="even">
+<td><code>dal repl</code></td>
+<td>Interactive REPL</td>
+</tr>
+<tr class="odd">
+<td><code>dal watch &lt;file&gt;</code></td>
+<td>Watch for changes</td>
+</tr>
+<tr class="even">
+<td><code>dal new &lt;name&gt;</code></td>
+<td>Create new project</td>
+</tr>
+<tr class="odd">
+<td><code>dal convert &lt;file&gt;</code></td>
+<td>Solidity to DAL</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="blockchain-and-hybrid-trust">Blockchain and hybrid trust</h2>
+<p>DAL provides multi-chain blockchain integration through its trust
+model and chain module.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Guide</th>
+<th>What it covers</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="guides/HYBRID_INTEGRATION_GUIDE.html">Hybrid Integration
+Guide</a></td>
+<td>On-chain/off-chain patterns, trust model, sync, security</td>
+</tr>
+<tr class="even">
+<td><a href="guides/PRESIGNED_DEPLOYMENT_GUIDE.html">Pre-signed Deployment
+Guide</a></td>
+<td>Building and submitting pre-signed deploy tx (Foundry/Hardhat →
+DAL), use cases</td>
+</tr>
+<tr class="odd">
+<td><a href="SOLIDITY_INTEGRATION_GUIDE.html">Solidity Integration
+Guide</a></td>
+<td>Orchestrating Solidity contracts from DAL</td>
+</tr>
+<tr class="even">
+<td><a href="guides/AI_BEST_PRACTICES.html">AI Best Practices</a></td>
+<td>Security and optimization for AI + blockchain</td>
+</tr>
+<tr class="odd">
+<td><a href="guides/ARCHITECTURE_SEPARATION.html">Architecture
+Separation</a></td>
+<td>Separating DAL contracts from frontend</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Supported chains:</strong> Ethereum, Polygon, Solana,
+Arbitrum (and others via chain module).</p>
+<p><strong>Trust levels:</strong></p>
+<ul>
+<li><code>@trust("decentralized")</code> — On-chain only</li>
+<li><code>@trust("hybrid")</code> — On-chain + off-chain</li>
+<li><code>@trust("centralized")</code> — Off-chain only</li>
+</ul>
+<hr />
+<h2 id="ide-and-agent-integration">IDE and agent integration</h2>
+<ul>
+<li><a href="IDE_AND_AGENT_INTEGRATION.html">IDE and Agent Integration</a>
+— LSP setup, editor agents, tool schema</li>
+<li><a href="development/LSP_AND_AGENT_INTEGRATION_PLAN.html">LSP and
+Agent Integration Plan (detailed)</a> — Full LSP feature plan, phases,
+stdio vs IDE HTTP routes</li>
+<li><a href="AGENT_ASSISTANT_PLAN.html">DAL Assistant Plan</a> — How
+agents work as DAL assistants: skills, molds, code-editor tools</li>
+</ul>
+<h3 id="project-state-and-alignment-maintainers">Project state and
+alignment (maintainers)</h3>
+<ul>
+<li><strong><a href="PROJECT_STATE_AND_ALIGNMENT.html">Project state and
+alignment</a></strong> — Single matrix: what is shipped vs stub vs
+planned; links to trust-split EVM, LSP, checklists; <strong>gap
+backlog</strong> to keep docs and code honest across releases.</li>
+<li><strong><a href="PRODUCTION_GRADE_CHECKLIST.html">Production grade
+checklist</a></strong> — Unwrap/panic, stubs, JWT, logging</li>
+<li><strong><a
+href="../CODEBASE_TODOS.html">CODEBASE_TODOS.md</a></strong> — Short index
+into the above (repo root)</li>
+</ul>
+<h3 id="configuration">Configuration</h3>
+<ul>
+<li><strong><a href="CONFIG.html">CONFIG.md</a></strong> — Index of
+environment variables (<code>DAL_*</code>, LLM keys, JWT, etc.) with
+links to full guides.</li>
+</ul>
+<p><strong>File extensions:</strong></p>
+<ul>
+<li><code>.dal</code> — Source files</li>
+<li><code>.test.dal</code> — Test files</li>
+<li><code>.mold.dal</code> — Mold definitions</li>
+<li><code>.skill.dal</code> — Skill definitions</li>
+</ul>
+<p><strong>Syntax highlighting:</strong> Use Rust syntax as a base.
+DAL-specific keywords: <code>service</code>, <code>@chain</code>,
+<code>@trust</code>, <code>@ai</code>, <code>@secure</code>,
+<code>@txn</code>.</p>
+<hr />
+<h2 id="examples">Examples</h2>
+<h3 id="in-the-repo">In the repo</h3>
+<p>27+ example programs in the <a href="../examples/">examples/</a>
+directory:</p>
+<ul>
+<li><code>01_hello_world.dal</code> — Basic language features</li>
+<li><code>02_nft_marketplace.dal</code> — Blockchain operations and
+attributes</li>
+<li><code>03_trading_bot.dal</code> — Async and agent system</li>
+<li><code>04_error_handling.dal</code> — Error management patterns</li>
+</ul>
+<h3 id="tutorials">Tutorials</h3>
+<ul>
+<li><a href="tutorials/01_defi_token.html">DeFi Token</a></li>
+<li><a href="tutorials/02_ai_trading_agent.html">AI Trading Agent</a></li>
+<li><a href="tutorials/03_hybrid_marketplace_cloudadmin.html">Hybrid
+Marketplace</a></li>
+</ul>
+<h3 id="quick-snippets">Quick snippets</h3>
+<p><strong>Agent with persistent memory and skills:</strong></p>
+<pre class="dal"><code>let agent_id = agent::spawn({
+    &quot;name&quot;: &quot;office-bot&quot;,
+    &quot;type&quot;: &quot;ai&quot;,
+    &quot;role&quot;: &quot;Office assistant with calendar and email skills&quot;
+});
+agent::set_serve_agent(agent_id);</code></pre>
+<p><strong>Blockchain operation:</strong></p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service Token {
+    fn deploy() {
+        let result = chain::deploy(&quot;MyToken&quot;, &quot;{}&quot;);
+        log::info(&quot;Deployed: &quot; + result.address);
+    }
+}</code></pre>
+<p><strong>Agent coordination:</strong></p>
+<pre class="dal"><code>let task = agent::create_task(&quot;Process batch 42&quot;, &quot;high&quot;);
+agent::coordinate(agent_id, task, &quot;task_distribution&quot;);</code></pre>
+<hr />
+<h2 id="package-management">Package management</h2>
+<ul>
+<li><a href="PACKAGING.html">Packaging and Distribution</a> — Install
+methods, versioning, configuration</li>
+<li><a href="VENV.html">DAL Venv</a> — Named execution environments with
+security profiles</li>
+</ul>
+<p><strong>Release maintainers:</strong> <a
+href="RELEASE_DOCS_BUNDLE.html">RELEASE_DOCS_BUNDLE.md</a> lists which
+docs and guides to include with the language release so installs (and
+LLMs) have access to the most important documentation.</p>
+<hr />
+<h2 id="project-status">Project status</h2>
+<p><strong>Current:</strong> Beta (v1.0.8). Actively maintained with
+consistent updates.</p>
+<table>
+<thead>
+<tr class="header">
+<th>What works</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Interpreter runtime (<code>dal run</code>)</td>
+<td>Stable</td>
+</tr>
+<tr class="even">
+<td>Agent framework (spawn, serve, persist, skills)</td>
+<td>Stable</td>
+</tr>
+<tr class="odd">
+<td>30-module stdlib</td>
+<td>Stable</td>
+</tr>
+<tr class="even">
+<td>CLI toolchain</td>
+<td>Stable</td>
+</tr>
+<tr class="odd">
+<td>Mold system</td>
+<td>Stable</td>
+</tr>
+<tr class="even">
+<td>HTTP agent server</td>
+<td>Stable</td>
+</tr>
+<tr class="odd">
+<td>Solidity converter</td>
+<td>Stable</td>
+</tr>
+<tr class="even">
+<td>Testing framework</td>
+<td>Stable</td>
+</tr>
+<tr class="odd">
+<td>Blockchain transpilation</td>
+<td>Experimental</td>
+</tr>
+<tr class="even">
+<td>WASM/native compile targets</td>
+<td>Experimental</td>
+</tr>
+</tbody>
+</table>
+<p>For the roadmap, see <a
+href="guides/GENERAL_PURPOSE_LANGUAGE_ANALYSIS.html">Language Vision</a>
+and <a href="guides/BETA_RELEASE_SUMMARY.html">Beta Release
+Summary</a>.</p>
+<p><strong>Design docs:</strong></p>
+<ul>
+<li><a href="design/RUNTIME_VALUE_METHODS_AND_STDLIB_WIRING.html">Runtime
+value methods and stdlib wiring</a> — Production-grade plan for
+value-method support (list/map methods, receiver-first dispatch) and
+stdlib wiring (IoT reference). Phase 1 and chain fixes implemented.</li>
+<li><a href="design/CHAIN_NAMESPACE_GAPS_AND_FIXES.html">Chain namespace
+gaps and fixes</a> — deploy 3rd arg, get as Map, get_chain_config /
+get_supported_chains; remaining optional improvements.</li>
+<li><a href="design/MOBILE_EDGE_IOT_TARGETS.html">Mobile, edge, and IoT
+targets</a> — Edge = IoT; IoT served by runtime (not compiled to);
+transpile deferred, same pattern; mobile compile deferred unless
+transpile path exists.</li>
+</ul>
+<hr />
+<h2 id="version-history">Version history</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Version</th>
+<th>Date</th>
+<th>Highlights</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.0.8</td>
+<td>2026-03</td>
+<td>Persistent agent memory, extensible skills registry, documentation
+overhaul</td>
+</tr>
+<tr class="even">
+<td>1.0.5</td>
+<td>2026-02</td>
+<td>Mutation testing hardening, HTTP middleware tests</td>
+</tr>
+<tr class="odd">
+<td>1.0.3</td>
+<td>2026-02</td>
+<td>mold:: stdlib, agent molds, CLI mold commands</td>
+</tr>
+<tr class="even">
+<td>1.0.2</td>
+<td>2026-01</td>
+<td>CloudAdmin module, improved stdlib</td>
+</tr>
+<tr class="odd">
+<td>1.0.0</td>
+<td>2025-11</td>
+<td>Initial release</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="license">License</h2>
+<p><strong>Apache License 2.0</strong> — see <a
+href="../LICENSE">LICENSE</a>.</p>
+<hr />
+<h2 id="contact-and-community">Contact and community</h2>
+<ul>
+<li><strong>GitHub:</strong> <a
+href="https://github.com/okjason-source/dist_agent_lang">okjason-source/dist_agent_lang</a></li>
+<li><strong>Discord:</strong> <a
+href="https://discord.gg/tu7tg9eN">discord.gg/tu7tg9eN</a></li>
+<li><strong>Email:</strong> <a
+href="mailto:jason.dinh.developer@gmail.com">jason.dinh.developer@gmail.com</a></li>
+</ul>
+</body>
+</html>

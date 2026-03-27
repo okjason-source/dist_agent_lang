@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CLI_QUICK_REFERENCE</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1
+id="dist_agent_lang-cli---complete-command-reference">dist_agent_lang
+CLI - Complete Command Reference</h1>
+<p><strong>Version:</strong> 1.0.8<br />
+<strong>Phases Complete:</strong> Phase 0–9<br />
+<strong>Total Commands:</strong> 80+ on our way to interactive
+distributed agents...</p>
+<hr />
+<h2 id="quick-navigation">Quick Navigation</h2>
+<ul>
+<li><a href="#core-commands">Core Commands</a></li>
+<li><a href="#developer-tools-phase-0">Developer Tools (Phase
+0)</a></li>
+<li><a href="#optimization-phase-1">Optimization (Phase 1)</a></li>
+<li><a href="#blockchain-phase-2">Blockchain (Phase 2)</a></li>
+<li><a href="#cryptography-phase-2">Cryptography (Phase 2)</a></li>
+<li><a href="#database-phase-2">Database (Phase 2)</a></li>
+<li><a href="#ai-enhanced-tools-phase-3">AI-Enhanced Tools (Phase
+3)</a></li>
+<li><a href="#cloud--enterprise-phase-4">Cloud &amp; Enterprise (Phase
+4)</a></li>
+<li><a href="#ide--lsp-phase-5">IDE &amp; LSP (Phase 5)</a></li>
+<li><a href="#agent-commands-phase-6">Agent Commands (Phase 6)</a></li>
+<li><a href="#ai-iot-phase-7">AI-IoT (Phase 7)</a></li>
+<li><a href="#specialized-phase-8">Specialized (Phase 8)</a></li>
+<li><a href="#cross-component-phase-9">Cross-Component (Phase
+9)</a></li>
+<li><a href="#solidity-tools">Solidity Tools</a></li>
+</ul>
+<hr />
+<h2 id="core-commands">Core Commands</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal run &lt;file.dal&gt;</code></td>
+<td>Run a DAL file</td>
+<td><code>dal run app.dal</code></td>
+</tr>
+<tr class="even">
+<td><code>dal web &lt;file.dal&gt;</code></td>
+<td>Run DAL web app</td>
+<td><code>dal web server.dal</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal web &lt;file.js&gt; [args...]</code></td>
+<td>Run standalone JS (Node)</td>
+<td><code>dal web app.js</code></td>
+</tr>
+<tr class="even">
+<td><code>dal serve &lt;file.dal&gt; [--port N] [--venv &lt;name&gt;]</code></td>
+<td>Serve HTTP handlers (optional venv)</td>
+<td><code>dal serve server.dal --port 4040</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal test [file]</code></td>
+<td>Run tests</td>
+<td><code>dal test</code> or <code>dal test app.test.dal</code></td>
+</tr>
+<tr class="even">
+<td><code>dal parse &lt;file.dal&gt;</code></td>
+<td>Parse and validate syntax</td>
+<td><code>dal parse app.dal</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal help</code></td>
+<td>Show help message</td>
+<td><code>dal help</code></td>
+</tr>
+<tr class="even">
+<td><code>dal version</code></td>
+<td>Show version</td>
+<td><code>dal version</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="developer-tools-phase-0">Developer Tools (Phase 0)</h2>
+<h3 id="code-quality">Code Quality</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal check &lt;file.dal&gt;</code></td>
+<td>Type check without executing</td>
+<td><code>dal check app.dal</code></td>
+</tr>
+<tr class="even">
+<td><code>dal fmt &lt;file.dal&gt;</code></td>
+<td>Format DAL code</td>
+<td><code>dal fmt app.dal</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal fmt &lt;file&gt; --check</code></td>
+<td>Check if formatted (CI)</td>
+<td><code>dal fmt app.dal --check</code></td>
+</tr>
+<tr class="even">
+<td><code>dal lint &lt;file.dal&gt;</code></td>
+<td>Lint code for issues</td>
+<td><code>dal lint app.dal</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="project-management">Project Management</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal new &lt;name&gt;</code></td>
+<td>Create new default project</td>
+<td><code>dal new my-project</code></td>
+</tr>
+<tr class="even">
+<td><code>dal new &lt;name&gt; --type &lt;type&gt;</code></td>
+<td>Create typed project</td>
+<td><code>dal new my-ai --type ai</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal init</code></td>
+<td>Initialize in current dir</td>
+<td><code>dal init</code></td>
+</tr>
+<tr class="even">
+<td><code>dal add &lt;package&gt;</code></td>
+<td>Add dependency</td>
+<td><code>dal add @dal/testing</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal install</code></td>
+<td>Install dependencies from dal.toml</td>
+<td><code>dal install</code></td>
+</tr>
+<tr class="even">
+<td><code>dal install --sync</code></td>
+<td>Add missing [dependencies] from import usage in .dal files, then
+install</td>
+<td><code>dal install --sync</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal publish</code></td>
+<td>Publish package to registry (requires
+<code>DAL_REGISTRY_TOKEN</code>)</td>
+<td><code>dal publish</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Registry server:</strong> Run <code>dal-registry</code>
+(build with <code>cargo build --bin dal-registry</code>). Env:
+<code>REGISTRY_STORAGE_PATH</code>, <code>REGISTRY_TOKEN</code>,
+<code>REGISTRY_PUBLIC_URL</code>, <code>PORT</code>. See <a
+href="development/PACKAGE_REGISTRY_PLAN.html">PACKAGE_REGISTRY_PLAN.md</a>.</p>
+<p><strong>Project Types:</strong></p>
+<ul>
+<li><code>ai</code> - AI/ML application</li>
+<li><code>iot</code> - IoT device controller</li>
+<li><code>agent</code> - Multi-agent system</li>
+<li><code>chain</code> - Blockchain/smart contract</li>
+<li><code>web</code> - Web application</li>
+<li><code>cli</code> - Command-line tool</li>
+<li><code>lib</code> - Library/package</li>
+</ul>
+<h3 id="interactive-development">Interactive Development</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal repl</code></td>
+<td>Start interactive REPL</td>
+<td><code>dal repl</code></td>
+</tr>
+<tr class="even">
+<td><code>dal watch &lt;file.dal&gt;</code></td>
+<td>Watch file, re-run on changes</td>
+<td><code>dal watch app.dal</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="optimization-phase-1">Optimization (Phase 1)</h2>
+<h3 id="benchmarking">Benchmarking</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal bench</code></td>
+<td>Run all benchmark suites</td>
+<td><code>dal bench</code></td>
+</tr>
+<tr class="even">
+<td><code>dal bench &lt;file.dal&gt;</code></td>
+<td>Benchmark specific file</td>
+<td><code>dal bench app.dal</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal bench --suite &lt;name&gt;</code></td>
+<td>Run specific suite</td>
+<td><code>dal bench --suite lexer</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Benchmark Suites:</strong></p>
+<ul>
+<li><code>lexer</code> - Tokenization performance</li>
+<li><code>parser</code> - Parsing performance</li>
+<li><code>runtime</code> - Execution performance</li>
+<li><code>stdlib</code> - Standard library performance</li>
+<li><code>all</code> - All suites (default)</li>
+</ul>
+<h3 id="profiling">Profiling</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal profile &lt;file.dal&gt;</code></td>
+<td>Profile execution timing</td>
+<td><code>dal profile app.dal</code></td>
+</tr>
+<tr class="even">
+<td><code>dal profile &lt;file&gt; --memory</code></td>
+<td>Include memory tracking</td>
+<td><code>dal profile app.dal --memory</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="optimization">Optimization</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal optimize &lt;file.dal&gt;</code></td>
+<td>Apply AST optimizations</td>
+<td><code>dal optimize app.dal</code></td>
+</tr>
+<tr class="even">
+<td><code>dal optimize &lt;file&gt; -o &lt;out&gt;</code></td>
+<td>Save optimized code</td>
+<td><code>dal optimize app.dal -o opt.dal</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal optimize --level &lt;n&gt;</code></td>
+<td>Set optimization level</td>
+<td><code>dal optimize app.dal --level 2</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Optimization Levels:</strong></p>
+<ul>
+<li><code>0</code> - None</li>
+<li><code>1</code> - Basic (constant folding, dead code
+elimination)</li>
+<li><code>2</code> - Aggressive (all optimizations)</li>
+</ul>
+<h3 id="memory">Memory</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal memory-stats</code></td>
+<td>Show memory statistics</td>
+<td><code>dal memory-stats</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="blockchain-phase-2">Blockchain (Phase 2)</h2>
+<h3 id="chain-information">Chain Information</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal chain list</code></td>
+<td>List supported chains</td>
+<td><code>dal chain list</code></td>
+</tr>
+<tr class="even">
+<td><code>dal chain config &lt;id&gt;</code></td>
+<td>Show chain configuration</td>
+<td><code>dal chain config 1</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Supported Chain IDs:</strong></p>
+<ul>
+<li><code>1</code> - Ethereum Mainnet</li>
+<li><code>5</code> - Ethereum Goerli (testnet)</li>
+<li><code>137</code> - Polygon</li>
+<li><code>80001</code> - Polygon Mumbai (testnet)</li>
+<li><code>42161</code> - Arbitrum One</li>
+<li><code>56</code> - Binance Smart Chain</li>
+</ul>
+<h3 id="chain-operations">Chain Operations</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal chain gas-price &lt;id&gt;</code></td>
+<td>Get current gas price (Gwei)</td>
+<td><code>dal chain gas-price 1</code></td>
+</tr>
+<tr class="even">
+<td><code>dal chain balance &lt;id&gt; &lt;addr&gt;</code></td>
+<td>Get address balance (wei &amp; ETH)</td>
+<td><code>dal chain balance 1 0x742d...</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal chain tx-status &lt;id&gt; &lt;hash&gt;</code></td>
+<td>Get transaction status</td>
+<td><code>dal chain tx-status 1 0xabc...</code></td>
+</tr>
+<tr class="even">
+<td><code>dal chain block-time &lt;id&gt;</code></td>
+<td>Get latest block timestamp</td>
+<td><code>dal chain block-time 1</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="asset-management-localsimulation">Asset Management
+(Local/Simulation)</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal chain mint &lt;name&gt;</code></td>
+<td>Mint asset</td>
+<td><code>dal chain mint MyToken</code></td>
+</tr>
+<tr class="even">
+<td><code>dal chain mint &lt;name&gt; --meta &lt;kv&gt;</code></td>
+<td>Mint with metadata</td>
+<td><code>dal chain mint NFT --meta name=Punk,id=1</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal chain asset &lt;id&gt;</code></td>
+<td>Get asset info</td>
+<td><code>dal chain asset 42</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="cryptography-phase-2">Cryptography (Phase 2)</h2>
+<h3 id="hashing">Hashing</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal crypto hash &lt;data&gt;</code></td>
+<td>Hash data (SHA256 default)</td>
+<td><code>dal crypto hash "hello"</code></td>
+</tr>
+<tr class="even">
+<td><code>dal crypto hash &lt;data&gt; &lt;alg&gt;</code></td>
+<td>Hash with algorithm</td>
+<td><code>dal crypto hash "hello" sha512</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal crypto random-hash</code></td>
+<td>Generate random hash</td>
+<td><code>dal crypto random-hash</code></td>
+</tr>
+<tr class="even">
+<td><code>dal crypto random-hash &lt;alg&gt;</code></td>
+<td>Random hash with algorithm</td>
+<td><code>dal crypto random-hash sha512</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Hash Algorithms:</strong></p>
+<ul>
+<li><code>sha256</code> (default)</li>
+<li><code>sha512</code></li>
+</ul>
+<h3 id="key-management">Key Management</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal crypto keygen</code></td>
+<td>Generate RSA keypair (default)</td>
+<td><code>dal crypto keygen</code></td>
+</tr>
+<tr class="even">
+<td><code>dal crypto keygen &lt;alg&gt;</code></td>
+<td>Generate with algorithm</td>
+<td><code>dal crypto keygen ed25519</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Algorithms:</strong></p>
+<ul>
+<li><code>rsa</code> (default)</li>
+<li><code>ed25519</code></li>
+</ul>
+<h3 id="signing--verification">Signing &amp; Verification</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal crypto sign &lt;data&gt; &lt;key&gt;</code></td>
+<td>Sign data with private key</td>
+<td><code>dal crypto sign "msg" "-----BEGIN..." rsa</code></td>
+</tr>
+<tr class="even">
+<td><code>dal crypto sign &lt;d&gt; &lt;k&gt; &lt;alg&gt;</code></td>
+<td>Sign with algorithm</td>
+<td><code>dal crypto sign "msg" "key" ed25519</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal crypto verify &lt;d&gt; &lt;s&gt; &lt;k&gt;</code></td>
+<td>Verify signature</td>
+<td><code>dal crypto verify "msg" "sig" "pubkey" rsa</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="encryption">Encryption</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal crypto encrypt &lt;data&gt; &lt;key&gt;</code></td>
+<td>Encrypt with public key (RSA)</td>
+<td><code>dal crypto encrypt "secret" "pubkey"</code></td>
+</tr>
+<tr class="even">
+<td><code>dal crypto decrypt &lt;data&gt; &lt;key&gt;</code></td>
+<td>Decrypt with private key (RSA)</td>
+<td><code>dal crypto decrypt "cipher" "privkey"</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal crypto aes-encrypt &lt;d&gt; &lt;k&gt;</code></td>
+<td>AES-256 encryption</td>
+<td><code>dal crypto aes-encrypt "data" "key32"</code></td>
+</tr>
+<tr class="even">
+<td><code>dal crypto aes-decrypt &lt;d&gt; &lt;k&gt;</code></td>
+<td>AES-256 decryption</td>
+<td><code>dal crypto aes-decrypt "cipher" "key32"</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="database-phase-2">Database (Phase 2)</h2>
+<h3 id="connection--basic-operations">Connection &amp; Basic
+Operations</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal db connect &lt;conn&gt;</code></td>
+<td>Test database connection</td>
+<td><code>dal db connect "postgresql://localhost/db"</code></td>
+</tr>
+<tr class="even">
+<td><code>dal db query &lt;conn&gt; "&lt;sql&gt;"</code></td>
+<td>Execute SQL query</td>
+<td><code>dal db query "..." "SELECT * FROM users"</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal db tables &lt;conn&gt;</code></td>
+<td>List all tables</td>
+<td><code>dal db tables "postgresql://localhost/db"</code></td>
+</tr>
+<tr class="even">
+<td><code>dal db schema &lt;conn&gt; &lt;table&gt;</code></td>
+<td>Get table schema</td>
+<td><code>dal db schema "..." users</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="advanced-operations">Advanced Operations</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal db plan &lt;conn&gt; "&lt;sql&gt;"</code></td>
+<td>Get query execution plan</td>
+<td><code>dal db plan "..." "SELECT * FROM big_table"</code></td>
+</tr>
+<tr class="even">
+<td><code>dal db backup &lt;conn&gt; &lt;path&gt;</code></td>
+<td>Backup database</td>
+<td><code>dal db backup "..." backup.sql</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal db restore &lt;conn&gt; &lt;path&gt;</code></td>
+<td>Restore from backup</td>
+<td><code>dal db restore "..." backup.sql</code></td>
+</tr>
+<tr class="even">
+<td><code>dal db metrics &lt;conn&gt;</code></td>
+<td>Show database metrics</td>
+<td><code>dal db metrics "postgresql://localhost/db"</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Connection String Formats:</strong></p>
+<ul>
+<li>PostgreSQL:
+<code>postgresql://user:pass@host:port/database</code></li>
+<li>MySQL: <code>mysql://user:pass@host:port/database</code></li>
+<li>MongoDB: <code>mongodb://host:port/database</code></li>
+</ul>
+<hr />
+<h2 id="ai-enhanced-tools-phase-3">AI-Enhanced Tools (Phase 3)</h2>
+<h3 id="code-generation--analysis">Code Generation &amp; Analysis</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal ai code "&lt;prompt&gt;"</code></td>
+<td>Generate DAL code from natural language</td>
+<td><code>dal ai code "Create a token contract"</code></td>
+</tr>
+<tr class="even">
+<td><code>dal ai code "&lt;p&gt;" -o &lt;file&gt;</code></td>
+<td>Generate and save code</td>
+<td><code>dal ai code "REST API" -o server.dal</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal ai explain &lt;file&gt;</code></td>
+<td>Explain what code does</td>
+<td><code>dal ai explain contract.dal</code></td>
+</tr>
+<tr class="even">
+<td><code>dal ai review &lt;file&gt;</code></td>
+<td>Code review with suggestions</td>
+<td><code>dal ai review myapp.dal</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="testing--optimization">Testing &amp; Optimization</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal ai test &lt;file&gt;</code></td>
+<td>Generate test cases</td>
+<td><code>dal ai test contract.dal</code></td>
+</tr>
+<tr class="even">
+<td><code>dal ai test &lt;file&gt; -o &lt;test&gt;</code></td>
+<td>Generate and save tests</td>
+<td><code>dal ai test contract.dal -o tests.dal</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal ai fix &lt;file&gt;</code></td>
+<td>Suggest fixes for issues</td>
+<td><code>dal ai fix broken.dal</code></td>
+</tr>
+<tr class="even">
+<td><code>dal ai optimize-gas &lt;file&gt;</code></td>
+<td>Gas optimization suggestions</td>
+<td><code>dal ai optimize-gas contract.dal</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="security">Security</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal ai audit &lt;file&gt;</code></td>
+<td>Security audit for smart contracts</td>
+<td><code>dal ai audit token.dal</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="cloud--enterprise-phase-4">Cloud &amp; Enterprise (Phase 4)</h2>
+<h3 id="authorization--roles">Authorization &amp; Roles</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal cloud authorize &lt;id&gt; &lt;op&gt; &lt;resource&gt;</code></td>
+<td>Check authorization</td>
+<td><code>dal cloud authorize user_123 read config/db</code></td>
+</tr>
+<tr class="even">
+<td><code>dal cloud grant &lt;user&gt; &lt;role&gt; &lt;scope&gt;</code></td>
+<td>Grant role</td>
+<td><code>dal cloud grant user_123 admin ec2:admin</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal cloud revoke &lt;user&gt;</code></td>
+<td>Revoke all roles</td>
+<td><code>dal cloud revoke user_123</code></td>
+</tr>
+<tr class="even">
+<td><code>dal cloud roles &lt;user&gt;</code></td>
+<td>List user roles</td>
+<td><code>dal cloud roles user_123</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Roles:</strong> <code>superadmin</code>, <code>admin</code>,
+<code>moderator</code>, <code>user</code></p>
+<h3 id="audit-policies-tenant">Audit, Policies, Tenant</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal cloud audit-log</code></td>
+<td>Audit trail (info)</td>
+<td><code>dal cloud audit-log</code></td>
+</tr>
+<tr class="even">
+<td><code>dal cloud policies</code></td>
+<td>Policies (info)</td>
+<td><code>dal cloud policies</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal cloud tenant list</code></td>
+<td>List tenants (info)</td>
+<td><code>dal cloud tenant list</code></td>
+</tr>
+<tr class="even">
+<td><code>dal cloud tenant create &lt;name&gt;</code></td>
+<td>Create tenant (simulated)</td>
+<td><code>dal cloud tenant create acme --admin-email a@b.com</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="compliance--chain">Compliance &amp; Chain</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal cloud compliance scan [--standard X]</code></td>
+<td>Compliance scan (info)</td>
+<td><code>dal cloud compliance scan --standard SOC2</code></td>
+</tr>
+<tr class="even">
+<td><code>dal cloud compliance report &lt;std&gt; [-o file]</code></td>
+<td>Report (info)</td>
+<td><code>dal cloud compliance report SOC2 -o out.pdf</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal cloud chain-log "&lt;event&gt;"</code></td>
+<td>Chain audit (info)</td>
+<td><code>dal cloud chain-log "user deleted X" --chain_id 1</code></td>
+</tr>
+<tr class="even">
+<td><code>dal cloud chain-verify &lt;log_id&gt;</code></td>
+<td>Verify log (info)</td>
+<td><code>dal cloud chain-verify log_789</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="hybrid-trust">Hybrid Trust</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal cloud trust validate &lt;admin&gt; &lt;user&gt;</code></td>
+<td>Validate hybrid trust</td>
+<td><code>dal cloud trust validate valid valid</code></td>
+</tr>
+<tr class="even">
+<td><code>dal cloud trust bridge &lt;central&gt; &lt;decentral&gt;</code></td>
+<td>Bridge trust systems</td>
+<td><code>dal cloud trust bridge admin user</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Env:</strong> <code>ADMIN_IDS</code>,
+<code>ADMIN_LEVEL_&lt;id&gt;</code>,
+<code>POLICY_&lt;name&gt;_LEVEL</code></p>
+<hr />
+<h2 id="ide--lsp-phase-5">IDE &amp; LSP (Phase 5)</h2>
+<h3 id="language-server--documentation">Language Server &amp;
+Documentation</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal lsp</code></td>
+<td>LSP server info (editor integration)</td>
+<td><code>dal lsp</code></td>
+</tr>
+<tr class="even">
+<td><code>dal doc &lt;file.dal&gt;</code></td>
+<td>Generate documentation</td>
+<td><code>dal doc contract.dal</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal doc &lt;file&gt; -o &lt;path&gt;</code></td>
+<td>Save docs to path</td>
+<td><code>dal doc contract.dal -o docs/API.md</code></td>
+</tr>
+<tr class="even">
+<td><code>dal doc &lt;file&gt; --open</code></td>
+<td>Generate and open</td>
+<td><code>dal doc contract.dal --open</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal completions [shell]</code></td>
+<td>Shell completions</td>
+<td><code>dal completions bash</code></td>
+</tr>
+<tr class="even">
+<td><code>dal debug &lt;file.dal&gt;</code></td>
+<td>Debug mode (planned)</td>
+<td><code>dal debug app.dal</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Shells:</strong> <code>bash</code>, <code>zsh</code>,
+<code>fish</code></p>
+<p><strong>Install completions:</strong>
+<code>dal completions bash &gt;&gt; ~/.bashrc</code> or
+<code>eval "$(dal completions zsh)"</code></p>
+<hr />
+<h2 id="agent-commands-phase-6">Agent Commands (Phase 6)</h2>
+<h3 id="agent-lifecycle">Agent Lifecycle</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal agent create &lt;type&gt; &lt;name&gt;</code></td>
+<td>Create agent</td>
+<td><code>dal agent create worker w1 --role "ETL"</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent list</code></td>
+<td>Agent info (process-local)</td>
+<td><code>dal agent list</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Types:</strong> <code>ai</code>, <code>system</code>,
+<code>worker</code>, <code>custom:&lt;name&gt;</code></p>
+<h3 id="communication--tasks">Communication &amp; Tasks</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal agent send &lt;from&gt; &lt;to&gt; "&lt;msg&gt;"</code></td>
+<td>Send message</td>
+<td><code>dal agent send agent_1 agent_2 "Process batch"</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent messages &lt;agent_id&gt;</code></td>
+<td>List messages</td>
+<td><code>dal agent messages agent_2</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal agent task assign &lt;id&gt; "&lt;desc&gt;"</code></td>
+<td>Assign task</td>
+<td><code>dal agent task assign agent_1 "Analyze data" --priority high</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent task list &lt;agent_id&gt;</code></td>
+<td>List pending tasks</td>
+<td><code>dal agent task list agent_1</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> Agent state is process-local. Use
+<code>dal run your_agents.dal</code> for multi-agent workflows.</p>
+<h3 id="fleet--molds">Fleet &amp; Molds</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal agent fleet create &lt;name&gt; [--from-mold &lt;path&gt; --count N] [--param k=v ...]</code></td>
+<td>Create fleet (empty or from mold)</td>
+<td><code>dal agent fleet create workers --from-mold worker.mold.dal --count 10</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent fleet list [-v | --verbose]</code></td>
+<td>List fleets (optionally last_deployed)</td>
+<td><code>dal agent fleet list -v</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal agent fleet show &lt;name&gt;</code></td>
+<td>Show fleet details</td>
+<td><code>dal agent fleet show workers</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent fleet scale &lt;name&gt; &lt;N&gt;</code></td>
+<td>Resize to N members</td>
+<td><code>dal agent fleet scale workers 20</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal agent fleet delete &lt;name&gt;</code></td>
+<td>Remove fleet metadata</td>
+<td><code>dal agent fleet delete workers</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent fleet deploy &lt;name&gt; &lt;task&gt;</code></td>
+<td>Record last-deployed task</td>
+<td><code>dal agent fleet deploy workers "Process logs"</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal agent fleet add-from-mold &lt;name&gt; &lt;mold&gt; &lt;count&gt; [--param k=v ...]</code></td>
+<td>Add N agents from mold</td>
+<td><code>dal agent fleet add-from-mold workers worker.mold.dal 5</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent fleet add-member &lt;name&gt; &lt;agent_id&gt;</code></td>
+<td>Register existing agent</td>
+<td><code>dal agent fleet add-member workers agent_xyz</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal agent fleet run [name]</code></td>
+<td>Dispatch last_deployed_task to members</td>
+<td><code>dal agent fleet run workers</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent fleet health &lt;name&gt;</code></td>
+<td>Member count, mold, status</td>
+<td><code>dal agent fleet health workers</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal agent fleet export [name] [--format k8s|docker-compose]</code></td>
+<td>Emit YAML for orchestrators</td>
+<td><code>dal agent fleet export --format docker-compose</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent mold list</code></td>
+<td>List local molds</td>
+<td><code>dal agent mold list</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal agent mold show &lt;path-or-name&gt;</code></td>
+<td>Show mold config</td>
+<td><code>dal agent mold show verify_mold</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent mold create &lt;name&gt;</code></td>
+<td>Scaffold new mold</td>
+<td><code>dal agent mold create my_mold</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal agent mold publish &lt;file&gt;</code></td>
+<td>Upload to IPFS</td>
+<td><code>dal agent mold publish my_mold.mold.json</code></td>
+</tr>
+<tr class="even">
+<td><code>dal agent create --mold &lt;path|ipfs://cid|moldId&gt; &lt;name&gt;</code></td>
+<td>Create agent from mold</td>
+<td><code>dal agent create --mold verify_mold MyAgent</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>fleet:: stdlib:</strong> Use <code>fleet::create</code>,
+<code>fleet::create_from_mold</code>, <code>fleet::list</code>,
+<code>fleet::show</code>, <code>fleet::scale</code>,
+<code>fleet::deploy</code>, <code>fleet::add_from_mold</code>,
+<code>fleet::add_member</code>, <code>fleet::health</code> in DAL code.
+See <a href="FLEET_DEPLOYMENT.html">FLEET_DEPLOYMENT.md</a>.</p>
+<p><strong>mold:: stdlib:</strong> Use <code>mold::load</code>,
+<code>mold::spawn_from</code>, <code>mold::list</code>,
+<code>mold::get_info</code>, <code>mold::use_mold</code> in DAL code.
+See <a
+href="STDLIB_REFERENCE.html#mold-module">STDLIB_REFERENCE.md</a>.</p>
+<hr />
+<h2 id="ai-iot-phase-7">AI-IoT (Phase 7)</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal iot ai-predict &lt;device_id&gt;</code></td>
+<td>Predictive maintenance</td>
+<td><code>dal iot ai-predict dev_001</code></td>
+</tr>
+<tr class="even">
+<td><code>dal iot ai-anomaly &lt;sensor_id&gt;</code></td>
+<td>Anomaly detection</td>
+<td><code>dal iot ai-anomaly sens_001</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal iot ai-optimize &lt;device_id&gt;</code></td>
+<td>Power optimization</td>
+<td><code>dal iot ai-optimize dev_001 --target-hours 8</code></td>
+</tr>
+<tr class="even">
+<td><code>dal iot read-sensor &lt;sensor_id&gt;</code></td>
+<td>Read sensor data</td>
+<td><code>dal iot read-sensor sens_001</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal iot status &lt;device_id&gt;</code></td>
+<td>Device status</td>
+<td><code>dal iot status dev_001</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Env:</strong> <code>IOT_ANOMALY_API_URL</code>,
+<code>IOT_ML_API_URL</code> for external APIs.</p>
+<hr />
+<h2 id="specialized-phase-8">Specialized (Phase 8)</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal log [show|stats|clear]</code></td>
+<td>Log entries, stats, clear</td>
+<td><code>dal log show</code></td>
+</tr>
+<tr class="even">
+<td><code>dal config [show|get &lt;key&gt;]</code></td>
+<td>Config and env</td>
+<td><code>dal config get AI_API_KEY</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="cross-component-phase-9">Cross-Component (Phase 9)</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal bond &lt;flow&gt; &lt;args...&gt;</code></td>
+<td>Bond components</td>
+<td><code>dal bond iot-to-db dev_001 postgres://...</code></td>
+</tr>
+<tr class="even">
+<td><code>dal pipe &lt;source&gt; -&gt; &lt;sink&gt;</code></td>
+<td>Pipeline between components</td>
+<td><code>dal pipe oracle fetch x -&gt; chain estimate 1</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal invoke &lt;workflow&gt; &lt;args...&gt;</code></td>
+<td>Multi-component workflows</td>
+<td><code>dal invoke iot-ingest dev_001 postgres://...</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flows:</strong> auth-to-web, oracle-to-chain, chain-to-sync,
+iot-to-db, iot-to-web, db-to-sync, sync-to-db, ai-to-service,
+service-to-chain, log-to-sync<br />
+<strong>Workflows:</strong> price-to-deploy, iot-ingest, ai-audit,
+compliance-check</p>
+<p><strong>Flags (bond, pipe, invoke):</strong></p>
+<ul>
+<li><code>--dry-run</code> — Print planned steps only, do not
+execute</li>
+<li><code>--format json</code> — Machine-readable JSON output</li>
+<li><code>--token &lt;value&gt;</code> — Auth token for HTTP flows
+(auth-to-web, iot-to-web, ai-to-service, service-to-chain)</li>
+<li><code>--token-env &lt;VAR&gt;</code> — Read token from environment
+variable</li>
+<li><code>--auth-file &lt;path&gt;</code> — Read token from file (first
+line)</li>
+</ul>
+<hr />
+<h2 id="solidity-tools">Solidity Tools</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal convert &lt;input.sol&gt;</code></td>
+<td>Convert Solidity to DAL</td>
+<td><code>dal convert Token.sol</code></td>
+</tr>
+<tr class="even">
+<td><code>dal convert &lt;in&gt; -o &lt;out&gt;</code></td>
+<td>Specify output file</td>
+<td><code>dal convert Token.sol -o token.dal</code></td>
+</tr>
+<tr class="odd">
+<td><code>dal analyze &lt;input.sol&gt;</code></td>
+<td>Analyze Solidity compatibility</td>
+<td><code>dal analyze Token.sol</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="common-workflows">Common Workflows</h2>
+<h3 id="1-start-new-project">1. Start New Project</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> new my-agent</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> init agent</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># write code with @hybrid(centralized) @chain(blockchain)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run agent.dal</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span><span class="fu">bash</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> new my-token <span class="at">--type</span> chain</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> my-token</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> add @dal/testing</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> install</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> fmt src/</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> check src/main.dal</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run src/main.dal</span></code></pre></div>
+<h3 id="2-development-workflow">2. Development Workflow</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Format and check</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> fmt src/</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> lint src/</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> check src/main.dal</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Watch mode for rapid iteration</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> watch src/main.dal</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Or use REPL for experiments</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> repl</span></code></pre></div>
+<h3 id="3-performance-optimization">3. Performance Optimization</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Profile to find bottlenecks</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> profile app.dal <span class="at">--memory</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimize</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> optimize app.dal <span class="at">-o</span> optimized.dal <span class="at">--level</span> 2</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Benchmark to verify improvement</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> bench app.dal</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> bench optimized.dal</span></code></pre></div>
+<h3 id="4-blockchain-deployment">4. Blockchain Deployment</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check gas price</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> chain gas-price 1</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check balance</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> chain balance 1 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Deploy (via DAL script)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run deploy.dal</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Check transaction</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> chain tx-status 1 0xabc123...</span></code></pre></div>
+<h3 id="5-cryptographic-operations">5. Cryptographic Operations</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate keys</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> crypto keygen ed25519 <span class="op">&gt;</span> keys.txt</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Hash data</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> crypto hash <span class="st">&quot;message&quot;</span> sha256</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Sign and verify</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> crypto sign <span class="st">&quot;msg&quot;</span> <span class="st">&quot;</span><span class="va">$PRIVATE_KEY</span><span class="st">&quot;</span> ed25519 <span class="op">&gt;</span> sig.txt</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> crypto verify <span class="st">&quot;msg&quot;</span> <span class="st">&quot;</span><span class="va">$(</span><span class="fu">cat</span> sig.txt<span class="va">)</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$PUBLIC_KEY</span><span class="st">&quot;</span> ed25519</span></code></pre></div>
+<h3 id="6-database-operations">6. Database Operations</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Test connection</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db connect <span class="st">&quot;postgresql://localhost/mydb&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Explore schema</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db tables <span class="st">&quot;postgresql://localhost/mydb&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db schema <span class="st">&quot;postgresql://localhost/mydb&quot;</span> users</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Query data</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db query <span class="st">&quot;postgresql://localhost/mydb&quot;</span> <span class="st">&quot;SELECT COUNT(*) FROM users&quot;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Backup before changes</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db backup <span class="st">&quot;postgresql://localhost/mydb&quot;</span> pre_migration.sql</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Check performance</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db metrics <span class="st">&quot;postgresql://localhost/mydb&quot;</span></span></code></pre></div>
+<h3 id="7-ai-assisted-development">7. AI-Assisted Development</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate code</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai code <span class="st">&quot;Create a DeFi lending protocol&quot;</span> <span class="at">-o</span> lending.dal</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Understand code</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai explain lending.dal</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Security audit</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai audit lending.dal</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate tests</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai test lending.dal <span class="at">-o</span> lending.test.dal</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Review and optimize</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai review lending.dal</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai optimize-gas lending.dal</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Fix issues</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ai fix lending.dal</span></code></pre></div>
+<hr />
+<h2 id="tips--best-practices">Tips &amp; Best Practices</h2>
+<h3 id="performance">Performance</h3>
+<ul>
+<li>Use <code>dal profile --memory</code> to identify memory leaks</li>
+<li>Run <code>dal bench</code> before and after optimizations</li>
+<li>Use <code>dal optimize --level 2</code> for production builds</li>
+<li>Check <code>dal memory-stats</code> periodically during
+development</li>
+</ul>
+<h3 id="code-quality-1">Code Quality</h3>
+<ul>
+<li>Always run <code>dal fmt</code> before committing</li>
+<li>Use <code>dal lint</code> to catch common issues</li>
+<li>Run <code>dal check</code> in CI/CD pipelines</li>
+<li>Use <code>dal watch</code> for instant feedback during
+development</li>
+</ul>
+<h3 id="blockchain">Blockchain</h3>
+<ul>
+<li>Check <code>dal chain gas-price</code> before deploying to
+mainnet</li>
+<li>Verify <code>dal chain balance</code> before transactions</li>
+<li>Use testnets (chain IDs 5, 80001) for development</li>
+<li>Monitor <code>dal chain tx-status</code> after deployment</li>
+</ul>
+<h3 id="cryptography">Cryptography</h3>
+<ul>
+<li>Use <code>dal crypto hash</code> for checksums and IDs</li>
+<li>Generate strong keys with
+<code>dal crypto keygen ed25519</code></li>
+<li>Use <code>dal crypto aes-encrypt</code> for large data (faster than
+RSA)</li>
+<li>Never expose private keys in commands (use files or env vars)</li>
+</ul>
+<h3 id="database">Database</h3>
+<ul>
+<li>Use <code>dal db plan</code> to optimize slow queries</li>
+<li>Run <code>dal db backup</code> before migrations</li>
+<li>Check <code>dal db metrics</code> to monitor performance</li>
+<li>Use <code>dal db schema</code> to understand table structures</li>
+</ul>
+<hr />
+<h2 id="command-shortcuts">Command Shortcuts</h2>
+<p>Many commands have short forms or defaults:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Full Command</th>
+<th>Short Form / Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal fmt file.dal --check</code></td>
+<td>Add <code>--check</code> for CI</td>
+</tr>
+<tr class="even">
+<td><code>dal crypto hash "data"</code></td>
+<td>SHA256 is default</td>
+</tr>
+<tr class="odd">
+<td><code>dal crypto keygen</code></td>
+<td>RSA is default</td>
+</tr>
+<tr class="even">
+<td><code>dal bench</code></td>
+<td>Runs all suites</td>
+</tr>
+<tr class="odd">
+<td><code>dal optimize file.dal</code></td>
+<td>Level 1 is default</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="output-formats">Output Formats</h2>
+<p>All commands support human-readable output by default:</p>
+<ul>
+<li>✅ Success messages in green</li>
+<li>❌ Errors in red</li>
+<li>⚠️ Warnings in yellow</li>
+<li>Emojis for visual clarity</li>
+</ul>
+<p><strong>JSON output:</strong> Use <code>--format json</code> with
+bond, pipe, or invoke for machine-readable output.</p>
+<hr />
+<h2 id="exit-codes">Exit Codes</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Code</th>
+<th>Meaning</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>0</code></td>
+<td>Success</td>
+<td>Command completed successfully</td>
+</tr>
+<tr class="even">
+<td><code>1</code></td>
+<td>Error</td>
+<td>Command failed (file not found, syntax error, etc.)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="environment-variables">Environment Variables</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Purpose</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DAL_RPC_URL_&lt;CHAIN_ID&gt;</code></td>
+<td>Override RPC URL</td>
+<td><code>DAL_RPC_URL_1=https://...</code></td>
+</tr>
+<tr class="even">
+<td>(Future) <code>DAL_DB_URL</code></td>
+<td>Default database connection</td>
+<td><code>DAL_DB_URL=postgresql://...</code></td>
+</tr>
+<tr class="odd">
+<td>(Future) <code>DAL_NO_COLOR</code></td>
+<td>Disable colored output</td>
+<td><code>DAL_NO_COLOR=1</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="comparison-with-other-tools">Comparison with Other Tools</h2>
+<h3 id="developer-tooling">Developer Tooling</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Rust (<code>cargo</code>)</th>
+<th>Go</th>
+<th>JavaScript</th>
+<th>DAL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Format code</td>
+<td>✅ <code>cargo fmt</code></td>
+<td>✅ <code>go fmt</code></td>
+<td>✅ <code>prettier</code></td>
+<td>✅ <code>dal fmt</code></td>
+</tr>
+<tr class="even">
+<td>Lint code</td>
+<td>✅ <code>cargo clippy</code></td>
+<td>✅ <code>go vet</code></td>
+<td>✅ <code>eslint</code></td>
+<td>✅ <code>dal lint</code></td>
+</tr>
+<tr class="odd">
+<td>Type check</td>
+<td>✅ <code>cargo check</code></td>
+<td>✅ <code>go build</code></td>
+<td>✅ <code>tsc --noEmit</code></td>
+<td>✅ <code>dal check</code></td>
+</tr>
+<tr class="even">
+<td>REPL</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅ <code>node</code></td>
+<td>✅ <code>dal repl</code></td>
+</tr>
+<tr class="odd">
+<td>Watch mode</td>
+<td>🔧 <code>cargo watch</code></td>
+<td>🔧 <code>air</code></td>
+<td>✅ <code>nodemon</code></td>
+<td>✅ <code>dal watch</code></td>
+</tr>
+<tr class="even">
+<td>Project init</td>
+<td>✅ <code>cargo new</code></td>
+<td>✅ <code>go mod init</code></td>
+<td>✅ <code>npm init</code></td>
+<td>✅ <code>dal new</code></td>
+</tr>
+<tr class="odd">
+<td>Benchmarks</td>
+<td>✅ <code>cargo bench</code></td>
+<td>✅ <code>go test -bench</code></td>
+<td>❌</td>
+<td>✅ <code>dal bench</code></td>
+</tr>
+<tr class="even">
+<td>Profiling</td>
+<td>🔧 External</td>
+<td>🔧 <code>pprof</code></td>
+<td>🔧 Chrome DevTools</td>
+<td>✅ <code>dal profile</code></td>
+</tr>
+<tr class="odd">
+<td>Optimization</td>
+<td>✅ <code>--release</code></td>
+<td>✅ <code>-gcflags</code></td>
+<td>❌</td>
+<td>✅ <code>dal optimize</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="blockchain-tools">Blockchain Tools</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Foundry (<code>cast</code>)</th>
+<th>Hardhat</th>
+<th>DAL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Gas price</td>
+<td>✅ <code>cast gas-price</code></td>
+<td>🔧 JS code</td>
+<td>✅ <code>dal chain gas-price 1</code></td>
+</tr>
+<tr class="even">
+<td>Balance</td>
+<td>✅ <code>cast balance</code></td>
+<td>🔧 JS code</td>
+<td>✅ <code>dal chain balance 1 &lt;addr&gt;</code></td>
+</tr>
+<tr class="odd">
+<td>Multi-chain</td>
+<td>🔧 CLI flags</td>
+<td>🔧 Config</td>
+<td>✅ Built-in (chain ID)</td>
+</tr>
+<tr class="even">
+<td>Tx status</td>
+<td>✅ <code>cast receipt</code></td>
+<td>🔧 JS code</td>
+<td>✅ <code>dal chain tx-status 1 &lt;hash&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="crypto-tools">Crypto Tools</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>OpenSSL</th>
+<th>GPG</th>
+<th>DAL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Hash</td>
+<td>✅ <code>openssl dgst</code></td>
+<td>❌</td>
+<td>✅ <code>dal crypto hash &lt;d&gt; sha256</code></td>
+</tr>
+<tr class="even">
+<td>Keygen</td>
+<td>✅ <code>openssl genrsa</code></td>
+<td>✅ <code>gpg --gen-key</code></td>
+<td>✅ <code>dal crypto keygen rsa</code></td>
+</tr>
+<tr class="odd">
+<td>Sign</td>
+<td>✅ <code>openssl rsautl</code></td>
+<td>✅ <code>gpg --sign</code></td>
+<td>✅ <code>dal crypto sign &lt;d&gt; &lt;k&gt;</code></td>
+</tr>
+<tr class="even">
+<td>Encrypt</td>
+<td>✅ <code>openssl rsautl</code></td>
+<td>✅ <code>gpg --encrypt</code></td>
+<td>✅ <code>dal crypto encrypt &lt;d&gt; &lt;k&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="database-tools">Database Tools</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>psql</th>
+<th>mysql</th>
+<th>DAL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Connect</td>
+<td>✅ <code>psql -c</code></td>
+<td>✅ <code>mysql -e</code></td>
+<td>✅ <code>dal db connect &lt;conn&gt;</code></td>
+</tr>
+<tr class="even">
+<td>Query</td>
+<td>✅ <code>psql -c "..."</code></td>
+<td>✅ <code>mysql -e "..."</code></td>
+<td>✅ <code>dal db query &lt;conn&gt; "..."</code></td>
+</tr>
+<tr class="odd">
+<td>List tables</td>
+<td>✅ <code>\dt</code></td>
+<td>✅ <code>SHOW TABLES</code></td>
+<td>✅ <code>dal db tables &lt;conn&gt;</code></td>
+</tr>
+<tr class="even">
+<td>Schema</td>
+<td>✅ <code>\d table</code></td>
+<td>✅ <code>DESC table</code></td>
+<td>✅ <code>dal db schema &lt;conn&gt; table</code></td>
+</tr>
+<tr class="odd">
+<td>Backup</td>
+<td>✅ <code>pg_dump</code></td>
+<td>✅ <code>mysqldump</code></td>
+<td>✅ <code>dal db backup &lt;conn&gt; &lt;path&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="phase-completion-status">Phase Completion Status</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Status</th>
+<th>Commands</th>
+<th>Focus</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Phase 0</strong></td>
+<td>✅ Complete</td>
+<td>10</td>
+<td>Developer tools, project management</td>
+</tr>
+<tr class="even">
+<td><strong>Phase 1</strong></td>
+<td>✅ Complete</td>
+<td>4</td>
+<td>Optimization, profiling, benchmarking</td>
+</tr>
+<tr class="odd">
+<td><strong>Phase 2</strong></td>
+<td>✅ Complete</td>
+<td>25</td>
+<td>Blockchain, crypto, database operations</td>
+</tr>
+<tr class="even">
+<td><strong>Phase 3</strong></td>
+<td>✅ Complete</td>
+<td>7</td>
+<td>AI-enhanced code generation &amp; analysis</td>
+</tr>
+<tr class="odd">
+<td><strong>Phase 4</strong></td>
+<td>✅ Complete</td>
+<td>12+</td>
+<td>Cloud &amp; enterprise (authorize, grant, tenant, compliance,
+trust)</td>
+</tr>
+<tr class="even">
+<td><strong>Phase 5</strong></td>
+<td>✅ Complete</td>
+<td>5</td>
+<td>IDE &amp; LSP (lsp, doc, completions, debug)</td>
+</tr>
+<tr class="odd">
+<td><strong>Phase 6</strong></td>
+<td>✅ Complete</td>
+<td>8</td>
+<td>Agent create, send, messages, task, fleet, mold</td>
+</tr>
+<tr class="even">
+<td><strong>Phase 7</strong></td>
+<td>✅ Complete</td>
+<td>10</td>
+<td>AI-IoT (ai-predict, ai-anomaly, ai-optimize, read-sensor,
+status)</td>
+</tr>
+<tr class="odd">
+<td><strong>Phase 8</strong></td>
+<td>✅ Complete</td>
+<td>2</td>
+<td>Specialized (log, config)</td>
+</tr>
+<tr class="even">
+<td><strong>Phase 9</strong></td>
+<td>✅ Complete</td>
+<td>3</td>
+<td>Cross-component (bond, pipe, invoke)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="help--documentation">Help &amp; Documentation</h2>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Show main help</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> help</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Show command help (future)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> chain <span class="at">--help</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> crypto <span class="at">--help</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db <span class="at">--help</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Version information</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> version</span></code></pre></div>
+<hr />
+<h2 id="examples-by-use-case">Examples by Use Case</h2>
+<h3 id="smart-contract-development">Smart Contract Development</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create project</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> new token-contract <span class="at">--type</span> chain</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> token-contract</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Format and check</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> fmt src/main.dal</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> check src/main.dal</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimize before deployment</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> optimize src/main.dal <span class="at">-o</span> src/optimized.dal <span class="at">--level</span> 2</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Check gas price</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> chain gas-price 1</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Deploy (via script)</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run deploy.dal</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> chain tx-status 1 <span class="op">&lt;</span>tx_hash<span class="op">&gt;</span></span></code></pre></div>
+<h3 id="api-development">API Development</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create project</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> new my-api <span class="at">--type</span> web</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Watch mode for development</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> watch src/main.dal</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Benchmark API performance</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> bench src/main.dal</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Profile to find slow endpoints</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> profile src/main.dal <span class="at">--memory</span></span></code></pre></div>
+<h3 id="iot-development">IoT Development</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create IoT project</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> new smart-device <span class="at">--type</span> iot</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Format and lint</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> fmt src/</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> lint src/main.dal</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Test locally</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run src/main.dal</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Hash sensor data</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> crypto hash <span class="st">&quot;sensor_reading_123&quot;</span> sha256</span></code></pre></div>
+<h3 id="database-heavy-applications">Database-Heavy Applications</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Test connection</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db connect <span class="st">&quot;postgresql://localhost/mydb&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Explore schema</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db tables <span class="st">&quot;postgresql://localhost/mydb&quot;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db schema <span class="st">&quot;postgresql://localhost/mydb&quot;</span> orders</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Test query</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db query <span class="st">&quot;postgresql://localhost/mydb&quot;</span> <span class="st">&quot;SELECT COUNT(*) FROM orders&quot;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimize slow query</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db plan <span class="st">&quot;postgresql://localhost/mydb&quot;</span> <span class="st">&quot;SELECT * FROM orders WHERE user_id = 123&quot;</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Backup before migration</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> db backup <span class="st">&quot;postgresql://localhost/mydb&quot;</span> backup_<span class="va">$(</span><span class="fu">date</span> +%Y%m%d<span class="va">)</span>.sql</span></code></pre></div>
+<hr />
+<h2 id="key-takeaways">Key Takeaways</h2>
+<ol type="1">
+<li><strong>Complete Toolchain</strong> - DAL has 39 commands covering
+development, optimization, and operations</li>
+<li><strong>No External Tools</strong> - Everything built into
+<code>dal</code> CLI</li>
+<li><strong>Multi-Domain</strong> - Blockchain, crypto, database, AI
+(future) in one tool</li>
+<li><strong>Developer-Friendly</strong> - Clear output, helpful errors,
+consistent interface</li>
+<li><strong>Fast Implementation</strong> - Phases 1-2 took ~3-4 hours
+total (backend already existed)</li>
+</ol>
+<p><strong>DAL is now competitive with mature toolchains like
+<code>cargo</code>, <code>go</code>, and <code>npm</code>, while adding
+blockchain-native and AI-powered features that no other language
+has.</strong></p>
+<hr />
+<p>For detailed documentation on each phase:</p>
+<ul>
+<li><a href="./development/CLI_PHASE0_COMPLETE.html">Phase 0
+Complete</a></li>
+<li><a href="./development/CLI_PHASE1_COMPLETE.html">Phase 1
+Complete</a></li>
+<li><a href="./development/CLI_PHASE2_COMPLETE.html">Phase 2
+Complete</a></li>
+<li><a href="./development/CLI_PHASE3_COMPLETE.html">Phase 3
+Complete</a></li>
+<li><a href="./development/CLI_PHASE4_COMPLETE.html">Phase 4
+Complete</a></li>
+<li><a href="./development/CLI_PHASE5_COMPLETE.html">Phase 5
+Complete</a></li>
+<li><a href="./development/CLI_PHASE6_COMPLETE.html">Phase 6
+Complete</a></li>
+<li><a href="./development/CLI_PHASE7_8_9_COMPLETE.html">Phases 7, 8, 9
+Complete</a></li>
+</ul>
+</body>
+</html>

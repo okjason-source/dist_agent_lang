@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AGENT_SETUP_AND_USAGE</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="agent-setup-and-usage-guide">Agent setup and usage guide</h1>
+<p>This guide describes how to set up and use agents in dist_agent_lang:
+project setup, CLI commands, the agent HTTP server, DAL APIs, molds, and
+evolve context. It reflects what users and developers can do today.</p>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-overview">Overview</a></li>
+<li><a href="#2-quick-start-agent-project">Quick start: agent
+project</a></li>
+<li><a href="#3-project-layout-and-config">Project layout and
+config</a></li>
+<li><a href="#4-cli-agent-commands">CLI: agent commands</a></li>
+<li><a href="#5-agent-http-server">Agent HTTP server</a></li>
+<li><a href="#6-dal-agent-and-evolve-apis">DAL: agent and evolve
+APIs</a></li>
+<li><a href="#7-molds">Molds</a></li>
+<li><a href="#8-shell-trust-and-evolve-context">Shell trust and evolve
+context</a></li>
+<li><a href="#9-persistent-memory">Persistent memory</a></li>
+<li><a href="#10-skills-and-registry">Skills and registry</a></li>
+<li><a href="#11-capabilities-and-types">Capabilities and types</a></li>
+<li><a href="#12-references">References</a></li>
+</ol>
+<hr />
+<h2 id="1-overview">1. Overview</h2>
+<p>Agents in dist_agent_lang are in-process entities with:</p>
+<ul>
+<li><strong>Types</strong>: <code>ai</code>, <code>system</code>,
+<code>worker</code>, or <code>custom:&lt;name&gt;</code></li>
+<li><strong>Lifecycle</strong>: spawn, coordinate (tasks), communicate
+(messages), evolve (learning)</li>
+<li><strong>Serving</strong>: One agent per process can be exposed via
+HTTP with <code>dal agent serve</code></li>
+</ul>
+<p>You can:</p>
+<ul>
+<li><strong>Initialize</strong> an agent project with
+<code>dal init agent</code> (adds <code>agent.dal</code>,
+<code>agent.toml</code>, <code>evolve.md</code>, etc.).</li>
+<li><strong>Run</strong> agent logic with <code>dal run agent.dal</code>
+or run the <strong>HTTP server</strong> with
+<code>dal agent serve</code>.</li>
+<li><strong>Create</strong> agents from the CLI
+(<code>dal agent create &lt;type&gt; &lt;name&gt;</code>) or from DAL
+(<code>agent::spawn(config)</code>).</li>
+<li><strong>Send messages and assign tasks</strong> via CLI or HTTP, and
+use <strong>molds</strong> to spawn agents from reusable configs (local
+or IPFS/on-chain).</li>
+<li><strong>Persist conversation and action history</strong> in an
+<strong>evolve</strong> markdown file and control <strong>shell
+execution</strong> with <code>[agent.sh]</code> in
+<code>agent.toml</code>.</li>
+</ul>
+<hr />
+<h2 id="2-quick-start-agent-project">2. Quick start: agent project</h2>
+<h3 id="create-an-agent-project">Create an agent project</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> my-agent <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> my-agent</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> init agent</span></code></pre></div>
+<p>This creates (only if missing):</p>
+<ul>
+<li><code>dal.toml</code> — minimal package config</li>
+<li><code>agent.toml</code> — agent config: <code>[agent.sh]</code>
+trust, <code>[agent]</code> context_path</li>
+<li><code>agent.dal</code> — entry script that spawns an agent and sets
+it as the serve agent</li>
+<li><code>evolve.md</code> — evolve context (conversation + action
+log)</li>
+<li><code>playground.dal</code> — small language sandbox
+(<code>dal run playground.dal</code>)</li>
+<li><code>README.md</code> — short project summary</li>
+<li><code>.env.example</code> and <code>.env</code> — env vars
+(<code>.env</code> in <code>.gitignore</code>)</li>
+</ul>
+<h3 id="run-the-agent-script">Run the agent script</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run agent.dal</span></code></pre></div>
+<p>This runs <code>agent.dal</code>: it spawns one agent and calls
+<code>agent::set_serve_agent(agent_id)</code>. The process then exits;
+the “serve” designation is used when you start the HTTP server with a
+behavior script.</p>
+<h3 id="run-the-agent-http-server">Run the agent HTTP server</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent serve</span></code></pre></div>
+<p>If <code>agent.dal</code> exists in the current directory, it is run
+first; the script must spawn an agent and call
+<code>agent::set_serve_agent(agent_id)</code>. That agent is then served
+at <code>http://localhost:4040</code> (default port). See <a
+href="#5-agent-http-server">Agent HTTP server</a>.</p>
+<h3 id="optional-environment">Optional: environment</h3>
+<p>Copy <code>.env.example</code> to <code>.env</code>, set any keys
+(e.g. <code>OPENAI_API_KEY</code>, <code>ANTHROPIC_API_KEY</code> for
+AI), and load them (e.g. <code>export $(cat .env | xargs)</code> or use
+a .env loader). See <a href="#8-shell-trust-and-evolve-context">Shell
+trust and evolve context</a>.</p>
+<h3 id="host-protocol-api-note">Host protocol API note</h3>
+<p>For DAL apps, prefer the typed request shape:</p>
+<pre class="dal"><code>let ai_result = ai::agent_run({&quot;message&quot;: &quot;Run pwd once and summarize&quot;, &quot;policy&quot;: &quot;tool_loop&quot;});</code></pre>
+<p><code>ai::respond_with_tools_result(...)</code> remains available for
+compatibility, but new first-party examples and templates use
+<code>ai::agent_run(...)</code>.</p>
+<p>For <code>dal init agent</code>, the generated <code>.env</code>
+includes a minimal host-protocol profile intended for task completion
+with safety guardrails:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AGENT_SHELL_TRUST</span><span class="op">=</span>sandboxed</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AGENT_CONTEXT_PATH</span><span class="op">=</span>./evolve.md</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AGENT_POLICY_DEFAULT</span><span class="op">=</span>auto</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AGENT_NATIVE_TOOL_CALLS_ENABLED</span><span class="op">=</span>1</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AGENT_ENABLE_LEGACY_TEXT_JSON</span><span class="op">=</span>0</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AGENT_GUARDS_STRICT_MODE</span><span class="op">=</span>1</span></code></pre></div>
+<ul>
+<li><code>DAL_AGENT_POLICY_DEFAULT=auto</code> favors execution for
+actionable requests and direct replies for purely conversational
+prompts.</li>
+<li><code>DAL_AGENT_GUARDS_STRICT_MODE=1</code> keeps conservative loop
+safeguards enabled for fresh projects.</li>
+<li>If you want chat-only behavior, set
+<code>DAL_AGENT_POLICY_DEFAULT=reply_only</code>.</li>
+</ul>
+<hr />
+<h2 id="3-project-layout-and-config">3. Project layout and config</h2>
+<h3 id="files-created-by-dal-init-agent">Files created by
+<code>dal init agent</code></h3>
+<table>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>agent.dal</code></td>
+<td>Agent behavior: spawn agent, call
+<code>agent::set_serve_agent(agent_id)</code>. Used by
+<code>dal run agent.dal</code> and by <code>dal agent serve</code> when
+no <code>--behavior</code> is given.</td>
+</tr>
+<tr class="even">
+<td><code>agent.toml</code></td>
+<td>Agent config: <code>[agent.sh]</code> (shell trust),
+<code>[agent]</code> (e.g. <code>context_path</code> for evolve).</td>
+</tr>
+<tr class="odd">
+<td><code>evolve.md</code></td>
+<td>Evolve context file: conversation history and action log. Path set
+by <code>[agent] context_path</code> or
+<code>DAL_AGENT_CONTEXT_PATH</code>.</td>
+</tr>
+<tr class="even">
+<td><code>playground.dal</code></td>
+<td>Minimal DAL language sandbox for quick experimentation
+(<code>dal run playground.dal</code>).</td>
+</tr>
+<tr class="odd">
+<td><code>dal.toml</code></td>
+<td>Minimal DAL package (created only if missing).</td>
+</tr>
+<tr class="even">
+<td><code>.env.example</code></td>
+<td>Documented env vars (safe to commit).</td>
+</tr>
+<tr class="odd">
+<td><code>.env</code></td>
+<td>Local overrides (do not commit; in <code>.gitignore</code>).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agenttoml">agent.toml</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Agent project config</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">[agent.sh]</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">trust</span> <span class="op">=</span> <span class="st">&quot;sandboxed&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># forbidden_patterns = [&quot;rm -rf&quot;, &quot;sudo&quot;]</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># allowed_prefixes = [&quot;npm&quot;, &quot;cargo&quot;, &quot;git&quot;]</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">[agent]</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="dt">context_path</span> <span class="op">=</span> <span class="st">&quot;./evolve.md&quot;</span></span></code></pre></div>
+<ul>
+<li><strong><code>[agent.sh]</code></strong> — Used by
+<code>sh::run(cmd)</code> in DAL: <code>trust</code> = <code>off</code>
+| <code>sandboxed</code> | <code>confirmed</code> |
+<code>trusted</code>; optional <code>forbidden_patterns</code> /
+<code>allowed_prefixes</code>.</li>
+<li><strong><code>[agent]</code></strong> — <code>context_path</code>:
+path to the evolve context file (default <code>./evolve.md</code>).</li>
+</ul>
+<p>Context path can be overridden with
+<code>DAL_AGENT_CONTEXT_PATH</code>.</p>
+<p><strong>Evolve wired at init:</strong> When you run
+<code>dal init agent</code>, evolve is wired by default:
+<code>agent.toml</code> gets <code>context_path = "./evolve.md"</code>
+and <code>evolve.md</code> is created. The serve path loads evolve into
+the prompt each turn; lifecycle hooks (e.g. in molds) can use
+<code>evolve::append_log</code>, <code>evolve::append_summary</code>,
+<code>evolve::append_conversation</code>. To <strong>disable</strong>
+evolve, comment out or remove the <code>context_path</code> line in
+<code>agent.toml</code> (and optionally remove <code>evolve.md</code>).
+To <strong>opt in</strong> again, uncomment <code>context_path</code>
+and ensure the evolve file exists.</p>
+<hr />
+<h2 id="4-cli-agent-commands">4. CLI: agent commands</h2>
+<p>All agent subcommands:
+<code>dal agent &lt;subcommand&gt; [args...]</code>.</p>
+<h3 id="dal-agent-serve">dal agent serve</h3>
+<p>Run the agent HTTP server (one agent per process).</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent serve <span class="pp">[</span><span class="ss">name</span><span class="pp">]</span> [--port PORT] [--mold path] [--behavior path] <span class="pp">[--</span><span class="ss">prompt</span><span class="pp">-</span><span class="ss">only</span><span class="pp">]</span></span></code></pre></div>
+<ul>
+<li><strong>name</strong> — Agent name used when not using a behavior
+script (default: <code>serve_agent</code>).</li>
+<li><strong>--port</strong> — Port (default: 4040).</li>
+<li><strong>--mold</strong> — Mold path or
+<code>ipfs://&lt;cid&gt;</code> to spawn from mold instead of default
+config.</li>
+<li><strong>--behavior</strong> — DAL file to run; script must spawn an
+agent and call <code>agent::set_serve_agent(agent_id)</code>. If omitted
+and <code>agent.dal</code> exists in cwd, <code>agent.dal</code> is
+used.</li>
+<li><strong>--prompt-only</strong> — No behavior script; spawn a default
+worker agent and respond to each message via AI (LLM) and post the
+reply. Set <code>DAL_AGENT_PROMPT_ONLY=1</code> for the same
+effect.</li>
+</ul>
+<p>Examples:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent serve</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent serve my-bot <span class="at">--port</span> 5000</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent serve <span class="at">--behavior</span> ./scripts/agent.dal</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent serve <span class="at">--prompt-only</span></span></code></pre></div>
+<h3 id="dal-agent-create">dal agent create</h3>
+<p>Create an agent in the current process (in-memory; process exit
+clears it).</p>
+<p><strong>By type and name:</strong></p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent create <span class="op">&lt;</span>type<span class="op">&gt;</span> <span class="op">&lt;</span>name<span class="op">&gt;</span> [--role <span class="st">&quot;role&quot;</span>]</span></code></pre></div>
+<p>Types: <code>ai</code>, <code>system</code>, <code>worker</code>,
+<code>custom:&lt;name&gt;</code>.</p>
+<p><strong>From a mold:</strong></p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent create <span class="at">--mold</span> <span class="op">&lt;</span>path<span class="kw">|</span><span class="ex">ipfs://cid</span><span class="op">&gt;</span> <span class="op">&lt;</span>name<span class="op">&gt;</span></span></code></pre></div>
+<p>With web3: <code>--mold &lt;numeric_mold_id&gt;</code> uses on-chain
+registry (pay fee, then load from IPFS).</p>
+<h3 id="dal-agent-send">dal agent send</h3>
+<p>Send a message between two agent IDs (same process).</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent send <span class="op">&lt;</span>sender_id<span class="op">&gt;</span> <span class="op">&lt;</span>receiver_id<span class="op">&gt;</span> <span class="st">&quot;&lt;message&gt;&quot;</span></span></code></pre></div>
+<h3 id="dal-agent-messages">dal agent messages</h3>
+<p>Print messages received by an agent (consumes the queue).</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent messages <span class="op">&lt;</span>agent_id<span class="op">&gt;</span></span></code></pre></div>
+<h3 id="dal-agent-task-assign--list">dal agent task assign / list</h3>
+<p>Assign a task or list pending tasks:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent task assign <span class="op">&lt;</span>agent_id<span class="op">&gt;</span> <span class="st">&quot;&lt;description&gt;&quot;</span> [--priority low<span class="kw">|</span><span class="ex">medium</span><span class="kw">|</span><span class="ex">high</span><span class="kw">|</span><span class="ex">critical]</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent task list <span class="op">&lt;</span>agent_id<span class="op">&gt;</span></span></code></pre></div>
+<h3 id="dal-agent-chat">dal agent chat</h3>
+<p>Interactive chat with an AI agent (same process): messages go to the
+agent; replies come from the LLM (OpenAI/Anthropic/local). Requires API
+keys or <code>DAL_AI_ENDPOINT</code>.</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent chat <span class="pp">[</span><span class="ss">name</span><span class="pp">]</span></span></code></pre></div>
+<h3 id="dal-agent-list">dal agent list</h3>
+<p>Prints how to run chat, serve, and multi-agent DAL patterns (agent
+state is process-local).</p>
+<h3 id="dal-agent-fleet">dal agent fleet</h3>
+<p>Off-chain fleet: named set of agents, optionally created from a mold.
+See <a href="../FLEET_DEPLOYMENT.html">FLEET_DEPLOYMENT.md</a> for full
+deployment flow.</p>
+<ul>
+<li><strong>create</strong> &lt;name&gt; — Create an empty fleet. Use
+<code>--from-mold &lt;path&gt; [--count N] [--param k=v ...]</code> to
+create a fleet of N agents from a mold (default count 1).</li>
+<li><strong>list</strong> [<strong>-v</strong> |
+<strong>--verbose</strong>] — List fleet names and agent counts; with
+<code>-v</code> also shows last_deployed_task and last_deployed_at.</li>
+<li><strong>show</strong> &lt;name&gt; — Show fleet details: mold path
+(if any), member count, agent IDs, last deployed task (if set).</li>
+<li><strong>scale</strong> &lt;name&gt; &lt;N&gt; — Resize fleet to N
+members. Scale down truncates the member list; scale up spawns more from
+the same mold (uses stored <code>last_create_params</code> if set).</li>
+<li><strong>delete</strong> &lt;name&gt; — Remove the fleet (metadata
+only; agent contexts remain).</li>
+<li><strong>deploy</strong> &lt;name&gt; &lt;task&gt; — Record the task
+as the fleet’s last deployment. Use <strong>run</strong> to dispatch it
+to members.</li>
+<li><strong>add-from-mold</strong> &lt;name&gt; &lt;mold_source&gt;
+&lt;count&gt; [--param k=v ...] — Add N agents from a mold to an
+existing fleet (sets mold_source if fleet was empty).</li>
+<li><strong>add-member</strong> &lt;name&gt; &lt;agent_id&gt; — Register
+an existing agent as a fleet member.</li>
+<li><strong>run</strong> [&lt;name&gt;] — For each fleet with a deployed
+task (optionally filter by name), ensure members (add from mold if
+empty), then dispatch last_deployed_task to each member via agent
+coordination.</li>
+<li><strong>health</strong> &lt;name&gt; — Report member count,
+has_mold, last_deployed_task/at, status (ok/empty).</li>
+<li><strong>export</strong> [&lt;name&gt;] [<strong>--format</strong>
+k8s|docker-compose] — Emit YAML (Kubernetes JobList or docker-compose
+services) for the fleet(s).</li>
+</ul>
+<p>Fleet state is stored in <code>base/.dal/fleets.json</code> when
+using the CLI (current working directory as base).</p>
+<h3 id="dal-agent-mold">dal agent mold</h3>
+<ul>
+<li><strong>list</strong> — List local mold paths (<code>.</code>,
+<code>mold/</code>, <code>mold/samples</code>; <code>*.mold.dal</code>,
+<code>*.mold.json</code>).</li>
+<li><strong>show &lt;path-or-name&gt;</strong> — Print mold name,
+version, agent type, role, capabilities, trust, memory, flags.</li>
+<li><strong>create &lt;name&gt;</strong> — Create a new mold file
+(scaffold).</li>
+<li><strong>publish &lt;file&gt;</strong> — Publish mold
+(implementation-specific).</li>
+</ul>
+<hr />
+<h2 id="5-agent-http-server">5. Agent HTTP server</h2>
+<p>When you run <code>dal agent serve</code>, the server listens
+(default port 4040) and exposes one agent.</p>
+<h3 id="endpoints">Endpoints</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Path</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GET</td>
+<td><code>/status</code></td>
+<td>Agent id, name, type, status</td>
+</tr>
+<tr class="even">
+<td>POST</td>
+<td><code>/message</code></td>
+<td>Send message (body: <code>sender_id</code>, <code>content</code>;
+optional <code>message_type</code>)</td>
+</tr>
+<tr class="odd">
+<td>GET</td>
+<td><code>/messages</code></td>
+<td>Receive (and consume) messages for this agent</td>
+</tr>
+<tr class="even">
+<td>POST</td>
+<td><code>/task</code></td>
+<td>Assign task (body: <code>description</code>; optional
+<code>task_id</code>, <code>priority</code>,
+<code>requester_id</code>)</td>
+</tr>
+<tr class="odd">
+<td>GET</td>
+<td><code>/tasks</code></td>
+<td>Receive (and consume) pending tasks</td>
+</tr>
+<tr class="even">
+<td>GET</td>
+<td><code>/health</code></td>
+<td>Liveness</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-send-message-and-get-messages">Example: send message and
+get messages</h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST http://localhost:4040/message <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="dt">\</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;sender_id&quot;: &quot;user1&quot;, &quot;content&quot;: &quot;Hello&quot;}&#39;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:4040/messages</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:4040/status</span></code></pre></div>
+<h3 id="prompt-only-mode">Prompt-only mode</h3>
+<p>With <code>--prompt-only</code> (or
+<code>DAL_AGENT_PROMPT_ONLY=1</code>), no behavior script is run. The
+server spawns a default worker agent and, for each incoming message,
+calls the LLM and posts the reply back to the sender. Use when you want
+a simple chat-style API without custom DAL logic.</p>
+<hr />
+<h2 id="6-dal-agent-and-evolve-apis">6. DAL: agent and evolve APIs</h2>
+<h3 id="agent--lifecycle-and-coordination">agent:: — lifecycle and
+coordination</h3>
+<p>From DAL you call the <code>agent</code> module as follows.</p>
+<p><strong>Spawn an agent</strong></p>
+<ul>
+<li><code>agent::spawn(config)</code> — <code>config</code> is a map
+with:
+<ul>
+<li><code>name</code> (string)</li>
+<li><code>type</code> (string): <code>ai</code>, <code>system</code>,
+<code>worker</code>, <code>custom:&lt;name&gt;</code></li>
+<li>optional: <code>role</code>, <code>capabilities</code> (list of
+strings), <code>trust_level</code>, <code>metadata</code></li>
+</ul></li>
+<li>Returns: agent ID (string).</li>
+</ul>
+<p>Example:</p>
+<pre class="dal"><code>use agent;
+
+let agent_id = agent::spawn({
+    &quot;name&quot;: &quot;my-agent&quot;,
+    &quot;type&quot;: &quot;worker&quot;,
+    &quot;role&quot;: &quot;Agent serve&quot;
+});
+agent::set_serve_agent(agent_id);</code></pre>
+<p><strong>Set the serve agent</strong> (required when using
+<code>dal agent serve</code> with a behavior script):</p>
+<ul>
+<li><code>agent::set_serve_agent(agent_id)</code> — Registers this agent
+as the one to serve over HTTP.</li>
+</ul>
+<p><strong>Coordination</strong></p>
+<ul>
+<li><code>agent::coordinate(agent_id, task_description, coordination_type)</code>
+— Assigns a task to the agent. Coordination type e.g.
+<code>"task_distribution"</code>. Task is created with default
+priority.</li>
+</ul>
+<p><strong>Communication</strong></p>
+<ul>
+<li><code>agent::communicate(sender_id, receiver_id, message)</code> —
+Sends a message. You build the message with
+<code>agent::create_message(sender_id, receiver_id, message_type, content)</code>
+(or the runtime creates one with a generated id and type when you use
+the three-arg <code>communicate</code>).</li>
+</ul>
+<p><strong>Other</strong></p>
+<ul>
+<li><code>agent::create_config(name, type_str, role)</code> — Build a
+config (returns a value used internally).</li>
+<li><code>agent::create_task(description, priority?)</code> — Create a
+task (task_id is generated).</li>
+<li><code>agent::create_message(sender_id, receiver_id, message_type, content)</code>
+— Create a message (message_id generated).</li>
+<li><code>agent::evolve(agent_id, evolution_data)</code> — Record
+evolution data; molds can hook <code>on_evolve</code> (e.g. call
+<code>evolve::append_summary</code>).</li>
+<li><code>agent::validate_capabilities(agent_type, required_capabilities)</code>
+— Validate that an agent type has the required capabilities.</li>
+<li><code>agent::terminate(agent_id)</code> — Mark agent terminated
+(in-memory).</li>
+<li><code>agent::get_status(agent_id)</code> — Get status string.</li>
+</ul>
+<p>Note: Messages and tasks are consumed when received (e.g.
+<code>receive_messages</code> / <code>receive_pending_tasks</code>); the
+HTTP server uses the same in-memory bus and queues.</p>
+<h3 id="evolve--context-file">evolve:: — context file</h3>
+<p>Evolve uses a single markdown file (path from
+<code>[agent] context_path</code> or
+<code>DAL_AGENT_CONTEXT_PATH</code>; default
+<code>./evolve.md</code>).</p>
+<ul>
+<li><code>evolve::load(agent_name?)</code> — Load full context. Creates
+file with header if missing.</li>
+<li><code>evolve::load_recent(agent_name?, max_lines)</code> — Last N
+lines (or full if <code>max_lines &lt;= 0</code>).</li>
+<li><code>evolve::append_conversation(user_message, agent_response, agent_name?)</code>
+— Append a conversation turn.</li>
+<li><code>evolve::append_log(action, detail, result)</code> — Append an
+action log row (e.g. after <code>sh::run</code>).</li>
+<li><code>evolve::append_summary(summary_text, title?)</code> — Append a
+summary section.</li>
+<li><code>evolve::get_path()</code> — Resolved context file path.</li>
+<li><code>evolve::trim_retention(keep_tail_lines)</code> — Keep only the
+last N lines of content after the header.</li>
+</ul>
+<p>Use these from DAL to keep the context file in sync with agent
+behavior (e.g. after answering a user or running a command).</p>
+<h3 id="shrun--shell-execution">sh::run — shell execution</h3>
+<ul>
+<li><code>sh::run(cmd)</code> — Run a shell command. Trust is determined
+by <code>DAL_AGENT_SHELL_TRUST</code> or <code>[agent.sh]</code> in
+<code>agent.toml</code> / <code>dal.toml</code>. Returns a map:
+<code>stdout</code>, <code>stderr</code>, <code>exit_code</code>.</li>
+</ul>
+<p>Use <code>evolve::append_log</code> after <code>sh::run</code> to
+record the action in the evolve file.</p>
+<hr />
+<h2 id="7-molds">7. Molds</h2>
+<p>Molds are reusable agent configs (type, role, capabilities, trust,
+memory, lifecycle hooks). They can be local files or IPFS/on-chain.</p>
+<h3 id="mold-format-canonical">Mold format (canonical)</h3>
+<ul>
+<li><strong>Format:</strong> .mold.dal only (canonical). File naming:
+<code>*.mold.dal</code>. DAL-native block syntax; not plain JSON. See
+docs/MOLD_FORMAT.md.</li>
+<li><strong>Discovery:</strong> Current directory, <code>mold/</code>,
+<code>mold/samples</code>. Legacy <code>*.mold.json</code> still loads
+but prefer <code>.mold.dal</code>.</li>
+</ul>
+<h3 id="mold-structure-molddal">Mold structure (.mold.dal)</h3>
+<ul>
+<li><strong>name</strong>, <strong>version</strong></li>
+<li><strong>agent</strong>: type, role, capabilities, trust_level,
+learning, communication, coordination, memory_limit</li>
+<li><strong>lifecycle</strong> (optional): onCreate, onEvolve run at
+spawn/evolve; onMessage, onDestroy are reserved (see
+MOLD_FORMAT.md)</li>
+<li><strong>parameters</strong>, <strong>dependencies</strong>,
+<strong>metadata</strong> (optional)</li>
+</ul>
+<h3 id="cli">CLI</h3>
+<ul>
+<li><code>dal agent mold list</code> — List local mold paths.</li>
+<li><code>dal agent mold show &lt;path-or-name&gt;</code> — Show mold
+details.</li>
+<li><code>dal agent create --mold &lt;path|ipfs://cid&gt; &lt;name&gt; [--param k=v ...]</code>
+— Create agent from mold; optional params merged into metadata and
+substituted in role/capabilities (<code>{{key}}</code>). If the CLI
+reports "unexpected argument '--mold'", use:
+<code>dal agent create -- --mold &lt;source&gt; &lt;name&gt; [--param k=v ...]</code>.</li>
+<li><code>dal agent serve --mold &lt;path&gt; [name]</code> — Serve an
+agent spawned from that mold.</li>
+</ul>
+<h3 id="principal-vs-mold-trust-and-evolve-path">Principal vs mold:
+trust and evolve path</h3>
+<p>When you create or serve an agent from a mold, <strong>trust</strong>
+(shell execution) and <strong>evolve path</strong> (context file) always
+come from the <strong>process</strong> (agent.toml, dal.toml, or env),
+not from the mold. The mold can set role, capabilities, lifecycle, etc.,
+but the operator controls trust and where evolution is stored. See
+COMPREHENSIVE_AGENT_AND_MOLD_PLANS.md §3–4.</p>
+<h3 id="from-dal">From DAL</h3>
+<ul>
+<li><code>mold::spawn_from(source, name_override?, params?)</code> —
+Load mold from path/name or <code>ipfs://&lt;cid&gt;</code>, spawn
+agent, return agent_id. Optional name override; optional params map
+(string keys/values) merged into metadata and substituted in
+role/capabilities (<code>{{key}}</code>).</li>
+</ul>
+<hr />
+<h2 id="8-shell-trust-and-evolve-context">8. Shell trust and evolve
+context</h2>
+<h3 id="shell-trust">Shell trust</h3>
+<p><code>sh::run(cmd)</code> respects:</p>
+<ol type="1">
+<li><code>DAL_AGENT_SHELL_TRUST</code> — <code>off</code> |
+<code>sandboxed</code> | <code>confirmed</code> |
+<code>trusted</code></li>
+<li><code>[agent.sh]</code> in <code>agent.toml</code> or
+<code>dal.toml</code>: <code>trust</code>, optional
+<code>forbidden_patterns</code>, <code>allowed_prefixes</code></li>
+</ol>
+<p>If key-based gating is used and the check denies, config falls back
+to <code>[agent.sh]</code>.</p>
+<h3 id="evolve-context-path">Evolve context path</h3>
+<ol type="1">
+<li><code>DAL_AGENT_CONTEXT_PATH</code> — explicit path</li>
+<li><code>[agent] context_path</code> in <code>agent.toml</code> or
+<code>dal.toml</code></li>
+<li>Default: <code>./evolve.md</code></li>
+</ol>
+<h3 id="multi-step-tool-loop-agent-serve">Multi-step tool loop (agent
+serve)</h3>
+<ul>
+<li><strong><code>DAL_AGENT_MAX_TOOL_STEPS</code></strong> — max tool
+steps (run/search) per message or task before the agent is asked to
+summarize. Default <strong>20</strong>, clamped 1–50. Used when
+<code>dal agent serve</code> runs in prompt_only mode with the
+multi-step loop.</li>
+</ul>
+<hr />
+<h2 id="9-persistent-memory">9. Persistent memory</h2>
+<p>Agent runtime state persists across restarts by default. No
+configuration is required — when you run <code>dal agent serve</code>,
+the runtime automatically saves and restores agent memory, tasks,
+messages, evolution data, and registered skills.</p>
+<h3 id="what-persists">What persists</h3>
+<ul>
+<li><strong>Agent contexts</strong>: Key-value memory, config, tasks,
+messages, metrics, lifecycle hooks</li>
+<li><strong>Task queue</strong>: Pending tasks across all agents</li>
+<li><strong>Message bus</strong>: Undelivered messages</li>
+<li><strong>Evolution store</strong>: Per-agent evolution data</li>
+<li><strong>Registered skills</strong>: Skills registered at runtime
+(not built-ins, which are always loaded)</li>
+<li><strong>Serve agent ID</strong>: Which agent is served over
+HTTP</li>
+</ul>
+<h3 id="backends">Backends</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Backend</th>
+<th>Default?</th>
+<th>Config</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>File</strong> (JSON)</td>
+<td>Yes</td>
+<td><code>DAL_AGENT_RUNTIME_PATH=./agent_runtime.json</code></td>
+<td>Atomic writes, human-readable</td>
+</tr>
+<tr class="even">
+<td><strong>SQLite</strong></td>
+<td>No</td>
+<td><code>DAL_AGENT_RUNTIME_BACKEND=sqlite</code></td>
+<td>WAL mode, higher throughput, requires <code>sqlite-storage</code>
+feature</td>
+</tr>
+<tr class="odd">
+<td><strong>Disabled</strong></td>
+<td>No</td>
+<td><code>DAL_AGENT_RUNTIME_PERSIST=0</code></td>
+<td>In-memory only, state lost on exit</td>
+</tr>
+</tbody>
+</table>
+<h3 id="configuration">Configuration</h3>
+<p>Set via environment variables or <code>agent.toml</code> /
+<code>dal.toml</code>:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Environment variables</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AGENT_RUNTIME_PERSIST</span><span class="op">=</span>1          <span class="co"># 1 (default) or 0</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AGENT_RUNTIME_BACKEND</span><span class="op">=</span>file       <span class="co"># file (default) or sqlite</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="va">DAL_AGENT_RUNTIME_PATH</span><span class="op">=</span>./my_state.json  <span class="co"># Custom path</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># agent.toml</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[agent.persistence]</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="dt">enabled</span> <span class="op">=</span> <span class="cn">true</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="dt">backend</span> <span class="op">=</span> <span class="st">&quot;file&quot;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="dt">path</span> <span class="op">=</span> <span class="st">&quot;./agent_runtime.json&quot;</span></span></code></pre></div>
+<h3 id="behavior">Behavior</h3>
+<ul>
+<li>On first access (e.g. <code>dal agent serve</code>), the runtime
+checks for a saved snapshot and restores state.</li>
+<li>After every state-mutating operation (spawn, coordinate,
+communicate, evolve, register skills), the runtime writes the
+snapshot.</li>
+<li>Queues are capped at 10,000 entries per type to prevent unbounded
+growth.</li>
+<li>Schema versioning (<code>version</code> field) enables
+forward-compatible migrations.</li>
+</ul>
+<p>For full details, see <a href="PERSISTENT_AGENT_MEMORY.html">Persistent
+Agent Memory</a>.</p>
+<hr />
+<h2 id="10-skills-and-registry">10. Skills and registry</h2>
+<p>Skills define what an agent can do. Each skill is a named bundle of
+tools and a description that gets included in the agent prompt at serve
+time.</p>
+<h3 id="built-in-skills">Built-in skills</h3>
+<p>Four categories ship with every DAL install:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Category</th>
+<th>Skill name</th>
+<th>Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Development</td>
+<td><code>development</code></td>
+<td>read, write, search, run, lint, test, debug</td>
+</tr>
+<tr class="even">
+<td>Creative</td>
+<td><code>creative</code></td>
+<td>read, write, search, generate, transform</td>
+</tr>
+<tr class="odd">
+<td>Office</td>
+<td><code>office</code></td>
+<td>read, write, search, run, schedule, email</td>
+</tr>
+<tr class="even">
+<td>Home</td>
+<td><code>home</code></td>
+<td>read, search, run, control, monitor</td>
+</tr>
+</tbody>
+</table>
+<h3 id="user-defined-skills">User-defined skills</h3>
+<p>Create <code>.skill.dal</code> files in your project's
+<code>.dal/</code> directory (or set <code>DAL_SKILLS_PATH</code>):</p>
+<pre><code>// .dal/calendar.skill.dal
+skill &quot;my_calendar&quot; {
+  category &quot;office&quot;
+  description &quot;Manage my custom calendar app via CLI and API calls.&quot;
+  tools &quot;run&quot; &quot;search&quot; &quot;read&quot; &quot;write&quot;
+}</code></pre>
+<p>Skills are loaded at startup and included in the agent prompt when
+the agent's config references them by name.</p>
+<h3 id="runtime-skill-registration">Runtime skill registration</h3>
+<p>From DAL or Rust, register skills programmatically:</p>
+<pre class="dal"><code>let skills = [{
+    &quot;name&quot;: &quot;data_pipeline&quot;,
+    &quot;category&quot;: &quot;development&quot;,
+    &quot;description&quot;: &quot;Run ETL pipelines and data transformations.&quot;,
+    &quot;tools&quot;: [&quot;run&quot;, &quot;read&quot;, &quot;write&quot;, &quot;search&quot;]
+}];
+agent::register_runtime_skills(skills);</code></pre>
+<p>Runtime-registered skills persist across restarts (stored in the
+agent runtime snapshot).</p>
+<h3 id="programmatic-encouragement">Programmatic encouragement</h3>
+<p>The skills system includes built-in guidance that helps agents
+discover and use tools effectively:</p>
+<ul>
+<li><strong>Encouragement block</strong>: Always included in the prompt
+— reminds the agent to search for tools, try commands, and learn from
+results.</li>
+<li><strong>Meta-from-memory</strong>: If the agent's evolve history
+shows past tool usage (e.g. searching, running commands), the prompt
+includes reinforcement ("You have successfully used search
+before...").</li>
+</ul>
+<p>For full details, see <a href="SKILLS_AND_REGISTRY.html">Skills and
+Registry</a>.</p>
+<hr />
+<h2 id="11-capabilities-and-types">11. Capabilities and types</h2>
+<p>Agent <strong>types</strong>: <code>ai</code>, <code>system</code>,
+<code>worker</code>, <code>custom:&lt;name&gt;</code>.</p>
+<p><strong>Capabilities</strong> are per-type (built-in or registry) and
+per-agent (config/mold). Use
+<code>agent::validate_capabilities(agent_type, required_capabilities)</code>
+to check a type; at runtime, an agent context’s capabilities are set at
+spawn (from type initializer or from config/mold).</p>
+<p>For how capabilities are defined, set, and validated, see <a
+href="../AGENT_CAPABILITIES.html">AGENT_CAPABILITIES.md</a>.</p>
+<hr />
+<h2 id="12-references">12. References</h2>
+<ul>
+<li><a href="PERSISTENT_AGENT_MEMORY.html">Persistent Agent Memory</a> —
+Runtime persistence, backends, configuration, schema versioning.</li>
+<li><a href="SKILLS_AND_REGISTRY.html">Skills and Registry</a> — Custom
+skills, <code>.skill.dal</code> format, programmatic encouragement,
+runtime registration.</li>
+<li><a href="../AGENT_CAPABILITIES.html">AGENT_CAPABILITIES.md</a> — How
+capabilities are defined, set, and validated.</li>
+<li><a href="../MOLD_FORMAT.html">MOLD_FORMAT.md</a> — Canonical
+<code>.mold.dal</code> syntax and lifecycle hooks.</li>
+<li><a href="API_REFERENCE.html">API_REFERENCE.md</a> — Full stdlib
+reference (agent, ai, mold, etc.).</li>
+<li><a href="CLI_DESIGN.html">CLI_DESIGN.md</a> — CLI structure and init
+templates.</li>
+<li><a href="AI_FEATURES_GUIDE.html">AI_FEATURES_GUIDE.md</a> — AI module
+and LLM integration.</li>
+</ul>
+</body>
+</html>

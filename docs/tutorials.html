@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>tutorials</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="dist_agent_lang-tutorial-series">dist_agent_lang Tutorial
+Series</h1>
+<p>Welcome to the comprehensive tutorial series for
+<code>dist_agent_lang</code>! This guide will take you from complete
+beginner to advanced practitioner, covering all aspects of the
+language.</p>
+<h2 id="-tutorial-overview">📚 Tutorial Overview</h2>
+<h3 id="beginner-level-tutorials-1-4">Beginner Level (Tutorials
+1-4)</h3>
+<ul>
+<li>Basic syntax and concepts</li>
+<li>Variables, functions, and control flow</li>
+<li>Standard library basics (22 modules)</li>
+<li>Multi-chain operations</li>
+</ul>
+<h3 id="intermediate-level-tutorials-5-8">Intermediate Level (Tutorials
+5-8)</h3>
+<ul>
+<li>Attributes and security</li>
+<li>Error handling</li>
+<li>Service architecture</li>
+<li>AI integration and agents</li>
+</ul>
+<h3 id="advanced-level-tutorials-9-12">Advanced Level (Tutorials
+9-12)</h3>
+<ul>
+<li>Database operations and web APIs</li>
+<li>Compliance features (KYC/AML)</li>
+<li>Performance optimization</li>
+<li>Testing and debugging</li>
+<li>Desktop/mobile/IoT support</li>
+</ul>
+<h2 id="-tutorial-1-getting-started">🚀 Tutorial 1: Getting Started</h2>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Rust installed (1.70+)</li>
+<li>Basic programming knowledge</li>
+<li>Terminal/command line experience</li>
+</ul>
+<h3 id="installation">Installation</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone the repository</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone <span class="op">&lt;</span>repository-url<span class="op">&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> dist_agent_lang</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Build the project</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the first example</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run</span></code></pre></div>
+<h3 id="your-first-program">Your First Program</h3>
+<p>Create a file called <code>hello.dal</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Hello World - Your first dist_agent_lang program</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Basic variable assignment</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> message <span class="op">=</span> <span class="st">&quot;Hello from dist_agent_lang!&quot;</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> version <span class="op">=</span> <span class="st">&quot;1.0.0&quot;</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Print to console</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    print(message)<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Log with structured data</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Application started&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;version&quot;</span><span class="op">:</span> version<span class="op">,</span> </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;timestamp&quot;</span><span class="op">:</span> <span class="dv">1234567890</span> </span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Basic arithmetic</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> x <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> y <span class="op">=</span> <span class="dv">8</span><span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> sum <span class="op">=</span> add(x<span class="op">,</span> y)<span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Calculation completed&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;x&quot;</span><span class="op">:</span> x<span class="op">,</span> </span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;y&quot;</span><span class="op">:</span> y<span class="op">,</span> </span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;sum&quot;</span><span class="op">:</span> sum </span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Return null to indicate successful completion</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    null</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="running-your-program">Running Your Program</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> hello.dal</span></code></pre></div>
+<h3 id="what-you-learned">What You Learned</h3>
+<ul>
+<li>✅ Basic syntax structure</li>
+<li>✅ Variable declaration with <code>let</code></li>
+<li>✅ Function definition with <code>fn</code></li>
+<li>✅ Built-in functions (<code>print</code>, <code>add</code>)</li>
+<li>✅ Standard library usage (<code>log::info</code>)</li>
+<li>✅ Return statements</li>
+</ul>
+<h3 id="exercises">Exercises</h3>
+<ol type="1">
+<li>Modify the program to calculate the product of two numbers</li>
+<li>Add more variables and print them</li>
+<li>Try different data types (strings, numbers)</li>
+</ol>
+<hr />
+<h2 id="-tutorial-2-variables-functions-and-control-flow">🚀 Tutorial 2:
+Variables, Functions, and Control Flow</h2>
+<h3 id="variables-and-data-types">Variables and Data Types</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> data_types_demo() <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Integer</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> age <span class="op">=</span> <span class="dv">25</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// String</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> name <span class="op">=</span> <span class="st">&quot;Alice&quot;</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Boolean</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> is_active <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Null value</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> empty <span class="op">=</span> null<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Print all variables</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Age: &quot;</span> <span class="op">+</span> age)<span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Name: &quot;</span> <span class="op">+</span> name)<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Active: &quot;</span> <span class="op">+</span> is_active)<span class="op">;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="functions-with-parameters-and-return-values">Functions with
+Parameters and Return Values</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> calculate_total(price<span class="op">:</span> int<span class="op">,</span> quantity<span class="op">:</span> int<span class="op">,</span> tax_rate<span class="op">:</span> float) <span class="op">-&gt;</span> int <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> subtotal <span class="op">=</span> price <span class="op">*</span> quantity<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> tax <span class="op">=</span> subtotal <span class="op">*</span> tax_rate<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    subtotal <span class="op">+</span> tax</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> greet_user(name<span class="op">:</span> string<span class="op">,</span> greeting<span class="op">:</span> string) <span class="op">-&gt;</span> string <span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    greeting <span class="op">+</span> <span class="st">&quot;, &quot;</span> <span class="op">+</span> name <span class="op">+</span> <span class="st">&quot;!&quot;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> total <span class="op">=</span> calculate_total(<span class="dv">100</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">0.08</span>)<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> message <span class="op">=</span> greet_user(<span class="st">&quot;Alice&quot;</span><span class="op">,</span> <span class="st">&quot;Hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Total: &quot;</span> <span class="op">+</span> total)<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    print(message)<span class="op">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="control-flow">Control Flow</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> control_flow_demo(score<span class="op">:</span> int) <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> score <span class="op">&gt;=</span> <span class="dv">90</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Excellent!&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> score <span class="op">&gt;=</span> <span class="dv">80</span> <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Good!&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> score <span class="op">&gt;=</span> <span class="dv">70</span> <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Fair!&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Needs improvement!&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> loop_demo() <span class="op">{</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> count <span class="op">&lt;</span> <span class="dv">5</span> <span class="op">{</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Count: &quot;</span> <span class="op">+</span> count)<span class="op">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        count <span class="op">=</span> count <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-1">What You Learned</h3>
+<ul>
+<li>✅ Different data types (int, string, bool, null)</li>
+<li>✅ Function parameters and return types</li>
+<li>✅ If/else conditional statements</li>
+<li>✅ While loops</li>
+<li>✅ String concatenation</li>
+</ul>
+<h3 id="exercises-1">Exercises</h3>
+<ol type="1">
+<li>Create a function that calculates the factorial of a number</li>
+<li>Write a function that checks if a number is even or odd</li>
+<li>Create a simple calculator with add, subtract, multiply, divide</li>
+</ol>
+<hr />
+<h2 id="-tutorial-3-standard-library-basics-22-modules">🚀 Tutorial 3:
+Standard Library Basics (22 Modules)</h2>
+<h3 id="logging-with-log-namespace">Logging with <code>log::</code>
+Namespace</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> logging_demo() <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Different log levels</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;User logged in&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;user_id&quot;</span><span class="op">:</span> <span class="st">&quot;123&quot;</span><span class="op">,</span> </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ip&quot;</span><span class="op">:</span> <span class="st">&quot;192.168.1.1&quot;</span> </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>warning(<span class="st">&quot;High memory usage&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;usage&quot;</span><span class="op">:</span> <span class="st">&quot;85%&quot;</span><span class="op">,</span> </span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;threshold&quot;</span><span class="op">:</span> <span class="st">&quot;80%&quot;</span> </span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>error(<span class="st">&quot;Database connection failed&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;error_code&quot;</span><span class="op">:</span> <span class="st">&quot;CONN_001&quot;</span> </span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>audit(<span class="st">&quot;user_login&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;user_id&quot;</span><span class="op">:</span> <span class="st">&quot;123&quot;</span><span class="op">,</span> </span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;success&quot;</span><span class="op">:</span> <span class="cn">true</span> </span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>debug(<span class="st">&quot;Function execution time&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;duration_ms&quot;</span><span class="op">:</span> <span class="dv">150</span> </span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="blockchain-operations-with-chain-namespace">Blockchain
+Operations with <code>chain::</code> Namespace</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> blockchain_demo() <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create an NFT</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> metadata <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;My First NFT&quot;</span><span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;description&quot;</span><span class="op">:</span> <span class="st">&quot;A digital artwork&quot;</span><span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;creator&quot;</span><span class="op">:</span> <span class="st">&quot;alice&quot;</span><span class="op">,</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;created_at&quot;</span><span class="op">:</span> timestamp()</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> asset_id <span class="op">=</span> <span class="pp">chain::</span>mint(<span class="st">&quot;MyNFT&quot;</span><span class="op">,</span> metadata)<span class="op">;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Created NFT with ID: &quot;</span> <span class="op">+</span> asset_id)<span class="op">;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get asset information</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> asset_info <span class="op">=</span> <span class="pp">chain::</span>get(asset_id)<span class="op">;</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Asset info: &quot;</span> <span class="op">+</span> asset_info)<span class="op">;</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if asset exists</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> exists <span class="op">=</span> <span class="pp">chain::</span>exists(asset_id)<span class="op">;</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Asset exists: &quot;</span> <span class="op">+</span> exists)<span class="op">;</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Multi-chain operations</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> chains <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">137</span><span class="op">,</span> <span class="dv">56</span><span class="op">,</span> <span class="dv">42161</span>]<span class="op">;</span> <span class="co">// Ethereum, Polygon, BSC, Arbitrum</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> chain_id <span class="kw">in</span> chains <span class="op">{</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> gas_price <span class="op">=</span> <span class="pp">chain::</span>get_gas_price(chain_id)<span class="op">;</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> balance <span class="op">=</span> <span class="pp">chain::</span>get_balance(chain_id<span class="op">,</span> <span class="st">&quot;0x123...&quot;</span>)<span class="op">;</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>info(<span class="st">&quot;Chain info&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;chain_id&quot;</span><span class="op">:</span> chain_id<span class="op">,</span> </span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;gas_price&quot;</span><span class="op">:</span> gas_price<span class="op">,</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;balance&quot;</span><span class="op">:</span> balance </span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="authentication-with-auth-namespace">Authentication with
+<code>auth::</code> Namespace</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> auth_demo() <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a user session</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> session <span class="op">=</span> <span class="pp">auth::</span>session(<span class="st">&quot;user123&quot;</span><span class="op">,</span> [<span class="st">&quot;admin&quot;</span><span class="op">,</span> <span class="st">&quot;moderator&quot;</span>])<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Session created: &quot;</span> <span class="op">+</span> session)<span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check session validity</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> is_valid <span class="op">=</span> <span class="pp">auth::</span>is_valid_session(<span class="op">&amp;</span>session)<span class="op">;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Session valid: &quot;</span> <span class="op">+</span> is_valid)<span class="op">;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check user roles</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> has_admin <span class="op">=</span> <span class="pp">auth::</span>has_role(<span class="op">&amp;</span>session<span class="op">,</span> <span class="st">&quot;admin&quot;</span>)<span class="op">;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> can_write <span class="op">=</span> <span class="pp">auth::</span>has_permission(<span class="op">&amp;</span>session<span class="op">,</span> <span class="st">&quot;write&quot;</span>)<span class="op">;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Has admin role: &quot;</span> <span class="op">+</span> has_admin)<span class="op">;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Can write: &quot;</span> <span class="op">+</span> can_write)<span class="op">;</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="cryptography-with-crypto-namespace">Cryptography with
+<code>crypto::</code> Namespace</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> crypto_demo() <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Hash a message</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> message <span class="op">=</span> <span class="st">&quot;Hello, World!&quot;</span><span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> hash <span class="op">=</span> <span class="pp">crypto::</span>hash(message<span class="op">,</span> <span class="pp">HashAlgorithm::</span>SHA256)<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;SHA256 hash: &quot;</span> <span class="op">+</span> hash)<span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Generate a keypair</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> keypair <span class="op">=</span> <span class="pp">crypto::</span>generate_keypair(<span class="pp">SignatureAlgorithm::</span>RSA)<span class="op">;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Generated keypair: &quot;</span> <span class="op">+</span> keypair)<span class="op">;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Sign a message</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> signature <span class="op">=</span> <span class="pp">crypto::</span>sign(</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        message<span class="op">,</span> </span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">&amp;</span>keypair[<span class="st">&quot;private_key&quot;</span>]<span class="op">,</span> </span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        <span class="pp">SignatureAlgorithm::</span>RSA</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Signature: &quot;</span> <span class="op">+</span> signature)<span class="op">;</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify signature</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> is_valid <span class="op">=</span> <span class="pp">crypto::</span>verify(</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>        message<span class="op">,</span> </span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">&amp;</span>signature<span class="op">,</span> </span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">&amp;</span>keypair[<span class="st">&quot;public_key&quot;</span>]<span class="op">,</span> </span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>        <span class="pp">SignatureAlgorithm::</span>RSA</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Signature valid: &quot;</span> <span class="op">+</span> is_valid)<span class="op">;</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-2">What You Learned</h3>
+<ul>
+<li>✅ Logging with different levels and structured data</li>
+<li>✅ Blockchain operations (mint, get, exists)</li>
+<li>✅ Multi-chain support (Ethereum, Polygon, BSC, Arbitrum)</li>
+<li>✅ Authentication and authorization</li>
+<li>✅ Cryptographic operations (hash, sign, verify)</li>
+<li>✅ Working with complex data structures</li>
+</ul>
+<h3 id="exercises-2">Exercises</h3>
+<ol type="1">
+<li>Create a simple user registration system with logging</li>
+<li>Build a basic NFT creation workflow</li>
+<li>Implement a simple authentication check</li>
+<li>Deploy a contract to multiple chains</li>
+</ol>
+<hr />
+<h2 id="-tutorial-4-multi-chain-operations">🚀 Tutorial 4: Multi-Chain
+Operations</h2>
+<h3 id="understanding-multi-chain-support">Understanding Multi-Chain
+Support</h3>
+<p><code>dist_agent_lang</code> provides native support for multiple
+blockchain networks, allowing you to deploy and interact with contracts
+across different chains.</p>
+<h3 id="chain-selection">Chain Selection</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> chain_selection_demo() <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Define supported chains</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> chains <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ethereum&quot;</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span>      <span class="co">// Mainnet</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;polygon&quot;</span><span class="op">:</span> <span class="dv">137</span><span class="op">,</span>     <span class="co">// Mainnet</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;bsc&quot;</span><span class="op">:</span> <span class="dv">56</span><span class="op">,</span>          <span class="co">// Mainnet</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;arbitrum&quot;</span><span class="op">:</span> <span class="dv">42161</span><span class="op">,</span>  <span class="co">// Mainnet</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;goerli&quot;</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span>        <span class="co">// Testnet</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;mumbai&quot;</span><span class="op">:</span> <span class="dv">80001</span>     <span class="co">// Testnet</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Select chain based on use case</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> select_chain(use_case<span class="op">:</span> string) <span class="op">-&gt;</span> int <span class="op">{</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> use_case <span class="op">{</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;high_value&quot;</span> <span class="op">=&gt;</span> chains[<span class="st">&quot;ethereum&quot;</span>]<span class="op">,</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;gaming&quot;</span> <span class="op">=&gt;</span> chains[<span class="st">&quot;polygon&quot;</span>]<span class="op">,</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;micro_transaction&quot;</span> <span class="op">=&gt;</span> chains[<span class="st">&quot;bsc&quot;</span>]<span class="op">,</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;defi&quot;</span> <span class="op">=&gt;</span> chains[<span class="st">&quot;arbitrum&quot;</span>]<span class="op">,</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;testing&quot;</span> <span class="op">=&gt;</span> chains[<span class="st">&quot;goerli&quot;</span>]<span class="op">,</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>            _ <span class="op">=&gt;</span> chains[<span class="st">&quot;ethereum&quot;</span>]</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use cases</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> high_value_chain <span class="op">=</span> select_chain(<span class="st">&quot;high_value&quot;</span>)<span class="op">;</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> gaming_chain <span class="op">=</span> select_chain(<span class="st">&quot;gaming&quot;</span>)<span class="op">;</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> defi_chain <span class="op">=</span> select_chain(<span class="st">&quot;defi&quot;</span>)<span class="op">;</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Chain selection&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;high_value&quot;</span><span class="op">:</span> high_value_chain<span class="op">,</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;gaming&quot;</span><span class="op">:</span> gaming_chain<span class="op">,</span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;defi&quot;</span><span class="op">:</span> defi_chain</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="multi-chain-deployment">Multi-Chain Deployment</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> multi_chain_deployment() <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Deploy to all supported chains</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> contract_name <span class="op">=</span> <span class="st">&quot;MyToken&quot;</span><span class="op">;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> constructor_args <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Multi-Chain Token&quot;</span><span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;symbol&quot;</span><span class="op">:</span> <span class="st">&quot;MCT&quot;</span><span class="op">,</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;total_supply&quot;</span><span class="op">:</span> <span class="dv">1000000</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> deployed_addresses <span class="op">=</span> <span class="op">{};</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> chain_id <span class="kw">in</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">137</span><span class="op">,</span> <span class="dv">56</span><span class="op">,</span> <span class="dv">42161</span>] <span class="op">{</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">try</span> <span class="op">{</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> address <span class="op">=</span> <span class="pp">chain::</span>deploy(chain_id<span class="op">,</span> contract_name<span class="op">,</span> constructor_args)<span class="op">;</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>            deployed_addresses[chain_id] <span class="op">=</span> address<span class="op">;</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>            <span class="pp">log::</span>info(<span class="st">&quot;Deployed successfully&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;chain_id&quot;</span><span class="op">:</span> chain_id<span class="op">,</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;address&quot;</span><span class="op">:</span> address</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> catch error <span class="op">{</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>            <span class="pp">log::</span>error(<span class="st">&quot;Deployment failed&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;chain_id&quot;</span><span class="op">:</span> chain_id<span class="op">,</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;error&quot;</span><span class="op">:</span> error</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> deployed_addresses<span class="op">;</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="cross-chain-operations">Cross-Chain Operations</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> cross_chain_operations() <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Find cheapest chain for operation</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> find_cheapest_chain(operation<span class="op">:</span> string) <span class="op">-&gt;</span> int <span class="op">{</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> cheapest_chain <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> lowest_cost <span class="op">=</span> <span class="dv">999999</span><span class="op">;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> chain_id <span class="kw">in</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">137</span><span class="op">,</span> <span class="dv">56</span><span class="op">,</span> <span class="dv">42161</span>] <span class="op">{</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> gas_estimate <span class="op">=</span> <span class="pp">chain::</span>estimate_gas(chain_id<span class="op">,</span> operation)<span class="op">;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> gas_price <span class="op">=</span> <span class="pp">chain::</span>get_gas_price(chain_id)<span class="op">;</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> total_cost <span class="op">=</span> gas_estimate <span class="op">*</span> gas_price<span class="op">;</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> total_cost <span class="op">&lt;</span> lowest_cost <span class="op">{</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>                lowest_cost <span class="op">=</span> total_cost<span class="op">;</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>                cheapest_chain <span class="op">=</span> chain_id<span class="op">;</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> cheapest_chain<span class="op">;</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Execute on cheapest chain</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> operation <span class="op">=</span> <span class="st">&quot;transfer&quot;</span><span class="op">;</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> cheapest_chain <span class="op">=</span> find_cheapest_chain(operation)<span class="op">;</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> <span class="pp">chain::</span>call(cheapest_chain<span class="op">,</span> contract_address<span class="op">,</span> operation<span class="op">,</span> <span class="op">{</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;to&quot;</span><span class="op">:</span> recipient<span class="op">,</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;amount&quot;</span><span class="op">:</span> amount</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Cross-chain operation&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;chain_id&quot;</span><span class="op">:</span> cheapest_chain<span class="op">,</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;operation&quot;</span><span class="op">:</span> operation<span class="op">,</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;result&quot;</span><span class="op">:</span> result</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-3">What You Learned</h3>
+<ul>
+<li>✅ Multi-chain support (Ethereum, Polygon, BSC, Arbitrum)</li>
+<li>✅ Chain selection based on use case</li>
+<li>✅ Multi-chain deployment</li>
+<li>✅ Cross-chain operations</li>
+<li>✅ Gas optimization across chains</li>
+</ul>
+<h3 id="exercises-3">Exercises</h3>
+<ol type="1">
+<li>Deploy a simple token to all supported chains</li>
+<li>Create a function that finds the cheapest chain for transfers</li>
+<li>Implement cross-chain balance checking</li>
+<li>Build a multi-chain NFT marketplace</li>
+</ol>
+<hr />
+<h2 id="-tutorial-5-attributes-and-security">🚀 Tutorial 5: Attributes
+and Security</h2>
+<h3 id="understanding-attributes">Understanding Attributes</h3>
+<p>Attributes are annotations that configure behavior without expanding
+keywords. They provide declarative security and resource management.</p>
+<h3 id="basic-attributes">Basic Attributes</h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Security attribute - enforces security checks</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>secure</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> sensitive_operation() <span class="op">{</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This function will have security checks applied</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>audit(<span class="st">&quot;sensitive_operation_called&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;timestamp&quot;</span><span class="op">:</span> timestamp() <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Transaction attribute - wraps in transaction</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>txn</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> transfer_money(from<span class="op">:</span> string<span class="op">,</span> to<span class="op">:</span> string<span class="op">,</span> amount<span class="op">:</span> int) <span class="op">{</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This function will be wrapped in a transaction</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// If any part fails, the entire operation is rolled back</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Resource limit attribute - limits execution resources</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>limit(<span class="dv">1000</span>)</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> expensive_operation() <span class="op">{</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This function is limited to 1000 operations</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Useful for preventing infinite loops or resource exhaustion</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Trust attribute - specifies trust model</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>trust(hybrid)</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> hybrid_function() <span class="op">{</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This function uses hybrid trust (decentralized + centralized)</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Compilation target attribute</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>compile_target(blockchain)</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> blockchain_function() <span class="op">{</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This function targets blockchain deployment (transpiled to Solidity)</span></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="co">// Chain specification attribute</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>chain(ethereum)</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> ethereum_function() <span class="op">{</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This function is specific to Ethereum</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a><span class="co">// Interface generation attribute</span></span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>interface(typescript)</span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> typescript_interface() <span class="op">{</span></span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This function generates TypeScript interface</span></span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="combining-attributes">Combining Attributes</h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>secure</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>txn</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>limit(<span class="dv">100</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>trust(hybrid)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>compile_target(blockchain)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>chain(ethereum)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>interface(typescript)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> secure_transfer(from<span class="op">:</span> string<span class="op">,</span> to<span class="op">:</span> string<span class="op">,</span> amount<span class="op">:</span> int) <span class="op">-&gt;</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This function has:</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - Security checks (@secure)</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - Transaction wrapping (@txn)</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - Resource limits (@limit)</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - Hybrid trust (@trust)</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - Blockchain compilation (@compile_target)</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - Ethereum specificity (@chain)</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - TypeScript interface generation (@interface)</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> amount <span class="op">&lt;=</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">false</span><span class="op">;</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Perform transfer logic</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> success <span class="op">=</span> perform_transfer(from<span class="op">,</span> to<span class="op">,</span> amount)<span class="op">;</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> success <span class="op">{</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>audit(<span class="st">&quot;transfer_successful&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;from&quot;</span><span class="op">:</span> from<span class="op">,</span> </span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;to&quot;</span><span class="op">:</span> to<span class="op">,</span> </span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;amount&quot;</span><span class="op">:</span> amount </span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>    success</span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-4">What You Learned</h3>
+<ul>
+<li>✅ Purpose and usage of attributes</li>
+<li>✅ Security attribute (<code>@secure</code>)</li>
+<li>✅ Transaction attribute (<code>@txn</code>)</li>
+<li>✅ Resource limit attribute (<code>@limit</code>)</li>
+<li>✅ Trust attribute (<code>@trust</code>)</li>
+<li>✅ Compilation target attribute (<code>@compile_target</code>)</li>
+<li>✅ Chain specification attribute (<code>@chain</code>)</li>
+<li>✅ Interface generation attribute (<code>@interface</code>)</li>
+<li>✅ Combining multiple attributes</li>
+</ul>
+<h3 id="exercises-4">Exercises</h3>
+<ol type="1">
+<li>Create a secure user management service with multiple
+attributes</li>
+<li>Implement a transaction-based payment system</li>
+<li>Build a resource-limited data processing function</li>
+<li>Create a multi-chain contract with interface generation</li>
+</ol>
+<hr />
+<h2 id="-tutorial-6-ai-integration-and-agents">🚀 Tutorial 6: AI
+Integration and Agents</h2>
+<h3 id="understanding-ai-integration">Understanding AI Integration</h3>
+<p><code>dist_agent_lang</code> provides native AI agent and workflow
+management capabilities, allowing you to create intelligent, autonomous
+systems.</p>
+<h3 id="creating-ai-agents">Creating AI Agents</h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> ai_agent_demo() <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create an AI agent configuration</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> agent_config <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;agent_id&quot;</span><span class="op">:</span> <span class="st">&quot;trading_agent_001&quot;</span><span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Crypto Trading Agent&quot;</span><span class="op">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;role&quot;</span><span class="op">:</span> <span class="st">&quot;market_analyzer&quot;</span><span class="op">,</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;capabilities&quot;</span><span class="op">:</span> [<span class="st">&quot;price_analysis&quot;</span><span class="op">,</span> <span class="st">&quot;risk_assessment&quot;</span><span class="op">,</span> <span class="st">&quot;trade_execution&quot;</span>]<span class="op">,</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;memory_size&quot;</span><span class="op">:</span> <span class="dv">1000</span><span class="op">,</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;max_concurrent_tasks&quot;</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;trust_level&quot;</span><span class="op">:</span> <span class="st">&quot;hybrid&quot;</span><span class="op">,</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;communication_protocols&quot;</span><span class="op">:</span> [<span class="st">&quot;http&quot;</span><span class="op">,</span> <span class="st">&quot;websocket&quot;</span>]<span class="op">,</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ai_models&quot;</span><span class="op">:</span> [<span class="st">&quot;gpt-4&quot;</span><span class="op">,</span> <span class="st">&quot;claude-3&quot;</span>]</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create the agent</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> agent <span class="op">=</span> <span class="pp">ai::</span>create_agent(agent_config)<span class="op">;</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add agent to coordinator</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> coordinator <span class="op">=</span> <span class="pp">ai::</span>create_agent_coordinator()<span class="op">;</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> agent_id <span class="op">=</span> <span class="pp">ai::</span>add_agent_to_coordinator(coordinator<span class="op">,</span> agent)<span class="op">;</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;AI agent created&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;agent_id&quot;</span><span class="op">:</span> agent_id<span class="op">,</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> agent_config[<span class="st">&quot;name&quot;</span>]</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="agent-tasks-and-workflows">Agent Tasks and Workflows</h3>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> agent_tasks_demo() <span class="op">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a task for the agent</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> task <span class="op">=</span> <span class="pp">ai::</span>create_task(agent<span class="op">,</span> <span class="st">&quot;market_analysis&quot;</span><span class="op">,</span> <span class="st">&quot;Analyze BTC market conditions&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;asset&quot;</span><span class="op">:</span> <span class="st">&quot;BTC&quot;</span><span class="op">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;timeframe&quot;</span><span class="op">:</span> <span class="st">&quot;1h&quot;</span><span class="op">,</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;indicators&quot;</span><span class="op">:</span> [<span class="st">&quot;rsi&quot;</span><span class="op">,</span> <span class="st">&quot;macd&quot;</span><span class="op">,</span> <span class="st">&quot;volume&quot;</span>]</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Execute the task</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> <span class="pp">ai::</span>execute_task(agent<span class="op">,</span> task<span class="op">.</span>id)<span class="op">;</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a workflow</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> workflow_config <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;workflow_id&quot;</span><span class="op">:</span> <span class="st">&quot;trading_workflow_001&quot;</span><span class="op">,</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Automated Trading Workflow&quot;</span><span class="op">,</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;steps&quot;</span><span class="op">:</span> [</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;step_id&quot;</span><span class="op">:</span> <span class="st">&quot;market_analysis&quot;</span><span class="op">,</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;task_type&quot;</span><span class="op">:</span> <span class="st">&quot;market_analysis&quot;</span><span class="op">,</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;agent_id&quot;</span><span class="op">:</span> <span class="st">&quot;trading_agent_001&quot;</span><span class="op">,</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;dependencies&quot;</span><span class="op">:</span> []</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;step_id&quot;</span><span class="op">:</span> <span class="st">&quot;risk_assessment&quot;</span><span class="op">,</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;task_type&quot;</span><span class="op">:</span> <span class="st">&quot;risk_assessment&quot;</span><span class="op">,</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;agent_id&quot;</span><span class="op">:</span> <span class="st">&quot;trading_agent_001&quot;</span><span class="op">,</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;dependencies&quot;</span><span class="op">:</span> [<span class="st">&quot;market_analysis&quot;</span>]</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;step_id&quot;</span><span class="op">:</span> <span class="st">&quot;trade_execution&quot;</span><span class="op">,</span></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;task_type&quot;</span><span class="op">:</span> <span class="st">&quot;trade_execution&quot;</span><span class="op">,</span></span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;agent_id&quot;</span><span class="op">:</span> <span class="st">&quot;trading_agent_001&quot;</span><span class="op">,</span></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;dependencies&quot;</span><span class="op">:</span> [<span class="st">&quot;risk_assessment&quot;</span>]</span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> workflow <span class="op">=</span> <span class="pp">ai::</span>create_workflow(coordinator<span class="op">,</span> workflow_config)<span class="op">;</span></span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> success <span class="op">=</span> <span class="pp">ai::</span>execute_workflow(coordinator<span class="op">,</span> workflow<span class="op">.</span>workflow_id)<span class="op">;</span></span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="ai-service-integration">AI Service Integration</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> ai_service_demo() <span class="op">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create AI service</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ai_service <span class="op">=</span> <span class="pp">service::</span>create_ai_service(<span class="st">&quot;gpt-4&quot;</span>)<span class="op">;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// AI-powered analysis</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> analysis <span class="op">=</span> <span class="kw">await</span> <span class="pp">service::</span>ai(<span class="st">&quot;Analyze the current market conditions for Bitcoin&quot;</span><span class="op">,</span> ai_service)<span class="op">;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// AI-powered prediction</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> prediction <span class="op">=</span> <span class="kw">await</span> <span class="pp">service::</span>ai(<span class="st">&quot;Predict Bitcoin price movement for the next 24 hours&quot;</span><span class="op">,</span> ai_service)<span class="op">;</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// AI-powered decision making</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> decision <span class="op">=</span> <span class="kw">await</span> <span class="pp">service::</span>ai(<span class="st">&quot;Should I buy or sell Bitcoin based on current market data?&quot;</span><span class="op">,</span> ai_service)<span class="op">;</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;AI analysis completed&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;analysis&quot;</span><span class="op">:</span> analysis<span class="op">,</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;prediction&quot;</span><span class="op">:</span> prediction<span class="op">,</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;decision&quot;</span><span class="op">:</span> decision</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="agent-communication">Agent Communication</h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> agent_communication_demo() <span class="op">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create multiple agents</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> agent1 <span class="op">=</span> <span class="pp">ai::</span>create_agent(<span class="op">{</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Data Collector&quot;</span><span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;role&quot;</span><span class="op">:</span> <span class="st">&quot;data_gathering&quot;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> agent2 <span class="op">=</span> <span class="pp">ai::</span>create_agent(<span class="op">{</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Data Analyzer&quot;</span><span class="op">,</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;role&quot;</span><span class="op">:</span> <span class="st">&quot;data_analysis&quot;</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> agent3 <span class="op">=</span> <span class="pp">ai::</span>create_agent(<span class="op">{</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Decision Maker&quot;</span><span class="op">,</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;role&quot;</span><span class="op">:</span> <span class="st">&quot;decision_making&quot;</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Agent communication workflow</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> message1 <span class="op">=</span> <span class="pp">agent::</span>create_agent_message(</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>        agent1<span class="op">.</span>id<span class="op">,</span> </span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>        agent2<span class="op">.</span>id<span class="op">,</span> </span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;data_collected&quot;</span><span class="op">,</span> </span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span> <span class="st">&quot;data&quot;</span><span class="op">:</span> collected_data <span class="op">}</span></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>    <span class="pp">agent::</span>send_message(agent1<span class="op">.</span>id<span class="op">,</span> message1)<span class="op">;</span></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> message2 <span class="op">=</span> <span class="pp">agent::</span>create_agent_message(</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>        agent2<span class="op">.</span>id<span class="op">,</span> </span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>        agent3<span class="op">.</span>id<span class="op">,</span> </span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;analysis_complete&quot;</span><span class="op">,</span> </span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span> <span class="st">&quot;analysis&quot;</span><span class="op">:</span> analysis_result <span class="op">}</span></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>    <span class="pp">agent::</span>send_message(agent2<span class="op">.</span>id<span class="op">,</span> message2)<span class="op">;</span></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-5">What You Learned</h3>
+<ul>
+<li>✅ AI agent creation and configuration</li>
+<li>✅ Agent task management</li>
+<li>✅ Workflow creation and execution</li>
+<li>✅ AI service integration</li>
+<li>✅ Agent communication patterns</li>
+<li>✅ Multi-agent coordination</li>
+</ul>
+<h3 id="exercises-5">Exercises</h3>
+<ol type="1">
+<li>Create an AI agent for price monitoring</li>
+<li>Build a workflow for automated trading</li>
+<li>Implement agent communication for data processing</li>
+<li>Create a multi-agent system for portfolio management</li>
+</ol>
+<hr />
+<h2 id="-tutorial-7-database-operations">🚀 Tutorial 7: Database
+Operations</h2>
+<h3 id="understanding-database-integration">Understanding Database
+Integration</h3>
+<p><code>dist_agent_lang</code> provides comprehensive database
+operations for both traditional and blockchain data storage.</p>
+<h3 id="database-connection">Database Connection</h3>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> database_connection_demo() <span class="op">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Connect to database</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> connection_string <span class="op">=</span> <span class="st">&quot;postgresql://user:password@localhost:5432/mydb&quot;</span><span class="op">;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> db <span class="op">=</span> <span class="pp">database::</span>connect(connection_string)<span class="op">;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check connection</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> connected <span class="op">=</span> <span class="pp">database::</span>is_connected(db)<span class="op">;</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    print(<span class="st">&quot;Database connected: &quot;</span> <span class="op">+</span> connected)<span class="op">;</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get database info</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> db_info <span class="op">=</span> <span class="pp">database::</span>get_database_info(db)<span class="op">;</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Database info&quot;</span><span class="op">,</span> db_info)<span class="op">;</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="basic-crud-operations">Basic CRUD Operations</h3>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> crud_operations_demo() <span class="op">{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> db <span class="op">=</span> <span class="pp">database::</span>connect(<span class="st">&quot;postgresql://user:password@localhost:5432/mydb&quot;</span>)<span class="op">;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create (Insert)</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> user_data <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;email&quot;</span><span class="op">:</span> <span class="st">&quot;john@example.com&quot;</span><span class="op">,</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;age&quot;</span><span class="op">:</span> <span class="dv">30</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> inserted <span class="op">=</span> <span class="pp">database::</span>insert(db<span class="op">,</span> <span class="st">&quot;users&quot;</span><span class="op">,</span> user_data)<span class="op">;</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;User inserted&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;id&quot;</span><span class="op">:</span> inserted<span class="op">.</span>id <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Read (Query)</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> users <span class="op">=</span> <span class="pp">database::</span>query(db<span class="op">,</span> <span class="st">&quot;SELECT * FROM users WHERE age &gt; 25&quot;</span><span class="op">,</span> [])<span class="op">;</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Users found&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;count&quot;</span><span class="op">:</span> users<span class="op">.</span>length <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> update_data <span class="op">=</span> <span class="op">{</span> <span class="st">&quot;age&quot;</span><span class="op">:</span> <span class="dv">31</span> <span class="op">};</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> updated <span class="op">=</span> <span class="pp">database::</span>update(db<span class="op">,</span> <span class="st">&quot;users&quot;</span><span class="op">,</span> update_data<span class="op">,</span> <span class="st">&quot;id = &quot;</span> <span class="op">+</span> inserted<span class="op">.</span>id)<span class="op">;</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;User updated&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;rows_affected&quot;</span><span class="op">:</span> updated <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Delete</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> deleted <span class="op">=</span> <span class="pp">database::</span>delete(db<span class="op">,</span> <span class="st">&quot;users&quot;</span><span class="op">,</span> <span class="st">&quot;id = &quot;</span> <span class="op">+</span> inserted<span class="op">.</span>id)<span class="op">;</span></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;User deleted&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;rows_affected&quot;</span><span class="op">:</span> deleted <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="transaction-management">Transaction Management</h3>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> transaction_demo() <span class="op">{</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> db <span class="op">=</span> <span class="pp">database::</span>connect(<span class="st">&quot;postgresql://user:password@localhost:5432/mydb&quot;</span>)<span class="op">;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Begin transaction</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> transaction <span class="op">=</span> <span class="pp">database::</span>begin_transaction(db)<span class="op">;</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">try</span> <span class="op">{</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Multiple operations in transaction</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> user1 <span class="op">=</span> <span class="pp">database::</span>insert(db<span class="op">,</span> <span class="st">&quot;users&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Alice&quot;</span><span class="op">,</span> <span class="st">&quot;email&quot;</span><span class="op">:</span> <span class="st">&quot;alice@example.com&quot;</span> <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> user2 <span class="op">=</span> <span class="pp">database::</span>insert(db<span class="op">,</span> <span class="st">&quot;users&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Bob&quot;</span><span class="op">,</span> <span class="st">&quot;email&quot;</span><span class="op">:</span> <span class="st">&quot;bob@example.com&quot;</span> <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create relationship</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>        <span class="pp">database::</span>insert(db<span class="op">,</span> <span class="st">&quot;friendships&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;user1_id&quot;</span><span class="op">:</span> user1<span class="op">.</span>id<span class="op">,</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;user2_id&quot;</span><span class="op">:</span> user2<span class="op">.</span>id<span class="op">,</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;created_at&quot;</span><span class="op">:</span> timestamp()</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Commit transaction</span></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> committed <span class="op">=</span> <span class="pp">database::</span>commit_transaction(transaction)<span class="op">;</span></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>info(<span class="st">&quot;Transaction committed&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;success&quot;</span><span class="op">:</span> committed <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> catch error <span class="op">{</span></span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Rollback transaction on error</span></span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> rolled_back <span class="op">=</span> <span class="pp">database::</span>rollback_transaction(transaction)<span class="op">;</span></span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>error(<span class="st">&quot;Transaction rolled back&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;error&quot;</span><span class="op">:</span> error <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="advanced-database-features">Advanced Database Features</h3>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> advanced_database_demo() <span class="op">{</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> db <span class="op">=</span> <span class="pp">database::</span>connect(<span class="st">&quot;postgresql://user:password@localhost:5432/mydb&quot;</span>)<span class="op">;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Batch operations</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> users <span class="op">=</span> [</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span> <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Alice&quot;</span><span class="op">,</span> <span class="st">&quot;email&quot;</span><span class="op">:</span> <span class="st">&quot;alice@example.com&quot;</span> <span class="op">},</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span> <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Bob&quot;</span><span class="op">,</span> <span class="st">&quot;email&quot;</span><span class="op">:</span> <span class="st">&quot;bob@example.com&quot;</span> <span class="op">},</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span> <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Charlie&quot;</span><span class="op">,</span> <span class="st">&quot;email&quot;</span><span class="op">:</span> <span class="st">&quot;charlie@example.com&quot;</span> <span class="op">}</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    ]<span class="op">;</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> batch_result <span class="op">=</span> <span class="pp">database::</span>batch_insert(db<span class="op">,</span> <span class="st">&quot;users&quot;</span><span class="op">,</span> users)<span class="op">;</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Batch insert completed&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;inserted&quot;</span><span class="op">:</span> batch_result<span class="op">.</span>length <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Complex queries with parameters</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> query <span class="op">=</span> <span class="st">&quot;SELECT * FROM users WHERE age &gt; ? AND status = ?&quot;</span><span class="op">;</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> params <span class="op">=</span> [<span class="dv">25</span><span class="op">,</span> <span class="st">&quot;active&quot;</span>]<span class="op">;</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> results <span class="op">=</span> <span class="pp">database::</span>query(db<span class="op">,</span> query<span class="op">,</span> params)<span class="op">;</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Database backup</span></span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> backup_info <span class="op">=</span> <span class="pp">database::</span>create_backup(db<span class="op">,</span> <span class="op">{</span></span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;format&quot;</span><span class="op">:</span> <span class="st">&quot;sql&quot;</span><span class="op">,</span></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;compress&quot;</span><span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;include_data&quot;</span><span class="op">:</span> <span class="cn">true</span></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Backup created&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;backup_id&quot;</span><span class="op">:</span> backup_info<span class="op">.</span>id<span class="op">,</span></span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;size&quot;</span><span class="op">:</span> backup_info<span class="op">.</span>size<span class="op">,</span></span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;path&quot;</span><span class="op">:</span> backup_info<span class="op">.</span>path</span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-6">What You Learned</h3>
+<ul>
+<li>✅ Database connection management</li>
+<li>✅ CRUD operations (Create, Read, Update, Delete)</li>
+<li>✅ Transaction management</li>
+<li>✅ Batch operations</li>
+<li>✅ Complex queries with parameters</li>
+<li>✅ Database backup and restore</li>
+</ul>
+<h3 id="exercises-6">Exercises</h3>
+<ol type="1">
+<li>Create a user management system with database operations</li>
+<li>Implement a transaction-based payment system</li>
+<li>Build a data migration script</li>
+<li>Create a database backup and restore system</li>
+</ol>
+<hr />
+<h2 id="-tutorial-8-web-api-operations">🚀 Tutorial 8: Web API
+Operations</h2>
+<h3 id="understanding-web-integration">Understanding Web
+Integration</h3>
+<p><code>dist_agent_lang</code> provides comprehensive web API support
+for HTTP and WebSocket operations.</p>
+<h3 id="http-operations">HTTP Operations</h3>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> http_operations_demo() <span class="op">{</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// GET request</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> response <span class="op">=</span> <span class="pp">web::</span>get(<span class="st">&quot;https://api.example.com/users&quot;</span>)<span class="op">;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;GET response&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;status&quot;</span><span class="op">:</span> response<span class="op">.</span>status<span class="op">,</span> <span class="st">&quot;data&quot;</span><span class="op">:</span> response<span class="op">.</span>data <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// POST request</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> post_data <span class="op">=</span> <span class="op">{</span> <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span> <span class="st">&quot;email&quot;</span><span class="op">:</span> <span class="st">&quot;john@example.com&quot;</span> <span class="op">};</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> post_response <span class="op">=</span> <span class="pp">web::</span>post(<span class="st">&quot;https://api.example.com/users&quot;</span><span class="op">,</span> post_data)<span class="op">;</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// PUT request</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> put_data <span class="op">=</span> <span class="op">{</span> <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;John Smith&quot;</span> <span class="op">};</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> put_response <span class="op">=</span> <span class="pp">web::</span>put(<span class="st">&quot;https://api.example.com/users/123&quot;</span><span class="op">,</span> put_data)<span class="op">;</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// DELETE request</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> delete_response <span class="op">=</span> <span class="pp">web::</span>delete(<span class="st">&quot;https://api.example.com/users/123&quot;</span>)<span class="op">;</span></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Request with headers</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> headers <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;Authorization&quot;</span><span class="op">:</span> <span class="st">&quot;Bearer token123&quot;</span><span class="op">,</span></span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;Content-Type&quot;</span><span class="op">:</span> <span class="st">&quot;application/json&quot;</span></span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> auth_response <span class="op">=</span> <span class="pp">web::</span>get_with_headers(<span class="st">&quot;https://api.example.com/protected&quot;</span><span class="op">,</span> headers)<span class="op">;</span></span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="websocket-operations">WebSocket Operations</h3>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> websocket_demo() <span class="op">{</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Connect to WebSocket</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ws <span class="op">=</span> <span class="pp">web::</span>websocket_connect(<span class="st">&quot;wss://echo.websocket.org&quot;</span>)<span class="op">;</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Send message</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> message <span class="op">=</span> <span class="op">{</span> <span class="st">&quot;type&quot;</span><span class="op">:</span> <span class="st">&quot;ping&quot;</span><span class="op">,</span> <span class="st">&quot;data&quot;</span><span class="op">:</span> <span class="st">&quot;Hello WebSocket!&quot;</span> <span class="op">};</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> sent <span class="op">=</span> <span class="pp">web::</span>websocket_send(ws<span class="op">,</span> message)<span class="op">;</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Receive message</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> received <span class="op">=</span> <span class="pp">web::</span>websocket_receive(ws)<span class="op">;</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;WebSocket message received&quot;</span><span class="op">,</span> received)<span class="op">;</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Close connection</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    <span class="pp">web::</span>websocket_close(ws)<span class="op">;</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="api-integration-examples">API Integration Examples</h3>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> api_integration_demo() <span class="op">{</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// External API integration</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> weather_api <span class="op">=</span> <span class="st">&quot;https://api.openweathermap.org/data/2.5/weather&quot;</span><span class="op">;</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> city <span class="op">=</span> <span class="st">&quot;London&quot;</span><span class="op">;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> api_key <span class="op">=</span> <span class="pp">config::</span>get_env(<span class="st">&quot;WEATHER_API_KEY&quot;</span>)<span class="op">;</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> weather_url <span class="op">=</span> weather_api <span class="op">+</span> <span class="st">&quot;?q=&quot;</span> <span class="op">+</span> city <span class="op">+</span> <span class="st">&quot;&amp;appid=&quot;</span> <span class="op">+</span> api_key<span class="op">;</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> weather_response <span class="op">=</span> <span class="pp">web::</span>get(weather_url)<span class="op">;</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Weather data&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;city&quot;</span><span class="op">:</span> city<span class="op">,</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;temperature&quot;</span><span class="op">:</span> weather_response<span class="op">.</span>data<span class="op">.</span>main<span class="op">.</span>temp<span class="op">,</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;description&quot;</span><span class="op">:</span> weather_response<span class="op">.</span>data<span class="op">.</span>weather[<span class="dv">0</span>]<span class="op">.</span>description</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cryptocurrency price API</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> crypto_api <span class="op">=</span> <span class="st">&quot;https://api.coingecko.com/api/v3/simple/price&quot;</span><span class="op">;</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> crypto_url <span class="op">=</span> crypto_api <span class="op">+</span> <span class="st">&quot;?ids=bitcoin,ethereum&amp;vs_currencies=usd&quot;</span><span class="op">;</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> crypto_response <span class="op">=</span> <span class="pp">web::</span>get(crypto_url)<span class="op">;</span></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Crypto prices&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;bitcoin&quot;</span><span class="op">:</span> crypto_response<span class="op">.</span>data<span class="op">.</span>bitcoin<span class="op">.</span>usd<span class="op">,</span></span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ethereum&quot;</span><span class="op">:</span> crypto_response<span class="op">.</span>data<span class="op">.</span>ethereum<span class="op">.</span>usd</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-7">What You Learned</h3>
+<ul>
+<li>✅ HTTP operations (GET, POST, PUT, DELETE)</li>
+<li>✅ WebSocket connections and messaging</li>
+<li>✅ API integration with external services</li>
+<li>✅ Request headers and authentication</li>
+<li>✅ Response handling and error management</li>
+</ul>
+<h3 id="exercises-7">Exercises</h3>
+<ol type="1">
+<li>Create a weather monitoring system using external APIs</li>
+<li>Build a cryptocurrency price tracker</li>
+<li>Implement a real-time chat system with WebSockets</li>
+<li>Create a REST API client for your application</li>
+</ol>
+<hr />
+<h2 id="-tutorial-9-compliance-features-kycaml">🚀 Tutorial 9:
+Compliance Features (KYC/AML)</h2>
+<h3 id="understanding-compliance">Understanding Compliance</h3>
+<p><code>dist_agent_lang</code> provides built-in KYC (Know Your
+Customer) and AML (Anti-Money Laundering) features for regulatory
+compliance.</p>
+<h3 id="kyc-operations">KYC Operations</h3>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> kyc_demo() <span class="op">{</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// User verification</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> user_data <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;email&quot;</span><span class="op">:</span> <span class="st">&quot;john@example.com&quot;</span><span class="op">,</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;phone&quot;</span><span class="op">:</span> <span class="st">&quot;+1234567890&quot;</span><span class="op">,</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;date_of_birth&quot;</span><span class="op">:</span> <span class="st">&quot;1990-01-01&quot;</span><span class="op">,</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;nationality&quot;</span><span class="op">:</span> <span class="st">&quot;US&quot;</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> verification <span class="op">=</span> <span class="pp">kyc::</span>verify_user(user_data)<span class="op">;</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;KYC verification&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;user_id&quot;</span><span class="op">:</span> verification<span class="op">.</span>user_id<span class="op">,</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;status&quot;</span><span class="op">:</span> verification<span class="op">.</span>status<span class="op">,</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;score&quot;</span><span class="op">:</span> verification<span class="op">.</span>verification_score</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Document verification</span></span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> document_data <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;document_type&quot;</span><span class="op">:</span> <span class="st">&quot;passport&quot;</span><span class="op">,</span></span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;document_number&quot;</span><span class="op">:</span> <span class="st">&quot;123456789&quot;</span><span class="op">,</span></span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;issuing_country&quot;</span><span class="op">:</span> <span class="st">&quot;US&quot;</span><span class="op">,</span></span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;expiry_date&quot;</span><span class="op">:</span> <span class="st">&quot;2025-01-01&quot;</span></span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> document_verified <span class="op">=</span> <span class="pp">kyc::</span>verify_document(document_data)<span class="op">;</span></span>
+<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Identity verification</span></span>
+<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> identity_data <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;full_name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span></span>
+<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;date_of_birth&quot;</span><span class="op">:</span> <span class="st">&quot;1990-01-01&quot;</span><span class="op">,</span></span>
+<span id="cb27-32"><a href="#cb27-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;address&quot;</span><span class="op">:</span> <span class="st">&quot;123 Main St, City, State, ZIP&quot;</span></span>
+<span id="cb27-33"><a href="#cb27-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb27-34"><a href="#cb27-34" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb27-35"><a href="#cb27-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> identity_verified <span class="op">=</span> <span class="pp">kyc::</span>verify_identity(identity_data)<span class="op">;</span></span>
+<span id="cb27-36"><a href="#cb27-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="aml-operations">AML Operations</h3>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> aml_demo() <span class="op">{</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Transaction monitoring</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> transaction_data <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;from_address&quot;</span><span class="op">:</span> <span class="st">&quot;0x123...&quot;</span><span class="op">,</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;to_address&quot;</span><span class="op">:</span> <span class="st">&quot;0x456...&quot;</span><span class="op">,</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;amount&quot;</span><span class="op">:</span> <span class="dv">10000</span><span class="op">,</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;currency&quot;</span><span class="op">:</span> <span class="st">&quot;USD&quot;</span><span class="op">,</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;transaction_type&quot;</span><span class="op">:</span> <span class="st">&quot;transfer&quot;</span><span class="op">,</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;timestamp&quot;</span><span class="op">:</span> timestamp()</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> risk_score <span class="op">=</span> <span class="pp">aml::</span>calculate_risk_score(transaction_data)<span class="op">;</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;AML risk assessment&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;transaction_id&quot;</span><span class="op">:</span> transaction_data<span class="op">.</span>id<span class="op">,</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;risk_score&quot;</span><span class="op">:</span> risk_score<span class="op">,</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;risk_level&quot;</span><span class="op">:</span> risk_score <span class="op">&gt;</span> <span class="dv">0.7</span> <span class="op">?</span> <span class="st">&quot;high&quot;</span> <span class="op">:</span> <span class="st">&quot;low&quot;</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Flag suspicious transactions</span></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> flagged <span class="op">=</span> <span class="pp">aml::</span>flag_suspicious_transaction(transaction_data)<span class="op">;</span></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> flagged <span class="op">{</span></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>warning(<span class="st">&quot;Suspicious transaction flagged&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;transaction_id&quot;</span><span class="op">:</span> transaction_data<span class="op">.</span>id<span class="op">,</span></span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;reason&quot;</span><span class="op">:</span> flagged<span class="op">.</span>reason</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compliance checks</span></span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> user_data <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;user_id&quot;</span><span class="op">:</span> <span class="st">&quot;user123&quot;</span><span class="op">,</span></span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;kyc_status&quot;</span><span class="op">:</span> <span class="st">&quot;verified&quot;</span><span class="op">,</span></span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;risk_level&quot;</span><span class="op">:</span> <span class="st">&quot;medium&quot;</span></span>
+<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb28-34"><a href="#cb28-34" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-35"><a href="#cb28-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> compliant <span class="op">=</span> <span class="pp">aml::</span>check_compliance(user_data<span class="op">,</span> transaction_data)<span class="op">;</span></span>
+<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-37"><a href="#cb28-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Generate compliance report</span></span>
+<span id="cb28-38"><a href="#cb28-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> report <span class="op">=</span> <span class="pp">aml::</span>generate_compliance_report(<span class="st">&quot;user123&quot;</span>)<span class="op">;</span></span>
+<span id="cb28-39"><a href="#cb28-39" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Compliance report generated&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb28-40"><a href="#cb28-40" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;report_id&quot;</span><span class="op">:</span> report<span class="op">.</span>id<span class="op">,</span></span>
+<span id="cb28-41"><a href="#cb28-41" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;total_transactions&quot;</span><span class="op">:</span> report<span class="op">.</span>total_transactions<span class="op">,</span></span>
+<span id="cb28-42"><a href="#cb28-42" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;flagged_transactions&quot;</span><span class="op">:</span> report<span class="op">.</span>flagged_transactions</span>
+<span id="cb28-43"><a href="#cb28-43" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb28-44"><a href="#cb28-44" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="compliance-workflow">Compliance Workflow</h3>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> compliance_workflow_demo() <span class="op">{</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Complete compliance workflow</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> process_user_registration(user_data<span class="op">:</span> map<span class="op">&lt;</span>string<span class="op">,</span> any<span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 1: KYC verification</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> kyc_result <span class="op">=</span> <span class="pp">kyc::</span>verify_user(user_data)<span class="op">;</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> kyc_result<span class="op">.</span>status <span class="op">!=</span> <span class="st">&quot;verified&quot;</span> <span class="op">{</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>            <span class="pp">log::</span>error(<span class="st">&quot;KYC verification failed&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;user_id&quot;</span><span class="op">:</span> user_data<span class="op">.</span>user_id <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="cn">false</span><span class="op">;</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 2: Document verification</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> document_result <span class="op">=</span> <span class="pp">kyc::</span>verify_document(user_data<span class="op">.</span>documents)<span class="op">;</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">!</span>document_result<span class="op">.</span>verified <span class="op">{</span></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>            <span class="pp">log::</span>error(<span class="st">&quot;Document verification failed&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;user_id&quot;</span><span class="op">:</span> user_data<span class="op">.</span>user_id <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="cn">false</span><span class="op">;</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 3: Risk assessment</span></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> risk_assessment <span class="op">=</span> <span class="pp">aml::</span>calculate_risk_score(user_data)<span class="op">;</span></span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> risk_assessment <span class="op">&gt;</span> <span class="dv">0.8</span> <span class="op">{</span></span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>            <span class="pp">log::</span>warning(<span class="st">&quot;High-risk user detected&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;user_id&quot;</span><span class="op">:</span> user_data<span class="op">.</span>user_id <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Additional verification required</span></span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 4: Compliance check</span></span>
+<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> compliant <span class="op">=</span> <span class="pp">aml::</span>check_compliance(user_data<span class="op">,</span> <span class="op">{}</span>)<span class="op">;</span></span>
+<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> compliant <span class="op">{</span></span>
+<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a>            <span class="pp">log::</span>audit(<span class="st">&quot;User registration completed&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;user_id&quot;</span><span class="op">:</span> user_data<span class="op">.</span>user_id <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb29-34"><a href="#cb29-34" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb29-35"><a href="#cb29-35" aria-hidden="true" tabindex="-1"></a>            <span class="pp">log::</span>error(<span class="st">&quot;Compliance check failed&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;user_id&quot;</span><span class="op">:</span> user_data<span class="op">.</span>user_id <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb29-36"><a href="#cb29-36" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="cn">false</span><span class="op">;</span></span>
+<span id="cb29-37"><a href="#cb29-37" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb29-38"><a href="#cb29-38" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb29-39"><a href="#cb29-39" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-8">What You Learned</h3>
+<ul>
+<li>✅ KYC user verification</li>
+<li>✅ Document verification</li>
+<li>✅ Identity verification</li>
+<li>✅ AML risk assessment</li>
+<li>✅ Suspicious transaction flagging</li>
+<li>✅ Compliance reporting</li>
+<li>✅ Complete compliance workflow</li>
+</ul>
+<h3 id="exercises-8">Exercises</h3>
+<ol type="1">
+<li>Create a complete user onboarding system with KYC/AML</li>
+<li>Implement transaction monitoring for suspicious activity</li>
+<li>Build a compliance reporting dashboard</li>
+<li>Create a risk assessment system</li>
+</ol>
+<hr />
+<h2 id="-tutorial-10-error-handling">🚀 Tutorial 10: Error Handling</h2>
+<h3 id="understanding-error-handling">Understanding Error Handling</h3>
+<p>Error handling in <code>dist_agent_lang</code> uses try-catch blocks
+and Result types for robust error management.</p>
+<h3 id="try-catch-blocks">Try-Catch Blocks</h3>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> basic_error_handling() <span class="op">{</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">try</span> <span class="op">{</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Risky operation that might fail</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> result <span class="op">=</span> risky_operation()<span class="op">;</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Operation succeeded: &quot;</span> <span class="op">+</span> result)<span class="op">;</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> catch (error) <span class="op">{</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Handle the error</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>error(<span class="st">&quot;Operation failed&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;error&quot;</span><span class="op">:</span> error <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Operation failed: &quot;</span> <span class="op">+</span> error)<span class="op">;</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> finally <span class="op">{</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Always executed, for cleanup</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>        cleanup_resources()<span class="op">;</span></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="result-types">Result Types</h3>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> safe_division(numerator<span class="op">:</span> int<span class="op">,</span> denominator<span class="op">:</span> int) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>float<span class="op">,</span> string<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">try</span> <span class="op">{</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> denominator <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>            throw <span class="st">&quot;Division by zero&quot;</span><span class="op">;</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> result <span class="op">=</span> numerator <span class="op">/</span> denominator<span class="op">;</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(result)</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> catch (error) <span class="op">{</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>error(<span class="st">&quot;Division error&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;numerator&quot;</span><span class="op">:</span> numerator<span class="op">,</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;denominator&quot;</span><span class="op">:</span> denominator<span class="op">,</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;error&quot;</span><span class="op">:</span> error </span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(error)</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> use_result_types() <span class="op">{</span></span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result1 <span class="op">=</span> safe_division(<span class="dv">10</span><span class="op">,</span> <span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result2 <span class="op">=</span> safe_division(<span class="dv">10</span><span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> result1<span class="op">.</span>is_ok() <span class="op">{</span></span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Result 1: &quot;</span> <span class="op">+</span> result1<span class="op">.</span>unwrap())<span class="op">;</span></span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Error 1: &quot;</span> <span class="op">+</span> result1<span class="op">.</span>unwrap_err())<span class="op">;</span></span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> result2<span class="op">.</span>is_ok() <span class="op">{</span></span>
+<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Result 2: &quot;</span> <span class="op">+</span> result2<span class="op">.</span>unwrap())<span class="op">;</span></span>
+<span id="cb31-33"><a href="#cb31-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb31-34"><a href="#cb31-34" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Error 2: &quot;</span> <span class="op">+</span> result2<span class="op">.</span>unwrap_err())<span class="op">;</span></span>
+<span id="cb31-35"><a href="#cb31-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb31-36"><a href="#cb31-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="complex-error-handling">Complex Error Handling</h3>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>secure</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> process_user_data(user_id<span class="op">:</span> string<span class="op">,</span> data<span class="op">:</span> map<span class="op">&lt;</span>string<span class="op">,</span> any<span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">bool</span><span class="op">,</span> string<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> transaction_id <span class="op">=</span> generate_transaction_id()<span class="op">;</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">try</span> <span class="op">{</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Validate input</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> user_id <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>            throw <span class="st">&quot;User ID cannot be empty&quot;</span><span class="op">;</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">!</span>data<span class="op">.</span>contains(<span class="st">&quot;name&quot;</span>) <span class="op">{</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>            throw <span class="st">&quot;Name is required&quot;</span><span class="op">;</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check if user exists</span></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">!</span>users<span class="op">.</span>contains(user_id) <span class="op">{</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>            throw <span class="st">&quot;User not found&quot;</span><span class="op">;</span></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Process the data</span></span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> user <span class="op">=</span> users[user_id]<span class="op">;</span></span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>        user<span class="op">.</span>name <span class="op">=</span> data[<span class="st">&quot;name&quot;</span>]<span class="op">;</span></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>        user<span class="op">.</span>last_updated <span class="op">=</span> timestamp()<span class="op">;</span></span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a>        users[user_id] <span class="op">=</span> user<span class="op">;</span></span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Log success</span></span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>audit(<span class="st">&quot;user_updated&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;user_id&quot;</span><span class="op">:</span> user_id<span class="op">,</span> </span>
+<span id="cb32-30"><a href="#cb32-30" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;transaction_id&quot;</span><span class="op">:</span> transaction_id </span>
+<span id="cb32-31"><a href="#cb32-31" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb32-32"><a href="#cb32-32" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb32-33"><a href="#cb32-33" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(<span class="cn">true</span>)</span>
+<span id="cb32-34"><a href="#cb32-34" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb32-35"><a href="#cb32-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> catch (error) <span class="op">{</span></span>
+<span id="cb32-36"><a href="#cb32-36" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Log error</span></span>
+<span id="cb32-37"><a href="#cb32-37" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>error(<span class="st">&quot;User update failed&quot;</span><span class="op">,</span> <span class="op">{</span> </span>
+<span id="cb32-38"><a href="#cb32-38" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;user_id&quot;</span><span class="op">:</span> user_id<span class="op">,</span></span>
+<span id="cb32-39"><a href="#cb32-39" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;transaction_id&quot;</span><span class="op">:</span> transaction_id<span class="op">,</span></span>
+<span id="cb32-40"><a href="#cb32-40" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;error&quot;</span><span class="op">:</span> error </span>
+<span id="cb32-41"><a href="#cb32-41" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb32-42"><a href="#cb32-42" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb32-43"><a href="#cb32-43" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Rollback transaction if needed</span></span>
+<span id="cb32-44"><a href="#cb32-44" aria-hidden="true" tabindex="-1"></a>        rollback_transaction(transaction_id)<span class="op">;</span></span>
+<span id="cb32-45"><a href="#cb32-45" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb32-46"><a href="#cb32-46" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(error)</span>
+<span id="cb32-47"><a href="#cb32-47" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb32-48"><a href="#cb32-48" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> finally <span class="op">{</span></span>
+<span id="cb32-49"><a href="#cb32-49" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Cleanup</span></span>
+<span id="cb32-50"><a href="#cb32-50" aria-hidden="true" tabindex="-1"></a>        cleanup_transaction_resources(transaction_id)<span class="op">;</span></span>
+<span id="cb32-51"><a href="#cb32-51" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb32-52"><a href="#cb32-52" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-9">What You Learned</h3>
+<ul>
+<li>✅ Try-catch-finally blocks</li>
+<li>✅ Result types (Ok/Err)</li>
+<li>✅ Error logging and reporting</li>
+<li>✅ Transaction rollback</li>
+<li>✅ Resource cleanup</li>
+<li>✅ Complex error handling patterns</li>
+</ul>
+<h3 id="exercises-9">Exercises</h3>
+<ol type="1">
+<li>Create a file processing function with error handling</li>
+<li>Implement a database operation with rollback</li>
+<li>Build a batch data validation system</li>
+<li>Create a comprehensive error handling framework</li>
+</ol>
+<hr />
+<h2 id="-tutorial-11-performance-optimization">🚀 Tutorial 11:
+Performance Optimization</h2>
+<h3 id="understanding-performance-optimization">Understanding
+Performance Optimization</h3>
+<p>Performance optimization involves improving execution speed, memory
+usage, and resource efficiency.</p>
+<h3 id="benchmarking-your-code">Benchmarking Your Code</h3>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> benchmark_demo() <span class="op">{</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Benchmark lexer performance</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    benchmark <span class="st">&quot;lexer_performance&quot;</span> <span class="op">{</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> source_code <span class="op">=</span> <span class="st">&quot;let x = 42; let y = 10; let z = x + y;&quot;</span><span class="op">;</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> tokens <span class="op">=</span> <span class="pp">lexer::</span>tokenize(source_code)<span class="op">;</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Performance measurement happens automatically</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Benchmark parser performance</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    benchmark <span class="st">&quot;parser_performance&quot;</span> <span class="op">{</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> tokens <span class="op">=</span> <span class="pp">lexer::</span>tokenize(source_code)<span class="op">;</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> ast <span class="op">=</span> <span class="pp">parser::</span>parse(tokens)<span class="op">;</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Performance measurement happens automatically</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Benchmark runtime performance</span></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>    benchmark <span class="st">&quot;runtime_performance&quot;</span> <span class="op">{</span></span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> ast <span class="op">=</span> <span class="pp">parser::</span>parse(tokens)<span class="op">;</span></span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> result <span class="op">=</span> <span class="pp">runtime::</span>execute(ast)<span class="op">;</span></span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Performance measurement happens automatically</span></span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="memory-management">Memory Management</h3>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> memory_optimization_demo() <span class="op">{</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use object pooling for frequently created objects</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> string_pool <span class="op">=</span> memory_manager<span class="op">.</span><span class="pp">create_object_pool::</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span>(<span class="st">&quot;strings&quot;</span><span class="op">,</span> <span class="dv">100</span>)<span class="op">;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">1000</span> <span class="op">{</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> pooled_string <span class="op">=</span> string_pool<span class="op">.</span>acquire()<span class="op">;</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>pooled_string<span class="op">.</span>value_mut() <span class="op">=</span> <span class="st">&quot;String &quot;</span> <span class="op">+</span> i<span class="op">;</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use the string</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>        process_string(pooled_string<span class="op">.</span>value())<span class="op">;</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// String is automatically returned to pool when dropped</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get memory statistics</span></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> memory_stats <span class="op">=</span> memory_manager<span class="op">.</span>get_stats()<span class="op">;</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log::</span>info(<span class="st">&quot;Memory usage&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;total_allocated&quot;</span><span class="op">:</span> memory_stats<span class="op">.</span>total_allocated<span class="op">,</span></span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;current_usage&quot;</span><span class="op">:</span> memory_stats<span class="op">.</span>current_usage<span class="op">,</span></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;peak_usage&quot;</span><span class="op">:</span> memory_stats<span class="op">.</span>peak_usage</span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-10">What You Learned</h3>
+<ul>
+<li>✅ Benchmarking code performance</li>
+<li>✅ Memory management with object pooling</li>
+<li>✅ Performance monitoring</li>
+<li>✅ Optimization techniques</li>
+</ul>
+<h3 id="exercises-10">Exercises</h3>
+<ol type="1">
+<li>Optimize a data processing pipeline</li>
+<li>Implement memory-efficient caching</li>
+<li>Build a high-performance web service</li>
+<li>Create performance monitoring tools</li>
+</ol>
+<hr />
+<h2 id="-tutorial-12-testing-and-debugging">🚀 Tutorial 12: Testing and
+Debugging</h2>
+<h3 id="understanding-testing">Understanding Testing</h3>
+<p>Testing ensures your code works correctly and helps catch bugs
+early.</p>
+<h3 id="unit-testing">Unit Testing</h3>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>test <span class="st">&quot;basic_arithmetic&quot;</span> <span class="op">{</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> add(<span class="dv">5</span><span class="op">,</span> <span class="dv">3</span>)<span class="op">;</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    assert_eq(result<span class="op">,</span> <span class="dv">8</span>)<span class="op">;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result2 <span class="op">=</span> multiply(<span class="dv">4</span><span class="op">,</span> <span class="dv">6</span>)<span class="op">;</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    assert_eq(result2<span class="op">,</span> <span class="dv">24</span>)<span class="op">;</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>test <span class="st">&quot;user_creation&quot;</span> <span class="op">{</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> user <span class="op">=</span> create_user(<span class="st">&quot;test_user&quot;</span><span class="op">,</span> <span class="st">&quot;Test User&quot;</span><span class="op">,</span> <span class="st">&quot;test@example.com&quot;</span>)<span class="op">;</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    assert_eq(user<span class="op">.</span>id<span class="op">,</span> <span class="st">&quot;test_user&quot;</span>)<span class="op">;</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    assert_eq(user<span class="op">.</span>name<span class="op">,</span> <span class="st">&quot;Test User&quot;</span>)<span class="op">;</span></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>    assert_eq(user<span class="op">.</span>status<span class="op">,</span> <span class="st">&quot;active&quot;</span>)<span class="op">;</span></span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="integration-testing">Integration Testing</h3>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>test_suite <span class="st">&quot;user_management_integration&quot;</span> <span class="op">{</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    test <span class="st">&quot;complete_user_lifecycle&quot;</span> <span class="op">{</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create user</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> user <span class="op">=</span> create_user(<span class="st">&quot;alice&quot;</span><span class="op">,</span> <span class="st">&quot;Alice Johnson&quot;</span><span class="op">,</span> <span class="st">&quot;alice@example.com&quot;</span>)<span class="op">;</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>        assert_eq(user<span class="op">.</span>status<span class="op">,</span> <span class="st">&quot;active&quot;</span>)<span class="op">;</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Login user</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> session <span class="op">=</span> login_user(<span class="st">&quot;alice&quot;</span><span class="op">,</span> <span class="st">&quot;password123&quot;</span>)<span class="op">;</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>        assert_eq(session<span class="op">.</span>user_id<span class="op">,</span> <span class="st">&quot;alice&quot;</span>)<span class="op">;</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>        assert_gt(session<span class="op">.</span>expires_at<span class="op">,</span> timestamp())<span class="op">;</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Update user</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> updated <span class="op">=</span> update_user(<span class="st">&quot;alice&quot;</span><span class="op">,</span> <span class="op">{</span> <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Alice Smith&quot;</span> <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>        assert_eq(updated<span class="op">.</span>name<span class="op">,</span> <span class="st">&quot;Alice Smith&quot;</span>)<span class="op">;</span></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Logout user</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> logout_success <span class="op">=</span> logout_user(session<span class="op">.</span>id)<span class="op">;</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a>        assert_eq(logout_success<span class="op">,</span> <span class="cn">true</span>)<span class="op">;</span></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="what-you-learned-11">What You Learned</h3>
+<ul>
+<li>✅ Unit testing with assertions</li>
+<li>✅ Integration testing</li>
+<li>✅ Test suites and organization</li>
+<li>✅ Debugging techniques</li>
+</ul>
+<h3 id="exercises-11">Exercises</h3>
+<ol type="1">
+<li>Create comprehensive tests for a user management system</li>
+<li>Implement mocking for blockchain operations</li>
+<li>Build a debugging framework for your application</li>
+<li>Create automated testing workflows</li>
+</ol>
+<hr />
+<h2 id="-next-steps">🎯 Next Steps</h2>
+<p>Congratulations! You've completed the comprehensive tutorial series
+for <code>dist_agent_lang</code>. Here's what you can do next:</p>
+<h3 id="practice-projects">Practice Projects</h3>
+<ol type="1">
+<li><strong>Build a DeFi Protocol</strong>: Create a decentralized
+finance application</li>
+<li><strong>Create a Trading Bot</strong>: Implement an AI-powered
+trading system</li>
+<li><strong>Develop a Social Platform</strong>: Build a decentralized
+social network</li>
+<li><strong>Design a Supply Chain System</strong>: Create a
+blockchain-based supply chain</li>
+</ol>
+<h3 id="advanced-topics">Advanced Topics</h3>
+<ol type="1">
+<li><strong>Smart Contract Integration</strong>: Deep dive into
+blockchain operations</li>
+<li><strong>AI/ML Integration</strong>: Explore advanced AI service
+usage</li>
+<li><strong>Scalability</strong>: Learn about horizontal scaling with
+agents</li>
+<li><strong>Security</strong>: Master advanced security patterns</li>
+</ol>
+<h3 id="community">Community</h3>
+<ol type="1">
+<li><strong>Join the Community</strong>: Connect with other
+developers</li>
+<li><strong>Contribute</strong>: Help improve the language and
+documentation</li>
+<li><strong>Share Projects</strong>: Showcase your applications</li>
+<li><strong>Get Support</strong>: Ask questions and get help</li>
+</ol>
+<h3 id="resources">Resources</h3>
+<ul>
+<li><a href="../Documentation.html">Language Reference</a></li>
+<li><a href="../docs/api.html">API Documentation</a></li>
+<li><a href="../examples/">Examples</a></li>
+<li><a href="../docs/best-practices.html">Best Practices</a></li>
+</ul>
+<p>Happy coding with <code>dist_agent_lang</code>! 🚀</p>
+</body>
+</html>

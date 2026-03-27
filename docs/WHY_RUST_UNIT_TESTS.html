@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>WHY_RUST_UNIT_TESTS</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="why-rust-unit-tests-are-critical-for-testing-examples">Why Rust
+Unit Tests Are Critical for Testing Examples</h1>
+<h2 id="the-problem">The Problem</h2>
+<p>When you have example files that demonstrate language features, you
+need a way to ensure they:</p>
+<ol type="1">
+<li><strong>Still compile</strong> when the language changes</li>
+<li><strong>Don't break</strong> when refactoring the compiler</li>
+<li><strong>Stay up-to-date</strong> with the current syntax</li>
+<li><strong>Work correctly</strong> (or at least parse correctly)</li>
+</ol>
+<h2 id="the-solution-rust-unit-tests">The Solution: Rust Unit Tests</h2>
+<h3 id="why-rust-unit-tests">Why Rust Unit Tests?</h3>
+<ol type="1">
+<li><strong>Automated</strong>: Run with <code>cargo test</code> - no
+manual work</li>
+<li><strong>Fast</strong>: Run in seconds, not minutes</li>
+<li><strong>Reliable</strong>: Same results every time</li>
+<li><strong>CI/CD Ready</strong>: Easy to integrate into GitHub Actions,
+GitLab CI, etc.</li>
+<li><strong>Early Detection</strong>: Catch breaking changes
+immediately</li>
+<li><strong>Documentation</strong>: Tests serve as documentation of what
+works</li>
+</ol>
+<h3 id="what-we-built">What We Built</h3>
+<p>Created <code>tests/example_tests.rs</code> with:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_hello_world_demo_parses() <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> path <span class="op">=</span> <span class="dt">Path</span><span class="pp">::</span>new(<span class="st">&quot;examples/hello_world_demo.dal&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> path<span class="op">.</span>exists() <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        test_example_parses(path)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_all_examples_parse() <span class="op">{</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Tests ALL examples at once</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Fails if any example has syntax errors</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="how-it-works">How It Works</h3>
+<ol type="1">
+<li><strong>Parse Tests</strong>: Use <code>parse_source()</code> to
+verify examples compile</li>
+<li><strong>Execution Tests</strong>: Use <code>execute_source()</code>
+for simple examples</li>
+<li><strong>Smart Skipping</strong>: Automatically skips examples
+requiring external deps</li>
+<li><strong>Comprehensive</strong>: Tests all examples, not just one at
+a time</li>
+</ol>
+<h2 id="real-results">Real Results</h2>
+<p>When we ran the tests, they immediately caught issues:</p>
+<pre><code>❌ Failed to parse 37 example(s):
+  - &quot;examples/hello_world_demo.dal&quot;: Unexpected character &#39;|&#39; at line 488
+  - &quot;examples/cross_chain_patterns.dal&quot;: Syntax Error at line 1
+  - ...</code></pre>
+<p><strong>This is exactly what we want!</strong> The tests are:</p>
+<ul>
+<li>✅ Working correctly</li>
+<li>✅ Catching real problems</li>
+<li>✅ Providing actionable feedback</li>
+</ul>
+<h2 id="comparison-rust-tests-vs-other-approaches">Comparison: Rust
+Tests vs. Other Approaches</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Approach</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Rust Unit Tests</strong> ✅</td>
+<td>Automated, fast, CI-ready, reliable</td>
+<td>Requires Rust knowledge</td>
+</tr>
+<tr class="even">
+<td>Manual Testing</td>
+<td>Simple, no code needed</td>
+<td>Time-consuming, error-prone, not automated</td>
+</tr>
+<tr class="odd">
+<td>Shell Scripts</td>
+<td>Can automate</td>
+<td>Platform-specific, harder to maintain</td>
+</tr>
+<tr class="even">
+<td>DAL Test Framework</td>
+<td>Tests in DAL itself</td>
+<td>Requires building entire framework first</td>
+</tr>
+</tbody>
+</table>
+<h2 id="integration-with-development-workflow">Integration with
+Development Workflow</h2>
+<h3 id="for-developers">For Developers</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before committing, run:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test example_tests</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># If tests pass, examples are valid</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># If tests fail, fix the examples before committing</span></span></code></pre></div>
+<h3 id="for-cicd">For CI/CD</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .github/workflows/test.yml</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Test Examples</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">run</span><span class="kw">:</span><span class="at"> cargo test example_tests</span></span></code></pre></div>
+<h3 id="for-contributors">For Contributors</h3>
+<p>When adding a new example:</p>
+<ol type="1">
+<li>Add it to <code>examples/</code></li>
+<li>Add a test in <code>tests/example_tests.rs</code></li>
+<li>Run <code>cargo test</code> to verify it works</li>
+</ol>
+<h2 id="what-gets-tested">What Gets Tested</h2>
+<h3 id="-currently-tested">✅ Currently Tested</h3>
+<ul>
+<li><strong>Parse Tests</strong>: All examples must parse
+successfully</li>
+<li><strong>Execution Tests</strong>: Simple examples (without external
+deps) must execute</li>
+<li><strong>Comprehensive Test</strong>: One test checks all examples at
+once</li>
+</ul>
+<h3 id="-you-can-contribute">🔄 You can contribute:</h3>
+<ul>
+<li><strong>Type Checking</strong>: Verify types are correct (when type
+system is complete)</li>
+<li><strong>Semantic Analysis</strong>: Check that references are
+valid</li>
+<li><strong>Output Validation</strong>: Compare execution output to
+expected results</li>
+<li><strong>Performance Tests</strong>: Ensure examples run in
+reasonable time</li>
+</ul>
+<h2 id="example-test-structure">Example Test Structure</h2>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Individual test for each example</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_my_example_parses() <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> path <span class="op">=</span> <span class="dt">Path</span><span class="pp">::</span>new(<span class="st">&quot;examples/my_example.dal&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> path<span class="op">.</span>exists() <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        test_example_parses(path)<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Comprehensive test for all examples</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_all_examples_parse() <span class="op">{</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> example_files <span class="op">=</span> get_example_files()<span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... test all files</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Execution test (skips if requires external deps)</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_simple_examples_execute() <span class="op">{</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... test execution for simple examples</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="benefits-over-manual-testing">Benefits Over Manual Testing</h2>
+<h3 id="before-manual">Before (Manual)</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Developer has to remember to test</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run examples/hello_world_demo.dal</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run examples/smart_contract.dal</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ... 30 more files</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Easy to miss one</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># No record of what was tested</span></span></code></pre></div>
+<h3 id="after-automated">After (Automated)</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One command tests everything</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test example_tests</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ All examples tested</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Results recorded</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Fails if anything breaks</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Runs in CI automatically</span></span></code></pre></div>
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>Rust unit tests are the right approach</strong> because
+they:</p>
+<ol type="1">
+<li>✅ Catch problems automatically</li>
+<li>✅ Integrate with development workflow</li>
+<li>✅ Provide fast feedback</li>
+<li>✅ Work in CI/CD pipelines</li>
+<li>✅ Are maintainable and reliable</li>
+</ol>
+<p>The tests we created (<code>tests/example_tests.rs</code>) are
+already working and catching real issues in the examples. This is
+exactly what we need to ensure examples stay valid as the language
+evolves.</p>
+<h2 id="next-steps">Next Steps</h2>
+<ol type="1">
+<li>✅ <strong>Tests Created</strong>:
+<code>tests/example_tests.rs</code> is ready</li>
+<li><strong>Fix Examples</strong>: Update examples that fail to
+parse</li>
+<li><strong>Add More Tests</strong>: Add execution tests as features are
+implemented</li>
+<li><strong>CI Integration</strong>: Add to GitHub Actions/GitLab
+CI</li>
+<li><strong>Documentation</strong>: Keep tests updated as examples are
+added</li>
+</ol>
+</body>
+</html>

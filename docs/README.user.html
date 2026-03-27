@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README.user</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1
+id="distributed-agent-language-integrated-development-environment">Distributed
+Agent Language Integrated Development Environment</h1>
+<p><strong>Unified language for Web, Blockchain &amp; AI</strong></p>
+<p>DAL IDE is the browser-based control station for the Distributed
+Agent Language (DAL). You use it to open projects, edit files, run
+scripts, and work with the DAL runtime.</p>
+<h2 id="running-it-locally">Running it locally</h2>
+<p>You need two things: the <strong>backend</strong> (the
+<code>dal</code> program that serves your project) and the
+<strong>IDE</strong> (this web app). Both run on your machine. The only
+traffic that may leave your computer is <strong>LLM API calls</strong>
+when you use AI features in DAL code.</p>
+<h3 id="1-one-time-setup-only-if-you-have-the-full-project">1. One-time
+setup (only if you have the full project)</h3>
+<p><strong>If you cloned or downloaded the full project</strong> (the
+folder that has <code>install.sh</code>, <code>dist_agent_lang/</code>,
+and <code>dal-ide/</code>), run from that folder:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./install.sh</span></span></code></pre></div>
+<p>That installs Rust/Node if needed, builds the <code>dal</code>
+backend, and puts it on your PATH. If your terminal can’t find
+<code>dal</code> later, use the full path: <code>~/.local/bin/dal</code>
+or <code>/usr/local/bin/dal</code>.</p>
+<p><strong>If you didn’t clone the repo</strong> — for example you have
+<code>dal</code> from <code>cargo install</code> or a release binary —
+you don’t need <code>install.sh</code>. Just use
+<code>dal ide serve</code> (see below).</p>
+<h3 id="2-start-the-backend">2. Start the backend</h3>
+<p>In a terminal, go to the folder you want to work in (your project
+directory), then run:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ide serve <span class="at">-w</span> . <span class="at">-p</span> 3847</span></code></pre></div>
+<p>The <strong><code>-w .</code></strong> means “use the <strong>current
+directory</strong> as the workspace.”</p>
+<p><strong>Run the backend with a Python venv:</strong> If you want the
+backend (and any Python the backend uses, e.g. for FFI or agent tools)
+to use a specific virtual environment, activate the venv in the same
+terminal before starting the backend:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /path/to/your/project</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> .venv/bin/activate   <span class="co"># or: .venv\Scripts\activate on Windows</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> ide serve <span class="at">-w</span> . <span class="at">-p</span> 3847</span></code></pre></div>
+<p>The backend process inherits your shell’s environment, so
+<code>VIRTUAL_ENV</code> and <code>PATH</code> point at the venv’s
+Python. To use a venv that is <strong>not</strong> in the current
+directory, activate it first (e.g.
+<code>source /path/to/other/.venv/bin/activate</code>), then run
+<code>dal ide serve</code>. The <strong>current directory</strong> is
+whatever folder your terminal is in when you run the command — for
+example your home directory (<code>~</code>) if you just opened a
+terminal, or a project folder if you ran <code>cd my-project</code>
+first. Names like <strong>my-project</strong> are just example folder
+names (your own project); there is no special “DAL project” folder
+unless you create one. So: <code>cd my-project</code> then
+<code>dal ide serve -w .</code> uses <code>my-project</code> as the
+workspace; or use an absolute path, e.g.
+<code>-w /Users/you/my-project</code>.</p>
+<p>Leave the command running. The backend will serve that folder on port
+<strong>3847</strong>.</p>
+<h3 id="3-open-the-ide">3. Open the IDE</h3>
+<ul>
+<li>If you’re developing: run <code>npm run dev</code> in the
+<code>dal-ide</code> folder, then open
+<strong>http://localhost:5173</strong> in your browser.</li>
+<li>If you’re using a pre-built copy (e.g. from a download or AWS): open
+the URL you were given for the IDE.</li>
+</ul>
+<p>In the IDE, click <strong>Open Folder</strong> and enter the same
+path you used with <code>-w</code> (e.g. <code>.</code> for the current
+directory). Then open a file, choose a run config from the
+<strong>Run</strong> dropdown, and click <strong>Run</strong>.</p>
+<h2 id="stopping-the-servers">Stopping the servers</h2>
+<ul>
+<li><strong>Backend</strong> (<code>dal ide serve</code>): In the
+terminal where it’s running, press <strong>Ctrl+C</strong>.</li>
+<li><strong>Frontend</strong> (<code>npm run dev</code>): Same — in the
+terminal where the dev server is running, press
+<strong>Ctrl+C</strong>.</li>
+<li><strong>A script you started from the IDE</strong> (e.g. you clicked
+Run): Use the <strong>Stop</strong> button in the IDE’s command bar next
+to Run; it’s enabled while a run is in progress. That stops the script,
+not the backend.</li>
+</ul>
+<p><strong>If a server is running in the background</strong> (you closed
+the terminal or it’s detached), kill it by port. On macOS/Linux:</p>
+<ul>
+<li>Backend (port 3847): <code>lsof -ti :3847 | xargs kill</code></li>
+<li>Frontend (port 5173): <code>lsof -ti :5173 | xargs kill</code></li>
+</ul>
+<p>Or find the process: <code>lsof -i :3847</code> (or
+<code>:5173</code>), note the PID, then <code>kill &lt;PID&gt;</code>.
+On Windows you can use Task Manager or <code>netstat -ano</code> to find
+the PID, then <code>taskkill /PID &lt;pid&gt; /F</code>.</p>
+<h2 id="install-as-an-app">Install as an app</h2>
+<p>You can install the IDE as a Progressive Web App from your browser
+(“Install” in Chrome/Edge or “Add to Home Screen” on mobile) for a
+standalone window. To wire into the command bar (Run/Chat/Agent), see <a
+href="README.wiring.html">Wiring into the command bar</a>.</p>
+<h2 id="if-something-doesnt-work">If something doesn’t work</h2>
+<ul>
+<li><strong>“dal: command not found”</strong> — Run
+<code>./install.sh</code> from the project root, or use the full path:
+<code>~/.local/bin/dal ide serve -w . -p 3847</code>. Make sure
+<code>~/.local/bin</code> is in your PATH (install.sh usually adds it to
+your shell config).</li>
+<li><strong>“Run failed” or 404 in the IDE</strong> — Ensure the backend
+is running (<code>dal ide serve -w . -p 3847</code>) and the IDE is
+pointing at it (default is http://localhost:3847). If you built the IDE
+yourself and use a different port, set <code>VITE_IDE_BACKEND_URL</code>
+when building.<br />
+<strong>If POST /api/lsp/document_symbols returns 404:</strong> the
+running <code>dal</code> binary is from an <strong>older build</strong>
+that doesn’t include that route. <strong>Fix:</strong> run the backend
+from a fresh build so you don’t rely on whatever <code>dal</code> is on
+your PATH:
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From repo root: build then run this binary (not the global dal)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span> <span class="at">--manifest-path</span> dist_agent_lang/Cargo.toml</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./dist_agent_lang/target/release/dal</span> ide serve <span class="at">-w</span> . <span class="at">-p</span> 3847</span></code></pre></div>
+Or run <code>./install.sh</code> to rebuild and reinstall
+<code>dal</code> to your PATH, then start the backend again.<br />
+<strong>What breaks when document_symbols 404s:</strong> Go to
+definition (F12) and the document outline stay empty for DAL files; the
+app does not crash.</li>
+<li><strong>Theme errors (e.g. “Unable to load … package.nls.json” or
+“dark_modern.json”)</strong> — The Vite config serves the theme-defaults
+extension resources. If you still see 404s, clear the Vite cache and
+restart: <code>rm -rf node_modules/.vite</code> then
+<code>npm run dev</code>.</li>
+</ul>
+<hr />
+<p>DAL IDE — part of the Distributed Agent Language toolchain.</p>
+</body>
+</html>

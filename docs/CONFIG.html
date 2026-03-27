@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CONFIG</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="configuration-and-environment-variables">Configuration and
+environment variables</h1>
+<p><strong>Purpose:</strong> Single index of commonly used environment
+variables. For agent behavior and trust in depth, see <a
+href="guides/AGENT_SETUP_AND_USAGE.html">guides/AGENT_SETUP_AND_USAGE.md</a>.
+For IDE backend guardrails when hosted, see
+<code>dal-ide/README.md</code> (agent guardrails section).</p>
+<table>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Variable(s)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Process logging (Rust <code>tracing</code>)</strong></td>
+<td><code>RUST_LOG</code>, <code>DAL_LOG_FORMAT</code>,
+<code>DAL_METRICS</code></td>
+<td><code>RUST_LOG</code> — standard filter (e.g. <code>info</code>,
+<code>dal_http=debug</code>). <code>DAL_LOG_FORMAT=json</code> — JSON
+lines to stderr. <code>DAL_METRICS=1</code> — expose
+<code>GET /metrics</code> (Prometheus text counters) on HTTP servers
+that ship observability (<code>dal web</code>,
+<code>dal ide serve</code>, <code>dal agent serve</code>,
+<code>dal-registry</code>, <code>start_http_server</code>).</td>
+</tr>
+<tr class="even">
+<td><strong>LLM / AI</strong></td>
+<td><code>OPENAI_API_KEY</code>, <code>ANTHROPIC_API_KEY</code>,
+<code>DAL_AI_PROVIDER</code>, <code>DAL_AI_ENDPOINT</code>,
+<code>DAL_AI_MODEL</code>, <code>DAL_AI_TEMPERATURE</code>, …</td>
+<td>Provider-specific; see <a
+href="guides/AI_FEATURES_GUIDE.html">guides/AI_FEATURES_GUIDE.md</a>, <a
+href="CUSTOM_AI_PROVIDERS.html">CUSTOM_AI_PROVIDERS.md</a>.</td>
+</tr>
+<tr class="odd">
+<td><strong>Agent serve / IDE agent loop</strong></td>
+<td><code>DAL_AGENT_*</code> (e.g.
+<code>DAL_AGENT_MAX_TOOL_STEPS</code>,
+<code>DAL_AGENT_SHELL_TRUST</code>, <code>DAL_AGENT_CONTEXT_PATH</code>,
+<code>DAL_AGENT_GUARDS_STRICT_MODE</code>, runtime persistence)</td>
+<td><a
+href="guides/AGENT_SETUP_AND_USAGE.html">AGENT_SETUP_AND_USAGE.md</a>.</td>
+</tr>
+<tr class="even">
+<td><strong>Hosted IDE agent safety</strong></td>
+<td><code>DAL_AGENT_MAX_TOOL_STEPS</code>,
+<code>DAL_AGENT_MAX_WALL_CLOCK_MS</code>,
+<code>DAL_AGENT_MAX_TOTAL_TOKENS</code>,
+<code>DAL_AGENT_MAX_COST_MICROUSD</code>,
+<code>DAL_AGENT_GUARDS_STRICT_MODE</code>, …</td>
+<td>Listed in <a href="PRODUCTION_ROADMAP.html">PRODUCTION_ROADMAP.md</a>
+and <code>dal-ide/README.md</code>.</td>
+</tr>
+<tr class="odd">
+<td><strong>HTTP server auth</strong></td>
+<td><code>JWT_SECRET</code></td>
+<td>Required when JWT auth is used; enforced in
+<code>http_server_security</code>. See <a
+href="../SECURITY.html">SECURITY.md</a>.</td>
+</tr>
+<tr class="even">
+<td><strong>Trust-split / compile</strong></td>
+<td><code>DAL_COMPILE_TRUST_MODE</code>, chain RPC / strict policy
+vars</td>
+<td>See <a
+href="development/implementation/TRUST_SPLIT_EVM_HARDENING_REFACTOR_PLAN.html">TRUST_SPLIT_EVM_HARDENING_REFACTOR_PLAN.md</a>,
+<a
+href="SMART_CONTRACTS_WITH_DAL_REVIEW.html">SMART_CONTRACTS_WITH_DAL_REVIEW.md</a>.</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

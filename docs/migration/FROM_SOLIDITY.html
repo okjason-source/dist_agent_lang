@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FROM_SOLIDITY</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="-migration-guide-solidity--dist_agent_lang-v102">🔄 Migration
+Guide: Solidity → dist_agent_lang (v1.0.2)</h1>
+<blockquote>
+<p><strong>📢 Beta Release v1.0.2:</strong> Actively developed with
+consistent updates. Test migrated contracts thoroughly. <strong>Beta
+testing contributions appreciated!</strong> 🙏</p>
+</blockquote>
+<p>Complete guide to migrating your Solidity contracts to
+<strong>dist_agent_lang</strong>.</p>
+<hr />
+<h2 id="-table-of-contents">📋 Table of Contents</h2>
+<ol type="1">
+<li><a href="#why-migrate">Why Migrate?</a></li>
+<li><a href="#key-differences">Key Differences</a></li>
+<li><a href="#syntax-comparison">Syntax Comparison</a></li>
+<li><a href="#step-by-step-migration">Step-by-Step Migration</a></li>
+<li><a href="#common-patterns">Common Patterns</a></li>
+<li><a href="#tools--automation">Tools &amp; Automation</a></li>
+</ol>
+<hr />
+<h2 id="-why-migrate">🎯 Why Migrate?</h2>
+<h3 id="advantages-of-dist_agent_lang">Advantages of
+dist_agent_lang</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Solidity</th>
+<th>DAL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Multi-Chain</strong></td>
+<td>EVM only</td>
+<td>Ethereum, Polygon, Solana, Arbitrum, + more</td>
+</tr>
+<tr class="even">
+<td><strong>Security</strong></td>
+<td>Manual (OpenZeppelin)</td>
+<td>Built-in (@reentrancy_guard, @safe_math)</td>
+</tr>
+<tr class="odd">
+<td><strong>Oracle Access</strong></td>
+<td>External contracts</td>
+<td>Native (oracle::)</td>
+</tr>
+<tr class="even">
+<td><strong>Async/Await</strong></td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr class="odd">
+<td><strong>Type Safety</strong></td>
+<td>Medium</td>
+<td>Strong</td>
+</tr>
+<tr class="even">
+<td><strong>Testing</strong></td>
+<td>Requires Hardhat/Truffle</td>
+<td>Built-in testing framework</td>
+</tr>
+<tr class="odd">
+<td><strong>Deployment</strong></td>
+<td>Complex</td>
+<td>Single command multi-chain</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="-key-differences">🔑 Key Differences</h2>
+<h3 id="1-attributes-vs-pragmas">1. Attributes vs Pragmas</h3>
+<p><strong>Solidity:</strong></p>
+<pre class="solidity"><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;</code></pre>
+<p><strong>DAL:</strong></p>
+<pre class="dal"><code>@contract
+@version(&quot;1.0.0&quot;)
+@blockchain(&quot;ethereum&quot;)</code></pre>
+<h3 id="2-built-in-security">2. Built-in Security</h3>
+<p><strong>Solidity:</strong></p>
+<pre class="solidity"><code>// Must use external libraries
+import &quot;@openzeppelin/contracts/security/ReentrancyGuard.sol&quot;;
+
+contract MyContract is ReentrancyGuard {
+    function withdraw() external nonReentrant {
+        // ...
+    }
+}</code></pre>
+<p><strong>DAL:</strong></p>
+<pre class="dal"><code>@contract
+@reentrancy_guard        // Automatic!
+@safe_math               // Automatic overflow protection!
+contract MyContract {
+    @public
+    function withdraw() {
+        // Automatically protected
+    }
+}</code></pre>
+<h3 id="3-function-visibility">3. Function Visibility</h3>
+<p><strong>Solidity:</strong></p>
+<pre class="solidity"><code>function myPublic() public { }
+function myExternal() external { }
+function myInternal() internal { }
+function myPrivate() private { }</code></pre>
+<p><strong>DAL:</strong></p>
+<pre class="dal"><code>@public
+function myPublic() { }
+
+@public      // external = public in DAL
+function myExternal() { }
+
+@private
+function myPrivate() { }</code></pre>
+<h3 id="4-viewpure-functions">4. View/Pure Functions</h3>
+<p><strong>Solidity:</strong></p>
+<pre class="solidity"><code>function getValue() public view returns (uint256) {
+    return value;
+}
+
+function calculate(uint256 x) public pure returns (uint256) {
+    return x * 2;
+}</code></pre>
+<p><strong>DAL:</strong></p>
+<pre class="dal"><code>@public
+@view
+function getValue() -&gt; uint256 {
+    return value;
+}
+
+@public
+@view
+function calculate(uint256 x) -&gt; uint256 {
+    return x * 2;
+}</code></pre>
+<h3 id="5-events">5. Events</h3>
+<p><strong>Solidity:</strong></p>
+<pre class="solidity"><code>event Transfer(address indexed from, address indexed to, uint256 value);
+
+emit Transfer(msg.sender, recipient, amount);</code></pre>
+<p><strong>DAL:</strong></p>
+<pre class="dal"><code>event Transfer(address indexed from, address indexed to, uint256 value);
+
+emit Transfer(msg.sender, recipient, amount);  // Same syntax!</code></pre>
+<hr />
+<h2 id="-syntax-comparison">📊 Syntax Comparison</h2>
+<h3 id="variable-declarations">Variable Declarations</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Solidity</th>
+<th>DAL</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>uint256 public value;</code></td>
+<td><code>uint256 public value;</code></td>
+<td>Identical</td>
+</tr>
+<tr class="even">
+<td><code>address public owner;</code></td>
+<td><code>address public owner;</code></td>
+<td>Identical</td>
+</tr>
+<tr class="odd">
+<td><code>mapping(address =&gt; uint256) balances;</code></td>
+<td><code>mapping(address =&gt; uint256) balances;</code></td>
+<td>Identical</td>
+</tr>
+<tr class="even">
+<td><code>string memory text;</code></td>
+<td><code>string memory text;</code></td>
+<td>Identical</td>
+</tr>
+</tbody>
+</table>
+<h3 id="control-flow">Control Flow</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Solidity</th>
+<th>DAL</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>if (condition) { }</code></td>
+<td><code>if (condition) { }</code></td>
+<td>Identical</td>
+</tr>
+<tr class="even">
+<td><code>for (uint i = 0; i &lt; length; i++) { }</code></td>
+<td><code>for (uint i = 0; i &lt; length; i++) { }</code></td>
+<td>Identical</td>
+</tr>
+<tr class="odd">
+<td><code>while (condition) { }</code></td>
+<td><code>while (condition) { }</code></td>
+<td>Identical</td>
+</tr>
+<tr class="even">
+<td><code>require(condition, "error");</code></td>
+<td><code>require(condition, "error");</code></td>
+<td>Identical</td>
+</tr>
+<tr class="odd">
+<td><code>revert("error");</code></td>
+<td><code>revert("error");</code></td>
+<td>Identical</td>
+</tr>
+</tbody>
+</table>
+<h3 id="special-variables">Special Variables</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Solidity</th>
+<th>DAL</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>msg.sender</code></td>
+<td><code>msg.sender</code></td>
+<td>Identical</td>
+</tr>
+<tr class="even">
+<td><code>msg.value</code></td>
+<td><code>msg.value</code></td>
+<td>Identical</td>
+</tr>
+<tr class="odd">
+<td><code>block.timestamp</code></td>
+<td><code>block.timestamp</code> or <code>chain::timestamp()</code></td>
+<td>Both work</td>
+</tr>
+<tr class="even">
+<td><code>block.number</code></td>
+<td><code>block.number</code> or <code>chain::block_number()</code></td>
+<td>Both work</td>
+</tr>
+<tr class="odd">
+<td><code>address(this)</code></td>
+<td><code>address(this)</code></td>
+<td>Identical</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="-step-by-step-migration">🔧 Step-by-Step Migration</h2>
+<h3 id="example-erc-20-token">Example: ERC-20 Token</h3>
+<h4 id="original-solidity-contract">Original Solidity Contract</h4>
+<pre class="solidity"><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import &quot;@openzeppelin/contracts/token/ERC20/ERC20.sol&quot;;
+import &quot;@openzeppelin/contracts/security/ReentrancyGuard.sol&quot;;
+import &quot;@openzeppelin/contracts/access/Ownable.sol&quot;;
+
+contract MyToken is ERC20, ReentrancyGuard, Ownable {
+    uint256 public maxSupply = 1000000 * 10**18;
+    
+    constructor() ERC20(&quot;MyToken&quot;, &quot;MTK&quot;) {
+        _mint(msg.sender, 100000 * 10**18);
+    }
+    
+    function mint(address to, uint256 amount) external onlyOwner {
+        require(totalSupply() + amount &lt;= maxSupply, &quot;Exceeds max supply&quot;);
+        _mint(to, amount);
+    }
+    
+    function burn(uint256 amount) external {
+        _burn(msg.sender, amount);
+    }
+}</code></pre>
+<h4 id="migrated-dal-contract">Migrated DAL Contract</h4>
+<pre class="dal"><code>@contract
+@version(&quot;1.0.0&quot;)
+@blockchain(&quot;ethereum&quot;)
+@blockchain(&quot;polygon&quot;)      // Now multi-chain!
+@reentrancy_guard            // Built-in!
+@safe_math                   // Built-in overflow protection!
+contract MyToken {
+    // State
+    string public name = &quot;MyToken&quot;;
+    string public symbol = &quot;MTK&quot;;
+    uint8 public decimals = 18;
+    uint256 public totalSupply;
+    uint256 public maxSupply = 1000000 * 10**18;
+    address public owner;
+    
+    mapping(address =&gt; uint256) public balances;
+    mapping(address =&gt; mapping(address =&gt; uint256)) public allowances;
+    
+    // Events
+    event Transfer(address indexed from, address indexed to, uint256 amount);
+    event Approval(address indexed owner, address indexed spender, uint256 amount);
+    
+    // Modifiers
+    @modifier
+    modifier onlyOwner() {
+        require(msg.sender == owner, &quot;Not owner&quot;);
+        _;
+    }
+    
+    // Constructor
+    constructor() {
+        owner = msg.sender;
+        totalSupply = 100000 * 10**18;
+        balances[owner] = totalSupply;
+        emit Transfer(address(0), owner, totalSupply);
+    }
+    
+    // ERC-20 Functions
+    @public
+    @view
+    function balanceOf(address account) -&gt; uint256 {
+        return balances[account];
+    }
+    
+    @public
+    function transfer(address to, uint256 amount) -&gt; bool {
+        require(to != address(0), &quot;Invalid address&quot;);
+        require(balances[msg.sender] &gt;= amount, &quot;Insufficient balance&quot;);
+        
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+        
+        emit Transfer(msg.sender, to, amount);
+        return true;
+    }
+    
+    @public
+    function approve(address spender, uint256 amount) -&gt; bool {
+        allowances[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
+    }
+    
+    @public
+    function transferFrom(address from, address to, uint256 amount) -&gt; bool {
+        require(balances[from] &gt;= amount, &quot;Insufficient balance&quot;);
+        require(allowances[from][msg.sender] &gt;= amount, &quot;Insufficient allowance&quot;);
+        
+        balances[from] -= amount;
+        balances[to] += amount;
+        allowances[from][msg.sender] -= amount;
+        
+        emit Transfer(from, to, amount);
+        return true;
+    }
+    
+    // Admin Functions
+    @public
+    @onlyOwner
+    function mint(address to, uint256 amount) {
+        require(totalSupply + amount &lt;= maxSupply, &quot;Exceeds max supply&quot;);
+        
+        totalSupply += amount;
+        balances[to] += amount;
+        
+        emit Transfer(address(0), to, amount);
+    }
+    
+    @public
+    function burn(uint256 amount) {
+        require(balances[msg.sender] &gt;= amount, &quot;Insufficient balance&quot;);
+        
+        totalSupply -= amount;
+        balances[msg.sender] -= amount;
+        
+        emit Transfer(msg.sender, address(0), amount);
+    }
+}</code></pre>
+<h3 id="key-changes-made">Key Changes Made:</h3>
+<ol type="1">
+<li>✅ <strong>Removed imports</strong> - Security features are
+built-in</li>
+<li>✅ <strong>Added attributes</strong> - <code>@contract</code>,
+<code>@reentrancy_guard</code>, <code>@safe_math</code></li>
+<li>✅ <strong>Multi-chain support</strong> - Added
+<code>@blockchain</code> attributes</li>
+<li>✅ <strong>Implemented ERC-20</strong> - No inheritance needed</li>
+<li>✅ <strong>Same syntax</strong> - Most Solidity code works
+as-is!</li>
+</ol>
+<hr />
+<h2 id="-common-patterns">🎨 Common Patterns</h2>
+<h3 id="pattern-1-ownable">Pattern 1: Ownable</h3>
+<p><strong>Solidity (OpenZeppelin):</strong></p>
+<pre class="solidity"><code>import &quot;@openzeppelin/contracts/access/Ownable.sol&quot;;
+
+contract MyContract is Ownable {
+    function adminFunction() external onlyOwner {
+        // ...
+    }
+}</code></pre>
+<p><strong>DAL:</strong></p>
+<pre class="dal"><code>@contract
+@access_control
+contract MyContract {
+    address public owner;
+    
+    constructor() {
+        owner = msg.sender;
+    }
+    
+    @modifier
+    modifier onlyOwner() {
+        require(msg.sender == owner, &quot;Not owner&quot;);
+        _;
+    }
+    
+    @public
+    @onlyOwner
+    function adminFunction() {
+        // ...
+    }
+}</code></pre>
+<h3 id="pattern-2-pausable">Pattern 2: Pausable</h3>
+<p><strong>Solidity:</strong></p>
+<pre class="solidity"><code>import &quot;@openzeppelin/contracts/security/Pausable.sol&quot;;
+
+contract MyContract is Pausable {
+    function criticalFunction() external whenNotPaused {
+        // ...
+    }
+}</code></pre>
+<p><strong>DAL:</strong></p>
+<pre class="dal"><code>@contract
+contract MyContract {
+    bool public paused = false;
+    
+    @modifier
+    modifier whenNotPaused() {
+        require(!paused, &quot;Contract is paused&quot;);
+        _;
+    }
+    
+    @public
+    @whenNotPaused
+    function criticalFunction() {
+        // ...
+    }
+    
+    @public
+    @onlyOwner
+    function pause() {
+        paused = true;
+    }
+    
+    @public
+    @onlyOwner
+    function unpause() {
+        paused = false;
+    }
+}</code></pre>
+<h3 id="pattern-3-safeerc20">Pattern 3: SafeERC20</h3>
+<p><strong>Solidity:</strong></p>
+<pre class="solidity"><code>import &quot;@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol&quot;;
+
+using SafeERC20 for IERC20;
+
+function transferTokens(IERC20 token, address to, uint256 amount) external {
+    token.safeTransfer(to, amount);
+}</code></pre>
+<p><strong>DAL:</strong></p>
+<pre class="dal"><code>@contract
+@safe_math  // Built-in safe operations!
+contract MyContract {
+    @public
+    function transferTokens(address token, address to, uint256 amount) {
+        // Call token contract
+        (bool success,) = token.call(
+            abi.encodeWithSignature(&quot;transfer(address,uint256)&quot;, to, amount)
+        );
+        require(success, &quot;Transfer failed&quot;);
+    }
+}</code></pre>
+<hr />
+<h2 id="️-tools--automation">🛠️ Tools &amp; Automation</h2>
+<h3 id="automated-conversion-tool--available-now">Automated Conversion
+Tool ✅ <strong>Available Now</strong></h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert Solidity to DAL</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> convert MyContract.sol <span class="at">--output</span> MyContract.dal</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># or</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> convert MyContract.sol <span class="at">-o</span> MyContract.dal</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Analyze compatibility</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> analyze MyContract.sol</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Test migrated contract</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> test MyContract.dal</span></code></pre></div>
+<p><strong>Note</strong>: The conversion tool is in active development.
+It handles common Solidity patterns but may require manual review for
+complex contracts. Always test converted contracts thoroughly!</p>
+<h3 id="manual-checklist">Manual Checklist</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Remove <code>pragma solidity</code>
+statements</label></li>
+<li><label><input type="checkbox" />Add <code>@contract</code>
+attribute</label></li>
+<li><label><input type="checkbox" />Add security attributes
+(<code>@reentrancy_guard</code>, <code>@safe_math</code>)</label></li>
+<li><label><input type="checkbox" />Remove OpenZeppelin
+imports</label></li>
+<li><label><input type="checkbox" />Implement security features
+directly</label></li>
+<li><label><input type="checkbox" />Add <code>@blockchain</code>
+attributes for multi-chain</label></li>
+<li><label><input type="checkbox" />Update function visibility with
+<code>@public</code>/@private`</label></li>
+<li><label><input type="checkbox" />Add <code>@view</code> to read-only
+functions</label></li>
+<li><label><input type="checkbox" />Test thoroughly!</label></li>
+<li><label><input type="checkbox" />Deploy to testnet first</label></li>
+</ul>
+<hr />
+<h2 id="-migration-timeline">📈 Migration Timeline</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Contract Size</th>
+<th>Estimated Time</th>
+<th>Difficulty</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Simple (&lt; 100 lines)</td>
+<td>1-2 hours</td>
+<td>Easy</td>
+</tr>
+<tr class="even">
+<td>Medium (100-500 lines)</td>
+<td>4-8 hours</td>
+<td>Medium</td>
+</tr>
+<tr class="odd">
+<td>Complex (500+ lines)</td>
+<td>1-3 days</td>
+<td>Hard</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="-learning-resources">🎓 Learning Resources</h2>
+<ol type="1">
+<li><strong><a href="../QUICK_START.html">Quick Start Guide</a></strong> -
+Get familiar with DAL</li>
+<li><strong><a href="../BEST_PRACTICES.html">Best Practices</a></strong> -
+Learn DAL patterns</li>
+<li><strong><a href="../API_REFERENCE.html">API Reference</a></strong> -
+Explore new features</li>
+<li><strong><a href="../tutorials/">Tutorials</a></strong> - Build real
+projects</li>
+</ol>
+<hr />
+<h2 id="-pro-tips">💡 Pro Tips</h2>
+<ol type="1">
+<li><strong>Start with tests</strong> - Migrate tests first to verify
+behavior</li>
+<li><strong>Use built-in security</strong> - Remove dependencies on
+external libraries</li>
+<li><strong>Leverage multi-chain</strong> - Deploy to multiple networks
+with one contract</li>
+<li><strong>Add oracle integration</strong> - Use native oracle support
+for price feeds</li>
+<li><strong>Test extensively</strong> - Test on testnets before
+mainnet</li>
+</ol>
+<hr />
+<h2 id="-common-issues">🆘 Common Issues</h2>
+<h3 id="issue-1-missing-openzeppelin-imports">Issue 1: Missing
+OpenZeppelin Imports</h3>
+<p><strong>Problem:</strong> Contract relies heavily on OpenZeppelin
+<strong>Solution:</strong> DAL has built-in equivalents - use attributes
+and native features</p>
+<h3 id="issue-2-complex-inheritance">Issue 2: Complex Inheritance</h3>
+<p><strong>Problem:</strong> Multiple inheritance levels
+<strong>Solution:</strong> Flatten the contract and use composition</p>
+<h3 id="issue-3-assembly-code">Issue 3: Assembly Code</h3>
+<p><strong>Problem:</strong> Inline assembly (Yul)
+<strong>Solution:</strong> Most assembly can be replaced with DAL's
+built-in functions</p>
+<hr />
+<h2 id="-get-help">📞 Get Help</h2>
+<ul>
+<li><strong>Discord</strong>: <a href="#">Join Community</a></li>
+<li><strong>GitHub Issues</strong>: <a
+href="https://github.com/your-org/dist_agent_lang/issues">Report
+Problems</a></li>
+<li><strong>Documentation</strong>: <a href="../Documentation.html">Full
+Docs</a></li>
+</ul>
+<hr />
+<p><strong>Next:</strong> <a href="FROM_RUST.html">Migration from Rust
+→</a></p>
+</body>
+</html>

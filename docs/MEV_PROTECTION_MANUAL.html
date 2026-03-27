@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MEV_PROTECTION_MANUAL</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="manual-mev-protection-implementation-guide">Manual MEV
+Protection Implementation Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>This guide shows how to implement MEV (Maximal Extractable Value)
+protection <strong>manually in DAL code</strong> without relying on
+parser attributes. These patterns allow you to harden your services
+against front-running, back-running, and sandwich attacks.</p>
+<hr />
+<h2 id="strategy-1-commit-reveal-pattern">Strategy 1: Commit-Reveal
+Pattern</h2>
+<h3 id="how-it-works">How It Works</h3>
+<ol type="1">
+<li><strong>Commit Phase</strong>: User submits a hash of their
+transaction (details hidden)</li>
+<li><strong>Reveal Phase</strong>: User reveals the actual transaction
+data</li>
+<li><strong>Execution</strong>: Transaction executes only after
+reveal</li>
+</ol>
+<h3 id="implementation">Implementation</h3>
+<pre class="dal"><code>@secure
+service DeFiService {
+    // Storage for commitments
+    commitments: map&lt;string, map&lt;string, any&gt;&gt;,
+    revealed_transactions: map&lt;string, bool&gt;,
+    
+    // Commit phase: Submit hash of transaction
+    fn commit_swap(
+        commitment_hash: string,
+        nonce: int,
+        deadline: int  // Block number deadline
+    ) -&gt; Result&lt;string, string&gt; {
+        // Verify caller is authenticated (@secure handles this)
+        
+        // Store commitment
+        let caller = auth::current_caller();
+        let commit_id = crypto::hash(format!(&quot;{}:{}:{}&quot;, caller, commitment_hash, nonce), &quot;SHA256&quot;);
+        
+        self.commitments[commit_id] = {
+            &quot;hash&quot;: commitment_hash,
+            &quot;caller&quot;: caller,
+            &quot;nonce&quot;: nonce,
+            &quot;deadline&quot;: deadline,
+            &quot;timestamp&quot;: chain::block_number()
+        };
+        
+        log::audit(&quot;commit_swap&quot;, {
+            &quot;commit_id&quot;: commit_id,
+            &quot;caller&quot;: caller
+        }, Some(&quot;defi&quot;));
+        
+        return Ok(commit_id);
+    }
+    
+    // Reveal phase: Reveal actual transaction details
+    fn reveal_swap(
+        commit_id: string,
+        token_in: string,
+        token_out: string,
+        amount_in: int,
+        min_amount_out: int,
+        nonce: int
+    ) -&gt; Result&lt;bool, string&gt; {
+        // Verify commitment exists
+        let commitment = self.commitments.get(commit_id);
+        if commitment.is_none() {
+            throw &quot;Commitment not found&quot;;
+        }
+        
+        let commit = commitment.unwrap();
+        
+        // Verify deadline hasn&#39;t passed
+        if chain::block_number() &gt; commit.get(&quot;deadline&quot;).unwrap_or(0) {
+            throw &quot;Commitment expired&quot;;
+        }
+        
+        // Verify nonce matches
+        if nonce != commit.get(&quot;nonce&quot;).unwrap_or(0) {
+            throw &quot;Invalid nonce&quot;;
+        }
+        
+        // Reconstruct and verify commitment hash
+        let reveal_data = format!(&quot;{}:{}:{}:{}:{}:{}&quot;, 
+            commit.get(&quot;caller&quot;).unwrap_or(&quot;&quot;),
+            token_in,
+            token_out,
+            amount_in,
+            min_amount_out,
+            nonce
+        );
+        
+        let expected_hash = crypto::hash(reveal_data, &quot;SHA256&quot;);
+        if expected_hash != commit.get(&quot;hash&quot;).unwrap_or(&quot;&quot;) {
+            throw &quot;Commitment hash mismatch&quot;;
+        }
+        
+        // Mark as revealed
+        self.revealed_transactions[commit_id] = true;
+        
+        // Execute swap
+        return self.execute_swap(token_in, token_out, amount_in, min_amount_out);
+    }
+    
+    // Internal: Execute the actual swap
+    fn execute_swap(
+        token_in: string,
+        token_out: string,
+        amount_in: int,
+        min_amount_out: int
+    ) -&gt; Result&lt;bool, string&gt; {
+        // Your swap logic here
+        // At this point, transaction details are public but execution is immediate
+        // Front-runners can&#39;t see the details during commit phase
+        
+        return Ok(true);
+    }
+}</code></pre>
+<h3 id="usage">Usage</h3>
+<pre class="dal"><code>// Step 1: User commits (details hidden)
+let nonce = 12345;
+let token_in = &quot;ETH&quot;;
+let token_out = &quot;USDC&quot;;
+let amount_in = 1000;
+let min_amount_out = 2000;
+
+let reveal_data = format!(&quot;{}:{}:{}:{}:{}&quot;, 
+    auth::current_caller(),
+    token_in, token_out, amount_in, min_amount_out, nonce
+);
+let commitment_hash = crypto::hash(reveal_data);
+
+let commit_id = defi_service.commit_swap(
+    commitment_hash,
+    nonce,
+    chain::block_number() + 10  // 10 blocks to reveal
+);
+
+// Step 2: User reveals (after some blocks)
+let result = defi_service.reveal_swap(
+    commit_id,
+    token_in,
+    token_out,
+    amount_in,
+    min_amount_out,
+    nonce
+);</code></pre>
+<h3 id="protection-level-">Protection Level: ⭐⭐⭐⭐⭐</h3>
+<ul>
+<li>✅ Strong protection against front-running</li>
+<li>✅ Hides transaction intent during commit phase</li>
+<li>⚠️ Requires two-phase process</li>
+</ul>
+<hr />
+<h2 id="strategy-2-time-delayed-execution">Strategy 2: Time-Delayed
+Execution</h2>
+<h3 id="how-it-works-1">How It Works</h3>
+<p>Delay transaction execution by N blocks to reduce front-running
+window.</p>
+<h3 id="implementation-1">Implementation</h3>
+<pre class="dal"><code>@secure
+service DeFiService {
+    pending_transactions: map&lt;string, map&lt;string, any&gt;&gt;,
+    
+    fn submit_delayed_swap(
+        token_in: string,
+        token_out: string,
+        amount_in: int,
+        delay_blocks: int
+    ) -&gt; Result&lt;string, string&gt; {
+        let caller = auth::current_caller();
+        let tx_id = crypto::hash(format!(&quot;{}:{}:{}&quot;, caller, chain::block_number(), amount_in), &quot;SHA256&quot;);
+        
+        // Store transaction with execution block
+        self.pending_transactions[tx_id] = {
+            &quot;caller&quot;: caller,
+            &quot;token_in&quot;: token_in,
+            &quot;token_out&quot;: token_out,
+            &quot;amount_in&quot;: amount_in,
+            &quot;execute_at_block&quot;: chain::block_number() + delay_blocks,
+            &quot;submitted_at&quot;: chain::block_number()
+        };
+        
+        log::audit(&quot;submit_delayed_swap&quot;, {
+            &quot;tx_id&quot;: tx_id,
+            &quot;execute_at&quot;: chain::block_number() + delay_blocks
+        }, Some(&quot;defi&quot;));
+        
+        return Ok(tx_id);
+    }
+    
+    // Called by anyone after delay period
+    fn execute_delayed_swap(tx_id: string) -&gt; Result&lt;bool, string&gt; {
+        let tx = self.pending_transactions.get(tx_id);
+        if tx.is_none() {
+            throw &quot;Transaction not found&quot;;
+        }
+        
+        let pending = tx.unwrap();
+        
+        // Verify execution time has passed
+        if chain::block_number() &lt; pending.get(&quot;execute_at_block&quot;).unwrap_or(0) {
+            throw &quot;Execution time not reached&quot;;
+        }
+        
+        // Verify not too old (prevent stale transactions)
+        let max_age = 100;  // blocks
+        if chain::block_number() &gt; pending.get(&quot;execute_at_block&quot;).unwrap_or(0) + max_age {
+            throw &quot;Transaction expired&quot;;
+        }
+        
+        // Execute swap
+        let result = self.execute_swap(
+            pending.get(&quot;token_in&quot;).unwrap_or(&quot;&quot;),
+            pending.get(&quot;token_out&quot;).unwrap_or(&quot;&quot;),
+            pending.get(&quot;amount_in&quot;).unwrap_or(0),
+            0  // No min amount check for delayed execution
+        );
+        
+        // Clean up
+        self.pending_transactions.remove(tx_id);
+        
+        return result;
+    }
+}</code></pre>
+<h3 id="protection-level--1">Protection Level: ⭐⭐⭐</h3>
+<ul>
+<li>✅ Reduces front-running window</li>
+<li>⚠️ Still vulnerable if execution time is predictable</li>
+<li>⚠️ Requires separate execution call</li>
+</ul>
+<hr />
+<h2 id="strategy-3-fair-batch-ordering">Strategy 3: Fair Batch
+Ordering</h2>
+<h3 id="how-it-works-2">How It Works</h3>
+<p>Collect transactions in a time window, then execute in random/fair
+order.</p>
+<h3 id="implementation-2">Implementation</h3>
+<pre class="dal"><code>@secure
+service DeFiService {
+    batch_pool: map&lt;int, list&lt;map&lt;string, any&gt;&gt;&gt;,
+    batch_size: int = 10,
+    
+    fn submit_to_batch(
+        token_in: string,
+        token_out: string,
+        amount_in: int
+    ) -&gt; Result&lt;string, string&gt; {
+        let caller = auth::current_caller();
+        let current_batch = (chain::block_number() / self.batch_size) * self.batch_size;
+        
+        // Get or create batch
+        let batch = self.batch_pool.get(current_batch).unwrap_or([]);
+        
+        // Add transaction to batch
+        let tx = {
+            &quot;caller&quot;: caller,
+            &quot;token_in&quot;: token_in,
+            &quot;token_out&quot;: token_out,
+            &quot;amount_in&quot;: amount_in,
+            &quot;submitted_at&quot;: chain::block_number(),
+            &quot;random_seed&quot;: crypto::generate_random(16)  // For fair ordering
+        };
+        
+        batch.push(tx);
+        self.batch_pool[current_batch] = batch;
+        
+        let tx_id = crypto::hash(format!(&quot;{}:{}:{}&quot;, caller, current_batch, amount_in), &quot;SHA256&quot;);
+        
+        // Process batch if full
+        if batch.len() &gt;= self.batch_size {
+            self.process_batch(current_batch);
+        }
+        
+        return Ok(tx_id);
+    }
+    
+    fn process_batch(batch_id: int) -&gt; Result&lt;bool, string&gt; {
+        let batch = self.batch_pool.get(batch_id);
+        if batch.is_none() {
+            throw &quot;Batch not found&quot;;
+        }
+        
+        let transactions = batch.unwrap();
+        
+        // Sort by random seed for fair ordering
+        // (In real implementation, use VRF or block hash for randomness)
+        let block_hash = chain::block_hash();
+        let random_factor = crypto::hash(block_hash, &quot;SHA256&quot;);
+        
+        // Shuffle transactions based on block hash (fair randomness)
+        let shuffled = self.shuffle_by_hash(transactions, random_factor);
+        
+        // Execute in shuffled order
+        for tx in shuffled {
+            self.execute_swap(
+                tx.get(&quot;token_in&quot;).unwrap_or(&quot;&quot;),
+                tx.get(&quot;token_out&quot;).unwrap_or(&quot;&quot;),
+                tx.get(&quot;amount_in&quot;).unwrap_or(0),
+                0
+            );
+        }
+        
+        // Clean up batch
+        self.batch_pool.remove(batch_id);
+        
+        return Ok(true);
+    }
+    
+    // Helper: Shuffle using hash for deterministic randomness
+    fn shuffle_by_hash(
+        transactions: list&lt;map&lt;string, any&gt;&gt;,
+        seed: string
+    ) -&gt; list&lt;map&lt;string, any&gt;&gt; {
+        // Simple shuffle based on hash seed
+        // In production, use proper VRF or cryptographic shuffle
+        let result = [];
+        let used_indices = [];
+        
+        for i in 0..transactions.len() {
+            let hash = crypto::hash(format!(&quot;{}:{}:{}&quot;, seed, i, transactions.len()), &quot;SHA256&quot;);
+            // Convert hash hex string to integer (use first 16 chars as hex number)
+            // Simple implementation: parse first 8 hex chars as u32
+            let hash_int = self.hex_to_int(hash);  // Helper function below
+            let index = (hash_int % transactions.len());
+            
+            // Find next unused index
+            let mut final_index = index;
+            let mut attempts = 0;
+            while used_indices.contains(final_index) &amp;&amp; attempts &lt; transactions.len() {
+                final_index = (final_index + 1) % transactions.len();
+                attempts = attempts + 1;
+            }
+            
+            used_indices.push(final_index);
+            result.push(transactions[final_index]);
+        }
+        
+        return result;
+    }
+    
+    // Helper: Convert hex string to integer
+    fn hex_to_int(hex_str: string) -&gt; int {
+        // Take first 8 characters of hex string and parse as hex
+        let hex_part = hex_str.substring(0, 8);
+        // Simple hex parsing (in production, use proper hex parsing)
+        let mut result = 0;
+        for i in 0..hex_part.len() {
+            let char = hex_part[i];
+            let digit = if char &gt;= &#39;0&#39; &amp;&amp; char &lt;= &#39;9&#39; {
+                char - &#39;0&#39;
+            } else if char &gt;= &#39;a&#39; &amp;&amp; char &lt;= &#39;f&#39; {
+                char - &#39;a&#39; + 10
+            } else if char &gt;= &#39;A&#39; &amp;&amp; char &lt;= &#39;F&#39; {
+                char - &#39;A&#39; + 10
+            } else {
+                0
+            };
+            result = result * 16 + digit;
+        }
+        return result;
+    }
+}</code></pre>
+<h3 id="protection-level--2">Protection Level: ⭐⭐⭐⭐</h3>
+<ul>
+<li>✅ Fair ordering prevents manipulation</li>
+<li>✅ Can use VRF for true randomness</li>
+<li>⚠️ Requires batching (delayed execution)</li>
+</ul>
+<hr />
+<h2 id="strategy-4-price-slippage-protection">Strategy 4: Price Slippage
+Protection</h2>
+<h3 id="how-it-works-3">How It Works</h3>
+<p>Use maximum slippage limits and price oracles to prevent MEV
+exploitation.</p>
+<h3 id="implementation-3">Implementation</h3>
+<pre class="dal"><code>@secure
+service DeFiService {
+    oracle: OracleService,
+    max_slippage_bps: int = 50,  // 0.5% max slippage
+    
+    fn protected_swap(
+        token_in: string,
+        token_out: string,
+        amount_in: int,
+        max_slippage: int  // Basis points (100 = 1%)
+    ) -&gt; Result&lt;map&lt;string, any&gt;, string&gt; {
+        // Get current price from oracle
+        let current_price = self.oracle.get_price(token_in, token_out);
+        
+        // Calculate expected output
+        let expected_out = (amount_in * current_price) / 1000000;  // Assuming 6 decimals
+        
+        // Execute swap
+        let actual_out = self.execute_swap(token_in, token_out, amount_in, 0);
+        
+        // Verify slippage
+        let slippage_bps = ((expected_out - actual_out) * 10000) / expected_out;
+        
+        if slippage_bps &gt; max_slippage {
+            throw format!(&quot;Slippage too high: {} bps (max: {} bps)&quot;, slippage_bps, max_slippage);
+        }
+        
+        // Also check for sudden price changes (potential MEV attack)
+        let new_price = self.oracle.get_price(token_in, token_out);
+        let price_change_bps = ((new_price - current_price) * 10000) / current_price;
+        
+        if price_change_bps &gt; self.max_slippage_bps {
+            throw &quot;Suspicious price movement detected - potential MEV attack&quot;;
+        }
+        
+        return Ok({
+            &quot;amount_in&quot;: amount_in,
+            &quot;amount_out&quot;: actual_out,
+            &quot;slippage_bps&quot;: slippage_bps,
+            &quot;price&quot;: current_price
+        });
+    }
+}</code></pre>
+<h3 id="protection-level--3">Protection Level: ⭐⭐⭐</h3>
+<ul>
+<li>✅ Prevents excessive slippage</li>
+<li>✅ Detects suspicious price movements</li>
+<li>⚠️ Requires reliable oracle</li>
+</ul>
+<hr />
+<h2 id="strategy-5-rate-limiting--cooldowns">Strategy 5: Rate Limiting
+&amp; Cooldowns</h2>
+<h3 id="how-it-works-4">How It Works</h3>
+<p>Limit transaction frequency to prevent rapid-fire MEV attacks.</p>
+<h3 id="implementation-4">Implementation</h3>
+<pre class="dal"><code>@secure
+service DeFiService {
+    last_transaction: map&lt;string, int&gt;,  // caller -&gt; block number
+    cooldown_blocks: int = 5,
+    
+    fn rate_limited_swap(
+        token_in: string,
+        token_out: string,
+        amount_in: int
+    ) -&gt; Result&lt;bool, string&gt; {
+        let caller = auth::current_caller();
+        let current_block = chain::block_number();
+        
+        // Check cooldown
+        let last_tx_block = self.last_transaction.get(caller).unwrap_or(0);
+        let blocks_since_last = current_block - last_tx_block;
+        
+        if blocks_since_last &lt; self.cooldown_blocks {
+            throw format!(&quot;Cooldown active: {} blocks remaining&quot;, 
+                self.cooldown_blocks - blocks_since_last);
+        }
+        
+        // Update last transaction
+        self.last_transaction[caller] = current_block;
+        
+        // Execute swap
+        return self.execute_swap(token_in, token_out, amount_in, 0);
+    }
+}</code></pre>
+<h3 id="protection-level--4">Protection Level: ⭐⭐</h3>
+<ul>
+<li>✅ Prevents rapid-fire attacks</li>
+<li>⚠️ May inconvenience legitimate users</li>
+<li>⚠️ Doesn't prevent single-attack MEV</li>
+</ul>
+<hr />
+<h2 id="strategy-6-combined-multi-layer-protection">Strategy 6: Combined
+Multi-Layer Protection</h2>
+<h3 id="best-practice-combine-multiple-strategies">Best Practice:
+Combine Multiple Strategies</h3>
+<pre class="dal"><code>@secure
+service SecureDeFiService {
+    commitments: map&lt;string, map&lt;string, any&gt;&gt;,
+    batch_pool: map&lt;int, list&lt;map&lt;string, any&gt;&gt;&gt;,
+    oracle: OracleService,
+    
+    // Multi-layer protected swap
+    fn secure_swap(
+        token_in: string,
+        token_out: string,
+        amount_in: int,
+        min_amount_out: int,
+        use_commit_reveal: bool,
+        use_batching: bool
+    ) -&gt; Result&lt;string, string&gt; {
+        let caller = auth::current_caller();
+        
+        if use_commit_reveal {
+            // Strategy 1: Commit-reveal
+            return self.commit_swap(token_in, token_out, amount_in, min_amount_out);
+        } else if use_batching {
+            // Strategy 3: Fair batching
+            return self.submit_to_batch(token_in, token_out, amount_in);
+        } else {
+            // Strategy 4: Slippage protection only
+            return self.protected_swap(token_in, token_out, amount_in, 50);
+        }
+    }
+    
+    // Internal commit
+    fn commit_swap(
+        token_in: string,
+        token_out: string,
+        amount_in: int,
+        min_amount_out: int
+    ) -&gt; Result&lt;string, string&gt; {
+        let nonce = crypto::generate_random(16);
+        let reveal_data = format!(&quot;{}:{}:{}:{}:{}&quot;, 
+            auth::current_caller(), token_in, token_out, amount_in, min_amount_out, nonce
+        );
+        let commitment_hash = crypto::hash(reveal_data, &quot;SHA256&quot;);
+        
+        // Store commitment
+        let commit_id = crypto::hash(format!(&quot;{}:{}&quot;, caller, commitment_hash), &quot;SHA256&quot;);
+        self.commitments[commit_id] = {
+            &quot;hash&quot;: commitment_hash,
+            &quot;nonce&quot;: nonce,
+            &quot;deadline&quot;: chain::block_number() + 10
+        };
+        
+        return Ok(commit_id);
+    }
+}</code></pre>
+<hr />
+<h2 id="strategy-7-using-cryptographic-functions">Strategy 7: Using
+Cryptographic Functions</h2>
+<h3 id="available-crypto-functions">Available Crypto Functions</h3>
+<p>DAL provides cryptographic functions you can use:</p>
+<pre class="dal"><code>// Hash function
+        let hash = crypto::hash(&quot;data&quot;, &quot;SHA256&quot;);
+let hash_sha512 = crypto::hash(&quot;data&quot;, &quot;SHA512&quot;);
+
+// Random number generation
+let random_bytes = crypto::generate_random(32);  // 32 bytes
+let random_id = crypto::generate_random_bytes(16);
+
+// Sign/verify (if available)
+let signature = crypto::sign(data, private_key);
+let valid = crypto::verify(data, signature, public_key);</code></pre>
+<h3 id="example-commit-reveal-with-crypto">Example: Commit-Reveal with
+Crypto</h3>
+<pre class="dal"><code>fn create_commitment(
+    token_in: string,
+    token_out: string,
+    amount: int
+) -&gt; map&lt;string, any&gt; {
+    // Generate random nonce
+    let nonce = crypto::generate_random(16);  // 16 bytes random
+    
+    // Create commitment data
+    let data = format!(&quot;{}:{}:{}:{}:{}&quot;, 
+        auth::current_caller(),
+        token_in,
+        token_out,
+        amount,
+        nonce
+    );
+    
+    // Hash commitment
+    let commitment_hash = crypto::hash(data, &quot;SHA256&quot;);
+    
+    return {
+        &quot;commitment_hash&quot;: commitment_hash,
+        &quot;nonce&quot;: nonce,
+        &quot;data&quot;: data  // Keep secret until reveal
+    };
+}</code></pre>
+<hr />
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="1-choose-strategy-based-on-use-case">1. <strong>Choose Strategy
+Based on Use Case</strong></h3>
+<ul>
+<li><strong>High-value transactions</strong>: Use commit-reveal</li>
+<li><strong>DEX swaps</strong>: Use fair batching + slippage
+protection</li>
+<li><strong>Admin operations</strong>: Use time delays</li>
+<li><strong>General operations</strong>: Use slippage protection + rate
+limiting</li>
+</ul>
+<h3 id="2-combine-multiple-strategies">2. <strong>Combine Multiple
+Strategies</strong></h3>
+<pre class="dal"><code>// Best: Multi-layer protection
+@secure
+service BestPracticeService {
+    fn ultra_secure_swap(...) {
+        // 1. Commit-reveal (hide intent)
+        // 2. Fair batching (fair ordering)
+        // 3. Slippage protection (prevent exploitation)
+        // 4. Rate limiting (prevent spam)
+    }
+}</code></pre>
+<h3 id="3-use-oracles-for-price-validation">3. <strong>Use Oracles for
+Price Validation</strong></h3>
+<p>Always verify prices against trusted oracles before executing
+swaps.</p>
+<h3 id="4-implement-time-windows">4. <strong>Implement Time
+Windows</strong></h3>
+<p>Set deadlines for commitments and reveals to prevent stale
+transactions.</p>
+<h3 id="5-log-everything">5. <strong>Log Everything</strong></h3>
+<p>Use <code>log::audit()</code> to track all MEV protection events for
+analysis.</p>
+<hr />
+<h2 id="comparison-table">Comparison Table</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Strategy</th>
+<th>Protection Level</th>
+<th>Complexity</th>
+<th>Delay</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Commit-Reveal</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>High</td>
+<td>Medium</td>
+<td>High-value swaps</td>
+</tr>
+<tr class="even">
+<td>Time Delay</td>
+<td>⭐⭐⭐</td>
+<td>Low</td>
+<td>High</td>
+<td>Admin operations</td>
+</tr>
+<tr class="odd">
+<td>Fair Batching</td>
+<td>⭐⭐⭐⭐</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>DEX swaps</td>
+</tr>
+<tr class="even">
+<td>Slippage Protection</td>
+<td>⭐⭐⭐</td>
+<td>Low</td>
+<td>None</td>
+<td>All swaps</td>
+</tr>
+<tr class="odd">
+<td>Rate Limiting</td>
+<td>⭐⭐</td>
+<td>Low</td>
+<td>Low</td>
+<td>Spam prevention</td>
+</tr>
+<tr class="even">
+<td>Combined</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>High</td>
+<td>Medium</td>
+<td>Critical operations</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="example-complete-protected-dex-service">Example: Complete
+Protected DEX Service</h2>
+<pre class="dal"><code>@secure
+@trust(&quot;decentralized&quot;)
+@chain(&quot;ethereum&quot;)
+service ProtectedDEX {
+    commitments: map&lt;string, map&lt;string, any&gt;&gt;,
+    batch_pool: map&lt;int, list&lt;map&lt;string, any&gt;&gt;&gt;,
+    oracle: OracleService,
+    
+    // Main entry point with multiple protection layers
+    fn swap(
+        token_in: string,
+        token_out: string,
+        amount_in: int,
+        min_amount_out: int,
+        protection_mode: string  // &quot;commit_reveal&quot;, &quot;batch&quot;, &quot;direct&quot;
+    ) -&gt; Result&lt;map&lt;string, any&gt;, string&gt; {
+        // Always check slippage
+        let current_price = self.oracle.get_price(token_in, token_out);
+        let expected_out = (amount_in * current_price) / 1000000;
+        
+        if expected_out &lt; min_amount_out {
+            throw &quot;Slippage too high&quot;;
+        }
+        
+        // Route to protection mechanism
+        if protection_mode == &quot;commit_reveal&quot; {
+            return self.commit_swap(token_in, token_out, amount_in, min_amount_out);
+        } else if protection_mode == &quot;batch&quot; {
+            return self.submit_to_batch(token_in, token_out, amount_in);
+        } else {
+            // Direct swap with slippage protection only
+            return self.direct_swap(token_in, token_out, amount_in, min_amount_out);
+        }
+    }
+    
+    // Implementation methods (as shown above)
+    // ...
+}</code></pre>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>Before parser-level <code>@mev_protection</code> attributes,
+developers can already implement robust MEV protection using:</p>
+<ol type="1">
+<li><strong>Commit-reveal patterns</strong> (strongest protection)</li>
+<li><strong>Fair batching</strong> (good for DEX)</li>
+<li><strong>Slippage protection</strong> (essential for all swaps)</li>
+<li><strong>Time delays</strong> (for admin operations)</li>
+<li><strong>Rate limiting</strong> (spam prevention)</li>
+</ol>
+<p><strong>Recommendation</strong>: Combine multiple strategies for
+maximum protection, especially for high-value DeFi operations.</p>
+<hr />
+<p><strong>Last Updated</strong>: February 2026 <strong>Status</strong>:
+Implementation Guide</p>
+</body>
+</html>

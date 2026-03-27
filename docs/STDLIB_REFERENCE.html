@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>STDLIB_REFERENCE</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="dal-standard-library-reference">DAL Standard Library
+Reference</h1>
+<p><strong>Version:</strong> 1.0.8<br />
+<strong>Last Updated:</strong> 2026-02-06<br />
+<strong>Optimized for:</strong> AI/LLM code generation and human
+reference</p>
+<hr />
+<h2 id="overview">Overview</h2>
+<p>This document provides a comprehensive, machine-readable reference
+for all DAL standard library modules.</p>
+<p><strong>Format Convention:</strong></p>
+<pre><code>function_name(param1: Type, param2: Type) -&gt; ReturnType</code></pre>
+<hr />
+<h2 id="index">Index</h2>
+<ul>
+<li><a href="#chain-module">chain</a> - Blockchain operations</li>
+<li><a href="#crypto-module">crypto</a> - Cryptographic functions</li>
+<li><a href="#auth-module">auth</a> - Authentication</li>
+<li><a href="#db-module">db</a> - Database operations</li>
+<li><a href="#ai-module">ai</a> - AI/ML operations</li>
+<li><a href="#agent-module">agent</a> - Agent orchestration</li>
+<li><a href="#mold-module">mold</a> - Mold load/spawn</li>
+<li><a href="#iot-module">iot</a> - IoT device management</li>
+<li><a href="#oracle-module">oracle</a> - Oracle data feeds</li>
+<li><a href="#sync-module">sync</a> - Data synchronization</li>
+<li><a href="#web-module">web</a> - HTTP operations</li>
+<li><a href="#log-module">log</a> - Logging</li>
+<li><a href="#config-module">config</a> - Configuration</li>
+<li><a href="#cloudadmin-module">cloudadmin</a> - Cloud
+administration</li>
+<li><a href="#trust-module">trust</a> - Trust and permissions</li>
+<li><a href="#key-module">key</a> - Capability-based access control
+(keys to resources)</li>
+<li><a href="#aml-module">aml</a> - Anti-money laundering</li>
+<li><a href="#kyc-module">kyc</a> - Know Your Customer</li>
+<li><a href="#test-module">test</a> - Testing framework</li>
+</ul>
+<hr />
+<h2 id="chain-module">chain Module</h2>
+<p>Blockchain operations for deploying contracts, making calls, and
+managing assets.</p>
+<h3 id="functions">Functions</h3>
+<h4 id="deploy">deploy</h4>
+<pre class="dal"><code>chain::deploy(contract_name: String, constructor_args: String) -&gt; Result&lt;DeployResult, Error&gt;</code></pre>
+<p>Deploy a smart contract to the blockchain.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>contract_name</code>: Name of the contract to deploy</li>
+<li><code>constructor_args</code>: JSON string of constructor
+arguments</li>
+</ul>
+<p><strong>Returns:</strong> Deployment result with contract address</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let result = chain::deploy(&quot;MyToken&quot;, &quot;{}&quot;);
+log::info(&quot;Contract deployed at: &quot; + result.address);</code></pre>
+<hr />
+<h4 id="call">call</h4>
+<pre class="dal"><code>chain::call(contract_address: String, function_name: String, args: String) -&gt; Result&lt;CallResult, Error&gt;</code></pre>
+<p>Call a function on a deployed contract.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>contract_address</code>: Address of the deployed contract</li>
+<li><code>function_name</code>: Name of the function to call</li>
+<li><code>args</code>: JSON string of function arguments</li>
+</ul>
+<p><strong>Returns:</strong> Function call result</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let result = chain::call(&quot;0x742d35...&quot;, &quot;transfer&quot;, &quot;{\&quot;to\&quot;: \&quot;0xabc\&quot;, \&quot;amount\&quot;: 100}&quot;);</code></pre>
+<hr />
+<h4 id="get_balance">get_balance</h4>
+<pre class="dal"><code>chain::get_balance(chain_id: Int, address: String) -&gt; Int</code></pre>
+<p>Get the native token balance of an address.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>chain_id</code>: Blockchain chain ID (1=Ethereum, 137=Polygon,
+etc.)</li>
+<li><code>address</code>: Wallet address to query</li>
+</ul>
+<p><strong>Returns:</strong> Balance in wei (smallest denomination)</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let balance = chain::get_balance(1, &quot;0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb&quot;);
+log::info(&quot;Balance: &quot; + balance);</code></pre>
+<hr />
+<h4 id="get_gas_price">get_gas_price</h4>
+<pre class="dal"><code>chain::get_gas_price(chain_id: Int) -&gt; Int</code></pre>
+<p>Get current gas price for a chain.</p>
+<p><strong>Returns:</strong> Gas price in gwei</p>
+<hr />
+<h4 id="estimate_gas">estimate_gas</h4>
+<pre class="dal"><code>chain::estimate_gas(chain_id: Int, operation: String) -&gt; Int</code></pre>
+<p>Estimate gas cost for an operation.</p>
+<p><strong>Returns:</strong> Estimated gas units</p>
+<hr />
+<h4 id="get_transaction_status">get_transaction_status</h4>
+<pre class="dal"><code>chain::get_transaction_status(chain_id: Int, tx_hash: String) -&gt; String</code></pre>
+<p>Get status of a transaction.</p>
+<p><strong>Returns:</strong> Status string ("pending", "confirmed",
+"failed")</p>
+<hr />
+<h4 id="get_block_timestamp">get_block_timestamp</h4>
+<pre class="dal"><code>chain::get_block_timestamp(chain_id: Int) -&gt; Int</code></pre>
+<p>Get latest block timestamp.</p>
+<p><strong>Returns:</strong> Unix timestamp</p>
+<hr />
+<h4 id="mint">mint</h4>
+<pre class="dal"><code>chain::mint(name: String) -&gt; String</code></pre>
+<p>Mint an on-chain asset.</p>
+<p><strong>Returns:</strong> Asset ID</p>
+<hr />
+<h4 id="get">get</h4>
+<pre class="dal"><code>chain::get(asset_id: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get asset information.</p>
+<p><strong>Returns:</strong> Asset metadata</p>
+<hr />
+<h4 id="get_chain_config">get_chain_config</h4>
+<pre class="dal"><code>chain::get_chain_config(chain_id: Int) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get blockchain configuration.</p>
+<p><strong>Returns:</strong> Configuration map</p>
+<hr />
+<h4 id="get_supported_chains">get_supported_chains</h4>
+<pre class="dal"><code>chain::get_supported_chains() -&gt; List&lt;Map&lt;String, Value&gt;&gt;</code></pre>
+<p>Get list of supported blockchains.</p>
+<p><strong>Returns:</strong> List of chain configs</p>
+<hr />
+<h2 id="crypto-module">crypto Module</h2>
+<p>Cryptographic operations including hashing, signing, and
+encryption.</p>
+<h3 id="functions-1">Functions</h3>
+<h4 id="hash">hash</h4>
+<pre class="dal"><code>crypto::hash(data: String, algorithm: String) -&gt; String</code></pre>
+<p>Hash data using specified algorithm.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>data</code>: Data to hash</li>
+<li><code>algorithm</code>: "sha256" or "sha512"</li>
+</ul>
+<p><strong>Returns:</strong> Hex-encoded hash</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let hash = crypto::hash(&quot;hello world&quot;, &quot;sha256&quot;);</code></pre>
+<hr />
+<h4 id="sign">sign</h4>
+<pre class="dal"><code>crypto::sign(data: String, private_key: String) -&gt; String</code></pre>
+<p>Sign data with private key.</p>
+<p><strong>Returns:</strong> Signature (hex-encoded)</p>
+<hr />
+<h4 id="verify">verify</h4>
+<pre class="dal"><code>crypto::verify(data: String, signature: String, public_key: String) -&gt; Bool</code></pre>
+<p>Verify signature.</p>
+<p><strong>Returns:</strong> True if valid</p>
+<hr />
+<h4 id="generate_keypair">generate_keypair</h4>
+<pre class="dal"><code>crypto::generate_keypair(algorithm: String) -&gt; Map&lt;String, String&gt;</code></pre>
+<p>Generate public/private keypair.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>algorithm</code>: "rsa" or "ed25519"</li>
+</ul>
+<p><strong>Returns:</strong> Map with "public" and "private" keys</p>
+<hr />
+<h4 id="encrypt">encrypt</h4>
+<pre class="dal"><code>crypto::encrypt(data: String, public_key: String) -&gt; String</code></pre>
+<p>Encrypt data with public key.</p>
+<p><strong>Returns:</strong> Encrypted data (base64)</p>
+<hr />
+<h4 id="decrypt">decrypt</h4>
+<pre class="dal"><code>crypto::decrypt(encrypted_data: String, private_key: String) -&gt; String</code></pre>
+<p>Decrypt data with private key.</p>
+<p><strong>Returns:</strong> Original data</p>
+<hr />
+<h4 id="encrypt_aes256">encrypt_aes256</h4>
+<pre class="dal"><code>crypto::encrypt_aes256(data: String, key: String) -&gt; String</code></pre>
+<p>Encrypt with AES-256.</p>
+<p><strong>Returns:</strong> Encrypted data</p>
+<hr />
+<h4 id="decrypt_aes256">decrypt_aes256</h4>
+<pre class="dal"><code>crypto::decrypt_aes256(encrypted_data: String, key: String) -&gt; String</code></pre>
+<p>Decrypt with AES-256.</p>
+<p><strong>Returns:</strong> Decrypted data</p>
+<hr />
+<h4 id="random_hash">random_hash</h4>
+<pre class="dal"><code>crypto::random_hash(algorithm: String) -&gt; String</code></pre>
+<p>Generate random hash.</p>
+<p><strong>Returns:</strong> Random hash string</p>
+<hr />
+<h2 id="auth-module">auth Module</h2>
+<p>Authentication and user management.</p>
+<h3 id="functions-2">Functions</h3>
+<h4 id="create_user">create_user</h4>
+<pre class="dal"><code>auth::create_user(username: String, password: String, email: String) -&gt; String</code></pre>
+<p>Create a new user.</p>
+<p><strong>Returns:</strong> User ID</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let user_id = auth::create_user(&quot;alice&quot;, &quot;password123&quot;, &quot;alice@example.com&quot;);</code></pre>
+<hr />
+<h4 id="login">login</h4>
+<pre class="dal"><code>auth::login(username: String, password: String) -&gt; String</code></pre>
+<p>Authenticate user.</p>
+<p><strong>Returns:</strong> Session token</p>
+<hr />
+<h4 id="validate_token">validate_token</h4>
+<pre class="dal"><code>auth::validate_token(token: String) -&gt; Bool</code></pre>
+<p>Validate session token.</p>
+<p><strong>Returns:</strong> True if valid</p>
+<hr />
+<h4 id="session">session</h4>
+<pre class="dal"><code>auth::session() -&gt; Map&lt;String, Value&gt;
+auth::session(user_id: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get current session information.</p>
+<p><strong>Returns:</strong> Session map with user_id, timestamp,
+etc.</p>
+<hr />
+<h4 id="init_auth_system">init_auth_system</h4>
+<pre class="dal"><code>auth::init_auth_system() -&gt; Bool</code></pre>
+<p>Initialize authentication system.</p>
+<p><strong>Returns:</strong> Success status</p>
+<hr />
+<h2 id="db-module">db Module</h2>
+<p>Database operations for querying, migrations, and management.</p>
+<h3 id="functions-3">Functions</h3>
+<h4 id="connect">connect</h4>
+<pre class="dal"><code>db::connect(connection_string: String) -&gt; String</code></pre>
+<p>Connect to database.</p>
+<p><strong>Returns:</strong> Connection ID</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let conn = db::connect(&quot;postgresql://localhost:5432/mydb&quot;);</code></pre>
+<hr />
+<h4 id="query">query</h4>
+<pre class="dal"><code>db::query(conn: String, sql: String) -&gt; List&lt;Map&lt;String, Value&gt;&gt;</code></pre>
+<p>Execute SQL query.</p>
+<p><strong>Returns:</strong> Result rows</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let users = db::query(conn, &quot;SELECT * FROM users&quot;);</code></pre>
+<hr />
+<h4 id="execute">execute</h4>
+<pre class="dal"><code>db::execute(conn: String, sql: String) -&gt; Int</code></pre>
+<p>Execute SQL statement (INSERT, UPDATE, DELETE).</p>
+<p><strong>Returns:</strong> Number of affected rows</p>
+<hr />
+<h4 id="list_tables">list_tables</h4>
+<pre class="dal"><code>db::list_tables(conn: String) -&gt; List&lt;String&gt;</code></pre>
+<p>List all tables.</p>
+<p><strong>Returns:</strong> Table names</p>
+<hr />
+<h4 id="get_table_schema">get_table_schema</h4>
+<pre class="dal"><code>db::get_table_schema(conn: String, table_name: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get table schema.</p>
+<p><strong>Returns:</strong> Schema information</p>
+<hr />
+<h4 id="get_query_plan">get_query_plan</h4>
+<pre class="dal"><code>db::get_query_plan(conn: String, sql: String) -&gt; String</code></pre>
+<p>Get query execution plan.</p>
+<p><strong>Returns:</strong> Query plan</p>
+<hr />
+<h4 id="backup_database">backup_database</h4>
+<pre class="dal"><code>db::backup_database(conn: String, backup_path: String) -&gt; Bool</code></pre>
+<p>Backup database.</p>
+<p><strong>Returns:</strong> Success status</p>
+<hr />
+<h4 id="restore_database">restore_database</h4>
+<pre class="dal"><code>db::restore_database(conn: String, backup_path: String) -&gt; Bool</code></pre>
+<p>Restore from backup.</p>
+<p><strong>Returns:</strong> Success status</p>
+<hr />
+<h4 id="apply_migration">apply_migration</h4>
+<pre class="dal"><code>db::apply_migration(conn: String, migration_sql: String) -&gt; Bool</code></pre>
+<p>Apply database migration.</p>
+<p><strong>Returns:</strong> Success status</p>
+<hr />
+<h4 id="rollback_migration">rollback_migration</h4>
+<pre class="dal"><code>db::rollback_migration(conn: String, version: String) -&gt; Bool</code></pre>
+<p>Rollback migration.</p>
+<p><strong>Returns:</strong> Success status</p>
+<hr />
+<h4 id="ping_database">ping_database</h4>
+<pre class="dal"><code>db::ping_database(conn: String) -&gt; Bool</code></pre>
+<p>Check database connectivity.</p>
+<p><strong>Returns:</strong> True if connected</p>
+<hr />
+<h4 id="get_database_metrics">get_database_metrics</h4>
+<pre class="dal"><code>db::get_database_metrics(conn: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get database metrics.</p>
+<p><strong>Returns:</strong> Metrics map (connections, queries/sec,
+etc.)</p>
+<hr />
+<h2 id="agent-module">agent Module</h2>
+<p>AI agent orchestration, coordination, and communication.</p>
+<h3 id="functions-4">Functions</h3>
+<h4 id="spawn">spawn</h4>
+<pre class="dal"><code>agent::spawn(config: Map&lt;String, Value&gt;) -&gt; AgentContext</code></pre>
+<p>Create a new agent.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>config</code>: Agent configuration map with:
+<ul>
+<li><code>name</code>: Agent name</li>
+<li><code>type</code>: "ai", "system", "worker", or "custom:<name>"</li>
+<li><code>role</code>: Agent role description</li>
+<li><code>capabilities</code>: List of capabilities</li>
+<li><code>trust_level</code>: "standard", "high", or "critical"</li>
+</ul></li>
+</ul>
+<p><strong>Returns:</strong> Agent context with agent_id</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let agent = agent::spawn({
+    &quot;name&quot;: &quot;FraudDetector&quot;,
+    &quot;type&quot;: &quot;ai&quot;,
+    &quot;role&quot;: &quot;Detect fraudulent transactions&quot;,
+    &quot;capabilities&quot;: [&quot;fraud_detection&quot;, &quot;pattern_analysis&quot;],
+    &quot;trust_level&quot;: &quot;high&quot;
+});
+log::info(&quot;Agent created: &quot; + agent.agent_id);</code></pre>
+<hr />
+<h4 id="coordinate">coordinate</h4>
+<pre class="dal"><code>agent::coordinate(agent_id: String, task: AgentTask, coordination_type: String) -&gt; Bool</code></pre>
+<p>Coordinate agent activities.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>agent_id</code>: Target agent ID</li>
+<li><code>task</code>: Task object</li>
+<li><code>coordination_type</code>: "task_distribution",
+"resource_sharing", or "conflict_resolution"</li>
+</ul>
+<p><strong>Returns:</strong> Success status</p>
+<hr />
+<h4 id="communicate">communicate</h4>
+<pre class="dal"><code>agent::communicate(sender_id: String, receiver_id: String, message: AgentMessage) -&gt; Bool</code></pre>
+<p>Send message between agents.</p>
+<p><strong>Returns:</strong> Success status</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let msg = agent::create_agent_message(
+    &quot;msg_001&quot;,
+    sender_id,
+    receiver_id,
+    &quot;task_assignment&quot;,
+    &quot;Process batch 42&quot;
+);
+agent::communicate(sender_id, receiver_id, msg);</code></pre>
+<hr />
+<h4 id="evolve">evolve</h4>
+<pre class="dal"><code>agent::evolve(agent_id: String, evolution_data: Map&lt;String, Value&gt;) -&gt; Bool</code></pre>
+<p>Update agent through learning.</p>
+<p><strong>Returns:</strong> Success status</p>
+<hr />
+<h4 id="validate_capabilities">validate_capabilities</h4>
+<pre class="dal"><code>agent::validate_capabilities(agent_type: String, required_capabilities: List&lt;String&gt;) -&gt; Bool</code></pre>
+<p>Validate agent has required capabilities.</p>
+<p><strong>Returns:</strong> True if capable</p>
+<hr />
+<h4 id="create_agent_config">create_agent_config</h4>
+<pre class="dal"><code>agent::create_agent_config(name: String, agent_type: String, role: String) -&gt; AgentConfig</code></pre>
+<p>Create agent configuration.</p>
+<p><strong>Returns:</strong> Config object</p>
+<hr />
+<h4 id="create_agent_task">create_agent_task</h4>
+<pre class="dal"><code>agent::create_agent_task(task_id: String, description: String, priority: String) -&gt; AgentTask</code></pre>
+<p>Create agent task.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>priority</code>: "low", "medium", "high", or "critical"</li>
+</ul>
+<p><strong>Returns:</strong> Task object</p>
+<hr />
+<h4 id="create_agent_message">create_agent_message</h4>
+<pre class="dal"><code>agent::create_agent_message(
+    message_id: String,
+    sender_id: String,
+    receiver_id: String,
+    message_type: String,
+    content: Value
+) -&gt; AgentMessage</code></pre>
+<p>Create agent message.</p>
+<p><strong>Returns:</strong> Message object</p>
+<hr />
+<h4 id="receive_pending_tasks">receive_pending_tasks</h4>
+<pre class="dal"><code>agent::receive_pending_tasks(agent_id: String) -&gt; List&lt;AgentTask&gt;</code></pre>
+<p>Get pending tasks for agent.</p>
+<p><strong>Returns:</strong> List of tasks</p>
+<hr />
+<h4 id="receive_messages">receive_messages</h4>
+<pre class="dal"><code>agent::receive_messages(agent_id: String) -&gt; List&lt;AgentMessage&gt;</code></pre>
+<p>Get messages for agent.</p>
+<p><strong>Returns:</strong> List of messages</p>
+<hr />
+<h2 id="mold-module">mold Module</h2>
+<p>Load and spawn agents from mold files (reusable agent
+configurations). Supports local paths, IPFS, and on-chain molds.</p>
+<h3 id="functions-5">Functions</h3>
+<h4 id="load">load</h4>
+<pre class="dal"><code>mold::load(source: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Load mold config from path, name, or <code>ipfs://cid</code>. Returns
+config map with name, version, agent {...}.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>source</code>: Path, mold name (e.g.
+<code>"verify_mold"</code>), or <code>ipfs://Qm...</code></li>
+</ul>
+<p><strong>Returns:</strong> Config map (name, version, agent {...})</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let config = mold::load(&quot;verify_mold&quot;);
+log::info(&quot;Mold: &quot; + config.name + &quot; v&quot; + config.version);</code></pre>
+<hr />
+<h4 id="spawn_from">spawn_from</h4>
+<pre class="dal"><code>mold::spawn_from(source: String, name_override?: String) -&gt; String</code></pre>
+<p>Load mold and spawn agent. Returns agent_id.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>source</code>: Path, mold name, or
+<code>ipfs://cid</code></li>
+<li><code>name_override</code>: Optional agent name (else uses mold
+name)</li>
+</ul>
+<p><strong>Returns:</strong> agent_id</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let agent_id = mold::spawn_from(&quot;verify_mold&quot;, &quot;MyAgent&quot;);</code></pre>
+<hr />
+<h4 id="list">list</h4>
+<pre class="dal"><code>mold::list() -&gt; List&lt;String&gt;</code></pre>
+<p>List local mold file paths (base, mold/, mold/samples).</p>
+<p><strong>Returns:</strong> List of path strings</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let paths = mold::list();</code></pre>
+<hr />
+<h4 id="get_info">get_info</h4>
+<pre class="dal"><code>mold::get_info(mold_id: Int) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get on-chain mold info (creator, ipfs_hash, mint_fee, mint_count,
+etc.). Requires <code>web3</code> feature.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>mold_id</code>: On-chain mold NFT ID</li>
+</ul>
+<p><strong>Returns:</strong> Map with creator, ipfs_hash, mint_fee,
+mint_count, max_use_count, active, created_at, updated_at</p>
+<hr />
+<h4 id="use_mold">use_mold</h4>
+<pre class="dal"><code>mold::use_mold(mold_id: Int, name_override?: String) -&gt; String</code></pre>
+<p>Use on-chain mold: pay mint fee, enforce cap, load from IPFS, spawn
+agent. Requires <code>web3</code> feature and MoldRegistry deployed.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>mold_id</code>: On-chain mold NFT ID</li>
+<li><code>name_override</code>: Optional agent name</li>
+</ul>
+<p><strong>Returns:</strong> agent_id</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let agent_id = mold::use_mold(123, &quot;OnChainAgent&quot;);</code></pre>
+<hr />
+<h2 id="ai-module">ai Module</h2>
+<p>AI and machine learning operations.</p>
+<h3 id="functions-6">Functions</h3>
+<h4 id="generate_text">generate_text</h4>
+<pre class="dal"><code>ai::generate_text(prompt: String) -&gt; String</code></pre>
+<p>Generate text from prompt.</p>
+<p><strong>Returns:</strong> Generated text</p>
+<hr />
+<h4 id="classify">classify</h4>
+<pre class="dal"><code>ai::classify(model: String, input: String) -&gt; String</code></pre>
+<p>Classify input with model.</p>
+<p><strong>Returns:</strong> Classification result</p>
+<hr />
+<h4 id="embed">embed</h4>
+<pre class="dal"><code>ai::embed(text: String) -&gt; List&lt;Float&gt;</code></pre>
+<p>Get embedding vector for text.</p>
+<p><strong>Returns:</strong> Embedding vector</p>
+<hr />
+<h4 id="cosine_similarity">cosine_similarity</h4>
+<pre class="dal"><code>ai::cosine_similarity(vec1: List&lt;Float&gt;, vec2: List&lt;Float&gt;) -&gt; Float</code></pre>
+<p>Calculate cosine similarity.</p>
+<p><strong>Returns:</strong> Similarity score (-1 to 1)</p>
+<hr />
+<h4 id="analyze_text">analyze_text</h4>
+<pre class="dal"><code>ai::analyze_text(text: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Analyze text (sentiment, entities, etc.).</p>
+<p><strong>Returns:</strong> Analysis results</p>
+<hr />
+<h4 id="analyze_image_url">analyze_image_url</h4>
+<pre class="dal"><code>ai::analyze_image_url(url: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Analyze image from URL.</p>
+<p><strong>Returns:</strong> Analysis results</p>
+<hr />
+<h2 id="iot-module">iot Module</h2>
+<p>IoT device management and sensor operations.</p>
+<h3 id="functions-7">Functions</h3>
+<h4 id="register_device">register_device</h4>
+<pre class="dal"><code>iot::register_device(device_config: Map&lt;String, Value&gt;) -&gt; String</code></pre>
+<p>Register IoT device.</p>
+<p><strong>Returns:</strong> Device ID</p>
+<hr />
+<h4 id="connect_device">connect_device</h4>
+<pre class="dal"><code>iot::connect_device(device_id: String) -&gt; Bool</code></pre>
+<p>Connect to device.</p>
+<p><strong>Returns:</strong> Success status</p>
+<hr />
+<h4 id="get_device_status">get_device_status</h4>
+<pre class="dal"><code>iot::get_device_status(device_id: String) -&gt; String</code></pre>
+<p>Get device status.</p>
+<p><strong>Returns:</strong> Status ("online", "offline", "error")</p>
+<hr />
+<h4 id="read_sensor_data">read_sensor_data</h4>
+<pre class="dal"><code>iot::read_sensor_data(sensor_id: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Read sensor data.</p>
+<p><strong>Returns:</strong> Sensor readings</p>
+<hr />
+<h4 id="send_actuator_command">send_actuator_command</h4>
+<pre class="dal"><code>iot::send_actuator_command(actuator_id: String, command: String) -&gt; Bool</code></pre>
+<p>Send command to actuator.</p>
+<p><strong>Returns:</strong> Success status</p>
+<hr />
+<h4 id="monitor_power_consumption">monitor_power_consumption</h4>
+<pre class="dal"><code>iot::monitor_power_consumption(device_id: String) -&gt; Float</code></pre>
+<p>Monitor device power usage.</p>
+<p><strong>Returns:</strong> Power consumption (watts)</p>
+<hr />
+<h4 id="optimize_power_usage">optimize_power_usage</h4>
+<pre class="dal"><code>iot::optimize_power_usage(device_id: String, target_hours: Int) -&gt; String</code></pre>
+<p>Optimize power usage.</p>
+<p><strong>Returns:</strong> Optimization result</p>
+<hr />
+<h4 id="detect_sensor_anomalies">detect_sensor_anomalies</h4>
+<pre class="dal"><code>iot::detect_sensor_anomalies(sensor_data: Map&lt;String, Value&gt;) -&gt; String</code></pre>
+<p>Detect anomalies in sensor data.</p>
+<p><strong>Returns:</strong> Anomaly report</p>
+<hr />
+<h4 id="predict_device_failure">predict_device_failure</h4>
+<pre class="dal"><code>iot::predict_device_failure(device_id: String, historical_data: Map&lt;String, Value&gt;) -&gt; Float</code></pre>
+<p>Predict device failure probability.</p>
+<p><strong>Returns:</strong> Failure probability (0-1)</p>
+<hr />
+<h2 id="oracle-module">oracle Module</h2>
+<p>Oracle data feed operations.</p>
+<h3 id="functions-8">Functions</h3>
+<h4 id="fetch">fetch</h4>
+<pre class="dal"><code>oracle::fetch(source: String, query_type: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Fetch data from oracle.</p>
+<p><strong>Returns:</strong> Oracle data</p>
+<hr />
+<h4 id="stream">stream</h4>
+<pre class="dal"><code>oracle::stream(source: String, callback: String) -&gt; String</code></pre>
+<p>Create data stream from oracle.</p>
+<p><strong>Returns:</strong> Stream ID</p>
+<hr />
+<h4 id="get_stream">get_stream</h4>
+<pre class="dal"><code>oracle::get_stream(stream_id: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get stream status.</p>
+<p><strong>Returns:</strong> Stream info</p>
+<hr />
+<h4 id="close_stream">close_stream</h4>
+<pre class="dal"><code>oracle::close_stream(stream_id: String) -&gt; Bool</code></pre>
+<p>Close data stream.</p>
+<p><strong>Returns:</strong> Success status</p>
+<hr />
+<h4 id="create_source">create_source</h4>
+<pre class="dal"><code>oracle::create_source(name: String, url: String) -&gt; String</code></pre>
+<p>Create oracle source.</p>
+<p><strong>Returns:</strong> Source ID</p>
+<hr />
+<h4 id="verify-1">verify</h4>
+<pre class="dal"><code>oracle::verify(data: Map&lt;String, Value&gt;, signature: String) -&gt; Bool</code></pre>
+<p>Verify oracle data signature.</p>
+<p><strong>Returns:</strong> True if valid</p>
+<hr />
+<h2 id="web-module">web Module</h2>
+<p>HTTP operations for web requests and responses.</p>
+<h3 id="functions-9">Functions</h3>
+<h4 id="get_request">get_request</h4>
+<pre class="dal"><code>web::get_request(url: String) -&gt; String</code></pre>
+<p>HTTP GET request.</p>
+<p><strong>Returns:</strong> Response body</p>
+<hr />
+<h4 id="post_request">post_request</h4>
+<pre class="dal"><code>web::post_request(url: String, data: String) -&gt; String</code></pre>
+<p>HTTP POST request.</p>
+<p><strong>Returns:</strong> Response body</p>
+<hr />
+<h4 id="parse_url">parse_url</h4>
+<pre class="dal"><code>web::parse_url(url: String) -&gt; Map&lt;String, String&gt;</code></pre>
+<p>Parse URL into components.</p>
+<p><strong>Returns:</strong> Map with scheme, host, path, query,
+etc.</p>
+<hr />
+<h4 id="render_template">render_template</h4>
+<pre class="dal"><code>web::render_template(template: String, variables: Map&lt;String, Value&gt;) -&gt; String</code></pre>
+<p>Render template with variables.</p>
+<p><strong>Returns:</strong> Rendered HTML</p>
+<hr />
+<h2 id="log-module">log Module</h2>
+<p>Logging operations.</p>
+<h3 id="functions-10">Functions</h3>
+<h4 id="info">info</h4>
+<pre class="dal"><code>log::info(message: String)
+log::info(source: String, message: String)</code></pre>
+<p>Log info message.</p>
+<hr />
+<h4 id="warn">warn</h4>
+<pre class="dal"><code>log::warn(message: String)
+log::warn(source: String, message: String)</code></pre>
+<p>Log warning message.</p>
+<hr />
+<h4 id="error">error</h4>
+<pre class="dal"><code>log::error(message: String)
+log::error(source: String, message: String)</code></pre>
+<p>Log error message.</p>
+<hr />
+<h4 id="debug">debug</h4>
+<pre class="dal"><code>log::debug(message: String)
+log::debug(source: String, message: String)</code></pre>
+<p>Log debug message.</p>
+<hr />
+<h4 id="audit">audit</h4>
+<pre class="dal"><code>log::audit(event: String, data: Map&lt;String, Value&gt;)
+log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code></pre>
+<p>Log audit event.</p>
+<hr />
+<h4 id="get_stats">get_stats</h4>
+<pre class="dal"><code>log::get_stats() -&gt; Map&lt;String, Int&gt;</code></pre>
+<p>Get logging statistics.</p>
+<p><strong>Returns:</strong> Stats (total logs, by level, etc.)</p>
+<hr />
+<h4 id="get_entries">get_entries</h4>
+<pre class="dal"><code>log::get_entries() -&gt; List&lt;Map&lt;String, Value&gt;&gt;</code></pre>
+<p>Get recent log entries.</p>
+<p><strong>Returns:</strong> Log entries</p>
+<hr />
+<h4 id="get_entries_by_level">get_entries_by_level</h4>
+<pre class="dal"><code>log::get_entries_by_level(level: String) -&gt; List&lt;Map&lt;String, Value&gt;&gt;</code></pre>
+<p>Get logs by level.</p>
+<p><strong>Returns:</strong> Filtered log entries</p>
+<hr />
+<h4 id="clear">clear</h4>
+<pre class="dal"><code>log::clear()</code></pre>
+<p>Clear all logs.</p>
+<hr />
+<h2 id="config-module">config Module</h2>
+<p>Configuration management.</p>
+<h3 id="functions-11">Functions</h3>
+<h4 id="get_env">get_env</h4>
+<pre class="dal"><code>config::get_env(key: String) -&gt; String</code></pre>
+<p>Get environment variable.</p>
+<p><strong>Returns:</strong> Value or empty string</p>
+<hr />
+<h4 id="get_database_config">get_database_config</h4>
+<pre class="dal"><code>config::get_database_config() -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get database configuration.</p>
+<p><strong>Returns:</strong> DB config</p>
+<hr />
+<h4 id="get_api_config">get_api_config</h4>
+<pre class="dal"><code>config::get_api_config() -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get API configuration.</p>
+<p><strong>Returns:</strong> API config</p>
+<hr />
+<h4 id="get_blockchain_config">get_blockchain_config</h4>
+<pre class="dal"><code>config::get_blockchain_config() -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get blockchain configuration.</p>
+<p><strong>Returns:</strong> Blockchain config</p>
+<hr />
+<h4 id="get_ai_config">get_ai_config</h4>
+<pre class="dal"><code>config::get_ai_config() -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get AI configuration.</p>
+<p><strong>Returns:</strong> AI config</p>
+<hr />
+<h2 id="cloudadmin-module">cloudadmin Module</h2>
+<p>Cloud administration and governance.</p>
+<h3 id="functions-12">Functions</h3>
+<h4 id="authorize">authorize</h4>
+<pre class="dal"><code>cloudadmin::authorize(admin_id: String, operation: String, resource: String) -&gt; Bool</code></pre>
+<p>Check authorization.</p>
+<p><strong>Returns:</strong> True if authorized</p>
+<hr />
+<h4 id="enforce_policy">enforce_policy</h4>
+<pre class="dal"><code>cloudadmin::enforce_policy(policy_name: String, context: AdminContext) -&gt; Bool</code></pre>
+<p>Enforce admin policy.</p>
+<p><strong>Returns:</strong> True if allowed</p>
+<hr />
+<h4 id="validate_hybrid_trust">validate_hybrid_trust</h4>
+<pre class="dal"><code>cloudadmin::validate_hybrid_trust(admin_trust: String, user_trust: String) -&gt; Bool</code></pre>
+<p>Validate hybrid trust.</p>
+<p><strong>Returns:</strong> True if valid</p>
+<hr />
+<h4 id="bridge_trusts">bridge_trusts</h4>
+<pre class="dal"><code>cloudadmin::bridge_trusts(centralized_trust: String, decentralized_trust: String) -&gt; Bool</code></pre>
+<p>Bridge trust models.</p>
+<p><strong>Returns:</strong> True if bridged</p>
+<hr />
+<h2 id="trust-module">trust Module</h2>
+<p>Trust and permission management.</p>
+<h3 id="functions-13">Functions</h3>
+<h4 id="authorize-1">authorize</h4>
+<pre class="dal"><code>trust::authorize(admin_id: String, operation: String, resource: String) -&gt; Bool</code></pre>
+<p>Authorize operation.</p>
+<p><strong>Returns:</strong> True if authorized</p>
+<hr />
+<h4 id="enforce_policy-1">enforce_policy</h4>
+<pre class="dal"><code>trust::enforce_policy(policy_name: String, context: AdminContext) -&gt; Bool</code></pre>
+<p>Enforce policy.</p>
+<p><strong>Returns:</strong> True if allowed</p>
+<hr />
+<h4 id="validate_hybrid_trust-1">validate_hybrid_trust</h4>
+<pre class="dal"><code>trust::validate_hybrid_trust(admin_trust: String, user_trust: String) -&gt; Bool</code></pre>
+<p>Validate hybrid trust.</p>
+<p><strong>Returns:</strong> True if valid</p>
+<hr />
+<h4 id="bridge_trusts-1">bridge_trusts</h4>
+<pre class="dal"><code>trust::bridge_trusts(centralized_trust: String, decentralized_trust: String) -&gt; Bool</code></pre>
+<p>Bridge trust models.</p>
+<p><strong>Returns:</strong> True if bridged</p>
+<hr />
+<h4 id="register_admin">register_admin</h4>
+<pre class="dal"><code>trust::register_admin(admin_id: String, level: String, permissions: List&lt;String&gt;)</code></pre>
+<p>Register admin user.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>level</code>: "user", "moderator", "admin", or
+"superadmin"</li>
+</ul>
+<hr />
+<h2 id="key-module">key Module</h2>
+<p>Capability-based access control (keys to resources).</p>
+<h3 id="functions-14">Functions</h3>
+<h4 id="create">create</h4>
+<pre class="dal"><code>key::create(resource: String, permissions: List&lt;String&gt;) -&gt; Capability</code></pre>
+<p>Create key (capability).</p>
+<p><strong>Returns:</strong> Capability</p>
+<hr />
+<h4 id="check">check</h4>
+<pre class="dal"><code>key::check(request: CapabilityRequest) -&gt; Bool</code></pre>
+<p>Check if operation is allowed.</p>
+<p><strong>Returns:</strong> True if allowed</p>
+<hr />
+<h4 id="create_principal">create_principal</h4>
+<pre class="dal"><code>key::create_principal(principal_id: String, name: String) -&gt; Principal</code></pre>
+<p>Create security principal.</p>
+<p><strong>Returns:</strong> Principal</p>
+<hr />
+<h2 id="aml-module">aml Module</h2>
+<p>Anti-money laundering checks.</p>
+<h3 id="functions-15">Functions</h3>
+<h4 id="perform_check">perform_check</h4>
+<pre class="dal"><code>aml::perform_check(transaction: Map&lt;String, Value&gt;, address: String) -&gt; String</code></pre>
+<p>Perform AML check.</p>
+<p><strong>Returns:</strong> Check ID</p>
+<hr />
+<h4 id="get_check_status">get_check_status</h4>
+<pre class="dal"><code>aml::get_check_status(check_id: String) -&gt; String</code></pre>
+<p>Get check status.</p>
+<p><strong>Returns:</strong> Status ("pending", "passed", "failed")</p>
+<hr />
+<h4 id="list_providers">list_providers</h4>
+<pre class="dal"><code>aml::list_providers() -&gt; List&lt;String&gt;</code></pre>
+<p>List AML providers.</p>
+<p><strong>Returns:</strong> Provider names</p>
+<hr />
+<h2 id="kyc-module">kyc Module</h2>
+<p>Know Your Customer verification.</p>
+<h3 id="functions-16">Functions</h3>
+<h4 id="verify-2">verify</h4>
+<pre class="dal"><code>kyc::verify(user_id: String, verification_data: Map&lt;String, Value&gt;) -&gt; String</code></pre>
+<p>Verify user identity.</p>
+<p><strong>Returns:</strong> Verification ID</p>
+<hr />
+<h4 id="get_verification_status">get_verification_status</h4>
+<pre class="dal"><code>kyc::get_verification_status(verification_id: String) -&gt; String</code></pre>
+<p>Get verification status.</p>
+<p><strong>Returns:</strong> Status ("pending", "verified",
+"rejected")</p>
+<hr />
+<h2 id="test-module">test Module</h2>
+<p>Testing framework.</p>
+<h3 id="functions-17">Functions</h3>
+<h4 id="run_registered_tests">run_registered_tests</h4>
+<pre class="dal"><code>test::run_registered_tests() -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Run all registered tests.</p>
+<p><strong>Returns:</strong> Test results</p>
+<hr />
+<h4 id="get_test_suites">get_test_suites</h4>
+<pre class="dal"><code>test::get_test_suites() -&gt; List&lt;String&gt;</code></pre>
+<p>Get test suite names.</p>
+<p><strong>Returns:</strong> Suite names</p>
+<hr />
+<h4 id="get_results">get_results</h4>
+<pre class="dal"><code>test::get_results() -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Get last test results.</p>
+<p><strong>Returns:</strong> Results</p>
+<hr />
+<h2 id="type-definitions">Type Definitions</h2>
+<h3 id="common-types">Common Types</h3>
+<pre class="dal"><code>// Agent Types
+type AgentContext = Map&lt;String, Value&gt;
+type AgentConfig = Map&lt;String, Value&gt;
+type AgentTask = Map&lt;String, Value&gt;
+type AgentMessage = Map&lt;String, Value&gt;
+
+// Admin Types
+type AdminContext = Map&lt;String, Value&gt;
+
+// Capability Types
+type CapabilityRequest = Map&lt;String, Value&gt;
+
+// Result Types
+type DeployResult = Map&lt;String, Value&gt;  // { address: String, tx_hash: String }
+type CallResult = Map&lt;String, Value&gt;    // { success: Bool, result: Value }</code></pre>
+<hr />
+<h2 id="error-handling">Error Handling</h2>
+<p>All functions that can fail return
+<code>Result&lt;T, Error&gt;</code> or throw runtime errors. Use
+try-catch for error handling:</p>
+<pre class="dal"><code>try {
+    let result = chain::deploy(&quot;MyContract&quot;, &quot;{}&quot;);
+    log::info(&quot;Success: &quot; + result.address);
+} catch error {
+    log::error(&quot;Failed: &quot; + error);
+}</code></pre>
+<hr />
+<h2 id="best-practices-for-aillm-code-generation">Best Practices for
+AI/LLM Code Generation</h2>
+<ol type="1">
+<li><p><strong>Always import modules:</strong></p>
+<pre class="dal"><code>import stdlib::chain;
+import stdlib::agent;</code></pre></li>
+<li><p><strong>Use try-catch for error handling:</strong></p>
+<pre class="dal"><code>try {
+    // risky operation
+} catch error {
+    log::error(&quot;Error: &quot; + error);
+}</code></pre></li>
+<li><p><strong>Leverage built-in functions:</strong></p>
+<ul>
+<li>Don't implement crypto: use <code>crypto::hash()</code></li>
+<li>Don't write HTTP clients: use <code>web::get_request()</code></li>
+<li>Don't implement auth: use <code>auth::create_user()</code></li>
+</ul></li>
+<li><p><strong>Use services for stateful components:</strong></p>
+<pre class="dal"><code>@chain(&quot;ethereum&quot;)
+service MyContract {
+    var state: String = &quot;initial&quot;;
+    
+    function update() {
+        state = &quot;updated&quot;;
+    }
+}</code></pre></li>
+<li><p><strong>Follow attribute patterns:</strong></p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+@ai
+service SmartAgent { }</code></pre></li>
+</ol>
+<hr />
+<p><strong>Document Version:</strong> 1.0<br />
+<strong>Last Updated for AI Training:</strong> 2026-02-06<br />
+<strong>Machine-Readable Format:</strong> Yes<br />
+<strong>Status:</strong> Beta (v1.0.8)</p>
+</body>
+</html>

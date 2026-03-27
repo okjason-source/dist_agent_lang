@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TESTING_GUIDE</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="comprehensive-testing-guide-for-dal">Comprehensive Testing Guide
+for DAL</h1>
+<p>This guide covers all testing approaches in the Dist Agent Language
+ecosystem.</p>
+<h2 id="quick-start">Quick Start</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Layer 1: Run Rust unit tests (syntax validation)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> dist_agent_lang</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Layer 2: Semantic validation (used within tests)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># See examples in tests/example_tests.rs</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Layer 3: Run DAL test files (runtime behavior)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/run_dal_tests.sh</span></span></code></pre></div>
+<h2 id="testing-philosophy">Testing Philosophy</h2>
+<p>DAL uses a <strong>three-layer testing strategy</strong> that
+provides comprehensive validation at different levels:</p>
+<ol type="1">
+<li><strong>Layer 1</strong>: Fast syntax validation (Rust unit
+tests)</li>
+<li><strong>Layer 2</strong>: Semantic validation (validation
+helpers)</li>
+<li><strong>Layer 3</strong>: Runtime behavior testing (DAL test
+files)</li>
+</ol>
+<p>For complete details, see <a
+href="../THREE_LAYER_TESTING.html"><code>THREE_LAYER_TESTING.md</code></a>.</p>
+<h2 id="layer-1-rust-unit-tests">Layer 1: Rust Unit Tests</h2>
+<h3 id="purpose">Purpose</h3>
+<p>Validate that all DAL code parses correctly and has valid syntax.</p>
+<h3 id="location">Location</h3>
+<p><code>/dist_agent_lang/tests/example_tests.rs</code></p>
+<h3 id="running-tests">Running Tests</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run all tests</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run only example tests</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test <span class="at">--test</span> example_tests</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific test</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test test_hello_world_demo_parses</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with verbose output</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test <span class="at">--</span> <span class="at">--nocapture</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Run tests for a category</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test test_blockchain_examples_parse</span></code></pre></div>
+<h3 id="what-gets-tested">What Gets Tested</h3>
+<p>✅ All <code>.dal</code> files in <code>examples/</code> directory ✅
+Syntax correctness ✅ Parse-time validation ✅ Attribute syntax ✅
+Statement structure</p>
+<h3 id="adding-new-tests">Adding New Tests</h3>
+<p>Tests automatically include any <code>.dal</code> file in the
+<code>examples/</code> directory. To add a new test:</p>
+<ol type="1">
+<li>Add your <code>.dal</code> file to <code>examples/</code></li>
+<li>Run <code>cargo test</code></li>
+<li>The test suite will automatically pick it up</li>
+</ol>
+<h3 id="example-output">Example Output</h3>
+<pre><code>running 25 tests
+test test_hello_world_demo_parses ... ok
+test test_cross_chain_patterns_parses ... ok
+test test_token_contract_parses ... ok
+test test_all_examples_parse ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored</code></pre>
+<h2 id="layer-2-semantic-validators">Layer 2: Semantic Validators</h2>
+<h3 id="purpose-1">Purpose</h3>
+<p>Validate semantic meaning beyond syntax (attribute values, types,
+rules).</p>
+<h3 id="location-1">Location</h3>
+<p><code>/dist_agent_lang/src/stdlib/test.rs</code></p>
+<h3 id="available-functions">Available Functions</h3>
+<h4 id="attribute-validation">Attribute Validation</h4>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate trust models</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_valid_trust_model(<span class="st">&quot;hybrid&quot;</span>)        <span class="co">// ✓</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_valid_trust_model(<span class="st">&quot;centralized&quot;</span>)   <span class="co">// ✓</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_valid_trust_model(<span class="st">&quot;decentralized&quot;</span>) <span class="co">// ✓</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_valid_trust_model(<span class="st">&quot;invalid&quot;</span>)       <span class="co">// ✗ Error</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate blockchains</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_valid_chain(<span class="st">&quot;ethereum&quot;</span>)  <span class="co">// ✓</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_valid_chain(<span class="st">&quot;polygon&quot;</span>)   <span class="co">// ✓</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_valid_chain(<span class="st">&quot;solana&quot;</span>)    <span class="co">// ✓</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_valid_chain(<span class="st">&quot;fake&quot;</span>)      <span class="co">// ✗ Error</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate attribute compatibility</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_compatible_attributes([<span class="st">&quot;trust&quot;</span>])            <span class="co">// ✓</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_compatible_attributes([<span class="st">&quot;trust&quot;</span><span class="op">,</span> <span class="st">&quot;chain&quot;</span>])   <span class="co">// ✓</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_compatible_attributes([<span class="st">&quot;secure&quot;</span><span class="op">,</span> <span class="st">&quot;public&quot;</span>]) <span class="co">// ✗ Exclusive</span></span></code></pre></div>
+<h4 id="type-validation">Type Validation</h4>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate types</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> value <span class="op">=</span> <span class="pp">Value::</span>Number(<span class="dv">42.0</span>)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_type(<span class="op">&amp;</span>value<span class="op">,</span> <span class="st">&quot;number&quot;</span>)  <span class="co">// ✓</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_type(<span class="op">&amp;</span>value<span class="op">,</span> <span class="st">&quot;string&quot;</span>)  <span class="co">// ✗ Error</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate ranges</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_in_range(<span class="pp">Value::</span>Number(<span class="dv">50.0</span>)<span class="op">,</span> <span class="dv">0.0</span><span class="op">,</span> <span class="dv">100.0</span>)  <span class="co">// ✓</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_in_range(<span class="pp">Value::</span>Number(<span class="dv">150.0</span>)<span class="op">,</span> <span class="dv">0.0</span><span class="op">,</span> <span class="dv">100.0</span>) <span class="co">// ✗ Out of range</span></span></code></pre></div>
+<h4 id="collection-validation">Collection Validation</h4>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate length</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_length(<span class="pp">Value::</span><span class="dt">String</span>(<span class="st">&quot;hello&quot;</span>)<span class="op">,</span> <span class="dv">5</span>)  <span class="co">// ✓</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate not empty</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_not_empty(<span class="pp">Value::</span>Vector(<span class="pp">vec!</span>[<span class="op">...</span>]))  <span class="co">// ✓</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate map keys</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_has_key(map<span class="op">,</span> <span class="st">&quot;key&quot;</span>)  <span class="co">// ✓</span></span></code></pre></div>
+<h4 id="string-validation">String Validation</h4>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_contains(<span class="st">&quot;hello world&quot;</span><span class="op">,</span> <span class="st">&quot;world&quot;</span>)  <span class="co">// ✓</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="pp">test::</span>expect_starts_with(<span class="st">&quot;0x123&quot;</span><span class="op">,</span> <span class="st">&quot;0x&quot;</span>)        <span class="co">// ✓</span></span></code></pre></div>
+<h3 id="using-in-rust-tests">Using in Rust Tests</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_semantic_validation() <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> source <span class="op">=</span> <span class="st">r#&quot;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">        @trust(&quot;hybrid&quot;)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="st">        @chain(&quot;ethereum&quot;)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="st">        service MyService {}</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;#</span><span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ast <span class="op">=</span> parse_source(source)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="pp">Statement::</span>Service(service) <span class="op">=</span> <span class="op">&amp;</span>ast<span class="op">.</span>statements[<span class="dv">0</span>] <span class="op">{</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Validate trust model</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> trust_attr <span class="op">=</span> service<span class="op">.</span>attributes<span class="op">.</span>iter()</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>find(<span class="op">|</span>a<span class="op">|</span> a<span class="op">.</span>name <span class="op">==</span> <span class="st">&quot;trust&quot;</span>)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">let</span> <span class="pp">Expression::</span>Literal(<span class="pp">Literal::</span><span class="dt">String</span>(model)) <span class="op">=</span> <span class="op">&amp;</span>trust_attr<span class="op">.</span>parameters[<span class="dv">0</span>] <span class="op">{</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>            expect_valid_trust_model(model)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="using-in-dal-tests">Using in DAL Tests</h3>
+<pre class="dal"><code>describe(&quot;Semantic Validation&quot;, fn() {
+    it(&quot;should validate trust model&quot;, fn() {
+        test::expect_valid_trust_model(&quot;hybrid&quot;);
+        test::expect_valid_chain(&quot;ethereum&quot;);
+    });
+});</code></pre>
+<h2 id="layer-3-dal-test-files">Layer 3: DAL Test Files</h2>
+<h3 id="purpose-2">Purpose</h3>
+<p>Test runtime behavior and integration, written in DAL itself.</p>
+<h3 id="file-convention">File Convention</h3>
+<ul>
+<li>Filename: <code>*.test.dal</code></li>
+<li>Location: Alongside implementation files in
+<code>examples/</code></li>
+<li>Runner: <code>./scripts/run_dal_tests.sh</code></li>
+</ul>
+<h3 id="syntax-hardhat-style">Syntax (Hardhat-style)</h3>
+<pre class="dal"><code>describe(&quot;Test Suite Name&quot;, fn() {
+    // Setup
+    let contract;
+    
+    beforeEach(fn() {
+        // Runs before each test
+        contract = deploy_service(&quot;MyService&quot;, {});
+    });
+    
+    afterEach(fn() {
+        // Runs after each test
+        reset_context();
+    });
+    
+    it(&quot;should do something&quot;, fn() {
+        // Test implementation
+        let result = contract.some_method();
+        expect(result).to_equal(expected);
+    });
+});</code></pre>
+<h3 id="assertions">Assertions</h3>
+<pre class="dal"><code>// Equality
+expect(value).to_equal(expected);
+expect(value).not_to_equal(other);
+
+// Booleans
+expect(value).to_be_true();
+expect(value).to_be_false();
+
+// Null checks
+expect(value).to_be_nil();
+expect(value).not_to_be_nil();
+
+// Exceptions
+expect_throws(fn() {
+    some_error_producing_code();
+}, &quot;error message&quot;);
+
+// Layer 2 semantic validation
+test::expect_type(&amp;value, &quot;number&quot;);
+test::expect_in_range(value, 0.0, 100.0);
+test::expect_valid_trust_model(&quot;hybrid&quot;);</code></pre>
+<h3 id="lifecycle-hooks">Lifecycle Hooks</h3>
+<pre class="dal"><code>beforeAll(fn() {
+    // Runs once before all tests in suite
+});
+
+beforeEach(fn() {
+    // Runs before each test
+});
+
+afterEach(fn() {
+    // Runs after each test
+});
+
+afterAll(fn() {
+    // Runs once after all tests in suite
+});</code></pre>
+<h3 id="example-test-file">Example Test File</h3>
+<p>See <a
+href="../../examples/token_contract.test.dal"><code>token_contract.test.dal</code></a>
+for a complete example.</p>
+<h3 id="running-dal-tests">Running DAL Tests</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run all test files</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/run_dal_tests.sh</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific test file</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--release</span> <span class="at">--</span> run examples/token_contract.test.dal</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with verbose output</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--release</span> <span class="at">--</span> run examples/token_contract.test.dal <span class="at">--verbose</span></span></code></pre></div>
+<h2 id="testing-workflow">Testing Workflow</h2>
+<h3 id="1-during-development">1. During Development</h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Watch mode for Rust tests</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> watch <span class="at">-x</span> test</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Quick syntax check</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test <span class="at">--test</span> example_tests</span></code></pre></div>
+<h3 id="2-before-commit">2. Before Commit</h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Full test suite</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run DAL tests</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/run_dal_tests.sh</span></span></code></pre></div>
+<h3 id="3-in-cicd">3. In CI/CD</h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .github/workflows/test.yml</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run Rust tests</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">run</span><span class="kw">:</span><span class="at"> cargo test</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run DAL tests</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">run</span><span class="kw">:</span><span class="at"> ./scripts/run_dal_tests.sh</span></span></code></pre></div>
+<h2 id="testing-best-practices">Testing Best Practices</h2>
+<h3 id="1-test-pyramid">1. Test Pyramid</h3>
+<pre><code>        ╱╲
+       ╱  ╲     Few: Integration tests (Layer 3)
+      ╱────╲
+     ╱      ╲   Medium: Semantic tests (Layer 2)
+    ╱────────╲
+   ╱          ╲ Many: Unit tests (Layer 1)
+  ╱────────────╲</code></pre>
+<ul>
+<li><strong>Many</strong> fast unit tests (Layer 1)</li>
+<li><strong>Medium</strong> semantic validation (Layer 2)</li>
+<li><strong>Few</strong> comprehensive integration tests (Layer 3)</li>
+</ul>
+<h3 id="2-test-naming">2. Test Naming</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Rust tests</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_<span class="op">&lt;</span>feature<span class="op">&gt;</span>_<span class="op">&lt;</span>scenario<span class="op">&gt;</span>() <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Example:</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_token_transfer_succeeds_with_valid_amount() <span class="op">{</span> <span class="op">}</span></span></code></pre></div>
+<pre class="dal"><code>// DAL tests
+describe(&quot;Feature&quot;, fn() {
+    it(&quot;should do something specific&quot;, fn() { });
+});
+
+// Example:
+describe(&quot;TokenContract&quot;, fn() {
+    it(&quot;should transfer tokens with valid amount&quot;, fn() { });
+});</code></pre>
+<h3 id="3-arrange-act-assert">3. Arrange-Act-Assert</h3>
+<pre class="dal"><code>it(&quot;should update balance after transfer&quot;, fn() {
+    // Arrange
+    let initial_balance = contract.balance_of(&quot;alice&quot;);
+    let amount = 100.0;
+    
+    // Act
+    contract.transfer(&quot;bob&quot;, amount);
+    
+    // Assert
+    let final_balance = contract.balance_of(&quot;alice&quot;);
+    expect(final_balance).to_equal(initial_balance - amount);
+});</code></pre>
+<h3 id="4-test-independence">4. Test Independence</h3>
+<pre class="dal"><code>describe(&quot;Tests&quot;, fn() {
+    beforeEach(fn() {
+        // Fresh state for each test
+        contract = deploy_service(&quot;MyService&quot;, {});
+    });
+    
+    it(&quot;test 1&quot;, fn() { /* ... */ });
+    it(&quot;test 2&quot;, fn() { /* ... */ }); // Independent of test 1
+});</code></pre>
+<h3 id="5-edge-cases">5. Edge Cases</h3>
+<pre class="dal"><code>describe(&quot;Edge Cases&quot;, fn() {
+    it(&quot;should handle zero values&quot;, fn() { /* ... */ });
+    it(&quot;should handle maximum values&quot;, fn() { /* ... */ });
+    it(&quot;should handle empty inputs&quot;, fn() { /* ... */ });
+    it(&quot;should reject invalid inputs&quot;, fn() { /* ... */ });
+});</code></pre>
+<h2 id="common-testing-patterns">Common Testing Patterns</h2>
+<h3 id="pattern-1-attribute-validation">Pattern 1: Attribute
+Validation</h3>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_service_attributes() <span class="op">{</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> source <span class="op">=</span> <span class="st">&quot;@trust(</span><span class="sc">\&quot;</span><span class="st">hybrid</span><span class="sc">\&quot;</span><span class="st">) @chain(</span><span class="sc">\&quot;</span><span class="st">ethereum</span><span class="sc">\&quot;</span><span class="st">) service S {}&quot;</span><span class="op">;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ast <span class="op">=</span> parse_source(source)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Extract attributes</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="pp">Statement::</span>Service(s) <span class="op">=</span> <span class="op">&amp;</span>ast<span class="op">.</span>statements[<span class="dv">0</span>] <span class="op">{</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> attrs<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;&amp;</span><span class="dt">str</span><span class="op">&gt;</span> <span class="op">=</span> s<span class="op">.</span>attributes<span class="op">.</span>iter()</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>map(<span class="op">|</span>a<span class="op">|</span> a<span class="op">.</span>name<span class="op">.</span>as_str())</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Validate</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>        expect_compatible_attributes(attrs)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="pattern-2-state-changes">Pattern 2: State Changes</h3>
+<pre class="dal"><code>it(&quot;should update state correctly&quot;, fn() {
+    let before = contract.get_state();
+    
+    contract.modify_state();
+    
+    let after = contract.get_state();
+    expect(after).not_to_equal(before);
+});</code></pre>
+<h3 id="pattern-3-error-handling">Pattern 3: Error Handling</h3>
+<pre class="dal"><code>it(&quot;should reject invalid input&quot;, fn() {
+    expect_throws(fn() {
+        contract.risky_operation(-1);
+    }, &quot;must be positive&quot;);
+});</code></pre>
+<h3 id="pattern-4-integration-testing">Pattern 4: Integration
+Testing</h3>
+<pre class="dal"><code>describe(&quot;Multi-service integration&quot;, fn() {
+    let token;
+    let escrow;
+    
+    beforeEach(fn() {
+        token = deploy_service(&quot;Token&quot;, {});
+        escrow = deploy_service(&quot;Escrow&quot;, { &quot;token&quot;: token });
+    });
+    
+    it(&quot;should integrate services&quot;, fn() {
+        token.approve(escrow, 100.0);
+        escrow.deposit(100.0);
+        
+        expect(token.balance_of(escrow)).to_equal(100.0);
+    });
+});</code></pre>
+<h2 id="debugging-failed-tests">Debugging Failed Tests</h2>
+<h3 id="1-rust-test-failures">1. Rust Test Failures</h3>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with output</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test <span class="at">--</span> <span class="at">--nocapture</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific test</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test test_name <span class="at">--</span> <span class="at">--nocapture</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Show full backtraces</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="va">RUST_BACKTRACE</span><span class="op">=</span>1 <span class="ex">cargo</span> test</span></code></pre></div>
+<h3 id="2-dal-test-failures">2. DAL Test Failures</h3>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with verbose mode</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--release</span> <span class="at">--</span> run test.dal <span class="at">--verbose</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add print statements</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="ex">print</span><span class="er">(</span><span class="st">&quot;Debug: value =&quot;</span><span class="ex">,</span> value<span class="kw">);</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check parsed AST</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--release</span> <span class="at">--</span> parse test.dal</span></code></pre></div>
+<h3 id="3-common-issues">3. Common Issues</h3>
+<p><strong>Issue</strong>: Test fails with "Parse error"
+<strong>Solution</strong>: Run Layer 1 tests first to check syntax</p>
+<p><strong>Issue</strong>: Semantic validation fails
+<strong>Solution</strong>: Check attribute values match allowed
+options</p>
+<p><strong>Issue</strong>: Runtime behavior unexpected
+<strong>Solution</strong>: Add debug prints, check service state</p>
+<h2 id="performance-testing">Performance Testing</h2>
+<pre class="dal"><code>describe(&quot;Performance&quot;, fn() {
+    it(&quot;should complete in reasonable time&quot;, fn() {
+        let start = time::now();
+        
+        // Operation to test
+        for i in 0..1000 {
+            contract.operation();
+        }
+        
+        let duration = time::now() - start;
+        test::expect_in_range(duration, 0.0, 1000.0); // &lt; 1 second
+    });
+});</code></pre>
+<h2 id="coverage-reporting">Coverage Reporting</h2>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install tarpaulin</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install cargo-tarpaulin</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate coverage report</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> tarpaulin <span class="at">--out</span> Html</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co"># View report</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="ex">open</span> tarpaulin-report.html</span></code></pre></div>
+<h2 id="continuous-integration">Continuous Integration</h2>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .github/workflows/test.yml</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> Tests</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">push</span><span class="kw">,</span><span class="at"> pull_request</span><span class="kw">]</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">test</span><span class="kw">:</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v2</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install Rust</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions-rs/toolchain@v1</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">toolchain</span><span class="kw">:</span><span class="at"> stable</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run Layer 1 tests</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> cargo test</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run Layer 3 tests</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> ./scripts/run_dal_tests.sh</span></span></code></pre></div>
+<h2 id="summary">Summary</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Layer</th>
+<th>Tool</th>
+<th>Speed</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Layer 1</strong></td>
+<td><code>cargo test</code></td>
+<td>⚡ Fast</td>
+<td>Syntax validation</td>
+</tr>
+<tr class="even">
+<td><strong>Layer 2</strong></td>
+<td><code>test::expect_*()</code></td>
+<td>🚀 Medium</td>
+<td>Semantic validation</td>
+</tr>
+<tr class="odd">
+<td><strong>Layer 3</strong></td>
+<td><code>./scripts/run_dal_tests.sh</code></td>
+<td>🐌 Slower</td>
+<td>Runtime behavior</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Best Practice</strong>: Start with Layer 1, add Layer 2 for
+semantic rules, and Layer 3 for critical paths.</p>
+<p>For more details, see:</p>
+<ul>
+<li><a
+href="../THREE_LAYER_TESTING.html"><code>THREE_LAYER_TESTING.md</code></a>
+- Complete strategy overview</li>
+<li><a
+href="../TESTING_ATTRIBUTES.html"><code>TESTING_ATTRIBUTES.md</code></a> -
+Attribute testing deep dive</li>
+<li><a
+href="../WHY_RUST_UNIT_TESTS.html"><code>WHY_RUST_UNIT_TESTS.md</code></a>
+- Rationale for Rust tests</li>
+</ul>
+</body>
+</html>

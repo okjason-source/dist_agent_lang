@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AGENT_CAPABILITIES</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="agent-capabilities-how-theyre-built-and-used">Agent
+capabilities: how they’re built and used</h1>
+<p>This doc describes how agent capabilities are defined, set,
+validated, and used so you can extend or add new ones. For
+<strong>setting up and using agents</strong> (project init, CLI, HTTP
+server, DAL APIs, molds, evolve), see <a
+href="guides/AGENT_SETUP_AND_USAGE.html">guides/AGENT_SETUP_AND_USAGE.md</a>.</p>
+<hr />
+<h2 id="1-where-capabilities-live">1. Where capabilities live</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Place</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong><code>AgentConfig.capabilities</code></strong></td>
+<td>Per-agent list of capability strings (stored on the agent
+context).</td>
+</tr>
+<tr class="even">
+<td><strong><code>builtin_capabilities(AgentType)</code></strong>
+(Rust)</td>
+<td>Default list per type used when <strong>no</strong> registry
+override exists.</td>
+</tr>
+<tr class="odd">
+<td><strong><code>CAPABILITY_REGISTRY</code></strong> (Rust)</td>
+<td>Optional override: per–agent-type list used by
+<strong>validation</strong> instead of built-ins.</td>
+</tr>
+<tr class="even">
+<td><strong>Mold <code>agent.capabilities</code></strong></td>
+<td>Capabilities for agents spawned from that mold.</td>
+</tr>
+<tr class="odd">
+<td><strong>DAL <code>agent</code> block /
+<code>create_agent_config</code></strong></td>
+<td>Capabilities supplied from DAL (agent declaration or config
+map).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-how-capabilities-get-set-the-build-process">2. How
+capabilities get set (the “build” process)</h2>
+<h3 id="a-at-spawn-time-rust-agentspawn">A. At spawn time (Rust:
+<code>agent::spawn</code>)</h3>
+<ol type="1">
+<li><strong><code>AgentConfig::new(name, agent_type)</code></strong>
+creates config with
+<strong><code>capabilities: Vec::new()</code></strong>.</li>
+<li><strong><code>initialize_&lt;type&gt;_agent(agent_context)</code></strong>
+is called and <strong>overwrites</strong>
+<code>agent_context.config.capabilities</code> with the type-specific
+list (see table below).</li>
+</ol>
+<p>So by default, every spawned agent gets the list from the initializer
+for its type. No separate “registration” step is required for these
+defaults.</p>
+<h3 id="b-overriding-from-config-before-or-instead-of-init">B.
+Overriding from config (before or instead of init)</h3>
+<ul>
+<li><strong>Rust:</strong> Use
+<strong><code>AgentConfig::with_capabilities(vec!["cap1", "cap2"])</code></strong>
+when building the config. If you build the config yourself and then
+spawn, the initializer will still overwrite <code>capabilities</code>
+unless you change the flow (e.g. only run initializer when capabilities
+are still empty, or set capabilities after init).</li>
+<li><strong>Mold:</strong> In the mold’s <code>agent</code> block, set
+<strong><code>capabilities</code></strong>. When creating
+<code>AgentConfig</code> from the mold, the runtime uses
+<strong><code>config.with_capabilities(mold.agent.capabilities.clone())</code></strong>
+(<code>mold/mod.rs</code>), so the mold’s list is applied when spawning
+from that mold.</li>
+<li><strong>DAL (stdlib agent):</strong> When the runtime creates config
+from a map (e.g. <code>create_agent_config</code>-style flow in
+<code>engine.rs</code>), it reads
+<strong><code>fields["capabilities"]</code></strong> and, if present and
+a list of strings, calls
+<strong><code>config.with_capabilities(capability_strings)</code></strong>.
+So DAL can supply capabilities via the config map.</li>
+<li><strong>DAL (AI agent declaration):</strong> For
+<strong><code>agent</code></strong> statements,
+<strong><code>agent_stmt.capabilities</code></strong> is copied onto
+<strong><code>ai::AgentConfig</code></strong> when executing the
+declaration. So the list you write in the agent block in DAL is what
+that AI agent gets.</li>
+</ul>
+<p>So “building out” capabilities for an agent means: either rely on the
+<strong>built-in list for that type</strong>, or
+<strong>set/override</strong> via config (Rust builder, mold, or DAL
+config/agent block).</p>
+<hr />
+<h2 id="3-built-in-lists-current-defaults">3. Built-in lists (current
+defaults)</h2>
+<p>Defined in <strong><code>src/stdlib/agent.rs</code></strong>:</p>
+<ul>
+<li><p><strong><code>builtin_capabilities(AgentType)</code></strong>
+(used for <strong>validation</strong> when registry is not set):</p>
+<ul>
+<li><strong>AI:</strong> <code>analysis</code>, <code>learning</code>,
+<code>communication</code>, <code>task_execution</code></li>
+<li><strong>System:</strong> <code>monitoring</code>,
+<code>coordination</code>, <code>resource_management</code></li>
+<li><strong>Worker:</strong> <code>task_execution</code>,
+<code>data_processing</code>, <code>automation</code></li>
+<li><strong>Custom:</strong> <code>custom_processing</code></li>
+</ul></li>
+<li><p><strong><code>initialize_&lt;type&gt;_agent</code></strong> (sets
+<strong>actual</strong> config at spawn):</p>
+<ul>
+<li><strong>AI:</strong> same four + <code>problem_solving</code></li>
+<li><strong>System:</strong> same three +
+<code>system_optimization</code></li>
+<li><strong>Worker:</strong> same three +
+<code>workflow_management</code></li>
+<li><strong>Custom:</strong> <code>custom_processing</code>,
+<code>adaptation</code>, <code>flexibility</code></li>
+</ul></li>
+</ul>
+<p>Validation uses either the <strong>registry</strong> (if set) or
+<strong><code>builtin_capabilities</code></strong>; it does
+<strong>not</strong> read the per-agent
+<code>AgentContext.config.capabilities</code> — it only checks that the
+<strong>agent type</strong> has the required capabilities in the
+registry/built-in list.</p>
+<hr />
+<h2 id="4-validation-vs-runtime-checks">4. Validation vs runtime
+checks</h2>
+<ul>
+<li><p><strong><code>agent::validate_capabilities(agent_type, required_capabilities)</code></strong><br />
+Checks that the <strong>type</strong>’s allowed set (registry or
+built-in) contains every string in <code>required_capabilities</code>.
+Used to decide “can this type do this?” (e.g. before assigning a task).
+It does <strong>not</strong> look at a specific agent instance’s
+<code>config.capabilities</code>.</p></li>
+<li><p><strong><code>AgentContext::is_capable(capability)</code></strong><br />
+Checks whether <strong>this agent’s</strong>
+<code>config.capabilities</code> contains the given string. So per-agent
+overrides (mold, DAL, or manual config) are reflected here.</p></li>
+</ul>
+<p>So:</p>
+<ul>
+<li>To <strong>add a capability</strong> that a type is
+<strong>allowed</strong> to have: extend
+<strong><code>builtin_capabilities</code></strong> and/or the
+corresponding
+<strong><code>initialize_&lt;type&gt;_agent</code></strong> list (and
+optionally <strong><code>register_capabilities</code></strong> if you
+use the registry).</li>
+<li>To <strong>give a specific agent</strong> a capability: set it via
+<strong><code>with_capabilities</code></strong> (Rust), mold
+<strong><code>agent.capabilities</code></strong>, or DAL config / agent
+block; then <strong><code>is_capable</code></strong> will reflect
+it.</li>
+</ul>
+<hr />
+<h2 id="5-how-to-add-or-extend-capabilities-concrete-steps">5. How to
+add or extend capabilities (concrete steps)</h2>
+<h3
+id="option-a-add-a-new-capability-to-an-existing-type-built-in">Option
+A: Add a new capability to an existing type (built-in)</h3>
+<ol type="1">
+<li>In <strong><code>src/stdlib/agent.rs</code></strong>:
+<ul>
+<li>In <strong><code>builtin_capabilities(AgentType)</code></strong>,
+add the new string to the appropriate type’s <code>vec![]</code>.</li>
+<li>In <strong><code>initialize_&lt;type&gt;_agent</code></strong> for
+that type, add the same string to
+<strong><code>agent_context.config.capabilities</code></strong>.</li>
+</ul></li>
+<li>No DAL or mold change required; new agents of that type will get the
+capability by default, and
+<strong><code>validate_capabilities</code></strong> will accept it for
+that type.</li>
+</ol>
+<h3 id="option-b-custom-list-for-a-type-registry">Option B: Custom list
+for a type (registry)</h3>
+<ol type="1">
+<li>From Rust or from DAL (if you expose it), call
+<strong><code>agent::register_capabilities(agent_type_string, vec!["cap1", "cap2", ...])</code></strong>.</li>
+<li>Validation will use this list instead of
+<strong><code>builtin_capabilities</code></strong> for that
+<code>agent_type</code>. Spawn initializers still set
+<strong><code>config.capabilities</code></strong> per agent; the
+registry only affects <strong>validation</strong>.</li>
+</ol>
+<h3 id="option-c-per-agent-list-no-new-built-ins">Option C: Per-agent
+list (no new built-ins)</h3>
+<ol type="1">
+<li><strong>Rust:</strong> Build config with
+<strong><code>.with_capabilities(vec!["my_cap", ...])</code></strong>
+and spawn. The initializer will overwrite unless you change init to
+respect existing capabilities (e.g. only set when empty).</li>
+<li><strong>Mold:</strong> In the mold’s
+<strong><code>agent</code></strong> block set
+<strong><code>capabilities: ["my_cap", ...]</code></strong>.</li>
+<li><strong>DAL:</strong> In the agent’s config or agent block, set
+<strong><code>capabilities</code></strong> to a list of strings.</li>
+</ol>
+<p>Then <strong><code>is_capable("my_cap")</code></strong> will be true
+for that agent; <strong><code>validate_capabilities</code></strong> will
+only accept it if the type’s built-in/registry list also includes
+<code>"my_cap"</code> (if you validate that type for that
+capability).</p>
+<h3 id="option-d-new-agent-type-with-its-own-list">Option D: New agent
+type with its own list</h3>
+<ol type="1">
+<li>Add a new variant to <strong><code>AgentType</code></strong> (e.g.
+<strong><code>Custom("my_type")</code></strong> or a dedicated
+variant).</li>
+<li>In <strong><code>builtin_capabilities</code></strong>, add a branch
+returning the new type’s list.</li>
+<li>In <strong><code>initialize_&lt;type&gt;_agent</code></strong> (or a
+new initializer), set
+<strong><code>agent_context.config.capabilities</code></strong> for the
+new type.</li>
+<li>Wire the new type through spawn/parser/mold as needed so it’s usable
+from DAL and molds.</li>
+</ol>
+<hr />
+<h2 id="6-summary">6. Summary</h2>
+<ul>
+<li><strong>Defined:</strong> In code as
+<strong><code>builtin_capabilities</code></strong> and in
+<strong><code>initialize_*_agent</code></strong>; optionally in
+<strong><code>CAPABILITY_REGISTRY</code></strong>; and in molds/DAL as
+<strong><code>capabilities</code></strong> on config or agent
+block.</li>
+<li><strong>Set on agents:</strong> By spawn initializers (defaults)
+and/or by <strong><code>with_capabilities</code></strong> (Rust), mold
+<strong><code>agent.capabilities</code></strong>, or DAL <strong>config
+/ agent block</strong>.</li>
+<li><strong>Validated:</strong> By
+<strong><code>validate_capabilities(agent_type, required)</code></strong>
+using registry or
+<strong><code>builtin_capabilities</code></strong>.</li>
+<li><strong>Checked at runtime:</strong> By
+<strong><code>AgentContext::is_capable(capability)</code></strong> using
+the agent’s <strong><code>config.capabilities</code></strong>.</li>
+</ul>
+<p>To build out agent capabilities you either extend the built-in/init
+lists and optionally the registry, or supply custom lists per agent via
+config/mold/DAL; validation and <strong><code>is_capable</code></strong>
+then reflect those choices.</p>
+</body>
+</html>

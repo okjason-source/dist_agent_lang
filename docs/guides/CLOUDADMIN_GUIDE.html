@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CLOUDADMIN_GUIDE</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="-cloudadmin-guide-hybrid-trust--administrative-control">👔
+CloudAdmin Guide: Hybrid Trust &amp; Administrative Control</h1>
+<blockquote>
+<p><strong>Beta Release v1.0.8:</strong> CloudAdmin is actively
+maintained with consistent updates. Test thoroughly before production.
+<strong>Beta testing contributions appreciated!</strong></p>
+</blockquote>
+<p><strong>Complete guide to CloudAdmin security architecture for hybrid
+applications</strong></p>
+<hr />
+<h2 id="-table-of-contents">📋 Table of Contents</h2>
+<ol type="1">
+<li><a href="#what-is-cloudadmin">What is CloudAdmin?</a></li>
+<li><a href="#architecture">Architecture</a></li>
+<li><a href="#core-features">Core Features</a></li>
+<li><a href="#admin-levels">Admin Levels</a></li>
+<li><a href="#authorization-system">Authorization System</a></li>
+<li><a href="#policy-enforcement">Policy Enforcement</a></li>
+<li><a href="#hybrid-trust-model">Hybrid Trust Model</a></li>
+<li><a href="#process-management">Process Management</a></li>
+<li><a href="#cli-commands">CLI Commands</a></li>
+<li><a href="#api-reference">API Reference</a></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+<li><a href="#security-considerations">Security Considerations</a></li>
+</ol>
+<hr />
+<h2 id="-what-is-cloudadmin">🎯 What is CloudAdmin?</h2>
+<p><strong>CloudAdmin</strong> is dist_agent_lang's security
+architecture designed specifically for <strong>hybrid
+applications</strong> that combine centralized administrative control
+with decentralized user operations.</p>
+<h3 id="key-concepts">Key Concepts:</h3>
+<ul>
+<li><strong>Hybrid Trust</strong>: Bridge centralized admin control with
+decentralized user trust</li>
+<li><strong>Multi-Level Administration</strong>: 4-tier admin hierarchy
+(SuperAdmin, Admin, Moderator, User)</li>
+<li><strong>Policy-Based Control</strong>: Flexible policy enforcement
+(strict, moderate, permissive)</li>
+<li><strong>Process Management</strong>: Administrative control over
+agents and processes</li>
+<li><strong>Trust Bridging</strong>: Seamlessly connect centralized and
+decentralized trust models</li>
+</ul>
+<h3 id="use-cases">Use Cases:</h3>
+<p>✅ <strong>Enterprise DApps</strong> - Apps needing both admin
+control and user autonomy<br />
+✅ <strong>Regulated DeFi</strong> - Financial apps requiring compliance
+oversight<br />
+✅ <strong>Hybrid Marketplaces</strong> - Platforms with centralized
+moderation and decentralized trading<br />
+✅ <strong>Multi-Chain Applications</strong> - Cross-chain apps with
+central coordination<br />
+✅ <strong>AI Agent Systems</strong> - Agent networks requiring
+administrative oversight</p>
+<hr />
+<h2 id="️-architecture">🏗️ Architecture</h2>
+<p>CloudAdmin uses a <strong>namespace-based approach</strong> with two
+primary modules:</p>
+<h3 id="1-cloudadmin---authorization--trust">1.
+<strong><code>cloudadmin::</code></strong> - Authorization &amp;
+Trust</h3>
+<ul>
+<li>Authorization control</li>
+<li>Policy enforcement</li>
+<li>Hybrid trust validation</li>
+<li>Trust bridging</li>
+</ul>
+<h3 id="2-admin---process-management">2.
+<strong><code>admin::</code></strong> - Process Management</h3>
+<ul>
+<li>Process termination</li>
+<li>Process monitoring</li>
+<li>Resource tracking</li>
+<li>Agent lifecycle management</li>
+</ul>
+<pre><code>┌─────────────────────────────────────────┐
+│         CloudAdmin Architecture         │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌───────────────┐   ┌──────────────┐  │
+│  │  cloudadmin:: │   │   admin::    │  │
+│  │               │   │              │  │
+│  │ • authorize() │   │ • kill()     │  │
+│  │ • enforce()   │   │ • info()     │  │
+│  │ • validate()  │   │ • list()     │  │
+│  │ • bridge()    │   │              │  │
+│  └───────────────┘   └──────────────┘  │
+│           │                  │          │
+│           └──────────┬───────┘          │
+│                      │                  │
+│            ┌─────────▼─────────┐        │
+│            │   Admin Context   │        │
+│            │  • Level          │        │
+│            │  • Permissions    │        │
+│            │  • Metadata       │        │
+│            └───────────────────┘        │
+│                      │                  │
+│            ┌─────────▼─────────┐        │
+│            │  Trust Validation │        │
+│            │  • Centralized    │        │
+│            │  • Decentralized  │        │
+│            │  • Hybrid         │        │
+│            └───────────────────┘        │
+└─────────────────────────────────────────┘</code></pre>
+<hr />
+<h2 id="️-core-features">⚙️ Core Features</h2>
+<h3 id="1-authorization-system-">1. <strong>Authorization
+System</strong> ✅</h3>
+<p>Role-based access control for operations</p>
+<pre class="dal"><code>let can_read = cloudadmin::authorize(admin_id, &quot;read&quot;, resource);
+let can_write = cloudadmin::authorize(admin_id, &quot;write&quot;, resource);
+let can_delete = cloudadmin::authorize(admin_id, &quot;delete&quot;, resource);</code></pre>
+<h3 id="2-policy-enforcement-">2. <strong>Policy Enforcement</strong>
+✅</h3>
+<p>Flexible policy-based security</p>
+<pre class="dal"><code>let context = cloudadmin::create_admin_context(admin_id, &quot;admin&quot;);
+if context != null {
+    let allowed = cloudadmin::enforce_policy(&quot;moderate&quot;, context);
+    if allowed.is_ok() &amp;&amp; allowed.unwrap() {
+        // Proceed with operation
+    }
+}</code></pre>
+<h3 id="3-hybrid-trust-validation-">3. <strong>Hybrid Trust
+Validation</strong> ✅</h3>
+<p>Bridge centralized and decentralized trust</p>
+<pre class="dal"><code>let is_valid = cloudadmin::validate_hybrid_trust(admin_trust, user_trust);
+let bridged = cloudadmin::bridge_trusts(centralized_trust, decentralized_trust);</code></pre>
+<h3 id="4-process-management-">4. <strong>Process Management</strong>
+✅</h3>
+<p>Administrative control over system processes</p>
+<pre class="dal"><code>let info = admin::get_process_info(process_id);
+let killed = admin::kill(process_id, &quot;resource_violation&quot;);
+let all_processes = admin::list_processes();</code></pre>
+<hr />
+<h2 id="️-admin-levels">🎖️ Admin Levels</h2>
+<p>CloudAdmin supports <strong>4 hierarchical admin levels</strong>:</p>
+<h3 id="1-superadmin-">1. <strong>SuperAdmin</strong> 👑</h3>
+<ul>
+<li><strong>Highest privilege level</strong></li>
+<li>Can perform ALL operations (read, write, delete)</li>
+<li>Can enforce strict policies</li>
+<li>Can kill any process including system processes</li>
+<li>Full access to all resources</li>
+</ul>
+<p><strong>Typical Use Cases:</strong></p>
+<ul>
+<li>Platform owners</li>
+<li>System administrators</li>
+<li>Emergency response</li>
+</ul>
+<h3 id="2-admin-️">2. <strong>Admin</strong> 🛡️</h3>
+<ul>
+<li><strong>High privilege level</strong></li>
+<li>Can perform read and write operations</li>
+<li>Can enforce moderate policies</li>
+<li>Can kill user processes (not system processes)</li>
+<li>Access to most resources</li>
+</ul>
+<p><strong>Typical Use Cases:</strong></p>
+<ul>
+<li>Department heads</li>
+<li>Project managers</li>
+<li>Senior moderators</li>
+</ul>
+<h3 id="3-moderator-">3. <strong>Moderator</strong> 🔍</h3>
+<ul>
+<li><strong>Medium privilege level</strong></li>
+<li>Can perform read operations</li>
+<li>Can enforce permissive policies</li>
+<li>Can view process information</li>
+<li>Limited resource access</li>
+</ul>
+<p><strong>Typical Use Cases:</strong></p>
+<ul>
+<li>Community moderators</li>
+<li>Support staff</li>
+<li>Compliance officers</li>
+</ul>
+<h3 id="4-user-">4. <strong>User</strong> 👤</h3>
+<ul>
+<li><strong>Standard privilege level</strong></li>
+<li>Can perform basic read operations</li>
+<li>Subject to all policies</li>
+<li>Can view own processes</li>
+<li>Restricted resource access</li>
+</ul>
+<p><strong>Typical Use Cases:</strong></p>
+<ul>
+<li>Regular users</li>
+<li>Customers</li>
+<li>Contributors</li>
+</ul>
+<h3 id="permission-matrix">Permission Matrix:</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>SuperAdmin</th>
+<th>Admin</th>
+<th>Moderator</th>
+<th>User</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Read</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr class="even">
+<td><strong>Write</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr class="odd">
+<td><strong>Delete</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr class="even">
+<td><strong>Kill Process</strong></td>
+<td>✅ All</td>
+<td>✅ User</td>
+<td>❌</td>
+<td>❌ Own</td>
+</tr>
+<tr class="odd">
+<td><strong>Strict Policy</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr class="even">
+<td><strong>Moderate Policy</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr class="odd">
+<td><strong>Permissive Policy</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="-authorization-system">🔐 Authorization System</h2>
+<h3 id="how-authorization-works">How Authorization Works:</h3>
+<ol type="1">
+<li><strong>Admin ID</strong> - Identifies the admin making the
+request</li>
+<li><strong>Operation</strong> - The action being requested (read,
+write, delete)</li>
+<li><strong>Resource</strong> - The target resource being accessed</li>
+</ol>
+<h3 id="authorization-function">Authorization Function:</h3>
+<pre class="dal"><code>cloudadmin::authorize(admin_id: string, operation: string, resource: string) -&gt; bool</code></pre>
+<h3 id="supported-operations">Supported Operations:</h3>
+<h4 id="read---read-only-access"><strong>"read"</strong> - Read-only
+access</h4>
+<ul>
+<li>Available to: All admin levels</li>
+<li>Use for: Viewing data, querying information</li>
+<li>Example:
+<pre class="dal"><code>let can_view = cloudadmin::authorize(&quot;user123&quot;, &quot;read&quot;, &quot;/data/reports&quot;);</code></pre></li>
+</ul>
+<h4 id="write---modify-access"><strong>"write"</strong> - Modify
+access</h4>
+<ul>
+<li>Available to: Admin, SuperAdmin</li>
+<li>Use for: Creating, updating data</li>
+<li>Example:
+<pre class="dal"><code>let can_update = cloudadmin::authorize(&quot;admin456&quot;, &quot;write&quot;, &quot;/data/config&quot;);</code></pre></li>
+</ul>
+<h4 id="delete---remove-access"><strong>"delete"</strong> - Remove
+access</h4>
+<ul>
+<li>Available to: SuperAdmin only</li>
+<li>Use for: Deleting data, removing resources</li>
+<li>Example:
+<pre class="dal"><code>let can_remove = cloudadmin::authorize(&quot;superadmin789&quot;, &quot;delete&quot;, &quot;/data/users&quot;);</code></pre></li>
+</ul>
+<h3 id="custom-operations">Custom Operations:</h3>
+<p>You can extend with custom operations:</p>
+<pre class="dal"><code>// Custom operation names
+let can_approve = cloudadmin::authorize(admin_id, &quot;approve_transaction&quot;, resource);
+let can_override = cloudadmin::authorize(admin_id, &quot;override_policy&quot;, resource);</code></pre>
+<hr />
+<h2 id="-policy-enforcement">📜 Policy Enforcement</h2>
+<p>CloudAdmin supports <strong>three policy levels</strong> for flexible
+security:</p>
+<h3 id="1-strict-policy-">1. <strong>Strict Policy</strong> 🔒</h3>
+<ul>
+<li><strong>Requirement</strong>: SuperAdmin only</li>
+<li><strong>Use Case</strong>: High-security operations</li>
+<li><strong>Example</strong>:
+<pre class="dal"><code>let context = cloudadmin::create_admin_context(&quot;admin_id&quot;, &quot;superadmin&quot;);
+if context != null {
+    let allowed = cloudadmin::enforce_policy(&quot;strict&quot;, context);
+    if allowed.is_ok() &amp;&amp; allowed.unwrap() {
+        // Proceed with strict operation
+    }
+}</code></pre></li>
+</ul>
+<h3 id="2-moderate-policy-️">2. <strong>Moderate Policy</strong> 🛡️</h3>
+<ul>
+<li><strong>Requirement</strong>: Admin or SuperAdmin</li>
+<li><strong>Use Case</strong>: Standard administrative operations</li>
+<li><strong>Example</strong>:
+<pre class="dal"><code>let context = cloudadmin::create_admin_context(&quot;admin_id&quot;, &quot;admin&quot;);
+if context != null {
+    let allowed = cloudadmin::enforce_policy(&quot;moderate&quot;, context);
+    if allowed.is_ok() &amp;&amp; allowed.unwrap() {
+        // Proceed with moderate operation
+    }
+}</code></pre></li>
+</ul>
+<h3 id="3-permissive-policy-">3. <strong>Permissive Policy</strong>
+🔓</h3>
+<ul>
+<li><strong>Requirement</strong>: All users</li>
+<li><strong>Use Case</strong>: Public or user-accessible operations</li>
+<li><strong>Example</strong>:
+<pre class="dal"><code>let context = cloudadmin::create_admin_context(&quot;user_id&quot;, &quot;user&quot;);
+if context != null {
+    let allowed = cloudadmin::enforce_policy(&quot;permissive&quot;, context);
+    if allowed.is_ok() &amp;&amp; allowed.unwrap() {
+        // Proceed with permissive operation
+    }
+}</code></pre></li>
+</ul>
+<h3 id="environment-variable-overrides">Environment Variable
+Overrides:</h3>
+<p>You can override policy requirements via environment variables:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Require SuperAdmin for strict policy</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">POLICY_STRICT_LEVEL</span><span class="op">=</span>superadmin</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Require Admin for moderate policy</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">POLICY_MODERATE_LEVEL</span><span class="op">=</span>admin</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Allow all users for permissive policy</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">POLICY_PERMISSIVE_LEVEL</span><span class="op">=</span>user</span></code></pre></div>
+<hr />
+<h2 id="-hybrid-trust-model">🌉 Hybrid Trust Model</h2>
+<p>CloudAdmin's <strong>unique feature</strong> is bridging centralized
+and decentralized trust:</p>
+<h3 id="concept">Concept:</h3>
+<p>In hybrid applications, you need:</p>
+<ul>
+<li><strong>Centralized Trust</strong>: Admin verification, compliance,
+oversight</li>
+<li><strong>Decentralized Trust</strong>: User autonomy, blockchain
+verification, smart contracts</li>
+</ul>
+<h3 id="hybrid-trust-validation">Hybrid Trust Validation:</h3>
+<pre class="dal"><code>cloudadmin::validate_hybrid_trust(admin_trust: string, user_trust: string) -&gt; bool</code></pre>
+<p><strong>Requirements:</strong></p>
+<ul>
+<li>Both admin and user trust must be "valid"</li>
+<li>Returns <code>true</code> only if both trusts are validated</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@secure
+service HybridMarketplace {
+    fn create_listing(admin_approved: bool, user_verified: bool) {
+        let admin_trust = if admin_approved { &quot;valid&quot; } else { &quot;invalid&quot; };
+        let user_trust = if user_verified { &quot;valid&quot; } else { &quot;invalid&quot; };
+        
+        let is_trusted = cloudadmin::validate_hybrid_trust(admin_trust, user_trust);
+        
+        if is_trusted {
+            // Create listing with both admin and user trust
+            chain::deploy(1, &quot;ListingContract&quot;, [listing_data]);
+        } else {
+            log::error(&quot;hybrid&quot;, &quot;Trust validation failed&quot;);
+        }
+    }
+}</code></pre>
+<h3 id="trust-bridging">Trust Bridging:</h3>
+<pre class="dal"><code>cloudadmin::bridge_trusts(centralized_trust: string, decentralized_trust: string) -&gt; bool</code></pre>
+<p><strong>Use Case</strong>: Connect centralized admin systems with
+decentralized blockchain</p>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+service CrossChainBridge {
+    fn bridge_assets(from_chain: string, to_chain: string, amount: int) {
+        // Centralized: Admin approval
+        let admin_approved = cloudadmin::authorize(&quot;bridge_admin&quot;, &quot;write&quot;, &quot;bridge&quot;);
+        let centralized = if admin_approved { &quot;admin&quot; } else { &quot;none&quot; };
+        
+        // Decentralized: User wallet verification
+        let user_verified = auth::verify_signature(user_sig, user_address);
+        let decentralized = if user_verified { &quot;user&quot; } else { &quot;none&quot; };
+        
+        // Bridge trusts
+        let can_bridge = cloudadmin::bridge_trusts(centralized, decentralized);
+        
+        if can_bridge {
+            chain::transfer_cross_chain(from_chain, to_chain, amount);
+        }
+    }
+}</code></pre>
+<h3 id="trust-compatibility">Trust Compatibility:</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Centralized</th>
+<th>Decentralized</th>
+<th>Bridged?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>"admin"</td>
+<td>"user"</td>
+<td>✅ Yes</td>
+</tr>
+<tr class="even">
+<td>"admin"</td>
+<td>"none"</td>
+<td>❌ No</td>
+</tr>
+<tr class="odd">
+<td>"none"</td>
+<td>"user"</td>
+<td>❌ No</td>
+</tr>
+<tr class="even">
+<td>Other combos</td>
+<td>Any</td>
+<td>❌ No</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="-process-management">🎮 Process Management</h2>
+<p>The <code>admin::</code> namespace provides <strong>process lifecycle
+management</strong>:</p>
+<h3 id="1-kill-process-">1. <strong>Kill Process</strong> 🛑</h3>
+<p>Terminate processes or agents:</p>
+<pre class="dal"><code>admin::kill(process_id: string, reason: string) -&gt; Result&lt;bool, string&gt;</code></pre>
+<p><strong>Requirements:</strong></p>
+<ul>
+<li>Reason must be provided</li>
+<li>SuperAdmin can kill any process</li>
+<li>Admin can kill user processes only</li>
+<li>System processes are protected</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>// Kill agent for resource violation
+let result = admin::kill(&quot;agent_123&quot;, &quot;resource_violation&quot;);
+
+if result.is_ok() {
+    log::info(&quot;admin&quot;, &quot;Agent terminated successfully&quot;);
+} else {
+    log::error(&quot;admin&quot;, &quot;Failed to terminate: &quot; + result.unwrap_err());
+}</code></pre>
+<p><strong>Valid Reasons:</strong></p>
+<ul>
+<li><code>"resource_violation"</code> - Excessive resource usage</li>
+<li><code>"security_breach"</code> - Security threat detected</li>
+<li><code>"policy_violation"</code> - Policy compliance issue</li>
+<li><code>"maintenance"</code> - Scheduled maintenance</li>
+<li><code>"user_request"</code> - User-initiated termination</li>
+</ul>
+<h3 id="2-get-process-info-">2. <strong>Get Process Info</strong>
+📊</h3>
+<p>Query process status and resource usage:</p>
+<pre class="dal"><code>admin::get_process_info(process_id: string) -&gt; Result&lt;ProcessInfo, string&gt;</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Process ID</li>
+<li>Process name</li>
+<li>Status (running, stopped, error)</li>
+<li>Start time</li>
+<li>Resource usage (CPU, memory, etc.)</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let info = admin::get_process_info(&quot;agent_123&quot;);
+
+if info.is_ok() {
+    let process = info.unwrap();
+    log::info(&quot;admin&quot;, &quot;Process: &quot; + process.name);
+    log::info(&quot;admin&quot;, &quot;Status: &quot; + process.status);
+    let cpu = process.resource_usage[&quot;cpu&quot;];
+    let memory = process.resource_usage[&quot;memory&quot;];
+    log::info(&quot;admin&quot;, &quot;CPU: &quot; + cpu.to_string());
+    log::info(&quot;admin&quot;, &quot;Memory: &quot; + memory.to_string());
+}</code></pre>
+<h3 id="3-list-processes-">3. <strong>List Processes</strong> 📝</h3>
+<p>Get all running processes:</p>
+<pre class="dal"><code>admin::list_processes() -&gt; Vec&lt;ProcessInfo&gt;</code></pre>
+<p><strong>Example:</strong></p>
+<pre class="dal"><code>let processes = admin::list_processes();
+
+for process in processes {
+    log::info(&quot;admin&quot;, &quot;Process ID: &quot; + process.process_id);
+    log::info(&quot;admin&quot;, &quot;Name: &quot; + process.name);
+    log::info(&quot;admin&quot;, &quot;Status: &quot; + process.status);
+}</code></pre>
+<hr />
+<h2 id="-cli-commands">💻 CLI Commands</h2>
+<p>CloudAdmin provides CLI commands via <code>dal cloud</code>:</p>
+<h3 id="authorization">Authorization</h3>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if user is authorized for operation</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud authorize <span class="op">&lt;</span>user_id<span class="op">&gt;</span> <span class="op">&lt;</span>operation<span class="op">&gt;</span> <span class="op">&lt;</span>resource<span class="op">&gt;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Example</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud authorize user_123 read config/db</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud authorize admin_456 write /data/users</span></code></pre></div>
+<h3 id="admin-management">Admin Management</h3>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Grant admin role to user</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud grant <span class="op">&lt;</span>user_id<span class="op">&gt;</span> <span class="op">&lt;</span>role<span class="op">&gt;</span> <span class="op">&lt;</span>scope<span class="op">&gt;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Roles: superadmin, admin, moderator, user</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Example</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud grant user_123 admin ec2:admin</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Revoke admin role</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud revoke <span class="op">&lt;</span>user_id<span class="op">&gt;</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="co"># List user roles</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud roles <span class="op">&lt;</span>user_id<span class="op">&gt;</span></span></code></pre></div>
+<h3 id="trust-operations">Trust Operations</h3>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Validate hybrid trust</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud trust validate <span class="op">&lt;</span>admin_trust<span class="op">&gt;</span> <span class="op">&lt;</span>user_trust<span class="op">&gt;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Example</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud trust validate valid valid</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Bridge trusts</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud trust bridge <span class="op">&lt;</span>centralized_trust<span class="op">&gt;</span> <span class="op">&lt;</span>decentralized_trust<span class="op">&gt;</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Example</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud trust bridge admin user</span></code></pre></div>
+<h3 id="audit--compliance">Audit &amp; Compliance</h3>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View audit log (instructions)</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud audit-log</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co"># View policies</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud policies</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Compliance scan</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud compliance scan [--standard SOC2<span class="kw">|</span><span class="ex">HIPAA</span><span class="kw">|</span><span class="ex">GDPR]</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate compliance report</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud compliance report <span class="op">&lt;</span>standard<span class="op">&gt;</span> [-o file]</span></code></pre></div>
+<h3 id="chain-logging">Chain Logging</h3>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Log event to blockchain</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud chain-log <span class="st">&quot;&lt;event&gt;&quot;</span> [--chain_id <span class="op">&lt;</span>id<span class="op">&gt;</span>]</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Example</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud chain-log <span class="st">&quot;user_123 deleted resource&quot;</span> <span class="at">--chain_id</span> 1</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify chain log</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud chain-verify <span class="op">&lt;</span>log_id<span class="op">&gt;</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Export chain logs</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> cloud chain-export</span></code></pre></div>
+<hr />
+<h2 id="-api-reference">📚 API Reference</h2>
+<h3 id="cloudadmin-module">cloudadmin:: Module</h3>
+<h4
+id="authorizeadmin_id-operation-resource---bool"><code>authorize(admin_id, operation, resource) -&gt; bool</code></h4>
+<p>Check if admin is authorized for operation on resource.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>admin_id: string</code> - Admin identifier</li>
+<li><code>operation: string</code> - Operation type (read, write,
+delete)</li>
+<li><code>resource: string</code> - Target resource path</li>
+</ul>
+<p><strong>Returns:</strong> <code>bool</code> - true if authorized</p>
+<p><strong>Implementation Notes:</strong></p>
+<ul>
+<li>First checks key registry (<code>key::check</code>)</li>
+<li>Then checks admin registry (from <code>ADMIN_IDS</code> env or
+<code>trust::register_admin</code>)</li>
+<li>Falls back to built-in rules</li>
+</ul>
+<hr />
+<h4
+id="enforce_policypolicy_name-context---resultbool-string"><code>enforce_policy(policy_name, context) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Enforce admin policy based on context.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>policy_name: string</code> - Policy type (strict, moderate,
+permissive)</li>
+<li><code>context: AdminContext</code> - Admin context with level and
+permissions</li>
+</ul>
+<p><strong>Returns:</strong> <code>Result&lt;bool, string&gt;</code> -
+Success or error message</p>
+<p><strong>Policy Levels:</strong></p>
+<ul>
+<li><code>"strict"</code> - Requires SuperAdmin (or
+<code>POLICY_STRICT_LEVEL</code> env override)</li>
+<li><code>"moderate"</code> - Requires Admin or SuperAdmin (or
+<code>POLICY_MODERATE_LEVEL</code> env override)</li>
+<li><code>"permissive"</code> - Allows all users (or
+<code>POLICY_PERMISSIVE_LEVEL</code> env override)</li>
+</ul>
+<hr />
+<h4
+id="validate_hybrid_trustadmin_trust-user_trust---bool"><code>validate_hybrid_trust(admin_trust, user_trust) -&gt; bool</code></h4>
+<p>Validate hybrid trust between admin and user.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>admin_trust: string</code> - Admin trust status ("valid" or
+"invalid")</li>
+<li><code>user_trust: string</code> - User trust status ("valid" or
+"invalid")</li>
+</ul>
+<p><strong>Returns:</strong> <code>bool</code> - true if both are
+"valid"</p>
+<hr />
+<h4
+id="bridge_trustscentralized_trust-decentralized_trust---bool"><code>bridge_trusts(centralized_trust, decentralized_trust) -&gt; bool</code></h4>
+<p>Bridge centralized admin trust with decentralized user trust.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>centralized_trust: string</code> - Centralized trust type
+("admin" or other)</li>
+<li><code>decentralized_trust: string</code> - Decentralized trust type
+("user" or other)</li>
+</ul>
+<p><strong>Returns:</strong> <code>bool</code> - true if compatible
+(centralized="admin" AND decentralized="user")</p>
+<hr />
+<h4
+id="create_admin_contextadmin_id-level---optionadmincontext"><code>create_admin_context(admin_id, level) -&gt; Option&lt;AdminContext&gt;</code></h4>
+<p>Create a new admin context.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>admin_id: string</code> - Admin identifier</li>
+<li><code>level: string</code> - Admin level (superadmin, admin,
+moderator, user)</li>
+</ul>
+<p><strong>Returns:</strong> <code>Option&lt;AdminContext&gt;</code> -
+Context or null if invalid level</p>
+<p><strong>Note:</strong> In DAL, check for <code>null</code> before
+using the context:</p>
+<pre class="dal"><code>let context = cloudadmin::create_admin_context(admin_id, &quot;admin&quot;);
+if context != null {
+    // Use context
+}</code></pre>
+<hr />
+<h3 id="admin-module">admin:: Module</h3>
+<h4
+id="killprocess_id-reason---resultbool-string"><code>kill(process_id, reason) -&gt; Result&lt;bool, string&gt;</code></h4>
+<p>Terminate process or agent.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>process_id: string</code> - Process identifier</li>
+<li><code>reason: string</code> - Termination reason (required, cannot
+be empty)</li>
+</ul>
+<p><strong>Returns:</strong> <code>Result&lt;bool, string&gt;</code> -
+Success or error message</p>
+<p><strong>Errors:</strong></p>
+<ul>
+<li>Empty reason: <code>"Kill reason is required"</code></li>
+<li>Process not found: <code>"Process not found: &lt;id&gt;"</code></li>
+<li>System process: <code>"Cannot kill system processes"</code></li>
+</ul>
+<hr />
+<h4
+id="get_process_infoprocess_id---resultprocessinfo-string"><code>get_process_info(process_id) -&gt; Result&lt;ProcessInfo, string&gt;</code></h4>
+<p>Get detailed process information.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>process_id: string</code> - Process identifier</li>
+</ul>
+<p><strong>Returns:</strong>
+<code>Result&lt;ProcessInfo, string&gt;</code> - Process info or
+error</p>
+<p><strong>ProcessInfo Fields:</strong></p>
+<ul>
+<li><code>process_id: string</code></li>
+<li><code>name: string</code></li>
+<li><code>status: string</code> (e.g., "running", "stopped",
+"error")</li>
+<li><code>start_time: int</code> (Unix timestamp)</li>
+<li><code>resource_usage: map&lt;string, any&gt;</code> (e.g.,
+<code>{"cpu": 45, "memory": 1024}</code>)</li>
+</ul>
+<hr />
+<h4
+id="list_processes---vecprocessinfo"><code>list_processes() -&gt; Vec&lt;ProcessInfo&gt;</code></h4>
+<p>List all running processes.</p>
+<p><strong>Returns:</strong> <code>Vec&lt;ProcessInfo&gt;</code> - Array
+of process information</p>
+<hr />
+<h2 id="-examples">💡 Examples</h2>
+<h3 id="example-1-moderated-marketplace">Example 1: Moderated
+Marketplace</h3>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@secure
+@chain(&quot;ethereum&quot;)
+service ModeratedMarketplace {
+    // Admin moderates listings
+    fn approve_listing(listing_id: string, admin_id: string) -&gt; bool {
+        // Check admin authorization
+        let can_approve = cloudadmin::authorize(admin_id, &quot;write&quot;, &quot;/listings&quot;);
+        
+        if !can_approve {
+            log::error(&quot;marketplace&quot;, &quot;Admin not authorized&quot;);
+            return false;
+        }
+        
+        // Create admin context and enforce policy
+        let context = cloudadmin::create_admin_context(admin_id, &quot;admin&quot;);
+        if context == null {
+            return false;
+        }
+        
+        let policy_ok = cloudadmin::enforce_policy(&quot;moderate&quot;, context);
+        if policy_ok.is_ok() &amp;&amp; policy_ok.unwrap() {
+            // Approve listing on blockchain
+            chain::call(1, contract_address, &quot;approveListing&quot;, [listing_id]);
+            log::audit(&quot;marketplace&quot;, &quot;Listing approved by admin&quot;);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    // User creates listing (decentralized)
+    fn create_listing(user_id: string, item_data: map&lt;string, any&gt;) -&gt; bool {
+        // Verify user signature
+        let user_verified = auth::verify_session();
+        let user_trust = if user_verified { &quot;valid&quot; } else { &quot;invalid&quot; };
+        
+        // Admin pre-approval check
+        let admin_trust = &quot;valid&quot;; // Assume admin system validated
+        
+        // Validate hybrid trust
+        let is_trusted = cloudadmin::validate_hybrid_trust(admin_trust, user_trust);
+        
+        if is_trusted {
+            chain::deploy(1, &quot;ListingContract&quot;, [user_id, item_data]);
+            return true;
+        }
+        
+        return false;
+    }
+}</code></pre>
+<h3 id="example-2-ai-agent-oversight">Example 2: AI Agent Oversight</h3>
+<pre class="dal"><code>@ai
+@trust(&quot;hybrid&quot;)
+service AIAgentManager {
+    // Admin monitors AI agents
+    fn monitor_agents() {
+        let processes = admin::list_processes();
+        
+        for process in processes {
+            if process.name.starts_with(&quot;ai_agent_&quot;) {
+                // Check resource usage
+                let cpu = process.resource_usage[&quot;cpu&quot;];
+                let memory = process.resource_usage[&quot;memory&quot;];
+                
+                // Kill if exceeding limits
+                if cpu &gt; 80 || memory &gt; 4096 {
+                    let result = admin::kill(process.process_id, &quot;resource_violation&quot;);
+                    
+                    if result.is_ok() {
+                        log::audit(&quot;ai_manager&quot;, &quot;Terminated agent: &quot; + process.process_id);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Admin can override AI decisions
+    fn override_decision(decision_id: string, admin_id: string, new_decision: string) {
+        // Check SuperAdmin level for overrides
+        let context = cloudadmin::create_admin_context(admin_id, &quot;superadmin&quot;);
+        if context != null {
+            let allowed = cloudadmin::enforce_policy(&quot;strict&quot;, context);
+            if allowed.is_ok() &amp;&amp; allowed.unwrap() {
+                ai::update_decision(decision_id, new_decision);
+                log::audit(&quot;ai_manager&quot;, &quot;Decision overridden by admin&quot;);
+            }
+        }
+    }
+}</code></pre>
+<h3 id="example-3-cross-chain-bridge-with-admin-control">Example 3:
+Cross-Chain Bridge with Admin Control</h3>
+<pre class="dal"><code>@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;, &quot;polygon&quot;)
+service AdminControlledBridge {
+    // Bridge assets with admin approval
+    fn bridge_assets(
+        from_chain: string,
+        to_chain: string,
+        amount: int,
+        user_address: string,
+        admin_id: string
+    ) -&gt; bool {
+        // Admin authorization check
+        let admin_approved = cloudadmin::authorize(admin_id, &quot;write&quot;, &quot;/bridge&quot;);
+        let centralized = if admin_approved { &quot;admin&quot; } else { &quot;none&quot; };
+        
+        // User verification
+        let user_verified = auth::verify_address(user_address);
+        let decentralized = if user_verified { &quot;user&quot; } else { &quot;none&quot; };
+        
+        // Bridge trusts
+        let can_bridge = cloudadmin::bridge_trusts(centralized, decentralized);
+        
+        if can_bridge {
+            // Execute cross-chain transfer
+            chain::lock_assets(from_chain, amount);
+            chain::mint_assets(to_chain, amount, user_address);
+            
+            log::audit(&quot;bridge&quot;, &quot;Bridged &quot; + amount.to_string() + &quot; from &quot; + from_chain + &quot; to &quot; + to_chain);
+            return true;
+        }
+        
+        log::error(&quot;bridge&quot;, &quot;Trust validation failed&quot;);
+        return false;
+    }
+}</code></pre>
+<hr />
+<h2 id="-best-practices">🎯 Best Practices</h2>
+<h3 id="1-always-validate-admin-actions-">1. <strong>Always Validate
+Admin Actions</strong> ✅</h3>
+<pre class="dal"><code>// Good
+let can_do = cloudadmin::authorize(admin_id, operation, resource);
+if can_do {
+    perform_operation();
+}
+
+// Bad - No validation
+perform_operation(); // ❌</code></pre>
+<h3 id="2-use-appropriate-policy-levels-">2. <strong>Use Appropriate
+Policy Levels</strong> ✅</h3>
+<pre class="dal"><code>// Good - Strict for critical operations
+let context = cloudadmin::create_admin_context(admin_id, &quot;superadmin&quot;);
+if context != null {
+    let allowed = cloudadmin::enforce_policy(&quot;strict&quot;, context);
+    if allowed.is_ok() &amp;&amp; allowed.unwrap() {
+        perform_critical_operation();
+    }
+}
+
+// Good - Moderate for standard operations
+let context = cloudadmin::create_admin_context(admin_id, &quot;admin&quot;);
+if context != null {
+    let allowed = cloudadmin::enforce_policy(&quot;moderate&quot;, context);
+    if allowed.is_ok() &amp;&amp; allowed.unwrap() {
+        perform_standard_operation();
+    }
+}</code></pre>
+<h3 id="3-provide-clear-termination-reasons-">3. <strong>Provide Clear
+Termination Reasons</strong> ✅</h3>
+<pre class="dal"><code>// Good
+admin::kill(process_id, &quot;resource_violation: CPU &gt; 90%&quot;);
+
+// Bad
+admin::kill(process_id, &quot;&quot;); // ❌ Empty reason</code></pre>
+<h3 id="4-log-all-administrative-actions-">4. <strong>Log All
+Administrative Actions</strong> ✅</h3>
+<pre class="dal"><code>let result = cloudadmin::authorize(admin_id, &quot;delete&quot;, resource);
+if result {
+    log::audit(&quot;cloudadmin&quot;, &quot;Admin &quot; + admin_id + &quot; deleted &quot; + resource);
+    perform_delete();
+}</code></pre>
+<h3 id="5-use-hybrid-trust-for-sensitive-operations-">5. <strong>Use
+Hybrid Trust for Sensitive Operations</strong> ✅</h3>
+<pre class="dal"><code>// Good - Validate both admin and user
+let is_trusted = cloudadmin::validate_hybrid_trust(admin_trust, user_trust);
+if is_trusted {
+    perform_sensitive_operation();
+}
+
+// Bad - Only one trust model
+if admin_trust == &quot;valid&quot; { } // ❌ Missing user validation</code></pre>
+<h3 id="6-monitor-process-resource-usage-">6. <strong>Monitor Process
+Resource Usage</strong> ✅</h3>
+<pre class="dal"><code>// Good - Regular monitoring
+let info = admin::get_process_info(process_id);
+if info.is_ok() {
+    let process = info.unwrap();
+    let cpu = process.resource_usage[&quot;cpu&quot;];
+    if cpu &gt; threshold {
+        admin::kill(process_id, &quot;excessive_cpu_usage&quot;);
+    }
+}</code></pre>
+<h3 id="7-check-context-before-use-">7. <strong>Check Context Before
+Use</strong> ✅</h3>
+<pre class="dal"><code>// Good - Null check
+let context = cloudadmin::create_admin_context(admin_id, &quot;admin&quot;);
+if context != null {
+    let allowed = cloudadmin::enforce_policy(&quot;moderate&quot;, context);
+    // Use context
+}
+
+// Bad - No null check
+let context = cloudadmin::create_admin_context(admin_id, &quot;admin&quot;);
+let allowed = cloudadmin::enforce_policy(&quot;moderate&quot;, context); // ❌ May fail if context is null</code></pre>
+<hr />
+<h2 id="-security-considerations">🔒 Security Considerations</h2>
+<h3 id="1-admin-credential-protection-">1. <strong>Admin Credential
+Protection</strong> 🔐</h3>
+<ul>
+<li>Store admin IDs securely</li>
+<li>Use encrypted communication for admin operations</li>
+<li>Implement session management</li>
+<li>Regular credential rotation</li>
+</ul>
+<h3 id="2-operation-auditing-">2. <strong>Operation Auditing</strong>
+📝</h3>
+<ul>
+<li>Log all admin actions using <code>log::audit()</code></li>
+<li>Track authorization attempts</li>
+<li>Monitor policy enforcement</li>
+<li>Alert on suspicious patterns</li>
+</ul>
+<h3 id="3-process-protection-️">3. <strong>Process Protection</strong>
+🛡️</h3>
+<ul>
+<li>Prevent unauthorized process termination</li>
+<li>Validate kill reasons</li>
+<li>Protect system processes</li>
+<li>Implement kill confirmations for critical processes</li>
+</ul>
+<h3 id="4-trust-validation-">4. <strong>Trust Validation</strong>
+✅</h3>
+<ul>
+<li>Always validate both trusts in hybrid model</li>
+<li>Don't skip validation steps</li>
+<li>Use cryptographic verification where possible</li>
+<li>Implement trust revocation mechanisms</li>
+</ul>
+<h3 id="5-policy-review-">5. <strong>Policy Review</strong> 🔍</h3>
+<ul>
+<li>Regular policy audits</li>
+<li>Test policy enforcement</li>
+<li>Document policy decisions</li>
+<li>Update policies based on threats</li>
+</ul>
+<h3 id="6-resource-monitoring-">6. <strong>Resource Monitoring</strong>
+📊</h3>
+<ul>
+<li>Continuous resource tracking</li>
+<li>Automated alerts for violations</li>
+<li>Graceful degradation</li>
+<li>Resource limit enforcement</li>
+</ul>
+<h3 id="7-emergency-procedures-">7. <strong>Emergency
+Procedures</strong> 🚨</h3>
+<ul>
+<li>SuperAdmin override capabilities</li>
+<li>Emergency kill switches</li>
+<li>Incident response procedures</li>
+<li>Recovery mechanisms</li>
+</ul>
+<hr />
+<h2 id="-next-steps">🚀 Next Steps</h2>
+<ol type="1">
+<li><strong>Read the API Reference</strong> - Understand all
+functions</li>
+<li><strong>Try the Examples</strong> - Run sample code</li>
+<li><strong>Use CLI Commands</strong> - Test with <code>dal cloud</code>
+commands</li>
+<li><strong>Implement CloudAdmin</strong> - Add to your application</li>
+<li><strong>Test Thoroughly</strong> - Validate all security
+scenarios</li>
+<li><strong>Monitor in Production</strong> - Track admin actions and
+process health</li>
+</ol>
+<hr />
+<h2 id="-contributing">🤝 Contributing</h2>
+<p>CloudAdmin is actively developed. Contributions welcome:</p>
+<ul>
+<li>Test in your hybrid applications</li>
+<li>Report security issues</li>
+<li>Suggest improvements</li>
+<li>Share use cases</li>
+</ul>
+<hr />
+<h2 id="-related-documentation">📚 Related Documentation</h2>
+<ul>
+<li><a href="../STDLIB_REFERENCE.html#trust-module">Trust Module</a> -
+Underlying trust system</li>
+<li><a href="BEST_PRACTICES.html#security">Security Best Practices</a> -
+General security guidelines</li>
+<li><a href="HYBRID_INTEGRATION_GUIDE.html">Hybrid Integration Guide</a> -
+Hybrid system patterns</li>
+<li><a href="../CLI_QUICK_REFERENCE.html#cloud--enterprise-phase-4">CLI
+Reference</a> - Complete CLI documentation</li>
+</ul>
+<hr />
+<p><strong>CloudAdmin: Bridging Centralized Control with Decentralized
+Trust</strong> 🌉</p>
+<p><strong>Version</strong>: v1.0.8 (Beta)<br />
+<strong>Status</strong>: Actively Developed<br />
+<strong>Contributions</strong>: Welcome!</p>
+</body>
+</html>

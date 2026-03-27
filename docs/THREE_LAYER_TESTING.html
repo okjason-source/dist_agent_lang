@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>THREE_LAYER_TESTING</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="three-layer-testing-strategy-for-dal">Three-Layer Testing
+Strategy for DAL</h1>
+<p>This document describes the comprehensive three-layer testing
+strategy for the Dist Agent Language (DAL).</p>
+<h2 id="overview">Overview</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│ Layer 1: Rust Unit Tests (example_tests.rs)                │
+│ Purpose: Syntax &amp; Parse-time Validation                     │
+│ Tools: cargo test, parse_source(), execute_source()         │
+│ Runs: CI/CD, pre-commit, development                        │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Layer 2: Semantic Validators (stdlib/test.rs)              │
+│ Purpose: Attribute, Type &amp; Rule Validation                  │
+│ Tools: expect_valid_trust_model(), expect_type(), etc.      │
+│ Runs: Within DAL tests, programmatic validation             │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Layer 3: DAL Test Files (*.test.dal)                       │
+│ Purpose: Runtime Behavior &amp; Integration Testing             │
+│ Tools: describe(), it(), expect(), deploy_service()         │
+│ Runs: dist_agent_lang test, user-written tests              │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h2 id="layer-1-rust-unit-tests">Layer 1: Rust Unit Tests</h2>
+<p><strong>Location</strong>:
+<code>/dist_agent_lang/tests/example_tests.rs</code></p>
+<h3 id="purpose">Purpose</h3>
+<p>Validate that all DAL example files can be parsed and executed
+without errors.</p>
+<h3 id="what-it-tests">What It Tests</h3>
+<ul>
+<li>✅ <strong>Syntax correctness</strong>: All tokens are valid</li>
+<li>✅ <strong>Parse-time validation</strong>: AST can be
+constructed</li>
+<li>✅ <strong>Attribute syntax</strong>: <code>@</code> attributes are
+properly formatted</li>
+<li>✅ <strong>Structure validity</strong>: Functions, services,
+statements are well-formed</li>
+</ul>
+<h3 id="example">Example</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_token_contract_parses() <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> source <span class="op">=</span> <span class="st">r#&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="st">        @trust(&quot;hybrid&quot;)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="st">        @chain(&quot;ethereum&quot;)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="st">        service TokenContract {</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="st">            balance: map&lt;string, float&gt;;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="st">            </span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="st">            fn transfer(to: string, amount: float) {</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="st">                balance[to] = balance[to] + amount;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="st">            }</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="st">        }</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;#</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Layer 1: Parse validation</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    parse_source(<span class="op">&amp;</span>source)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="when-it-runs">When It Runs</h3>
+<ul>
+<li><code>cargo test</code> (local development)</li>
+<li>GitHub Actions CI/CD</li>
+<li>Pre-commit hooks (optional)</li>
+</ul>
+<h3 id="validation-capabilities">Validation Capabilities</h3>
+<p><strong>Syntax Validation</strong> (Parse-time)</p>
+<ul>
+<li>✅ Token recognition and lexical analysis</li>
+<li>✅ Grammar and structure validation</li>
+<li>✅ AST construction and integrity</li>
+<li>✅ Attribute syntax and positioning</li>
+</ul>
+<p><strong>Semantic Validation</strong> (Parse-time)</p>
+<ul>
+<li>✅ Trust model validation (hybrid, centralized, decentralized,
+trustless)</li>
+<li>✅ Blockchain identifier validation (ethereum, polygon, bsc, solana,
+etc.)</li>
+<li>✅ Attribute mutual exclusivity (@secure and @public)</li>
+<li>✅ Domain constraint enforcement</li>
+</ul>
+<p><strong>Runtime Behavior</strong> (Layer 3)</p>
+<ul>
+<li>For runtime behavior testing, use Layer 3 DAL test files
+(<code>.test.dal</code>)</li>
+<li>This separation ensures fast feedback for syntax/semantic
+issues</li>
+</ul>
+<p><strong>Key Feature</strong>: The
+<code>test_all_examples_with_semantic_validation()</code> test combines
+syntax and semantic validation in a single fast test run!</p>
+<hr />
+<h2 id="layer-2-semantic-validators">Layer 2: Semantic Validators</h2>
+<p><strong>Location</strong>:
+<code>/dist_agent_lang/src/stdlib/test.rs</code></p>
+<h3 id="purpose-1">Purpose</h3>
+<p>Provide semantic validation helpers that go beyond syntax
+checking.</p>
+<h3 id="what-it-tests-1">What It Tests</h3>
+<ul>
+<li>✅ <strong>Attribute semantics</strong>: Valid trust models, chain
+names, etc.</li>
+<li>✅ <strong>Type validation</strong>: Values match expected
+types</li>
+<li>✅ <strong>Rule enforcement</strong>: Attribute compatibility,
+constraints</li>
+<li>✅ <strong>Domain logic</strong>: Business rules, value ranges</li>
+</ul>
+<h3 id="available-functions">Available Functions</h3>
+<h4 id="attribute-validation">Attribute Validation</h4>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate trust model</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>expect_valid_trust_model(<span class="st">&quot;hybrid&quot;</span>)       <span class="co">// ✅ Pass</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>expect_valid_trust_model(<span class="st">&quot;invalid&quot;</span>)      <span class="co">// ❌ Fail</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate blockchain</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>expect_valid_chain(<span class="st">&quot;ethereum&quot;</span>)           <span class="co">// ✅ Pass</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>expect_valid_chain(<span class="st">&quot;fake_chain&quot;</span>)         <span class="co">// ❌ Fail</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Check attribute compatibility</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>expect_compatible_attributes(<span class="pp">vec!</span>[<span class="st">&quot;trust&quot;</span>])            <span class="co">// ✅ Pass</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>expect_compatible_attributes(<span class="pp">vec!</span>[<span class="st">&quot;trust&quot;</span><span class="op">,</span> <span class="st">&quot;chain&quot;</span>])  <span class="co">// ✅ Pass</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>expect_compatible_attributes(<span class="pp">vec!</span>[<span class="st">&quot;secure&quot;</span><span class="op">,</span> <span class="st">&quot;public&quot;</span>]) <span class="co">// ❌ Fail (exclusive)</span></span></code></pre></div>
+<h4 id="type-validation">Type Validation</h4>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate value type</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> balance <span class="op">=</span> <span class="pp">Value::</span>Number(<span class="dv">100.0</span>)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>expect_type(<span class="op">&amp;</span>balance<span class="op">,</span> <span class="st">&quot;number&quot;</span>)          <span class="co">// ✅ Pass</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>expect_type(<span class="op">&amp;</span>balance<span class="op">,</span> <span class="st">&quot;string&quot;</span>)          <span class="co">// ❌ Fail</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate range</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> amount <span class="op">=</span> <span class="pp">Value::</span>Number(<span class="dv">50.0</span>)<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>expect_in_range(amount<span class="op">,</span> <span class="dv">0.0</span><span class="op">,</span> <span class="dv">100.0</span>)      <span class="co">// ✅ Pass</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>expect_in_range(amount<span class="op">,</span> <span class="dv">200.0</span><span class="op">,</span> <span class="dv">300.0</span>)    <span class="co">// ❌ Fail</span></span></code></pre></div>
+<h4 id="collection-validation">Collection Validation</h4>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate length</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> name <span class="op">=</span> <span class="pp">Value::</span><span class="dt">String</span>(<span class="st">&quot;Alice&quot;</span><span class="op">.</span>to_string())<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>expect_length(name<span class="op">,</span> <span class="dv">5</span>)                   <span class="co">// ✅ Pass</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate not empty</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> items <span class="op">=</span> <span class="pp">Value::</span>Vector(<span class="pp">vec!</span>[<span class="pp">Value::</span>Number(<span class="dv">1.0</span>)])<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>expect_not_empty(items)                  <span class="co">// ✅ Pass</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate map keys</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> config <span class="op">=</span> <span class="pp">Value::</span>Map(<span class="pp">hashmap!</span><span class="op">{</span><span class="st">&quot;host&quot;</span> <span class="op">=&gt;</span> <span class="pp">Value::</span><span class="dt">String</span>(<span class="st">&quot;localhost&quot;</span>)<span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>expect_has_key(config<span class="op">,</span> <span class="st">&quot;host&quot;</span>)           <span class="co">// ✅ Pass</span></span></code></pre></div>
+<h4 id="string-validation">String Validation</h4>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>expect_contains(<span class="st">&quot;hello world&quot;</span><span class="op">,</span> <span class="st">&quot;world&quot;</span>)  <span class="co">// ✅ Pass</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>expect_starts_with(<span class="st">&quot;0x123abc&quot;</span><span class="op">,</span> <span class="st">&quot;0x&quot;</span>)     <span class="co">// ✅ Pass</span></span></code></pre></div>
+<h3 id="example-usage-in-rust-tests">Example Usage in Rust Tests</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_token_contract_semantics() <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> source <span class="op">=</span> <span class="st">r#&quot;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="st">        @trust(&quot;hybrid&quot;)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="st">        @chain(&quot;ethereum&quot;)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="st">        service TokenContract { }</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;#</span><span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Layer 1: Parse validation</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ast <span class="op">=</span> parse_source(<span class="op">&amp;</span>source)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Layer 2: Semantic validation</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="pp">Statement::</span>Service(service) <span class="op">=</span> <span class="op">&amp;</span>ast<span class="op">.</span>statements[<span class="dv">0</span>] <span class="op">{</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> attrs<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;&amp;</span><span class="dt">str</span><span class="op">&gt;</span> <span class="op">=</span> service<span class="op">.</span>attributes<span class="op">.</span>iter()</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>map(<span class="op">|</span>a<span class="op">|</span> a<span class="op">.</span>name<span class="op">.</span>as_str())</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Validate attribute compatibility</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        expect_compatible_attributes(attrs)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Validate specific attribute values</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> attr <span class="kw">in</span> <span class="op">&amp;</span>service<span class="op">.</span>attributes <span class="op">{</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> attr<span class="op">.</span>name <span class="op">==</span> <span class="st">&quot;trust&quot;</span> <span class="op">{</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="kw">let</span> <span class="pp">Expression::</span>Literal(<span class="pp">Literal::</span><span class="dt">String</span>(model)) <span class="op">=</span> <span class="op">&amp;</span>attr<span class="op">.</span>parameters[<span class="dv">0</span>] <span class="op">{</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>                    expect_valid_trust_model(model)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> attr<span class="op">.</span>name <span class="op">==</span> <span class="st">&quot;chain&quot;</span> <span class="op">{</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="kw">let</span> <span class="pp">Expression::</span>Literal(<span class="pp">Literal::</span><span class="dt">String</span>(chain)) <span class="op">=</span> <span class="op">&amp;</span>attr<span class="op">.</span>parameters[<span class="dv">0</span>] <span class="op">{</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>                    expect_valid_chain(chain)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="when-it-runs-1">When It Runs</h3>
+<ul>
+<li>Within Rust unit tests (Layer 1)</li>
+<li>Within DAL test files (Layer 3)</li>
+<li>Programmatic validation tools</li>
+</ul>
+<hr />
+<h2 id="layer-3-dal-test-files">Layer 3: DAL Test Files</h2>
+<p><strong>Location</strong>:
+<code>/dist_agent_lang/examples/*.test.dal</code></p>
+<h3 id="purpose-2">Purpose</h3>
+<p>Runtime behavior testing and integration testing, written in DAL
+itself.</p>
+<h3 id="what-it-tests-2">What It Tests</h3>
+<ul>
+<li>✅ <strong>Runtime behavior</strong>: Actual execution results</li>
+<li>✅ <strong>Service interactions</strong>: Method calls, state
+changes</li>
+<li>✅ <strong>Integration</strong>: Multiple services working
+together</li>
+<li>✅ <strong>Business logic</strong>: Application-level
+correctness</li>
+</ul>
+<h3 id="file-naming-convention">File Naming Convention</h3>
+<ul>
+<li><code>*.test.dal</code> - Test files</li>
+<li>Located alongside implementation files</li>
+<li>Run with <code>dist_agent_lang test</code></li>
+</ul>
+<h3 id="example-test-file">Example Test File</h3>
+<p><strong>File</strong>: <code>token_contract.test.dal</code></p>
+<pre class="dal"><code>// Import the service to test
+use token_contract::TokenContract;
+
+// Test suite using Hardhat-style syntax
+describe(&quot;TokenContract&quot;, fn() {
+    let contract;
+    let owner = &quot;alice&quot;;
+    let recipient = &quot;bob&quot;;
+    
+    beforeEach(fn() {
+        // Deploy a fresh contract for each test
+        contract = deploy_service(&quot;TokenContract&quot;, {
+            &quot;initial_supply&quot;: 1000.0
+        });
+    });
+    
+    it(&quot;should initialize with correct supply&quot;, fn() {
+        let supply = contract.total_supply();
+        
+        // Layer 2: Semantic validation
+        expect_type(&amp;supply, &quot;number&quot;);
+        expect_in_range(supply, 0.0, 1000000.0);
+        
+        // Layer 3: Runtime behavior
+        expect(supply).to_equal(1000.0);
+    });
+    
+    it(&quot;should transfer tokens correctly&quot;, fn() {
+        // Arrange
+        let initial_balance = contract.balance_of(recipient);
+        let transfer_amount = 100.0;
+        
+        // Act
+        contract.transfer(recipient, transfer_amount);
+        
+        // Assert - Runtime behavior
+        let new_balance = contract.balance_of(recipient);
+        expect(new_balance).to_equal(initial_balance + transfer_amount);
+        
+        // Assert - Semantic validation
+        expect_in_range(new_balance, 0.0, 1000.0);
+    });
+    
+    it(&quot;should validate trust model attribute&quot;, fn() {
+        // Layer 2: Semantic validation
+        expect_valid_trust_model(&quot;hybrid&quot;);
+        expect_valid_chain(&quot;ethereum&quot;);
+        
+        // Verify attribute compatibility
+        expect_compatible_attributes([&quot;trust&quot;, &quot;chain&quot;]);
+    });
+    
+    it(&quot;should reject invalid transfers&quot;, fn() {
+        expect_throws(fn() {
+            contract.transfer(recipient, -100.0);
+        }, &quot;negative amounts not allowed&quot;);
+    });
+    
+    it(&quot;should handle edge cases&quot;, fn() {
+        // Test boundary conditions
+        let zero_transfer = 0.0;
+        expect_in_range(zero_transfer, 0.0, 1000.0);
+        
+        contract.transfer(recipient, zero_transfer);
+        expect(contract.balance_of(recipient)).to_equal(zero_transfer);
+    });
+});
+
+describe(&quot;TokenContract attribute validation&quot;, fn() {
+    it(&quot;should have required attributes&quot;, fn() {
+        // Semantic validation
+        expect_has_attribute(&quot;TokenContract&quot;, &quot;trust&quot;);
+        expect_has_attribute(&quot;TokenContract&quot;, &quot;chain&quot;);
+    });
+    
+    it(&quot;should enforce attribute rules&quot;, fn() {
+        // These should pass
+        expect_compatible_attributes([&quot;trust&quot;, &quot;chain&quot;]);
+        
+        // This should fail
+        expect_throws(fn() {
+            expect_compatible_attributes([&quot;secure&quot;, &quot;public&quot;]);
+        }, &quot;mutually exclusive&quot;);
+    });
+});</code></pre>
+<h3 id="running-dal-tests">Running DAL Tests</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run all test files</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> test</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific test file</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> test token_contract.test.dal</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with verbose output</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> test <span class="at">--verbose</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with coverage</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> test <span class="at">--coverage</span></span></code></pre></div>
+<h3 id="when-it-runs-2">When It Runs</h3>
+<ul>
+<li><code>dist_agent_lang test</code> command</li>
+<li>CI/CD for integration tests</li>
+<li>Manual testing during development</li>
+</ul>
+<hr />
+<h2 id="complete-testing-flow">Complete Testing Flow</h2>
+<h3 id="example-testing-a-new-feature">Example: Testing a New
+Feature</h3>
+<p><strong>1. Write the implementation</strong></p>
+<pre class="dal"><code>// token_contract.dal
+@trust(&quot;hybrid&quot;)
+@chain(&quot;ethereum&quot;)
+service TokenContract {
+    balance: map&lt;string, float&gt;;
+    total_supply: float;
+    
+    fn transfer(to: string, amount: float) {
+        if amount &lt; 0.0 {
+            error(&quot;negative amounts not allowed&quot;);
+        }
+        balance[to] = balance[to] + amount;
+    }
+}</code></pre>
+<p><strong>2. Layer 1: Add to example tests (automatic)</strong></p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Runs automatically if file is in examples/</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test</span></code></pre></div>
+<p><strong>3. Layer 2: Add semantic validation (if needed)</strong></p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In tests/example_tests.rs</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_token_contract_semantics() <span class="op">{</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> source <span class="op">=</span> read_file(<span class="st">&quot;examples/token_contract.dal&quot;</span>)<span class="op">;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ast <span class="op">=</span> parse_source(<span class="op">&amp;</span>source)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Extract and validate attributes</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// (see Layer 2 examples above)</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>4. Layer 3: Write DAL test file</strong></p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create token_contract.test.dal</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (see Layer 3 example above)</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run tests</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> test token_contract.test.dal</span></code></pre></div>
+<hr />
+<h2 id="testing-checklist">Testing Checklist</h2>
+<p>When adding new DAL features, ensure:</p>
+<h3 id="-layer-1-rust-unit-tests">✅ Layer 1: Rust Unit Tests</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Example file added to
+<code>examples/</code></label></li>
+<li><label><input type="checkbox" />File parses without errors
+(<code>cargo test</code>)</label></li>
+<li><label><input type="checkbox" />Attributes have correct
+syntax</label></li>
+<li><label><input type="checkbox" />All statements are
+well-formed</label></li>
+</ul>
+<h3 id="-layer-2-semantic-validation">✅ Layer 2: Semantic
+Validation</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />New attribute values added to
+validators (if applicable)</label></li>
+<li><label><input type="checkbox" />Compatibility rules
+defined</label></li>
+<li><label><input type="checkbox" />Type constraints
+specified</label></li>
+<li><label><input type="checkbox" />Domain rules documented</label></li>
+</ul>
+<h3 id="-layer-3-dal-test-files">✅ Layer 3: DAL Test Files</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Test file created
+(<code>*.test.dal</code>)</label></li>
+<li><label><input type="checkbox" />Happy path tested</label></li>
+<li><label><input type="checkbox" />Edge cases covered</label></li>
+<li><label><input type="checkbox" />Error cases validated</label></li>
+<li><label><input type="checkbox" />Integration scenarios
+tested</label></li>
+</ul>
+<hr />
+<h2 id="benefits-of-three-layer-testing">Benefits of Three-Layer
+Testing</h2>
+<h3 id="-speed">🚀 <strong>Speed</strong></h3>
+<ul>
+<li>Layer 1: Fast syntax validation (milliseconds)</li>
+<li>Layer 2: Medium semantic checks (seconds)</li>
+<li>Layer 3: Slower integration tests (seconds to minutes)</li>
+</ul>
+<h3 id="-precision">🎯 <strong>Precision</strong></h3>
+<ul>
+<li>Layer 1: Catches syntax errors immediately</li>
+<li>Layer 2: Catches semantic errors early</li>
+<li>Layer 3: Catches logic errors before production</li>
+</ul>
+<h3 id="-feedback-loop">🔄 <strong>Feedback Loop</strong></h3>
+<ul>
+<li>Layer 1: Instant feedback in IDE/CI</li>
+<li>Layer 2: Quick validation during development</li>
+<li>Layer 3: Comprehensive validation before release</li>
+</ul>
+<h3 id="-coverage">📊 <strong>Coverage</strong></h3>
+<ul>
+<li>Layer 1: 100% of examples syntactically valid</li>
+<li>Layer 2: 100% of semantic rules enforced</li>
+<li>Layer 3: Critical paths integration tested</li>
+</ul>
+<hr />
+<h2 id="future-enhancements">Future Enhancements</h2>
+<p>For <strong>mutation testing</strong> (fault injection against the
+Rust test suite), see the <a
+href="testing/mutation_testing/README.html">mutation testing runbook</a>
+and <a href="MUTATION_ANALYSIS.html">Mutation analysis</a> for run
+scripts, reliable long-run practices, and enterprise-oriented test
+policy.</p>
+<h3 id="planned-features">Planned Features</h3>
+<ol type="1">
+<li><p><strong>AST-aware semantic validation</strong></p>
+<ul>
+<li>Direct AST access in <code>expect_has_attribute()</code></li>
+<li>Automatic attribute extraction</li>
+<li>Cross-reference validation</li>
+</ul></li>
+<li><p><strong>Test coverage reporting</strong></p>
+<ul>
+<li>Line coverage for DAL code</li>
+<li>Attribute usage coverage</li>
+<li>Service interaction coverage</li>
+</ul></li>
+<li><p><strong>Property-based testing</strong></p>
+<ul>
+<li>Fuzzing with semantic constraints</li>
+<li>Generative test cases</li>
+<li>Invariant checking</li>
+</ul></li>
+<li><p><strong>Visual test reporting</strong></p>
+<ul>
+<li>HTML test reports</li>
+<li>Coverage visualizations</li>
+<li>Performance metrics</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="summary">Summary</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Layer</th>
+<th>Purpose</th>
+<th>Tools</th>
+<th>Speed</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>1. Rust Unit Tests</strong></td>
+<td>Syntax validation</td>
+<td><code>cargo test</code>, <code>parse_source()</code></td>
+<td>⚡ Fast</td>
+<td>Syntax</td>
+</tr>
+<tr class="even">
+<td><strong>2. Semantic Validators</strong></td>
+<td>Rule enforcement</td>
+<td><code>expect_*()</code> functions</td>
+<td>🚀 Medium</td>
+<td>Semantics</td>
+</tr>
+<tr class="odd">
+<td><strong>3. DAL Test Files</strong></td>
+<td>Runtime behavior</td>
+<td><code>describe()</code>, <code>it()</code></td>
+<td>🐌 Slower</td>
+<td>Logic</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Principle</strong>: Each layer builds on the previous
+one, providing increasingly sophisticated validation while maintaining
+fast feedback for common errors.</p>
+</body>
+</html>

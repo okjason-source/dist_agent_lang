@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SMART_CONTRACTS_WITH_DAL_REVIEW</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="comprehensive-review-smart-contracts-with-dal-current-state">Comprehensive
+Review: Smart Contracts with DAL (Current State)</h1>
+<p><strong>Version:</strong> 2.0<br />
+<strong>Date:</strong> 2026-03-20<br />
+<strong>Purpose:</strong> Single, up-to-date reference for DAL
+smart-contract workflows: trust split model, EVM path maturity,
+ABI/decode reliability, and remaining gaps.</p>
+<hr />
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>DAL now supports a stronger smart-contract path than the previous
+review:</p>
+<ul>
+<li>You can write contract-oriented DAL services with explicit trust
+boundaries.</li>
+<li><code>@compile_target("blockchain")</code> emits Solidity/ABI/bin
+artifacts when toolchain is present.</li>
+<li>Hybrid services can auto-split orchestration-only methods to HTTP
+artifacts while preserving bytecode-safe methods for EVM artifacts.</li>
+<li><code>chain::call_typed</code> and <code>chain::deploy_typed</code>
+expose typed evidence fields.</li>
+<li>A typed ABI decode surface (<code>stdlib::abi_codec</code>) is
+extracted and used at integration boundaries.</li>
+<li>ABI registry-based decode is active, with overload-safe
+disambiguation via optional <code>function_signature</code>.</li>
+</ul>
+<p>What is still not complete:</p>
+<ul>
+<li>Generated Solidity method bodies are still
+conservative/stub-oriented for many constructs.</li>
+<li>Full decentralized codegen subset and end-to-end “DAL source -&gt;
+production-grade on-chain logic” is still in-progress.</li>
+</ul>
+<hr />
+<h2 id="2-dal-contract-model">2. DAL Contract Model</h2>
+<h3 id="21-services-as-contract-units">2.1 Services as Contract
+Units</h3>
+<p>DAL “contracts” are services with trust and chain attributes. There
+is no separate <code>contract</code> keyword.</p>
+<p>Key attributes:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Attribute</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>@trust("decentralized" | "hybrid" | "centralized")</code></td>
+<td>Declares trust model and policy envelope</td>
+</tr>
+<tr class="even">
+<td><code>@chain("...")</code></td>
+<td>Declares chain context and allowed chain namespace usage</td>
+</tr>
+<tr class="odd">
+<td><code>@secure</code> / <code>@public</code></td>
+<td>Access semantics; mutually exclusive</td>
+</tr>
+<tr class="even">
+<td><code>@compile_target("blockchain")</code></td>
+<td>Routes service into blockchain compile backend</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-trust-split-current-enforcement">2.2 Trust Split (Current
+Enforcement)</h3>
+<ul>
+<li><strong><code>decentralized</code></strong>: deterministic-only
+path; disallowed orchestration namespaces are blocked by
+policy/checks.</li>
+<li><strong><code>hybrid</code></strong>: orchestration + chain
+interaction; now supports dual-artifact split for mixed logic.</li>
+<li><strong><code>centralized</code></strong>: runtime-centric
+orchestration path.</li>
+</ul>
+<p>Important product direction:</p>
+<ul>
+<li>Eventual naming migration from <code>decentralized</code> to
+<code>zero</code> is planned with compatibility aliasing; not yet cut
+over.</li>
+</ul>
+<hr />
+<h2 id="3-evm-compile-path-what-works-today">3. EVM Compile Path: What
+Works Today</h2>
+<h3 id="31-blockchain-backend">3.1 Blockchain Backend</h3>
+<p><code>@compile_target("blockchain")</code> currently supports:</p>
+<ul>
+<li>DAL service selection for blockchain target</li>
+<li>Solidity source emission</li>
+<li>solc invocation for <code>.abi</code>/<code>.bin</code> outputs
+(when available)</li>
+<li>compile manifest generation</li>
+</ul>
+<h3 id="32-hybrid-auto-split-artifacts">3.2 Hybrid Auto-Split
+Artifacts</h3>
+<p>For <code>@trust("hybrid")</code> +
+<code>@compile_target("blockchain")</code>:</p>
+<ul>
+<li>Methods using orchestration/admin namespaces (<code>auth::</code>,
+<code>cloudadmin::</code>, <code>cloud</code> alias) are auto-routed to
+HTTP/orchestration artifact output.</li>
+<li>Bytecode-safe methods continue in EVM artifact flow.</li>
+<li>HTTP split artifact emitted as
+<code>&lt;Service&gt;.http.json</code>.</li>
+</ul>
+<p>This enables one hybrid service definition to produce dual artifacts
+without silent cross-boundary leakage.</p>
+<hr />
+<h2 id="4-chain-runtime-and-typed-evidence">4. Chain Runtime and Typed
+Evidence</h2>
+<h3 id="41-typed-chain-surfaces">4.1 Typed Chain Surfaces</h3>
+<ul>
+<li><code>chain::deploy_typed(...)</code></li>
+<li><code>chain::call_typed(...)</code></li>
+</ul>
+<p>Both carry evidence contracts including:</p>
+<ul>
+<li>payload fields (<code>contract_address</code> /
+<code>result_hex</code>)</li>
+<li><code>tx_hash</code></li>
+<li><code>receipt_status</code></li>
+<li><code>revert_data</code></li>
+<li><code>error_code</code></li>
+<li><code>message</code></li>
+</ul>
+<p><code>chain::deploy</code>/<code>chain::call</code> remain as
+compatibility wrappers.</p>
+<h3 id="42-strict-mode">4.2 Strict Mode</h3>
+<p>Strict policy controls synthetic fallback behavior:</p>
+<ul>
+<li>enabled via env policy path</li>
+<li>rejects missing signed deploy tx / missing calldata in strict
+contexts</li>
+<li>enforces explicit, auditable failure over implicit simulation in
+protected paths</li>
+</ul>
+<hr />
+<h2 id="5-abidecode-maturity-major-progress">5. ABI/Decode Maturity
+(Major Progress)</h2>
+<h3 id="51-vector-hardened-coverage">5.1 Vector-Hardened Coverage</h3>
+<p>ABI golden vectors now cover:</p>
+<ul>
+<li>selector determinism and catalog parity</li>
+<li>static words (<code>uint</code>, <code>bool</code>,
+<code>address</code>, <code>bytes32</code>)</li>
+<li>revert payloads (<code>Error(string)</code>,
+<code>Panic(uint256)</code>)</li>
+<li>custom error family parity</li>
+<li>dynamic returns (<code>string</code>, <code>bytes</code>)</li>
+<li>nested dynamic tuple decode (<code>tuple(string,bytes)</code>)</li>
+<li>malformed payload rejection</li>
+<li>selector mismatch rejection</li>
+</ul>
+<h3 id="52-extracted-typed-codec-surface">5.2 Extracted Typed Codec
+Surface</h3>
+<p><code>src/stdlib/abi_codec.rs</code> now contains decode-focused
+helpers:</p>
+<ul>
+<li>word decoders</li>
+<li>dynamic payload decoders</li>
+<li>nested tuple decoder</li>
+<li>custom error payload decoder</li>
+<li>revert payload decoders</li>
+</ul>
+<p>This extraction is additive and compatibility-safe: behavior remains
+pinned by vectors.</p>
+<hr />
+<h2 id="6-abi-registry-integration-current-state">6. ABI Registry
+Integration (Current State)</h2>
+<h3 id="61-registry-model">6.1 Registry Model</h3>
+<p>ABI metadata is registered per contract identity:</p>
+<ul>
+<li>key: <code>(chain_id, contract_address)</code></li>
+<li>value: parsed function metadata</li>
+</ul>
+<p>Registration occurs during
+<code>add_sol::register_contract(...)</code>.</p>
+<h3 id="62-runtime-decode-resolution">6.2 Runtime Decode Resolution</h3>
+<p><code>chain::call_typed</code> now attempts decode through registry
+identity:</p>
+<ul>
+<li>resolves by
+<code>chain_id + contract_address + function_name</code></li>
+<li>populates additive fields:
+<ul>
+<li><code>decoded</code></li>
+<li><code>decode_error</code></li>
+</ul></li>
+</ul>
+<h3 id="63-overload-safety">6.3 Overload Safety</h3>
+<p>For overloaded function names:</p>
+<ul>
+<li>decode does <strong>not</strong> guess</li>
+<li>optional <code>function_signature</code> hint is used for
+deterministic disambiguation</li>
+<li>if omitted under overload ambiguity, decode is skipped with explicit
+<code>decode_error</code></li>
+</ul>
+<p>This is aligned with audit-ready deterministic behavior.</p>
+<hr />
+<h2 id="7-add_sol-boundary-status">7. add_sol Boundary Status</h2>
+<p><code>add_sol</code> is now runtime-integrated (no longer
+“stdlib-only/not wired”):</p>
+<ul>
+<li><code>add_sol::call_with_abi(...)</code> (legacy string
+projection)</li>
+<li><code>add_sol::call_with_abi_typed(...)</code> (typed envelope with
+decoded/evidence fields)</li>
+</ul>
+<p>Typed boundary fields include:</p>
+<ul>
+<li><code>result_hex</code></li>
+<li><code>decoded</code></li>
+<li><code>decode_error</code></li>
+<li><code>tx_hash</code></li>
+<li><code>receipt_status</code></li>
+<li><code>revert_data</code></li>
+<li><code>error_code</code></li>
+<li><code>message</code></li>
+</ul>
+<hr />
+<h2 id="8-security-and-policy-posture">8. Security and Policy
+Posture</h2>
+<ul>
+<li><code>@secure</code> remains the primary runtime guard for
+authenticated, non-reentrant execution paths.</li>
+<li>Trust-mode boundary enforcement is active and increasingly
+compile/test-gated.</li>
+<li>Hybrid split and overload-safe decode reduce ambiguity and policy
+leakage risks.</li>
+<li>CI trust-gate has expanded forensic logs for each hardening
+increment.</li>
+</ul>
+<hr />
+<h2 id="9-remaining-gaps-honest-status">9. Remaining Gaps (Honest
+Status)</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Current gap</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Full decentralized codegen</td>
+<td>Broad subset still pending; many generated method bodies remain
+conservative</td>
+</tr>
+<tr class="even">
+<td>End-to-end production contract path</td>
+<td>Still not equivalent to “drop-in Solidity replacement” for all
+patterns</td>
+</tr>
+<tr class="odd">
+<td>Typed decode conventions in DAL call-sites</td>
+<td>Signature-hint conventions and guidance are still being
+normalized</td>
+</tr>
+<tr class="even">
+<td>Audit package completeness</td>
+<td>In progress; not yet final-form</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-practical-guidance-use-dal-for-smart-contract-work">10.
+Practical Guidance: Use DAL for Smart Contract Work</h2>
+<p><strong>Good fit now</strong></p>
+<ul>
+<li>Trust-aware orchestration over on-chain systems</li>
+<li>Typed chain interaction with evidence-first outputs</li>
+<li>ABI-driven integration with existing Solidity contracts</li>
+<li>Hybrid services requiring clear split between chain-safe and
+orchestration-only blocks</li>
+</ul>
+<p><strong>Use caution / expect work-in-progress</strong></p>
+<ul>
+<li>Fully replacing Solidity-only contract development for complex
+on-chain-only programs</li>
+<li>Assuming all DAL methods under blockchain target generate
+production-grade non-stub contract logic today</li>
+</ul>
+<hr />
+<h2 id="11-reference-pointers-live-source-of-truth">11. Reference
+Pointers (Live Source of Truth)</h2>
+<ul>
+<li><code>docs/development/implementation/TRUST_SPLIT_EVM_PRODUCTION_PLAN.md</code></li>
+<li><code>docs/development/implementation/TRUST_SPLIT_EVM_HARDENING_REFACTOR_PLAN.md</code>
+(gateboard §7 = test/release style gates until a standalone test plan
+file is added)</li>
+<li><code>docs/PROJECT_STATE_AND_ALIGNMENT.md</code></li>
+<li><code>src/stdlib/chain.rs</code></li>
+<li><code>src/stdlib/abi_codec.rs</code></li>
+<li><code>src/stdlib/add_sol.rs</code></li>
+<li><code>.github/workflows/ci.yml</code>
+(<code>trust-split-fast</code>)</li>
+</ul>
+<hr />
+<p><strong>Bottom line:</strong> DAL’s smart-contract path is now
+materially stronger than earlier states: typed evidence, hardened ABI
+decode, hybrid dual-artifact split, and overload-safe registry decode
+are in place. The strategic goal remains unchanged: continue converting
+this reliable integration/runtime surface into a full audit-ready
+contract-native path by closing the remaining decentralized codegen and
+final operational audit gaps.</p>
+</body>
+</html>

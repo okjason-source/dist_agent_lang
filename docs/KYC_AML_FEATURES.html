@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>KYC_AML_FEATURES</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="kycaml-features-in-dist_agent_lang">KYC/AML Features in
+dist_agent_lang</h1>
+<h2 id="-overview">🎯 <strong>Overview</strong></h2>
+<p><strong>dist_agent_lang</strong> includes built-in KYC (Know Your
+Customer) and AML (Anti-Money Laundering) capabilities as native
+namespaces, enabling developers to build compliant decentralized
+applications with regulatory requirements built into the language
+itself.</p>
+<h2 id="-kyc-know-your-customer-namespace">🔐 <strong>KYC (Know Your
+Customer) Namespace</strong></h2>
+<h3 id="core-functions"><strong>Core Functions</strong></h3>
+<h4 id="1-identity-verification"><strong>1. Identity
+Verification</strong></h4>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Verify user identity with a KYC provider</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> verification_result <span class="op">=</span> <span class="pp">kyc::</span>verify_identity(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;securekyc&quot;</span><span class="op">,</span>           <span class="co">// Provider ID</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;0x1234...&quot;</span><span class="op">,</span>           <span class="co">// User address</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;enhanced&quot;</span><span class="op">,</span>            <span class="co">// Verification level</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span>                      <span class="co">// User data</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;full_name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;date_of_birth&quot;</span><span class="op">:</span> <span class="st">&quot;1990-01-01&quot;</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;address&quot;</span><span class="op">:</span> <span class="st">&quot;123 Main St, City, Country&quot;</span><span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;nationality&quot;</span><span class="op">:</span> <span class="st">&quot;US&quot;</span><span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;document_type&quot;</span><span class="op">:</span> <span class="st">&quot;passport&quot;</span><span class="op">,</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;document_number&quot;</span><span class="op">:</span> <span class="st">&quot;US123456789&quot;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;status&quot;: &quot;verified&quot;, &quot;verification_id&quot;: &quot;kyc_123...&quot;, &quot;confidence&quot;: 0.95 }</span></span></code></pre></div>
+<h4 id="2-verification-status-check"><strong>2. Verification Status
+Check</strong></h4>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Check verification status</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> status <span class="op">=</span> <span class="pp">kyc::</span>get_verification_status(<span class="st">&quot;kyc_123456789&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;status&quot;: &quot;verified&quot;, &quot;is_valid&quot;: true, &quot;expires_at&quot;: 1234567890 }</span></span></code></pre></div>
+<h4 id="3-verification-revocation"><strong>3. Verification
+Revocation</strong></h4>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Revoke verification if needed</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> revoked <span class="op">=</span> <span class="pp">kyc::</span>revoke_verification(<span class="st">&quot;kyc_123456789&quot;</span><span class="op">,</span> <span class="st">&quot;Suspicious activity detected&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: true</span></span></code></pre></div>
+<h4 id="4-provider-management"><strong>4. Provider
+Management</strong></h4>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get provider information</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> provider_info <span class="op">=</span> <span class="pp">kyc::</span>get_provider_info(<span class="st">&quot;securekyc&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;name&quot;: &quot;SecureKYC Inc.&quot;, &quot;success_rate&quot;: 0.98, &quot;compliance_standards&quot;: {...} }</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">// List available providers</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> providers <span class="op">=</span> <span class="pp">kyc::</span>list_providers()<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: [&quot;securekyc&quot;, &quot;veriff&quot;]</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Get verification levels for a provider</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> levels <span class="op">=</span> <span class="pp">kyc::</span>get_verification_levels(<span class="st">&quot;securekyc&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;basic&quot;: {...}, &quot;enhanced&quot;: {...}, &quot;premium&quot;: {...} }</span></span></code></pre></div>
+<h4 id="5-document-validation"><strong>5. Document
+Validation</strong></h4>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate identity documents</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> validation <span class="op">=</span> <span class="pp">kyc::</span>validate_document(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;passport&quot;</span><span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;document_number&quot;</span><span class="op">:</span> <span class="st">&quot;US123456789&quot;</span><span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;expiry_date&quot;</span><span class="op">:</span> <span class="st">&quot;2030-12-31&quot;</span><span class="op">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;issuing_country&quot;</span><span class="op">:</span> <span class="st">&quot;US&quot;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;is_valid&quot;: true, &quot;confidence&quot;: 0.95, &quot;validation_id&quot;: &quot;doc_123...&quot; }</span></span></code></pre></div>
+<h4 id="6-identity-matching"><strong>6. Identity Matching</strong></h4>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Check if identity data matches verification data</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> match_result <span class="op">=</span> <span class="pp">kyc::</span>check_identity_match(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span> <span class="st">&quot;dob&quot;</span><span class="op">:</span> <span class="st">&quot;1990-01-01&quot;</span> <span class="op">},</span>  <span class="co">// Identity data</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span> <span class="st">&quot;dob&quot;</span><span class="op">:</span> <span class="st">&quot;1990-01-01&quot;</span> <span class="op">}</span>   <span class="co">// Verification data</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;match_score&quot;: 0.92, &quot;is_match&quot;: true, &quot;confidence&quot;: 0.88 }</span></span></code></pre></div>
+<h4 id="7-compliance-reporting"><strong>7. Compliance
+Reporting</strong></h4>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Generate compliance report for a user</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> report <span class="op">=</span> <span class="pp">kyc::</span>get_compliance_report(<span class="st">&quot;0x1234...&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;kyc_status&quot;: &quot;verified&quot;, &quot;verification_level&quot;: &quot;enhanced&quot;, &quot;compliance_score&quot;: 0.92 }</span></span></code></pre></div>
+<h3 id="supported-kyc-providers"><strong>Supported KYC
+Providers</strong></h3>
+<h4 id="securekyc-inc"><strong>SecureKYC Inc.</strong></h4>
+<ul>
+<li><strong>ID</strong>: <code>securekyc</code></li>
+<li><strong>Verification Levels</strong>: Basic, Enhanced, Premium</li>
+<li><strong>Compliance Standards</strong>: GDPR, SOX, PCI</li>
+<li><strong>Success Rate</strong>: 98%</li>
+<li><strong>Response Time</strong>: 5 seconds</li>
+</ul>
+<h4 id="veriff"><strong>Veriff</strong></h4>
+<ul>
+<li><strong>ID</strong>: <code>veriff</code></li>
+<li><strong>Verification Levels</strong>: Basic, Enhanced</li>
+<li><strong>Compliance Standards</strong>: GDPR, ISO27001</li>
+<li><strong>Success Rate</strong>: 96%</li>
+<li><strong>Response Time</strong>: 3 seconds</li>
+</ul>
+<h3 id="verification-levels"><strong>Verification Levels</strong></h3>
+<h4 id="basic-level"><strong>Basic Level</strong></h4>
+<ul>
+<li><strong>Requirements</strong>: Identity, Address</li>
+<li><strong>Verification Time</strong>: 12-24 hours</li>
+<li><strong>Cost</strong>: $10-15</li>
+<li><strong>Compliance Score</strong>: 0.8-0.85</li>
+</ul>
+<h4 id="enhanced-level"><strong>Enhanced Level</strong></h4>
+<ul>
+<li><strong>Requirements</strong>: Identity, Address, Income</li>
+<li><strong>Verification Time</strong>: 24-48 hours</li>
+<li><strong>Cost</strong>: $25-30</li>
+<li><strong>Compliance Score</strong>: 0.9-0.92</li>
+</ul>
+<h4 id="premium-level"><strong>Premium Level</strong></h4>
+<ul>
+<li><strong>Requirements</strong>: Identity, Address, Income, Source of
+Funds</li>
+<li><strong>Verification Time</strong>: 48-72 hours</li>
+<li><strong>Cost</strong>: $50</li>
+<li><strong>Compliance Score</strong>: 0.95</li>
+</ul>
+<h2 id="️-aml-anti-money-laundering-namespace">🛡️ <strong>AML (Anti-Money
+Laundering) Namespace</strong></h2>
+<h3 id="core-functions-1"><strong>Core Functions</strong></h3>
+<h4 id="1-aml-checks"><strong>1. AML Checks</strong></h4>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Perform AML check</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> aml_result <span class="op">=</span> <span class="pp">aml::</span>perform_check(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;chainalysis&quot;</span><span class="op">,</span>         <span class="co">// Provider ID</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;0x1234...&quot;</span><span class="op">,</span>           <span class="co">// User address</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;sanctions&quot;</span><span class="op">,</span>           <span class="co">// Check type</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span>                      <span class="co">// User data</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;full_name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;nationality&quot;</span><span class="op">:</span> <span class="st">&quot;US&quot;</span><span class="op">,</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;business_type&quot;</span><span class="op">:</span> <span class="st">&quot;individual&quot;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;status&quot;: &quot;passed&quot;, &quot;check_id&quot;: &quot;aml_123...&quot;, &quot;risk_score&quot;: 0.1 }</span></span></code></pre></div>
+<h4 id="2-check-status"><strong>2. Check Status</strong></h4>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Check AML check status</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> status <span class="op">=</span> <span class="pp">aml::</span>get_check_status(<span class="st">&quot;aml_123456789&quot;</span>)<span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;status&quot;: &quot;passed&quot;, &quot;is_valid&quot;: true, &quot;expires_at&quot;: 1234567890 }</span></span></code></pre></div>
+<h4 id="3-transaction-screening"><strong>3. Transaction
+Screening</strong></h4>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Screen a transaction for AML compliance</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> screening <span class="op">=</span> <span class="pp">aml::</span>screen_transaction(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;0x1234...&quot;</span><span class="op">,</span>           <span class="co">// From address</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;0x5678...&quot;</span><span class="op">,</span>           <span class="co">// To address</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="dv">50000</span><span class="op">,</span>                 <span class="co">// Amount</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span>                      <span class="co">// Transaction data</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;currency&quot;</span><span class="op">:</span> <span class="st">&quot;USD&quot;</span><span class="op">,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;purpose&quot;</span><span class="op">:</span> <span class="st">&quot;business_payment&quot;</span><span class="op">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;source&quot;</span><span class="op">:</span> <span class="st">&quot;bank_transfer&quot;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;status&quot;: &quot;approved&quot;, &quot;risk_score&quot;: 0.15, &quot;recommendation&quot;: &quot;approve&quot; }</span></span></code></pre></div>
+<h4 id="4-address-monitoring"><strong>4. Address
+Monitoring</strong></h4>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Monitor an address for suspicious activity</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> monitoring <span class="op">=</span> <span class="pp">aml::</span>monitor_address(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;0x1234...&quot;</span><span class="op">,</span>           <span class="co">// Address to monitor</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;high&quot;</span>                 <span class="co">// Monitoring level</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;monitoring_id&quot;: &quot;monitor_123...&quot;, &quot;status&quot;: &quot;active&quot;, &quot;risk_score&quot;: 0.2 }</span></span></code></pre></div>
+<h4 id="5-risk-assessment"><strong>5. Risk Assessment</strong></h4>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Comprehensive risk assessment</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> risk_assessment <span class="op">=</span> <span class="pp">aml::</span>get_risk_assessment(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;0x1234...&quot;</span><span class="op">,</span>           <span class="co">// User address</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span>                      <span class="co">// Transaction history</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;tx_1&quot;</span><span class="op">:</span> <span class="dv">10000</span><span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;tx_2&quot;</span><span class="op">:</span> <span class="dv">25000</span><span class="op">,</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;tx_3&quot;</span><span class="op">:</span> <span class="dv">5000</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;overall_risk&quot;: 0.25, &quot;risk_category&quot;: &quot;low&quot;, &quot;recommendations&quot;: &quot;Standard monitoring&quot; }</span></span></code></pre></div>
+<h4 id="6-sanctions-list-check"><strong>6. Sanctions List
+Check</strong></h4>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Check against sanctions lists</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> sanctions_check <span class="op">=</span> <span class="pp">aml::</span>check_sanctions_list(</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;0x1234...&quot;</span><span class="op">,</span>           <span class="co">// User address</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span>                      <span class="co">// User data</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;full_name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;nationality&quot;</span><span class="op">:</span> <span class="st">&quot;US&quot;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;sanctions_status&quot;: &quot;clear&quot;, &quot;ofac_status&quot;: &quot;clear&quot;, &quot;eu_sanctions_status&quot;: &quot;clear&quot; }</span></span></code></pre></div>
+<h4 id="7-provider-management"><strong>7. Provider
+Management</strong></h4>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get AML provider information</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> provider_info <span class="op">=</span> <span class="pp">aml::</span>get_provider_info(<span class="st">&quot;chainalysis&quot;</span>)<span class="op">;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;name&quot;: &quot;Chainalysis&quot;, &quot;success_rate&quot;: 0.99, &quot;compliance_standards&quot;: {...} }</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">// List available providers</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> providers <span class="op">=</span> <span class="pp">aml::</span>list_providers()<span class="op">;</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: [&quot;chainalysis&quot;, &quot;elliptic&quot;]</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Get check types for a provider</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> check_types <span class="op">=</span> <span class="pp">aml::</span>get_check_types(<span class="st">&quot;chainalysis&quot;</span>)<span class="op">;</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { &quot;sanctions&quot;: {...}, &quot;pep&quot;: {...}, &quot;adverse_media&quot;: {...}, &quot;risk_assessment&quot;: {...} }</span></span></code></pre></div>
+<h3 id="supported-aml-providers"><strong>Supported AML
+Providers</strong></h3>
+<h4 id="chainalysis"><strong>Chainalysis</strong></h4>
+<ul>
+<li><strong>ID</strong>: <code>chainalysis</code></li>
+<li><strong>Check Types</strong>: Sanctions, PEP, Adverse Media, Risk
+Assessment</li>
+<li><strong>Compliance Standards</strong>: FATF, OFAC, EU Sanctions, UK
+Sanctions</li>
+<li><strong>Success Rate</strong>: 99%</li>
+<li><strong>Response Time</strong>: 3 seconds</li>
+</ul>
+<h4 id="elliptic"><strong>Elliptic</strong></h4>
+<ul>
+<li><strong>ID</strong>: <code>elliptic</code></li>
+<li><strong>Check Types</strong>: Sanctions, Risk Assessment</li>
+<li><strong>Compliance Standards</strong>: FATF, OFAC, EU Sanctions</li>
+<li><strong>Success Rate</strong>: 98%</li>
+<li><strong>Response Time</strong>: 2 seconds</li>
+</ul>
+<h3 id="aml-check-types"><strong>AML Check Types</strong></h3>
+<h4 id="sanctions-screening"><strong>Sanctions Screening</strong></h4>
+<ul>
+<li><strong>Description</strong>: Check against global sanctions
+lists</li>
+<li><strong>Risk Factors</strong>: Sanctions match, PEP match, Adverse
+media</li>
+<li><strong>Check Time</strong>: 3-5 minutes</li>
+<li><strong>Cost</strong>: $4-5</li>
+<li><strong>Accuracy</strong>: 97-98%</li>
+</ul>
+<h4 id="pep-screening"><strong>PEP Screening</strong></h4>
+<ul>
+<li><strong>Description</strong>: Politically Exposed Person
+screening</li>
+<li><strong>Risk Factors</strong>: PEP match, Family PEP, Close
+associate</li>
+<li><strong>Check Time</strong>: 10 minutes</li>
+<li><strong>Cost</strong>: $8</li>
+<li><strong>Accuracy</strong>: 95%</li>
+</ul>
+<h4 id="adverse-media"><strong>Adverse Media</strong></h4>
+<ul>
+<li><strong>Description</strong>: Negative news and media screening</li>
+<li><strong>Risk Factors</strong>: Negative news, Fraud allegations,
+Regulatory violations</li>
+<li><strong>Check Time</strong>: 15 minutes</li>
+<li><strong>Cost</strong>: $12</li>
+<li><strong>Accuracy</strong>: 92%</li>
+</ul>
+<h4 id="risk-assessment"><strong>Risk Assessment</strong></h4>
+<ul>
+<li><strong>Description</strong>: Comprehensive risk assessment</li>
+<li><strong>Risk Factors</strong>: Transaction pattern, Geographic risk,
+Business risk, Source of funds</li>
+<li><strong>Check Time</strong>: 20-30 minutes</li>
+<li><strong>Cost</strong>: $15-20</li>
+<li><strong>Accuracy</strong>: 93-94%</li>
+</ul>
+<h2 id="-integration-with-defi-nft-rwa-contract">🔄 <strong>Integration
+with DeFi NFT RWA Contract</strong></h2>
+<h3 id="complete-example"><strong>Complete Example</strong></h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>trust(<span class="st">&quot;hybrid&quot;</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>secure</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>service DeFiNFT_RWA <span class="op">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing code ...</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> tokenize_asset_with_compliance(</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        owner<span class="op">:</span> string<span class="op">,</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        asset_type<span class="op">:</span> string<span class="op">,</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        value<span class="op">:</span> int<span class="op">,</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        metadata<span class="op">:</span> map<span class="op">&lt;</span>string<span class="op">,</span> string<span class="op">&gt;,</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>        legal_docs<span class="op">:</span> map<span class="op">&lt;</span>string<span class="op">,</span> string<span class="op">&gt;,</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>        insurance_info<span class="op">:</span> map<span class="op">&lt;</span>string<span class="op">,</span> string<span class="op">&gt;</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> int <span class="op">{</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 1: KYC Verification</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> kyc_result <span class="op">=</span> <span class="pp">kyc::</span>verify_identity(</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;securekyc&quot;</span><span class="op">,</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>            owner<span class="op">,</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;enhanced&quot;</span><span class="op">,</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;full_name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;date_of_birth&quot;</span><span class="op">:</span> <span class="st">&quot;1990-01-01&quot;</span><span class="op">,</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;address&quot;</span><span class="op">:</span> <span class="st">&quot;123 Main St, City, Country&quot;</span><span class="op">,</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;nationality&quot;</span><span class="op">:</span> <span class="st">&quot;US&quot;</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>        )<span class="op">;</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> kyc_result[<span class="st">&quot;status&quot;</span>] <span class="op">!=</span> <span class="st">&quot;verified&quot;</span> <span class="op">{</span></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>            throw <span class="st">&quot;KYC verification failed&quot;</span><span class="op">;</span></span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 2: AML Check</span></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> aml_result <span class="op">=</span> <span class="pp">aml::</span>perform_check(</span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;chainalysis&quot;</span><span class="op">,</span></span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>            owner<span class="op">,</span></span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;risk_assessment&quot;</span><span class="op">,</span></span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span></span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;full_name&quot;</span><span class="op">:</span> <span class="st">&quot;John Doe&quot;</span><span class="op">,</span></span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;nationality&quot;</span><span class="op">:</span> <span class="st">&quot;US&quot;</span><span class="op">,</span></span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;business_type&quot;</span><span class="op">:</span> <span class="st">&quot;individual&quot;</span></span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a>        )<span class="op">;</span></span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> aml_result[<span class="st">&quot;status&quot;</span>] <span class="op">!=</span> <span class="st">&quot;passed&quot;</span> <span class="op">{</span></span>
+<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a>            throw <span class="st">&quot;AML check failed&quot;</span><span class="op">;</span></span>
+<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 3: Transaction Screening</span></span>
+<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> screening <span class="op">=</span> <span class="pp">aml::</span>screen_transaction(</span>
+<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a>            owner<span class="op">,</span></span>
+<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;contract_address&quot;</span><span class="op">,</span></span>
+<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a>            value<span class="op">,</span></span>
+<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span></span>
+<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;currency&quot;</span><span class="op">:</span> <span class="st">&quot;USD&quot;</span><span class="op">,</span></span>
+<span id="cb15-54"><a href="#cb15-54" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;purpose&quot;</span><span class="op">:</span> <span class="st">&quot;asset_tokenization&quot;</span><span class="op">,</span></span>
+<span id="cb15-55"><a href="#cb15-55" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;source&quot;</span><span class="op">:</span> <span class="st">&quot;bank_transfer&quot;</span></span>
+<span id="cb15-56"><a href="#cb15-56" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb15-57"><a href="#cb15-57" aria-hidden="true" tabindex="-1"></a>        )<span class="op">;</span></span>
+<span id="cb15-58"><a href="#cb15-58" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-59"><a href="#cb15-59" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> screening[<span class="st">&quot;status&quot;</span>] <span class="op">!=</span> <span class="st">&quot;approved&quot;</span> <span class="op">{</span></span>
+<span id="cb15-60"><a href="#cb15-60" aria-hidden="true" tabindex="-1"></a>            throw <span class="st">&quot;Transaction screening failed&quot;</span><span class="op">;</span></span>
+<span id="cb15-61"><a href="#cb15-61" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb15-62"><a href="#cb15-62" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-63"><a href="#cb15-63" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 4: Proceed with tokenization</span></span>
+<span id="cb15-64"><a href="#cb15-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">self</span><span class="op">.</span>tokenize_asset(owner<span class="op">,</span> asset_type<span class="op">,</span> value<span class="op">,</span> metadata<span class="op">,</span> legal_docs<span class="op">,</span> insurance_info)<span class="op">;</span></span>
+<span id="cb15-65"><a href="#cb15-65" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb15-66"><a href="#cb15-66" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-67"><a href="#cb15-67" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> trade_asset_with_compliance(</span>
+<span id="cb15-68"><a href="#cb15-68" aria-hidden="true" tabindex="-1"></a>        asset_id<span class="op">:</span> int<span class="op">,</span></span>
+<span id="cb15-69"><a href="#cb15-69" aria-hidden="true" tabindex="-1"></a>        seller<span class="op">:</span> string<span class="op">,</span></span>
+<span id="cb15-70"><a href="#cb15-70" aria-hidden="true" tabindex="-1"></a>        buyer<span class="op">:</span> string<span class="op">,</span></span>
+<span id="cb15-71"><a href="#cb15-71" aria-hidden="true" tabindex="-1"></a>        price<span class="op">:</span> int<span class="op">,</span></span>
+<span id="cb15-72"><a href="#cb15-72" aria-hidden="true" tabindex="-1"></a>        quantity<span class="op">:</span> int<span class="op">,</span></span>
+<span id="cb15-73"><a href="#cb15-73" aria-hidden="true" tabindex="-1"></a>        trade_type<span class="op">:</span> string</span>
+<span id="cb15-74"><a href="#cb15-74" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> int <span class="op">{</span></span>
+<span id="cb15-75"><a href="#cb15-75" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify both parties compliance</span></span>
+<span id="cb15-76"><a href="#cb15-76" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> seller_kyc <span class="op">=</span> <span class="pp">kyc::</span>get_verification_status(seller)<span class="op">;</span></span>
+<span id="cb15-77"><a href="#cb15-77" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> buyer_kyc <span class="op">=</span> <span class="pp">kyc::</span>get_verification_status(buyer)<span class="op">;</span></span>
+<span id="cb15-78"><a href="#cb15-78" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-79"><a href="#cb15-79" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> seller_kyc[<span class="st">&quot;status&quot;</span>] <span class="op">!=</span> <span class="st">&quot;verified&quot;</span> <span class="op">||</span> buyer_kyc[<span class="st">&quot;status&quot;</span>] <span class="op">!=</span> <span class="st">&quot;verified&quot;</span> <span class="op">{</span></span>
+<span id="cb15-80"><a href="#cb15-80" aria-hidden="true" tabindex="-1"></a>            throw <span class="st">&quot;KYC verification required for both parties&quot;</span><span class="op">;</span></span>
+<span id="cb15-81"><a href="#cb15-81" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb15-82"><a href="#cb15-82" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-83"><a href="#cb15-83" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Screen the transaction</span></span>
+<span id="cb15-84"><a href="#cb15-84" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> screening <span class="op">=</span> <span class="pp">aml::</span>screen_transaction(</span>
+<span id="cb15-85"><a href="#cb15-85" aria-hidden="true" tabindex="-1"></a>            seller<span class="op">,</span></span>
+<span id="cb15-86"><a href="#cb15-86" aria-hidden="true" tabindex="-1"></a>            buyer<span class="op">,</span></span>
+<span id="cb15-87"><a href="#cb15-87" aria-hidden="true" tabindex="-1"></a>            price <span class="op">*</span> quantity<span class="op">,</span></span>
+<span id="cb15-88"><a href="#cb15-88" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span></span>
+<span id="cb15-89"><a href="#cb15-89" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;currency&quot;</span><span class="op">:</span> <span class="st">&quot;USD&quot;</span><span class="op">,</span></span>
+<span id="cb15-90"><a href="#cb15-90" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;purpose&quot;</span><span class="op">:</span> <span class="st">&quot;asset_trading&quot;</span><span class="op">,</span></span>
+<span id="cb15-91"><a href="#cb15-91" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;trade_type&quot;</span><span class="op">:</span> trade_type</span>
+<span id="cb15-92"><a href="#cb15-92" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb15-93"><a href="#cb15-93" aria-hidden="true" tabindex="-1"></a>        )<span class="op">;</span></span>
+<span id="cb15-94"><a href="#cb15-94" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-95"><a href="#cb15-95" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> screening[<span class="st">&quot;status&quot;</span>] <span class="op">!=</span> <span class="st">&quot;approved&quot;</span> <span class="op">{</span></span>
+<span id="cb15-96"><a href="#cb15-96" aria-hidden="true" tabindex="-1"></a>            throw <span class="st">&quot;Transaction screening failed&quot;</span><span class="op">;</span></span>
+<span id="cb15-97"><a href="#cb15-97" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb15-98"><a href="#cb15-98" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-99"><a href="#cb15-99" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Proceed with trade</span></span>
+<span id="cb15-100"><a href="#cb15-100" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">self</span><span class="op">.</span>trade_asset(asset_id<span class="op">,</span> seller<span class="op">,</span> buyer<span class="op">,</span> price<span class="op">,</span> quantity<span class="op">,</span> trade_type)<span class="op">;</span></span>
+<span id="cb15-101"><a href="#cb15-101" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb15-102"><a href="#cb15-102" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="-compliance-features">📊 <strong>Compliance
+Features</strong></h2>
+<h3 id="1-audit-trails"><strong>1. Audit Trails</strong></h3>
+<p>All KYC and AML operations are automatically logged with
+comprehensive audit trails:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Automatic audit logging</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="pp">log::</span>audit(<span class="st">&quot;kyc_verify&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;provider_id&quot;</span><span class="op">:</span> <span class="st">&quot;securekyc&quot;</span><span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;user_address&quot;</span><span class="op">:</span> <span class="st">&quot;0x1234...&quot;</span><span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;level&quot;</span><span class="op">:</span> <span class="st">&quot;enhanced&quot;</span><span class="op">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;timestamp&quot;</span><span class="op">:</span> <span class="pp">chain::</span>get_block_timestamp(<span class="dv">1</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="pp">log::</span>audit(<span class="st">&quot;aml_check&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;provider_id&quot;</span><span class="op">:</span> <span class="st">&quot;chainalysis&quot;</span><span class="op">,</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;user_address&quot;</span><span class="op">:</span> <span class="st">&quot;0x1234...&quot;</span><span class="op">,</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;check_type&quot;</span><span class="op">:</span> <span class="st">&quot;sanctions&quot;</span><span class="op">,</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;timestamp&quot;</span><span class="op">:</span> <span class="pp">chain::</span>get_block_timestamp(<span class="dv">1</span>)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="2-risk-scoring"><strong>2. Risk Scoring</strong></h3>
+<p>Built-in risk scoring for all operations:</p>
+<ul>
+<li><strong>Low Risk</strong>: &lt; 0.3 (Standard monitoring)</li>
+<li><strong>Medium Risk</strong>: 0.3 - 0.7 (Enhanced monitoring)</li>
+<li><strong>High Risk</strong>: &gt; 0.7 (High monitoring)</li>
+</ul>
+<h3 id="3-compliance-standards"><strong>3. Compliance
+Standards</strong></h3>
+<p>Support for major regulatory standards:</p>
+<ul>
+<li><strong>FATF</strong>: Financial Action Task Force</li>
+<li><strong>OFAC</strong>: Office of Foreign Assets Control</li>
+<li><strong>EU Sanctions</strong>: European Union sanctions</li>
+<li><strong>UK Sanctions</strong>: United Kingdom sanctions</li>
+<li><strong>GDPR</strong>: General Data Protection Regulation</li>
+<li><strong>SOX</strong>: Sarbanes-Oxley Act</li>
+<li><strong>PCI</strong>: Payment Card Industry</li>
+</ul>
+<h3 id="4-real-time-monitoring"><strong>4. Real-time
+Monitoring</strong></h3>
+<p>Continuous monitoring capabilities:</p>
+<ul>
+<li>Address monitoring</li>
+<li>Transaction screening</li>
+<li>Risk assessment updates</li>
+<li>Compliance status tracking</li>
+</ul>
+<h2 id="-benefits">🚀 <strong>Benefits</strong></h2>
+<h3 id="1-regulatory-compliance"><strong>1. Regulatory
+Compliance</strong></h3>
+<ul>
+<li>Built-in compliance with major regulations</li>
+<li>Automatic audit trails</li>
+<li>Risk-based monitoring</li>
+<li>Sanctions screening</li>
+</ul>
+<h3 id="2-developer-experience"><strong>2. Developer
+Experience</strong></h3>
+<ul>
+<li>Simple API calls</li>
+<li>No external service integration needed</li>
+<li>Built-in error handling</li>
+<li>Comprehensive documentation</li>
+</ul>
+<h3 id="3-cost-efficiency"><strong>3. Cost Efficiency</strong></h3>
+<ul>
+<li>No need for external KYC/AML providers</li>
+<li>Reduced integration costs</li>
+<li>Automated compliance checks</li>
+<li>Scalable solution</li>
+</ul>
+<h3 id="4-security"><strong>4. Security</strong></h3>
+<ul>
+<li>On-chain verification records</li>
+<li>Immutable audit trails</li>
+<li>Decentralized compliance</li>
+<li>Privacy-preserving checks</li>
+</ul>
+<h2 id="-use-cases">🎯 <strong>Use Cases</strong></h2>
+<h3 id="1-defi-protocols"><strong>1. DeFi Protocols</strong></h3>
+<ul>
+<li>Tokenized asset trading</li>
+<li>Lending platforms</li>
+<li>Yield farming protocols</li>
+<li>Cross-chain bridges</li>
+</ul>
+<h3 id="2-nft-marketplaces"><strong>2. NFT Marketplaces</strong></h3>
+<ul>
+<li>High-value NFT trading</li>
+<li>RWA tokenization</li>
+<li>Fractional ownership</li>
+<li>Royalty distribution</li>
+</ul>
+<h3 id="3-daos"><strong>3. DAOs</strong></h3>
+<ul>
+<li>Member verification</li>
+<li>Governance participation</li>
+<li>Treasury management</li>
+<li>Proposal voting</li>
+</ul>
+<h3 id="4-enterprise-applications"><strong>4. Enterprise
+Applications</strong></h3>
+<ul>
+<li>Supply chain finance</li>
+<li>Trade finance</li>
+<li>Real estate tokenization</li>
+<li>Commodity trading</li>
+</ul>
+<h2 id="-future-enhancements">🔮 <strong>Future
+Enhancements</strong></h2>
+<h3 id="1-advanced-ai-integration"><strong>1. Advanced AI
+Integration</strong></h3>
+<ul>
+<li>Behavioral analysis</li>
+<li>Pattern recognition</li>
+<li>Anomaly detection</li>
+<li>Predictive risk modeling</li>
+</ul>
+<h3 id="2-cross-chain-compliance"><strong>2. Cross-Chain
+Compliance</strong></h3>
+<ul>
+<li>Multi-chain verification</li>
+<li>Cross-chain monitoring</li>
+<li>Interoperable compliance</li>
+<li>Universal identity</li>
+</ul>
+<h3 id="3-privacy-enhancements"><strong>3. Privacy
+Enhancements</strong></h3>
+<ul>
+<li>Zero-knowledge proofs</li>
+<li>Privacy-preserving verification</li>
+<li>Selective disclosure</li>
+<li>Confidential compliance</li>
+</ul>
+<h3 id="4-regulatory-updates"><strong>4. Regulatory
+Updates</strong></h3>
+<ul>
+<li>Real-time regulation updates</li>
+<li>Automated compliance changes</li>
+<li>Dynamic risk assessment</li>
+<li>Adaptive monitoring</li>
+</ul>
+<hr />
+<p><strong>dist_agent_lang</strong> provides the most comprehensive
+KYC/AML solution for decentralized applications, making regulatory
+compliance simple and built into the language itself.</p>
+</body>
+</html>
