@@ -1,3 +1,0 @@
-// Verify evolve path (agent project only). Run: dal run scripts/verify_evolve_path.dal
-// Prints the path used by evolve::get_path() so you can confirm it matches agent.toml context_path.
-log::info("evolve_path", evolve::get_path());

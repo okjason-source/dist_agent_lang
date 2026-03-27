@@ -1,9 +1,0 @@
-# DAL scripting — write and run DAL programs from the agent.
-#
-# Behavior: Prefer scripts/ for project scripts; use write_file when available; always report outcome.
-
-skill "dal_scripting" {
-  category "development"
-  description "Write and run DAL (dist_agent_lang) scripts. Behavior: (1) Prefer project scripts/ for scripts that are part of the repo; use /tmp only for throwaway one-offs. (2) When write_file is available: write the .dal file (e.g. scripts/task.dal), then run with dal run scripts/task.dal. (3) When not: use run with heredoc, e.g. cat > path << 'DAL_END' ... DAL_END; choose a delimiter that does not appear in the script body. (4) Run with dal run <path>. (5) Always report to the user: what was run, stdout/stderr or result, and any errors. For verify_evolve_path or similar, use the project scripts/ path so the script is versioned."
-  tools "run" "search"
-}
