@@ -1,12 +1,12 @@
 [package]
 name = "dist_agent_lang"
-version = "1.0.18"
+version = "1.0.19"
 edition = "2021"
-description = "Hybrid programming with library and CLI support for Off/On-chain network integration"
+description = "Agentic programming with library and CLI support for Off/On-chain network integration"
 authors = ["OK Jason <jason.dinh.developer@gmail.com>"]
 license = "Apache-2.0"
 repository = "https://github.com/okjason-source/dist_agent_lang"
-keywords = ["programming-language", "blockchain", "smart-contracts", "distributed-systems"]
+keywords = ["programming-language", "trust-split", "agents", "distributed-systems", "trust-bridge"]
 categories = ["development-tools"]
 # Keep crate under crates.io 10 MB limit
 exclude = [
