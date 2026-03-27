@@ -11,4 +11,3 @@
 | **HTTP server auth** | `JWT_SECRET` | Required when JWT auth is used; enforced in `http_server_security`. See [SECURITY.md](../SECURITY.md). |
 | **Trust-split / compile** | `DAL_COMPILE_TRUST_MODE`, chain RPC / strict policy vars | See [TRUST_SPLIT_EVM_HARDENING_REFACTOR_PLAN.md](development/implementation/TRUST_SPLIT_EVM_HARDENING_REFACTOR_PLAN.md), [SMART_CONTRACTS_WITH_DAL_REVIEW.md](SMART_CONTRACTS_WITH_DAL_REVIEW.md). |
 
-**Project state:** This file is the **index**; detailed semantics stay in the linked guides. Update [PROJECT_STATE_AND_ALIGNMENT.md](PROJECT_STATE_AND_ALIGNMENT.md) when adding a new production-critical env var family.
