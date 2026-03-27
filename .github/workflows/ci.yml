@@ -251,29 +251,36 @@ jobs:
         cp -r docs target/docs/docs
         sudo apt-get update -qq
         sudo apt-get install -y pandoc
+        REPO_NAME="${GITHUB_REPOSITORY##*/}"
+        CSS_URL="/${REPO_NAME}/docs/assets/docs.css"
         # Render every Markdown file to HTML so intra-doc links work in the browser.
         (
           cd target/docs/docs
           find . -name '*.md' -print0 | while IFS= read -r -d '' f; do
             html="${f%.md}.html"
-            pandoc "$f" -o "$html" --standalone -f gfm -t html5 || echo "::warning::pandoc failed for $f" >&2
+            pandoc "$f" -o "$html" --standalone -f gfm -t html5 \
+              --css="$CSS_URL" \
+              --highlight-style=tango \
+              || echo "::warning::pandoc failed for $f" >&2
           done
         )
         # Point hrefs at .html peers (pandoc leaves .md in links). Skip http(s) URLs.
         find target/docs/docs -name '*.html' -print0 | while IFS= read -r -d '' f; do
           perl -pi -e 's/href="(?!https?:\/\/)([^"]+)\.md((?:#[^"]*)?)"/href="$1.html$2"/g' "$f"
         done
-        printf '%s\n' \
-          '<!DOCTYPE html>' \
-          '<html lang="en"><head>' \
-          '<meta charset="utf-8">' \
-          '<meta http-equiv="refresh" content="0; url=docs/PUBLIC_DOCUMENTATION_INDEX.html">' \
-          '<meta name="viewport" content="width=device-width, initial-scale=1">' \
-          '<title>dist_agent_lang documentation</title>' \
-          '</head><body>' \
-          '<p><a href="docs/PUBLIC_DOCUMENTATION_INDEX.html">dist_agent_lang documentation</a></p>' \
-          '</body></html>' \
-          > target/docs/index.html
+        {
+          printf '%s\n' \
+            '<!DOCTYPE html>' \
+            '<html lang="en"><head>' \
+            '<meta charset="utf-8">' \
+            '<meta name="viewport" content="width=device-width, initial-scale=1">' \
+            "<link rel=\"stylesheet\" href=\"${CSS_URL}\">" \
+            '<meta http-equiv="refresh" content="0; url=docs/PUBLIC_DOCUMENTATION_INDEX.html">' \
+            '<title>dist_agent_lang documentation</title>' \
+            '</head><body>' \
+            '<p><a href="docs/PUBLIC_DOCUMENTATION_INDEX.html">dist_agent_lang documentation</a></p>' \
+            '</body></html>'
+        } > target/docs/index.html
         mkdir -p target/docs/api
         if [ -d target/doc ] && [ "$(ls -A target/doc 2>/dev/null)" ]; then
           cp -r target/doc/. target/docs/api/
