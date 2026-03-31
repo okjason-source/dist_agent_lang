@@ -1198,6 +1198,7 @@ For run, search, and fetch_url the tool will execute and you will see the result
 
 /// Extended tools with file and DAL scripting: write_file, read_file, list_dir, dal_run, dal_check.
 /// Enabled when `DAL_AGENT_SCRIPTING=1` or `DAL_AGENT_SCRIPT_ROOT` is set; `AGENT_ASSISTANT_*` names are still accepted as aliases (same behavior).
+/// When only `DAL_AGENT_SCRIPTING=1`, file paths are jailed to the process current directory; with `DAL_AGENT_SCRIPT_ROOT`, to `<root>/scripts/`.
 /// Public for IDE agent runner (prompt → code development).
 pub const TOOLS_SYSTEM_WITH_SCRIPTING: &str = "You are an intelligent assistant. You can run shell commands, search the web, fetch a public HTTP/HTTPS URL as text, reply, ask the user, or use file/DAL tools. \
 Use host tools through the API when needed, and answer users in natural language when finished. \
@@ -1643,32 +1644,50 @@ fn scripting_env_enabled() -> bool {
         || std::env::var("AGENT_ASSISTANT_ROOT").is_ok()
 }
 
-/// Resolve working root for scripting: if DAL_AGENT_SCRIPT_ROOT (or legacy AGENT_ASSISTANT_ROOT) is set, use that/scripts (create if needed).
-/// Returns None if env is unset or path cannot be resolved.
+/// Resolve working root for scripting file tools (`read_file`, `write_file`, `list_dir`, …).
+/// - If `DAL_AGENT_SCRIPT_ROOT` (or legacy `AGENT_ASSISTANT_ROOT`) is set to a non-empty path, the
+///   jail is `<root>/scripts/` (created if missing).
+/// - If only `DAL_AGENT_SCRIPTING=1` (or legacy `AGENT_ASSISTANT_SCRIPTING=1`) is set, the jail is
+///   the **process current directory** (canonicalized when possible) so the agent works in cwd
+///   (e.g. CEO started from `./start.sh` without an extra root env).
+/// Returns `None` when scripting is enabled only via `DAL_AGENT_SCRIPT_ROOT` being present but
+/// empty/invalid — callers combine with [`scripting_env_enabled`].
 fn scripting_working_root() -> Option<std::path::PathBuf> {
-    let root = std::env::var("DAL_AGENT_SCRIPT_ROOT")
-        .or_else(|_| std::env::var("AGENT_ASSISTANT_ROOT"))
-        .ok()?;
-    let root = std::path::Path::new(&root);
-    let root = root.canonicalize().ok().or_else(|| {
-        if root.exists() {
-            Some(root.to_path_buf())
-        } else {
-            None
+    if let Ok(raw) =
+        std::env::var("DAL_AGENT_SCRIPT_ROOT").or_else(|_| std::env::var("AGENT_ASSISTANT_ROOT"))
+    {
+        let raw = raw.trim();
+        if !raw.is_empty() {
+            let root = std::path::Path::new(raw);
+            let root = root.canonicalize().ok().or_else(|| {
+                if root.exists() {
+                    Some(root.to_path_buf())
+                } else {
+                    None
+                }
+            })?;
+            let scripts = root.join("scripts");
+            if !scripts.exists() {
+                let _ = std::fs::create_dir_all(&scripts);
+            }
+            return Some(scripts);
         }
-    })?;
-    let scripts = root.join("scripts");
-    if !scripts.exists() {
-        let _ = std::fs::create_dir_all(&scripts);
     }
-    Some(scripts)
+    if std::env::var("DAL_AGENT_SCRIPTING").as_deref() == Ok("1")
+        || std::env::var("AGENT_ASSISTANT_SCRIPTING").as_deref() == Ok("1")
+    {
+        let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+        return cwd.canonicalize().ok().or(Some(cwd));
+    }
+    None
 }
 
 /// Agent that can reply, run shell commands, or search the web. Runs a multi-step loop until the
 /// LLM returns a final reply (or ask_user / parse_fail / max steps). So after a "run" (e.g. curl
 /// to post a tweet), the agent gets the tool result and continues until it sends a user-facing reply.
 /// When scripting env is enabled (see `scripting_env_enabled`), exposes write_file, read_file,
-/// list_dir, dal_run, dal_check and uses scripts/ under the configured root when set.
+/// list_dir, dal_run, dal_check under [`scripting_working_root`] (explicit `<root>/scripts/` or cwd
+/// when `DAL_AGENT_SCRIPTING=1` only).
 pub fn respond_with_tools(user_message: &str) -> Result<String, String> {
     respond_with_tools_result(user_message).map(|r| r.final_text)
 }
@@ -2079,15 +2098,27 @@ fn parse_tool_call_from_conversation(content: &str) -> Option<NativeToolCall> {
         .and_then(|x| x.as_str())
         .map(|s| s.to_string());
     let name = obj.get("name").and_then(|x| x.as_str())?.to_string();
-    let arguments = obj
-        .get("arguments")
-        .and_then(|x| x.as_object())
-        .map(|m| serde_json::Value::Object(m.clone()))?;
+    // Object, absent args, or a JSON string containing a serialized object (some providers).
+    let arguments = match obj.get("arguments") {
+        None => serde_json::Value::Object(serde_json::Map::new()),
+        Some(a) if a.is_object() => a.clone(),
+        Some(serde_json::Value::String(s)) => {
+            let inner = serde_json::from_str::<serde_json::Value>(s).ok()?;
+            inner.is_object().then_some(inner)?
+        }
+        Some(_) => return None,
+    };
     Some(NativeToolCall {
         id,
         name,
         arguments,
     })
+}
+
+/// Best-effort tool name from an assistant transcript line (for trace when full parse is unnecessary).
+fn parse_tool_name_from_assistant_line(content: &str) -> Option<String> {
+    let v: serde_json::Value = serde_json::from_str(content.trim()).ok()?;
+    v.get("name")?.as_str().map(|s| s.to_string())
 }
 
 fn parse_tool_result_from_conversation(content: &str) -> Option<String> {
@@ -2192,29 +2223,37 @@ pub fn generate_agent_model_turn(
 ) -> Result<AgentModelTurn, String> {
     let config = get_ai_config();
     if native_tool_calling_enabled() && !legacy_text_tool_protocol_enabled() {
-        match &config.provider {
-            AIProvider::OpenAI => {
-                if let Some(ref api_key) = config.api_key {
-                    if let Ok(turn) =
-                        call_openai_api_tool_turn(schema, api_key, &config, include_scripting_tools)
-                    {
-                        return Ok(turn);
+        if openai_compatible_tool_provider(&config) {
+            if let Some(ref api_key) = config.api_key {
+                match call_openai_api_tool_turn(schema, api_key, &config, include_scripting_tools) {
+                    Ok(turn) => return Ok(turn),
+                    Err(e) => {
+                        eprintln!("call_openai_api_tool_turn failed: {}", e);
+                        log::warn!("Tool-calling API failed (provider {:?}, falling back to plain text): {}", config.provider, e);
+                        return Err(e);
                     }
                 }
             }
-            AIProvider::Anthropic => {
-                if let Some(ref api_key) = config.api_key {
-                    if let Ok(turn) = call_anthropic_api_tool_turn(
-                        schema,
-                        api_key,
-                        &config,
-                        include_scripting_tools,
-                    ) {
-                        return Ok(turn);
+        }
+        if let AIProvider::Anthropic = &config.provider {
+            if let Some(ref api_key) = config.api_key {
+                match call_anthropic_api_tool_turn(
+                    schema,
+                    api_key,
+                    &config,
+                    include_scripting_tools,
+                ) {
+                    Ok(turn) => return Ok(turn),
+                    Err(e) => {
+                        eprintln!("call_anthropic_api_tool_turn failed: {}", e);
+                        log::warn!(
+                            "Tool-calling API failed (Anthropic, falling back to plain text): {}",
+                            e
+                        );
+                        return Err(e);
                     }
                 }
             }
-            _ => {}
         }
     }
     let prompt = crate::agent_context_schema::build_prompt_for_llm(schema);
@@ -2718,6 +2757,9 @@ pub struct MultiStepResult {
     pub steps_used: u32,
     /// True if the loop stopped because the step limit was reached (no final reply from the model).
     pub max_steps_reached: bool,
+    /// Tool names in execution order (`run`, `search`, …). Filled by the loop for accurate telemetry;
+    /// length should match `steps_used` when tools ran.
+    pub executed_tools: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -3041,6 +3083,7 @@ pub fn run_multi_step_tool_loop(
         ..ToolLoopGuardState::default()
     };
     let mut steps_used: u32 = 0;
+    let mut executed_tools: Vec<String> = Vec::new();
     let include_scripting_tools = working_root.is_some();
     loop {
         let task_get_started = std::time::Instant::now();
@@ -3056,6 +3099,7 @@ pub fn run_multi_step_tool_loop(
                     is_ask_user: false,
                     steps_used,
                     max_steps_reached: false,
+                    executed_tools: executed_tools.clone(),
                 });
             }
         }
@@ -3066,6 +3110,7 @@ pub fn run_multi_step_tool_loop(
                 is_ask_user: false,
                 steps_used,
                 max_steps_reached: false,
+                executed_tools: executed_tools.clone(),
             });
         }
         let parsed = model_turn_to_outcome(&turn);
@@ -3082,6 +3127,7 @@ pub fn run_multi_step_tool_loop(
                     is_ask_user: false,
                     steps_used,
                     max_steps_reached: false,
+                    executed_tools: executed_tools.clone(),
                 });
             }
         }
@@ -3092,6 +3138,7 @@ pub fn run_multi_step_tool_loop(
                     is_ask_user: false,
                     steps_used,
                     max_steps_reached: false,
+                    executed_tools: executed_tools.clone(),
                 });
             }
             ToolOutcome::AskUser(message) => {
@@ -3100,6 +3147,7 @@ pub fn run_multi_step_tool_loop(
                     is_ask_user: true,
                     steps_used,
                     max_steps_reached: false,
+                    executed_tools: executed_tools.clone(),
                 });
             }
             ToolOutcome::ParseFail(raw) => {
@@ -3108,6 +3156,7 @@ pub fn run_multi_step_tool_loop(
                     is_ask_user: false,
                     steps_used,
                     max_steps_reached: false,
+                    executed_tools: executed_tools.clone(),
                 });
             }
             ToolOutcome::Run(cmd) => {
@@ -3123,6 +3172,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3143,6 +3193,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("run".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3150,6 +3201,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3166,6 +3218,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3186,6 +3239,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("search".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3193,6 +3247,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3209,6 +3264,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3229,6 +3285,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("fetch_url".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3236,6 +3293,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3253,6 +3311,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3273,6 +3332,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("dal_init".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3280,6 +3340,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3296,6 +3357,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3316,6 +3378,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("read_file".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3323,6 +3386,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3339,6 +3403,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3359,6 +3424,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("write_file".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3366,6 +3432,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3382,6 +3449,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3402,6 +3470,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("list_dir".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3409,6 +3478,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3425,6 +3495,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3445,6 +3516,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("dal_check".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3452,6 +3524,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3468,6 +3541,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3488,6 +3562,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("dal_run".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3495,6 +3570,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3509,6 +3585,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3520,6 +3597,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("show_url".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3527,6 +3605,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3541,6 +3620,7 @@ pub fn run_multi_step_tool_loop(
                             is_ask_user: false,
                             steps_used,
                             max_steps_reached: false,
+                            executed_tools: executed_tools.clone(),
                         });
                     }
                 }
@@ -3552,6 +3632,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                executed_tools.push("show_content".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
                     return Ok(MultiStepResult {
@@ -3559,6 +3640,7 @@ pub fn run_multi_step_tool_loop(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: executed_tools.clone(),
                     });
                 }
             }
@@ -3691,6 +3773,8 @@ fn collect_tool_trace_from_schema(
         }
         if let Some(call) = parse_tool_call_from_conversation(&turn.content) {
             out.push(call.name);
+        } else if let Some(name) = parse_tool_name_from_assistant_line(&turn.content) {
+            out.push(name);
         }
     }
     out
@@ -3720,6 +3804,7 @@ pub fn respond_with_tools_diagnostics_with_policy(
                 is_ask_user: false,
                 steps_used: 0,
                 max_steps_reached: false,
+                executed_tools: Vec::new(),
             };
             emit_route_metrics(policy, route, None, &result, 0);
             Ok(RespondWithToolsDiagnostics {
@@ -3736,7 +3821,11 @@ pub fn respond_with_tools_diagnostics_with_policy(
             let (mut schema, working_root) = build_tool_loop_schema(user_message);
             let result =
                 run_multi_step_tool_loop(&mut schema, max_steps, None, working_root.as_deref())?;
-            let tool_trace = collect_tool_trace_from_schema(&schema);
+            let tool_trace = if !result.executed_tools.is_empty() {
+                result.executed_tools.clone()
+            } else {
+                collect_tool_trace_from_schema(&schema)
+            };
             emit_route_metrics(policy, route, Some(&schema), &result, max_steps);
             Ok(RespondWithToolsDiagnostics {
                 policy,
@@ -3774,8 +3863,12 @@ pub fn agent_run_result_map_from_diagnostics(
         ChatPolicy::ReplyOnly => "reply_only",
         ChatPolicy::ToolLoop => "tool_loop",
     };
-    let tool_trace_raw = d.tool_trace.clone();
     let r = &d.result;
+    let tool_trace_raw = if !r.executed_tools.is_empty() {
+        r.executed_tools.clone()
+    } else {
+        d.tool_trace.clone()
+    };
     let termination = classify_termination(r);
     let mut map = HashMap::new();
     map.insert(
@@ -3833,12 +3926,20 @@ pub fn agent_run_result_map_from_diagnostics(
         Value::String(default_policy.to_string()),
     );
     map.insert("observability".to_string(), Value::Map(obs));
-    let tool_trace = tool_trace_raw
+    let tool_names_arr = tool_trace_raw
         .into_iter()
         .map(Value::String)
         .collect::<Vec<_>>();
-    map.insert("tool_trace".to_string(), Value::Array(tool_trace.clone()));
-    map.insert("last_tool_names".to_string(), Value::Array(tool_trace));
+    map.insert(
+        "tool_trace".to_string(),
+        Value::Array(tool_names_arr.clone()),
+    );
+    map.insert(
+        "last_tool_names".to_string(),
+        Value::Array(tool_names_arr.clone()),
+    );
+    // Same ordering as tool_trace — name matches `MultiStepResult::executed_tools` for HTTP clients.
+    map.insert("executed_tools".to_string(), Value::Array(tool_names_arr));
     map
 }
 
@@ -3861,6 +3962,7 @@ mod agent_run_result_contract_tests {
                 is_ask_user: false,
                 steps_used: 0,
                 max_steps_reached: false,
+                executed_tools: Vec::new(),
             },
             tool_trace: vec!["run".to_string()],
         };
@@ -3877,6 +3979,7 @@ mod agent_run_result_contract_tests {
             "observability",
             "tool_trace",
             "last_tool_names",
+            "executed_tools",
         ] {
             assert!(
                 m.contains_key(key),
@@ -3913,6 +4016,7 @@ mod agent_run_result_contract_tests {
                 is_ask_user: false,
                 steps_used: 2,
                 max_steps_reached: false,
+                executed_tools: vec!["run".to_string(), "run".to_string()],
             },
             tool_trace: vec!["run".to_string()],
         };
@@ -4395,6 +4499,76 @@ fn estimate_turn_cost_microusd(input_tokens: u64, output_tokens: u64) -> Option<
 }
 
 #[cfg(feature = "http-interface")]
+/// True when the configured provider speaks OpenAI-style `/v1/chat/completions` with `tools` + `tool_calls`.
+fn openai_compatible_tool_provider(config: &AIConfig) -> bool {
+    match &config.provider {
+        AIProvider::OpenAI => true,
+        AIProvider::Custom(name) => {
+            let n = name.to_lowercase();
+            if matches!(
+                n.as_str(),
+                "openrouter"
+                    | "together"
+                    | "together-ai"
+                    | "azure-openai"
+                    | "azure"
+                    | "groq"
+                    | "xai"
+                    | "mistral"
+                    | "deepseek"
+            ) {
+                return true;
+            }
+            config
+                .endpoint
+                .as_ref()
+                .map_or(false, |e| openai_compatible_endpoint_hint(e))
+        }
+        _ => false,
+    }
+}
+
+#[cfg(feature = "http-interface")]
+fn openai_compatible_endpoint_hint(endpoint: &str) -> bool {
+    let e = endpoint.trim().to_lowercase();
+    e.contains("openrouter.ai")
+        || e.contains("together.xyz")
+        || e.contains("api.openai.com")
+        || e.contains("/v1/chat/completions")
+        || (e.starts_with("http://") || e.starts_with("https://")) && e.contains("/v1/")
+}
+
+/// POST URL for OpenAI-style chat completions (shared by tool turn and optional gateways).
+#[cfg(feature = "http-interface")]
+fn openai_chat_completions_url(config: &AIConfig) -> String {
+    if let Some(ep) = config.endpoint.as_ref() {
+        let e = ep.trim();
+        if e.contains("/chat/completions") {
+            return e.to_string();
+        }
+        if e.starts_with("http://") || e.starts_with("https://") {
+            let base = e.trim_end_matches('/');
+            if base.ends_with("/v1") {
+                return format!("{}/chat/completions", base);
+            }
+            return format!("{}/v1/chat/completions", base);
+        }
+    }
+    let base = env::var("OPENAI_BASE_URL")
+        .or_else(|_| env::var("DAL_OPENAI_BASE_URL"))
+        .unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
+    let base = base.trim().trim_end_matches('/').to_string();
+    if base.contains("/chat/completions") {
+        return base;
+    }
+    if base.ends_with("/v1") {
+        format!("{}/chat/completions", base)
+    } else {
+        format!("{}/v1/chat/completions", base)
+    }
+}
+
+#[cfg(feature = "http-interface")]
 fn call_openai_api_tool_turn(
     schema: &crate::agent_context_schema::AgentContextSchema,
     api_key: &str,
@@ -4465,10 +4639,20 @@ fn call_openai_api_tool_turn(
         "max_tokens": config.max_tokens
     });
 
-    let response = client
-        .post("https://api.openai.com/v1/chat/completions")
+    let url = openai_chat_completions_url(config);
+    let mut req = client
+        .post(&url)
         .header("Authorization", format!("Bearer {}", api_key))
-        .header("Content-Type", "application/json")
+        .header("Content-Type", "application/json");
+    if url.to_lowercase().contains("openrouter.ai") {
+        if let Ok(referer) = env::var("DAL_OPENROUTER_HTTP_REFERER") {
+            let referer = referer.trim();
+            if !referer.is_empty() {
+                req = req.header("HTTP-Referer", referer);
+            }
+        }
+    }
+    let response = req
         .json(&body)
         .send()
         .map_err(|e| format!("Request failed: {}", e))?;
@@ -4980,7 +5164,7 @@ fn call_custom_provider(
             (body, headers)
         }
         "openrouter" => {
-            // OpenRouter format (OpenAI-compatible)
+            // OpenRouter format (OpenAI-compatible). Optional attribution: DAL_OPENROUTER_HTTP_REFERER.
             let body = json!({
                 "model": model,
                 "messages": [
@@ -4992,11 +5176,16 @@ fn call_custom_provider(
                 "temperature": config.temperature,
                 "max_tokens": config.max_tokens
             });
-            let headers = vec![
+            let mut headers = vec![
                 ("Authorization", format!("Bearer {}", api_key)),
                 ("Content-Type", "application/json".to_string()),
-                ("HTTP-Referer", "https://dal-lang.dev".to_string()),
             ];
+            if let Ok(ref referer) = env::var("DAL_OPENROUTER_HTTP_REFERER") {
+                let r = referer.trim();
+                if !r.is_empty() {
+                    headers.push(("HTTP-Referer", r.to_string()));
+                }
+            }
             (body, headers)
         }
         _ => {

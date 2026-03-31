@@ -1298,7 +1298,7 @@ impl Runtime {
                     };
                     return Ok(map.get(&key_str).cloned().unwrap_or(Value::Null));
                 }
-                Value::Array(ref arr) => {
+                Value::Array(ref arr) | Value::List(ref arr) => {
                     let index = match key {
                         Value::Int(i) => *i as usize,
                         _ => {
@@ -1369,7 +1369,7 @@ impl Runtime {
                         self.set_variable(var_name, Value::Map(new_map));
                         return Ok(value);
                     }
-                    Value::Array(arr) => {
+                    Value::Array(arr) | Value::List(arr) => {
                         let index = match key {
                             Value::Int(i) if *i >= 0 => *i as usize,
                             _ => {
@@ -5299,6 +5299,21 @@ impl Runtime {
             (Value::String(a), Value::String(b)) => Ok(Value::String(a.clone() + b)),
             (Value::String(a), other) => Ok(Value::String(format!("{}{}", a, other))),
             (other, Value::String(b)) => Ok(Value::String(format!("{}{}", other, b))),
+            (Value::Array(a), Value::Array(b)) => {
+                let mut merged = a.clone();
+                merged.extend(b.iter().cloned());
+                Ok(Value::Array(merged))
+            }
+            (Value::List(a), Value::List(b)) => {
+                let mut merged = a.clone();
+                merged.extend(b.iter().cloned());
+                Ok(Value::List(merged))
+            }
+            (Value::Array(a), Value::List(b)) | (Value::List(a), Value::Array(b)) => {
+                let mut merged = a.clone();
+                merged.extend(b.iter().cloned());
+                Ok(Value::Array(merged))
+            }
             _ => SafeMath::add(&left, &right),
         }
     }
@@ -5477,6 +5492,22 @@ impl Runtime {
             }
         });
         self.register_function(len_fn);
+
+        // Built-in trim function — strip leading/trailing whitespace from strings
+        let trim_fn = Function::new("trim".to_string(), vec!["value".to_string()], |args, _| {
+            if args.len() != 1 {
+                return Err(RuntimeError::ArgumentCountMismatch {
+                    expected: 1,
+                    got: args.len(),
+                });
+            }
+            match &args[0] {
+                Value::String(s) => Ok(Value::String(s.trim().to_string())),
+                Value::Null => Ok(Value::String(String::new())),
+                other => Ok(Value::String(format!("{}", other).trim().to_string())),
+            }
+        });
+        self.register_function(trim_fn);
 
         // Built-in type function
         let type_fn = Function::new("type".to_string(), vec!["value".to_string()], |args, _| {

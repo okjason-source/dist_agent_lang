@@ -452,6 +452,7 @@ fn guard_break(reason: &str) -> MultiStepResult {
         is_ask_user: false,
         steps_used: 0, // caller patches this
         max_steps_reached: reason == "max_steps_reached",
+        executed_tools: vec![],
     }
 }
 
@@ -526,6 +527,7 @@ pub fn run_agent_prompt_sync(
                     is_ask_user: false,
                     steps_used,
                     max_steps_reached: false,
+                    executed_tools: vec![],
                 });
             }
         }
@@ -541,6 +543,7 @@ pub fn run_agent_prompt_sync(
                 is_ask_user: false,
                 steps_used,
                 max_steps_reached: false,
+                executed_tools: vec![],
             });
         }
 
@@ -582,6 +585,7 @@ pub fn run_agent_prompt_sync(
                         is_ask_user: false,
                         steps_used,
                         max_steps_reached: true,
+                        executed_tools: vec![],
                     });
                 }
                 continue;
@@ -596,6 +600,7 @@ pub fn run_agent_prompt_sync(
                     is_ask_user: false,
                     steps_used,
                     max_steps_reached: false,
+                    executed_tools: vec![],
                 });
             }
             ToolOutcome::AskUser(message) => {
@@ -604,6 +609,7 @@ pub fn run_agent_prompt_sync(
                     is_ask_user: true,
                     steps_used,
                     max_steps_reached: false,
+                    executed_tools: vec![],
                 });
             }
             ToolOutcome::ParseFail(raw) => {
@@ -612,6 +618,7 @@ pub fn run_agent_prompt_sync(
                     is_ask_user: false,
                     steps_used,
                     max_steps_reached: false,
+                    executed_tools: vec![],
                 });
             }
             ToolOutcome::Run(cmd) => {
