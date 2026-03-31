@@ -98,7 +98,7 @@ pyo3 = { version = "0.24", features = ["auto-initialize"], optional = true }
 # Note: ethers 2.0.x uses jsonwebtoken 8.x (security concern); consider updating when ethers 3.x+ available
 ethers = { version = "2.0", features = ["rustls"], optional = true }
 # SQLite for transaction storage backend (optional)
-rusqlite = { version = "0.31", features = ["bundled"], optional = true }
+rusqlite = { version = "0.39", features = ["bundled"], optional = true }
 # LSP (Language Server Protocol) for IDE integration
 tower-lsp = { version = "0.20", optional = true }
 lsp-types = { version = "0.94", optional = true }
