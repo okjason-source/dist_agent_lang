@@ -157,6 +157,12 @@ dal mold list                # List available molds
 - **[Persistent Agent Memory](docs/guides/PERSISTENT_AGENT_MEMORY.md)** — Runtime persistence, backends, configuration
 - **[Agent Capabilities](docs/AGENT_CAPABILITIES.md)** — Capability definition, validation, and usage
 
+### Retrieval and editor integration
+- **[Configuration](docs/CONFIG.md)** — Environment variables for **RAG** (`DAL_RAG`, index paths, `DAL_RAG_TOP_K`), **MCP bridge** (`DAL_AGENT_HTTP_BASE`, `dal mcp-bridge`), and web search / HTTP fetch
+- **[Agent setup and usage](docs/guides/AGENT_SETUP_AND_USAGE.md#12-rag-retrieval)** — RAG and MCP in practice (when to enable retrieval, wiring an IDE to your agent HTTP server)
+- **[RAG MVP spec](docs/development/RAG_MVP_SPEC.md)** — Lexical retrieval into agent prompts (`rag::prompt_block`, `include_rag`, corpus indexing)
+- **[IDE and agent integration](docs/IDE_AND_AGENT_INTEGRATION.md)** — Mental model: agent over HTTP first; **MCP** as an optional stdio bridge for editors (Cursor, etc.); LSP for language tooling
+
 ### Reference
 - **[Complete Documentation Index](docs/PUBLIC_DOCUMENTATION_INDEX.md)** — All docs in one place
 - **[API Reference](docs/guides/API_REFERENCE.md)** — Standard library documentation

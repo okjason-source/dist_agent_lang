@@ -2,6 +2,8 @@
 
 **Purpose:** Single index of commonly used environment variables. For agent behavior and trust in depth, see [guides/AGENT_SETUP_AND_USAGE.md](guides/AGENT_SETUP_AND_USAGE.md). For IDE backend guardrails when hosted, see **`../dal-ide/README.md`** (sibling `dal-ide/` checkout under `lang_mark/`, next to `dist_agent_lang/`; agent guardrails section).
 
+**RAG and MCP (how to use, not just env names):** **RAG** is optional lexical retrieval into prompts (`DAL_RAG`, index under `.dal/rag/`). **MCP** is an optional stdio adapter so IDEs can call the same routes as `curl` against your **`dal serve` / `dal agent serve`** base URL — set `DAL_AGENT_HTTP_BASE` (or `DAL_MCP_HTTP_BASE`) for `dal mcp-bridge` or the example under `CEO/mcp/`. Step-by-step context: [AGENT_SETUP_AND_USAGE.md §12–13](guides/AGENT_SETUP_AND_USAGE.md#12-rag-retrieval), [IDE_AND_AGENT_INTEGRATION.md](IDE_AND_AGENT_INTEGRATION.md), [RAG_MVP_SPEC.md](development/RAG_MVP_SPEC.md).
+
 | Area | Variable(s) | Notes |
 |------|----------------|------|
 | **Process logging (Rust `tracing`)** | `RUST_LOG`, `DAL_LOG_FORMAT`, `DAL_METRICS` | `RUST_LOG` — standard filter (e.g. `info`, `dal_http=debug`). `DAL_LOG_FORMAT=json` — JSON lines to stderr. `DAL_METRICS=1` — expose `GET /metrics` (Prometheus text counters) on HTTP servers that ship observability (`dal web`, `dal ide serve`, `dal agent serve`, `dal-registry`, `start_http_server`). |
