@@ -110,7 +110,9 @@ context</a></li>
 <li><a href="#9-persistent-memory">Persistent memory</a></li>
 <li><a href="#10-skills-and-registry">Skills and registry</a></li>
 <li><a href="#11-capabilities-and-types">Capabilities and types</a></li>
-<li><a href="#12-references">References</a></li>
+<li><a href="#12-rag-retrieval">RAG (retrieval)</a></li>
+<li><a href="#13-mcp-ide-bridge">MCP (IDE bridge)</a></li>
+<li><a href="#14-references">References</a></li>
 </ol>
 <hr />
 <h2 id="1-overview">1. Overview</h2>
@@ -872,8 +874,78 @@ spawn (from type initializer or from config/mold).</p>
 <p>For how capabilities are defined, set, and validated, see <a
 href="../AGENT_CAPABILITIES.html">AGENT_CAPABILITIES.md</a>.</p>
 <hr />
-<h2 id="12-references">12. References</h2>
+<h2 id="12-rag-retrieval">12. RAG (retrieval)</h2>
+<p><strong>RAG</strong> (retrieval-augmented generation) in
+dist_agent_lang is a <strong>lexical MVP</strong>: chunks from your
+indexed corpus are attached to the agent prompt as context blocks when
+enabled.</p>
 <ul>
+<li><strong>Enable:</strong> Set <strong><code>DAL_RAG=1</code></strong>
+so retrieval applies when the client omits <code>include_rag</code> or
+leaves it null (same rules for <code>dal agent serve</code>, HTTP
+handlers that support <code>include_rag</code>, and
+<code>workflow::run_steps</code> with an optional
+<code>include_rag</code> argument). Per-request JSON can override with
+<strong><code>include_rag</code>: true|false</strong>.</li>
+<li><strong>Index:</strong> From the repo root, run
+<strong><code>cargo run --bin rag-index</code></strong> (output defaults
+under <strong><code>.dal/rag/</code></strong>, e.g.
+<code>chunks.jsonl</code>). Override with
+<strong><code>DAL_RAG_INDEX_DIR</code></strong>.
+<strong><code>DAL_RAG_TOP_K</code></strong> controls how many chunks
+(1–50, default 5).</li>
+<li><strong>In DAL:</strong> Use
+<strong><code>rag::prompt_block(query, include_rag)</code></strong> to
+assemble a block for your own prompts.</li>
+</ul>
+<p>Full behavior, corpus layout, and <code>context_blocks</code> with
+<code>source: rag</code> are documented in <strong><a
+href="../development/RAG_MVP_SPEC.html">RAG_MVP_SPEC.md</a></strong>. Env
+reference: <strong><a href="../CONFIG.html">CONFIG.md</a></strong>.</p>
+<hr />
+<h2 id="13-mcp-ide-bridge">13. MCP (IDE bridge)</h2>
+<p><strong>MCP</strong> (Model Context Protocol) is <strong>not</strong>
+a DAL keyword or builtin. It is a <strong>host protocol</strong>: a
+small <strong>stdio</strong> process (often Node) forwards tool calls
+from an MCP-capable editor (e.g. Cursor) to <strong>your agent’s HTTP
+API</strong> — the same behavior as calling <code>POST /message</code>
+or <code>/task</code> with <code>curl</code>.</p>
+<ul>
+<li><strong>CLI:</strong> From a checkout,
+<strong><code>dal mcp-bridge</code></strong> runs the bundled bridge
+script and sets <strong><code>DAL_AGENT_HTTP_BASE</code></strong> (see
+<code>dal mcp-bridge --help</code>). Point the base URL at wherever
+<strong><code>dal agent serve</code></strong> or your
+<strong><code>dal serve</code></strong> app listens.</li>
+<li><strong>Env:</strong>
+<strong><code>DAL_AGENT_HTTP_BASE</code></strong> /
+<strong><code>DAL_MCP_HTTP_BASE</code></strong> (optional
+<strong><code>DAL_MCP_BRIDGE_SCRIPT</code></strong> to override the
+script path). Legacy names: <code>DAL_CEO_BASE_URL</code>,
+<code>DAL_CEO_MCP_SCRIPT</code>.</li>
+<li><strong>In-repo example:</strong>
+<strong><code>CEO/mcp/</code></strong> — reference implementation;
+<strong><code>npm install</code></strong> in that folder, then configure
+your IDE’s MCP server entry to run
+<code>node …/CEO/mcp/src/server.js</code> with
+<strong><code>cwd</code></strong> set to
+<strong><code>CEO/mcp</code></strong>.</li>
+</ul>
+<p>Language-wide mental model (HTTP first, MCP optional, LSP separate):
+<strong><a
+href="../IDE_AND_AGENT_INTEGRATION.html">IDE_AND_AGENT_INTEGRATION.md</a></strong>.
+Env index: <strong><a href="../CONFIG.html">CONFIG.md</a></strong>.</p>
+<hr />
+<h2 id="14-references">14. References</h2>
+<ul>
+<li><a href="../CONFIG.html">CONFIG.md</a> — Environment variables (RAG,
+MCP bridge, web search, HTTP fetch).</li>
+<li><a href="../development/RAG_MVP_SPEC.html">RAG_MVP_SPEC.md</a> —
+Retrieval MVP: indexing, <code>rag::prompt_block</code>,
+<code>include_rag</code>.</li>
+<li><a
+href="../IDE_AND_AGENT_INTEGRATION.html">IDE_AND_AGENT_INTEGRATION.md</a>
+— HTTP vs MCP vs LSP; <code>dal mcp-bridge</code>.</li>
 <li><a href="PERSISTENT_AGENT_MEMORY.html">Persistent Agent Memory</a> —
 Runtime persistence, backends, configuration, schema versioning.</li>
 <li><a href="SKILLS_AND_REGISTRY.html">Skills and Registry</a> — Custom

@@ -34,6 +34,19 @@ For IDE backend guardrails when hosted, see
 <strong><code>../dal-ide/README.md</code></strong> (sibling
 <code>dal-ide/</code> checkout under <code>lang_mark/</code>, next to
 <code>dist_agent_lang/</code>; agent guardrails section).</p>
+<p><strong>RAG and MCP (how to use, not just env names):</strong>
+<strong>RAG</strong> is optional lexical retrieval into prompts
+(<code>DAL_RAG</code>, index under <code>.dal/rag/</code>).
+<strong>MCP</strong> is an optional stdio adapter so IDEs can call the
+same routes as <code>curl</code> against your
+<strong><code>dal serve</code> / <code>dal agent serve</code></strong>
+base URL — set <code>DAL_AGENT_HTTP_BASE</code> (or
+<code>DAL_MCP_HTTP_BASE</code>) for <code>dal mcp-bridge</code> or the
+example under <code>CEO/mcp/</code>. Step-by-step context: <a
+href="guides/AGENT_SETUP_AND_USAGE.html#12-rag-retrieval">AGENT_SETUP_AND_USAGE.md
+§12–13</a>, <a
+href="IDE_AND_AGENT_INTEGRATION.html">IDE_AND_AGENT_INTEGRATION.md</a>, <a
+href="development/RAG_MVP_SPEC.html">RAG_MVP_SPEC.md</a>.</p>
 <table>
 <thead>
 <tr class="header">

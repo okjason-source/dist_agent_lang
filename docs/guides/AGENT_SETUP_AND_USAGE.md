@@ -17,7 +17,9 @@ This guide describes how to set up and use agents in dist_agent_lang: project se
 9. [Persistent memory](#9-persistent-memory)
 10. [Skills and registry](#10-skills-and-registry)
 11. [Capabilities and types](#11-capabilities-and-types)
-12. [References](#12-references)
+12. [RAG (retrieval)](#12-rag-retrieval)
+13. [MCP (IDE bridge)](#13-mcp-ide-bridge)
+14. [References](#14-references)
 
 ---
 
@@ -553,8 +555,35 @@ For how capabilities are defined, set, and validated, see [AGENT_CAPABILITIES.md
 
 ---
 
-## 12. References
+## 12. RAG (retrieval)
 
+**RAG** (retrieval-augmented generation) in dist_agent_lang is a **lexical MVP**: chunks from your indexed corpus are attached to the agent prompt as context blocks when enabled.
+
+- **Enable:** Set **`DAL_RAG=1`** so retrieval applies when the client omits `include_rag` or leaves it null (same rules for `dal agent serve`, HTTP handlers that support `include_rag`, and `workflow::run_steps` with an optional `include_rag` argument). Per-request JSON can override with **`include_rag`: true|false**.
+- **Index:** From the repo root, run **`cargo run --bin rag-index`** (output defaults under **`.dal/rag/`**, e.g. `chunks.jsonl`). Override with **`DAL_RAG_INDEX_DIR`**. **`DAL_RAG_TOP_K`** controls how many chunks (1–50, default 5).
+- **In DAL:** Use **`rag::prompt_block(query, include_rag)`** to assemble a block for your own prompts.
+
+Full behavior, corpus layout, and `context_blocks` with `source: rag` are documented in **[RAG_MVP_SPEC.md](../development/RAG_MVP_SPEC.md)**. Env reference: **[CONFIG.md](../CONFIG.md)**.
+
+---
+
+## 13. MCP (IDE bridge)
+
+**MCP** (Model Context Protocol) is **not** a DAL keyword or builtin. It is a **host protocol**: a small **stdio** process (often Node) forwards tool calls from an MCP-capable editor (e.g. Cursor) to **your agent’s HTTP API** — the same behavior as calling `POST /message` or `/task` with `curl`.
+
+- **CLI:** From a checkout, **`dal mcp-bridge`** runs the bundled bridge script and sets **`DAL_AGENT_HTTP_BASE`** (see `dal mcp-bridge --help`). Point the base URL at wherever **`dal agent serve`** or your **`dal serve`** app listens.
+- **Env:** **`DAL_AGENT_HTTP_BASE`** / **`DAL_MCP_HTTP_BASE`** (optional **`DAL_MCP_BRIDGE_SCRIPT`** to override the script path). Legacy names: `DAL_CEO_BASE_URL`, `DAL_CEO_MCP_SCRIPT`.
+- **In-repo example:** **`CEO/mcp/`** — reference implementation; **`npm install`** in that folder, then configure your IDE’s MCP server entry to run `node …/CEO/mcp/src/server.js` with **`cwd`** set to **`CEO/mcp`**.
+
+Language-wide mental model (HTTP first, MCP optional, LSP separate): **[IDE_AND_AGENT_INTEGRATION.md](../IDE_AND_AGENT_INTEGRATION.md)**. Env index: **[CONFIG.md](../CONFIG.md)**.
+
+---
+
+## 14. References
+
+- [CONFIG.md](../CONFIG.md) — Environment variables (RAG, MCP bridge, web search, HTTP fetch).
+- [RAG_MVP_SPEC.md](../development/RAG_MVP_SPEC.md) — Retrieval MVP: indexing, `rag::prompt_block`, `include_rag`.
+- [IDE_AND_AGENT_INTEGRATION.md](../IDE_AND_AGENT_INTEGRATION.md) — HTTP vs MCP vs LSP; `dal mcp-bridge`.
 - [Persistent Agent Memory](PERSISTENT_AGENT_MEMORY.md) — Runtime persistence, backends, configuration, schema versioning.
 - [Skills and Registry](SKILLS_AND_REGISTRY.md) — Custom skills, `.skill.dal` format, programmatic encouragement, runtime registration.
 - [AGENT_CAPABILITIES.md](../AGENT_CAPABILITIES.md) — How capabilities are defined, set, and validated.
