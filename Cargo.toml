@@ -93,7 +93,7 @@ urlencoding = "2"
 dotenvy = "0.15"
 # Python FFI bindings (optional)
 # Updated to 0.24.1+ to fix RUSTSEC-2025-0020 (buffer overflow in PyString::from_object)
-pyo3 = { version = "0.24", features = ["auto-initialize"], optional = true }
+pyo3 = { version = "0.28", features = ["auto-initialize"], optional = true }
 # Web3 / EVM for mold marketplace (mintMold, useMold)
 # Note: ethers 2.0.x uses jsonwebtoken 8.x (security concern); consider updating when ethers 3.x+ available
 ethers = { version = "2.0", features = ["rustls"], optional = true }
