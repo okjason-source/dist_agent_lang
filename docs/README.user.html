@@ -104,8 +104,10 @@ when you use AI features in DAL code.</p>
 <h3 id="1-one-time-setup-only-if-you-have-the-full-project">1. One-time
 setup (only if you have the full project)</h3>
 <p><strong>If you cloned or downloaded the full project</strong> (the
-folder that has <code>install.sh</code>, <code>dist_agent_lang/</code>,
-and <code>dal-ide/</code>), run from that folder:</p>
+parent tree <strong><code>lang_mark/</code></strong> that contains
+<strong><code>dist_agent_lang/</code></strong> and
+<strong><code>dal-ide/</code></strong> as siblings—same level, not
+nested), run from that folder:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./install.sh</span></span></code></pre></div>
 <p>That installs Rust/Node if needed, builds the <code>dal</code>
@@ -150,8 +152,9 @@ workspace; or use an absolute path, e.g.
 <strong>3847</strong>.</p>
 <h3 id="3-open-the-ide">3. Open the IDE</h3>
 <ul>
-<li>If you’re developing: run <code>npm run dev</code> in the
-<code>dal-ide</code> folder, then open
+<li>If you’re developing: run <code>npm run dev</code> in
+<strong><code>../dal-ide/</code></strong> (sibling of
+<code>dist_agent_lang</code> under <code>lang_mark/</code>), then open
 <strong>http://localhost:5173</strong> in your browser.</li>
 <li>If you’re using a pre-built copy (e.g. from a download or AWS): open
 the URL you were given for the IDE.</li>

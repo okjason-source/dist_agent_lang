@@ -31,7 +31,9 @@ environment variables</h1>
 variables. For agent behavior and trust in depth, see <a
 href="guides/AGENT_SETUP_AND_USAGE.html">guides/AGENT_SETUP_AND_USAGE.md</a>.
 For IDE backend guardrails when hosted, see
-<code>dal-ide/README.md</code> (agent guardrails section).</p>
+<strong><code>../dal-ide/README.md</code></strong> (sibling
+<code>dal-ide/</code> checkout under <code>lang_mark/</code>, next to
+<code>dist_agent_lang/</code>; agent guardrails section).</p>
 <table>
 <thead>
 <tr class="header">
@@ -72,6 +74,99 @@ href="CUSTOM_AI_PROVIDERS.html">CUSTOM_AI_PROVIDERS.md</a>.</td>
 href="guides/AGENT_SETUP_AND_USAGE.html">AGENT_SETUP_AND_USAGE.md</a>.</td>
 </tr>
 <tr class="even">
+<td><strong><code>dal agent serve</code> (prompt-only) — sync +
+idempotency</strong></td>
+<td>JSON body <strong><code>wait: true</code></strong> on
+<code>POST /message</code> or <code>POST /task</code>; HTTP header
+<strong><code>Idempotency-Key</code></strong></td>
+<td>When <strong><code>wait</code></strong> is true, the handler blocks
+until the tool loop finishes and returns
+<strong><code>result</code></strong> (<code>final_text</code>,
+<code>steps_used</code>, <code>max_steps_reached</code>,
+<code>is_ask_user</code>). Same
+<strong><code>Idempotency-Key</code></strong> within ~10 minutes returns
+the cached JSON (safe cron retries). See <a
+href="guides/AGENT_SETUP_AND_USAGE.html#structured-responses-wait-and-idempotency-key-prompt-only">AGENT_SETUP_AND_USAGE.md</a>.</td>
+</tr>
+<tr class="odd">
+<td><strong>Agent <code>search</code> tool</strong> (requires
+<code>http-interface</code>)</td>
+<td><code>DAL_WEB_SEARCH_PROVIDER</code>,
+<code>DAL_WEB_SEARCH_TIMEOUT_SECS</code>,
+<code>DAL_BRAVE_SEARCH_API_KEY</code> /
+<code>BRAVE_SEARCH_API_KEY</code>, <code>DAL_SERPAPI_KEY</code> /
+<code>SERPAPI_KEY</code></td>
+<td><strong><code>DAL_WEB_SEARCH_PROVIDER</code></strong> —
+<code>duckduckgo</code> (default, no API key), <code>brave</code>, or
+<code>serpapi</code>. Brave/SerpAPI need the corresponding API key env;
+see <a
+href="development/AUTONOMOUS_JOBS_LANGUAGE_GAPS.html">AUTONOMOUS_JOBS_LANGUAGE_GAPS.md</a>
+§2.1. Timeout default <strong>15</strong> seconds (5–60).</td>
+</tr>
+<tr class="even">
+<td><strong>Build: outbound HTTP (<code>search</code>,
+<code>fetch_url</code>, …)</strong></td>
+<td>Cargo feature <strong><code>http-interface</code></strong></td>
+<td><strong>On by default</strong> in root <code>Cargo.toml</code>
+(<code>default = ["http-interface"]</code>).
+<code>cargo build --no-default-features</code> omits
+<code>reqwest</code>; web tools then error at runtime unless you add
+<code>--features http-interface</code>.</td>
+</tr>
+<tr class="odd">
+<td><strong>Long agent HTTP requests (ops)</strong></td>
+<td>—</td>
+<td>Not an env var: overlapping LLM + tool-loop calls share blocking
+worker capacity. Stagger cron, cap concurrency, or serialize jobs. <a
+href="development/AUTONOMOUS_JOBS_LANGUAGE_GAPS.html">AUTONOMOUS_JOBS_LANGUAGE_GAPS.md</a>
+§2.3; <a
+href="guides/AGENT_SETUP_AND_USAGE.html#outbound-http-and-overlapping-requests">AGENT_SETUP_AND_USAGE.md</a>.</td>
+</tr>
+<tr class="even">
+<td><strong>Agent <code>fetch_url</code> tool</strong> and <strong>DAL
+<code>http::fetch_text</code></strong> (HTTP GET; requires
+<code>http-interface</code>)</td>
+<td><code>DAL_HTTP_FETCH_TIMEOUT_SECS</code>,
+<code>DAL_HTTP_FETCH_MAX_BYTES</code>,
+<code>DAL_HTTP_FETCH_ALLOW_HOSTS</code>,
+<code>DAL_HTTP_FETCH_BLOCK_PRIVATE</code></td>
+<td>Same policy for both. Timeout default 30s (1–120). Max body default
+512 KiB (capped). <code>DAL_HTTP_FETCH_ALLOW_HOSTS</code> — optional
+comma-separated host allowlist; if unset, any host allowed subject to
+other checks. <code>DAL_HTTP_FETCH_BLOCK_PRIVATE</code> — default on:
+blocks <code>localhost</code> and private/loopback IPs; set
+<code>0</code> or <code>false</code> to allow (e.g. local dev). See <a
+href="STDLIB_REFERENCE.html">STDLIB_REFERENCE.md</a> (<code>http</code>
+module).</td>
+</tr>
+<tr class="odd">
+<td><strong>RAG (lexical MVP)</strong></td>
+<td><code>DAL_RAG</code>, <code>DAL_RAG_INDEX_DIR</code>,
+<code>DAL_RAG_TOP_K</code></td>
+<td><code>DAL_RAG=1</code> — enable retrieval when the client omits
+<code>include_rag</code> or leaves it null (same rules for
+<strong><code>dal agent serve</code></strong>, agent HTTP
+<code>POST /api/message</code> / <code>POST /api/task</code> / agents
+&amp; workflows, and DAL
+<strong><code>workflow::run_steps(steps, input, optional include_rag)</code></strong>).
+Index: <code>cargo run --bin rag-index</code> from repo root →
+<code>.dal/rag/chunks.jsonl</code>. Default index dir:
+<code>.dal/rag</code>. <code>DAL_RAG_TOP_K</code> — 1–50, default 5.
+Optional JSON <code>include_rag</code>: <code>true</code> /
+<code>false</code>. DAL apps:
+<code>rag::prompt_block(query, include_rag)</code>. See <a
+href="development/RAG_MVP_SPEC.html">RAG_MVP_SPEC.md</a>.</td>
+</tr>
+<tr class="even">
+<td><strong>MCP bridge</strong> (<code>dal mcp-bridge</code>, example
+under <code>CEO/mcp/</code>)</td>
+<td><code>DAL_AGENT_HTTP_BASE</code>, <code>DAL_MCP_HTTP_BASE</code>,
+<code>DAL_MCP_BRIDGE_SCRIPT</code></td>
+<td>MCP stdio process forwards to your
+<strong><code>dal serve</code></strong> base URL. Legacy aliases:
+<code>DAL_CEO_BASE_URL</code>, <code>DAL_CEO_MCP_SCRIPT</code>.</td>
+</tr>
+<tr class="odd">
 <td><strong>Hosted IDE agent safety</strong></td>
 <td><code>DAL_AGENT_MAX_TOOL_STEPS</code>,
 <code>DAL_AGENT_MAX_WALL_CLOCK_MS</code>,
@@ -79,16 +174,16 @@ href="guides/AGENT_SETUP_AND_USAGE.html">AGENT_SETUP_AND_USAGE.md</a>.</td>
 <code>DAL_AGENT_MAX_COST_MICROUSD</code>,
 <code>DAL_AGENT_GUARDS_STRICT_MODE</code>, …</td>
 <td>Listed in <a href="PRODUCTION_ROADMAP.html">PRODUCTION_ROADMAP.md</a>
-and <code>dal-ide/README.md</code>.</td>
+and <strong><code>../dal-ide/README.md</code></strong>.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>HTTP server auth</strong></td>
 <td><code>JWT_SECRET</code></td>
 <td>Required when JWT auth is used; enforced in
 <code>http_server_security</code>. See <a
 href="../SECURITY.html">SECURITY.md</a>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>Trust-split / compile</strong></td>
 <td><code>DAL_COMPILE_TRUST_MODE</code>, chain RPC / strict policy
 vars</td>

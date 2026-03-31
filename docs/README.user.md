@@ -10,7 +10,7 @@ You need two things: the **backend** (the `dal` program that serves your project
 
 ### 1. One-time setup (only if you have the full project)
 
-**If you cloned or downloaded the full project** (the folder that has `install.sh`, `dist_agent_lang/`, and `dal-ide/`), run from that folder:
+**If you cloned or downloaded the full project** (the parent tree **`lang_mark/`** that contains **`dist_agent_lang/`** and **`dal-ide/`** as siblings—same level, not nested), run from that folder:
 
 ```bash
 ./install.sh
@@ -44,7 +44,7 @@ Leave the command running. The backend will serve that folder on port **3847**.
 
 ### 3. Open the IDE
 
-- If you’re developing: run `npm run dev` in the `dal-ide` folder, then open **http://localhost:5173** in your browser.
+- If you’re developing: run `npm run dev` in **`../dal-ide/`** (sibling of `dist_agent_lang` under `lang_mark/`), then open **http://localhost:5173** in your browser.
 - If you’re using a pre-built copy (e.g. from a download or AWS): open the URL you were given for the IDE.
 
 In the IDE, click **Open Folder** and enter the same path you used with `-w` (e.g. `.` for the current directory). Then open a file, choose a run config from the **Run** dropdown, and click **Run**.

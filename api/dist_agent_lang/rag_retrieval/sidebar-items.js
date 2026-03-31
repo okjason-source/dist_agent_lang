@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["bm25_scores","chunk_markdown_text","collect_markdown_files","rag_context_blocks_for_query","should_attempt_rag","tokenize","write_index"],"struct":["RagChunk"]};

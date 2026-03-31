@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["prompt_block","prompt_section_prefix"]};

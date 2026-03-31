@@ -429,7 +429,8 @@ version, agent type, role, capabilities, trust, memory, flags.</li>
 <td>POST</td>
 <td><code>/message</code></td>
 <td>Send message (body: <code>sender_id</code>, <code>content</code>;
-optional <code>message_type</code>)</td>
+optional <code>message_type</code>,
+<strong><code>wait</code></strong>)</td>
 </tr>
 <tr class="odd">
 <td>GET</td>
@@ -440,8 +441,8 @@ optional <code>message_type</code>)</td>
 <td>POST</td>
 <td><code>/task</code></td>
 <td>Assign task (body: <code>description</code>; optional
-<code>task_id</code>, <code>priority</code>,
-<code>requester_id</code>)</td>
+<code>task_id</code>, <code>priority</code>, <code>requester_id</code>,
+<strong><code>wait</code></strong>)</td>
 </tr>
 <tr class="odd">
 <td>GET</td>
@@ -470,6 +471,60 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href=
 server spawns a default worker agent and, for each incoming message,
 calls the LLM and posts the reply back to the sender. Use when you want
 a simple chat-style API without custom DAL logic.</p>
+<h3
+id="structured-responses-wait-and-idempotency-key-prompt-only">Structured
+responses: <code>wait</code> and <code>Idempotency-Key</code>
+(prompt-only)</h3>
+<p>For <strong><code>POST /message</code></strong> and
+<strong><code>POST /task</code></strong>, set
+<strong><code>"wait": true</code></strong> in the JSON body to
+<strong>block</strong> until the multi-step tool loop finishes. The HTTP
+response includes a <strong><code>result</code></strong> object:</p>
+<ul>
+<li><strong><code>final_text</code></strong> — assistant reply or error
+text from the loop</li>
+<li><strong><code>steps_used</code></strong>,
+<strong><code>max_steps_reached</code></strong>,
+<strong><code>is_ask_user</code></strong> — same meaning as in
+<code>ai::</code> diagnostics</li>
+</ul>
+<p>Without <strong><code>wait</code></strong>, the handler returns
+<strong><code>{ "ok": true }</code></strong> immediately and delivers
+the assistant output via <strong><code>GET /messages</code></strong>
+(unchanged).</p>
+<p>Send HTTP header
+<strong><code>Idempotency-Key: &lt;opaque&gt;</code></strong> on
+<strong><code>wait: true</code></strong> requests to
+<strong>cache</strong> the JSON response for about <strong>10
+minutes</strong>. Retries with the same key return the cached body
+without re-invoking the model (useful for safe cron retries). See <a
+href="../CONFIG.html">CONFIG.md</a>.</p>
+<h3 id="outbound-http-and-overlapping-requests">Outbound HTTP and
+overlapping requests</h3>
+<p><strong>Outbound HTTP tools</strong> (<code>search</code>,
+<code>fetch_url</code>, and other code paths that use
+<code>reqwest</code>) require the Cargo feature
+<strong><code>http-interface</code></strong>. The default
+<strong><code>dal</code></strong> binary enables it. If you build with
+<strong><code>cargo build --no-default-features</code></strong>,
+re-enable <strong><code>http-interface</code></strong> for production
+agent servers that need web access. See root <code>Cargo.toml</code>
+<code>[features]</code> and <a href="../CONFIG.html">CONFIG.md</a>.</p>
+<p><strong>Web search</strong> defaults to DuckDuckGo Instant Answer (no
+API key). For fuller results, set
+<strong><code>DAL_WEB_SEARCH_PROVIDER=brave</code></strong> or
+<strong><code>serpapi</code></strong> and supply the matching API key
+env vars listed in <a href="../CONFIG.html">CONFIG.md</a>.</p>
+<p><strong>URL fetch</strong> limits and SSRF-related toggles:
+<strong><code>DAL_HTTP_FETCH_*</code></strong> in <a
+href="../CONFIG.html">CONFIG.md</a>.</p>
+<p><strong>Overlapping long requests:</strong> handlers that run an LLM
+plus a tool loop can hold a blocking worker for a long time. Many
+concurrent cron-triggered HTTP calls may queue or time out. Mitigate by
+staggering schedules, limiting parallelism, or using a dedicated worker
+process. See <a
+href="../development/AUTONOMOUS_JOBS_LANGUAGE_GAPS.html">AUTONOMOUS_JOBS_LANGUAGE_GAPS.md</a>
+§2.3.</p>
 <hr />
 <h2 id="6-dal-agent-and-evolve-apis">6. DAL: agent and evolve APIs</h2>
 <h3 id="agent--lifecycle-and-coordination">agent:: — lifecycle and

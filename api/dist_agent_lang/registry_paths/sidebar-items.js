@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["name_to_storage_dir","path_under_storage","sanitize_name","sanitize_version"]};

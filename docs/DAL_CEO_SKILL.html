@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DAL_CEO_SKILL</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dist_agent_lang/docs/assets/docs.css" />
+</head>
+<body>
+<h1 id="dal-assistant--skill-for-editor-agents-eg-cursor">DAL Assistant
+— Skill for Editor Agents (e.g. Cursor)</h1>
+<p><strong>Purpose:</strong> Use DAL (Distributed Agent Language) agents
+and the DAL CLI from an editor agent so the user gets a consistent “DAL
+assistant” experience. Copy or adapt this into a Cursor skill (e.g.
+<code>.cursor/skills/dal-assistant.md</code>) if you want the editor to
+follow these patterns.</p>
+<hr />
+<h2 id="when-to-use">When to use</h2>
+<ul>
+<li>The user is working in a DAL project (has <code>dal.toml</code> and
+<code>.dal</code> files) or wants to create one.</li>
+<li>The user wants to run, check, or edit DAL code; or to talk to a DAL
+agent (e.g. <code>dal agent serve</code>).</li>
+<li>You (the editor agent) should use the same toolchain as DAL agents:
+<code>dal check</code>, <code>dal run</code>, <code>dal init</code>, and
+optionally the agent HTTP API.</li>
+</ul>
+<hr />
+<h2 id="dal-cli-toolchain">DAL CLI (toolchain)</h2>
+<ul>
+<li><strong><code>dal init [template]</code></strong> — Initialize a
+project. Templates: <code>dal</code>/<code>general</code> (main.dal),
+<code>chain</code> (chain.dal), <code>iot</code> (iot.dal),
+<code>agent</code> (agent.dal + evolve). Example:
+<code>dal init chain</code>.</li>
+<li><strong><code>dal check &lt;file&gt;</code></strong> — Validate a
+DAL file (syntax/semantics). Use after editing.</li>
+<li><strong><code>dal run &lt;file&gt;</code></strong> — Run a DAL
+script. Example: <code>dal run main.dal</code>.</li>
+<li><strong><code>dal agent serve</code></strong> — Start the agent HTTP
+server (messages, tasks). Requires an agent project (agent.dal,
+agent.toml, evolve.md).</li>
+</ul>
+<p>Assume the <code>dal</code> binary is on PATH or the user has set it
+up (e.g. via <code>scripts/install.sh</code> or package manager).</p>
+<hr />
+<h2 id="working-context">Working context</h2>
+<ul>
+<li>File paths in DAL projects are usually relative to the project root
+(where <code>dal.toml</code> lives).</li>
+<li>When calling the agent API, send
+<strong><code>working_root</code></strong> (absolute or relative path to
+project root) so file tools (read_file, write_file, list_dir, dal_check,
+dal_run) and dal_init run in the right directory.</li>
+</ul>
+<hr />
+<h2 id="agent-http-api-when-dal-agent-serve-is-running">Agent HTTP API
+(when <code>dal agent serve</code> is running)</h2>
+<ul>
+<li><strong>POST /message</strong> — Send a user message. Body can
+include:
+<ul>
+<li><code>content</code>, <code>sender_id</code>, optional
+<code>objective</code>, <code>sub_tasks</code>,
+<code>include_dal_summary</code>, <code>dal_file</code>,
+<strong><code>working_root</code></strong> (path for file tools).</li>
+</ul></li>
+<li><strong>POST /task</strong> — Submit a task. Body can include
+<code>description</code>, optional <code>sub_tasks</code>,
+<code>include_dal_summary</code>, <code>dal_file</code>,
+<strong><code>working_root</code></strong>.</li>
+</ul>
+<p>The agent uses skills (development, creative, office, home) and the
+<strong>project_init</strong> hard skill (dal_init). If the agent has
+the <strong>development</strong> skill, it can use read_file,
+write_file, list_dir, dal_check, dal_run.</p>
+<hr />
+<h2 id="editor-agent-workflow">Editor agent workflow</h2>
+<ol type="1">
+<li><strong>Detect DAL project</strong> — Presence of
+<code>dal.toml</code> (and optionally agent.dal / agent.toml).</li>
+<li><strong>Validate after edit</strong> — Run
+<code>dal check &lt;path&gt;</code> for the file you edited.</li>
+<li><strong>Run a script</strong> — Run
+<code>dal run &lt;path&gt;</code> when the user wants to execute.</li>
+<li><strong>Create a project</strong> — Run
+<code>dal init [template]</code> in the chosen directory.</li>
+<li><strong>Use the agent</strong> — If the user runs
+<code>dal agent serve</code>, you can POST to <code>/message</code> or
+<code>/task</code> with <code>working_root</code> set to the project
+root so the agent can read/edit files and run dal check/dal run
+there.</li>
+</ol>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li><a href="AGENT_ASSISTANT_PLAN.html">AGENT_ASSISTANT_PLAN.md</a> —
+Skills, tools, working context, phased plan.</li>
+<li><a
+href="guides/AGENT_SETUP_AND_USAGE.html">AGENT_SETUP_AND_USAGE.md</a> —
+Agent project setup, evolve, shell trust.</li>
+<li><a
+href="PUBLIC_DOCUMENTATION_INDEX.html">PUBLIC_DOCUMENTATION_INDEX.md</a> —
+Full docs index.</li>
+</ul>
+</body>
+</html>

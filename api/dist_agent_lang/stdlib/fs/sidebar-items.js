@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_READ_BYTES"],"fn":["append_text","exists","filesystem_root","read_text","resolve_path_under_root","write_text"]};

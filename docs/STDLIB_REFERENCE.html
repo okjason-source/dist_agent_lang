@@ -552,9 +552,25 @@ agent. Requires <code>web3</code> feature and MoldRegistry deployed.</p>
 <p>Predict device failure probability.</p>
 <p><strong>Returns:</strong> Failure probability (0-1)</p>
 <hr />
+<h2 id="http-module">http Module</h2>
+<p>Bounded HTTP GET for route handlers and scripts. Same security policy
+as the agent <strong><code>fetch_url</code></strong> tool: only
+<strong><code>http</code>/<code>https</code></strong>,
+<strong><code>DAL_HTTP_FETCH_*</code></strong> (timeout, max bytes,
+optional host allowlist, private/loopback blocking). Requires the
+<strong><code>http-interface</code></strong> Cargo feature (on by
+default).</p>
+<h3 id="functions-8">Functions</h3>
+<h4 id="fetch_text">fetch_text</h4>
+<pre class="dal"><code>http::fetch_text(url: String) -&gt; String</code></pre>
+<p>GET the URL and return the response body as plain text (HTML is
+stripped best-effort). On failure, the runtime surfaces an error string
+(network, HTTP status, blocked host, etc.).</p>
+<p>Alias: <strong><code>http::fetch</code></strong> — same behavior.</p>
+<hr />
 <h2 id="oracle-module">oracle Module</h2>
 <p>Oracle data feed operations.</p>
-<h3 id="functions-8">Functions</h3>
+<h3 id="functions-9">Functions</h3>
 <h4 id="fetch">fetch</h4>
 <pre class="dal"><code>oracle::fetch(source: String, query_type: String) -&gt; Map&lt;String, Value&gt;</code></pre>
 <p>Fetch data from oracle.</p>
@@ -587,7 +603,7 @@ agent. Requires <code>web3</code> feature and MoldRegistry deployed.</p>
 <hr />
 <h2 id="web-module">web Module</h2>
 <p>HTTP operations for web requests and responses.</p>
-<h3 id="functions-9">Functions</h3>
+<h3 id="functions-10">Functions</h3>
 <h4 id="get_request">get_request</h4>
 <pre class="dal"><code>web::get_request(url: String) -&gt; String</code></pre>
 <p>HTTP GET request.</p>
@@ -611,7 +627,7 @@ etc.</p>
 <hr />
 <h2 id="log-module">log Module</h2>
 <p>Logging operations.</p>
-<h3 id="functions-10">Functions</h3>
+<h3 id="functions-11">Functions</h3>
 <h4 id="info">info</h4>
 <pre class="dal"><code>log::info(message: String)
 log::info(source: String, message: String)</code></pre>
@@ -658,7 +674,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="config-module">config Module</h2>
 <p>Configuration management.</p>
-<h3 id="functions-11">Functions</h3>
+<h3 id="functions-12">Functions</h3>
 <h4 id="get_env">get_env</h4>
 <pre class="dal"><code>config::get_env(key: String) -&gt; String</code></pre>
 <p>Get environment variable.</p>
@@ -686,7 +702,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="cloudadmin-module">cloudadmin Module</h2>
 <p>Cloud administration and governance.</p>
-<h3 id="functions-12">Functions</h3>
+<h3 id="functions-13">Functions</h3>
 <h4 id="authorize">authorize</h4>
 <pre class="dal"><code>cloudadmin::authorize(admin_id: String, operation: String, resource: String) -&gt; Bool</code></pre>
 <p>Check authorization.</p>
@@ -709,7 +725,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="trust-module">trust Module</h2>
 <p>Trust and permission management.</p>
-<h3 id="functions-13">Functions</h3>
+<h3 id="functions-14">Functions</h3>
 <h4 id="authorize-1">authorize</h4>
 <pre class="dal"><code>trust::authorize(admin_id: String, operation: String, resource: String) -&gt; Bool</code></pre>
 <p>Authorize operation.</p>
@@ -741,7 +757,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="key-module">key Module</h2>
 <p>Capability-based access control (keys to resources).</p>
-<h3 id="functions-14">Functions</h3>
+<h3 id="functions-15">Functions</h3>
 <h4 id="create">create</h4>
 <pre class="dal"><code>key::create(resource: String, permissions: List&lt;String&gt;) -&gt; Capability</code></pre>
 <p>Create key (capability).</p>
@@ -759,7 +775,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="aml-module">aml Module</h2>
 <p>Anti-money laundering checks.</p>
-<h3 id="functions-15">Functions</h3>
+<h3 id="functions-16">Functions</h3>
 <h4 id="perform_check">perform_check</h4>
 <pre class="dal"><code>aml::perform_check(transaction: Map&lt;String, Value&gt;, address: String) -&gt; String</code></pre>
 <p>Perform AML check.</p>
@@ -777,7 +793,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="kyc-module">kyc Module</h2>
 <p>Know Your Customer verification.</p>
-<h3 id="functions-16">Functions</h3>
+<h3 id="functions-17">Functions</h3>
 <h4 id="verify-2">verify</h4>
 <pre class="dal"><code>kyc::verify(user_id: String, verification_data: Map&lt;String, Value&gt;) -&gt; String</code></pre>
 <p>Verify user identity.</p>
@@ -791,7 +807,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="test-module">test Module</h2>
 <p>Testing framework.</p>
-<h3 id="functions-17">Functions</h3>
+<h3 id="functions-18">Functions</h3>
 <h4 id="run_registered_tests">run_registered_tests</h4>
 <pre class="dal"><code>test::run_registered_tests() -&gt; Map&lt;String, Value&gt;</code></pre>
 <p>Run all registered tests.</p>

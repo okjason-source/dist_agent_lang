@@ -977,116 +977,117 @@
 <a href=#977 id=977 data-nosnippet>977</a>            <span class="string">"write_file"</span>,
 <a href=#978 id=978 data-nosnippet>978</a>            <span class="string">"list_dir"</span>,
 <a href=#979 id=979 data-nosnippet>979</a>            <span class="string">"search"</span>,
-<a href=#980 id=980 data-nosnippet>980</a>            <span class="string">"dal_check"</span>,
-<a href=#981 id=981 data-nosnippet>981</a>            <span class="string">"dal_run"</span>,
-<a href=#982 id=982 data-nosnippet>982</a>            <span class="string">"dal_init"</span>,
-<a href=#983 id=983 data-nosnippet>983</a>            <span class="string">"show_url"</span>,
-<a href=#984 id=984 data-nosnippet>984</a>            <span class="string">"show_content"</span>,
-<a href=#985 id=985 data-nosnippet>985</a>        ],
-<a href=#986 id=986 data-nosnippet>986</a>        AgentType::Custom(<span class="kw">_</span>) =&gt; <span class="macro">vec!</span>[<span class="string">"custom_processing"</span>],
-<a href=#987 id=987 data-nosnippet>987</a>    }
-<a href=#988 id=988 data-nosnippet>988</a>}
-<a href=#989 id=989 data-nosnippet>989</a>
-<a href=#990 id=990 data-nosnippet>990</a><span class="kw">fn </span>generate_id() -&gt; u64 {
-<a href=#991 id=991 data-nosnippet>991</a>    <span class="kw">use </span>std::time::{SystemTime, UNIX_EPOCH};
-<a href=#992 id=992 data-nosnippet>992</a>    SystemTime::now()
-<a href=#993 id=993 data-nosnippet>993</a>        .duration_since(UNIX_EPOCH)
-<a href=#994 id=994 data-nosnippet>994</a>        .unwrap()
-<a href=#995 id=995 data-nosnippet>995</a>        .as_nanos() <span class="kw">as </span>u64
-<a href=#996 id=996 data-nosnippet>996</a>}
-<a href=#997 id=997 data-nosnippet>997</a>
-<a href=#998 id=998 data-nosnippet>998</a><span class="kw">fn </span>initialize_ai_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
-<a href=#999 id=999 data-nosnippet>999</a>    <span class="comment">// Initialize AI-specific capabilities
-<a href=#1000 id=1000 data-nosnippet>1000</a>    </span>agent_context.store_memory(<span class="string">"ai_model"</span>.to_string(), Value::String(<span class="string">"gpt-4"</span>.to_string()));
-<a href=#1001 id=1001 data-nosnippet>1001</a>    agent_context.store_memory(
-<a href=#1002 id=1002 data-nosnippet>1002</a>        <span class="string">"learning_algorithm"</span>.to_string(),
-<a href=#1003 id=1003 data-nosnippet>1003</a>        Value::String(<span class="string">"reinforcement"</span>.to_string()),
-<a href=#1004 id=1004 data-nosnippet>1004</a>    );
-<a href=#1005 id=1005 data-nosnippet>1005</a>    agent_context.store_memory(
-<a href=#1006 id=1006 data-nosnippet>1006</a>        <span class="string">"communication_protocol"</span>.to_string(),
-<a href=#1007 id=1007 data-nosnippet>1007</a>        Value::String(<span class="string">"natural_language"</span>.to_string()),
-<a href=#1008 id=1008 data-nosnippet>1008</a>    );
-<a href=#1009 id=1009 data-nosnippet>1009</a>
-<a href=#1010 id=1010 data-nosnippet>1010</a>    <span class="comment">// Set initial capabilities
-<a href=#1011 id=1011 data-nosnippet>1011</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
-<a href=#1012 id=1012 data-nosnippet>1012</a>        <span class="string">"analysis"</span>.to_string(),
-<a href=#1013 id=1013 data-nosnippet>1013</a>        <span class="string">"learning"</span>.to_string(),
-<a href=#1014 id=1014 data-nosnippet>1014</a>        <span class="string">"communication"</span>.to_string(),
-<a href=#1015 id=1015 data-nosnippet>1015</a>        <span class="string">"task_execution"</span>.to_string(),
-<a href=#1016 id=1016 data-nosnippet>1016</a>        <span class="string">"problem_solving"</span>.to_string(),
-<a href=#1017 id=1017 data-nosnippet>1017</a>    ];
-<a href=#1018 id=1018 data-nosnippet>1018</a>}
-<a href=#1019 id=1019 data-nosnippet>1019</a>
-<a href=#1020 id=1020 data-nosnippet>1020</a><span class="kw">fn </span>initialize_system_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
-<a href=#1021 id=1021 data-nosnippet>1021</a>    <span class="comment">// Initialize system-specific capabilities
-<a href=#1022 id=1022 data-nosnippet>1022</a>    </span>agent_context.store_memory(
-<a href=#1023 id=1023 data-nosnippet>1023</a>        <span class="string">"system_role"</span>.to_string(),
-<a href=#1024 id=1024 data-nosnippet>1024</a>        Value::String(<span class="string">"coordinator"</span>.to_string()),
-<a href=#1025 id=1025 data-nosnippet>1025</a>    );
-<a href=#1026 id=1026 data-nosnippet>1026</a>    agent_context.store_memory(<span class="string">"monitoring_enabled"</span>.to_string(), Value::Bool(<span class="bool-val">true</span>));
-<a href=#1027 id=1027 data-nosnippet>1027</a>    agent_context.store_memory(<span class="string">"resource_tracking"</span>.to_string(), Value::Bool(<span class="bool-val">true</span>));
-<a href=#1028 id=1028 data-nosnippet>1028</a>
-<a href=#1029 id=1029 data-nosnippet>1029</a>    <span class="comment">// Set initial capabilities
-<a href=#1030 id=1030 data-nosnippet>1030</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
-<a href=#1031 id=1031 data-nosnippet>1031</a>        <span class="string">"monitoring"</span>.to_string(),
-<a href=#1032 id=1032 data-nosnippet>1032</a>        <span class="string">"coordination"</span>.to_string(),
-<a href=#1033 id=1033 data-nosnippet>1033</a>        <span class="string">"resource_management"</span>.to_string(),
-<a href=#1034 id=1034 data-nosnippet>1034</a>        <span class="string">"system_optimization"</span>.to_string(),
-<a href=#1035 id=1035 data-nosnippet>1035</a>    ];
-<a href=#1036 id=1036 data-nosnippet>1036</a>}
-<a href=#1037 id=1037 data-nosnippet>1037</a>
-<a href=#1038 id=1038 data-nosnippet>1038</a><span class="kw">fn </span>initialize_worker_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
-<a href=#1039 id=1039 data-nosnippet>1039</a>    <span class="comment">// Initialize worker-specific capabilities
-<a href=#1040 id=1040 data-nosnippet>1040</a>    </span>agent_context.store_memory(
-<a href=#1041 id=1041 data-nosnippet>1041</a>        <span class="string">"worker_type"</span>.to_string(),
-<a href=#1042 id=1042 data-nosnippet>1042</a>        Value::String(<span class="string">"general"</span>.to_string()),
-<a href=#1043 id=1043 data-nosnippet>1043</a>    );
-<a href=#1044 id=1044 data-nosnippet>1044</a>    agent_context.store_memory(
-<a href=#1045 id=1045 data-nosnippet>1045</a>        <span class="string">"automation_level"</span>.to_string(),
-<a href=#1046 id=1046 data-nosnippet>1046</a>        Value::String(<span class="string">"high"</span>.to_string()),
-<a href=#1047 id=1047 data-nosnippet>1047</a>    );
-<a href=#1048 id=1048 data-nosnippet>1048</a>    agent_context.store_memory(<span class="string">"task_queue_size"</span>.to_string(), Value::Int(<span class="number">100</span>));
-<a href=#1049 id=1049 data-nosnippet>1049</a>
-<a href=#1050 id=1050 data-nosnippet>1050</a>    <span class="comment">// Set initial capabilities
-<a href=#1051 id=1051 data-nosnippet>1051</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
-<a href=#1052 id=1052 data-nosnippet>1052</a>        <span class="string">"task_execution"</span>.to_string(),
-<a href=#1053 id=1053 data-nosnippet>1053</a>        <span class="string">"data_processing"</span>.to_string(),
-<a href=#1054 id=1054 data-nosnippet>1054</a>        <span class="string">"automation"</span>.to_string(),
-<a href=#1055 id=1055 data-nosnippet>1055</a>        <span class="string">"workflow_management"</span>.to_string(),
-<a href=#1056 id=1056 data-nosnippet>1056</a>    ];
-<a href=#1057 id=1057 data-nosnippet>1057</a>}
-<a href=#1058 id=1058 data-nosnippet>1058</a>
-<a href=#1059 id=1059 data-nosnippet>1059</a><span class="kw">fn </span>initialize_ide_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
-<a href=#1060 id=1060 data-nosnippet>1060</a>    agent_context.store_memory(
-<a href=#1061 id=1061 data-nosnippet>1061</a>        <span class="string">"surface"</span>.to_string(),
-<a href=#1062 id=1062 data-nosnippet>1062</a>        Value::String(<span class="string">"workspace"</span>.to_string()),
-<a href=#1063 id=1063 data-nosnippet>1063</a>    );
-<a href=#1064 id=1064 data-nosnippet>1064</a>    agent_context.store_memory(
-<a href=#1065 id=1065 data-nosnippet>1065</a>        <span class="string">"tool_dispatch"</span>.to_string(),
-<a href=#1066 id=1066 data-nosnippet>1066</a>        Value::String(<span class="string">"model_turn_loop"</span>.to_string()),
-<a href=#1067 id=1067 data-nosnippet>1067</a>    );
-<a href=#1068 id=1068 data-nosnippet>1068</a>
-<a href=#1069 id=1069 data-nosnippet>1069</a>    <span class="kw">if </span>agent_context.config.capabilities.is_empty() {
-<a href=#1070 id=1070 data-nosnippet>1070</a>        agent_context.config.capabilities = builtin_capabilities(<span class="kw-2">&amp;</span>AgentType::IDE)
-<a href=#1071 id=1071 data-nosnippet>1071</a>            .into_iter()
-<a href=#1072 id=1072 data-nosnippet>1072</a>            .map(String::from)
-<a href=#1073 id=1073 data-nosnippet>1073</a>            .collect();
-<a href=#1074 id=1074 data-nosnippet>1074</a>    }
-<a href=#1075 id=1075 data-nosnippet>1075</a>}
-<a href=#1076 id=1076 data-nosnippet>1076</a>
-<a href=#1077 id=1077 data-nosnippet>1077</a><span class="kw">fn </span>initialize_custom_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
-<a href=#1078 id=1078 data-nosnippet>1078</a>    <span class="comment">// Initialize custom agent with basic capabilities
-<a href=#1079 id=1079 data-nosnippet>1079</a>    </span>agent_context.store_memory(
-<a href=#1080 id=1080 data-nosnippet>1080</a>        <span class="string">"custom_type"</span>.to_string(),
-<a href=#1081 id=1081 data-nosnippet>1081</a>        Value::String(agent_context.config.agent_type.to_string()),
-<a href=#1082 id=1082 data-nosnippet>1082</a>    );
-<a href=#1083 id=1083 data-nosnippet>1083</a>    agent_context.store_memory(<span class="string">"flexibility"</span>.to_string(), Value::String(<span class="string">"high"</span>.to_string()));
-<a href=#1084 id=1084 data-nosnippet>1084</a>
-<a href=#1085 id=1085 data-nosnippet>1085</a>    <span class="comment">// Set initial capabilities
-<a href=#1086 id=1086 data-nosnippet>1086</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
-<a href=#1087 id=1087 data-nosnippet>1087</a>        <span class="string">"custom_processing"</span>.to_string(),
-<a href=#1088 id=1088 data-nosnippet>1088</a>        <span class="string">"adaptation"</span>.to_string(),
-<a href=#1089 id=1089 data-nosnippet>1089</a>        <span class="string">"flexibility"</span>.to_string(),
-<a href=#1090 id=1090 data-nosnippet>1090</a>    ];
-<a href=#1091 id=1091 data-nosnippet>1091</a>}
+<a href=#980 id=980 data-nosnippet>980</a>            <span class="string">"fetch_url"</span>,
+<a href=#981 id=981 data-nosnippet>981</a>            <span class="string">"dal_check"</span>,
+<a href=#982 id=982 data-nosnippet>982</a>            <span class="string">"dal_run"</span>,
+<a href=#983 id=983 data-nosnippet>983</a>            <span class="string">"dal_init"</span>,
+<a href=#984 id=984 data-nosnippet>984</a>            <span class="string">"show_url"</span>,
+<a href=#985 id=985 data-nosnippet>985</a>            <span class="string">"show_content"</span>,
+<a href=#986 id=986 data-nosnippet>986</a>        ],
+<a href=#987 id=987 data-nosnippet>987</a>        AgentType::Custom(<span class="kw">_</span>) =&gt; <span class="macro">vec!</span>[<span class="string">"custom_processing"</span>],
+<a href=#988 id=988 data-nosnippet>988</a>    }
+<a href=#989 id=989 data-nosnippet>989</a>}
+<a href=#990 id=990 data-nosnippet>990</a>
+<a href=#991 id=991 data-nosnippet>991</a><span class="kw">fn </span>generate_id() -&gt; u64 {
+<a href=#992 id=992 data-nosnippet>992</a>    <span class="kw">use </span>std::time::{SystemTime, UNIX_EPOCH};
+<a href=#993 id=993 data-nosnippet>993</a>    SystemTime::now()
+<a href=#994 id=994 data-nosnippet>994</a>        .duration_since(UNIX_EPOCH)
+<a href=#995 id=995 data-nosnippet>995</a>        .unwrap()
+<a href=#996 id=996 data-nosnippet>996</a>        .as_nanos() <span class="kw">as </span>u64
+<a href=#997 id=997 data-nosnippet>997</a>}
+<a href=#998 id=998 data-nosnippet>998</a>
+<a href=#999 id=999 data-nosnippet>999</a><span class="kw">fn </span>initialize_ai_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
+<a href=#1000 id=1000 data-nosnippet>1000</a>    <span class="comment">// Initialize AI-specific capabilities
+<a href=#1001 id=1001 data-nosnippet>1001</a>    </span>agent_context.store_memory(<span class="string">"ai_model"</span>.to_string(), Value::String(<span class="string">"gpt-4"</span>.to_string()));
+<a href=#1002 id=1002 data-nosnippet>1002</a>    agent_context.store_memory(
+<a href=#1003 id=1003 data-nosnippet>1003</a>        <span class="string">"learning_algorithm"</span>.to_string(),
+<a href=#1004 id=1004 data-nosnippet>1004</a>        Value::String(<span class="string">"reinforcement"</span>.to_string()),
+<a href=#1005 id=1005 data-nosnippet>1005</a>    );
+<a href=#1006 id=1006 data-nosnippet>1006</a>    agent_context.store_memory(
+<a href=#1007 id=1007 data-nosnippet>1007</a>        <span class="string">"communication_protocol"</span>.to_string(),
+<a href=#1008 id=1008 data-nosnippet>1008</a>        Value::String(<span class="string">"natural_language"</span>.to_string()),
+<a href=#1009 id=1009 data-nosnippet>1009</a>    );
+<a href=#1010 id=1010 data-nosnippet>1010</a>
+<a href=#1011 id=1011 data-nosnippet>1011</a>    <span class="comment">// Set initial capabilities
+<a href=#1012 id=1012 data-nosnippet>1012</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
+<a href=#1013 id=1013 data-nosnippet>1013</a>        <span class="string">"analysis"</span>.to_string(),
+<a href=#1014 id=1014 data-nosnippet>1014</a>        <span class="string">"learning"</span>.to_string(),
+<a href=#1015 id=1015 data-nosnippet>1015</a>        <span class="string">"communication"</span>.to_string(),
+<a href=#1016 id=1016 data-nosnippet>1016</a>        <span class="string">"task_execution"</span>.to_string(),
+<a href=#1017 id=1017 data-nosnippet>1017</a>        <span class="string">"problem_solving"</span>.to_string(),
+<a href=#1018 id=1018 data-nosnippet>1018</a>    ];
+<a href=#1019 id=1019 data-nosnippet>1019</a>}
+<a href=#1020 id=1020 data-nosnippet>1020</a>
+<a href=#1021 id=1021 data-nosnippet>1021</a><span class="kw">fn </span>initialize_system_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
+<a href=#1022 id=1022 data-nosnippet>1022</a>    <span class="comment">// Initialize system-specific capabilities
+<a href=#1023 id=1023 data-nosnippet>1023</a>    </span>agent_context.store_memory(
+<a href=#1024 id=1024 data-nosnippet>1024</a>        <span class="string">"system_role"</span>.to_string(),
+<a href=#1025 id=1025 data-nosnippet>1025</a>        Value::String(<span class="string">"coordinator"</span>.to_string()),
+<a href=#1026 id=1026 data-nosnippet>1026</a>    );
+<a href=#1027 id=1027 data-nosnippet>1027</a>    agent_context.store_memory(<span class="string">"monitoring_enabled"</span>.to_string(), Value::Bool(<span class="bool-val">true</span>));
+<a href=#1028 id=1028 data-nosnippet>1028</a>    agent_context.store_memory(<span class="string">"resource_tracking"</span>.to_string(), Value::Bool(<span class="bool-val">true</span>));
+<a href=#1029 id=1029 data-nosnippet>1029</a>
+<a href=#1030 id=1030 data-nosnippet>1030</a>    <span class="comment">// Set initial capabilities
+<a href=#1031 id=1031 data-nosnippet>1031</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
+<a href=#1032 id=1032 data-nosnippet>1032</a>        <span class="string">"monitoring"</span>.to_string(),
+<a href=#1033 id=1033 data-nosnippet>1033</a>        <span class="string">"coordination"</span>.to_string(),
+<a href=#1034 id=1034 data-nosnippet>1034</a>        <span class="string">"resource_management"</span>.to_string(),
+<a href=#1035 id=1035 data-nosnippet>1035</a>        <span class="string">"system_optimization"</span>.to_string(),
+<a href=#1036 id=1036 data-nosnippet>1036</a>    ];
+<a href=#1037 id=1037 data-nosnippet>1037</a>}
+<a href=#1038 id=1038 data-nosnippet>1038</a>
+<a href=#1039 id=1039 data-nosnippet>1039</a><span class="kw">fn </span>initialize_worker_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
+<a href=#1040 id=1040 data-nosnippet>1040</a>    <span class="comment">// Initialize worker-specific capabilities
+<a href=#1041 id=1041 data-nosnippet>1041</a>    </span>agent_context.store_memory(
+<a href=#1042 id=1042 data-nosnippet>1042</a>        <span class="string">"worker_type"</span>.to_string(),
+<a href=#1043 id=1043 data-nosnippet>1043</a>        Value::String(<span class="string">"general"</span>.to_string()),
+<a href=#1044 id=1044 data-nosnippet>1044</a>    );
+<a href=#1045 id=1045 data-nosnippet>1045</a>    agent_context.store_memory(
+<a href=#1046 id=1046 data-nosnippet>1046</a>        <span class="string">"automation_level"</span>.to_string(),
+<a href=#1047 id=1047 data-nosnippet>1047</a>        Value::String(<span class="string">"high"</span>.to_string()),
+<a href=#1048 id=1048 data-nosnippet>1048</a>    );
+<a href=#1049 id=1049 data-nosnippet>1049</a>    agent_context.store_memory(<span class="string">"task_queue_size"</span>.to_string(), Value::Int(<span class="number">100</span>));
+<a href=#1050 id=1050 data-nosnippet>1050</a>
+<a href=#1051 id=1051 data-nosnippet>1051</a>    <span class="comment">// Set initial capabilities
+<a href=#1052 id=1052 data-nosnippet>1052</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
+<a href=#1053 id=1053 data-nosnippet>1053</a>        <span class="string">"task_execution"</span>.to_string(),
+<a href=#1054 id=1054 data-nosnippet>1054</a>        <span class="string">"data_processing"</span>.to_string(),
+<a href=#1055 id=1055 data-nosnippet>1055</a>        <span class="string">"automation"</span>.to_string(),
+<a href=#1056 id=1056 data-nosnippet>1056</a>        <span class="string">"workflow_management"</span>.to_string(),
+<a href=#1057 id=1057 data-nosnippet>1057</a>    ];
+<a href=#1058 id=1058 data-nosnippet>1058</a>}
+<a href=#1059 id=1059 data-nosnippet>1059</a>
+<a href=#1060 id=1060 data-nosnippet>1060</a><span class="kw">fn </span>initialize_ide_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
+<a href=#1061 id=1061 data-nosnippet>1061</a>    agent_context.store_memory(
+<a href=#1062 id=1062 data-nosnippet>1062</a>        <span class="string">"surface"</span>.to_string(),
+<a href=#1063 id=1063 data-nosnippet>1063</a>        Value::String(<span class="string">"workspace"</span>.to_string()),
+<a href=#1064 id=1064 data-nosnippet>1064</a>    );
+<a href=#1065 id=1065 data-nosnippet>1065</a>    agent_context.store_memory(
+<a href=#1066 id=1066 data-nosnippet>1066</a>        <span class="string">"tool_dispatch"</span>.to_string(),
+<a href=#1067 id=1067 data-nosnippet>1067</a>        Value::String(<span class="string">"model_turn_loop"</span>.to_string()),
+<a href=#1068 id=1068 data-nosnippet>1068</a>    );
+<a href=#1069 id=1069 data-nosnippet>1069</a>
+<a href=#1070 id=1070 data-nosnippet>1070</a>    <span class="kw">if </span>agent_context.config.capabilities.is_empty() {
+<a href=#1071 id=1071 data-nosnippet>1071</a>        agent_context.config.capabilities = builtin_capabilities(<span class="kw-2">&amp;</span>AgentType::IDE)
+<a href=#1072 id=1072 data-nosnippet>1072</a>            .into_iter()
+<a href=#1073 id=1073 data-nosnippet>1073</a>            .map(String::from)
+<a href=#1074 id=1074 data-nosnippet>1074</a>            .collect();
+<a href=#1075 id=1075 data-nosnippet>1075</a>    }
+<a href=#1076 id=1076 data-nosnippet>1076</a>}
+<a href=#1077 id=1077 data-nosnippet>1077</a>
+<a href=#1078 id=1078 data-nosnippet>1078</a><span class="kw">fn </span>initialize_custom_agent(agent_context: <span class="kw-2">&amp;mut </span>AgentContext) {
+<a href=#1079 id=1079 data-nosnippet>1079</a>    <span class="comment">// Initialize custom agent with basic capabilities
+<a href=#1080 id=1080 data-nosnippet>1080</a>    </span>agent_context.store_memory(
+<a href=#1081 id=1081 data-nosnippet>1081</a>        <span class="string">"custom_type"</span>.to_string(),
+<a href=#1082 id=1082 data-nosnippet>1082</a>        Value::String(agent_context.config.agent_type.to_string()),
+<a href=#1083 id=1083 data-nosnippet>1083</a>    );
+<a href=#1084 id=1084 data-nosnippet>1084</a>    agent_context.store_memory(<span class="string">"flexibility"</span>.to_string(), Value::String(<span class="string">"high"</span>.to_string()));
+<a href=#1085 id=1085 data-nosnippet>1085</a>
+<a href=#1086 id=1086 data-nosnippet>1086</a>    <span class="comment">// Set initial capabilities
+<a href=#1087 id=1087 data-nosnippet>1087</a>    </span>agent_context.config.capabilities = <span class="macro">vec!</span>[
+<a href=#1088 id=1088 data-nosnippet>1088</a>        <span class="string">"custom_processing"</span>.to_string(),
+<a href=#1089 id=1089 data-nosnippet>1089</a>        <span class="string">"adaptation"</span>.to_string(),
+<a href=#1090 id=1090 data-nosnippet>1090</a>        <span class="string">"flexibility"</span>.to_string(),
+<a href=#1091 id=1091 data-nosnippet>1091</a>    ];
+<a href=#1092 id=1092 data-nosnippet>1092</a>}
 </code></pre></div></section></main></body></html>

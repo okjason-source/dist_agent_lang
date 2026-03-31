@@ -262,9 +262,9 @@ When you run `dal agent serve`, the server listens (default port 4040) and expos
 | Method | Path | Description |
 |--------|------|--------------|
 | GET | `/status` | Agent id, name, type, status |
-| POST | `/message` | Send message (body: `sender_id`, `content`; optional `message_type`) |
+| POST | `/message` | Send message (body: `sender_id`, `content`; optional `message_type`, **`wait`**) |
 | GET | `/messages` | Receive (and consume) messages for this agent |
-| POST | `/task` | Assign task (body: `description`; optional `task_id`, `priority`, `requester_id`) |
+| POST | `/task` | Assign task (body: `description`; optional `task_id`, `priority`, `requester_id`, **`wait`**) |
 | GET | `/tasks` | Receive (and consume) pending tasks |
 | GET | `/health` | Liveness |
 
@@ -282,6 +282,27 @@ curl http://localhost:4040/status
 ### Prompt-only mode
 
 With `--prompt-only` (or `DAL_AGENT_PROMPT_ONLY=1`), no behavior script is run. The server spawns a default worker agent and, for each incoming message, calls the LLM and posts the reply back to the sender. Use when you want a simple chat-style API without custom DAL logic.
+
+### Structured responses: `wait` and `Idempotency-Key` (prompt-only)
+
+For **`POST /message`** and **`POST /task`**, set **`"wait": true`** in the JSON body to **block** until the multi-step tool loop finishes. The HTTP response includes a **`result`** object:
+
+- **`final_text`** — assistant reply or error text from the loop  
+- **`steps_used`**, **`max_steps_reached`**, **`is_ask_user`** — same meaning as in `ai::` diagnostics  
+
+Without **`wait`**, the handler returns **`{ "ok": true }`** immediately and delivers the assistant output via **`GET /messages`** (unchanged).
+
+Send HTTP header **`Idempotency-Key: <opaque>`** on **`wait: true`** requests to **cache** the JSON response for about **10 minutes**. Retries with the same key return the cached body without re-invoking the model (useful for safe cron retries). See [CONFIG.md](../CONFIG.md).
+
+### Outbound HTTP and overlapping requests
+
+**Outbound HTTP tools** (`search`, `fetch_url`, and other code paths that use `reqwest`) require the Cargo feature **`http-interface`**. The default **`dal`** binary enables it. If you build with **`cargo build --no-default-features`**, re-enable **`http-interface`** for production agent servers that need web access. See root `Cargo.toml` `[features]` and [CONFIG.md](../CONFIG.md).
+
+**Web search** defaults to DuckDuckGo Instant Answer (no API key). For fuller results, set **`DAL_WEB_SEARCH_PROVIDER=brave`** or **`serpapi`** and supply the matching API key env vars listed in [CONFIG.md](../CONFIG.md).
+
+**URL fetch** limits and SSRF-related toggles: **`DAL_HTTP_FETCH_*`** in [CONFIG.md](../CONFIG.md).
+
+**Overlapping long requests:** handlers that run an LLM plus a tool loop can hold a blocking worker for a long time. Many concurrent cron-triggered HTTP calls may queue or time out. Mitigate by staggering schedules, limiting parallelism, or using a dedicated worker process. See [AUTONOMOUS_JOBS_LANGUAGE_GAPS.md](../development/AUTONOMOUS_JOBS_LANGUAGE_GAPS.md) §2.3.
 
 ---
 

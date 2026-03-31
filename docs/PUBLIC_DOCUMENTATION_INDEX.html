@@ -109,49 +109,56 @@ Documentation index</h1>
 <td>You're new to DAL</td>
 </tr>
 <tr class="even">
+<td><a href="IDE_AND_AGENT_INTEGRATION.html#first-time-mental-model">HTTP
+vs MCP vs LSP</a></td>
+<td>One-page mental model: agent = HTTP; MCP = optional IDE bridge; LSP
+= editor</td>
+<td>You're new to agents or confused about MCP</td>
+</tr>
+<tr class="odd">
 <td><a href="#agent-development">Agent development</a></td>
 <td>Agent setup, skills, persistent memory, molds</td>
 <td>You're building agents</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="#language-reference">Language reference</a></td>
 <td>Syntax, types, attributes</td>
 <td>You need syntax details</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="#standard-library">Standard library</a></td>
 <td>All 30 stdlib modules</td>
 <td>You need API docs</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="#cli-reference">CLI reference</a></td>
 <td>All commands</td>
 <td>You need CLI help</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="#blockchain-and-hybrid-trust">Blockchain and
 hybrid</a></td>
 <td>Multi-chain, trust models, security</td>
 <td>You're integrating blockchain</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="#ide-and-agent-integration">IDE and agent
 integration</a></td>
-<td>LSP, editor setup, agent tools</td>
-<td>You're setting up an editor</td>
-</tr>
-<tr class="even">
-<td><a href="#project-state-and-alignment-maintainers">Project
-state</a></td>
-<td>Shipped vs planned; gap checklist</td>
-<td>You maintain releases or audit docs</td>
+<td>DAL IDE vs MCP vs your HTTP agent (§1), LSP, editor tools</td>
+<td>You're setting up an editor or wiring agents</td>
 </tr>
 <tr class="odd">
+<td><a href="#project-state-and-alignment-maintainers">Project
+state</a></td>
+<td>Deploy/production readiness, shipped vs planned, gap checklist</td>
+<td>You maintain releases, CI, or audit docs</td>
+</tr>
+<tr class="even">
 <td><a href="#configuration">Configuration</a></td>
 <td>Environment variables index</td>
 <td>You deploy or set keys / policies</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="#examples">Examples</a></td>
 <td>Code samples and tutorials</td>
 <td>You learn by example</td>
@@ -556,16 +563,27 @@ Arbitrum (and others via chain module).</p>
 <h2 id="ide-and-agent-integration">IDE and agent integration</h2>
 <ul>
 <li><a href="IDE_AND_AGENT_INTEGRATION.html">IDE and Agent Integration</a>
-— LSP setup, editor agents, tool schema</li>
+— <strong>§1:</strong> DAL IDE (<code>dal ide serve</code>) vs external
+editors vs your HTTP agent; LSP setup; editor agents; tool schema</li>
 <li><a href="development/LSP_AND_AGENT_INTEGRATION_PLAN.html">LSP and
 Agent Integration Plan (detailed)</a> — Full LSP feature plan, phases,
 stdio vs IDE HTTP routes</li>
-<li><a href="AGENT_ASSISTANT_PLAN.html">DAL Assistant Plan</a> — How
-agents work as DAL assistants: skills, molds, code-editor tools</li>
+<li><a href="AGENT_ASSISTANT_PLAN.html">DAL CEO / agent app plan</a> —
+Executive sub-agents, skills, molds, code-editor tools (legacy filename;
+app lives under <code>CEO/</code>)</li>
 </ul>
 <h3 id="project-state-and-alignment-maintainers">Project state and
 alignment (maintainers)</h3>
 <ul>
+<li><strong><a
+href="development/DEPLOY_AND_PRODUCTION_READINESS.html">Deploy and
+production readiness</a></strong> — Fast iteration vs production
+discipline: CI, release artifacts, Docker, CEO run paths, linked
+checklists.</li>
+<li><strong><a href="development/RAG_MVP_SPEC.html">RAG MVP
+spec</a></strong> — Retrieval into <code>context_blocks</code>
+(<code>source: rag</code>), corpus, indexer, lexical MVP-A,
+<code>agent_serve</code> wiring.</li>
 <li><strong><a href="PROJECT_STATE_AND_ALIGNMENT.html">Project state and
 alignment</a></strong> — Single matrix: what is shipped vs stub vs
 planned; links to trust-split EVM, LSP, checklists; <strong>gap
