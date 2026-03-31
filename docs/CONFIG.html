@@ -197,6 +197,22 @@ and <strong><code>../dal-ide/README.md</code></strong>.</td>
 href="../SECURITY.html">SECURITY.md</a>.</td>
 </tr>
 <tr class="odd">
+<td><strong>DAL <code>fs::*</code> (language stdlib)</strong></td>
+<td><code>DAL_FS_ROOT</code></td>
+<td>Optional. When set, <code>fs::read_text</code> /
+<code>write_text</code> / <code>append_text</code> / <code>exists</code>
+resolve <strong>relative</strong> paths under this directory; when
+unset, the process <strong>current working directory</strong> is the
+root. Distinct from agent LLM
+<strong><code>read_file</code>/<code>write_file</code></strong>: enable
+with <strong><code>DAL_AGENT_SCRIPTING=1</code></strong> (jail defaults
+to <strong>cwd</strong>; optional
+<strong><code>DAL_AGENT_SCRIPT_ROOT</code></strong> →
+<code>&lt;root&gt;/scripts/</code>). See <a
+href="STDLIB_REFERENCE.html">STDLIB_REFERENCE.md</a> <strong>fs</strong>
+module.</td>
+</tr>
+<tr class="even">
 <td><strong>Trust-split / compile</strong></td>
 <td><code>DAL_COMPILE_TRUST_MODE</code>, chain RPC / strict policy
 vars</td>

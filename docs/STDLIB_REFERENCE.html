@@ -44,6 +44,8 @@ for all DAL standard library modules.</p>
 <li><a href="#crypto-module">crypto</a> - Cryptographic functions</li>
 <li><a href="#auth-module">auth</a> - Authentication</li>
 <li><a href="#db-module">db</a> - Database operations</li>
+<li><a href="#fs-module">fs</a> - Host filesystem (root-jailed
+paths)</li>
 <li><a href="#ai-module">ai</a> - AI/ML operations</li>
 <li><a href="#agent-module">agent</a> - Agent orchestration</li>
 <li><a href="#mold-module">mold</a> - Mold load/spawn</li>
@@ -309,9 +311,45 @@ etc.</p>
 <p><strong>Returns:</strong> Metrics map (connections, queries/sec,
 etc.)</p>
 <hr />
+<h2 id="fs-module">fs Module</h2>
+<p>Host filesystem access from DAL programs (<code>dal run</code>,
+<code>dal serve</code> route handlers, workflows). Paths are
+<strong>relative</strong> to a single root:
+<strong><code>DAL_FS_ROOT</code></strong> if set (non-empty), otherwise
+the process <strong>current working directory</strong>. Traversal
+(<code>..</code>), absolute paths, and Windows <code>\\</code> UNC
+prefixes are <strong>rejected</strong> (same jail semantics as the agent
+tool loop’s <code>read_file</code> / <code>write_file</code>, but
+<strong>not</strong> necessarily the same root — see below).</p>
+<p><strong>Not the same as agent LLM file tools:</strong> The multi-step
+agent’s <strong><code>read_file</code> / <code>write_file</code> /
+<code>list_dir</code></strong> are exposed when scripting is enabled
+(<code>DAL_AGENT_SCRIPTING=1</code> or
+<code>DAL_AGENT_SCRIPT_ROOT</code>). Paths are jailed to <strong>process
+cwd</strong> when only <code>DAL_AGENT_SCRIPTING=1</code>, or to
+<strong><code>&lt;DAL_AGENT_SCRIPT_ROOT&gt;/scripts/</code></strong>
+when that variable is set. Use <strong><code>fs::*</code></strong> when
+<strong>your DAL code</strong> should read or write files; use agent
+tools when the <strong>model</strong> should, with the stricter
+scripting gate.</p>
+<h3 id="functions-4">Functions</h3>
+<h4 id="read_text">read_text</h4>
+<pre class="dal"><code>fs::read_text(path: String) -&gt; String</code></pre>
+<p>Read a UTF-8 file. Max size <strong>8 MiB</strong> per read.</p>
+<h4 id="write_text">write_text</h4>
+<pre class="dal"><code>fs::write_text(path: String, contents: String) -&gt; String</code></pre>
+<p>Write or overwrite a file; creates parent directories. Returns a
+short status string (e.g. bytes written).</p>
+<h4 id="append_text">append_text</h4>
+<pre class="dal"><code>fs::append_text(path: String, contents: String) -&gt; String</code></pre>
+<p>Append UTF-8; creates file and parents if missing.</p>
+<h4 id="exists">exists</h4>
+<pre class="dal"><code>fs::exists(path: String) -&gt; Bool</code></pre>
+<p>Whether a path exists under the root (file or directory).</p>
+<hr />
 <h2 id="agent-module">agent Module</h2>
 <p>AI agent orchestration, coordination, and communication.</p>
-<h3 id="functions-4">Functions</h3>
+<h3 id="functions-5">Functions</h3>
 <h4 id="spawn">spawn</h4>
 <pre class="dal"><code>agent::spawn(config: Map&lt;String, Value&gt;) -&gt; AgentContext</code></pre>
 <p>Create a new agent.</p>
@@ -411,7 +449,7 @@ agent::communicate(sender_id, receiver_id, msg);</code></pre>
 <h2 id="mold-module">mold Module</h2>
 <p>Load and spawn agents from mold files (reusable agent
 configurations). Supports local paths, IPFS, and on-chain molds.</p>
-<h3 id="functions-5">Functions</h3>
+<h3 id="functions-6">Functions</h3>
 <h4 id="load">load</h4>
 <pre class="dal"><code>mold::load(source: String) -&gt; Map&lt;String, Value&gt;</code></pre>
 <p>Load mold config from path, name, or <code>ipfs://cid</code>. Returns
@@ -473,7 +511,7 @@ agent. Requires <code>web3</code> feature and MoldRegistry deployed.</p>
 <hr />
 <h2 id="ai-module">ai Module</h2>
 <p>AI and machine learning operations.</p>
-<h3 id="functions-6">Functions</h3>
+<h3 id="functions-7">Functions</h3>
 <h4 id="generate_text">generate_text</h4>
 <pre class="dal"><code>ai::generate_text(prompt: String) -&gt; String</code></pre>
 <p>Generate text from prompt.</p>
@@ -506,7 +544,7 @@ agent. Requires <code>web3</code> feature and MoldRegistry deployed.</p>
 <hr />
 <h2 id="iot-module">iot Module</h2>
 <p>IoT device management and sensor operations.</p>
-<h3 id="functions-7">Functions</h3>
+<h3 id="functions-8">Functions</h3>
 <h4 id="register_device">register_device</h4>
 <pre class="dal"><code>iot::register_device(device_config: Map&lt;String, Value&gt;) -&gt; String</code></pre>
 <p>Register IoT device.</p>
@@ -560,7 +598,7 @@ as the agent <strong><code>fetch_url</code></strong> tool: only
 optional host allowlist, private/loopback blocking). Requires the
 <strong><code>http-interface</code></strong> Cargo feature (on by
 default).</p>
-<h3 id="functions-8">Functions</h3>
+<h3 id="functions-9">Functions</h3>
 <h4 id="fetch_text">fetch_text</h4>
 <pre class="dal"><code>http::fetch_text(url: String) -&gt; String</code></pre>
 <p>GET the URL and return the response body as plain text (HTML is
@@ -570,7 +608,7 @@ stripped best-effort). On failure, the runtime surfaces an error string
 <hr />
 <h2 id="oracle-module">oracle Module</h2>
 <p>Oracle data feed operations.</p>
-<h3 id="functions-9">Functions</h3>
+<h3 id="functions-10">Functions</h3>
 <h4 id="fetch">fetch</h4>
 <pre class="dal"><code>oracle::fetch(source: String, query_type: String) -&gt; Map&lt;String, Value&gt;</code></pre>
 <p>Fetch data from oracle.</p>
@@ -603,7 +641,7 @@ stripped best-effort). On failure, the runtime surfaces an error string
 <hr />
 <h2 id="web-module">web Module</h2>
 <p>HTTP operations for web requests and responses.</p>
-<h3 id="functions-10">Functions</h3>
+<h3 id="functions-11">Functions</h3>
 <h4 id="get_request">get_request</h4>
 <pre class="dal"><code>web::get_request(url: String) -&gt; String</code></pre>
 <p>HTTP GET request.</p>
@@ -627,7 +665,7 @@ etc.</p>
 <hr />
 <h2 id="log-module">log Module</h2>
 <p>Logging operations.</p>
-<h3 id="functions-11">Functions</h3>
+<h3 id="functions-12">Functions</h3>
 <h4 id="info">info</h4>
 <pre class="dal"><code>log::info(message: String)
 log::info(source: String, message: String)</code></pre>
@@ -674,7 +712,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="config-module">config Module</h2>
 <p>Configuration management.</p>
-<h3 id="functions-12">Functions</h3>
+<h3 id="functions-13">Functions</h3>
 <h4 id="get_env">get_env</h4>
 <pre class="dal"><code>config::get_env(key: String) -&gt; String</code></pre>
 <p>Get environment variable.</p>
@@ -702,7 +740,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="cloudadmin-module">cloudadmin Module</h2>
 <p>Cloud administration and governance.</p>
-<h3 id="functions-13">Functions</h3>
+<h3 id="functions-14">Functions</h3>
 <h4 id="authorize">authorize</h4>
 <pre class="dal"><code>cloudadmin::authorize(admin_id: String, operation: String, resource: String) -&gt; Bool</code></pre>
 <p>Check authorization.</p>
@@ -725,7 +763,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="trust-module">trust Module</h2>
 <p>Trust and permission management.</p>
-<h3 id="functions-14">Functions</h3>
+<h3 id="functions-15">Functions</h3>
 <h4 id="authorize-1">authorize</h4>
 <pre class="dal"><code>trust::authorize(admin_id: String, operation: String, resource: String) -&gt; Bool</code></pre>
 <p>Authorize operation.</p>
@@ -757,7 +795,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="key-module">key Module</h2>
 <p>Capability-based access control (keys to resources).</p>
-<h3 id="functions-15">Functions</h3>
+<h3 id="functions-16">Functions</h3>
 <h4 id="create">create</h4>
 <pre class="dal"><code>key::create(resource: String, permissions: List&lt;String&gt;) -&gt; Capability</code></pre>
 <p>Create key (capability).</p>
@@ -775,7 +813,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="aml-module">aml Module</h2>
 <p>Anti-money laundering checks.</p>
-<h3 id="functions-16">Functions</h3>
+<h3 id="functions-17">Functions</h3>
 <h4 id="perform_check">perform_check</h4>
 <pre class="dal"><code>aml::perform_check(transaction: Map&lt;String, Value&gt;, address: String) -&gt; String</code></pre>
 <p>Perform AML check.</p>
@@ -793,7 +831,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="kyc-module">kyc Module</h2>
 <p>Know Your Customer verification.</p>
-<h3 id="functions-17">Functions</h3>
+<h3 id="functions-18">Functions</h3>
 <h4 id="verify-2">verify</h4>
 <pre class="dal"><code>kyc::verify(user_id: String, verification_data: Map&lt;String, Value&gt;) -&gt; String</code></pre>
 <p>Verify user identity.</p>
@@ -807,7 +845,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="test-module">test Module</h2>
 <p>Testing framework.</p>
-<h3 id="functions-18">Functions</h3>
+<h3 id="functions-19">Functions</h3>
 <h4 id="run_registered_tests">run_registered_tests</h4>
 <pre class="dal"><code>test::run_registered_tests() -&gt; Map&lt;String, Value&gt;</code></pre>
 <p>Run all registered tests.</p>

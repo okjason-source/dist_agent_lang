@@ -23,6 +23,7 @@ function_name(param1: Type, param2: Type) -> ReturnType
 - [crypto](#crypto-module) - Cryptographic functions
 - [auth](#auth-module) - Authentication
 - [db](#db-module) - Database operations
+- [fs](#fs-module) - Host filesystem (root-jailed paths)
 - [ai](#ai-module) - AI/ML operations
 - [agent](#agent-module) - Agent orchestration
 - [mold](#mold-module) - Mold load/spawn
@@ -490,6 +491,40 @@ db::get_database_metrics(conn: String) -> Map<String, Value>
 Get database metrics.
 
 **Returns:** Metrics map (connections, queries/sec, etc.)
+
+---
+
+## fs Module
+
+Host filesystem access from DAL programs (`dal run`, `dal serve` route handlers, workflows). Paths are **relative** to a single root: **`DAL_FS_ROOT`** if set (non-empty), otherwise the process **current working directory**. Traversal (`..`), absolute paths, and Windows `\\` UNC prefixes are **rejected** (same jail semantics as the agent tool loop’s `read_file` / `write_file`, but **not** necessarily the same root — see below).
+
+**Not the same as agent LLM file tools:** The multi-step agent’s **`read_file` / `write_file` / `list_dir`** are exposed when scripting is enabled (`DAL_AGENT_SCRIPTING=1` or `DAL_AGENT_SCRIPT_ROOT`). Paths are jailed to **process cwd** when only `DAL_AGENT_SCRIPTING=1`, or to **`<DAL_AGENT_SCRIPT_ROOT>/scripts/`** when that variable is set. Use **`fs::*`** when **your DAL code** should read or write files; use agent tools when the **model** should, with the stricter scripting gate.
+
+### Functions
+
+#### read_text
+```dal
+fs::read_text(path: String) -> String
+```
+Read a UTF-8 file. Max size **8 MiB** per read.
+
+#### write_text
+```dal
+fs::write_text(path: String, contents: String) -> String
+```
+Write or overwrite a file; creates parent directories. Returns a short status string (e.g. bytes written).
+
+#### append_text
+```dal
+fs::append_text(path: String, contents: String) -> String
+```
+Append UTF-8; creates file and parents if missing.
+
+#### exists
+```dal
+fs::exists(path: String) -> Bool
+```
+Whether a path exists under the root (file or directory).
 
 ---
 
