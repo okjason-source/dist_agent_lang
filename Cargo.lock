@@ -988,7 +988,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "toml",
- "tower 0.4.13",
+ "tower 0.5.3",
  "tower-http 0.5.2",
  "tower-lsp",
  "tracing",
@@ -4769,7 +4769,6 @@ dependencies = [
  "pin-project-lite",
  "tower-layer",
  "tower-service",
- "tracing",
 ]
 
 [[package]]
