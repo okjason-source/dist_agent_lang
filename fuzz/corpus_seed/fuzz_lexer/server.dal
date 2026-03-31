@@ -1,4 +1,4 @@
-// Agent Assistant — HTTP server with memory (evolve) and tool-using AI.
+// DAL CEO — HTTP server with memory (evolve) and tool-using AI.
 // Run: dal serve server.dal --port 4040
 //
 // Routes:
@@ -21,7 +21,7 @@ import "./workflows.dal" as workflows;
 fn check_config() {
  let ai_cfg = config::get_ai_config();
  let model = ai_cfg["model"];
- log::info("agent-assistant", "Starting v0.2.0");
+ log::info("dal-ceo", "Starting v0.2.0");
  log::info("config", "AI model: " + to_string(model));
 
  try {
@@ -230,7 +230,7 @@ fn history_trim() {
 
 // ---------------------------------------------------------------------------
 // Web UI: self-contained in this file for robustness. Tries static/ via sh, then inline fallback.
-// No import needed — keeps the agent assistant runnable with plain dal serve.
+// No import needed — keeps the DAL CEO app runnable with plain dal serve.
 // ---------------------------------------------------------------------------
 
 fn get_ui_base() {
@@ -287,7 +287,7 @@ fn get_app_js(base) {
 }
 
 fn default_index_html() {
- return "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Agent Assistant</title><link rel=\"stylesheet\" href=\"/styles.css\"></head><body><div class=\"header\"><h1>Agent Assistant</h1><p>Chat, run commands, or give tasks. Memory-enabled.</p><div class=\"ai-status\" id=\"ai-status\"><span class=\"ai-dot checking\" id=\"ai-dot\"></span><span id=\"ai-label\">Checking…</span></div><div class=\"ai-fix\" id=\"ai-fix\"></div></div><div class=\"layout\"><main class=\"chat-main\"><div id=\"messages\"></div><form class=\"input-bar\" id=\"form\"><input type=\"text\" id=\"input\" placeholder=\"Message your agent...\" autocomplete=\"off\"><button type=\"submit\">Send</button></form></main><aside class=\"panels\"><div class=\"tabs\"><button type=\"button\" class=\"tab active\" data-panel=\"history\">History</button><button type=\"button\" class=\"tab\" data-panel=\"task\">Task</button><button type=\"button\" class=\"tab\" data-panel=\"workflow\">Workflow</button></div><section class=\"panel active\" id=\"panel-history\"><div class=\"panel-header\"><h2>History</h2><button type=\"button\" id=\"history-refresh\">↻</button><button type=\"button\" id=\"history-clear\">Clear</button></div><div id=\"history-list\" class=\"history-list\"></div></section><section class=\"panel\" id=\"panel-task\"><div class=\"panel-header\"><h2>Task</h2></div><form id=\"task-form\" class=\"panel-form\"><textarea id=\"task-input\" placeholder=\"Describe the task...\" rows=\"3\"></textarea><button type=\"submit\">Run task</button></form><div id=\"task-result\" class=\"panel-result\"></div></section><section class=\"panel\" id=\"panel-workflow\"><div class=\"panel-header\"><h2>Workflow</h2></div><form id=\"workflow-form\" class=\"panel-form\"><label for=\"workflow-select\">Workflow</label><select id=\"workflow-select\"><option value=\"\">Loading…</option></select><label for=\"workflow-input\">Input</label><input type=\"text\" id=\"workflow-input\" placeholder=\"e.g. topic\"><button type=\"submit\">Run workflow</button></form><div id=\"workflow-result\" class=\"panel-result\"></div></section></aside></div><script src=\"/app.js\"></script></body></html>";
+ return "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>DAL CEO</title><link rel=\"stylesheet\" href=\"/styles.css\"></head><body><div class=\"header\"><h1>DAL CEO</h1><p>Chat, run commands, or give tasks. Memory-enabled.</p><div class=\"ai-status\" id=\"ai-status\"><span class=\"ai-dot checking\" id=\"ai-dot\"></span><span id=\"ai-label\">Checking…</span></div><div class=\"ai-fix\" id=\"ai-fix\"></div></div><div class=\"layout\"><main class=\"chat-main\"><div id=\"messages\"></div><form class=\"input-bar\" id=\"form\"><input type=\"text\" id=\"input\" placeholder=\"Message your agent...\" autocomplete=\"off\"><button type=\"submit\">Send</button></form></main><aside class=\"panels\"><div class=\"tabs\"><button type=\"button\" class=\"tab active\" data-panel=\"history\">History</button><button type=\"button\" class=\"tab\" data-panel=\"task\">Task</button><button type=\"button\" class=\"tab\" data-panel=\"workflow\">Workflow</button></div><section class=\"panel active\" id=\"panel-history\"><div class=\"panel-header\"><h2>History</h2><button type=\"button\" id=\"history-refresh\">↻</button><button type=\"button\" id=\"history-clear\">Clear</button></div><div id=\"history-list\" class=\"history-list\"></div></section><section class=\"panel\" id=\"panel-task\"><div class=\"panel-header\"><h2>Task</h2></div><form id=\"task-form\" class=\"panel-form\"><textarea id=\"task-input\" placeholder=\"Describe the task...\" rows=\"3\"></textarea><button type=\"submit\">Run task</button></form><div id=\"task-result\" class=\"panel-result\"></div></section><section class=\"panel\" id=\"panel-workflow\"><div class=\"panel-header\"><h2>Workflow</h2></div><form id=\"workflow-form\" class=\"panel-form\"><label for=\"workflow-select\">Workflow</label><select id=\"workflow-select\"><option value=\"\">Loading…</option></select><label for=\"workflow-input\">Input</label><input type=\"text\" id=\"workflow-input\" placeholder=\"e.g. topic\"><button type=\"submit\">Run workflow</button></form><div id=\"workflow-result\" class=\"panel-result\"></div></section></aside></div><script src=\"/app.js\"></script></body></html>";
 }
 
 fn default_styles_css() {
@@ -348,7 +348,7 @@ fn health(request) {
  return {
   "status": 200,
   "headers": {"Content-Type": "application/json"},
-  "body": "{\"status\":\"ok\",\"service\":\"agent-assistant\",\"version\":\"0.2.0\"}"
+  "body": "{\"status\":\"ok\",\"service\":\"dal-ceo\",\"version\":\"0.2.0\"}"
  };
 }
 
@@ -738,7 +738,7 @@ fn api_agents(request) {
 
 // ---------------------------------------------------------------------------
 // POST /api/agents/run — Run a task with a specific agent role
-// Body: { "role": "researcher|coder|reviewer", "task": "..." }
+// Body: { "role": "researcher|coder|reviewer", "task": "...", "include_rag": optional bool }
 // ---------------------------------------------------------------------------
 
 @route("POST", "/api/agents/run")
@@ -755,6 +755,7 @@ fn api_agents_run(request) {
   let body = json::parse(body_str);
   let role = body["role"];
   let task = body["task"];
+  let include_rag = body["include_rag"];
   if (role == null || task == null) {
    return {
     "status": 400,
@@ -764,7 +765,7 @@ fn api_agents_run(request) {
   }
 
   log::info("agents", "API run: " + role + " task: " + task);
-  let result = agents::run_with_agent(role, task);
+  let result = agents::run_with_agent(role, task, include_rag);
 
   // Log to history
   history_append("agent:" + role, task, result["result"], "agent_task");
@@ -801,7 +802,7 @@ fn api_workflow_list(request) {
 
 // ---------------------------------------------------------------------------
 // POST /api/workflow — Execute a workflow
-// Body: { "workflow": "research_and_summarize", "input": "topic or task" }
+// Body: { "workflow": "research_and_summarize", "input": "topic or task", "include_rag": optional bool }
 // ---------------------------------------------------------------------------
 
 @route("POST", "/api/workflow")
@@ -818,6 +819,7 @@ fn api_workflow(request) {
   let body = json::parse(body_str);
   let workflow_name = body["workflow"];
   let input = body["input"];
+  let include_rag = body["include_rag"];
   if (workflow_name == null || input == null) {
    return {
     "status": 400,
@@ -828,7 +830,7 @@ fn api_workflow(request) {
 
   log::info("workflow", "API run: " + workflow_name + " input: " + input);
   log::audit("workflow", workflow_name + ": " + input);
-  let result = workflows::run(workflow_name, input);
+  let result = workflows::run(workflow_name, input, include_rag);
 
   // Log to history
   history_append("workflow:" + workflow_name, input, result["final_result"], "workflow");

@@ -16,6 +16,9 @@ use axum::{
     routing::{get, put},
     Router,
 };
+use dist_agent_lang::registry_paths::{
+    name_to_storage_dir, path_under_storage, sanitize_name, sanitize_version,
+};
 use serde_json::json;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -42,46 +45,6 @@ struct AppState {
     storage: PathBuf,
     public_url: String,
     auth_token: Option<String>,
-}
-
-fn sanitize_name(s: &str) -> bool {
-    !s.is_empty()
-        && !s.contains("..")
-        && s.chars().all(|c| {
-            c.is_alphanumeric() || c == '/' || c == '@' || c == '-' || c == '_' || c == '.'
-        })
-}
-
-fn sanitize_version(s: &str) -> bool {
-    !s.is_empty()
-        && !s.contains("..")
-        && s.chars()
-            .all(|c| c.is_alphanumeric() || c == '.' || c == '-' || c == '_')
-}
-
-/// Verify path is under storage root (prevents path traversal).
-fn path_under_storage(path: &std::path::Path, storage: &std::path::Path) -> bool {
-    let storage_canon = match storage.canonicalize() {
-        Ok(p) => p,
-        Err(_) => return false,
-    };
-    if let Ok(path_canon) = path.canonicalize() {
-        return path_canon.starts_with(&storage_canon);
-    }
-    // Path may not exist yet; walk up to first existing ancestor and verify it's under storage
-    let mut current = path;
-    while let Some(parent) = current.parent() {
-        if let Ok(parent_canon) = parent.canonicalize() {
-            return parent_canon.starts_with(&storage_canon);
-        }
-        current = parent;
-    }
-    false
-}
-
-/// Map package name to filesystem-safe dir name (e.g. @dal/testing -> _at_dal_slash_testing).
-fn name_to_storage_dir(name: &str) -> String {
-    name.replace('@', "_at_").replace('/', "_slash_")
 }
 
 async fn get_package_index(

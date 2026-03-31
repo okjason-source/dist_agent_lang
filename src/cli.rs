@@ -420,6 +420,14 @@ pub enum Commands {
         #[arg(trailing_var_arg = true)]
         rest: Vec<String>,
     },
+
+    /// MCP (stdio) → HTTP: run the reference MCP bridge so IDEs can call your agent API (`dal serve …`)
+    #[command(name = "mcp-bridge")]
+    McpBridge {
+        /// Base URL of the agent HTTP server (default: http://127.0.0.1:4040; env DAL_AGENT_HTTP_BASE)
+        #[arg(long, value_name = "URL")]
+        url: Option<String>,
+    },
 }
 
 /// IDE subcommands.

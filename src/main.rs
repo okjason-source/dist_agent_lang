@@ -326,7 +326,131 @@ fn main() {
             handle_cross_component_command("invoke", &a, &cli);
         }
         Commands::Ide { subcommand } => handle_ide_command(subcommand),
+        Commands::McpBridge { url } => handle_mcp_bridge_command(url.as_deref()),
     }
+}
+
+/// Run the MCP stdio bridge (forwards IDE tools to your agent HTTP API). See `dal mcp-bridge --help`.
+fn handle_mcp_bridge_command(url: Option<&str>) {
+    let script = match find_mcp_bridge_script() {
+        Ok(p) => p,
+        Err(msg) => {
+            eprintln!("{}", msg);
+            std::process::exit(1);
+        }
+    };
+    let mcp_root = match script.parent().and_then(|p| p.parent()) {
+        Some(r) => r.to_path_buf(),
+        None => {
+            eprintln!("dal mcp-bridge: invalid MCP script path: {}", script.display());
+            std::process::exit(1);
+        }
+    };
+    let node_modules = mcp_root.join("node_modules");
+    if !node_modules.is_dir() {
+        eprintln!(
+            "dal mcp-bridge: missing {} — install dependencies:\n  cd {} && npm install",
+            node_modules.display(),
+            mcp_root.display()
+        );
+        std::process::exit(1);
+    }
+
+    let base = url
+        .map(String::from)
+        .or_else(|| std::env::var("DAL_AGENT_HTTP_BASE").ok())
+        .or_else(|| std::env::var("DAL_MCP_HTTP_BASE").ok())
+        .or_else(|| std::env::var("DAL_CEO_BASE_URL").ok())
+        .unwrap_or_else(|| "http://127.0.0.1:4040".to_string());
+    let base = base.trim_end_matches('/').to_string();
+
+    eprintln!("dal mcp-bridge: MCP (stdio) → {}", base);
+    eprintln!("  Start your agent first, e.g.: dal serve <server.dal> --port 4040");
+    eprintln!(
+        "  IDE config: command `node`, arg `{}`, cwd `{}`",
+        script.display(),
+        mcp_root.display()
+    );
+
+    let status = std::process::Command::new("node")
+        .current_dir(&mcp_root)
+        .arg(&script)
+        .env("DAL_AGENT_HTTP_BASE", &base)
+        .stdin(std::process::Stdio::inherit())
+        .stdout(std::process::Stdio::inherit())
+        .stderr(std::process::Stdio::inherit())
+        .status();
+
+    match status {
+        Ok(s) => std::process::exit(s.code().unwrap_or(1)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            eprintln!(
+                "dal mcp-bridge: `node` not found. Install Node.js (https://nodejs.org/) so the MCP bridge can run."
+            );
+            std::process::exit(1);
+        }
+        Err(e) => {
+            eprintln!("dal mcp-bridge: failed to run node: {}", e);
+            std::process::exit(1);
+        }
+    }
+}
+
+fn find_mcp_bridge_script() -> Result<std::path::PathBuf, String> {
+    use std::path::{Path, PathBuf};
+
+    if let Ok(p) = std::env::var("DAL_MCP_BRIDGE_SCRIPT") {
+        let path = PathBuf::from(p);
+        if path.is_file() {
+            return Ok(path);
+        }
+        return Err(format!(
+            "dal mcp-bridge: DAL_MCP_BRIDGE_SCRIPT is set but file is missing: {}",
+            path.display()
+        ));
+    }
+    // Legacy alias (avoid for new configs)
+    if let Ok(p) = std::env::var("DAL_CEO_MCP_SCRIPT") {
+        let path = PathBuf::from(p);
+        if path.is_file() {
+            return Ok(path);
+        }
+        return Err(format!(
+            "dal mcp-bridge: DAL_CEO_MCP_SCRIPT is set but file is missing: {}",
+            path.display()
+        ));
+    }
+
+    if let Ok(cwd) = std::env::current_dir() {
+        let mut dir = cwd;
+        for _ in 0..12 {
+            let candidate = dir.join("CEO/mcp/src/server.js");
+            if candidate.is_file() {
+                return Ok(candidate);
+            }
+            if !dir.pop() {
+                break;
+            }
+        }
+    }
+
+    let compile_time = Path::new(env!("CARGO_MANIFEST_DIR")).join("CEO/mcp/src/server.js");
+    if compile_time.is_file() {
+        return Ok(compile_time);
+    }
+
+    Err(r#"dal mcp-bridge: could not find the MCP bridge script (server.js)
+
+First-time setup (this repo includes an example under CEO/mcp/):
+  1. Install Node.js (`node` on PATH).
+  2. cd CEO/mcp && npm install
+  3. Start your agent, e.g.: dal serve CEO/server.dal --port 4040
+  4. In another terminal: dal mcp-bridge
+     (or configure your IDE: command `node`, script path …/CEO/mcp/src/server.js, cwd …/CEO/mcp)
+
+If the example lives elsewhere, set:
+  export DAL_MCP_BRIDGE_SCRIPT=/absolute/path/to/server.js"#
+        .to_string())
 }
 
 fn parse_dal_file(filename: &str) {
@@ -830,7 +954,7 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
     println!("    Port: {}", port);
 
     // Load .env from the entry file's directory so X_API_KEY, OPENAI_API_KEY, etc. are set
-    // when not started via ./start.sh (e.g. IDE run or `dal serve agent_assistant/server.dal`).
+    // when not started via ./start.sh (e.g. IDE run or `dal serve CEO/server.dal`).
     // Preserves existing env vars (e.g. from start.sh).
     let entry_path_for_env = std::path::Path::new(filename)
         .canonicalize()

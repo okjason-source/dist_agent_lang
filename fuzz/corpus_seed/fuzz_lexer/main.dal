@@ -1,4 +1,4 @@
-// Agent Assistant — CLI entry point
+// DAL CEO — CLI entry point
 // Run: dal run main.dal
 // Sends a single prompt to the agent (with evolve context) and prints the reply.
 // For the full HTTP server, use: dal serve server.dal --port 4040
@@ -11,7 +11,7 @@ fn main() {
         // no context yet
     }
 
-    print("Agent Assistant v0.2.0");
+    print("DAL CEO v0.2.0");
     print("Context loaded: " + to_string(len(ctx)) + " chars");
     print("---");
 

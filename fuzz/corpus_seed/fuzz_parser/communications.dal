@@ -1,4 +1,4 @@
-// Communications module — outbound messaging for Agent Assistant.
+// Communications module — outbound messaging for DAL CEO.
 //
 // Sends messages to Telegram, Discord, or iMessage using sh::run.
 // Telegram/Discord: curl against their HTTP APIs.

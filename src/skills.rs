@@ -72,15 +72,15 @@ pub struct SkillRegistry {
     skills: HashMap<String, SkillDefinition>,
 }
 
-/// Default skill set for the DAL assistant (smart agent assist).
+/// Default skill set for the DAL CEO app (executive sub-agent / smart assist).
 /// When an agent has no explicit skills, use these.
 pub const DEFAULT_LEARNING_PATH_SKILLS: &[&str] = &["development", "creative", "office", "home"];
 
 /// Hard skill: always available to every agent.
 pub const PROJECT_INIT_SKILL: &str = "project_init";
 
-/// Base tools (all agents): reply, run, search, ask_user, dal_init.
-const BASE_TOOLS: &str = "reply, run (shell), search, ask_user, dal_init";
+/// Base tools (all agents): reply, run, search, fetch_url, ask_user, dal_init.
+const BASE_TOOLS: &str = "reply, run (shell), search, fetch_url, ask_user, dal_init";
 
 /// Development skill tools.
 const DEVELOPMENT_TOOL_IDS: &[&str] = &[
@@ -657,7 +657,7 @@ pub fn tools_description_for_skills_with_registry(
         "You are a helpful assistant.".to_string()
     } else {
         format!(
-            "You are a DAL assistant serving your principal. Skills:\n{}",
+            "You are operating as the DAL CEO surface, serving your principal. Skills:\n{}",
             skill_descriptions.join("\n")
         )
     };
@@ -682,9 +682,9 @@ pub fn tools_description_for_skills_with_registry(
     };
 
     let json_tools = if has_development {
-        r#"Reply with JSON: {"action":"reply","text":"..."} or {"action":"run","cmd":"..."} or {"action":"search","query":"..."} or {"action":"ask_user","message":"..."} or {"action":"dal_init","template":"general"|"chain"|"iot"|"agent"} or {"action":"read_file","path":"..."} or {"action":"write_file","path":"...","contents":"..."} or {"action":"list_dir","path":"."} or {"action":"dal_check","path":"file.dal"} or {"action":"dal_run","path":"file.dal"}. Paths are relative to working directory."#
+        r#"Reply with JSON: {"action":"reply","text":"..."} or {"action":"run","cmd":"..."} or {"action":"search","query":"..."} or {"action":"fetch_url","url":"https://..."} or {"action":"ask_user","message":"..."} or {"action":"dal_init","template":"general"|"chain"|"iot"|"agent"} or {"action":"read_file","path":"..."} or {"action":"write_file","path":"...","contents":"..."} or {"action":"list_dir","path":"."} or {"action":"dal_check","path":"file.dal"} or {"action":"dal_run","path":"file.dal"}. Paths are relative to working directory."#
     } else {
-        r#"Reply with JSON: {"action":"reply","text":"..."} or {"action":"run","cmd":"..."} or {"action":"search","query":"..."} or {"action":"ask_user","message":"..."} or {"action":"dal_init","template":"general"|"chain"|"iot"|"agent"} to initialize a DAL project (omit template for general)."#
+        r#"Reply with JSON: {"action":"reply","text":"..."} or {"action":"run","cmd":"..."} or {"action":"search","query":"..."} or {"action":"fetch_url","url":"https://..."} or {"action":"ask_user","message":"..."} or {"action":"dal_init","template":"general"|"chain"|"iot"|"agent"} to initialize a DAL project (omit template for general)."#
     };
 
     let meta_sentence = memory_context
@@ -712,7 +712,7 @@ mod tests {
     #[test]
     fn default_skills_produce_non_empty_description() {
         let desc = tools_description_for_skills(&[]);
-        assert!(desc.contains("assistant"));
+        assert!(desc.contains("DAL CEO"));
         assert!(desc.contains("development"));
         assert!(desc.contains("creative"));
         assert!(desc.contains("office"));

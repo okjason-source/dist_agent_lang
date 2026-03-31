@@ -406,7 +406,7 @@ fn test_fuzz_runtime_slow_unit_a36a588e_no_panic() {
 #[test]
 fn test_server_registers_all_routes() {
     use dist_agent_lang::execute_dal_and_extract_handlers_with_path;
-    let path = std::path::Path::new("agent_assistant/server.dal");
+    let path = std::path::Path::new("CEO/server.dal");
     let source = match std::fs::read_to_string(path) {
         Ok(s) => s,
         Err(_) => return,
@@ -430,10 +430,10 @@ fn test_server_registers_all_routes() {
 #[test]
 fn test_route_attributes_count() {
     use dist_agent_lang::parser::ast::{BlockStatement, Statement};
-    let path = "agent_assistant/server.dal";
+    let path = "CEO/server.dal";
     let source = match std::fs::read_to_string(path) {
         Ok(s) => s,
-        Err(_) => return, // skip if not in agent_assistant
+        Err(_) => return, // skip if CEO/ app tree not present
     };
     let program = match dist_agent_lang::parse_source(&source) {
         Ok(p) => p,

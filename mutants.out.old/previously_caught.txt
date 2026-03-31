@@ -1,3 +1,11 @@
+src/dal_summary.rs:95:8: delete ! in to_context_string
+src/module_resolver.rs:14:5: replace package_import_names_from_program -> Vec<String> with vec![]
+src/module_resolver.rs:14:5: replace package_import_names_from_program -> Vec<String> with vec![String::new()]
+src/module_resolver.rs:14:5: replace package_import_names_from_program -> Vec<String> with vec!["xyzzy".into()]
+src/module_resolver.rs:25:17: replace || with && in package_import_names_from_program
+src/module_resolver.rs:24:17: replace || with && in package_import_names_from_program
+src/module_resolver.rs:22:17: replace || with && in package_import_names_from_program
+src/cross_component.rs:30:15: replace += with -= in strip_global_flags
 src/bin/registry_server.rs:50:62: replace == with != in sanitize_name
 src/compile/native.rs:50:5: replace default_return_expr -> String with "xyzzy".into()
 src/compile/native.rs:86:5: replace services_to_rust -> String with "xyzzy".into()

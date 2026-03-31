@@ -11,13 +11,14 @@
 | Section | Description | Start here if... |
 |---------|-------------|-----------------|
 | [Getting started](#getting-started) | Install, first program, first agent | You're new to DAL |
+| [HTTP vs MCP vs LSP](IDE_AND_AGENT_INTEGRATION.md#first-time-mental-model) | One-page mental model: agent = HTTP; MCP = optional IDE bridge; LSP = editor | You're new to agents or confused about MCP |
 | [Agent development](#agent-development) | Agent setup, skills, persistent memory, molds | You're building agents |
 | [Language reference](#language-reference) | Syntax, types, attributes | You need syntax details |
 | [Standard library](#standard-library) | All 30 stdlib modules | You need API docs |
 | [CLI reference](#cli-reference) | All commands | You need CLI help |
 | [Blockchain and hybrid](#blockchain-and-hybrid-trust) | Multi-chain, trust models, security | You're integrating blockchain |
-| [IDE and agent integration](#ide-and-agent-integration) | LSP, editor setup, agent tools | You're setting up an editor |
-| [Project state](#project-state-and-alignment-maintainers) | Shipped vs planned; gap checklist | You maintain releases or audit docs |
+| [IDE and agent integration](#ide-and-agent-integration) | DAL IDE vs MCP vs your HTTP agent (§1), LSP, editor tools | You're setting up an editor or wiring agents |
+| [Project state](#project-state-and-alignment-maintainers) | Deploy/production readiness, shipped vs planned, gap checklist | You maintain releases, CI, or audit docs |
 | [Configuration](#configuration) | Environment variables index | You deploy or set keys / policies |
 | [Examples](#examples) | Code samples and tutorials | You learn by example |
 
@@ -198,12 +199,14 @@ DAL provides multi-chain blockchain integration through its trust model and chai
 
 ## IDE and agent integration
 
-- [IDE and Agent Integration](IDE_AND_AGENT_INTEGRATION.md) — LSP setup, editor agents, tool schema
+- [IDE and Agent Integration](IDE_AND_AGENT_INTEGRATION.md) — **§1:** DAL IDE (`dal ide serve`) vs external editors vs your HTTP agent; LSP setup; editor agents; tool schema
 - [LSP and Agent Integration Plan (detailed)](development/LSP_AND_AGENT_INTEGRATION_PLAN.md) — Full LSP feature plan, phases, stdio vs IDE HTTP routes
-- [DAL Assistant Plan](AGENT_ASSISTANT_PLAN.md) — How agents work as DAL assistants: skills, molds, code-editor tools
+- [DAL CEO / agent app plan](AGENT_ASSISTANT_PLAN.md) — Executive sub-agents, skills, molds, code-editor tools (legacy filename; app lives under `CEO/`)
 
 ### Project state and alignment (maintainers)
 
+- **[Deploy and production readiness](development/DEPLOY_AND_PRODUCTION_READINESS.md)** — Fast iteration vs production discipline: CI, release artifacts, Docker, CEO run paths, linked checklists.
+- **[RAG MVP spec](development/RAG_MVP_SPEC.md)** — Retrieval into `context_blocks` (`source: rag`), corpus, indexer, lexical MVP-A, `agent_serve` wiring.
 - **[Project state and alignment](PROJECT_STATE_AND_ALIGNMENT.md)** — Single matrix: what is shipped vs stub vs planned; links to trust-split EVM, LSP, checklists; **gap backlog** to keep docs and code honest across releases.
 - **[Production grade checklist](PRODUCTION_GRADE_CHECKLIST.md)** — Unwrap/panic, stubs, JWT, logging
 - **[CODEBASE_TODOS.md](../CODEBASE_TODOS.md)** — Short index into the above (repo root)

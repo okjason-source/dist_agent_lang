@@ -584,9 +584,10 @@ mod tests {
     }
 
     // Mutation testing: catch count boundaries and delete return value (see docs/MUTATION_ANALYSIS.md).
+    // Use a valid agent type (see mold / agent runtime); short names like `W` are rejected.
     const MINIMAL_MOLD: &str = r#"mold "m" "1.0"
 agent
-  type W
+  type Worker
   role "r"
 "#;
 
@@ -737,5 +738,294 @@ agent
             reports[0].errors
         );
         let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn create_rejects_empty_name() {
+        let err = create("", None).unwrap_err();
+        assert!(
+            err.to_lowercase().contains("empty"),
+            "expected empty name error, got: {}",
+            err
+        );
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn list_returns_sorted_names() {
+        let suffix = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+        let b = format!("sort_b_{}", suffix);
+        let a = format!("sort_a_{}", suffix);
+        create(&b, None).unwrap();
+        create(&a, None).unwrap();
+        let names = list(None);
+        let pos_a = names.iter().position(|n| n == &a).expect("a");
+        let pos_b = names.iter().position(|n| n == &b).expect("b");
+        assert!(
+            pos_a < pos_b,
+            "list should be sorted lexicographically: {:?}",
+            names
+        );
+        let _ = delete(&a, None);
+        let _ = delete(&b, None);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn add_member_rejects_empty_agent_id() {
+        let base = tempfile::tempdir().unwrap();
+        let name = format!(
+            "add_mem_empty_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, Some(base.path())).unwrap();
+        let err = add_member(&name, "   ", Some(base.path())).unwrap_err();
+        assert!(
+            err.to_lowercase().contains("empty"),
+            "expected empty agent_id: {}",
+            err
+        );
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn add_member_requires_base_path() {
+        let name = format!(
+            "add_base_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, None).unwrap();
+        let err = add_member(&name, "agent-1", None).unwrap_err();
+        assert!(
+            err.contains("base path"),
+            "expected base path error: {}",
+            err
+        );
+        let _ = delete(&name, None);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn add_member_idempotent_duplicate() {
+        let base = tempfile::tempdir().unwrap();
+        let name = format!(
+            "add_dup_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, Some(base.path())).unwrap();
+        add_member(&name, "same-id", Some(base.path())).unwrap();
+        add_member(&name, "same-id", Some(base.path())).unwrap();
+        assert_eq!(show(&name, Some(base.path())).unwrap().member_ids, vec![
+            "same-id".to_string()
+        ]);
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn deploy_rejects_empty_task() {
+        let base = tempfile::tempdir().unwrap();
+        let name = format!(
+            "dep_empty_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, Some(base.path())).unwrap();
+        let err = deploy(&name, "   ", Some(base.path())).unwrap_err();
+        assert!(
+            err.to_lowercase().contains("empty"),
+            "expected empty task: {}",
+            err
+        );
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn deploy_requires_base_path() {
+        let name = format!(
+            "dep_base_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, None).unwrap();
+        let err = deploy(&name, "task", None).unwrap_err();
+        assert!(
+            err.contains("base path"),
+            "expected base path error: {}",
+            err
+        );
+        let _ = delete(&name, None);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn health_not_found() {
+        let err = health("no_such_fleet_ever", None).unwrap_err();
+        assert!(err.contains("not found"), "{}", err);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn health_empty_when_no_members_and_no_mold() {
+        let base = tempfile::tempdir().unwrap();
+        let name = format!(
+            "health_empty_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, Some(base.path())).unwrap();
+        let h = health(&name, Some(base.path())).unwrap();
+        assert_eq!(h.status, "empty");
+        assert_eq!(h.member_count, 0);
+        assert!(!h.has_mold);
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn scale_noop_when_n_equals_current() {
+        let base = tempfile::tempdir().unwrap();
+        std::fs::write(base.path().join("noop.mold.dal"), MINIMAL_MOLD).unwrap();
+        let name = format!(
+            "scale_noop_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create_from_mold(&name, "noop", 2, base.path(), None).unwrap();
+        let before = show(&name, Some(base.path())).unwrap().member_ids.len();
+        scale(&name, before as u32, Some(base.path())).unwrap();
+        assert_eq!(
+            show(&name, Some(base.path())).unwrap().member_ids.len(),
+            before
+        );
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn scale_down_truncates_members() {
+        let base = tempfile::tempdir().unwrap();
+        std::fs::write(base.path().join("trunc.mold.dal"), MINIMAL_MOLD).unwrap();
+        let name = format!(
+            "scale_trunc_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create_from_mold(&name, "trunc", 4, base.path(), None).unwrap();
+        scale(&name, 1, Some(base.path())).unwrap();
+        assert_eq!(show(&name, Some(base.path())).unwrap().member_ids.len(), 1);
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn scale_up_fails_when_fleet_has_no_mold() {
+        let base = tempfile::tempdir().unwrap();
+        let name = format!(
+            "scale_nomold_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, Some(base.path())).unwrap();
+        let err = scale(&name, 1, Some(base.path())).unwrap_err();
+        assert!(
+            err.contains("no mold") || err.contains("mold"),
+            "expected no-mold scale-up error: {}",
+            err
+        );
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn export_errors_when_fleet_missing() {
+        let err = export(
+            Some("missing_fleet_xyz"),
+            None,
+            ExportFormat::K8s,
+        )
+        .unwrap_err();
+        assert!(err.contains("not found"), "{}", err);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn export_k8s_and_compose_contain_agent_env() {
+        let base = tempfile::tempdir().unwrap();
+        std::fs::write(base.path().join("ex.mold.dal"), MINIMAL_MOLD).unwrap();
+        let name = format!(
+            "ex_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create_from_mold(&name, "ex", 1, base.path(), None).unwrap();
+        let k8s = export(Some(name.as_str()), Some(base.path()), ExportFormat::K8s).unwrap();
+        assert!(k8s.contains("DAL_AGENT_ID") && k8s.contains("kind: Job"));
+        let dc = export(
+            Some(name.as_str()),
+            Some(base.path()),
+            ExportFormat::DockerCompose,
+        )
+        .unwrap();
+        assert!(dc.contains("DAL_AGENT_ID") && dc.contains("services:"));
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn run_skips_fleets_without_deploy_task() {
+        let base = tempfile::tempdir().unwrap();
+        let name = format!(
+            "run_skip_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        create(&name, Some(base.path())).unwrap();
+        let reports = run(None, base.path()).unwrap();
+        assert!(
+            reports.is_empty(),
+            "no last_deployed_task => no reports: {:?}",
+            reports
+        );
+        let _ = delete(&name, Some(base.path()));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn add_from_mold_fails_when_fleet_missing() {
+        let base = tempfile::tempdir().unwrap();
+        let err = add_from_mold("ghost_fleet", MINIMAL_MOLD, 1, base.path(), None).unwrap_err();
+        assert!(err.contains("not found"), "{}", err);
     }
 }

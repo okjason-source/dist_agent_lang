@@ -11,9 +11,9 @@ use crate::agent_context_schema::{AgentContextSchema, ContextBlock, Conversation
 use crate::ide::run_backend;
 use crate::stdlib::agent::{self, AgentConfig, AgentType, ResourceBudget};
 use crate::stdlib::ai::{
-    generate_agent_model_turn, max_tool_steps_from_env, model_turn_to_outcome, run_web_search,
-    MultiStepResult, ToolOutcome, TurnUsage, COMPLETION_AND_ASK_GUIDANCE,
-    TOOLS_SYSTEM_WITH_SCRIPTING,
+    execute_fetch_url_result, generate_agent_model_turn, max_tool_steps_from_env,
+    model_turn_to_outcome, run_web_search, MultiStepResult, ToolOutcome, TurnUsage,
+    COMPLETION_AND_ASK_GUIDANCE, TOOLS_SYSTEM_WITH_SCRIPTING,
 };
 use std::path::Path;
 use std::time::Instant;
@@ -37,39 +37,7 @@ pub(crate) fn emit_activity(
     let _ = serde_json::to_string(&event).map(|s| tx.send(s));
 }
 
-/// Resolve path relative to root; reject path traversal.
-pub(crate) fn resolve_path_under_root(
-    root: &Path,
-    path: &str,
-) -> Result<std::path::PathBuf, String> {
-    let path = path.trim();
-    if path.is_empty() {
-        return Ok(root.to_path_buf());
-    }
-    if path.contains("..") {
-        return Err("Path traversal (..) not allowed".to_string());
-    }
-    if path.starts_with('/') || (path.len() >= 2 && path.get(..2) == Some("\\\\")) {
-        return Err("Absolute paths not allowed".to_string());
-    }
-    let root_canonical = match root.canonicalize() {
-        Ok(p) => p,
-        Err(_) => root.to_path_buf(),
-    };
-    let joined = root_canonical.join(path);
-    if joined.exists() {
-        let canonical = joined.canonicalize().map_err(|e| e.to_string())?;
-        if !canonical.starts_with(&root_canonical) {
-            return Err("Path escapes working directory".to_string());
-        }
-        Ok(canonical)
-    } else {
-        if !joined.starts_with(&root_canonical) {
-            return Err("Path escapes working directory".to_string());
-        }
-        Ok(joined)
-    }
-}
+pub(crate) use crate::stdlib::fs::resolve_path_under_root;
 
 fn truncate_result(s: &str) -> String {
     if s.len() <= MAX_TOOL_RESULT_LEN {
@@ -167,6 +135,10 @@ fn tool_signature(outcome: &ToolOutcome) -> Option<(String, String)> {
         ToolOutcome::Search(query) => {
             Some(("search".to_string(), format!("search:{}", query.trim())))
         }
+        ToolOutcome::FetchUrl(url) => Some((
+            "fetch_url".to_string(),
+            format!("fetch_url:{}", url.trim()),
+        )),
         ToolOutcome::DalInit(template) => Some((
             "dal_init".to_string(),
             format!(
@@ -304,6 +276,10 @@ fn exec_run(root: &Path, cmd: &str) -> String {
 fn exec_search(query: &str) -> String {
     let result = run_web_search(query.trim()).unwrap_or_else(|e| format!("Search failed: {}", e));
     truncate_result(&result)
+}
+
+fn exec_fetch_url(url: &str) -> String {
+    truncate_result(&execute_fetch_url_result(url.trim()))
 }
 
 fn exec_read_file(root: &Path, path: &str) -> String {
@@ -658,6 +634,10 @@ pub fn run_agent_prompt_sync(
             ToolOutcome::Search(query) => {
                 let q = query.trim().to_string();
                 ("search".into(), q.clone(), exec_search(&q))
+            }
+            ToolOutcome::FetchUrl(url) => {
+                let u = url.trim().to_string();
+                ("fetch_url".into(), u.clone(), exec_fetch_url(&u))
             }
             ToolOutcome::ReadFile(path) => {
                 let p = path.trim().to_string();

@@ -5,10 +5,90 @@
 use dist_agent_lang::manifest::{
     load_resolved_deps, parse_dependencies, resolve_dependencies, write_lockfile,
 };
-use dist_agent_lang::module_resolver::{ModuleResolver, ResolveError, ResolvedImport};
+use dist_agent_lang::module_resolver::{
+    package_import_names_from_program, ModuleResolver, ResolveError, ResolvedImport,
+};
 use dist_agent_lang::parser::ast::Statement;
 use dist_agent_lang::runtime::values::Value;
 use dist_agent_lang::{parse_source, resolve_imports, Runtime};
+
+#[test]
+fn test_package_import_names_collects_bare_package_only() {
+    let program = parse_source(
+        r#"
+import stdlib::log;
+import "./local.dal" as loc;
+import myregistry;
+"#,
+    )
+    .unwrap();
+    let names = package_import_names_from_program(&program);
+    assert_eq!(
+        names,
+        vec!["myregistry".to_string()],
+        "stdlib and relative paths must not appear as package names for install --sync"
+    );
+}
+
+#[test]
+fn test_package_import_names_two_packages_preserve_order() {
+    let program = parse_source("import alpha;\nimport beta;").unwrap();
+    let names = package_import_names_from_program(&program);
+    assert_eq!(names, vec!["alpha".to_string(), "beta".to_string()]);
+}
+
+#[test]
+fn test_package_import_names_skips_known_stdlib_string_literal() {
+    // String path "log" matches KNOWN_STDLIB and must not be listed for install --sync.
+    let program = parse_source(r#"import "log";"#).unwrap();
+    assert!(
+        package_import_names_from_program(&program).is_empty(),
+        "known stdlib name as string import should not be treated as external package"
+    );
+}
+
+#[test]
+fn test_package_import_names_skips_path_like_import() {
+    let program = parse_source(r#"import "vendor/lib";"#).unwrap();
+    assert!(
+        package_import_names_from_program(&program).is_empty(),
+        "path-like imports (slash) are not bare package names"
+    );
+}
+
+/// Catches: `||` -> `&&` in package_import_names_from_program skip chain (must still skip parent-relative).
+#[test]
+fn test_package_import_names_skips_parent_relative_string() {
+    let program = parse_source(r#"import "../sibling.dal";"#).unwrap();
+    assert!(
+        package_import_names_from_program(&program).is_empty(),
+        "parent-relative files must not be listed as package deps"
+    );
+}
+
+/// Catches: replace ModuleResolver::with_root_dir -> Self with Default::default() (builder must set root_dir).
+#[test]
+fn test_module_resolver_with_root_dir_stores_path() {
+    let p = std::path::PathBuf::from("/tmp/dal_proj_root_for_test");
+    let r = ModuleResolver::new().with_root_dir(p.clone());
+    assert_eq!(r.root_dir.as_ref(), Some(&p));
+}
+
+/// Catches: `path.contains('/') || path.ends_with(".dal")` must not become `&&` (single-segment *.dal under root).
+#[test]
+fn test_resolve_single_segment_dal_file_via_root_dir_only() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let f = root.join("only.dal");
+    std::fs::write(&f, "let x = 1;").unwrap();
+    let r = ModuleResolver::new().with_root_dir(root.to_path_buf());
+    let out = r.resolve("only.dal", None).unwrap();
+    assert!(
+        matches!(out, ResolvedImport::RelativeFile(ref p) if p.ends_with("only.dal")),
+        "expected only.dal resolved relative to root_dir; got {:?}",
+        out
+    );
+}
 
 #[test]
 fn test_resolve_program_imports_stdlib() {

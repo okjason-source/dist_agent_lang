@@ -68,6 +68,7 @@ AGENTS & AUTOMATION
   agent send <from> <to> <msg>  Send message between agents
   agent list                  List agents
   agent mold                  Molds and reusable configs
+  mcp-bridge [--url <url>]    MCP stdio → agent HTTP (after `dal serve …`; see repo MCP README)
 
 BLOCKCHAIN
   chain list                  List supported chains

@@ -21,27 +21,27 @@ let CUSTOM_FILE = "custom_workflows.json";
 // Run dispatcher — checks built-in, then custom, then ad-hoc
 // ---------------------------------------------------------------------------
 
-fn run(workflow_name, input) {
+fn run(workflow_name, input, include_rag) {
  log::info("workflow", "Starting: " + workflow_name);
 
  if (workflow_name == "research_and_summarize") {
-  return research_and_summarize(input);
+  return research_and_summarize(input, include_rag);
  }
  if (workflow_name == "code_and_review") {
-  return code_and_review(input);
+  return code_and_review(input, include_rag);
  }
  if (workflow_name == "deep_research") {
-  return deep_research(input);
+  return deep_research(input, include_rag);
  }
 
  // Check custom workflows
  let custom = load_custom(workflow_name);
  if (custom != null) {
-  return run_custom(workflow_name, custom, input);
+  return run_custom(workflow_name, custom, input, include_rag);
  }
 
  // Unknown workflow — run as ad-hoc single-agent task
- let result = agents::run_with_agent("researcher", input);
+ let result = agents::run_with_agent("researcher", input, include_rag);
  return {
   "ok": true,
   "workflow": workflow_name,
@@ -54,14 +54,14 @@ fn run(workflow_name, input) {
 // Built-in workflows
 // ---------------------------------------------------------------------------
 
-fn research_and_summarize(topic) {
- let step1 = agents::run_with_agent("researcher", "Research the following topic thoroughly. Search for current information and compile your findings.\n\nTopic: " + topic);
+fn research_and_summarize(topic, include_rag) {
+ let step1 = agents::run_with_agent("researcher", "Research the following topic thoroughly. Search for current information and compile your findings.\n\nTopic: " + topic, include_rag);
 
  let findings = step1["result"];
  if (findings == null) {
   findings = "No research results available.";
  }
- let step2 = agents::run_with_agent("reviewer", "Summarize the following research findings into a clear, concise report. Highlight key points and actionable insights.\n\nFindings:\n" + findings);
+ let step2 = agents::run_with_agent("reviewer", "Summarize the following research findings into a clear, concise report. Highlight key points and actionable insights.\n\nFindings:\n" + findings, include_rag);
 
  log::info("workflow", "Completed: research_and_summarize");
  return {
@@ -76,14 +76,14 @@ fn research_and_summarize(topic) {
  };
 }
 
-fn code_and_review(task) {
- let step1 = agents::run_with_agent("coder", "Write code for the following task. Include error handling and make it production-ready.\n\nTask: " + task);
+fn code_and_review(task, include_rag) {
+ let step1 = agents::run_with_agent("coder", "Write code for the following task. Include error handling and make it production-ready.\n\nTask: " + task, include_rag);
 
  let code = step1["result"];
  if (code == null) {
   code = "No code generated.";
  }
- let step2 = agents::run_with_agent("reviewer", "Review the following code for correctness, edge cases, security issues, and style. Provide specific feedback and a quality rating (1-10).\n\nCode:\n" + code);
+ let step2 = agents::run_with_agent("reviewer", "Review the following code for correctness, edge cases, security issues, and style. Provide specific feedback and a quality rating (1-10).\n\nCode:\n" + code, include_rag);
 
  log::info("workflow", "Completed: code_and_review");
  return {
@@ -98,21 +98,21 @@ fn code_and_review(task) {
  };
 }
 
-fn deep_research(topic) {
- let step1 = agents::run_with_agent("researcher", "Search for information about: " + topic + ". Gather key facts, recent developments, and relevant data.");
+fn deep_research(topic, include_rag) {
+ let step1 = agents::run_with_agent("researcher", "Search for information about: " + topic + ". Gather key facts, recent developments, and relevant data.", include_rag);
 
  let findings = step1["result"];
  if (findings == null) {
   findings = "";
  }
- let step2 = agents::run_with_agent("coder", "Based on these research findings, run any useful commands to gather additional data (e.g., check package versions, list directories, fetch URLs). Return what you find.\n\nInitial findings:\n" + findings);
+ let step2 = agents::run_with_agent("coder", "Based on these research findings, run any useful commands to gather additional data (e.g., check package versions, list directories, fetch URLs). Return what you find.\n\nInitial findings:\n" + findings, include_rag);
 
  let extra = step2["result"];
  if (extra == null) {
   extra = "";
  }
  let combined = findings + "\n\n" + extra;
- let step3 = agents::run_with_agent("reviewer", "Compile the following research into a comprehensive, well-structured report. Include sections for overview, key findings, data, and recommendations.\n\nResearch data:\n" + combined);
+ let step3 = agents::run_with_agent("reviewer", "Compile the following research into a comprehensive, well-structured report. Include sections for overview, key findings, data, and recommendations.\n\nResearch data:\n" + combined, include_rag);
 
  log::info("workflow", "Completed: deep_research");
  return {
@@ -132,7 +132,7 @@ fn deep_research(topic) {
 // Custom workflow engine
 // ---------------------------------------------------------------------------
 
-fn run_custom(workflow_name, definition, input) {
+fn run_custom(workflow_name, definition, input, include_rag) {
  let steps_def = definition["steps"];
  if (steps_def == null) {
   return {"ok": false, "error": "Workflow has no steps"};
@@ -189,7 +189,7 @@ fn run_custom(workflow_name, definition, input) {
     // Clean role (trim whitespace)
     parts_role = sh::run("echo -n '" + parts_role + "'");
 
-    let step_result = agents::run_with_agent(parts_role, resolved);
+    let step_result = agents::run_with_agent(parts_role, resolved, include_rag);
     return step_result;
    }
 

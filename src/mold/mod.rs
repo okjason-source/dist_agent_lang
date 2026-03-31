@@ -299,7 +299,7 @@ pub fn resolve_mold_path(base: &Path, path_or_name: &str) -> Result<PathBuf, Str
 }
 
 /// Scaffold a new .mold.dal file at `out_path` (canonical format).
-/// Includes default learning-path skills (development, creative, office, home) per AGENT_ASSISTANT_PLAN.
+/// Includes default learning-path skills (development, creative, office, home); see docs/DAL_CEO_APP_PLAN.md.
 pub fn scaffold_mold(name: &str, out_path: &Path) -> Result<(), String> {
     let content = format!(
         r#"mold "{}" "1.0"

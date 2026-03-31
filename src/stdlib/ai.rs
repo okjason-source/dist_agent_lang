@@ -1,4 +1,5 @@
 use crate::runtime::values::Value;
+use crate::stdlib::fs::resolve_path_under_root;
 #[cfg(feature = "http-interface")]
 use base64::Engine;
 use std::collections::HashMap;
@@ -1189,23 +1190,23 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
 }
 
 /// System prompt for tool-using agent: reply, run shell, or search.
-const TOOLS_SYSTEM: &str = "You are an intelligent assistant. You can run shell commands, search the web, reply, or ask the user. \
+const TOOLS_SYSTEM: &str = "You are an intelligent assistant. You can run shell commands, search the web, fetch a public HTTP/HTTPS URL as text, reply, or ask the user. \
 Use host tools through the API when needed, and answer users in natural language when finished. \
 If legacy text-JSON mode is explicitly enabled, output exactly one JSON action object using: \
-{\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"}. \
-For run and search the tool will execute and you will see the result; then reply once to complete the task. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
+{\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"fetch_url\",\"url\":\"https://...\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"}. \
+For run, search, and fetch_url the tool will execute and you will see the result; then reply once to complete the task. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
 
 /// Extended tools with file and DAL scripting: write_file, read_file, list_dir, dal_run, dal_check.
-/// Use when AGENT_ASSISTANT_SCRIPTING=1 or AGENT_ASSISTANT_ROOT is set.
+/// Enabled when `DAL_AGENT_SCRIPTING=1` or `DAL_AGENT_SCRIPT_ROOT` is set; `AGENT_ASSISTANT_*` names are still accepted as aliases (same behavior).
 /// Public for IDE agent runner (prompt → code development).
-pub const TOOLS_SYSTEM_WITH_SCRIPTING: &str = "You are an intelligent assistant. You can run shell commands, search the web, reply, ask the user, or use file/DAL tools. \
+pub const TOOLS_SYSTEM_WITH_SCRIPTING: &str = "You are an intelligent assistant. You can run shell commands, search the web, fetch a public HTTP/HTTPS URL as text, reply, ask the user, or use file/DAL tools. \
 Use host tools through the API when needed, and answer users in natural language when finished. \
 If legacy text-JSON mode is explicitly enabled, output exactly one JSON action object using: \
-{\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"} \
+{\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"fetch_url\",\"url\":\"https://...\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"} \
 or {\"action\":\"write_file\",\"path\":\"path/to/file\",\"contents\":\"file contents\"} or {\"action\":\"read_file\",\"path\":\"path/to/file\"} or {\"action\":\"list_dir\",\"path\":\".\"} \
 or {\"action\":\"dal_run\",\"path\":\"file.dal\"} or {\"action\":\"dal_check\",\"path\":\"file.dal\"} \
 or {\"action\":\"show_url\",\"url\":\"https://...\"} or {\"action\":\"show_content\",\"content\":\"html or text\",\"title\":\"optional\"}. \
-For run and search the tool will execute and you will see the result. For write_file, read_file, list_dir, dal_run, dal_check: paths are relative to the scripts root. Use write_file to create .dal or .sh scripts, then dal_run for DAL or run with bash for shell. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
+For run, search, and fetch_url the tool will execute and you will see the result. For write_file, read_file, list_dir, dal_run, dal_check: paths are relative to the scripts root. Use write_file to create .dal or .sh scripts, then dal_run for DAL or run with bash for shell. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
 
 /// Completion and when to ask: try to finish; if you need input or must stop, keep the user in the loop.
 /// Public for IDE agent runner.
@@ -1303,6 +1304,16 @@ pub fn decide_chat_route(user_message: &str) -> ChatRoute {
         "website",
         "x page",
         "tweet",
+        // Persisted artifacts / file work (long CEO prompts can still miss earlier "run " cues)
+        "save ",
+        "write ",
+        "persist",
+        "article",
+        "articles",
+        ".md",
+        "markdown",
+        "write_file",
+        "on disk",
     ]
     .iter()
     .any(|p| msg.contains(p));
@@ -1331,8 +1342,7 @@ fn build_tool_loop_schema(
     crate::agent_context_schema::AgentContextSchema,
     Option<std::path::PathBuf>,
 ) {
-    let scripting_enabled = std::env::var("AGENT_ASSISTANT_SCRIPTING").as_deref() == Ok("1")
-        || std::env::var("AGENT_ASSISTANT_ROOT").is_ok();
+    let scripting_enabled = scripting_env_enabled();
     let (tools_system, working_root) = if scripting_enabled {
         let root = scripting_working_root();
         (TOOLS_SYSTEM_WITH_SCRIPTING, root)
@@ -1377,15 +1387,74 @@ fn extract_json_object(s: &str) -> Option<&str> {
     None
 }
 
-/// Run a web search via DuckDuckGo Instant Answer API and return a short summary string.
+/// Which backend [`search_web`] uses (`DAL_WEB_SEARCH_PROVIDER`).
+#[cfg(feature = "http-interface")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum WebSearchProvider {
+    /// DuckDuckGo Instant Answer JSON API (no API key).
+    DuckDuckGo,
+    /// [Brave Search API](https://brave.com/search/api/) — requires `DAL_BRAVE_SEARCH_API_KEY`.
+    Brave,
+    /// [SerpAPI](https://serpapi.com/) Google organic results — requires `DAL_SERPAPI_KEY`.
+    SerpApi,
+}
+
+#[cfg(feature = "http-interface")]
+pub(crate) fn parse_web_search_provider_str(s: &str) -> Result<WebSearchProvider, String> {
+    let t = s.trim().to_ascii_lowercase();
+    match t.as_str() {
+        "" | "duckduckgo" | "ddg" => Ok(WebSearchProvider::DuckDuckGo),
+        "brave" => Ok(WebSearchProvider::Brave),
+        "serpapi" => Ok(WebSearchProvider::SerpApi),
+        other => Err(format!(
+            "unknown DAL_WEB_SEARCH_PROVIDER: {:?} (use duckduckgo, brave, or serpapi)",
+            other
+        )),
+    }
+}
+
+#[cfg(feature = "http-interface")]
+fn web_search_provider_from_env() -> Result<WebSearchProvider, String> {
+    match std::env::var("DAL_WEB_SEARCH_PROVIDER") {
+        Ok(s) => parse_web_search_provider_str(&s),
+        Err(_) => Ok(WebSearchProvider::DuckDuckGo),
+    }
+}
+
+#[cfg(feature = "http-interface")]
+fn search_client(timeout_secs: u64) -> Result<reqwest::blocking::Client, String> {
+    let timeout_secs = timeout_secs.clamp(5, 60);
+    reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(timeout_secs))
+        .build()
+        .map_err(|e| e.to_string())
+}
+
+#[cfg(feature = "http-interface")]
+fn web_search_timeout_secs() -> u64 {
+    std::env::var("DAL_WEB_SEARCH_TIMEOUT_SECS")
+        .ok()
+        .and_then(|s| s.trim().parse::<u64>().ok())
+        .unwrap_or(15)
+        .clamp(5, 60)
+}
+
+/// Run a web search and return a short text summary (provider selected by `DAL_WEB_SEARCH_PROVIDER`).
 #[cfg(feature = "http-interface")]
 fn search_web(query: &str) -> Result<String, String> {
+    let provider = web_search_provider_from_env()?;
+    match provider {
+        WebSearchProvider::DuckDuckGo => search_web_duckduckgo(query),
+        WebSearchProvider::Brave => search_web_brave(query),
+        WebSearchProvider::SerpApi => search_web_serpapi(query),
+    }
+}
+
+#[cfg(feature = "http-interface")]
+fn search_web_duckduckgo(query: &str) -> Result<String, String> {
     let encoded = urlencoding::encode(query).to_string();
     let url = format!("https://api.duckduckgo.com/?q={}&format=json", encoded);
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| e.to_string())?;
+    let client = search_client(web_search_timeout_secs())?;
     let resp = client.get(&url).send().map_err(|e| e.to_string())?;
     if !resp.status().is_success() {
         return Err(format!("Search API error: {}", resp.status()));
@@ -1403,7 +1472,7 @@ fn search_web(query: &str) -> Result<String, String> {
         }
     }
     if let Some(related) = json["RelatedTopics"].as_array() {
-        for topic in related.iter().take(3) {
+        for topic in related.iter().take(5) {
             let text = topic["Text"].as_str().unwrap_or("");
             if !text.is_empty() {
                 if !out.is_empty() {
@@ -1419,6 +1488,97 @@ fn search_web(query: &str) -> Result<String, String> {
     Ok(out)
 }
 
+#[cfg(feature = "http-interface")]
+fn search_web_brave(query: &str) -> Result<String, String> {
+    let key = std::env::var("DAL_BRAVE_SEARCH_API_KEY")
+        .or_else(|_| std::env::var("BRAVE_SEARCH_API_KEY"))
+        .map_err(|_| {
+            "Brave search requires DAL_BRAVE_SEARCH_API_KEY (or BRAVE_SEARCH_API_KEY)".to_string()
+        })?;
+    let encoded = urlencoding::encode(query);
+    let url = format!(
+        "https://api.search.brave.com/res/v1/web/search?q={}&count=8",
+        encoded
+    );
+    let client = search_client(web_search_timeout_secs())?;
+    let resp = client
+        .get(&url)
+        .header("Accept", "application/json")
+        .header("X-Subscription-Token", key)
+        .send()
+        .map_err(|e| e.to_string())?;
+    if !resp.status().is_success() {
+        return Err(format!("Brave Search API error: {}", resp.status()));
+    }
+    let json: serde_json::Value = resp.json().map_err(|e| e.to_string())?;
+    let mut lines: Vec<String> = Vec::new();
+    if let Some(results) = json["web"]["results"].as_array() {
+        for (i, hit) in results.iter().enumerate().take(8) {
+            let title = hit["title"].as_str().unwrap_or("(no title)");
+            let url = hit["url"].as_str().unwrap_or("");
+            let desc = hit["description"].as_str().unwrap_or("");
+            let mut block = format!("{}. {}", i + 1, title);
+            if !url.is_empty() {
+                block.push_str("\n   ");
+                block.push_str(url);
+            }
+            if !desc.is_empty() {
+                block.push_str("\n   ");
+                block.push_str(desc);
+            }
+            lines.push(block);
+        }
+    }
+    if lines.is_empty() {
+        return Ok("No web results returned (Brave).".to_string());
+    }
+    Ok(lines.join("\n\n"))
+}
+
+#[cfg(feature = "http-interface")]
+fn search_web_serpapi(query: &str) -> Result<String, String> {
+    let key = std::env::var("DAL_SERPAPI_KEY")
+        .or_else(|_| std::env::var("SERPAPI_KEY"))
+        .map_err(|_| "SerpAPI search requires DAL_SERPAPI_KEY (or SERPAPI_KEY)".to_string())?;
+    let client = search_client(web_search_timeout_secs())?;
+    let resp = client
+        .get("https://serpapi.com/search.json")
+        .query(&[
+            ("engine", "google"),
+            ("q", query),
+            ("api_key", key.as_str()),
+            ("num", "8"),
+        ])
+        .send()
+        .map_err(|e| e.to_string())?;
+    if !resp.status().is_success() {
+        return Err(format!("SerpAPI error: {}", resp.status()));
+    }
+    let json: serde_json::Value = resp.json().map_err(|e| e.to_string())?;
+    let mut lines: Vec<String> = Vec::new();
+    if let Some(results) = json["organic_results"].as_array() {
+        for (i, hit) in results.iter().enumerate().take(8) {
+            let title = hit["title"].as_str().unwrap_or("(no title)");
+            let url = hit["link"].as_str().unwrap_or("");
+            let desc = hit["snippet"].as_str().unwrap_or("");
+            let mut block = format!("{}. {}", i + 1, title);
+            if !url.is_empty() {
+                block.push_str("\n   ");
+                block.push_str(url);
+            }
+            if !desc.is_empty() {
+                block.push_str("\n   ");
+                block.push_str(desc);
+            }
+            lines.push(block);
+        }
+    }
+    if lines.is_empty() {
+        return Ok("No organic results returned (SerpAPI).".to_string());
+    }
+    Ok(lines.join("\n\n"))
+}
+
 #[cfg(not(feature = "http-interface"))]
 fn search_web(_query: &str) -> Result<String, String> {
     Err("Web search requires the http-interface feature.".to_string())
@@ -1429,10 +1589,20 @@ pub fn run_web_search(query: &str) -> Result<String, String> {
     search_web(query)
 }
 
-/// Resolve working root for scripting: if AGENT_ASSISTANT_ROOT is set, use that/scripts (create if needed).
+/// True when extended scripting tools should be exposed (canonical or legacy env names).
+fn scripting_env_enabled() -> bool {
+    std::env::var("DAL_AGENT_SCRIPTING").as_deref() == Ok("1")
+        || std::env::var("DAL_AGENT_SCRIPT_ROOT").is_ok()
+        || std::env::var("AGENT_ASSISTANT_SCRIPTING").as_deref() == Ok("1")
+        || std::env::var("AGENT_ASSISTANT_ROOT").is_ok()
+}
+
+/// Resolve working root for scripting: if DAL_AGENT_SCRIPT_ROOT (or legacy AGENT_ASSISTANT_ROOT) is set, use that/scripts (create if needed).
 /// Returns None if env is unset or path cannot be resolved.
 fn scripting_working_root() -> Option<std::path::PathBuf> {
-    let root = std::env::var("AGENT_ASSISTANT_ROOT").ok()?;
+    let root = std::env::var("DAL_AGENT_SCRIPT_ROOT")
+        .or_else(|_| std::env::var("AGENT_ASSISTANT_ROOT"))
+        .ok()?;
     let root = std::path::Path::new(&root);
     let root = root.canonicalize().ok().or_else(|| {
         if root.exists() {
@@ -1451,8 +1621,8 @@ fn scripting_working_root() -> Option<std::path::PathBuf> {
 /// Agent that can reply, run shell commands, or search the web. Runs a multi-step loop until the
 /// LLM returns a final reply (or ask_user / parse_fail / max steps). So after a "run" (e.g. curl
 /// to post a tweet), the agent gets the tool result and continues until it sends a user-facing reply.
-/// When AGENT_ASSISTANT_SCRIPTING=1 or AGENT_ASSISTANT_ROOT is set, exposes write_file, read_file,
-/// list_dir, dal_run, dal_check and uses scripts/ under AGENT_ASSISTANT_ROOT as working root.
+/// When scripting env is enabled (see `scripting_env_enabled`), exposes write_file, read_file,
+/// list_dir, dal_run, dal_check and uses scripts/ under the configured root when set.
 pub fn respond_with_tools(user_message: &str) -> Result<String, String> {
     respond_with_tools_result(user_message).map(|r| r.final_text)
 }
@@ -1493,6 +1663,8 @@ pub enum ToolOutcome {
     ShowUrl(String),
     /// Show content (HTML or text) in IDE workspace. Operable by agents.
     ShowContent(String, Option<String>),
+    /// GET an http(s) URL and return body as text (HTML stripped to plain text). See `fetch_url` tool.
+    FetchUrl(String),
     /// Response was not valid JSON or unknown action; treat as reply with raw text.
     ParseFail(String),
 }
@@ -1581,6 +1753,15 @@ pub fn parse_tool_response(response: &str) -> ToolOutcome {
                 .unwrap_or("")
                 .trim();
             ToolOutcome::Search(query.to_string())
+        }
+        "fetch_url" => {
+            let url = obj
+                .get("url")
+                .and_then(|u| u.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::FetchUrl(url)
         }
         "dal_init" => {
             let template = obj
@@ -1742,6 +1923,15 @@ fn native_tool_call_to_outcome(call: &NativeToolCall) -> ToolOutcome {
                 .trim()
                 .to_string();
             ToolOutcome::Search(query)
+        }
+        "fetch_url" => {
+            let url = obj
+                .and_then(|o| o.get("url"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            ToolOutcome::FetchUrl(url)
         }
         "dal_init" => {
             let template = obj
@@ -2150,46 +2340,199 @@ fn execute_search_result(query: &str) -> String {
     }
 }
 
+/// Plain-text extraction for HTML bodies (best-effort; heavy JS sites may be noisy).
+pub(crate) fn html_to_plaintext_best_effort(html: &str) -> String {
+    let mut out = String::with_capacity(html.len());
+    let mut in_tag = false;
+    for c in html.chars() {
+        match c {
+            '<' => in_tag = true,
+            '>' => in_tag = false,
+            _ if !in_tag => out.push(c),
+            _ => {}
+        }
+    }
+    out.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+#[cfg(feature = "http-interface")]
+fn fetch_url_allow_hosts() -> Option<Vec<String>> {
+    let raw = std::env::var("DAL_HTTP_FETCH_ALLOW_HOSTS").ok()?;
+    let parts: Vec<String> = raw
+        .split(',')
+        .map(|s| s.trim().to_ascii_lowercase())
+        .filter(|s| !s.is_empty())
+        .collect();
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts)
+    }
+}
+
+#[cfg(feature = "http-interface")]
+fn fetch_url_host_allowed(host: &str) -> bool {
+    let host = host.trim().to_ascii_lowercase();
+    if let Some(allowed) = fetch_url_allow_hosts() {
+        return allowed.iter().any(|a| a == &host);
+    }
+    true
+}
+
+#[cfg(feature = "http-interface")]
+fn fetch_url_block_private_env() -> bool {
+    std::env::var("DAL_HTTP_FETCH_BLOCK_PRIVATE")
+        .map(|v| {
+            let v = v.trim().to_ascii_lowercase();
+            matches!(v.as_str(), "1" | "true" | "yes" | "on")
+        })
+        .unwrap_or(true)
+}
+
+#[cfg(feature = "http-interface")]
+fn fetch_url_should_block_host(host: &str) -> bool {
+    if host.eq_ignore_ascii_case("localhost") {
+        return true;
+    }
+    if let Ok(ip) = host.parse::<std::net::IpAddr>() {
+        if fetch_url_block_private_env() {
+            return match ip {
+                std::net::IpAddr::V4(v4) => {
+                    v4.is_loopback() || v4.is_private() || v4.is_link_local()
+                }
+                std::net::IpAddr::V6(v6) => v6.is_loopback(),
+            };
+        }
+    }
+    false
+}
+
+/// Same HTTP GET policy as the agent **`fetch_url`** tool (`DAL_HTTP_FETCH_*`, SSRF-minded host checks).
+/// Returns [`Err`] with a short message on failure (for DAL `http::fetch_text` / `http::fetch`).
+pub fn fetch_url_text_result(url: &str) -> Result<String, String> {
+    #[cfg(feature = "http-interface")]
+    {
+        let text = fetch_url_http_impl(url)?;
+        Ok(if text.len() > MAX_TOOL_RESULT_LEN {
+            format!("{}\n... (truncated)", &text[..MAX_TOOL_RESULT_LEN])
+        } else {
+            text
+        })
+    }
+    #[cfg(not(feature = "http-interface"))]
+    {
+        Err("fetch_url requires the http-interface feature.".to_string())
+    }
+}
+
+pub(crate) fn execute_fetch_url_result(url: &str) -> String {
+    match fetch_url_text_result(url) {
+        Ok(s) => s,
+        Err(e) => {
+            if e == "fetch_url requires the http-interface feature." {
+                e
+            } else {
+                format!("fetch_url failed: {}", e)
+            }
+        }
+    }
+}
+
+#[cfg(feature = "http-interface")]
+fn fetch_url_http_impl(url: &str) -> Result<String, String> {
+    use reqwest::header::CONTENT_TYPE;
+    use reqwest::Url;
+
+    let trimmed = url.trim();
+    if trimmed.is_empty() {
+        return Err("empty URL".to_string());
+    }
+    let parsed = Url::parse(trimmed).map_err(|e| format!("invalid URL: {}", e))?;
+    if parsed.scheme() != "http" && parsed.scheme() != "https" {
+        return Err("only http and https URLs are allowed".to_string());
+    }
+    let host = parsed
+        .host_str()
+        .ok_or_else(|| "URL has no host".to_string())?;
+    if fetch_url_should_block_host(host) {
+        return Err(
+            "host is blocked (loopback/private). Set DAL_HTTP_FETCH_BLOCK_PRIVATE=0 or false to allow."
+                .to_string(),
+        );
+    }
+    if !fetch_url_host_allowed(host) {
+        return Err(format!(
+            "host not in DAL_HTTP_FETCH_ALLOW_HOSTS (allowed: {:?})",
+            fetch_url_allow_hosts().unwrap_or_default()
+        ));
+    }
+
+    let timeout_secs = std::env::var("DAL_HTTP_FETCH_TIMEOUT_SECS")
+        .ok()
+        .and_then(|s| s.trim().parse::<u64>().ok())
+        .unwrap_or(30)
+        .max(1)
+        .min(120);
+    let max_bytes = std::env::var("DAL_HTTP_FETCH_MAX_BYTES")
+        .ok()
+        .and_then(|s| s.trim().parse::<usize>().ok())
+        .unwrap_or(524_288)
+        .max(1024)
+        .min(5_485_760);
+
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(timeout_secs))
+        .redirect(reqwest::redirect::Policy::limited(8))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let resp = client
+        .get(trimmed)
+        .header(
+            reqwest::header::USER_AGENT,
+            "dal-agent-fetch_url/1.0 (+https://github.com/okjason-source/dist_agent_lang)",
+        )
+        .send()
+        .map_err(|e| e.to_string())?;
+
+    let status = resp.status();
+    if !status.is_success() {
+        return Err(format!("HTTP {}", status));
+    }
+
+    let content_type = resp
+        .headers()
+        .get(CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+
+    let bytes = resp.bytes().map_err(|e| e.to_string())?;
+    if bytes.len() > max_bytes {
+        return Err(format!(
+            "response too large ({} bytes; max {})",
+            bytes.len(),
+            max_bytes
+        ));
+    }
+
+    let text = String::from_utf8_lossy(&bytes).into_owned();
+
+    let out = if content_type.contains("html") || text.trim_start().starts_with('<') {
+        html_to_plaintext_best_effort(&text)
+    } else {
+        text
+    };
+
+    Ok(out)
+}
+
 /// Execute dal_init (project_init hard skill). Template: general, chain, iot, agent.
 fn execute_dal_init_result(template: Option<&str>, root: &std::path::Path) -> String {
     let t = template.unwrap_or("general");
     match crate::project_init::run_init(t, root) {
         Ok(msg) => msg,
         Err(e) => format!("dal_init failed: {}", e),
-    }
-}
-
-/// Resolve path relative to root; reject path traversal. Returns Err if path escapes root.
-fn resolve_path_under_root(
-    root: &std::path::Path,
-    path: &str,
-) -> Result<std::path::PathBuf, String> {
-    let path = path.trim();
-    if path.is_empty() {
-        return Ok(root.to_path_buf());
-    }
-    if path.contains("..") {
-        return Err("Path traversal (..) not allowed".to_string());
-    }
-    if path.starts_with('/') || (path.len() >= 2 && path.get(..2) == Some("\\\\")) {
-        return Err("Absolute paths not allowed".to_string());
-    }
-    let root_canonical = match root.canonicalize() {
-        Ok(p) => p,
-        Err(_) => root.to_path_buf(),
-    };
-    let joined = root_canonical.join(path);
-    if joined.exists() {
-        let canonical = joined.canonicalize().map_err(|e| e.to_string())?;
-        if !canonical.starts_with(&root_canonical) {
-            return Err("Path escapes working directory".to_string());
-        }
-        Ok(canonical)
-    } else {
-        if !joined.starts_with(&root_canonical) {
-            return Err("Path escapes working directory".to_string());
-        }
-        Ok(joined)
     }
 }
 
@@ -2520,6 +2863,10 @@ fn tool_signature(outcome: &ToolOutcome) -> Option<(String, String)> {
         ToolOutcome::Search(query) => {
             Some(("search".to_string(), format!("search:{}", query.trim())))
         }
+        ToolOutcome::FetchUrl(url) => Some((
+            "fetch_url".to_string(),
+            format!("fetch_url:{}", url.trim()),
+        )),
         ToolOutcome::DalInit(template) => Some((
             "dal_init".to_string(),
             format!(
@@ -2781,6 +3128,49 @@ pub fn run_multi_step_tool_loop(
                     let _ = crate::stdlib::evolve::append_log_timed(
                         "search",
                         &query,
+                        &result,
+                        get_task_ms,
+                        do_task_ms,
+                    );
+                }
+                schema.conversation.push(ConversationTurn {
+                    role: "assistant".to_string(),
+                    content: assistant_event.clone(),
+                });
+                schema.conversation.push(ConversationTurn {
+                    role: "user".to_string(),
+                    content: format!("[Tool result]\n{}", result),
+                });
+                steps_used += 1;
+                if steps_used >= max_steps {
+                    return Ok(MultiStepResult {
+                        final_text: "Max tool steps reached".to_string(),
+                        is_ask_user: false,
+                        steps_used,
+                        max_steps_reached: true,
+                    });
+                }
+            }
+            ToolOutcome::FetchUrl(url) => {
+                let task_do_started = std::time::Instant::now();
+                let result = execute_fetch_url_result(&url);
+                let do_task_ms = duration_ms_i64(task_do_started.elapsed());
+                if let Some((_, signature)) = pending_signature.as_ref() {
+                    if let Some(msg) =
+                        register_tool_result_guard(&mut guard_state, &guards, signature, &result)
+                    {
+                        return Ok(MultiStepResult {
+                            final_text: msg,
+                            is_ask_user: false,
+                            steps_used,
+                            max_steps_reached: false,
+                        });
+                    }
+                }
+                if agent_name.is_some() {
+                    let _ = crate::stdlib::evolve::append_log_timed(
+                        "fetch_url",
+                        &url,
                         &result,
                         get_task_ms,
                         do_task_ms,
@@ -3133,12 +3523,25 @@ pub fn run_multi_step_tool_loop(
 
 /// Same as `respond_with_tools` but returns a map-friendly result: final text, steps used, and
 /// whether the step limit was reached. Lets DAL apps branch on outcome without parsing the reply.
-fn emit_route_metrics(
-    route: &str,
+
+/// Structured fields for the `agent_route_metrics` log line. **Effective `policy` and `route`**
+/// match top-level keys in [`agent_run_result_map_from_diagnostics`] (Phase 5 telemetry parity).
+pub fn agent_route_metrics_map(
+    policy: ChatPolicy,
+    route: ChatRoute,
     schema: Option<&crate::agent_context_schema::AgentContextSchema>,
     result: &MultiStepResult,
     max_steps: u32,
-) {
+) -> HashMap<String, Value> {
+    let route_str = match route {
+        ChatRoute::ReplyOnly => "reply_only",
+        ChatRoute::ToolLoop => "tool_loop",
+    };
+    let policy_str = match policy {
+        ChatPolicy::Auto => "auto",
+        ChatPolicy::ReplyOnly => "reply_only",
+        ChatPolicy::ToolLoop => "tool_loop",
+    };
     let mut native_tool_calls_seen: i64 = 0;
     let mut tool_results_seen: i64 = 0;
     if let Some(schema) = schema {
@@ -3156,66 +3559,78 @@ fn emit_route_metrics(
         }
     }
     let termination = classify_termination(result);
-    crate::stdlib::log::info(
-        "agent_route_metrics",
-        {
-            let mut data = HashMap::new();
-            data.insert("route".to_string(), Value::String(route.to_string()));
-            data.insert(
-                "steps_used".to_string(),
-                Value::Int(result.steps_used as i64),
-            );
-            data.insert("max_steps".to_string(), Value::Int(max_steps as i64));
-            data.insert(
-                "max_steps_reached".to_string(),
-                Value::Bool(result.max_steps_reached),
-            );
-            data.insert("is_ask_user".to_string(), Value::Bool(result.is_ask_user));
-            data.insert(
-                "native_tool_calls_seen".to_string(),
-                Value::Int(native_tool_calls_seen),
-            );
-            data.insert(
-                "tool_results_seen".to_string(),
-                Value::Int(tool_results_seen),
-            );
-            data.insert(
-                "legacy_parse_enabled".to_string(),
-                Value::Bool(legacy_text_tool_protocol_enabled()),
-            );
-            data.insert(
-                "native_tool_calling_enabled".to_string(),
-                Value::Bool(native_tool_calling_enabled()),
-            );
-            let default_policy = match default_chat_policy_from_env() {
-                ChatPolicy::Auto => "auto",
-                ChatPolicy::ReplyOnly => "reply_only",
-                ChatPolicy::ToolLoop => "tool_loop",
-            };
-            data.insert(
-                "default_policy".to_string(),
-                Value::String(default_policy.to_string()),
-            );
-            data.insert(
-                "parse_fail_terminal".to_string(),
-                Value::Bool(termination.parse_fail_terminal),
-            );
-            data.insert(
-                "unsupported_tool_call_terminal".to_string(),
-                Value::Bool(termination.unsupported_tool_call_terminal),
-            );
-            data.insert(
-                "guard_stopped".to_string(),
-                Value::Bool(termination.guard_stopped),
-            );
-            data.insert(
-                "termination_reason".to_string(),
-                Value::String(termination.termination_reason.to_string()),
-            );
-            data
-        },
-        Some("ai"),
+    let mut data = HashMap::new();
+    data.insert(
+        "route".to_string(),
+        Value::String(route_str.to_string()),
     );
+    data.insert(
+        "policy".to_string(),
+        Value::String(policy_str.to_string()),
+    );
+    data.insert(
+        "steps_used".to_string(),
+        Value::Int(result.steps_used as i64),
+    );
+    data.insert("max_steps".to_string(), Value::Int(max_steps as i64));
+    data.insert(
+        "max_steps_reached".to_string(),
+        Value::Bool(result.max_steps_reached),
+    );
+    data.insert("is_ask_user".to_string(), Value::Bool(result.is_ask_user));
+    data.insert(
+        "native_tool_calls_seen".to_string(),
+        Value::Int(native_tool_calls_seen),
+    );
+    data.insert(
+        "tool_results_seen".to_string(),
+        Value::Int(tool_results_seen),
+    );
+    data.insert(
+        "legacy_parse_enabled".to_string(),
+        Value::Bool(legacy_text_tool_protocol_enabled()),
+    );
+    data.insert(
+        "native_tool_calling_enabled".to_string(),
+        Value::Bool(native_tool_calling_enabled()),
+    );
+    let default_policy = match default_chat_policy_from_env() {
+        ChatPolicy::Auto => "auto",
+        ChatPolicy::ReplyOnly => "reply_only",
+        ChatPolicy::ToolLoop => "tool_loop",
+    };
+    data.insert(
+        "default_policy".to_string(),
+        Value::String(default_policy.to_string()),
+    );
+    data.insert(
+        "parse_fail_terminal".to_string(),
+        Value::Bool(termination.parse_fail_terminal),
+    );
+    data.insert(
+        "unsupported_tool_call_terminal".to_string(),
+        Value::Bool(termination.unsupported_tool_call_terminal),
+    );
+    data.insert(
+        "guard_stopped".to_string(),
+        Value::Bool(termination.guard_stopped),
+    );
+    data.insert(
+        "termination_reason".to_string(),
+        Value::String(termination.termination_reason.to_string()),
+    );
+    data
+}
+
+fn emit_route_metrics(
+    policy: ChatPolicy,
+    route: ChatRoute,
+    schema: Option<&crate::agent_context_schema::AgentContextSchema>,
+    result: &MultiStepResult,
+    max_steps: u32,
+) {
+    let map = agent_route_metrics_map(policy, route, schema, result, max_steps);
+    crate::stdlib::log::info("agent_route_metrics", map, Some("ai"));
 }
 
 #[derive(Debug, Clone)]
@@ -3245,12 +3660,15 @@ fn collect_tool_trace_from_schema(
 pub fn respond_with_tools_diagnostics(
     user_message: &str,
 ) -> Result<RespondWithToolsDiagnostics, String> {
-    respond_with_tools_diagnostics_with_policy(user_message, default_chat_policy_from_env())
+    respond_with_tools_diagnostics_with_policy(user_message, default_chat_policy_from_env(), None)
 }
 
+/// `max_steps_override`: when `Some(n)` and `n > 0`, use `n` as the tool-loop cap instead of
+/// `DAL_AGENT_MAX_TOOL_STEPS` (CEO exploit/explore and per-call tuning).
 pub fn respond_with_tools_diagnostics_with_policy(
     user_message: &str,
     policy: ChatPolicy,
+    max_steps_override: Option<u32>,
 ) -> Result<RespondWithToolsDiagnostics, String> {
     let route = route_for_policy(policy, user_message);
     match route {
@@ -3264,7 +3682,7 @@ pub fn respond_with_tools_diagnostics_with_policy(
                 steps_used: 0,
                 max_steps_reached: false,
             };
-            emit_route_metrics("reply_only", None, &result, 0);
+            emit_route_metrics(policy, route, None, &result, 0);
             Ok(RespondWithToolsDiagnostics {
                 policy,
                 route,
@@ -3273,12 +3691,14 @@ pub fn respond_with_tools_diagnostics_with_policy(
             })
         }
         ChatRoute::ToolLoop => {
-            let max_steps = max_tool_steps_from_env();
+            let max_steps = max_steps_override
+                .filter(|&n| n > 0)
+                .unwrap_or_else(max_tool_steps_from_env);
             let (mut schema, working_root) = build_tool_loop_schema(user_message);
             let result =
                 run_multi_step_tool_loop(&mut schema, max_steps, None, working_root.as_deref())?;
             let tool_trace = collect_tool_trace_from_schema(&schema);
-            emit_route_metrics("tool_loop", Some(&schema), &result, max_steps);
+            emit_route_metrics(policy, route, Some(&schema), &result, max_steps);
             Ok(RespondWithToolsDiagnostics {
                 policy,
                 route,
@@ -3297,7 +3717,7 @@ pub fn respond_with_tools_result_with_policy(
     user_message: &str,
     policy: ChatPolicy,
 ) -> Result<MultiStepResult, String> {
-    respond_with_tools_diagnostics_with_policy(user_message, policy).map(|d| d.result)
+    respond_with_tools_diagnostics_with_policy(user_message, policy, None).map(|d| d.result)
 }
 
 /// Canonical result map for `ai::agent_run` and `ai::respond_with_tools_result` in the engine.
@@ -3386,8 +3806,8 @@ pub fn agent_run_result_map_from_diagnostics(
 #[cfg(test)]
 mod agent_run_result_contract_tests {
     use super::{
-        agent_run_result_map_from_diagnostics, ChatPolicy, ChatRoute, MultiStepResult,
-        RespondWithToolsDiagnostics,
+        agent_route_metrics_map, agent_run_result_map_from_diagnostics, ChatPolicy, ChatRoute,
+        MultiStepResult, RespondWithToolsDiagnostics,
     };
     use crate::runtime::values::Value;
 
@@ -3442,6 +3862,37 @@ mod agent_run_result_contract_tests {
             other => panic!("observability must be Map, got {:?}", other),
         }
     }
+
+    /// Phase 5: `agent_route_metrics` structured log must match API diagnostics for core fields.
+    #[test]
+    fn agent_route_metrics_matches_api_diagnostics_phase5_parity() {
+        let d = RespondWithToolsDiagnostics {
+            policy: ChatPolicy::ToolLoop,
+            route: ChatRoute::ToolLoop,
+            result: MultiStepResult {
+                final_text: "done".to_string(),
+                is_ask_user: false,
+                steps_used: 2,
+                max_steps_reached: false,
+            },
+            tool_trace: vec!["run".to_string()],
+        };
+        let api = agent_run_result_map_from_diagnostics(&d);
+        let metrics = agent_route_metrics_map(d.policy, d.route, None, &d.result, 40);
+        for key in [
+            "route",
+            "policy",
+            "termination_reason",
+            "guard_stopped",
+            "steps_used",
+        ] {
+            assert_eq!(
+                api.get(key),
+                metrics.get(key),
+                "parity mismatch for {key}: agent_run map vs agent_route_metrics map"
+            );
+        }
+    }
 }
 
 #[cfg(test)]
@@ -3462,6 +3913,18 @@ mod multi_step_loop_tests {
     fn chat_route_tool_loop_for_action_prompt() {
         let route = decide_chat_route("Check this project and run tests.");
         assert_eq!(route, ChatRoute::ToolLoop);
+    }
+
+    #[test]
+    fn chat_route_tool_loop_for_save_or_articles_wording() {
+        assert_eq!(
+            decide_chat_route("The articles did not save; try again."),
+            ChatRoute::ToolLoop
+        );
+        assert_eq!(
+            decide_chat_route("Please write articles/foo.md on disk."),
+            ChatRoute::ToolLoop
+        );
     }
 
     #[test]
@@ -3512,6 +3975,40 @@ mod multi_step_loop_tests {
             ToolOutcome::Search(s) => assert_eq!(s, "rust lang"),
             _ => panic!("expected Search"),
         }
+    }
+
+    #[test]
+    fn parse_tool_response_fetch_url() {
+        let out = parse_tool_response(
+            r#"{"action":"fetch_url","url":"https://example.com/path"}"#,
+        );
+        match out {
+            ToolOutcome::FetchUrl(s) => assert_eq!(s, "https://example.com/path"),
+            _ => panic!("expected FetchUrl"),
+        }
+    }
+
+    #[cfg(feature = "http-interface")]
+    #[test]
+    fn parse_web_search_provider_str_accepts_known_values() {
+        use super::{parse_web_search_provider_str, WebSearchProvider};
+        assert_eq!(
+            parse_web_search_provider_str("duckduckgo").unwrap(),
+            WebSearchProvider::DuckDuckGo
+        );
+        assert_eq!(
+            parse_web_search_provider_str("ddg").unwrap(),
+            WebSearchProvider::DuckDuckGo
+        );
+        assert_eq!(
+            parse_web_search_provider_str("  BRAVE  ").unwrap(),
+            WebSearchProvider::Brave
+        );
+        assert_eq!(
+            parse_web_search_provider_str("serpapi").unwrap(),
+            WebSearchProvider::SerpApi
+        );
+        assert!(parse_web_search_provider_str("bing").is_err());
     }
 
     #[test]
@@ -3672,13 +4169,28 @@ fn host_tool_definitions(include_scripting_tools: bool) -> serde_json::Value {
             "type": "function",
             "function": {
                 "name": "search",
-                "description": "Search the web for public information.",
+                "description": "Search the web for public information. Backend is configurable (e.g. DAL_WEB_SEARCH_PROVIDER: duckduckgo, brave, serpapi).",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "query": { "type": "string" }
                     },
                     "required": ["query"],
+                    "additionalProperties": false
+                }
+            }
+        }),
+        json!({
+            "type": "function",
+            "function": {
+                "name": "fetch_url",
+                "description": "GET an http(s) URL and return the response body as plain text (HTML is stripped).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "url": { "type": "string" }
+                    },
+                    "required": ["url"],
                     "additionalProperties": false
                 }
             }

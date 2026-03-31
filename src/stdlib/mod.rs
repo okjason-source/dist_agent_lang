@@ -16,6 +16,8 @@ pub mod crypto_signatures; // Production-grade cryptographic signatures
 pub mod database;
 pub mod desktop;
 pub mod evolve;
+pub mod fs;
+pub mod http_fetch;
 pub mod iot;
 pub mod key;
 pub mod kyc;
@@ -23,6 +25,7 @@ pub mod log;
 pub mod mobile;
 pub mod mold;
 pub mod oracle;
+pub mod rag;
 pub mod scatter;
 pub mod secure_auth;
 pub mod service;

@@ -977,6 +977,7 @@ fn builtin_capabilities(agent_type: &AgentType) -> Vec<&'static str> {
             "write_file",
             "list_dir",
             "search",
+            "fetch_url",
             "dal_check",
             "dal_run",
             "dal_init",

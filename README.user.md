@@ -44,7 +44,7 @@ Leave the command running. The backend will serve that folder on port **3847**.
 
 ### 3. Open the IDE
 
-- If you’re developing: run `npm run dev` in the `dal-ide` folder, then open **http://localhost:5173** in your browser.
+- If you’re developing: run `npm run dev` in **`../dal-ide/`** (sibling of `dist_agent_lang` under `lang_mark/`), then open **http://localhost:5173** in your browser.
 - If you’re using a pre-built copy (e.g. from a download or AWS): open the URL you were given for the IDE.
 
 In the IDE, click **Open Folder** and enter the same path you used with `-w` (e.g. `.` for the current directory). Then open a file, choose a run config from the **Run** dropdown, and click **Run**.

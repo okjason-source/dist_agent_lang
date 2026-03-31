@@ -107,8 +107,6 @@ PHASE*.md
 **/agent.toml
 /dal.toml
 **/dal.toml
-/agent_assistant/
-**/agent_assistant/
 Vibes_Job/
 **/Vibes_Job/
 

@@ -898,6 +898,24 @@ Predict device failure probability.
 
 ---
 
+## http Module
+
+Bounded HTTP GET for route handlers and scripts. Same security policy as the agent **`fetch_url`** tool: only **`http`/`https`**, **`DAL_HTTP_FETCH_*`** (timeout, max bytes, optional host allowlist, private/loopback blocking). Requires the **`http-interface`** Cargo feature (on by default).
+
+### Functions
+
+#### fetch_text
+
+```dal
+http::fetch_text(url: String) -> String
+```
+
+GET the URL and return the response body as plain text (HTML is stripped best-effort). On failure, the runtime surfaces an error string (network, HTTP status, blocked host, etc.).
+
+Alias: **`http::fetch`** — same behavior.
+
+---
+
 ## oracle Module
 
 Oracle data feed operations.

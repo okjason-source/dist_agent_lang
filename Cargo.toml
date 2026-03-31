@@ -1,6 +1,6 @@
 [package]
 name = "dist_agent_lang"
-version = "1.0.19"
+version = "1.0.20"
 edition = "2021"
 description = "Agentic programming with library and CLI support for Off/On-chain network integration"
 authors = ["OK Jason <jason.dinh.developer@gmail.com>"]
@@ -41,6 +41,10 @@ path = "src/main.rs"
 [[bin]]
 name = "dal-registry"
 path = "src/bin/registry_server.rs"
+
+[[bin]]
+name = "rag-index"
+path = "src/bin/rag_index.rs"
 
 [lib]
 name = "dist_agent_lang"

@@ -441,6 +441,42 @@ service App @compile_target("native") { fn run() { 42 } }
     }
 }
 
+/// Edge/IoT backend rejects compile when no service is marked for edge (empty selection).
+/// Catches: deleting `if services.is_empty()` or weakening the error in edge.rs.
+#[test]
+fn test_run_compile_edge_errors_when_no_edge_services() {
+    let source = r#"
+@native
+service App @compile_target("native") { fn run() { 42 } }
+"#;
+    let dir = tempfile::tempdir().unwrap();
+    let entry = dir.path().join("main.dal");
+    let out = dir.path().join("out");
+    std::fs::create_dir_all(&out).unwrap();
+
+    let result = run_compile(
+        entry.clone(),
+        CompilationTarget::Edge,
+        out.clone(),
+        source,
+    );
+
+    match &result {
+        Err(CompileError::Backend(msg)) => {
+            assert!(
+                msg.contains("edge") || msg.contains("iot"),
+                "expected message about edge/iot services; got: {}",
+                msg
+            );
+        }
+        Ok(a) => panic!(
+            "expected Backend error when no edge services, got Ok: {:?}",
+            a
+        ),
+        Err(e) => panic!("expected CompileError::Backend, got: {}", e),
+    }
+}
+
 /// StubBackend (Mobile/Edge) calls check_compiler_available("rustc"). When rustc is present,
 /// compile must succeed. This catches mutants that replace check_compiler_available with false.
 #[test]

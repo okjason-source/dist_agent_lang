@@ -3702,7 +3702,7 @@ impl Parser {
         });
         if is_decentralized {
             let forbidden_namespaces: HashSet<String> =
-                ["ai", "sh", "web", "http", "oracle", "agent", "cloudadmin"]
+                ["ai", "sh", "fs", "web", "http", "oracle", "agent", "cloudadmin"]
                     .iter()
                     .map(|s| s.to_string())
                     .collect();

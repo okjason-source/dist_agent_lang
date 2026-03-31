@@ -1759,6 +1759,7 @@ impl Runtime {
 
         match namespace {
             "oracle" => self.call_oracle_function(function_name, args),
+            "rag" => self.call_rag_function(function_name, args),
             "service" => self.call_service_function(function_name, args),
             "sync" => self.call_sync_function(function_name, args),
             "key" => self.call_key_function(function_name, args),
@@ -1783,7 +1784,9 @@ impl Runtime {
             "json" => self.call_json_function(function_name, args),
             "config" => self.call_config_function(function_name, args),
             "sh" => self.call_sh_function(function_name, args),
+            "fs" => self.call_fs_function(function_name, args),
             "evolve" => self.call_evolve_function(function_name, args),
+            "http" => self.call_http_function(function_name, args),
             "scatter" => self.call_scatter_function(function_name, args),
             "time" => self.call_time_function(function_name, args),
             "workflow" => self.call_workflow_function(function_name, args),
@@ -6383,6 +6386,62 @@ impl Runtime {
         }
     }
 
+    fn call_rag_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::rag;
+        match name {
+            "prompt_block" => {
+                if args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: 0,
+                    });
+                }
+                if args.len() > 2 {
+                    return Err(RuntimeError::General(
+                        "rag::prompt_block expects 1 or 2 arguments".to_string(),
+                    ));
+                }
+                let query = self.value_to_string(&args[0])?;
+                let include_rag = if args.len() > 1 {
+                    match &args[1] {
+                        Value::Null => None,
+                        Value::Bool(b) => Some(*b),
+                        _ => {
+                            return Err(RuntimeError::General(
+                                "rag::prompt_block second argument must be null or boolean"
+                                    .to_string(),
+                            ));
+                        }
+                    }
+                } else {
+                    None
+                };
+                Ok(Value::String(rag::prompt_block(&query, include_rag)))
+            }
+            _ => Err(RuntimeError::function_not_found(format!("rag::{}", name))),
+        }
+    }
+
+    /// `http::fetch_text` / `http::fetch` — bounded GET; same policy as agent `fetch_url` (`DAL_HTTP_FETCH_*`).
+    fn call_http_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::http_fetch;
+        match name {
+            "fetch_text" | "fetch" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let url = self.value_to_string(&args[0])?;
+                http_fetch::fetch_text(&url)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            _ => Err(RuntimeError::function_not_found(format!("http::{}", name))),
+        }
+    }
+
     fn call_sh_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         use crate::stdlib::sh;
         match name {
@@ -6397,6 +6456,64 @@ impl Runtime {
                 sh::run(&cmd).map_err(RuntimeError::General)
             }
             _ => Err(RuntimeError::function_not_found(format!("sh::{}", name))),
+        }
+    }
+
+    fn call_fs_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::fs;
+        let root = fs::filesystem_root();
+        match name {
+            "read_text" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let path = self.value_to_string(&args[0])?;
+                fs::read_text(&root, &path)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "write_text" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let path = self.value_to_string(&args[0])?;
+                let contents = self.value_to_string(&args[1])?;
+                let n = fs::write_text(&root, &path, &contents)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::String(format!("wrote {} bytes", n)))
+            }
+            "append_text" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let path = self.value_to_string(&args[0])?;
+                let contents = self.value_to_string(&args[1])?;
+                let n = fs::append_text(&root, &path, &contents)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::String(format!("appended {} bytes", n)))
+            }
+            "exists" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let path = self.value_to_string(&args[0])?;
+                fs::exists(&root, &path)
+                    .map(Value::Bool)
+                    .map_err(RuntimeError::General)
+            }
+            _ => Err(RuntimeError::function_not_found(format!("fs::{}", name))),
         }
     }
 
@@ -6514,12 +6631,33 @@ impl Runtime {
     ) -> Result<Value, RuntimeError> {
         match name {
             "run_steps" => {
+                use crate::stdlib::rag;
                 if args.len() < 2 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 2,
                         got: args.len(),
                     });
                 }
+                if args.len() > 3 {
+                    return Err(RuntimeError::General(
+                        "workflow::run_steps expects 2 or 3 arguments (steps, input, optional include_rag)"
+                            .to_string(),
+                    ));
+                }
+                let include_rag = if args.len() > 2 {
+                    match &args[2] {
+                        Value::Null => None,
+                        Value::Bool(b) => Some(*b),
+                        _ => {
+                            return Err(RuntimeError::General(
+                                "workflow::run_steps third argument must be null or boolean"
+                                    .to_string(),
+                            ));
+                        }
+                    }
+                } else {
+                    None
+                };
                 let steps_val = &args[0];
                 let input = self.value_to_string(&args[1])?;
                 let steps_arr = match steps_val {
@@ -6550,7 +6688,11 @@ impl Runtime {
                     let resolved = prompt
                         .replace("{input}", &input)
                         .replace("{prev}", &prev_output);
-                    let full_prompt = format!("You are a {} agent.\n\nTask: {}", role, resolved);
+                    let rag_prefix = rag::prompt_section_prefix(&resolved, include_rag);
+                    let full_prompt = format!(
+                        "{}You are a {} agent.\n\nTask: {}",
+                        rag_prefix, role, resolved
+                    );
                     let result = match crate::stdlib::ai::respond_with_tools(&full_prompt) {
                         Ok(r) => r,
                         Err(e) => format!("Error: {}", e),
@@ -8197,9 +8339,12 @@ impl Runtime {
                 } else {
                     crate::stdlib::ai::default_chat_policy_from_env()
                 };
-                let d =
-                    crate::stdlib::ai::respond_with_tools_diagnostics_with_policy(&message, policy)
-                        .map_err(RuntimeError::General)?;
+                let d = crate::stdlib::ai::respond_with_tools_diagnostics_with_policy(
+                    &message,
+                    policy,
+                    None,
+                )
+                .map_err(RuntimeError::General)?;
                 let map = crate::stdlib::ai::agent_run_result_map_from_diagnostics(&d);
                 Ok(Value::Map(map))
             }
@@ -8214,7 +8359,7 @@ impl Runtime {
                     Value::Map(m) => m,
                     _ => {
                         return Err(RuntimeError::General(
-                            "ai::agent_run expects a map argument: {\"message\": \"...\", \"policy\": \"auto|reply_only|tool_loop\"}".to_string(),
+                            "ai::agent_run expects a map argument: {\"message\": \"...\", \"policy\": \"...\", \"max_tool_steps\": optional positive int}".to_string(),
                         ))
                     }
                 };
@@ -8239,9 +8384,18 @@ impl Runtime {
                 } else {
                     crate::stdlib::ai::default_chat_policy_from_env()
                 };
-                let d =
-                    crate::stdlib::ai::respond_with_tools_diagnostics_with_policy(&message, policy)
-                        .map_err(RuntimeError::General)?;
+                let max_steps_override = req
+                    .get("max_tool_steps")
+                    .or_else(|| req.get("max_steps"))
+                    .and_then(|v| self.value_to_int(v).ok())
+                    .filter(|&n| n > 0)
+                    .map(|n| n as u32);
+                let d = crate::stdlib::ai::respond_with_tools_diagnostics_with_policy(
+                    &message,
+                    policy,
+                    max_steps_override,
+                )
+                .map_err(RuntimeError::General)?;
                 let map = crate::stdlib::ai::agent_run_result_map_from_diagnostics(&d);
                 Ok(Value::Map(map))
             }
@@ -12495,7 +12649,7 @@ impl Runtime {
             }
         } else {
             // No service context (e.g. top-level route handlers in dal serve, or script): allow AI
-            // so that Agent Assistant and similar apps work without wrapping in a @service.
+            // so that DAL CEO and similar apps work without wrapping in a @service.
             true
         }
     }

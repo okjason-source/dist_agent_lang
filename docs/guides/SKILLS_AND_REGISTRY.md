@@ -168,7 +168,7 @@ When the agent handles a request:
 The result is a prompt like:
 
 ```
-You are a DAL assistant serving your principal. Skills:
+You are operating as the DAL AGENT surface, serving your principal. Skills:
 - project_init: Initialize and set up a DAL project...
 - office: Tasks, scheduling, docs, meetings...
 - ms_office: Use MS Office tools (Word, Excel, Outlook) via run or scripts.

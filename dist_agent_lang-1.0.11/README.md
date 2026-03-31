@@ -8,7 +8,7 @@
 
 DAL is a programming language where AI agents are native citizens. Spawn agents, give them skills, persist their memory, coordinate multi-agent workflows, and serve them over HTTP — all in one language. Blockchain integration, off-chain services, and on-chain contracts coexist through a unified trust model.
 
-> **v1.0.8 Beta** — Actively maintained. Test thoroughly before production use.
+> **v1.0.xx Beta** — Actively maintained. Test thoroughly before production use.
 
 ---
 
