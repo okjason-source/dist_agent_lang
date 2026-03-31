@@ -3057,6 +3057,22 @@ fn register_tool_result_guard(
     None
 }
 
+fn step_result(
+    text: String,
+    is_ask: bool,
+    steps: u32,
+    max_reached: bool,
+    tools: Vec<String>,
+) -> MultiStepResult {
+    MultiStepResult {
+        final_text: text,
+        is_ask_user: is_ask,
+        steps_used: steps,
+        max_steps_reached: max_reached,
+        executed_tools: tools,
+    }
+}
+
 /// Run the tool loop until the LLM returns reply or ask_user, or max_steps is reached.
 /// Appends each run/search to evolve action log when agent_name is Some.
 /// working_root: if Some, file tools (read_file, write_file, list_dir, dal_check, dal_run, dal_init) use this path; else process current_dir (Phase D).
@@ -3091,27 +3107,21 @@ pub fn run_multi_step_tool_loop(
             if guards.max_wall_clock_ms > 0
                 && started.elapsed().as_millis() as u64 > guards.max_wall_clock_ms
             {
-                return Ok(MultiStepResult {
-                    final_text: format!(
+                return Ok(step_result(
+                    format!(
                         "Stopped: wall-clock limit exceeded (>{} ms).",
                         guards.max_wall_clock_ms
                     ),
-                    is_ask_user: false,
+                    false,
                     steps_used,
-                    max_steps_reached: false,
-                    executed_tools: executed_tools.clone(),
-                });
+                    false,
+                    executed_tools,
+                ));
             }
         }
         let turn = generate_agent_model_turn(schema, include_scripting_tools)?;
         if let Some(msg) = apply_turn_usage_budget(&mut guard_state, &guards, &turn) {
-            return Ok(MultiStepResult {
-                final_text: msg,
-                is_ask_user: false,
-                steps_used,
-                max_steps_reached: false,
-                executed_tools: executed_tools.clone(),
-            });
+            return Ok(step_result(msg, false, steps_used, false, executed_tools));
         }
         let parsed = model_turn_to_outcome(&turn);
         let outcome = parsed.outcome;
@@ -3122,42 +3132,24 @@ pub fn run_multi_step_tool_loop(
             if let Some(msg) =
                 register_tool_invocation_guard(&mut guard_state, &guards, tool_name, signature)
             {
-                return Ok(MultiStepResult {
-                    final_text: msg,
-                    is_ask_user: false,
-                    steps_used,
-                    max_steps_reached: false,
-                    executed_tools: executed_tools.clone(),
-                });
+                return Ok(step_result(msg, false, steps_used, false, executed_tools));
             }
         }
         match outcome {
             ToolOutcome::Reply(text) => {
-                return Ok(MultiStepResult {
-                    final_text: text,
-                    is_ask_user: false,
-                    steps_used,
-                    max_steps_reached: false,
-                    executed_tools: executed_tools.clone(),
-                });
+                return Ok(step_result(text, false, steps_used, false, executed_tools));
             }
             ToolOutcome::AskUser(message) => {
-                return Ok(MultiStepResult {
-                    final_text: message,
-                    is_ask_user: true,
+                return Ok(step_result(
+                    message,
+                    true,
                     steps_used,
-                    max_steps_reached: false,
-                    executed_tools: executed_tools.clone(),
-                });
+                    false,
+                    executed_tools,
+                ));
             }
             ToolOutcome::ParseFail(raw) => {
-                return Ok(MultiStepResult {
-                    final_text: raw,
-                    is_ask_user: false,
-                    steps_used,
-                    max_steps_reached: false,
-                    executed_tools: executed_tools.clone(),
-                });
+                return Ok(step_result(raw, false, steps_used, false, executed_tools));
             }
             ToolOutcome::Run(cmd) => {
                 let task_do_started = std::time::Instant::now();
@@ -3167,13 +3159,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 if agent_name.is_some() {
@@ -3196,13 +3182,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("run".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached.".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
             ToolOutcome::Search(query) => {
@@ -3213,13 +3199,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 if agent_name.is_some() {
@@ -3242,13 +3222,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("search".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
             ToolOutcome::FetchUrl(url) => {
@@ -3259,13 +3239,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 if agent_name.is_some() {
@@ -3288,13 +3262,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("fetch_url".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
             ToolOutcome::DalInit(template) => {
@@ -3306,13 +3280,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 if agent_name.is_some() {
@@ -3335,13 +3303,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("dal_init".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached.".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
             ToolOutcome::ReadFile(path) => {
@@ -3352,13 +3320,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 if agent_name.is_some() {
@@ -3381,13 +3343,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("read_file".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached.".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
             ToolOutcome::WriteFile(path, contents) => {
@@ -3398,13 +3360,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 if agent_name.is_some() {
@@ -3427,13 +3383,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("write_file".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached.".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
             ToolOutcome::ListDir(path) => {
@@ -3444,13 +3400,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 if agent_name.is_some() {
@@ -3473,13 +3423,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("list_dir".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached.".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
             ToolOutcome::DalCheck(path) => {
@@ -3490,13 +3440,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 if agent_name.is_some() {
@@ -3519,13 +3463,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("dal_check".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached.".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
             ToolOutcome::DalRun(path) => {
@@ -3536,13 +3480,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 if agent_name.is_some() {
@@ -3565,13 +3503,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("dal_run".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached.".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
             ToolOutcome::ShowUrl(_url) => {
@@ -3580,13 +3518,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 schema.conversation.push(ConversationTurn {
@@ -3600,13 +3532,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("show_url".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached.".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
             ToolOutcome::ShowContent(_, _) => {
@@ -3615,13 +3547,7 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(MultiStepResult {
-                            final_text: msg,
-                            is_ask_user: false,
-                            steps_used,
-                            max_steps_reached: false,
-                            executed_tools: executed_tools.clone(),
-                        });
+                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
                     }
                 }
                 schema.conversation.push(ConversationTurn {
@@ -3635,13 +3561,13 @@ pub fn run_multi_step_tool_loop(
                 executed_tools.push("show_content".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
-                    return Ok(MultiStepResult {
-                        final_text: "Max tool steps reached.".to_string(),
-                        is_ask_user: false,
+                    return Ok(step_result(
+                        "Max tool steps reached.".to_string(),
+                        false,
                         steps_used,
-                        max_steps_reached: true,
-                        executed_tools: executed_tools.clone(),
-                    });
+                        true,
+                        executed_tools,
+                    ));
                 }
             }
         }
@@ -3799,13 +3725,7 @@ pub fn respond_with_tools_diagnostics_with_policy(
             let schema = build_reply_only_schema(user_message);
             let prompt = crate::agent_context_schema::build_prompt_for_llm(&schema);
             let reply = generate_text(prompt).map_err(|e| e.to_string())?;
-            let result = MultiStepResult {
-                final_text: reply.trim().to_string(),
-                is_ask_user: false,
-                steps_used: 0,
-                max_steps_reached: false,
-                executed_tools: Vec::new(),
-            };
+            let result = step_result(reply.trim().to_string(), false, 0, false, Vec::new());
             emit_route_metrics(policy, route, None, &result, 0);
             Ok(RespondWithToolsDiagnostics {
                 policy,
