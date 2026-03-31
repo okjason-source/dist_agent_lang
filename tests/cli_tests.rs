@@ -149,7 +149,11 @@ fn test_chain_subcommand_to_args_tx_status() {
     });
     assert_eq!(
         args,
-        vec!["tx-status".to_string(), "5".to_string(), "0xdead".to_string()]
+        vec![
+            "tx-status".to_string(),
+            "5".to_string(),
+            "0xdead".to_string()
+        ]
     );
 }
 

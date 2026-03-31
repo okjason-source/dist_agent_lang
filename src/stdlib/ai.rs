@@ -2863,10 +2863,9 @@ fn tool_signature(outcome: &ToolOutcome) -> Option<(String, String)> {
         ToolOutcome::Search(query) => {
             Some(("search".to_string(), format!("search:{}", query.trim())))
         }
-        ToolOutcome::FetchUrl(url) => Some((
-            "fetch_url".to_string(),
-            format!("fetch_url:{}", url.trim()),
-        )),
+        ToolOutcome::FetchUrl(url) => {
+            Some(("fetch_url".to_string(), format!("fetch_url:{}", url.trim())))
+        }
         ToolOutcome::DalInit(template) => Some((
             "dal_init".to_string(),
             format!(
@@ -3560,14 +3559,8 @@ pub fn agent_route_metrics_map(
     }
     let termination = classify_termination(result);
     let mut data = HashMap::new();
-    data.insert(
-        "route".to_string(),
-        Value::String(route_str.to_string()),
-    );
-    data.insert(
-        "policy".to_string(),
-        Value::String(policy_str.to_string()),
-    );
+    data.insert("route".to_string(), Value::String(route_str.to_string()));
+    data.insert("policy".to_string(), Value::String(policy_str.to_string()));
     data.insert(
         "steps_used".to_string(),
         Value::Int(result.steps_used as i64),
@@ -3979,9 +3972,7 @@ mod multi_step_loop_tests {
 
     #[test]
     fn parse_tool_response_fetch_url() {
-        let out = parse_tool_response(
-            r#"{"action":"fetch_url","url":"https://example.com/path"}"#,
-        );
+        let out = parse_tool_response(r#"{"action":"fetch_url","url":"https://example.com/path"}"#);
         match out {
             ToolOutcome::FetchUrl(s) => assert_eq!(s, "https://example.com/path"),
             _ => panic!("expected FetchUrl"),

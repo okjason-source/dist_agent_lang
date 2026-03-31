@@ -38,8 +38,5 @@ fn dal_fs_uses_dal_fs_root() {
         Ok(Value::Bool(b)) => assert!(b),
         other => panic!("expected ok bool, got {:?}", other),
     }
-    assert_eq!(
-        std::fs::read_to_string(root.join("out.txt")).unwrap(),
-        "ok"
-    );
+    assert_eq!(std::fs::read_to_string(root.join("out.txt")).unwrap(), "ok");
 }

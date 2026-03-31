@@ -13,7 +13,10 @@ fn main() {
         roots.push(ceo_docs);
     }
     if roots.is_empty() {
-        eprintln!("rag-index: no docs/ or CEO/docs/ found from {}", cwd.display());
+        eprintln!(
+            "rag-index: no docs/ or CEO/docs/ found from {}",
+            cwd.display()
+        );
         std::process::exit(1);
     }
     let out = cwd.join(".dal/rag");

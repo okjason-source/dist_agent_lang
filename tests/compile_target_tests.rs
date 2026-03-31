@@ -454,12 +454,7 @@ service App @compile_target("native") { fn run() { 42 } }
     let out = dir.path().join("out");
     std::fs::create_dir_all(&out).unwrap();
 
-    let result = run_compile(
-        entry.clone(),
-        CompilationTarget::Edge,
-        out.clone(),
-        source,
-    );
+    let result = run_compile(entry.clone(), CompilationTarget::Edge, out.clone(), source);
 
     match &result {
         Err(CompileError::Backend(msg)) => {

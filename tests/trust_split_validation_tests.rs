@@ -230,13 +230,14 @@ service Token @compile_target("blockchain") {
         Err(e) => {
             let s = e.to_string();
             assert!(
-                s.contains("unsupported decentralized-v1 field")
-                    || s.contains("field type"),
+                s.contains("unsupported decentralized-v1 field") || s.contains("field type"),
                 "expected policy error about field types, got: {}",
                 s
             );
         }
-        Ok(_) => panic!("expected policy error for float field in decentralized blockchain service"),
+        Ok(_) => {
+            panic!("expected policy error for float field in decentralized blockchain service")
+        }
     }
 }
 
@@ -271,7 +272,10 @@ service S @compile_target("mobile") {
     );
     set_compiler_available_override(None);
 
-    assert!(result.is_err(), "array literal should be rejected in decentralized-v1");
+    assert!(
+        result.is_err(),
+        "array literal should be rejected in decentralized-v1"
+    );
     let msg = result.err().unwrap().to_string();
     assert!(
         msg.contains("array-literal") || msg.contains("unsupported decentralized-v1"),

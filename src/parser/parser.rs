@@ -3701,11 +3701,19 @@ impl Parser {
                 )
         });
         if is_decentralized {
-            let forbidden_namespaces: HashSet<String> =
-                ["ai", "sh", "fs", "web", "http", "oracle", "agent", "cloudadmin"]
-                    .iter()
-                    .map(|s| s.to_string())
-                    .collect();
+            let forbidden_namespaces: HashSet<String> = [
+                "ai",
+                "sh",
+                "fs",
+                "web",
+                "http",
+                "oracle",
+                "agent",
+                "cloudadmin",
+            ]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
 
             for method in &service.methods {
                 let used_namespaces = self.collect_namespaces_from_block(&method.body);

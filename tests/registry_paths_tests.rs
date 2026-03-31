@@ -38,10 +38,7 @@ fn sanitize_version_rejects_traversal_and_space() {
 
 #[test]
 fn name_to_storage_dir_replaces_scopes() {
-    assert_eq!(
-        name_to_storage_dir("@dal/testing"),
-        "_at_dal_slash_testing"
-    );
+    assert_eq!(name_to_storage_dir("@dal/testing"), "_at_dal_slash_testing");
     assert_eq!(name_to_storage_dir("plain"), "plain");
 }
 

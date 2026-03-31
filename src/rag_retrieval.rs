@@ -182,7 +182,11 @@ pub fn rag_context_blocks_for_query(query: &str, include_rag: Option<bool>) -> V
     let k = top_k_from_env();
     let scores = bm25_scores(query, &chunks);
     let mut order: Vec<usize> = (0..chunks.len()).collect();
-    order.sort_by(|a, b| scores[*b].partial_cmp(&scores[*a]).unwrap_or(std::cmp::Ordering::Equal));
+    order.sort_by(|a, b| {
+        scores[*b]
+            .partial_cmp(&scores[*a])
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     let mut picked = Vec::new();
     for idx in order.into_iter().take(k) {
@@ -277,10 +281,7 @@ pub fn chunk_markdown_text(rel_path: &str, text: &str, id_prefix: &str) -> Vec<R
 }
 
 /// Write `chunks.jsonl` and `manifest.json` under `out_dir`.
-pub fn write_index(
-    roots: &[PathBuf],
-    out_dir: &Path,
-) -> Result<(usize, usize), String> {
+pub fn write_index(roots: &[PathBuf], out_dir: &Path) -> Result<(usize, usize), String> {
     std::fs::create_dir_all(out_dir).map_err(|e| e.to_string())?;
     let mut paths = Vec::new();
     for root in roots {
@@ -321,8 +322,11 @@ pub fn write_index(
         "roots": roots.iter().map(|p| p.to_string_lossy()).collect::<Vec<_>>(),
         "chunking": { "max_chars": 3000, "overlap": 200, "engine": "bm25" },
     });
-    std::fs::write(out_dir.join("manifest.json"), serde_json::to_string_pretty(&manifest).unwrap())
-        .map_err(|e| e.to_string())?;
+    std::fs::write(
+        out_dir.join("manifest.json"),
+        serde_json::to_string_pretty(&manifest).unwrap(),
+    )
+    .map_err(|e| e.to_string())?;
 
     Ok((n_files, all_chunks.len()))
 }

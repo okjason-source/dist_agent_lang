@@ -92,7 +92,8 @@ pub fn append_text(root: &Path, rel_path: &str, contents: &str) -> Result<usize,
         .open(&p)
         .map_err(|e| e.to_string())?;
     let n = contents.as_bytes().len();
-    f.write_all(contents.as_bytes()).map_err(|e| e.to_string())?;
+    f.write_all(contents.as_bytes())
+        .map_err(|e| e.to_string())?;
     Ok(n)
 }
 

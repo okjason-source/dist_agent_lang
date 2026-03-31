@@ -163,11 +163,10 @@ fn prompt_only_run_task_ai(
     ) {
         Ok(result) => {
             let result_trimmed = result.final_text.trim();
-            let user_turn =
-                dist_agent_lang::stdlib::evolve::sanitize_for_conversation(&format!(
-                    "Task: {}",
-                    task_for_evolve
-                ));
+            let user_turn = dist_agent_lang::stdlib::evolve::sanitize_for_conversation(&format!(
+                "Task: {}",
+                task_for_evolve
+            ));
             let _ = dist_agent_lang::stdlib::evolve::append_conversation(
                 &user_turn,
                 result_trimmed,
@@ -190,11 +189,10 @@ fn prompt_only_run_task_ai(
             Ok(result)
         }
         Err(e) => {
-            let user_turn =
-                dist_agent_lang::stdlib::evolve::sanitize_for_conversation(&format!(
-                    "Task: {}",
-                    task_for_evolve
-                ));
+            let user_turn = dist_agent_lang::stdlib::evolve::sanitize_for_conversation(&format!(
+                "Task: {}",
+                task_for_evolve
+            ));
             let _ = dist_agent_lang::stdlib::evolve::append_conversation(
                 &user_turn,
                 &format!("Error: {}", e),
@@ -418,10 +416,12 @@ async fn handle_message(
                     include_dal,
                     body.dal_file.as_deref(),
                 ));
-                context_blocks.extend(dist_agent_lang::rag_retrieval::rag_context_blocks_for_query(
-                    objective,
-                    body.include_rag,
-                ));
+                context_blocks.extend(
+                    dist_agent_lang::rag_retrieval::rag_context_blocks_for_query(
+                        objective,
+                        body.include_rag,
+                    ),
+                );
                 let sub_tasks = body.sub_tasks.clone();
                 let evolve_text = context_blocks
                     .iter()
@@ -623,10 +623,12 @@ async fn handle_task(
                     include_dal,
                     body.dal_file.as_deref(),
                 ));
-                context_blocks.extend(dist_agent_lang::rag_retrieval::rag_context_blocks_for_query(
-                    task_description.as_str(),
-                    body.include_rag,
-                ));
+                context_blocks.extend(
+                    dist_agent_lang::rag_retrieval::rag_context_blocks_for_query(
+                        task_description.as_str(),
+                        body.include_rag,
+                    ),
+                );
                 let objective = format!(
                     "Complete the following task. Reply with the result or answer only.\n\nTask: {}",
                     task_description

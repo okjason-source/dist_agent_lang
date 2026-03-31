@@ -342,7 +342,10 @@ fn handle_mcp_bridge_command(url: Option<&str>) {
     let mcp_root = match script.parent().and_then(|p| p.parent()) {
         Some(r) => r.to_path_buf(),
         None => {
-            eprintln!("dal mcp-bridge: invalid MCP script path: {}", script.display());
+            eprintln!(
+                "dal mcp-bridge: invalid MCP script path: {}",
+                script.display()
+            );
             std::process::exit(1);
         }
     };
@@ -439,7 +442,8 @@ fn find_mcp_bridge_script() -> Result<std::path::PathBuf, String> {
         return Ok(compile_time);
     }
 
-    Err(r#"dal mcp-bridge: could not find the MCP bridge script (server.js)
+    Err(
+        r#"dal mcp-bridge: could not find the MCP bridge script (server.js)
 
 First-time setup (this repo includes an example under CEO/mcp/):
   1. Install Node.js (`node` on PATH).
@@ -450,7 +454,8 @@ First-time setup (this repo includes an example under CEO/mcp/):
 
 If the example lives elsewhere, set:
   export DAL_MCP_BRIDGE_SCRIPT=/absolute/path/to/server.js"#
-        .to_string())
+            .to_string(),
+    )
 }
 
 fn parse_dal_file(filename: &str) {

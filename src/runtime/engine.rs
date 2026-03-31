@@ -6484,8 +6484,7 @@ impl Runtime {
                 }
                 let path = self.value_to_string(&args[0])?;
                 let contents = self.value_to_string(&args[1])?;
-                let n = fs::write_text(&root, &path, &contents)
-                    .map_err(RuntimeError::General)?;
+                let n = fs::write_text(&root, &path, &contents).map_err(RuntimeError::General)?;
                 Ok(Value::String(format!("wrote {} bytes", n)))
             }
             "append_text" => {
@@ -6497,8 +6496,7 @@ impl Runtime {
                 }
                 let path = self.value_to_string(&args[0])?;
                 let contents = self.value_to_string(&args[1])?;
-                let n = fs::append_text(&root, &path, &contents)
-                    .map_err(RuntimeError::General)?;
+                let n = fs::append_text(&root, &path, &contents).map_err(RuntimeError::General)?;
                 Ok(Value::String(format!("appended {} bytes", n)))
             }
             "exists" => {
@@ -8340,9 +8338,7 @@ impl Runtime {
                     crate::stdlib::ai::default_chat_policy_from_env()
                 };
                 let d = crate::stdlib::ai::respond_with_tools_diagnostics_with_policy(
-                    &message,
-                    policy,
-                    None,
+                    &message, policy, None,
                 )
                 .map_err(RuntimeError::General)?;
                 let map = crate::stdlib::ai::agent_run_result_map_from_diagnostics(&d);

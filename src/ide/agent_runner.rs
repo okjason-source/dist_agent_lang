@@ -135,10 +135,9 @@ fn tool_signature(outcome: &ToolOutcome) -> Option<(String, String)> {
         ToolOutcome::Search(query) => {
             Some(("search".to_string(), format!("search:{}", query.trim())))
         }
-        ToolOutcome::FetchUrl(url) => Some((
-            "fetch_url".to_string(),
-            format!("fetch_url:{}", url.trim()),
-        )),
+        ToolOutcome::FetchUrl(url) => {
+            Some(("fetch_url".to_string(), format!("fetch_url:{}", url.trim())))
+        }
         ToolOutcome::DalInit(template) => Some((
             "dal_init".to_string(),
             format!(

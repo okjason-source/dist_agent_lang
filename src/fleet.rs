@@ -829,9 +829,10 @@ agent
         create(&name, Some(base.path())).unwrap();
         add_member(&name, "same-id", Some(base.path())).unwrap();
         add_member(&name, "same-id", Some(base.path())).unwrap();
-        assert_eq!(show(&name, Some(base.path())).unwrap().member_ids, vec![
-            "same-id".to_string()
-        ]);
+        assert_eq!(
+            show(&name, Some(base.path())).unwrap().member_ids,
+            vec!["same-id".to_string()]
+        );
         let _ = delete(&name, Some(base.path()));
     }
 
@@ -966,12 +967,7 @@ agent
     #[test]
     #[serial_test::serial]
     fn export_errors_when_fleet_missing() {
-        let err = export(
-            Some("missing_fleet_xyz"),
-            None,
-            ExportFormat::K8s,
-        )
-        .unwrap_err();
+        let err = export(Some("missing_fleet_xyz"), None, ExportFormat::K8s).unwrap_err();
         assert!(err.contains("not found"), "{}", err);
     }
 
