@@ -563,7 +563,7 @@ service SmartCityEdgeManager {
     fn handle_city_emergencies() {
         for edge_node in self.edge_nodes {
             let node_id = edge_node.node_id;
-            let emergency_check = {
+            let _emergency_check = {
                 "edge_node_id": node_id,
                 "emergency_types": [
                     "fire_detected",
