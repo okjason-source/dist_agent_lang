@@ -8,7 +8,8 @@
 // - Attribute compatibility issues
 // - Type mismatches
 
-use dist_agent_lang::{execute_source, parse_source};
+use dist_agent_lang::parser::ast::Statement;
+use dist_agent_lang::{execute_source, parse_source, Runtime};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -527,7 +528,8 @@ fn test_all_examples_with_semantic_validation() {
     );
 }
 
-/// Test that examples without external dependencies can execute
+/// Test that examples without external dependencies can execute.
+/// Hard-fails on ANY execution error so mutations in the runtime are caught.
 #[test]
 fn test_simple_examples_execute() {
     let example_files = get_example_files();
@@ -543,13 +545,11 @@ fn test_simple_examples_execute() {
         }
         let source = read_file(path);
 
-        // Skip files that require external dependencies
         if requires_external_dependencies(&source) {
             skipped += 1;
             continue;
         }
 
-        // Try to execute
         match execute_source(&source) {
             Ok(_) => {
                 executed += 1;
@@ -560,21 +560,20 @@ fn test_simple_examples_execute() {
         }
     }
 
-    eprintln!("\n📊 Execution Summary:");
-    eprintln!("  ✅ Executed: {}", executed);
-    eprintln!("  ⏭️  Skipped (external deps): {}", skipped);
-    eprintln!("  ❌ Failed: {}", failed.len());
+    eprintln!("\nExecution Summary:");
+    eprintln!("  Executed: {}", executed);
+    eprintln!("  Skipped:  {}", skipped);
+    eprintln!("  Failed:   {}", failed.len());
 
-    if !failed.is_empty() {
-        eprintln!("\n❌ Failed to execute {} example(s):", failed.len());
-        for (path, error) in &failed {
-            eprintln!("  - {:?}: {}", path, error);
-        }
-        // Don't panic - some failures might be expected
-        // Just report them for investigation
-    }
-
-    // At least some examples should execute
+    assert!(
+        failed.is_empty(),
+        "Example execution failures (runtime mutation would escape):\n{}",
+        failed
+            .iter()
+            .map(|(p, e)| format!("  {:?}: {}", p, e))
+            .collect::<Vec<_>>()
+            .join("\n")
+    );
     assert!(executed > 0, "No examples executed successfully");
 }
 
@@ -675,27 +674,102 @@ fn test_web_examples_parse() {
 #[test]
 fn test_hello_world_executes() {
     let path = Path::new("examples/hello_world_demo.dal");
-    if path.exists() {
-        let source = read_file(path);
-        if !requires_external_dependencies(&source) {
-            if let Err(e) = execute_source(&source) {
-                // Don't fail the test, just report
-                eprintln!("Warning: hello_world_demo.dal execution failed: {}", e);
+    assert!(path.exists(), "hello_world_demo.dal not found");
+    let source = read_file(path);
+    execute_source(&source).expect("hello_world_demo.dal execution failed");
+}
+
+/// Brainfuck interpreter: exercises core runtime (arithmetic, comparison,
+/// list ops, index access/assign, loops, conditionals, function calls).
+/// DAL-side assertions hard-fail via assert(), so any runtime mutation that
+/// breaks these primitives will cause execute_source to return Err.
+#[test]
+fn test_brainfuck_interpreter_executes() {
+    let path = Path::new("examples/brainfuck_interpreter.dal");
+    assert!(path.exists(), "brainfuck_interpreter.dal not found");
+    let source = read_file(path);
+    execute_source(&source).expect("brainfuck_interpreter.dal execution failed");
+}
+
+// ============================================
+// DAL @test FUNCTION RUNNER
+// ============================================
+
+/// Discovers and runs @test / test_ functions inside .test.dal files.
+/// `execute_source` only runs top-level statements — it does NOT invoke
+/// @test-annotated functions.  This helper replicates `dal test` behaviour
+/// so that DAL-side assert() failures propagate to `cargo test`.
+fn run_dal_test_functions(path: &Path) {
+    let source = read_file(path);
+    let program = parse_source(&source).unwrap_or_else(|e| {
+        panic!("Failed to parse {:?}: {}", path, e);
+    });
+
+    let test_names: Vec<String> = program
+        .statements
+        .iter()
+        .filter_map(|stmt| {
+            if let Statement::Function(func) = stmt {
+                let is_test = func
+                    .attributes
+                    .iter()
+                    .any(|a| a.name == "test" || a.name == "@test")
+                    || func.name.starts_with("test_");
+                if is_test {
+                    Some(func.name.clone())
+                } else {
+                    None
+                }
+            } else {
+                None
             }
-        }
+        })
+        .collect();
+
+    if test_names.is_empty() {
+        return;
+    }
+
+    let mut runtime = Runtime::new();
+    runtime
+        .execute_program(program, None)
+        .unwrap_or_else(|e| panic!("{:?} setup failed: {}", path, e));
+
+    for name in &test_names {
+        runtime.call_function(name, &[]).unwrap_or_else(|e| {
+            panic!("{:?} — @test {} failed: {}", path, name, e);
+        });
     }
 }
 
+/// Run every .test.dal file's @test functions.  Exercises runtime comparison,
+/// arithmetic, assert — catches mutations in those code paths.
 #[test]
-fn test_general_purpose_demo_executes() {
-    let path = Path::new("examples/general_purpose_demo.dal");
-    if path.exists() {
+fn test_dal_test_files_execute() {
+    let test_files: Vec<PathBuf> = get_example_files()
+        .into_iter()
+        .filter(|p| p.to_string_lossy().ends_with(".test.dal") && !should_skip(p))
+        .collect();
+
+    assert!(!test_files.is_empty(), "No .test.dal example files found");
+
+    let mut ran = 0;
+    for path in &test_files {
         let source = read_file(path);
-        if !requires_external_dependencies(&source) {
-            if let Err(e) = execute_source(&source) {
-                // Don't fail the test, just report
-                eprintln!("Warning: general_purpose_demo.dal execution failed: {}", e);
-            }
+        if requires_external_dependencies(&source) {
+            continue;
         }
+        run_dal_test_functions(path);
+        ran += 1;
+    }
+    assert!(ran > 0, "No .test.dal files were runnable");
+}
+
+/// account.test.dal: exercises arithmetic operators and comparison with assert().
+#[test]
+fn test_account_test_dal() {
+    let path = Path::new("examples/account.test.dal");
+    if path.exists() {
+        run_dal_test_functions(path);
     }
 }

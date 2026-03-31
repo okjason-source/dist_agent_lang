@@ -1,6 +1,6 @@
 [package]
 name = "dist_agent_lang"
-version = "1.0.21"
+version = "1.0.22"
 edition = "2021"
 description = "Agentic programming with library and CLI support for Off/On-chain network integration"
 authors = ["OK Jason <jason.dinh.developer@gmail.com>"]

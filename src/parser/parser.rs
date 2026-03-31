@@ -1180,7 +1180,8 @@ impl Parser {
                             self.expect_token(position + 1, &Token::Punctuation(Punctuation::Dot))?;
                         let (new_position, field_name) =
                             self.expect_identifier_or_keyword(new_position)?;
-                        // Check if this is a method call: identifier.field()
+                        // Method call: identifier.field() → MethodCall (supports both
+                        // service instance methods and value methods like list.push)
                         if let Some(Token::Punctuation(Punctuation::LeftParen)) =
                             self.tokens.get(new_position)
                         {
@@ -1188,10 +1189,11 @@ impl Parser {
                                 self.parse_function_arguments(new_position, depth)?;
                             return Ok((
                                 new_pos,
-                                Expression::FunctionCall(FunctionCall {
-                                    name: format!("{}.{}", namespace_name, field_name),
+                                Expression::MethodCall {
+                                    receiver: Box::new(Expression::Identifier(namespace_name)),
+                                    method_name: field_name,
                                     arguments,
-                                }),
+                                },
                             ));
                         } else {
                             return Ok((

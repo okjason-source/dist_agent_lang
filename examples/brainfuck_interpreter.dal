@@ -1,0 +1,311 @@
+// Brainfuck Interpreter in DAL
+// =============================
+// Proof of Turing completeness by reduction: Brainfuck is a known
+// Turing-complete language. If DAL can faithfully simulate it, DAL's
+// computational core is at least as powerful — i.e. Turing complete
+// (modulo the interpreter's runtime bounds).
+//
+// BF instructions:
+//   >  move data pointer right
+//   <  move data pointer left
+//   +  increment cell at pointer (wraps 255 → 0)
+//   -  decrement cell at pointer (wraps 0 → 255)
+//   .  output cell value
+//   ,  read input into cell (0 on EOF)
+//   [  jump past matching ] if cell is 0
+//   ]  jump back to matching [ if cell is non-zero
+//
+// Non-instruction characters are silently ignored, so BF source can
+// contain comments and whitespace freely.
+
+fn bf_run(program: list<string>, input: list<int>) -> list<int> {
+    let tape = [];
+    for _i in 0..300 {
+        tape.push(0);
+    }
+
+    let ptr = 0;
+    let pc = 0;
+    let input_ptr = 0;
+    let output = [];
+    let prog_len = len(program);
+
+    while (pc < prog_len) {
+        let cmd = program[pc];
+
+        if (cmd == ">") {
+            ptr = ptr + 1;
+            if (ptr >= len(tape)) {
+                tape.push(0);
+            }
+        } else if (cmd == "<") {
+            ptr = ptr - 1;
+        } else if (cmd == "+") {
+            tape[ptr] = (tape[ptr] + 1) % 256;
+        } else if (cmd == "-") {
+            tape[ptr] = (tape[ptr] + 255) % 256;
+        } else if (cmd == ".") {
+            output.push(tape[ptr]);
+        } else if (cmd == ",") {
+            if (input_ptr < len(input)) {
+                tape[ptr] = input[input_ptr] % 256;
+                input_ptr = input_ptr + 1;
+            } else {
+                tape[ptr] = 0;
+            }
+        } else if (cmd == "[") {
+            if (tape[ptr] == 0) {
+                let depth = 1;
+                while (depth > 0) {
+                    pc = pc + 1;
+                    if (program[pc] == "[") {
+                        depth = depth + 1;
+                    } else if (program[pc] == "]") {
+                        depth = depth - 1;
+                    }
+                }
+            }
+        } else if (cmd == "]") {
+            if (tape[ptr] != 0) {
+                let depth = 1;
+                while (depth > 0) {
+                    pc = pc - 1;
+                    if (program[pc] == "]") {
+                        depth = depth + 1;
+                    } else if (program[pc] == "[") {
+                        depth = depth - 1;
+                    }
+                }
+            }
+        }
+        // All other characters are ignored (comments / whitespace).
+
+        pc = pc + 1;
+    }
+
+    return output;
+}
+
+// ---------------------------------------------------------------------------
+// Assertion helper
+// ---------------------------------------------------------------------------
+
+fn assert_eq(label: string, actual: list<int>, expected: list<int>) {
+    let pass = true;
+    if (len(actual) != len(expected)) {
+        pass = false;
+    } else {
+        let idx = 0;
+        while (idx < len(actual)) {
+            if (actual[idx] != expected[idx]) {
+                pass = false;
+            }
+            idx = idx + 1;
+        }
+    }
+    if (pass) {
+        print("  PASS  " + label);
+    } else {
+        print("  FAIL  " + label);
+        print("    expected: " + to_string(expected));
+        print("    actual:   " + to_string(actual));
+        assert(false);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Test suite
+// ---------------------------------------------------------------------------
+
+print("=== Brainfuck Interpreter — Test Suite ===");
+print("");
+
+// --- Basic instruction tests ---
+
+print("[basic instructions]");
+
+// Test 1: Simple increment and output
+// BF: +++++++++.   →   cell 0 = 9, output it
+let result1 = bf_run(["+", "+", "+", "+", "+", "+", "+", "+", "+", "."], []);
+assert_eq("increment and output", result1, [9]);
+
+// Test 2: Decrement
+// BF: +++++--.   →   5 - 2 = 3
+let result2 = bf_run(["+", "+", "+", "+", "+", "-", "-", "."], []);
+assert_eq("decrement", result2, [3]);
+
+// Test 3: Pointer movement
+// BF: +++>+++++>+++++++<<.>.>.
+// Cell 0 = 3, cell 1 = 5, cell 2 = 7, rewind to cell 0, output all three
+let result3 = bf_run([
+    "+", "+", "+",
+    ">", "+", "+", "+", "+", "+",
+    ">", "+", "+", "+", "+", "+", "+", "+",
+    "<", "<",
+    ".", ">", ".", ">", "."
+], []);
+assert_eq("pointer movement", result3, [3, 5, 7]);
+
+// Test 4: Input and echo
+// BF: ,.,.,. with input [65, 66, 67]
+let result4 = bf_run([",", ".", ",", ".", ",", "."], [65, 66, 67]);
+assert_eq("input echo", result4, [65, 66, 67]);
+
+// Test 5: Input EOF returns 0
+// BF: ,.,. with only one input byte [42]
+let result5 = bf_run([",", ".", ",", "."], [42]);
+assert_eq("input EOF → 0", result5, [42, 0]);
+
+// --- Cell wrapping ---
+
+print("");
+print("[cell wrapping (mod 256)]");
+
+// Test 6: Increment wraps 255 → 0
+// 256 increments should wrap back to 0
+let prog6 = [];
+for _i in 0..256 {
+    prog6.push("+");
+}
+prog6.push(".");
+let result6 = bf_run(prog6, []);
+assert_eq("255+1 wraps to 0", result6, [0]);
+
+// Test 7: Decrement wraps 0 → 255
+// BF: -.   →   cell starts at 0, decrement wraps to 255
+let result7 = bf_run(["-", "."], []);
+assert_eq("0-1 wraps to 255", result7, [255]);
+
+// --- Loop tests ---
+
+print("");
+print("[loops and brackets]");
+
+// Test 8: Addition via loop
+// BF: ++>+++++[<+>-]<.   →   2 + 5 = 7
+let result8 = bf_run([
+    "+", "+",
+    ">", "+", "+", "+", "+", "+",
+    "[", "<", "+", ">", "-", "]",
+    "<", "."
+], []);
+assert_eq("addition loop (2+5)", result8, [7]);
+
+// Test 9: Multiplication via nested loop
+// BF: +++[>++++<-]>.   →   3 × 4 = 12
+let result9 = bf_run([
+    "+", "+", "+",
+    "[", ">", "+", "+", "+", "+", "<", "-", "]",
+    ">", "."
+], []);
+assert_eq("multiplication loop (3×4)", result9, [12]);
+
+// Test 10: Countdown
+// BF: +++++[.-]   →   outputs 5, 4, 3, 2, 1
+let result10 = bf_run(["+", "+", "+", "+", "+", "[", ".", "-", "]"], []);
+assert_eq("countdown (5→1)", result10, [5, 4, 3, 2, 1]);
+
+// Test 11: Skip block when cell is 0
+// BF: [+++].   →   cell is 0 on entry so [...] is skipped entirely, output 0
+let result11 = bf_run(["[", "+", "+", "+", "]", "."], []);
+assert_eq("skip block (cell=0)", result11, [0]);
+
+// Test 12: Nested brackets
+// BF: ++[>++[>+++<-]<-]>>.   →   cell2 = 2 × (2 × 3) = 12
+let result12 = bf_run([
+    "+", "+",
+    "[", ">", "+", "+",
+        "[", ">", "+", "+", "+", "<", "-", "]",
+    "<", "-", "]",
+    ">", ">", "."
+], []);
+assert_eq("nested brackets (2×2×3)", result12, [12]);
+
+// Test 13: Non-destructive copy (cell0 → cell1 via cell2 temp)
+// BF: +++++[>+>+<<-]>>[-<<+>>]<<.
+let result13 = bf_run([
+    "+", "+", "+", "+", "+",
+    "[", ">", "+", ">", "+", "<", "<", "-", "]",
+    ">", ">",
+    "[", "-", "<", "<", "+", ">", ">", "]",
+    "<", "<", "."
+], []);
+assert_eq("non-destructive copy", result13, [5]);
+
+// --- Edge cases ---
+
+print("");
+print("[edge cases]");
+
+// Test 14: Empty program
+let result14 = bf_run([], []);
+assert_eq("empty program", result14, []);
+
+// Test 15: No output instructions
+let result15 = bf_run(["+", "+", "+", ">", "+"], []);
+assert_eq("no output instructions", result15, []);
+
+// Test 16: Comments / non-BF characters are ignored
+let result16 = bf_run([
+    "H", "e", "l", "l", "o",
+    "+", "+", "+",
+    " ", "!", " ",
+    "."
+], []);
+assert_eq("non-BF chars ignored", result16, [3]);
+
+// Test 17: Adjacent empty loops — both are skipped because cell is 0
+// BF: [][]+.   →   skip [], skip [], set 1, output
+let result17 = bf_run(["[", "]", "[", "]", "+", "."], []);
+assert_eq("adjacent empty loops (skipped)", result17, [1]);
+
+// --- Algorithmic programs ---
+
+print("");
+print("[algorithmic programs]");
+
+// Test 18: Fibonacci — first 8 numbers
+// Cells: c0=counter, c1=a(prev), c2=b(curr), c3=temp1, c4=temp2
+// Init: c0=8, c2=1.  Each iteration:
+//   output b,  copy b to temp1 & temp2,  restore b from temp2,
+//   add a into b (destructive),  move temp1 to a (= old b),  dec counter.
+// BF: ++++++++>>+<<[>>.[>+>+<<-]>>[<<+>>-]<<<[>+<-]>>[<<+>>-]<<<-]
+// Outputs: 1 1 2 3 5 8 13 21
+let fib_prog = [
+    "+", "+", "+", "+", "+", "+", "+", "+",
+    ">", ">", "+", "<", "<",
+    "[",
+        ">", ">", ".",
+        "[", ">", "+", ">", "+", "<", "<", "-", "]",
+        ">", ">",
+        "[", "<", "<", "+", ">", ">", "-", "]",
+        "<", "<", "<",
+        "[", ">", "+", "<", "-", "]",
+        ">", ">",
+        "[", "<", "<", "+", ">", ">", "-", "]",
+        "<", "<", "<",
+        "-",
+    "]"
+];
+let result18 = bf_run(fib_prog, []);
+assert_eq("fibonacci (first 8)", result18, [1, 1, 2, 3, 5, 8, 13, 21]);
+
+// Test 19: Integer doubling via input
+// Reads a value, doubles it, outputs. BF: ,[->>++<<]>>.
+// Input 17 → output 34
+let result19 = bf_run([
+    ",",
+    "[", "-", ">", ">", "+", "+", "<", "<", "]",
+    ">", ">", "."
+], [17]);
+assert_eq("double input (17→34)", result19, [34]);
+
+// Test 20: Conditional — output only if input is non-zero
+// BF: ,[.[-]]    reads input; if non-zero outputs it and clears; if zero skips
+let result20a = bf_run([",", "[", ".", "[", "-", "]", "]"], [7]);
+assert_eq("conditional (input=7)", result20a, [7]);
+let result20b = bf_run([",", "[", ".", "[", "-", "]", "]"], [0]);
+assert_eq("conditional (input=0)", result20b, []);
+
+print("");
+print("=== All tests complete ===");
