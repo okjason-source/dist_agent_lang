@@ -1,3 +1,32 @@
+src/lib.rs:93:53: replace * with +
+src/lib.rs:93:53: replace * with /
+src/lib.rs:93:46: replace * with +
+src/lib.rs:93:46: replace * with /
+src/lib.rs:103:5: replace source_byte_len_exceeds_parse_limit -> bool with true
+src/lib.rs:103:5: replace source_byte_len_exceeds_parse_limit -> bool with false
+src/lib.rs:103:9: replace > with == in source_byte_len_exceeds_parse_limit
+src/lib.rs:103:9: replace > with < in source_byte_len_exceeds_parse_limit
+src/lib.rs:103:9: replace > with >= in source_byte_len_exceeds_parse_limit
+src/lib.rs:108:5: replace token_count_exceeds_parse_limit -> bool with true
+src/lib.rs:108:5: replace token_count_exceeds_parse_limit -> bool with false
+src/lib.rs:108:11: replace > with == in token_count_exceeds_parse_limit
+src/lib.rs:108:11: replace > with < in token_count_exceeds_parse_limit
+src/lib.rs:108:11: replace > with >= in token_count_exceeds_parse_limit
+src/lib.rs:114:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:172:5: replace execute_dal_file -> Result<(), String> with Ok(())
+src/fleet.rs:250:5: replace deploy -> Result<(), String> with Ok(())
+src/fleet.rs:368:5: replace run -> Result<Vec<RunReport>, String> with Ok(vec![])
+src/fleet.rs:372:44: replace == with != in run
+src/fleet.rs:415:40: replace += with -= in run
+src/fleet.rs:415:40: replace += with *= in run
+src/lib.rs:145:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:158:5: replace execute_dal_with_scope -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:221:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:221:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:221:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/lib.rs:241:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:241:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:241:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
 src/dal_summary.rs:95:8: delete ! in to_context_string
 src/module_resolver.rs:14:5: replace package_import_names_from_program -> Vec<String> with vec![]
 src/module_resolver.rs:14:5: replace package_import_names_from_program -> Vec<String> with vec![String::new()]

@@ -1,86 +1,55 @@
-src/bin/registry_server.rs:25:5: replace storage_path -> PathBuf with Default::default()
-src/bin/registry_server.rs:31:5: replace auth_token -> Option<String> with None
-src/bin/registry_server.rs:31:5: replace auth_token -> Option<String> with Some(String::new())
-src/bin/registry_server.rs:31:5: replace auth_token -> Option<String> with Some("xyzzy".into())
-src/bin/registry_server.rs:37:5: replace public_url -> String with String::new()
-src/bin/registry_server.rs:37:5: replace public_url -> String with "xyzzy".into()
-src/bin/registry_server.rs:48:5: replace sanitize_name -> bool with true
-src/bin/registry_server.rs:48:5: replace sanitize_name -> bool with false
-src/bin/registry_server.rs:50:9: replace && with || in sanitize_name
-src/bin/registry_server.rs:49:9: replace && with || in sanitize_name
-src/bin/registry_server.rs:48:5: delete ! in sanitize_name
-src/bin/registry_server.rs:49:12: delete ! in sanitize_name
-src/bin/registry_server.rs:51:81: replace || with && in sanitize_name
-src/bin/registry_server.rs:51:69: replace || with && in sanitize_name
-src/bin/registry_server.rs:51:57: replace || with && in sanitize_name
-src/bin/registry_server.rs:51:45: replace || with && in sanitize_name
-src/bin/registry_server.rs:51:33: replace || with && in sanitize_name
-src/bin/registry_server.rs:51:38: replace == with != in sanitize_name
-src/bin/registry_server.rs:51:50: replace == with != in sanitize_name
-src/bin/registry_server.rs:51:62: replace == with != in sanitize_name
-src/bin/registry_server.rs:51:74: replace == with != in sanitize_name
-src/bin/registry_server.rs:51:86: replace == with != in sanitize_name
-src/bin/registry_server.rs:56:5: replace sanitize_version -> bool with true
-src/bin/registry_server.rs:56:5: replace sanitize_version -> bool with false
-src/bin/registry_server.rs:58:9: replace && with || in sanitize_version
-src/bin/registry_server.rs:57:9: replace && with || in sanitize_version
-src/bin/registry_server.rs:56:5: delete ! in sanitize_version
-src/bin/registry_server.rs:57:12: delete ! in sanitize_version
-src/bin/registry_server.rs:59:66: replace || with && in sanitize_version
-src/bin/registry_server.rs:59:54: replace || with && in sanitize_version
-src/bin/registry_server.rs:59:42: replace || with && in sanitize_version
-src/bin/registry_server.rs:59:47: replace == with != in sanitize_version
-src/bin/registry_server.rs:59:59: replace == with != in sanitize_version
-src/bin/registry_server.rs:59:71: replace == with != in sanitize_version
-src/bin/registry_server.rs:64:5: replace path_under_storage -> bool with true
-src/bin/registry_server.rs:64:5: replace path_under_storage -> bool with false
-src/bin/registry_server.rs:84:5: replace name_to_storage_dir -> String with String::new()
-src/bin/registry_server.rs:84:5: replace name_to_storage_dir -> String with "xyzzy".into()
-src/bin/registry_server.rs:91:5: replace get_package_index -> Response with Default::default()
-src/bin/registry_server.rs:91:8: delete ! in get_package_index
-src/bin/registry_server.rs:96:8: delete ! in get_package_index
-src/bin/registry_server.rs:110:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with true in get_package_index
-src/bin/registry_server.rs:110:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with false in get_package_index
-src/bin/registry_server.rs:110:28: replace == with != in get_package_index
-src/bin/registry_server.rs:123:5: replace get_tarball -> Response with Default::default()
-src/bin/registry_server.rs:123:30: replace || with && in get_tarball
-src/bin/registry_server.rs:123:8: delete ! in get_tarball
-src/bin/registry_server.rs:123:33: delete ! in get_tarball
-src/bin/registry_server.rs:133:8: delete ! in get_tarball
-src/bin/registry_server.rs:143:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with true in get_tarball
-src/bin/registry_server.rs:143:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with false in get_tarball
-src/bin/registry_server.rs:143:28: replace == with != in get_tarball
-src/bin/registry_server.rs:157:5: replace put_version -> Response with Default::default()
-src/bin/registry_server.rs:157:30: replace || with && in put_version
-src/bin/registry_server.rs:157:8: delete ! in put_version
-src/bin/registry_server.rs:157:33: delete ! in put_version
-src/bin/registry_server.rs:167:13: replace || with && in put_version
-src/bin/registry_server.rs:166:12: delete ! in put_version
-src/bin/registry_server.rs:167:59: replace != with == in put_version
-src/bin/registry_server.rs:172:42: replace * with + in put_version
-src/bin/registry_server.rs:172:42: replace * with / in put_version
-src/bin/registry_server.rs:172:35: replace * with + in put_version
-src/bin/registry_server.rs:172:35: replace * with / in put_version
-src/bin/registry_server.rs:180:8: delete ! in put_version
-src/bin/registry_server.rs:191:8: delete ! in put_version
-src/bin/registry_server.rs:198:8: delete ! in put_version
-src/bin/registry_server.rs:240:5: replace main with ()
-src/cli_design.rs:16:5: replace version -> &'static str with ""
+src/bin/registry_server.rs:28:5: replace storage_path -> PathBuf with Default::default()
+src/bin/registry_server.rs:34:5: replace auth_token -> Option<String> with None
+src/bin/registry_server.rs:34:5: replace auth_token -> Option<String> with Some(String::new())
+src/bin/registry_server.rs:34:5: replace auth_token -> Option<String> with Some("xyzzy".into())
+src/bin/registry_server.rs:40:5: replace public_url -> String with String::new()
+src/bin/registry_server.rs:40:5: replace public_url -> String with "xyzzy".into()
+src/bin/registry_server.rs:54:5: replace get_package_index -> Response with Default::default()
+src/bin/registry_server.rs:54:8: delete ! in get_package_index
+src/bin/registry_server.rs:59:8: delete ! in get_package_index
+src/bin/registry_server.rs:73:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with true in get_package_index
+src/bin/registry_server.rs:73:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with false in get_package_index
+src/bin/registry_server.rs:73:28: replace == with != in get_package_index
+src/bin/registry_server.rs:86:5: replace get_tarball -> Response with Default::default()
+src/bin/registry_server.rs:86:30: replace || with && in get_tarball
+src/bin/registry_server.rs:86:8: delete ! in get_tarball
+src/bin/registry_server.rs:86:33: delete ! in get_tarball
+src/bin/registry_server.rs:96:8: delete ! in get_tarball
+src/bin/registry_server.rs:106:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with true in get_tarball
+src/bin/registry_server.rs:106:19: replace match guard e.kind() == std::io::ErrorKind::NotFound with false in get_tarball
+src/bin/registry_server.rs:106:28: replace == with != in get_tarball
+src/bin/registry_server.rs:120:5: replace put_version -> Response with Default::default()
+src/bin/registry_server.rs:120:30: replace || with && in put_version
+src/bin/registry_server.rs:120:8: delete ! in put_version
+src/bin/registry_server.rs:120:33: delete ! in put_version
+src/bin/registry_server.rs:130:13: replace || with && in put_version
+src/bin/registry_server.rs:129:12: delete ! in put_version
+src/bin/registry_server.rs:130:59: replace != with == in put_version
+src/bin/registry_server.rs:135:42: replace * with + in put_version
+src/bin/registry_server.rs:135:42: replace * with / in put_version
+src/bin/registry_server.rs:135:35: replace * with + in put_version
+src/bin/registry_server.rs:135:35: replace * with / in put_version
+src/bin/registry_server.rs:143:8: delete ! in put_version
+src/bin/registry_server.rs:154:8: delete ! in put_version
+src/bin/registry_server.rs:161:8: delete ! in put_version
+src/bin/registry_server.rs:203:5: replace main with ()
 src/cli_design.rs:21:5: replace print_banner with ()
-src/cli_design.rs:37:5: replace help_content -> String with String::new()
-src/cli_design.rs:37:5: replace help_content -> String with "xyzzy".into()
 src/compile/mod.rs:222:5: replace package_entry_path -> Option<PathBuf> with None
-src/compile/mod.rs:406:16: replace == with != in validate_decentralized_service
-src/compile/mod.rs:410:25: delete ! in validate_decentralized_service
-src/compile/mod.rs:413:12: delete ! in validate_decentralized_service
-src/compile/mod.rs:426:5: replace is_decentralized_v1_supported_type -> bool with true
 src/compile/mod.rs:426:5: replace is_decentralized_v1_supported_type -> bool with false
-src/compile/mod.rs:509:5: replace collect_unsupported_from_expression with ()
 src/ffi/mod.rs:63:9: replace FFIConfig::both -> Self with Default::default()
 src/ffi/mod.rs:70:9: replace FFIConfig::auto_detect -> Self with Default::default()
 src/fleet.rs:126:14: replace > with >= in create_from_mold
 src/fleet.rs:180:14: replace > with >= in add_from_mold
-src/fleet.rs:229:5: replace add_member -> Result<(), String> with Ok(())
 src/fleet.rs:306:10: replace > with >= in scale
 src/fleet.rs:324:10: replace < with <= in scale
 src/fleet.rs:451:50: replace || with && in health
+src/fleet.rs:506:55: replace || with && in export_k8s
+src/fleet.rs:506:61: replace == with != in export_k8s
+src/fleet.rs:523:55: replace || with && in export_docker_compose
+src/fleet.rs:523:61: replace == with != in export_docker_compose
+src/http_server.rs:47:5: replace start_http_server -> Result<(), Box<dyn std::error::Error>> with Ok(())
+src/http_server.rs:97:17: delete match arm "GET" in start_http_server
+src/http_server.rs:98:17: delete match arm "POST" in start_http_server
+src/http_server.rs:99:17: delete match arm "PUT" in start_http_server
+src/http_server.rs:100:17: delete match arm "DELETE" in start_http_server
+src/http_server.rs:147:5: replace home_handler -> Html<String> with Html::from(String::new())
