@@ -1450,6 +1450,35 @@ fn search_web(query: &str) -> Result<String, String> {
     }
 }
 
+/// Collect `Text` lines from DuckDuckGo `RelatedTopics` (flat or nested under `Topics`).
+#[cfg(feature = "http-interface")]
+fn push_ddg_related_topic_lines(
+    topic: &serde_json::Value,
+    out: &mut String,
+    remaining: &mut usize,
+) {
+    if *remaining == 0 {
+        return;
+    }
+    if let Some(text) = topic["Text"].as_str() {
+        if !text.is_empty() {
+            if !out.is_empty() {
+                out.push('\n');
+            }
+            out.push_str(text);
+            *remaining = remaining.saturating_sub(1);
+        }
+    }
+    if let Some(subs) = topic["Topics"].as_array() {
+        for t in subs {
+            push_ddg_related_topic_lines(t, out, remaining);
+            if *remaining == 0 {
+                return;
+            }
+        }
+    }
+}
+
 #[cfg(feature = "http-interface")]
 fn search_web_duckduckgo(query: &str) -> Result<String, String> {
     let encoded = urlencoding::encode(query).to_string();
@@ -1471,15 +1500,32 @@ fn search_web_duckduckgo(query: &str) -> Result<String, String> {
             out.push(')');
         }
     }
+    let answer = json["Answer"].as_str().unwrap_or("");
+    if !answer.is_empty() {
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        out.push_str(answer);
+    }
     if let Some(related) = json["RelatedTopics"].as_array() {
-        for topic in related.iter().take(5) {
-            let text = topic["Text"].as_str().unwrap_or("");
-            if !text.is_empty() {
-                if !out.is_empty() {
-                    out.push_str("\n");
-                }
-                out.push_str(text);
+        let mut rem = 8usize;
+        for topic in related {
+            push_ddg_related_topic_lines(topic, &mut out, &mut rem);
+            if rem == 0 {
+                break;
             }
+        }
+    }
+    if let Some(results) = json["Results"].as_array() {
+        for hit in results.iter().take(5) {
+            let text = hit["Text"].as_str().unwrap_or("");
+            if text.is_empty() {
+                continue;
+            }
+            if !out.is_empty() {
+                out.push('\n');
+            }
+            out.push_str(text);
         }
     }
     if out.is_empty() {
