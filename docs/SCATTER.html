@@ -30,7 +30,9 @@ work”</h1>
 <p>Scatter is a <strong>process-local</strong> timer registry in the
 dist_agent_lang stdlib (<code>scatter::</code>). It answers
 <em>when</em> something is due; your DAL code decides <em>what</em> to
-run by matching job ids.</p>
+run by matching job ids. For a <strong>single namespace</strong> that
+combines wall-clock helpers + these timers (better for agents), see <a
+href="SCHEDULE.html"><code>schedule::</code></a>.</p>
 <p><strong>Internals:</strong> a <strong>schedule</strong> map (per job
 id: next fire + once vs repeat), a <strong>min-heap</strong> of
 <code>(next fire time, id)</code> with lazy removal of stale entries

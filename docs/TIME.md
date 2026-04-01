@@ -1,6 +1,6 @@
 # `time::` — wall-clock helpers (language)
 
-Deterministic **Unix millisecond** time and **RFC3339** parsing. No LLM: apps and tools turn natural language into these values, then call [`scatter`](SCATTER.md).
+Deterministic **Unix millisecond** time and **RFC3339** parsing. No LLM: apps and tools turn natural language into these values, then call [`scatter`](SCATTER.md) or the ergonomic facade [`schedule`](SCHEDULE.md) (same semantics, one namespace).
 
 ## Functions (DAL)
 

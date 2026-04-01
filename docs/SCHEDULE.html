@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SCHEDULE</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dist_agent_lang/docs/assets/docs.css" />
+</head>
+<body>
+<h1
+id="schedule--unified-time--scatter-for-agents"><code>schedule::</code>
+— unified time + scatter for agents</h1>
+<p>The <strong><code>schedule::</code></strong> stdlib module wraps <a
+href="TIME.html"><code>time::</code></a> and <a
+href="SCATTER.html"><code>scatter::</code></a> behind <strong>one
+namespace</strong> so DAL code and LLM-generated code can express “when”
+without juggling two modules.</p>
+<p><strong>Semantics:</strong> identical to Scatter —
+<strong>process-local</strong> timers only. For <strong>durable</strong>
+jobs across process restarts, use an application store (e.g. CEO
+<code>POST /api/schedule</code>).</p>
+<h2 id="functions-dal">Functions (DAL)</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Call</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>schedule::once_after_ms(id, delay_ms)</code></td>
+<td>One-shot after a delay from now.</td>
+</tr>
+<tr class="even">
+<td><code>schedule::once_at_unix_ms(id, unix_ms)</code></td>
+<td>One-shot at wall-clock Unix ms.</td>
+</tr>
+<tr class="odd">
+<td><code>schedule::once_at_rfc3339(id, rfc3339)</code></td>
+<td>Parse RFC3339 / naive UTC (see
+<code>time::parse_rfc3339_or_naive_utc_unix_ms</code>), then
+one-shot.</td>
+</tr>
+<tr class="even">
+<td><code>schedule::every_seconds(id, n)</code></td>
+<td>Repeat every <code>n</code> seconds (<code>n</code> &gt; 0).</td>
+</tr>
+<tr class="odd">
+<td><code>schedule::every_minutes(id, n)</code></td>
+<td>Repeat every <code>n</code> minutes.</td>
+</tr>
+<tr class="even">
+<td><code>schedule::every_hours(id, n)</code></td>
+<td>Repeat every <code>n</code> hours.</td>
+</tr>
+<tr class="odd">
+<td><code>schedule::series_interval_unix_ms(prefix, start_unix_ms, interval_ms, count)</code></td>
+<td><code>count</code> one-shots at <code>start + i * interval</code>
+for <code>i in 0..count</code>. Ids: <code>prefix_0</code> …
+<code>prefix_{count-1}</code>. Max <code>count</code> = 10_000.</td>
+</tr>
+<tr class="even">
+<td><code>schedule::series_interval_from_now_ms(prefix, interval_ms, count)</code></td>
+<td>Same with <code>start = time::unix_ms_now()</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>schedule::cancel(id)</code></td>
+<td>Remove a job (delegates to <code>scatter::cancel</code>).</td>
+</tr>
+<tr class="even">
+<td><code>schedule::pending()</code></td>
+<td>Drain due ids (delegates to <code>scatter::pending</code>).</td>
+</tr>
+<tr class="odd">
+<td><code>schedule::peek_pending()</code></td>
+<td>Non-draining snapshot.</td>
+</tr>
+<tr class="even">
+<td><code>schedule::scheduled_count()</code></td>
+<td>Jobs in the heap (delegates to
+<code>scatter::scheduled_count</code>).</td>
+</tr>
+<tr class="odd">
+<td><code>schedule::next_due_ms()</code></td>
+<td>Ms until next fire, or null.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Argument order:</strong> job <strong><code>id</code>
+first</strong>, then time parameters — easier to read than
+<code>scatter::after_ms(ms, id)</code> when authoring for agents.</p>
+<h2 id="example-recurring-cadence">Example: recurring cadence</h2>
+<pre class="dal"><code>schedule::every_minutes(&quot;heartbeat&quot;, 15);</code></pre>
+<h2 id="example-six-posts-spaced-by-two-hours-from-now">Example: six
+posts spaced by two hours (from now)</h2>
+<p>Two hours = <code>2 * 60 * 60 * 1000</code> ms:</p>
+<pre class="dal"><code>let ids = schedule::series_interval_from_now_ms(&quot;xpost&quot;, 7200000, 6);</code></pre>
+<p>Dispatch in a route or loop with <code>schedule::pending()</code> and
+match on <code>xpost_0</code>, …</p>
+<h2 id="relationship-to-scatter">Relationship to
+<code>scatter::</code></h2>
+<p><code>schedule::</code> does not add a second timer implementation;
+it <strong>delegates</strong> to <code>scatter::</code>. Prefer
+<strong><code>schedule::</code></strong> for new agent-facing DAL; use
+<strong><code>scatter::</code></strong> directly when you need the raw
+<code>(milliseconds, id)</code> argument order or minimal surface
+area.</p>
+<p>See also: <a href="TIME.html"><code>TIME.md</code></a>, <a
+href="SCATTER.html"><code>SCATTER.md</code></a>,
+<code>examples/schedule_stdlib.dal</code>.</p>
+</body>
+</html>
