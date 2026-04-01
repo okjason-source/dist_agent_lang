@@ -115,7 +115,7 @@ DAL is a **Rust-hosted interpreted language** with a tree-walking runtime. The i
 | **Persistent memory** | Agent state survives restarts. File or SQLite backend. Schema versioning. On by default. |
 | **Blockchain** | Multi-chain (Ethereum, Polygon, Solana, Arbitrum). Deploy, call, events. Solidity converter. |
 | **Security** | Reentrancy protection, safe math, cross-chain security, oracle validation, shell trust controls, ACID transactions. |
-| **Hybrid trust** | @trust("decentralized") | "hybrid" | "centralized") — one language for on-chain and off-chain. |
+| **Hybrid trust** | @trust("decentralized") or ("hybrid") or ("centralized") — one language for on-chain and off-chain. |
 | **CLI toolchain** | `dal run`, `dal check`, `dal fmt`, `dal lint`, `dal test`, `dal repl`, `dal watch`, `dal new`, `dal init`, `dal agent serve` |
 | **Standard library** | 30 modules: agent, ai, chain, crypto, database, auth, cloud, iot, mobile, desktop, evolve, trust, and more |
 | **Testing** | Built-in test framework, mock registry, 140+ tests passing |
