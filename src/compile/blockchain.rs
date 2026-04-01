@@ -253,11 +253,8 @@ fn expression_to_solidity(expr: &Expression) -> Result<String, String> {
                     call.name
                 ));
             }
-            let args: Result<Vec<String>, String> = call
-                .arguments
-                .iter()
-                .map(expression_to_solidity)
-                .collect();
+            let args: Result<Vec<String>, String> =
+                call.arguments.iter().map(expression_to_solidity).collect();
             Ok(format!("{}({})", call.name, args?.join(", ")))
         }
         _ => Err("unsupported expression in decentralized-v1 blockchain codegen".to_string()),
@@ -1536,11 +1533,9 @@ service Counter @compile_target("blockchain") {
         );
         let result = expression_to_solidity(&expr);
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .contains("only supported for self.<map_field>[key]"),
-        );
+        assert!(result
+            .unwrap_err()
+            .contains("only supported for self.<map_field>[key]"),);
     }
 
     #[test]
@@ -1561,8 +1556,8 @@ service Counter @compile_target("blockchain") {
     fn decentralized_v1_lowers_internal_function_calls() {
         use crate::parser::ast::{
             Attribute, AttributeTarget, BlockStatement, Expression,
-            FunctionCall as AstFunctionCall, FunctionStatement, LetStatement,
-            Parameter, ReturnStatement, ServiceStatement, Statement,
+            FunctionCall as AstFunctionCall, FunctionStatement, LetStatement, Parameter,
+            ReturnStatement, ServiceStatement, Statement,
         };
 
         let helper = FunctionStatement {
@@ -1632,8 +1627,8 @@ service Counter @compile_target("blockchain") {
             exported: false,
         };
 
-        let solidity = service_to_solidity(&service, &[helper, main_method])
-            .expect("solidity generation");
+        let solidity =
+            service_to_solidity(&service, &[helper, main_method]).expect("solidity generation");
 
         let expected = [
             "function double(int256 x) public returns (int256 )",
@@ -1723,7 +1718,10 @@ service Vault @compile_target("blockchain") {
             &program,
             &crate::lexer::tokens::CompilationTarget::Blockchain,
         );
-        assert!(!services.is_empty(), "should find at least one blockchain service");
+        assert!(
+            !services.is_empty(),
+            "should find at least one blockchain service"
+        );
         let service = services[0];
 
         let solidity = service_to_solidity(service, service.methods.as_slice())

@@ -1794,7 +1794,12 @@ pub fn call_typed_with_args(
     function_name: String,
     args: ChainCallArgs,
 ) -> ChainCallResult {
-    call_typed(chain_id, contract_address, function_name, args.to_flat_map())
+    call_typed(
+        chain_id,
+        contract_address,
+        function_name,
+        args.to_flat_map(),
+    )
 }
 
 /// Mint a new asset or token
@@ -2056,15 +2061,14 @@ mod abi_golden_vectors {
         build_erc20_total_supply_calldata, build_erc20_transfer_calldata,
         build_erc20_transfer_from_calldata, build_erc721_owner_of_calldata,
         build_erc721_token_uri_calldata, build_panic_revert_payload, build_revert_error_payload,
-        call_typed, call_typed_with_args, chain_arg_map_from_runtime_values,
-        decode_abi_bytes_data, decode_abi_string_data, decode_abi_tuple_string_bytes_payload,
-        decode_address_word, decode_bool_word, decode_custom_error_payload_words,
-        decode_revert_error_string_payload, decode_revert_panic_code_payload,
-        decode_static_tuple_address_uint_bool_payload, decode_uint256_word, deploy_typed,
-        deploy_typed_with_args, encode_address_word, encode_bool_word, encode_bytes32_word,
-        encode_uint256_word, typed_call_request_from_args, typed_deploy_request_from_args,
-        ChainCallArgs, ChainDeployArgs, TypedCallResponse, TypedChainErrorCode,
-        TypedDeployResponse,
+        call_typed, call_typed_with_args, chain_arg_map_from_runtime_values, decode_abi_bytes_data,
+        decode_abi_string_data, decode_abi_tuple_string_bytes_payload, decode_address_word,
+        decode_bool_word, decode_custom_error_payload_words, decode_revert_error_string_payload,
+        decode_revert_panic_code_payload, decode_static_tuple_address_uint_bool_payload,
+        decode_uint256_word, deploy_typed, deploy_typed_with_args, encode_address_word,
+        encode_bool_word, encode_bytes32_word, encode_uint256_word, typed_call_request_from_args,
+        typed_deploy_request_from_args, ChainCallArgs, ChainDeployArgs, TypedCallResponse,
+        TypedChainErrorCode, TypedDeployResponse,
     };
     use crate::runtime::values::Value;
     use crate::stdlib::abi::{canonical_selector_catalog, selector_from_signature};
@@ -2092,7 +2096,10 @@ mod abi_golden_vectors {
         m.insert("gas_limit".to_string(), "21000".to_string());
         let args = ChainDeployArgs::from_map(m).expect("should parse");
         assert_eq!(args.raw_transaction, "0xdeadbeef");
-        assert_eq!(args.extra.get("gas_limit").map(String::as_str), Some("21000"));
+        assert_eq!(
+            args.extra.get("gas_limit").map(String::as_str),
+            Some("21000")
+        );
         assert!(!args.extra.contains_key("signed_tx"));
         assert!(!args.extra.contains_key("raw_transaction"));
     }
@@ -2110,7 +2117,10 @@ mod abi_golden_vectors {
             extra: std::collections::HashMap::new(),
         };
         let flat = args.to_flat_map();
-        assert_eq!(flat.get("raw_transaction").map(String::as_str), Some("0xabc"));
+        assert_eq!(
+            flat.get("raw_transaction").map(String::as_str),
+            Some("0xabc")
+        );
     }
 
     #[test]
@@ -2124,7 +2134,10 @@ mod abi_golden_vectors {
         m.insert("value".to_string(), "0".to_string());
         let args = ChainCallArgs::from_map(m).expect("should parse");
         assert_eq!(args.data, "0x70a08231");
-        assert_eq!(args.function_signature.as_deref(), Some("balanceOf(address)"));
+        assert_eq!(
+            args.function_signature.as_deref(),
+            Some("balanceOf(address)")
+        );
         assert_eq!(args.extra.get("value").map(String::as_str), Some("0"));
         assert!(!args.extra.contains_key("calldata"));
         assert!(!args.extra.contains_key("function_signature"));

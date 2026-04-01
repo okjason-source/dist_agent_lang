@@ -369,7 +369,16 @@ fn validate_decentralized_service(
     service: &ServiceStatement,
     target: &CompilationTarget,
 ) -> Result<(), CompileError> {
-    let forbidden = ["ai", "sh", "fs", "web", "http", "oracle", "agent", "cloudadmin"];
+    let forbidden = [
+        "ai",
+        "sh",
+        "fs",
+        "web",
+        "http",
+        "oracle",
+        "agent",
+        "cloudadmin",
+    ];
     for method in &service.methods {
         let namespaces = collect_namespaces_from_block(&method.body);
         let mut violating: Vec<String> = namespaces
@@ -765,7 +774,10 @@ service Bad {
 }
 "#;
         let result = crate::parse_source(source);
-        assert!(result.is_err(), "parser should reject @trust without string model");
+        assert!(
+            result.is_err(),
+            "parser should reject @trust without string model"
+        );
         let err = format!("{}", result.unwrap_err());
         assert!(
             err.contains("without a valid string model"),
@@ -833,7 +845,10 @@ service Store @compile_target("blockchain") {
             &CompilationTarget::Blockchain,
             super::TrustCompileMode::Auto,
         );
-        assert!(result.is_ok(), "clean decentralized service should pass compiler policy");
+        assert!(
+            result.is_ok(),
+            "clean decentralized service should pass compiler policy"
+        );
     }
 
     #[test]
@@ -875,16 +890,32 @@ service Test @compile_target("blockchain") {{
 
     #[test]
     fn forbidden_namespace_lists_are_aligned() {
-        let parser_forbidden: std::collections::HashSet<&str> =
-            ["ai", "sh", "fs", "web", "http", "oracle", "agent", "cloudadmin"]
-                .iter()
-                .copied()
-                .collect();
-        let compiler_forbidden: std::collections::HashSet<&str> =
-            ["ai", "sh", "fs", "web", "http", "oracle", "agent", "cloudadmin"]
-                .iter()
-                .copied()
-                .collect();
+        let parser_forbidden: std::collections::HashSet<&str> = [
+            "ai",
+            "sh",
+            "fs",
+            "web",
+            "http",
+            "oracle",
+            "agent",
+            "cloudadmin",
+        ]
+        .iter()
+        .copied()
+        .collect();
+        let compiler_forbidden: std::collections::HashSet<&str> = [
+            "ai",
+            "sh",
+            "fs",
+            "web",
+            "http",
+            "oracle",
+            "agent",
+            "cloudadmin",
+        ]
+        .iter()
+        .copied()
+        .collect();
         assert_eq!(
             parser_forbidden, compiler_forbidden,
             "parser and compiler forbidden namespace lists must be identical"
