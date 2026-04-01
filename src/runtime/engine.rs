@@ -357,6 +357,26 @@ impl Runtime {
         self.allowed_namespaces = Some(names);
     }
 
+    /// Snapshot for `dal serve`: stdlib import aliases and loaded `import ... as name` exports.
+    pub fn serve_import_snapshot(
+        &self,
+    ) -> (
+        std::collections::HashMap<String, String>,
+        std::collections::HashMap<String, ModuleExports>,
+    ) {
+        (self.stdlib_aliases.clone(), self.module_exports.clone())
+    }
+
+    /// Restore snapshot on a fresh per-request runtime (see `serve_import_snapshot`).
+    pub fn apply_serve_import_snapshot(
+        &mut self,
+        stdlib_aliases: std::collections::HashMap<String, String>,
+        module_exports: std::collections::HashMap<String, ModuleExports>,
+    ) {
+        self.stdlib_aliases = stdlib_aliases;
+        self.module_exports = module_exports;
+    }
+
     pub fn push(&mut self, value: Value) {
         self.stack.push(value);
     }
@@ -1642,6 +1662,17 @@ impl Runtime {
             function_name: Some(format!("{}::{}", "module", function_name)),
         };
         self.call_stack.push(call_frame);
+        // Make module-local helpers callable by unqualified name while executing this module function.
+        // Without this, calls like `x_scalar_str(...)` inside `x.dal` fail because `call_function`
+        // only checks `self.user_functions` / `self.services`.
+        let saved_user_functions = self.user_functions.clone();
+        let saved_services = self.services.clone();
+        for (name, func) in &exports.user_functions {
+            self.user_functions.insert(name.clone(), func.clone());
+        }
+        for (name, svc) in &exports.services {
+            self.services.insert(name.clone(), svc.clone());
+        }
         let saved_scope = std::mem::replace(&mut self.scope, exports.scope.clone());
         for (param, arg) in user_func.parameters.iter().zip(args.iter()) {
             self.scope.set(param.clone(), arg.clone());
@@ -1666,6 +1697,8 @@ impl Runtime {
         }
         self.return_pending = None;
         self.scope = saved_scope;
+        self.user_functions = saved_user_functions;
+        self.services = saved_services;
         if let Some(frame) = self.call_stack.pop() {
             self.scope = frame.scope;
         }
@@ -1788,6 +1821,7 @@ impl Runtime {
             "evolve" => self.call_evolve_function(function_name, args),
             "http" => self.call_http_function(function_name, args),
             "scatter" => self.call_scatter_function(function_name, args),
+            "schedule" => self.call_schedule_function(function_name, args),
             "time" => self.call_time_function(function_name, args),
             "workflow" => self.call_workflow_function(function_name, args),
             "skills" => self.call_skills_function(function_name, args),
@@ -4002,6 +4036,180 @@ impl Runtime {
             }
             _ => Err(RuntimeError::function_not_found(format!(
                 "scatter::{}",
+                name
+            ))),
+        }
+    }
+
+    fn call_schedule_function(
+        &mut self,
+        name: &str,
+        args: &[Value],
+    ) -> Result<Value, RuntimeError> {
+        use crate::stdlib::schedule;
+        fn int_arg(v: &Value, label: &str) -> Result<i64, RuntimeError> {
+            match v {
+                Value::Int(n) => Ok(*n),
+                Value::Float(f) => Ok(*f as i64),
+                _ => Err(RuntimeError::General(format!(
+                    "{}: argument must be a number",
+                    label
+                ))),
+            }
+        }
+        match name {
+            "once_after_ms" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let id = self.value_to_string(&args[0])?;
+                let ms = int_arg(&args[1], "schedule::once_after_ms")?;
+                schedule::once_after_ms(&id, ms).map_err(RuntimeError::General)?;
+                Ok(Value::String(id))
+            }
+            "once_at_unix_ms" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let id = self.value_to_string(&args[0])?;
+                let unix_ms = int_arg(&args[1], "schedule::once_at_unix_ms")?;
+                schedule::once_at_unix_ms(&id, unix_ms).map_err(RuntimeError::General)?;
+                Ok(Value::String(id))
+            }
+            "once_at_rfc3339" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let id = self.value_to_string(&args[0])?;
+                let s = self.value_to_string(&args[1])?;
+                schedule::once_at_rfc3339(&id, &s).map_err(RuntimeError::General)?;
+                Ok(Value::String(id))
+            }
+            "every_seconds" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let id = self.value_to_string(&args[0])?;
+                let n = int_arg(&args[1], "schedule::every_seconds")?;
+                schedule::every_seconds(&id, n).map_err(RuntimeError::General)?;
+                Ok(Value::String(id))
+            }
+            "every_minutes" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let id = self.value_to_string(&args[0])?;
+                let n = int_arg(&args[1], "schedule::every_minutes")?;
+                schedule::every_minutes(&id, n).map_err(RuntimeError::General)?;
+                Ok(Value::String(id))
+            }
+            "every_hours" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let id = self.value_to_string(&args[0])?;
+                let n = int_arg(&args[1], "schedule::every_hours")?;
+                schedule::every_hours(&id, n).map_err(RuntimeError::General)?;
+                Ok(Value::String(id))
+            }
+            "series_interval_unix_ms" => {
+                if args.len() != 4 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 4,
+                        got: args.len(),
+                    });
+                }
+                let prefix = self.value_to_string(&args[0])?;
+                let start = int_arg(&args[1], "schedule::series_interval_unix_ms start")?;
+                let interval = int_arg(&args[2], "schedule::series_interval_unix_ms interval")?;
+                let count = int_arg(&args[3], "schedule::series_interval_unix_ms count")?;
+                let ids = schedule::series_interval_unix_ms(&prefix, start, interval, count)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Array(ids.into_iter().map(Value::String).collect()))
+            }
+            "series_interval_from_now_ms" => {
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let prefix = self.value_to_string(&args[0])?;
+                let interval = int_arg(&args[1], "schedule::series_interval_from_now_ms interval")?;
+                let count = int_arg(&args[2], "schedule::series_interval_from_now_ms count")?;
+                let ids = schedule::series_interval_from_now_ms(&prefix, interval, count)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Array(ids.into_iter().map(Value::String).collect()))
+            }
+            "cancel" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let id = self.value_to_string(&args[0])?;
+                Ok(Value::Bool(schedule::cancel(&id)))
+            }
+            "pending" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                Ok(schedule::pending_value())
+            }
+            "peek_pending" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                Ok(schedule::peek_pending_value())
+            }
+            "scheduled_count" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                Ok(Value::Int(schedule::scheduled_count() as i64))
+            }
+            "next_due_ms" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                Ok(match schedule::next_due_ms() {
+                    Some(ms) => Value::Int(ms as i64),
+                    None => Value::Null,
+                })
+            }
+            _ => Err(RuntimeError::function_not_found(format!(
+                "schedule::{}",
                 name
             ))),
         }

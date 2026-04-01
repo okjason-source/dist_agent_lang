@@ -233,7 +233,11 @@ impl ModuleResolver {
     }
 
     /// Resolve program and recursively resolve relative imports with cycle detection.
-    /// Returns a flat list of all resolved imports (entry file first, then dependencies in order).
+    /// Returns a flat list of **all** resolved imports (DFS: nested dependency imports appear before their parent).
+    ///
+    /// **Do not** pass this slice to `execute_program` as the `resolved_imports` argument: execution
+    /// pairs `resolved[i]` with the *i-th top-level* `import` in the entry program only. For loading
+    /// a single file, use [`Self::resolve_program_imports`] instead.
     pub fn resolve_program_with_cycles(
         &self,
         program: &Program,

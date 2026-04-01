@@ -572,9 +572,7 @@ fn run_dal_file(filename: &str) {
                 resolver = resolver.with_dependencies(deps);
             }
         }
-        let parse_fn = |s: &str| dist_agent_lang::parse_source(s).map_err(|e| e.to_string());
-        let resolved = match resolver.resolve_program_with_cycles(&ast, Some(entry_path), parse_fn)
-        {
+        let resolved = match resolver.resolve_program_imports(&ast, Some(entry_path)) {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("❌ Import resolution failed: {}", e);
@@ -991,7 +989,7 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
         Ok(p) => p,
         Err(_) => std::path::Path::new(filename).to_path_buf(),
     };
-    let (user_functions, scope) =
+    let (user_functions, scope, stdlib_aliases, module_exports) =
         match execute_dal_and_extract_handlers_with_path(&source_code, &entry_path) {
             Ok(extracted) => extracted,
             Err(e) => {
@@ -1036,14 +1034,20 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
 
     let user_functions = Arc::new(user_functions);
     let shared_scope = Arc::new(std::sync::RwLock::new(scope));
+    let stdlib_aliases = Arc::new(stdlib_aliases);
+    let module_exports = Arc::new(module_exports);
     let runtime_factory = {
         let uf = user_functions.clone();
         let sc = shared_scope.clone();
+        let sa = stdlib_aliases.clone();
+        let me = module_exports.clone();
         move || {
             let mut rt = Runtime::new();
             rt.user_functions = (*uf).clone();
             // Read shared scope (handler state persists across requests)
             rt.scope = sc.read().unwrap_or_else(|e| e.into_inner()).clone();
+            // Import `as x` / `as comms` modules only exist on the loader runtime unless copied here
+            rt.apply_serve_import_snapshot((*sa).clone(), (*me).clone());
             rt
         }
     };
@@ -3430,9 +3434,7 @@ fn run_dal_file_with_venv(script_path: &std::path::Path, venv: &dist_agent_lang:
     }
 
     let exec_result = if has_imports {
-        let parse_fn = |s: &str| dist_agent_lang::parse_source(s).map_err(|e| e.to_string());
-        let resolved = match resolver.resolve_program_with_cycles(&ast, Some(script_path), parse_fn)
-        {
+        let resolved = match resolver.resolve_program_imports(&ast, Some(script_path)) {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("❌ Import resolution failed: {}", e);

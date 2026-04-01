@@ -193,9 +193,10 @@ pub fn execute_dal_file(path: &str) -> Result<(), String> {
                 resolver = resolver.with_dependencies(deps);
             }
         }
-        let parse_fn = |s: &str| parse_source(s).map_err(|e| e.to_string());
+        // Must match one entry per top-level `import` in order (see `execute_program` + Import stmt).
+        // Do not use `resolve_program_with_cycles` here — that flattens nested imports and misaligns indices.
         let resolved = resolver
-            .resolve_program_with_cycles(&program, Some(entry_path), parse_fn)
+            .resolve_program_imports(&program, Some(entry_path))
             .map_err(|e| e.to_string())?;
         runtime
             .execute_program(program, Some(&resolved))
@@ -230,6 +231,7 @@ pub fn execute_dal_and_extract_handlers(
 
 /// Like execute_dal_and_extract_handlers but resolves imports using entry_path.
 /// Use this for `dal serve <file>` so that handlers and their imports (e.g. workflows.dal) load correctly and all @route handlers are registered.
+/// The third and fourth tuple values are stdlib import aliases and per-alias module exports; `dal serve` copies them into each per-request runtime.
 pub fn execute_dal_and_extract_handlers_with_path(
     source: &str,
     entry_path: &std::path::Path,
@@ -237,6 +239,8 @@ pub fn execute_dal_and_extract_handlers_with_path(
     (
         std::collections::HashMap<String, runtime::engine::UserFunction>,
         runtime::scope::Scope,
+        std::collections::HashMap<String, String>,
+        std::collections::HashMap<String, runtime::engine::ModuleExports>,
     ),
     Box<dyn std::error::Error>,
 > {
@@ -259,9 +263,9 @@ pub fn execute_dal_and_extract_handlers_with_path(
                 resolver = resolver.with_dependencies(deps);
             }
         }
-        let parse_fn = |s: &str| parse_source(s).map_err(|e| e.to_string());
+        // One resolved entry per top-level import in source order (nested deps resolved inside Import).
         let resolved = resolver
-            .resolve_program_with_cycles(&program, Some(entry_path), parse_fn)
+            .resolve_program_imports(&program, Some(entry_path))
             .map_err(|e| {
                 Box::new(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
                     as Box<dyn std::error::Error>
@@ -274,7 +278,13 @@ pub fn execute_dal_and_extract_handlers_with_path(
             .execute_program(program, None)
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
     }
-    Ok((runtime.user_functions.clone(), runtime.scope.clone()))
+    let (stdlib_aliases, module_exports) = runtime.serve_import_snapshot();
+    Ok((
+        runtime.user_functions.clone(),
+        runtime.scope.clone(),
+        stdlib_aliases,
+        module_exports,
+    ))
 }
 
 #[cfg(test)]

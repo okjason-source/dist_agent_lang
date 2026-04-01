@@ -1,6 +1,6 @@
 # Scatter — runtime “time to do work”
 
-Scatter is a **process-local** timer registry in the dist_agent_lang stdlib (`scatter::`). It answers *when* something is due; your DAL code decides *what* to run by matching job ids.
+Scatter is a **process-local** timer registry in the dist_agent_lang stdlib (`scatter::`). It answers *when* something is due; your DAL code decides *what* to run by matching job ids. For a **single namespace** that combines wall-clock helpers + these timers (better for agents), see [`schedule::`](SCHEDULE.md).
 
 **Internals:** a **schedule** map (per job id: next fire + once vs repeat), a **min-heap** of `(next fire time, id)` with lazy removal of stale entries when ids are rescheduled or cancelled, and a **due queue** (`VecDeque`) of ids ready to handle. A worker thread **sleeps until the next due time** or until a **notify** from `after_ms` / `every_ms` / `cancel`, then runs **process_due** to move fired ids into the due queue.
 

@@ -411,7 +411,8 @@ fn test_server_registers_all_routes() {
         Ok(s) => s,
         Err(_) => return,
     };
-    let (user_functions, _) = match execute_dal_and_extract_handlers_with_path(&source, path) {
+    let (user_functions, _, _, _) = match execute_dal_and_extract_handlers_with_path(&source, path)
+    {
         Ok(x) => x,
         Err(e) => panic!("execute failed: {}", e),
     };

@@ -27,6 +27,7 @@ pub mod mold;
 pub mod oracle;
 pub mod rag;
 pub mod scatter;
+pub mod schedule;
 pub mod secure_auth;
 pub mod service;
 pub mod sh;
