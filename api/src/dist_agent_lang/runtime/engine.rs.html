@@ -12906,58 +12906,59 @@
 <a href=#12906 id=12906 data-nosnippet>12906</a>            }
 <a href=#12907 id=12907 data-nosnippet>12907</a>        }
 <a href=#12908 id=12908 data-nosnippet>12908</a>
-<a href=#12909 id=12909 data-nosnippet>12909</a>        <span class="comment">// Set admin/cloudadmin privileges based on trust model
+<a href=#12909 id=12909 data-nosnippet>12909</a>        <span class="comment">// Set admin/cloudadmin privileges based on trust model (fail-closed for unknown models)
 <a href=#12910 id=12910 data-nosnippet>12910</a>        </span><span class="kw">match </span>trust_model.as_str() {
 <a href=#12911 id=12911 data-nosnippet>12911</a>            <span class="string">"centralized" </span>=&gt; {
 <a href=#12912 id=12912 data-nosnippet>12912</a>                has_admin_privileges = <span class="bool-val">true</span>;
 <a href=#12913 id=12913 data-nosnippet>12913</a>                has_cloudadmin_privileges = <span class="bool-val">true</span>;
 <a href=#12914 id=12914 data-nosnippet>12914</a>            }
 <a href=#12915 id=12915 data-nosnippet>12915</a>            <span class="string">"hybrid" </span>=&gt; {
-<a href=#12916 id=12916 data-nosnippet>12916</a>                <span class="comment">// In hybrid mode, check if admin/cloudadmin attributes are present
-<a href=#12917 id=12917 data-nosnippet>12917</a>                </span>has_admin_privileges = attributes.iter().any(|a| a == <span class="string">"@admin"</span>);
-<a href=#12918 id=12918 data-nosnippet>12918</a>                has_cloudadmin_privileges = attributes.iter().any(|a| a == <span class="string">"@cloudadmin"</span>);
-<a href=#12919 id=12919 data-nosnippet>12919</a>            }
-<a href=#12920 id=12920 data-nosnippet>12920</a>            <span class="string">"decentralized" </span>=&gt; {
-<a href=#12921 id=12921 data-nosnippet>12921</a>                <span class="comment">// In decentralized mode, admin/cloudadmin operations are restricted
-<a href=#12922 id=12922 data-nosnippet>12922</a>                </span>has_admin_privileges = <span class="bool-val">false</span>;
-<a href=#12923 id=12923 data-nosnippet>12923</a>                has_cloudadmin_privileges = <span class="bool-val">false</span>;
-<a href=#12924 id=12924 data-nosnippet>12924</a>            }
-<a href=#12925 id=12925 data-nosnippet>12925</a>            <span class="kw">_ </span>=&gt; {}
-<a href=#12926 id=12926 data-nosnippet>12926</a>        }
-<a href=#12927 id=12927 data-nosnippet>12927</a>
-<a href=#12928 id=12928 data-nosnippet>12928</a>        <span class="self">self</span>.current_service = <span class="prelude-val">Some</span>(ServiceContext {
-<a href=#12929 id=12929 data-nosnippet>12929</a>            name: service_name,
-<a href=#12930 id=12930 data-nosnippet>12930</a>            trust_model,
-<a href=#12931 id=12931 data-nosnippet>12931</a>            has_admin_privileges,
-<a href=#12932 id=12932 data-nosnippet>12932</a>            has_cloudadmin_privileges,
-<a href=#12933 id=12933 data-nosnippet>12933</a>            has_web_privileges,
-<a href=#12934 id=12934 data-nosnippet>12934</a>            has_ai_privileges,
-<a href=#12935 id=12935 data-nosnippet>12935</a>            has_chain_privileges,
-<a href=#12936 id=12936 data-nosnippet>12936</a>            attributes,
-<a href=#12937 id=12937 data-nosnippet>12937</a>        });
-<a href=#12938 id=12938 data-nosnippet>12938</a>    }
-<a href=#12939 id=12939 data-nosnippet>12939</a>
-<a href=#12940 id=12940 data-nosnippet>12940</a>    <span class="doccomment">/// Clear the current service context
-<a href=#12941 id=12941 data-nosnippet>12941</a>    </span><span class="kw">pub fn </span>clear_current_service(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#12942 id=12942 data-nosnippet>12942</a>        <span class="self">self</span>.current_service = <span class="prelude-val">None</span>;
-<a href=#12943 id=12943 data-nosnippet>12943</a>    }
-<a href=#12944 id=12944 data-nosnippet>12944</a>}
-<a href=#12945 id=12945 data-nosnippet>12945</a>
-<a href=#12946 id=12946 data-nosnippet>12946</a><span class="comment">// Helper function to generate unique IDs
-<a href=#12947 id=12947 data-nosnippet>12947</a></span><span class="kw">fn </span>generate_id() -&gt; u64 {
-<a href=#12948 id=12948 data-nosnippet>12948</a>    <span class="kw">use </span>std::time::{SystemTime, UNIX_EPOCH};
-<a href=#12949 id=12949 data-nosnippet>12949</a>    SystemTime::now()
-<a href=#12950 id=12950 data-nosnippet>12950</a>        .duration_since(UNIX_EPOCH)
-<a href=#12951 id=12951 data-nosnippet>12951</a>        .map(|d| d.as_nanos() <span class="kw">as </span>u64)
-<a href=#12952 id=12952 data-nosnippet>12952</a>        .unwrap_or(<span class="number">0</span>)
-<a href=#12953 id=12953 data-nosnippet>12953</a>}
-<a href=#12954 id=12954 data-nosnippet>12954</a>
-<a href=#12955 id=12955 data-nosnippet>12955</a><span class="kw">impl </span>Default <span class="kw">for </span>Runtime {
-<a href=#12956 id=12956 data-nosnippet>12956</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-<a href=#12957 id=12957 data-nosnippet>12957</a>        <span class="self">Self</span>::new()
-<a href=#12958 id=12958 data-nosnippet>12958</a>    }
-<a href=#12959 id=12959 data-nosnippet>12959</a>}
-<a href=#12960 id=12960 data-nosnippet>12960</a>
-<a href=#12961 id=12961 data-nosnippet>12961</a><span class="comment">// Use the proper RuntimeError variants
-<a href=#12962 id=12962 data-nosnippet>12962</a></span><span class="kw">impl </span>RuntimeError {}
+<a href=#12916 id=12916 data-nosnippet>12916</a>                has_admin_privileges = attributes.iter().any(|a| a == <span class="string">"@admin"</span>);
+<a href=#12917 id=12917 data-nosnippet>12917</a>                has_cloudadmin_privileges = attributes.iter().any(|a| a == <span class="string">"@cloudadmin"</span>);
+<a href=#12918 id=12918 data-nosnippet>12918</a>            }
+<a href=#12919 id=12919 data-nosnippet>12919</a>            <span class="string">"decentralized" </span>| <span class="string">"trustless" </span>=&gt; {
+<a href=#12920 id=12920 data-nosnippet>12920</a>                has_admin_privileges = <span class="bool-val">false</span>;
+<a href=#12921 id=12921 data-nosnippet>12921</a>                has_cloudadmin_privileges = <span class="bool-val">false</span>;
+<a href=#12922 id=12922 data-nosnippet>12922</a>            }
+<a href=#12923 id=12923 data-nosnippet>12923</a>            <span class="kw">_ </span>=&gt; {
+<a href=#12924 id=12924 data-nosnippet>12924</a>                has_admin_privileges = <span class="bool-val">false</span>;
+<a href=#12925 id=12925 data-nosnippet>12925</a>                has_cloudadmin_privileges = <span class="bool-val">false</span>;
+<a href=#12926 id=12926 data-nosnippet>12926</a>            }
+<a href=#12927 id=12927 data-nosnippet>12927</a>        }
+<a href=#12928 id=12928 data-nosnippet>12928</a>
+<a href=#12929 id=12929 data-nosnippet>12929</a>        <span class="self">self</span>.current_service = <span class="prelude-val">Some</span>(ServiceContext {
+<a href=#12930 id=12930 data-nosnippet>12930</a>            name: service_name,
+<a href=#12931 id=12931 data-nosnippet>12931</a>            trust_model,
+<a href=#12932 id=12932 data-nosnippet>12932</a>            has_admin_privileges,
+<a href=#12933 id=12933 data-nosnippet>12933</a>            has_cloudadmin_privileges,
+<a href=#12934 id=12934 data-nosnippet>12934</a>            has_web_privileges,
+<a href=#12935 id=12935 data-nosnippet>12935</a>            has_ai_privileges,
+<a href=#12936 id=12936 data-nosnippet>12936</a>            has_chain_privileges,
+<a href=#12937 id=12937 data-nosnippet>12937</a>            attributes,
+<a href=#12938 id=12938 data-nosnippet>12938</a>        });
+<a href=#12939 id=12939 data-nosnippet>12939</a>    }
+<a href=#12940 id=12940 data-nosnippet>12940</a>
+<a href=#12941 id=12941 data-nosnippet>12941</a>    <span class="doccomment">/// Clear the current service context
+<a href=#12942 id=12942 data-nosnippet>12942</a>    </span><span class="kw">pub fn </span>clear_current_service(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#12943 id=12943 data-nosnippet>12943</a>        <span class="self">self</span>.current_service = <span class="prelude-val">None</span>;
+<a href=#12944 id=12944 data-nosnippet>12944</a>    }
+<a href=#12945 id=12945 data-nosnippet>12945</a>}
+<a href=#12946 id=12946 data-nosnippet>12946</a>
+<a href=#12947 id=12947 data-nosnippet>12947</a><span class="comment">// Helper function to generate unique IDs
+<a href=#12948 id=12948 data-nosnippet>12948</a></span><span class="kw">fn </span>generate_id() -&gt; u64 {
+<a href=#12949 id=12949 data-nosnippet>12949</a>    <span class="kw">use </span>std::time::{SystemTime, UNIX_EPOCH};
+<a href=#12950 id=12950 data-nosnippet>12950</a>    SystemTime::now()
+<a href=#12951 id=12951 data-nosnippet>12951</a>        .duration_since(UNIX_EPOCH)
+<a href=#12952 id=12952 data-nosnippet>12952</a>        .map(|d| d.as_nanos() <span class="kw">as </span>u64)
+<a href=#12953 id=12953 data-nosnippet>12953</a>        .unwrap_or(<span class="number">0</span>)
+<a href=#12954 id=12954 data-nosnippet>12954</a>}
+<a href=#12955 id=12955 data-nosnippet>12955</a>
+<a href=#12956 id=12956 data-nosnippet>12956</a><span class="kw">impl </span>Default <span class="kw">for </span>Runtime {
+<a href=#12957 id=12957 data-nosnippet>12957</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#12958 id=12958 data-nosnippet>12958</a>        <span class="self">Self</span>::new()
+<a href=#12959 id=12959 data-nosnippet>12959</a>    }
+<a href=#12960 id=12960 data-nosnippet>12960</a>}
+<a href=#12961 id=12961 data-nosnippet>12961</a>
+<a href=#12962 id=12962 data-nosnippet>12962</a><span class="comment">// Use the proper RuntimeError variants
+<a href=#12963 id=12963 data-nosnippet>12963</a></span><span class="kw">impl </span>RuntimeError {}
 </code></pre></div></section></main></body></html>

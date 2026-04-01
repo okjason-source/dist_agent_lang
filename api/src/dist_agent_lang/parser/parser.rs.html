@@ -3657,263 +3657,274 @@
 <a href=#3657 id=3657 data-nosnippet>3657</a>                            context: ErrorContext::new(),
 <a href=#3658 id=3658 data-nosnippet>3658</a>                        });
 <a href=#3659 id=3659 data-nosnippet>3659</a>                    }
-<a href=#3660 id=3660 data-nosnippet>3660</a>                }
-<a href=#3661 id=3661 data-nosnippet>3661</a>            }
-<a href=#3662 id=3662 data-nosnippet>3662</a>
-<a href=#3663 id=3663 data-nosnippet>3663</a>            <span class="comment">// Rule 4: Validate chain identifiers
-<a href=#3664 id=3664 data-nosnippet>3664</a>            </span><span class="kw">if </span>attr.name == <span class="string">"@chain" </span>{
-<a href=#3665 id=3665 data-nosnippet>3665</a>                <span class="kw">for </span>param <span class="kw">in </span><span class="kw-2">&amp;</span>attr.parameters {
-<a href=#3666 id=3666 data-nosnippet>3666</a>                    <span class="kw">if let </span>Expression::Literal(Literal::String(chain)) = param {
-<a href=#3667 id=3667 data-nosnippet>3667</a>                        <span class="kw">let </span>valid_chains = [
-<a href=#3668 id=3668 data-nosnippet>3668</a>                            <span class="string">"ethereum"</span>,
-<a href=#3669 id=3669 data-nosnippet>3669</a>                            <span class="string">"polygon"</span>,
-<a href=#3670 id=3670 data-nosnippet>3670</a>                            <span class="string">"bsc"</span>,
-<a href=#3671 id=3671 data-nosnippet>3671</a>                            <span class="string">"solana"</span>,
-<a href=#3672 id=3672 data-nosnippet>3672</a>                            <span class="string">"bitcoin"</span>,
-<a href=#3673 id=3673 data-nosnippet>3673</a>                            <span class="string">"avalanche"</span>,
-<a href=#3674 id=3674 data-nosnippet>3674</a>                            <span class="string">"arbitrum"</span>,
-<a href=#3675 id=3675 data-nosnippet>3675</a>                            <span class="string">"optimism"</span>,
-<a href=#3676 id=3676 data-nosnippet>3676</a>                            <span class="string">"base"</span>,
-<a href=#3677 id=3677 data-nosnippet>3677</a>                            <span class="string">"near"</span>,
-<a href=#3678 id=3678 data-nosnippet>3678</a>                            <span class="string">"eth"</span>, <span class="comment">// Common shorthand
-<a href=#3679 id=3679 data-nosnippet>3679</a>                        </span>];
-<a href=#3680 id=3680 data-nosnippet>3680</a>                        <span class="kw">let </span>chain_lower = chain.to_lowercase();
-<a href=#3681 id=3681 data-nosnippet>3681</a>                        <span class="kw">if </span>!valid_chains.contains(<span class="kw-2">&amp;</span>chain_lower.as_str()) {
-<a href=#3682 id=3682 data-nosnippet>3682</a>                            <span class="kw">let </span>(line, _column) = <span class="self">self</span>.get_service_line_column(service);
-<a href=#3683 id=3683 data-nosnippet>3683</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(ParserError::SemanticError {
-<a href=#3684 id=3684 data-nosnippet>3684</a>                                message: <span class="macro">format!</span>(
-<a href=#3685 id=3685 data-nosnippet>3685</a>                                    <span class="string">"Service '{}' has invalid chain identifier '{}'. Valid options: {:?}"</span>,
-<a href=#3686 id=3686 data-nosnippet>3686</a>                                    service.name, chain, valid_chains
-<a href=#3687 id=3687 data-nosnippet>3687</a>                                ),
-<a href=#3688 id=3688 data-nosnippet>3688</a>                                line,
-<a href=#3689 id=3689 data-nosnippet>3689</a>                                context: ErrorContext::new(),
-<a href=#3690 id=3690 data-nosnippet>3690</a>                            });
-<a href=#3691 id=3691 data-nosnippet>3691</a>                        }
-<a href=#3692 id=3692 data-nosnippet>3692</a>                    }
-<a href=#3693 id=3693 data-nosnippet>3693</a>                }
-<a href=#3694 id=3694 data-nosnippet>3694</a>            }
-<a href=#3695 id=3695 data-nosnippet>3695</a>        }
-<a href=#3696 id=3696 data-nosnippet>3696</a>
-<a href=#3697 id=3697 data-nosnippet>3697</a>        <span class="comment">// Rule 5: @trust("decentralized") requires deterministic-only namespace usage.
-<a href=#3698 id=3698 data-nosnippet>3698</a>        </span><span class="kw">let </span>is_decentralized = service.attributes.iter().any(|attr| {
-<a href=#3699 id=3699 data-nosnippet>3699</a>            attr.name == <span class="string">"@trust"
-<a href=#3700 id=3700 data-nosnippet>3700</a>                </span>&amp;&amp; <span class="macro">matches!</span>(
-<a href=#3701 id=3701 data-nosnippet>3701</a>                    attr.parameters.first(),
-<a href=#3702 id=3702 data-nosnippet>3702</a>                    <span class="prelude-val">Some</span>(Expression::Literal(Literal::String(model))) <span class="kw">if </span>model == <span class="string">"decentralized"
-<a href=#3703 id=3703 data-nosnippet>3703</a>                </span>)
-<a href=#3704 id=3704 data-nosnippet>3704</a>        });
-<a href=#3705 id=3705 data-nosnippet>3705</a>        <span class="kw">if </span>is_decentralized {
-<a href=#3706 id=3706 data-nosnippet>3706</a>            <span class="kw">let </span>forbidden_namespaces: HashSet&lt;String&gt; = [
-<a href=#3707 id=3707 data-nosnippet>3707</a>                <span class="string">"ai"</span>,
-<a href=#3708 id=3708 data-nosnippet>3708</a>                <span class="string">"sh"</span>,
-<a href=#3709 id=3709 data-nosnippet>3709</a>                <span class="string">"fs"</span>,
-<a href=#3710 id=3710 data-nosnippet>3710</a>                <span class="string">"web"</span>,
-<a href=#3711 id=3711 data-nosnippet>3711</a>                <span class="string">"http"</span>,
-<a href=#3712 id=3712 data-nosnippet>3712</a>                <span class="string">"oracle"</span>,
-<a href=#3713 id=3713 data-nosnippet>3713</a>                <span class="string">"agent"</span>,
-<a href=#3714 id=3714 data-nosnippet>3714</a>                <span class="string">"cloudadmin"</span>,
-<a href=#3715 id=3715 data-nosnippet>3715</a>            ]
-<a href=#3716 id=3716 data-nosnippet>3716</a>            .iter()
-<a href=#3717 id=3717 data-nosnippet>3717</a>            .map(|s| s.to_string())
-<a href=#3718 id=3718 data-nosnippet>3718</a>            .collect();
-<a href=#3719 id=3719 data-nosnippet>3719</a>
-<a href=#3720 id=3720 data-nosnippet>3720</a>            <span class="kw">for </span>method <span class="kw">in </span><span class="kw-2">&amp;</span>service.methods {
-<a href=#3721 id=3721 data-nosnippet>3721</a>                <span class="kw">let </span>used_namespaces = <span class="self">self</span>.collect_namespaces_from_block(<span class="kw-2">&amp;</span>method.body);
-<a href=#3722 id=3722 data-nosnippet>3722</a>                <span class="kw">let </span><span class="kw-2">mut </span>violating: Vec&lt;String&gt; = used_namespaces
-<a href=#3723 id=3723 data-nosnippet>3723</a>                    .intersection(<span class="kw-2">&amp;</span>forbidden_namespaces)
-<a href=#3724 id=3724 data-nosnippet>3724</a>                    .cloned()
-<a href=#3725 id=3725 data-nosnippet>3725</a>                    .collect();
-<a href=#3726 id=3726 data-nosnippet>3726</a>                <span class="kw">if </span>!violating.is_empty() {
-<a href=#3727 id=3727 data-nosnippet>3727</a>                    violating.sort();
-<a href=#3728 id=3728 data-nosnippet>3728</a>                    violating.dedup();
-<a href=#3729 id=3729 data-nosnippet>3729</a>                    <span class="kw">let </span>line = <span class="kw">if let </span><span class="prelude-val">Some</span>(pos) =
-<a href=#3730 id=3730 data-nosnippet>3730</a>                        <span class="self">self</span>.find_function_position(<span class="kw-2">&amp;</span>service.name, <span class="kw-2">&amp;</span>method.name)
-<a href=#3731 id=3731 data-nosnippet>3731</a>                    {
-<a href=#3732 id=3732 data-nosnippet>3732</a>                        <span class="kw">let </span>(line, _column) = <span class="self">self</span>.get_token_position(pos);
-<a href=#3733 id=3733 data-nosnippet>3733</a>                        line
-<a href=#3734 id=3734 data-nosnippet>3734</a>                    } <span class="kw">else </span>{
-<a href=#3735 id=3735 data-nosnippet>3735</a>                        <span class="self">self</span>.get_service_line_column(service).<span class="number">0
-<a href=#3736 id=3736 data-nosnippet>3736</a>                    </span>};
-<a href=#3737 id=3737 data-nosnippet>3737</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(ParserError::SemanticError {
-<a href=#3738 id=3738 data-nosnippet>3738</a>                        message: <span class="macro">format!</span>(
-<a href=#3739 id=3739 data-nosnippet>3739</a>                            <span class="string">"Function '{}' in decentralized service '{}' uses disallowed namespace(s): {:?}. \
-<a href=#3740 id=3740 data-nosnippet>3740</a>Move orchestration/tooling calls to @trust(\"hybrid\") or @trust(\"centralized\") services."</span>,
-<a href=#3741 id=3741 data-nosnippet>3741</a>                            method.name, service.name, violating
-<a href=#3742 id=3742 data-nosnippet>3742</a>                        ),
-<a href=#3743 id=3743 data-nosnippet>3743</a>                        line,
-<a href=#3744 id=3744 data-nosnippet>3744</a>                        context: ErrorContext::new(),
-<a href=#3745 id=3745 data-nosnippet>3745</a>                    });
-<a href=#3746 id=3746 data-nosnippet>3746</a>                }
-<a href=#3747 id=3747 data-nosnippet>3747</a>            }
-<a href=#3748 id=3748 data-nosnippet>3748</a>        }
-<a href=#3749 id=3749 data-nosnippet>3749</a>
-<a href=#3750 id=3750 data-nosnippet>3750</a>        <span class="comment">// Rule 6: Validate function-level attributes (@secure and @public are mutually exclusive)
-<a href=#3751 id=3751 data-nosnippet>3751</a>        </span><span class="kw">for </span>method <span class="kw">in </span><span class="kw-2">&amp;</span>service.methods {
-<a href=#3752 id=3752 data-nosnippet>3752</a>            <span class="kw">let </span>func_attr_names: Vec&lt;<span class="kw-2">&amp;</span>str&gt; =
-<a href=#3753 id=3753 data-nosnippet>3753</a>                method.attributes.iter().map(|a| a.name.as_str()).collect();
-<a href=#3754 id=3754 data-nosnippet>3754</a>
-<a href=#3755 id=3755 data-nosnippet>3755</a>            <span class="kw">let </span>func_has_secure = func_attr_names.contains(<span class="kw-2">&amp;</span><span class="string">"@secure"</span>);
-<a href=#3756 id=3756 data-nosnippet>3756</a>            <span class="kw">let </span>func_has_public = func_attr_names.contains(<span class="kw-2">&amp;</span><span class="string">"@public"</span>);
-<a href=#3757 id=3757 data-nosnippet>3757</a>
-<a href=#3758 id=3758 data-nosnippet>3758</a>            <span class="kw">if </span>func_has_secure &amp;&amp; func_has_public {
-<a href=#3759 id=3759 data-nosnippet>3759</a>                <span class="comment">// Try to get line number for the function
-<a href=#3760 id=3760 data-nosnippet>3760</a>                </span><span class="kw">let </span>line =
-<a href=#3761 id=3761 data-nosnippet>3761</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(pos) = <span class="self">self</span>.find_function_position(<span class="kw-2">&amp;</span>service.name, <span class="kw-2">&amp;</span>method.name) {
-<a href=#3762 id=3762 data-nosnippet>3762</a>                        <span class="kw">let </span>(line, _column) = <span class="self">self</span>.get_token_position(pos);
-<a href=#3763 id=3763 data-nosnippet>3763</a>                        line
-<a href=#3764 id=3764 data-nosnippet>3764</a>                    } <span class="kw">else </span>{
-<a href=#3765 id=3765 data-nosnippet>3765</a>                        <span class="number">0 </span><span class="comment">// Fallback if position not found
-<a href=#3766 id=3766 data-nosnippet>3766</a>                    </span>};
-<a href=#3767 id=3767 data-nosnippet>3767</a>
-<a href=#3768 id=3768 data-nosnippet>3768</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(ParserError::SemanticError {
-<a href=#3769 id=3769 data-nosnippet>3769</a>                    message: <span class="macro">format!</span>(
-<a href=#3770 id=3770 data-nosnippet>3770</a>                        <span class="string">"Function '{}' in service '{}' cannot have both @secure and @public attributes (mutually exclusive)"</span>,
-<a href=#3771 id=3771 data-nosnippet>3771</a>                        method.name, service.name
-<a href=#3772 id=3772 data-nosnippet>3772</a>                    ),
-<a href=#3773 id=3773 data-nosnippet>3773</a>                    line,
-<a href=#3774 id=3774 data-nosnippet>3774</a>                    context: ErrorContext::new(),
-<a href=#3775 id=3775 data-nosnippet>3775</a>                });
-<a href=#3776 id=3776 data-nosnippet>3776</a>            }
-<a href=#3777 id=3777 data-nosnippet>3777</a>        }
+<a href=#3660 id=3660 data-nosnippet>3660</a>                } <span class="kw">else </span>{
+<a href=#3661 id=3661 data-nosnippet>3661</a>                    <span class="kw">let </span>(line, _column) = <span class="self">self</span>.get_service_line_column(service);
+<a href=#3662 id=3662 data-nosnippet>3662</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(ParserError::SemanticError {
+<a href=#3663 id=3663 data-nosnippet>3663</a>                        message: <span class="macro">format!</span>(
+<a href=#3664 id=3664 data-nosnippet>3664</a>                            <span class="string">"Service '{}' has @trust attribute without a valid string model parameter. \
+<a href=#3665 id=3665 data-nosnippet>3665</a>Usage: @trust(\"decentralized\"), @trust(\"hybrid\"), or @trust(\"centralized\")"</span>,
+<a href=#3666 id=3666 data-nosnippet>3666</a>                            service.name
+<a href=#3667 id=3667 data-nosnippet>3667</a>                        ),
+<a href=#3668 id=3668 data-nosnippet>3668</a>                        line,
+<a href=#3669 id=3669 data-nosnippet>3669</a>                        context: ErrorContext::new(),
+<a href=#3670 id=3670 data-nosnippet>3670</a>                    });
+<a href=#3671 id=3671 data-nosnippet>3671</a>                }
+<a href=#3672 id=3672 data-nosnippet>3672</a>            }
+<a href=#3673 id=3673 data-nosnippet>3673</a>
+<a href=#3674 id=3674 data-nosnippet>3674</a>            <span class="comment">// Rule 4: Validate chain identifiers
+<a href=#3675 id=3675 data-nosnippet>3675</a>            </span><span class="kw">if </span>attr.name == <span class="string">"@chain" </span>{
+<a href=#3676 id=3676 data-nosnippet>3676</a>                <span class="kw">for </span>param <span class="kw">in </span><span class="kw-2">&amp;</span>attr.parameters {
+<a href=#3677 id=3677 data-nosnippet>3677</a>                    <span class="kw">if let </span>Expression::Literal(Literal::String(chain)) = param {
+<a href=#3678 id=3678 data-nosnippet>3678</a>                        <span class="kw">let </span>valid_chains = [
+<a href=#3679 id=3679 data-nosnippet>3679</a>                            <span class="string">"ethereum"</span>,
+<a href=#3680 id=3680 data-nosnippet>3680</a>                            <span class="string">"polygon"</span>,
+<a href=#3681 id=3681 data-nosnippet>3681</a>                            <span class="string">"bsc"</span>,
+<a href=#3682 id=3682 data-nosnippet>3682</a>                            <span class="string">"solana"</span>,
+<a href=#3683 id=3683 data-nosnippet>3683</a>                            <span class="string">"bitcoin"</span>,
+<a href=#3684 id=3684 data-nosnippet>3684</a>                            <span class="string">"avalanche"</span>,
+<a href=#3685 id=3685 data-nosnippet>3685</a>                            <span class="string">"arbitrum"</span>,
+<a href=#3686 id=3686 data-nosnippet>3686</a>                            <span class="string">"optimism"</span>,
+<a href=#3687 id=3687 data-nosnippet>3687</a>                            <span class="string">"base"</span>,
+<a href=#3688 id=3688 data-nosnippet>3688</a>                            <span class="string">"near"</span>,
+<a href=#3689 id=3689 data-nosnippet>3689</a>                            <span class="string">"eth"</span>, <span class="comment">// Common shorthand
+<a href=#3690 id=3690 data-nosnippet>3690</a>                        </span>];
+<a href=#3691 id=3691 data-nosnippet>3691</a>                        <span class="kw">let </span>chain_lower = chain.to_lowercase();
+<a href=#3692 id=3692 data-nosnippet>3692</a>                        <span class="kw">if </span>!valid_chains.contains(<span class="kw-2">&amp;</span>chain_lower.as_str()) {
+<a href=#3693 id=3693 data-nosnippet>3693</a>                            <span class="kw">let </span>(line, _column) = <span class="self">self</span>.get_service_line_column(service);
+<a href=#3694 id=3694 data-nosnippet>3694</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(ParserError::SemanticError {
+<a href=#3695 id=3695 data-nosnippet>3695</a>                                message: <span class="macro">format!</span>(
+<a href=#3696 id=3696 data-nosnippet>3696</a>                                    <span class="string">"Service '{}' has invalid chain identifier '{}'. Valid options: {:?}"</span>,
+<a href=#3697 id=3697 data-nosnippet>3697</a>                                    service.name, chain, valid_chains
+<a href=#3698 id=3698 data-nosnippet>3698</a>                                ),
+<a href=#3699 id=3699 data-nosnippet>3699</a>                                line,
+<a href=#3700 id=3700 data-nosnippet>3700</a>                                context: ErrorContext::new(),
+<a href=#3701 id=3701 data-nosnippet>3701</a>                            });
+<a href=#3702 id=3702 data-nosnippet>3702</a>                        }
+<a href=#3703 id=3703 data-nosnippet>3703</a>                    }
+<a href=#3704 id=3704 data-nosnippet>3704</a>                }
+<a href=#3705 id=3705 data-nosnippet>3705</a>            }
+<a href=#3706 id=3706 data-nosnippet>3706</a>        }
+<a href=#3707 id=3707 data-nosnippet>3707</a>
+<a href=#3708 id=3708 data-nosnippet>3708</a>        <span class="comment">// Rule 5: @trust("decentralized") requires deterministic-only namespace usage.
+<a href=#3709 id=3709 data-nosnippet>3709</a>        </span><span class="kw">let </span>is_decentralized = service.attributes.iter().any(|attr| {
+<a href=#3710 id=3710 data-nosnippet>3710</a>            attr.name == <span class="string">"@trust"
+<a href=#3711 id=3711 data-nosnippet>3711</a>                </span>&amp;&amp; <span class="macro">matches!</span>(
+<a href=#3712 id=3712 data-nosnippet>3712</a>                    attr.parameters.first(),
+<a href=#3713 id=3713 data-nosnippet>3713</a>                    <span class="prelude-val">Some</span>(Expression::Literal(Literal::String(model))) <span class="kw">if </span>model == <span class="string">"decentralized"
+<a href=#3714 id=3714 data-nosnippet>3714</a>                </span>)
+<a href=#3715 id=3715 data-nosnippet>3715</a>        });
+<a href=#3716 id=3716 data-nosnippet>3716</a>        <span class="kw">if </span>is_decentralized {
+<a href=#3717 id=3717 data-nosnippet>3717</a>            <span class="kw">let </span>forbidden_namespaces: HashSet&lt;String&gt; = [
+<a href=#3718 id=3718 data-nosnippet>3718</a>                <span class="string">"ai"</span>,
+<a href=#3719 id=3719 data-nosnippet>3719</a>                <span class="string">"sh"</span>,
+<a href=#3720 id=3720 data-nosnippet>3720</a>                <span class="string">"fs"</span>,
+<a href=#3721 id=3721 data-nosnippet>3721</a>                <span class="string">"web"</span>,
+<a href=#3722 id=3722 data-nosnippet>3722</a>                <span class="string">"http"</span>,
+<a href=#3723 id=3723 data-nosnippet>3723</a>                <span class="string">"oracle"</span>,
+<a href=#3724 id=3724 data-nosnippet>3724</a>                <span class="string">"agent"</span>,
+<a href=#3725 id=3725 data-nosnippet>3725</a>                <span class="string">"cloudadmin"</span>,
+<a href=#3726 id=3726 data-nosnippet>3726</a>            ]
+<a href=#3727 id=3727 data-nosnippet>3727</a>            .iter()
+<a href=#3728 id=3728 data-nosnippet>3728</a>            .map(|s| s.to_string())
+<a href=#3729 id=3729 data-nosnippet>3729</a>            .collect();
+<a href=#3730 id=3730 data-nosnippet>3730</a>
+<a href=#3731 id=3731 data-nosnippet>3731</a>            <span class="kw">for </span>method <span class="kw">in </span><span class="kw-2">&amp;</span>service.methods {
+<a href=#3732 id=3732 data-nosnippet>3732</a>                <span class="kw">let </span>used_namespaces = <span class="self">self</span>.collect_namespaces_from_block(<span class="kw-2">&amp;</span>method.body);
+<a href=#3733 id=3733 data-nosnippet>3733</a>                <span class="kw">let </span><span class="kw-2">mut </span>violating: Vec&lt;String&gt; = used_namespaces
+<a href=#3734 id=3734 data-nosnippet>3734</a>                    .intersection(<span class="kw-2">&amp;</span>forbidden_namespaces)
+<a href=#3735 id=3735 data-nosnippet>3735</a>                    .cloned()
+<a href=#3736 id=3736 data-nosnippet>3736</a>                    .collect();
+<a href=#3737 id=3737 data-nosnippet>3737</a>                <span class="kw">if </span>!violating.is_empty() {
+<a href=#3738 id=3738 data-nosnippet>3738</a>                    violating.sort();
+<a href=#3739 id=3739 data-nosnippet>3739</a>                    violating.dedup();
+<a href=#3740 id=3740 data-nosnippet>3740</a>                    <span class="kw">let </span>line = <span class="kw">if let </span><span class="prelude-val">Some</span>(pos) =
+<a href=#3741 id=3741 data-nosnippet>3741</a>                        <span class="self">self</span>.find_function_position(<span class="kw-2">&amp;</span>service.name, <span class="kw-2">&amp;</span>method.name)
+<a href=#3742 id=3742 data-nosnippet>3742</a>                    {
+<a href=#3743 id=3743 data-nosnippet>3743</a>                        <span class="kw">let </span>(line, _column) = <span class="self">self</span>.get_token_position(pos);
+<a href=#3744 id=3744 data-nosnippet>3744</a>                        line
+<a href=#3745 id=3745 data-nosnippet>3745</a>                    } <span class="kw">else </span>{
+<a href=#3746 id=3746 data-nosnippet>3746</a>                        <span class="self">self</span>.get_service_line_column(service).<span class="number">0
+<a href=#3747 id=3747 data-nosnippet>3747</a>                    </span>};
+<a href=#3748 id=3748 data-nosnippet>3748</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(ParserError::SemanticError {
+<a href=#3749 id=3749 data-nosnippet>3749</a>                        message: <span class="macro">format!</span>(
+<a href=#3750 id=3750 data-nosnippet>3750</a>                            <span class="string">"Function '{}' in decentralized service '{}' uses disallowed namespace(s): {:?}. \
+<a href=#3751 id=3751 data-nosnippet>3751</a>Move orchestration/tooling calls to @trust(\"hybrid\") or @trust(\"centralized\") services."</span>,
+<a href=#3752 id=3752 data-nosnippet>3752</a>                            method.name, service.name, violating
+<a href=#3753 id=3753 data-nosnippet>3753</a>                        ),
+<a href=#3754 id=3754 data-nosnippet>3754</a>                        line,
+<a href=#3755 id=3755 data-nosnippet>3755</a>                        context: ErrorContext::new(),
+<a href=#3756 id=3756 data-nosnippet>3756</a>                    });
+<a href=#3757 id=3757 data-nosnippet>3757</a>                }
+<a href=#3758 id=3758 data-nosnippet>3758</a>            }
+<a href=#3759 id=3759 data-nosnippet>3759</a>        }
+<a href=#3760 id=3760 data-nosnippet>3760</a>
+<a href=#3761 id=3761 data-nosnippet>3761</a>        <span class="comment">// Rule 6: Validate function-level attributes (@secure and @public are mutually exclusive)
+<a href=#3762 id=3762 data-nosnippet>3762</a>        </span><span class="kw">for </span>method <span class="kw">in </span><span class="kw-2">&amp;</span>service.methods {
+<a href=#3763 id=3763 data-nosnippet>3763</a>            <span class="kw">let </span>func_attr_names: Vec&lt;<span class="kw-2">&amp;</span>str&gt; =
+<a href=#3764 id=3764 data-nosnippet>3764</a>                method.attributes.iter().map(|a| a.name.as_str()).collect();
+<a href=#3765 id=3765 data-nosnippet>3765</a>
+<a href=#3766 id=3766 data-nosnippet>3766</a>            <span class="kw">let </span>func_has_secure = func_attr_names.contains(<span class="kw-2">&amp;</span><span class="string">"@secure"</span>);
+<a href=#3767 id=3767 data-nosnippet>3767</a>            <span class="kw">let </span>func_has_public = func_attr_names.contains(<span class="kw-2">&amp;</span><span class="string">"@public"</span>);
+<a href=#3768 id=3768 data-nosnippet>3768</a>
+<a href=#3769 id=3769 data-nosnippet>3769</a>            <span class="kw">if </span>func_has_secure &amp;&amp; func_has_public {
+<a href=#3770 id=3770 data-nosnippet>3770</a>                <span class="comment">// Try to get line number for the function
+<a href=#3771 id=3771 data-nosnippet>3771</a>                </span><span class="kw">let </span>line =
+<a href=#3772 id=3772 data-nosnippet>3772</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(pos) = <span class="self">self</span>.find_function_position(<span class="kw-2">&amp;</span>service.name, <span class="kw-2">&amp;</span>method.name) {
+<a href=#3773 id=3773 data-nosnippet>3773</a>                        <span class="kw">let </span>(line, _column) = <span class="self">self</span>.get_token_position(pos);
+<a href=#3774 id=3774 data-nosnippet>3774</a>                        line
+<a href=#3775 id=3775 data-nosnippet>3775</a>                    } <span class="kw">else </span>{
+<a href=#3776 id=3776 data-nosnippet>3776</a>                        <span class="number">0 </span><span class="comment">// Fallback if position not found
+<a href=#3777 id=3777 data-nosnippet>3777</a>                    </span>};
 <a href=#3778 id=3778 data-nosnippet>3778</a>
-<a href=#3779 id=3779 data-nosnippet>3779</a>        <span class="prelude-val">Ok</span>(())
-<a href=#3780 id=3780 data-nosnippet>3780</a>    }
-<a href=#3781 id=3781 data-nosnippet>3781</a>
-<a href=#3782 id=3782 data-nosnippet>3782</a>    <span class="doccomment">/// Helper to find the position of a function within a service
-<a href=#3783 id=3783 data-nosnippet>3783</a>    </span><span class="kw">fn </span>find_function_position(<span class="kw-2">&amp;</span><span class="self">self</span>, _service_name: <span class="kw-2">&amp;</span>str, function_name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-<a href=#3784 id=3784 data-nosnippet>3784</a>        <span class="comment">// This is a simplified implementation - in practice, you'd track positions during parsing
-<a href=#3785 id=3785 data-nosnippet>3785</a>        // For now, we'll search through tokens to find the function
-<a href=#3786 id=3786 data-nosnippet>3786</a>        </span><span class="kw">for </span>(pos, tokens_window) <span class="kw">in </span><span class="self">self</span>.tokens.windows(<span class="number">3</span>).enumerate() {
-<a href=#3787 id=3787 data-nosnippet>3787</a>            <span class="kw">if let </span>[Token::Keyword(Keyword::Fn), Token::Identifier(name), ..] = tokens_window {
-<a href=#3788 id=3788 data-nosnippet>3788</a>                <span class="kw">if </span>name == function_name {
-<a href=#3789 id=3789 data-nosnippet>3789</a>                    <span class="kw">return </span><span class="prelude-val">Some</span>(pos);
-<a href=#3790 id=3790 data-nosnippet>3790</a>                }
-<a href=#3791 id=3791 data-nosnippet>3791</a>            }
-<a href=#3792 id=3792 data-nosnippet>3792</a>        }
-<a href=#3793 id=3793 data-nosnippet>3793</a>        <span class="prelude-val">None
-<a href=#3794 id=3794 data-nosnippet>3794</a>    </span>}
-<a href=#3795 id=3795 data-nosnippet>3795</a>
-<a href=#3796 id=3796 data-nosnippet>3796</a>    <span class="doccomment">/// Get the line and column for a service statement (for error reporting)
-<a href=#3797 id=3797 data-nosnippet>3797</a>    </span><span class="kw">fn </span>get_service_line_column(<span class="kw-2">&amp;</span><span class="self">self</span>, _service: <span class="kw-2">&amp;</span>ServiceStatement) -&gt; (usize, usize) {
-<a href=#3798 id=3798 data-nosnippet>3798</a>        <span class="comment">// Try to find the service keyword token
-<a href=#3799 id=3799 data-nosnippet>3799</a>        </span><span class="kw">for </span>(i, token) <span class="kw">in </span><span class="self">self</span>.tokens.iter().enumerate() {
-<a href=#3800 id=3800 data-nosnippet>3800</a>            <span class="kw">if let </span>Token::Keyword(Keyword::Service) = token {
-<a href=#3801 id=3801 data-nosnippet>3801</a>                <span class="kw">if </span>i &lt; <span class="self">self</span>.token_positions.len() {
-<a href=#3802 id=3802 data-nosnippet>3802</a>                    <span class="kw">return </span><span class="self">self</span>.token_positions[i];
-<a href=#3803 id=3803 data-nosnippet>3803</a>                }
-<a href=#3804 id=3804 data-nosnippet>3804</a>            }
-<a href=#3805 id=3805 data-nosnippet>3805</a>        }
-<a href=#3806 id=3806 data-nosnippet>3806</a>        <span class="comment">// Fallback to first token position or (1, 1)
-<a href=#3807 id=3807 data-nosnippet>3807</a>        </span><span class="kw">if </span>!<span class="self">self</span>.token_positions.is_empty() {
-<a href=#3808 id=3808 data-nosnippet>3808</a>            <span class="self">self</span>.token_positions[<span class="number">0</span>]
-<a href=#3809 id=3809 data-nosnippet>3809</a>        } <span class="kw">else </span>{
-<a href=#3810 id=3810 data-nosnippet>3810</a>            (<span class="number">1</span>, <span class="number">1</span>)
-<a href=#3811 id=3811 data-nosnippet>3811</a>        }
-<a href=#3812 id=3812 data-nosnippet>3812</a>    }
-<a href=#3813 id=3813 data-nosnippet>3813</a>
-<a href=#3814 id=3814 data-nosnippet>3814</a>    <span class="comment">// Helper methods
-<a href=#3815 id=3815 data-nosnippet>3815</a>    </span><span class="kw">fn </span>expect_token(
-<a href=#3816 id=3816 data-nosnippet>3816</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#3817 id=3817 data-nosnippet>3817</a>        position: usize,
-<a href=#3818 id=3818 data-nosnippet>3818</a>        expected: <span class="kw-2">&amp;</span>Token,
-<a href=#3819 id=3819 data-nosnippet>3819</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, <span class="kw-2">&amp;</span>Token), ParserError&gt; {
-<a href=#3820 id=3820 data-nosnippet>3820</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(token) = <span class="self">self</span>.tokens.get(position) {
-<a href=#3821 id=3821 data-nosnippet>3821</a>            <span class="kw">if </span>token == expected {
-<a href=#3822 id=3822 data-nosnippet>3822</a>                <span class="prelude-val">Ok</span>((position + <span class="number">1</span>, token))
-<a href=#3823 id=3823 data-nosnippet>3823</a>            } <span class="kw">else </span>{
-<a href=#3824 id=3824 data-nosnippet>3824</a>                <span class="prelude-val">Err</span>(<span class="self">self</span>.error_unexpected_token(position, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{:?}"</span>, expected)]))
-<a href=#3825 id=3825 data-nosnippet>3825</a>            }
-<a href=#3826 id=3826 data-nosnippet>3826</a>        } <span class="kw">else </span>{
-<a href=#3827 id=3827 data-nosnippet>3827</a>            <span class="prelude-val">Err</span>(ParserError::unexpected_eof(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{:?}"</span>, expected)))
-<a href=#3828 id=3828 data-nosnippet>3828</a>        }
-<a href=#3829 id=3829 data-nosnippet>3829</a>    }
-<a href=#3830 id=3830 data-nosnippet>3830</a>
-<a href=#3831 id=3831 data-nosnippet>3831</a>    <span class="kw">fn </span>expect_identifier(<span class="kw-2">&amp;</span><span class="self">self</span>, position: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, String), ParserError&gt; {
-<a href=#3832 id=3832 data-nosnippet>3832</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(Token::Identifier(name)) = <span class="self">self</span>.tokens.get(position) {
-<a href=#3833 id=3833 data-nosnippet>3833</a>            <span class="prelude-val">Ok</span>((position + <span class="number">1</span>, name.clone()))
-<a href=#3834 id=3834 data-nosnippet>3834</a>        } <span class="kw">else </span>{
-<a href=#3835 id=3835 data-nosnippet>3835</a>            <span class="prelude-val">Err</span>(<span class="self">self</span>.error_unexpected_token(position, <span class="kw-2">&amp;</span>[<span class="string">"identifier"</span>]))
-<a href=#3836 id=3836 data-nosnippet>3836</a>        }
-<a href=#3837 id=3837 data-nosnippet>3837</a>    }
-<a href=#3838 id=3838 data-nosnippet>3838</a>
-<a href=#3839 id=3839 data-nosnippet>3839</a>    <span class="doccomment">/// Returns the string value of the token at position if it is an Identifier or Keyword (for import path segments).
-<a href=#3840 id=3840 data-nosnippet>3840</a>    </span><span class="kw">fn </span>get_identifier_or_keyword_string_at(<span class="kw-2">&amp;</span><span class="self">self</span>, position: usize) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-<a href=#3841 id=3841 data-nosnippet>3841</a>        <span class="kw">match </span><span class="self">self</span>.tokens.get(position) {
-<a href=#3842 id=3842 data-nosnippet>3842</a>            <span class="prelude-val">Some</span>(Token::Identifier(s)) =&gt; <span class="prelude-val">Some</span>(s.clone()),
-<a href=#3843 id=3843 data-nosnippet>3843</a>            <span class="prelude-val">Some</span>(Token::Keyword(k)) =&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.keyword_to_string(k)),
-<a href=#3844 id=3844 data-nosnippet>3844</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#3845 id=3845 data-nosnippet>3845</a>        }
-<a href=#3846 id=3846 data-nosnippet>3846</a>    }
-<a href=#3847 id=3847 data-nosnippet>3847</a>
-<a href=#3848 id=3848 data-nosnippet>3848</a>    <span class="kw">fn </span>keyword_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, k: <span class="kw-2">&amp;</span>Keyword) -&gt; String {
-<a href=#3849 id=3849 data-nosnippet>3849</a>        <span class="kw">match </span>k {
-<a href=#3850 id=3850 data-nosnippet>3850</a>            Keyword::Service =&gt; <span class="string">"service"</span>.to_string(),
-<a href=#3851 id=3851 data-nosnippet>3851</a>            Keyword::Ai =&gt; <span class="string">"ai"</span>.to_string(),
-<a href=#3852 id=3852 data-nosnippet>3852</a>            Keyword::Chain =&gt; <span class="string">"chain"</span>.to_string(),
-<a href=#3853 id=3853 data-nosnippet>3853</a>            Keyword::Mobile =&gt; <span class="string">"mobile"</span>.to_string(),
-<a href=#3854 id=3854 data-nosnippet>3854</a>            Keyword::Desktop =&gt; <span class="string">"desktop"</span>.to_string(),
-<a href=#3855 id=3855 data-nosnippet>3855</a>            Keyword::Iot =&gt; <span class="string">"iot"</span>.to_string(),
-<a href=#3856 id=3856 data-nosnippet>3856</a>            Keyword::Persistent =&gt; <span class="string">"persistent"</span>.to_string(),
-<a href=#3857 id=3857 data-nosnippet>3857</a>            Keyword::Cached =&gt; <span class="string">"cached"</span>.to_string(),
-<a href=#3858 id=3858 data-nosnippet>3858</a>            Keyword::Versioned =&gt; <span class="string">"versioned"</span>.to_string(),
-<a href=#3859 id=3859 data-nosnippet>3859</a>            Keyword::Deprecated =&gt; <span class="string">"deprecated"</span>.to_string(),
-<a href=#3860 id=3860 data-nosnippet>3860</a>            Keyword::CompileTarget =&gt; <span class="string">"compile_target"</span>.to_string(),
-<a href=#3861 id=3861 data-nosnippet>3861</a>            Keyword::Interface =&gt; <span class="string">"interface"</span>.to_string(),
-<a href=#3862 id=3862 data-nosnippet>3862</a>            Keyword::Txn =&gt; <span class="string">"txn"</span>.to_string(),
-<a href=#3863 id=3863 data-nosnippet>3863</a>            Keyword::Secure =&gt; <span class="string">"secure"</span>.to_string(),
-<a href=#3864 id=3864 data-nosnippet>3864</a>            Keyword::Limit =&gt; <span class="string">"limit"</span>.to_string(),
-<a href=#3865 id=3865 data-nosnippet>3865</a>            Keyword::Trust =&gt; <span class="string">"trust"</span>.to_string(),
-<a href=#3866 id=3866 data-nosnippet>3866</a>            Keyword::Import =&gt; <span class="string">"import"</span>.to_string(),
-<a href=#3867 id=3867 data-nosnippet>3867</a>            Keyword::Export =&gt; <span class="string">"export"</span>.to_string(),
-<a href=#3868 id=3868 data-nosnippet>3868</a>            Keyword::As =&gt; <span class="string">"as"</span>.to_string(),
-<a href=#3869 id=3869 data-nosnippet>3869</a>            Keyword::Private =&gt; <span class="string">"private"</span>.to_string(),
-<a href=#3870 id=3870 data-nosnippet>3870</a>            Keyword::Audit =&gt; <span class="string">"audit"</span>.to_string(),
-<a href=#3871 id=3871 data-nosnippet>3871</a>            Keyword::With =&gt; <span class="string">"with"</span>.to_string(),
-<a href=#3872 id=3872 data-nosnippet>3872</a>            Keyword::Finally =&gt; <span class="string">"finally"</span>.to_string(),
-<a href=#3873 id=3873 data-nosnippet>3873</a>            Keyword::Await =&gt; <span class="string">"await"</span>.to_string(),
-<a href=#3874 id=3874 data-nosnippet>3874</a>            Keyword::Async =&gt; <span class="string">"async"</span>.to_string(),
-<a href=#3875 id=3875 data-nosnippet>3875</a>            Keyword::Result =&gt; <span class="string">"Result"</span>.to_string(),
-<a href=#3876 id=3876 data-nosnippet>3876</a>            Keyword::Option =&gt; <span class="string">"Option"</span>.to_string(),
-<a href=#3877 id=3877 data-nosnippet>3877</a>            Keyword::Some =&gt; <span class="string">"Some"</span>.to_string(),
-<a href=#3878 id=3878 data-nosnippet>3878</a>            Keyword::None =&gt; <span class="string">"None"</span>.to_string(),
-<a href=#3879 id=3879 data-nosnippet>3879</a>            Keyword::Ok =&gt; <span class="string">"Ok"</span>.to_string(),
-<a href=#3880 id=3880 data-nosnippet>3880</a>            Keyword::Err =&gt; <span class="string">"Err"</span>.to_string(),
-<a href=#3881 id=3881 data-nosnippet>3881</a>            Keyword::List =&gt; <span class="string">"List"</span>.to_string(),
-<a href=#3882 id=3882 data-nosnippet>3882</a>            Keyword::Map =&gt; <span class="string">"Map"</span>.to_string(),
-<a href=#3883 id=3883 data-nosnippet>3883</a>            Keyword::Set =&gt; <span class="string">"Set"</span>.to_string(),
-<a href=#3884 id=3884 data-nosnippet>3884</a>            Keyword::Generic =&gt; <span class="string">"Generic"</span>.to_string(),
-<a href=#3885 id=3885 data-nosnippet>3885</a>            Keyword::Box =&gt; <span class="string">"Box"</span>.to_string(),
-<a href=#3886 id=3886 data-nosnippet>3886</a>            Keyword::Ref =&gt; <span class="string">"ref"</span>.to_string(),
-<a href=#3887 id=3887 data-nosnippet>3887</a>            Keyword::Mut =&gt; <span class="string">"mut"</span>.to_string(),
-<a href=#3888 id=3888 data-nosnippet>3888</a>            Keyword::Const =&gt; <span class="string">"const"</span>.to_string(),
-<a href=#3889 id=3889 data-nosnippet>3889</a>            Keyword::Static =&gt; <span class="string">"static"</span>.to_string(),
-<a href=#3890 id=3890 data-nosnippet>3890</a>            Keyword::Extern =&gt; <span class="string">"extern"</span>.to_string(),
-<a href=#3891 id=3891 data-nosnippet>3891</a>            Keyword::Crate =&gt; <span class="string">"crate"</span>.to_string(),
-<a href=#3892 id=3892 data-nosnippet>3892</a>            Keyword::Super =&gt; <span class="string">"super"</span>.to_string(),
-<a href=#3893 id=3893 data-nosnippet>3893</a>            Keyword::Self_ =&gt; <span class="string">"self"</span>.to_string(),
-<a href=#3894 id=3894 data-nosnippet>3894</a>            Keyword::SelfType =&gt; <span class="string">"Self"</span>.to_string(),
-<a href=#3895 id=3895 data-nosnippet>3895</a>            <span class="kw">_ </span>=&gt; <span class="macro">format!</span>(<span class="string">"{:?}"</span>, k).to_lowercase(),
-<a href=#3896 id=3896 data-nosnippet>3896</a>        }
-<a href=#3897 id=3897 data-nosnippet>3897</a>    }
-<a href=#3898 id=3898 data-nosnippet>3898</a>
-<a href=#3899 id=3899 data-nosnippet>3899</a>    <span class="kw">fn </span>expect_identifier_or_keyword(
-<a href=#3900 id=3900 data-nosnippet>3900</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#3901 id=3901 data-nosnippet>3901</a>        position: usize,
-<a href=#3902 id=3902 data-nosnippet>3902</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, String), ParserError&gt; {
-<a href=#3903 id=3903 data-nosnippet>3903</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(Token::Identifier(name)) = <span class="self">self</span>.tokens.get(position) {
-<a href=#3904 id=3904 data-nosnippet>3904</a>            <span class="prelude-val">Ok</span>((position + <span class="number">1</span>, name.clone()))
-<a href=#3905 id=3905 data-nosnippet>3905</a>        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(Token::Keyword(keyword)) = <span class="self">self</span>.tokens.get(position) {
-<a href=#3906 id=3906 data-nosnippet>3906</a>            <span class="kw">let </span>name = <span class="self">self</span>.keyword_to_string(keyword);
-<a href=#3907 id=3907 data-nosnippet>3907</a>            <span class="prelude-val">Ok</span>((position + <span class="number">1</span>, name))
-<a href=#3908 id=3908 data-nosnippet>3908</a>        } <span class="kw">else </span>{
-<a href=#3909 id=3909 data-nosnippet>3909</a>            <span class="kw">let </span>(line, column) = <span class="self">self</span>.get_token_position(position);
-<a href=#3910 id=3910 data-nosnippet>3910</a>            <span class="prelude-val">Err</span>(ParserError::unexpected_token(
-<a href=#3911 id=3911 data-nosnippet>3911</a>                <span class="self">self</span>.tokens.get(position).unwrap_or(<span class="kw-2">&amp;</span>Token::EOF),
-<a href=#3912 id=3912 data-nosnippet>3912</a>                <span class="kw-2">&amp;</span>[<span class="string">"identifier"</span>, <span class="string">"keyword"</span>],
-<a href=#3913 id=3913 data-nosnippet>3913</a>                line,
-<a href=#3914 id=3914 data-nosnippet>3914</a>                column,
-<a href=#3915 id=3915 data-nosnippet>3915</a>            ))
-<a href=#3916 id=3916 data-nosnippet>3916</a>        }
-<a href=#3917 id=3917 data-nosnippet>3917</a>    }
-<a href=#3918 id=3918 data-nosnippet>3918</a>}
+<a href=#3779 id=3779 data-nosnippet>3779</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(ParserError::SemanticError {
+<a href=#3780 id=3780 data-nosnippet>3780</a>                    message: <span class="macro">format!</span>(
+<a href=#3781 id=3781 data-nosnippet>3781</a>                        <span class="string">"Function '{}' in service '{}' cannot have both @secure and @public attributes (mutually exclusive)"</span>,
+<a href=#3782 id=3782 data-nosnippet>3782</a>                        method.name, service.name
+<a href=#3783 id=3783 data-nosnippet>3783</a>                    ),
+<a href=#3784 id=3784 data-nosnippet>3784</a>                    line,
+<a href=#3785 id=3785 data-nosnippet>3785</a>                    context: ErrorContext::new(),
+<a href=#3786 id=3786 data-nosnippet>3786</a>                });
+<a href=#3787 id=3787 data-nosnippet>3787</a>            }
+<a href=#3788 id=3788 data-nosnippet>3788</a>        }
+<a href=#3789 id=3789 data-nosnippet>3789</a>
+<a href=#3790 id=3790 data-nosnippet>3790</a>        <span class="prelude-val">Ok</span>(())
+<a href=#3791 id=3791 data-nosnippet>3791</a>    }
+<a href=#3792 id=3792 data-nosnippet>3792</a>
+<a href=#3793 id=3793 data-nosnippet>3793</a>    <span class="doccomment">/// Helper to find the position of a function within a service
+<a href=#3794 id=3794 data-nosnippet>3794</a>    </span><span class="kw">fn </span>find_function_position(<span class="kw-2">&amp;</span><span class="self">self</span>, _service_name: <span class="kw-2">&amp;</span>str, function_name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+<a href=#3795 id=3795 data-nosnippet>3795</a>        <span class="comment">// This is a simplified implementation - in practice, you'd track positions during parsing
+<a href=#3796 id=3796 data-nosnippet>3796</a>        // For now, we'll search through tokens to find the function
+<a href=#3797 id=3797 data-nosnippet>3797</a>        </span><span class="kw">for </span>(pos, tokens_window) <span class="kw">in </span><span class="self">self</span>.tokens.windows(<span class="number">3</span>).enumerate() {
+<a href=#3798 id=3798 data-nosnippet>3798</a>            <span class="kw">if let </span>[Token::Keyword(Keyword::Fn), Token::Identifier(name), ..] = tokens_window {
+<a href=#3799 id=3799 data-nosnippet>3799</a>                <span class="kw">if </span>name == function_name {
+<a href=#3800 id=3800 data-nosnippet>3800</a>                    <span class="kw">return </span><span class="prelude-val">Some</span>(pos);
+<a href=#3801 id=3801 data-nosnippet>3801</a>                }
+<a href=#3802 id=3802 data-nosnippet>3802</a>            }
+<a href=#3803 id=3803 data-nosnippet>3803</a>        }
+<a href=#3804 id=3804 data-nosnippet>3804</a>        <span class="prelude-val">None
+<a href=#3805 id=3805 data-nosnippet>3805</a>    </span>}
+<a href=#3806 id=3806 data-nosnippet>3806</a>
+<a href=#3807 id=3807 data-nosnippet>3807</a>    <span class="doccomment">/// Get the line and column for a service statement (for error reporting)
+<a href=#3808 id=3808 data-nosnippet>3808</a>    </span><span class="kw">fn </span>get_service_line_column(<span class="kw-2">&amp;</span><span class="self">self</span>, _service: <span class="kw-2">&amp;</span>ServiceStatement) -&gt; (usize, usize) {
+<a href=#3809 id=3809 data-nosnippet>3809</a>        <span class="comment">// Try to find the service keyword token
+<a href=#3810 id=3810 data-nosnippet>3810</a>        </span><span class="kw">for </span>(i, token) <span class="kw">in </span><span class="self">self</span>.tokens.iter().enumerate() {
+<a href=#3811 id=3811 data-nosnippet>3811</a>            <span class="kw">if let </span>Token::Keyword(Keyword::Service) = token {
+<a href=#3812 id=3812 data-nosnippet>3812</a>                <span class="kw">if </span>i &lt; <span class="self">self</span>.token_positions.len() {
+<a href=#3813 id=3813 data-nosnippet>3813</a>                    <span class="kw">return </span><span class="self">self</span>.token_positions[i];
+<a href=#3814 id=3814 data-nosnippet>3814</a>                }
+<a href=#3815 id=3815 data-nosnippet>3815</a>            }
+<a href=#3816 id=3816 data-nosnippet>3816</a>        }
+<a href=#3817 id=3817 data-nosnippet>3817</a>        <span class="comment">// Fallback to first token position or (1, 1)
+<a href=#3818 id=3818 data-nosnippet>3818</a>        </span><span class="kw">if </span>!<span class="self">self</span>.token_positions.is_empty() {
+<a href=#3819 id=3819 data-nosnippet>3819</a>            <span class="self">self</span>.token_positions[<span class="number">0</span>]
+<a href=#3820 id=3820 data-nosnippet>3820</a>        } <span class="kw">else </span>{
+<a href=#3821 id=3821 data-nosnippet>3821</a>            (<span class="number">1</span>, <span class="number">1</span>)
+<a href=#3822 id=3822 data-nosnippet>3822</a>        }
+<a href=#3823 id=3823 data-nosnippet>3823</a>    }
+<a href=#3824 id=3824 data-nosnippet>3824</a>
+<a href=#3825 id=3825 data-nosnippet>3825</a>    <span class="comment">// Helper methods
+<a href=#3826 id=3826 data-nosnippet>3826</a>    </span><span class="kw">fn </span>expect_token(
+<a href=#3827 id=3827 data-nosnippet>3827</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#3828 id=3828 data-nosnippet>3828</a>        position: usize,
+<a href=#3829 id=3829 data-nosnippet>3829</a>        expected: <span class="kw-2">&amp;</span>Token,
+<a href=#3830 id=3830 data-nosnippet>3830</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, <span class="kw-2">&amp;</span>Token), ParserError&gt; {
+<a href=#3831 id=3831 data-nosnippet>3831</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(token) = <span class="self">self</span>.tokens.get(position) {
+<a href=#3832 id=3832 data-nosnippet>3832</a>            <span class="kw">if </span>token == expected {
+<a href=#3833 id=3833 data-nosnippet>3833</a>                <span class="prelude-val">Ok</span>((position + <span class="number">1</span>, token))
+<a href=#3834 id=3834 data-nosnippet>3834</a>            } <span class="kw">else </span>{
+<a href=#3835 id=3835 data-nosnippet>3835</a>                <span class="prelude-val">Err</span>(<span class="self">self</span>.error_unexpected_token(position, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{:?}"</span>, expected)]))
+<a href=#3836 id=3836 data-nosnippet>3836</a>            }
+<a href=#3837 id=3837 data-nosnippet>3837</a>        } <span class="kw">else </span>{
+<a href=#3838 id=3838 data-nosnippet>3838</a>            <span class="prelude-val">Err</span>(ParserError::unexpected_eof(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{:?}"</span>, expected)))
+<a href=#3839 id=3839 data-nosnippet>3839</a>        }
+<a href=#3840 id=3840 data-nosnippet>3840</a>    }
+<a href=#3841 id=3841 data-nosnippet>3841</a>
+<a href=#3842 id=3842 data-nosnippet>3842</a>    <span class="kw">fn </span>expect_identifier(<span class="kw-2">&amp;</span><span class="self">self</span>, position: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, String), ParserError&gt; {
+<a href=#3843 id=3843 data-nosnippet>3843</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(Token::Identifier(name)) = <span class="self">self</span>.tokens.get(position) {
+<a href=#3844 id=3844 data-nosnippet>3844</a>            <span class="prelude-val">Ok</span>((position + <span class="number">1</span>, name.clone()))
+<a href=#3845 id=3845 data-nosnippet>3845</a>        } <span class="kw">else </span>{
+<a href=#3846 id=3846 data-nosnippet>3846</a>            <span class="prelude-val">Err</span>(<span class="self">self</span>.error_unexpected_token(position, <span class="kw-2">&amp;</span>[<span class="string">"identifier"</span>]))
+<a href=#3847 id=3847 data-nosnippet>3847</a>        }
+<a href=#3848 id=3848 data-nosnippet>3848</a>    }
+<a href=#3849 id=3849 data-nosnippet>3849</a>
+<a href=#3850 id=3850 data-nosnippet>3850</a>    <span class="doccomment">/// Returns the string value of the token at position if it is an Identifier or Keyword (for import path segments).
+<a href=#3851 id=3851 data-nosnippet>3851</a>    </span><span class="kw">fn </span>get_identifier_or_keyword_string_at(<span class="kw-2">&amp;</span><span class="self">self</span>, position: usize) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+<a href=#3852 id=3852 data-nosnippet>3852</a>        <span class="kw">match </span><span class="self">self</span>.tokens.get(position) {
+<a href=#3853 id=3853 data-nosnippet>3853</a>            <span class="prelude-val">Some</span>(Token::Identifier(s)) =&gt; <span class="prelude-val">Some</span>(s.clone()),
+<a href=#3854 id=3854 data-nosnippet>3854</a>            <span class="prelude-val">Some</span>(Token::Keyword(k)) =&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.keyword_to_string(k)),
+<a href=#3855 id=3855 data-nosnippet>3855</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#3856 id=3856 data-nosnippet>3856</a>        }
+<a href=#3857 id=3857 data-nosnippet>3857</a>    }
+<a href=#3858 id=3858 data-nosnippet>3858</a>
+<a href=#3859 id=3859 data-nosnippet>3859</a>    <span class="kw">fn </span>keyword_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, k: <span class="kw-2">&amp;</span>Keyword) -&gt; String {
+<a href=#3860 id=3860 data-nosnippet>3860</a>        <span class="kw">match </span>k {
+<a href=#3861 id=3861 data-nosnippet>3861</a>            Keyword::Service =&gt; <span class="string">"service"</span>.to_string(),
+<a href=#3862 id=3862 data-nosnippet>3862</a>            Keyword::Ai =&gt; <span class="string">"ai"</span>.to_string(),
+<a href=#3863 id=3863 data-nosnippet>3863</a>            Keyword::Chain =&gt; <span class="string">"chain"</span>.to_string(),
+<a href=#3864 id=3864 data-nosnippet>3864</a>            Keyword::Mobile =&gt; <span class="string">"mobile"</span>.to_string(),
+<a href=#3865 id=3865 data-nosnippet>3865</a>            Keyword::Desktop =&gt; <span class="string">"desktop"</span>.to_string(),
+<a href=#3866 id=3866 data-nosnippet>3866</a>            Keyword::Iot =&gt; <span class="string">"iot"</span>.to_string(),
+<a href=#3867 id=3867 data-nosnippet>3867</a>            Keyword::Persistent =&gt; <span class="string">"persistent"</span>.to_string(),
+<a href=#3868 id=3868 data-nosnippet>3868</a>            Keyword::Cached =&gt; <span class="string">"cached"</span>.to_string(),
+<a href=#3869 id=3869 data-nosnippet>3869</a>            Keyword::Versioned =&gt; <span class="string">"versioned"</span>.to_string(),
+<a href=#3870 id=3870 data-nosnippet>3870</a>            Keyword::Deprecated =&gt; <span class="string">"deprecated"</span>.to_string(),
+<a href=#3871 id=3871 data-nosnippet>3871</a>            Keyword::CompileTarget =&gt; <span class="string">"compile_target"</span>.to_string(),
+<a href=#3872 id=3872 data-nosnippet>3872</a>            Keyword::Interface =&gt; <span class="string">"interface"</span>.to_string(),
+<a href=#3873 id=3873 data-nosnippet>3873</a>            Keyword::Txn =&gt; <span class="string">"txn"</span>.to_string(),
+<a href=#3874 id=3874 data-nosnippet>3874</a>            Keyword::Secure =&gt; <span class="string">"secure"</span>.to_string(),
+<a href=#3875 id=3875 data-nosnippet>3875</a>            Keyword::Limit =&gt; <span class="string">"limit"</span>.to_string(),
+<a href=#3876 id=3876 data-nosnippet>3876</a>            Keyword::Trust =&gt; <span class="string">"trust"</span>.to_string(),
+<a href=#3877 id=3877 data-nosnippet>3877</a>            Keyword::Import =&gt; <span class="string">"import"</span>.to_string(),
+<a href=#3878 id=3878 data-nosnippet>3878</a>            Keyword::Export =&gt; <span class="string">"export"</span>.to_string(),
+<a href=#3879 id=3879 data-nosnippet>3879</a>            Keyword::As =&gt; <span class="string">"as"</span>.to_string(),
+<a href=#3880 id=3880 data-nosnippet>3880</a>            Keyword::Private =&gt; <span class="string">"private"</span>.to_string(),
+<a href=#3881 id=3881 data-nosnippet>3881</a>            Keyword::Audit =&gt; <span class="string">"audit"</span>.to_string(),
+<a href=#3882 id=3882 data-nosnippet>3882</a>            Keyword::With =&gt; <span class="string">"with"</span>.to_string(),
+<a href=#3883 id=3883 data-nosnippet>3883</a>            Keyword::Finally =&gt; <span class="string">"finally"</span>.to_string(),
+<a href=#3884 id=3884 data-nosnippet>3884</a>            Keyword::Await =&gt; <span class="string">"await"</span>.to_string(),
+<a href=#3885 id=3885 data-nosnippet>3885</a>            Keyword::Async =&gt; <span class="string">"async"</span>.to_string(),
+<a href=#3886 id=3886 data-nosnippet>3886</a>            Keyword::Result =&gt; <span class="string">"Result"</span>.to_string(),
+<a href=#3887 id=3887 data-nosnippet>3887</a>            Keyword::Option =&gt; <span class="string">"Option"</span>.to_string(),
+<a href=#3888 id=3888 data-nosnippet>3888</a>            Keyword::Some =&gt; <span class="string">"Some"</span>.to_string(),
+<a href=#3889 id=3889 data-nosnippet>3889</a>            Keyword::None =&gt; <span class="string">"None"</span>.to_string(),
+<a href=#3890 id=3890 data-nosnippet>3890</a>            Keyword::Ok =&gt; <span class="string">"Ok"</span>.to_string(),
+<a href=#3891 id=3891 data-nosnippet>3891</a>            Keyword::Err =&gt; <span class="string">"Err"</span>.to_string(),
+<a href=#3892 id=3892 data-nosnippet>3892</a>            Keyword::List =&gt; <span class="string">"List"</span>.to_string(),
+<a href=#3893 id=3893 data-nosnippet>3893</a>            Keyword::Map =&gt; <span class="string">"Map"</span>.to_string(),
+<a href=#3894 id=3894 data-nosnippet>3894</a>            Keyword::Set =&gt; <span class="string">"Set"</span>.to_string(),
+<a href=#3895 id=3895 data-nosnippet>3895</a>            Keyword::Generic =&gt; <span class="string">"Generic"</span>.to_string(),
+<a href=#3896 id=3896 data-nosnippet>3896</a>            Keyword::Box =&gt; <span class="string">"Box"</span>.to_string(),
+<a href=#3897 id=3897 data-nosnippet>3897</a>            Keyword::Ref =&gt; <span class="string">"ref"</span>.to_string(),
+<a href=#3898 id=3898 data-nosnippet>3898</a>            Keyword::Mut =&gt; <span class="string">"mut"</span>.to_string(),
+<a href=#3899 id=3899 data-nosnippet>3899</a>            Keyword::Const =&gt; <span class="string">"const"</span>.to_string(),
+<a href=#3900 id=3900 data-nosnippet>3900</a>            Keyword::Static =&gt; <span class="string">"static"</span>.to_string(),
+<a href=#3901 id=3901 data-nosnippet>3901</a>            Keyword::Extern =&gt; <span class="string">"extern"</span>.to_string(),
+<a href=#3902 id=3902 data-nosnippet>3902</a>            Keyword::Crate =&gt; <span class="string">"crate"</span>.to_string(),
+<a href=#3903 id=3903 data-nosnippet>3903</a>            Keyword::Super =&gt; <span class="string">"super"</span>.to_string(),
+<a href=#3904 id=3904 data-nosnippet>3904</a>            Keyword::Self_ =&gt; <span class="string">"self"</span>.to_string(),
+<a href=#3905 id=3905 data-nosnippet>3905</a>            Keyword::SelfType =&gt; <span class="string">"Self"</span>.to_string(),
+<a href=#3906 id=3906 data-nosnippet>3906</a>            <span class="kw">_ </span>=&gt; <span class="macro">format!</span>(<span class="string">"{:?}"</span>, k).to_lowercase(),
+<a href=#3907 id=3907 data-nosnippet>3907</a>        }
+<a href=#3908 id=3908 data-nosnippet>3908</a>    }
+<a href=#3909 id=3909 data-nosnippet>3909</a>
+<a href=#3910 id=3910 data-nosnippet>3910</a>    <span class="kw">fn </span>expect_identifier_or_keyword(
+<a href=#3911 id=3911 data-nosnippet>3911</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#3912 id=3912 data-nosnippet>3912</a>        position: usize,
+<a href=#3913 id=3913 data-nosnippet>3913</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, String), ParserError&gt; {
+<a href=#3914 id=3914 data-nosnippet>3914</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(Token::Identifier(name)) = <span class="self">self</span>.tokens.get(position) {
+<a href=#3915 id=3915 data-nosnippet>3915</a>            <span class="prelude-val">Ok</span>((position + <span class="number">1</span>, name.clone()))
+<a href=#3916 id=3916 data-nosnippet>3916</a>        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(Token::Keyword(keyword)) = <span class="self">self</span>.tokens.get(position) {
+<a href=#3917 id=3917 data-nosnippet>3917</a>            <span class="kw">let </span>name = <span class="self">self</span>.keyword_to_string(keyword);
+<a href=#3918 id=3918 data-nosnippet>3918</a>            <span class="prelude-val">Ok</span>((position + <span class="number">1</span>, name))
+<a href=#3919 id=3919 data-nosnippet>3919</a>        } <span class="kw">else </span>{
+<a href=#3920 id=3920 data-nosnippet>3920</a>            <span class="kw">let </span>(line, column) = <span class="self">self</span>.get_token_position(position);
+<a href=#3921 id=3921 data-nosnippet>3921</a>            <span class="prelude-val">Err</span>(ParserError::unexpected_token(
+<a href=#3922 id=3922 data-nosnippet>3922</a>                <span class="self">self</span>.tokens.get(position).unwrap_or(<span class="kw-2">&amp;</span>Token::EOF),
+<a href=#3923 id=3923 data-nosnippet>3923</a>                <span class="kw-2">&amp;</span>[<span class="string">"identifier"</span>, <span class="string">"keyword"</span>],
+<a href=#3924 id=3924 data-nosnippet>3924</a>                line,
+<a href=#3925 id=3925 data-nosnippet>3925</a>                column,
+<a href=#3926 id=3926 data-nosnippet>3926</a>            ))
+<a href=#3927 id=3927 data-nosnippet>3927</a>        }
+<a href=#3928 id=3928 data-nosnippet>3928</a>    }
+<a href=#3929 id=3929 data-nosnippet>3929</a>}
 </code></pre></div></section></main></body></html>
