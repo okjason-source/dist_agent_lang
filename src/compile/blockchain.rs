@@ -64,7 +64,7 @@ fn solidity_binary_operator(op: &Operator) -> Option<&'static str> {
         Operator::Star => Some("*"),
         Operator::Slash => Some("/"),
         Operator::Percent => Some("%"),
-        Operator::EqualEqual => Some("=="),
+        Operator::Equal | Operator::EqualEqual => Some("=="),
         Operator::BangEqual | Operator::NotEqual => Some("!="),
         Operator::Less => Some("<"),
         Operator::LessEqual => Some("<="),
@@ -81,6 +81,17 @@ fn normalized_value_type(sol_type: &str) -> String {
         "string memory" | "string calldata" | "string storage" => "string".to_string(),
         other => other.to_string(),
     }
+}
+
+/// Extract the value type from a DAL `map<K,V>` type string.
+/// Returns `None` if the type is not a map.
+fn extract_map_value_type(dal_type: &str) -> Option<String> {
+    let t = dal_type.trim();
+    let rest = t.strip_prefix("map<")?.strip_suffix('>')?;
+    let mut parts = rest.splitn(2, ',');
+    let _key = parts.next()?;
+    let value = parts.next()?.trim();
+    Some(value.to_string())
 }
 
 fn infer_expr_solidity_type(
@@ -113,7 +124,8 @@ fn infer_expr_solidity_type(
                         None
                     }
                 }
-                Operator::EqualEqual
+                Operator::Equal
+                | Operator::EqualEqual
                 | Operator::BangEqual
                 | Operator::NotEqual
                 | Operator::Less
@@ -143,6 +155,30 @@ fn infer_expr_solidity_type(
             } else {
                 None
             }
+        }
+        Expression::IndexAccess(container, _index) => {
+            if let Expression::FieldAccess(owner, field) = container.as_ref() {
+                if matches!(owner.as_ref(), Expression::Identifier(id) if id == "self") {
+                    return service
+                        .fields
+                        .iter()
+                        .find(|f| f.name == *field)
+                        .and_then(|f| extract_map_value_type(&f.field_type))
+                        .map(|vt| normalized_value_type(&dal_type_to_solidity(&vt)));
+                }
+            }
+            None
+        }
+        Expression::FunctionCall(call) => {
+            if call.name.contains("::") {
+                return None;
+            }
+            service
+                .methods
+                .iter()
+                .find(|m| m.name == call.name)
+                .and_then(|m| m.return_type.as_deref())
+                .map(|rt| normalized_value_type(&dal_type_to_solidity(rt)))
         }
         _ => None,
     }
@@ -201,6 +237,29 @@ fn expression_to_solidity(expr: &Expression) -> Result<String, String> {
                 Err("field assignment is only supported for self.<field> in decentralized-v1 blockchain codegen".to_string())
             }
         }
+        Expression::IndexAccess(container, index) => {
+            if let Expression::FieldAccess(owner, field) = container.as_ref() {
+                if matches!(owner.as_ref(), Expression::Identifier(id) if id == "self") {
+                    let key = expression_to_solidity(index)?;
+                    return Ok(format!("{}[{}]", field, key));
+                }
+            }
+            Err("index access is only supported for self.<map_field>[key] in decentralized-v1 blockchain codegen".to_string())
+        }
+        Expression::FunctionCall(call) => {
+            if call.name.contains("::") {
+                return Err(format!(
+                    "namespace call '{}' is not allowed in decentralized-v1 blockchain codegen; move to hybrid/centralized",
+                    call.name
+                ));
+            }
+            let args: Result<Vec<String>, String> = call
+                .arguments
+                .iter()
+                .map(expression_to_solidity)
+                .collect();
+            Ok(format!("{}({})", call.name, args?.join(", ")))
+        }
         _ => Err("unsupported expression in decentralized-v1 blockchain codegen".to_string()),
     }
 }
@@ -249,6 +308,30 @@ fn block_to_solidity_v1(
                 } else {
                     out.push_str(&format!("{}return;\n", pad));
                 }
+            }
+            Statement::Expression(Expression::FunctionCall(call))
+                if call.name == "__index_assign__" && call.arguments.len() >= 3 =>
+            {
+                if let Expression::FieldAccess(owner, field) = &call.arguments[0] {
+                    if matches!(owner.as_ref(), Expression::Identifier(id) if id == "self") {
+                        let key = expression_to_solidity(&call.arguments[1])?;
+                        let val = expression_to_solidity(&call.arguments[2])?;
+                        out.push_str(&format!("{}{}[{}] = {};\n", pad, field, key, val));
+                    } else {
+                        return Err(
+                            "map index assignment is only supported for self.<map_field>[key] in decentralized-v1 blockchain codegen"
+                                .to_string(),
+                        );
+                    }
+                } else {
+                    return Err(
+                        "map index assignment is only supported for self.<map_field>[key] in decentralized-v1 blockchain codegen"
+                            .to_string(),
+                    );
+                }
+            }
+            Statement::Expression(Expression::Literal(Literal::Null)) => {
+                // Parser artifact from semicolons — skip.
             }
             Statement::Expression(expr) => {
                 out.push_str(&format!("{}{};\n", pad, expression_to_solidity(expr)?));
@@ -348,6 +431,10 @@ fn service_to_solidity(
         let sol_type = dal_type_to_solidity(&field.field_type);
         if is_decentralized {
             if let Some(initial) = &field.initial_value {
+                if sol_type.starts_with("mapping(") {
+                    out.push_str(&format!("    {} {};\n", sol_type, field.name));
+                    continue;
+                }
                 let init_expr = expression_to_solidity(initial).map_err(|e| {
                     CompileError::Policy(format!(
                         "Service '{}' field '{}' has unsupported decentralized-v1 initializer: {}",
@@ -1319,5 +1406,369 @@ service Counter @compile_target("blockchain") {
             });
             cursor += pos + needle.len();
         }
+    }
+
+    #[test]
+    fn decentralized_v1_lowers_map_index_read_and_write_for_self_fields() {
+        use crate::parser::ast::{
+            Attribute, AttributeTarget, BlockStatement, Expression, FieldVisibility,
+            FunctionCall as AstFunctionCall, FunctionStatement, LetStatement, Parameter,
+            ReturnStatement, ServiceField, ServiceStatement, Statement,
+        };
+
+        // Method: fn transfer(to: address, amount: int) -> int
+        //   self.balances[to] = self.balances[to] + amount
+        //   let bal = self.balances[to]
+        //   return bal
+        let to_id = || Expression::Identifier("to".to_string());
+        let self_balances = || {
+            Expression::FieldAccess(
+                Box::new(Expression::Identifier("self".to_string())),
+                "balances".to_string(),
+            )
+        };
+        let map_read = || Expression::IndexAccess(Box::new(self_balances()), Box::new(to_id()));
+
+        let method = FunctionStatement {
+            name: "transfer".to_string(),
+            parameters: vec![
+                Parameter {
+                    name: "to".to_string(),
+                    param_type: Some("address".to_string()),
+                },
+                Parameter {
+                    name: "amount".to_string(),
+                    param_type: Some("int".to_string()),
+                },
+            ],
+            return_type: Some("int".to_string()),
+            body: BlockStatement {
+                statements: vec![
+                    // self.balances[to] = self.balances[to] + amount
+                    Statement::Expression(Expression::FunctionCall(AstFunctionCall {
+                        name: "__index_assign__".to_string(),
+                        arguments: vec![
+                            self_balances(),
+                            to_id(),
+                            Expression::BinaryOp(
+                                Box::new(map_read()),
+                                crate::lexer::tokens::Operator::Plus,
+                                Box::new(Expression::Identifier("amount".to_string())),
+                            ),
+                            Expression::Literal(crate::lexer::tokens::Literal::String(
+                                String::new(),
+                            )),
+                            Expression::Literal(crate::lexer::tokens::Literal::String(
+                                "balances".to_string(),
+                            )),
+                        ],
+                    })),
+                    // let bal = self.balances[to]
+                    Statement::Let(LetStatement {
+                        name: "bal".to_string(),
+                        value: map_read(),
+                        line: None,
+                    }),
+                    Statement::Return(ReturnStatement {
+                        value: Some(Expression::Identifier("bal".to_string())),
+                    }),
+                ],
+            },
+            attributes: vec![],
+            is_async: false,
+            exported: false,
+        };
+
+        let service = ServiceStatement {
+            name: "Token".to_string(),
+            attributes: vec![Attribute {
+                name: "@trust".to_string(),
+                parameters: vec![Expression::Literal(crate::lexer::tokens::Literal::String(
+                    "decentralized".to_string(),
+                ))],
+                target: AttributeTarget::Module,
+            }],
+            fields: vec![ServiceField {
+                name: "balances".to_string(),
+                field_type: "map<address,int>".to_string(),
+                initial_value: None,
+                visibility: FieldVisibility::Private,
+            }],
+            methods: vec![method],
+            events: vec![],
+            compilation_target: None,
+            exported: false,
+        };
+
+        let solidity =
+            service_to_solidity(&service, service.methods.as_slice()).expect("solidity generation");
+
+        let expected = [
+            "mapping(address => int256) balances;",
+            "function transfer(address to, int256 amount) public returns (int256 ) {",
+            "balances[to] = (balances[to] + amount);",
+            "int256 bal = balances[to];",
+            "return bal;",
+        ];
+        let mut cursor = 0usize;
+        for needle in expected {
+            let slice = &solidity[cursor..];
+            let pos = slice.find(needle).unwrap_or_else(|| {
+                panic!(
+                    "expected ordered fragment '{}' not found in generated Solidity:\n{}",
+                    needle, solidity
+                )
+            });
+            cursor += pos + needle.len();
+        }
+
+        assert!(
+            !solidity.contains("DAL transpiled; implement in Solidity"),
+            "map index codegen should not emit revert stubs"
+        );
+    }
+
+    #[test]
+    fn decentralized_v1_rejects_non_self_index_access() {
+        let expr = Expression::IndexAccess(
+            Box::new(Expression::Identifier("localvar".to_string())),
+            Box::new(Expression::Literal(crate::lexer::tokens::Literal::Int(0))),
+        );
+        let result = expression_to_solidity(&expr);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .contains("only supported for self.<map_field>[key]"),
+        );
+    }
+
+    #[test]
+    fn extract_map_value_type_parses_supported_map_types() {
+        assert_eq!(
+            extract_map_value_type("map<address,int>"),
+            Some("int".to_string())
+        );
+        assert_eq!(
+            extract_map_value_type("map<string,int>"),
+            Some("int".to_string())
+        );
+        assert_eq!(extract_map_value_type("int"), None);
+        assert_eq!(extract_map_value_type("list<int>"), None);
+    }
+
+    #[test]
+    fn decentralized_v1_lowers_internal_function_calls() {
+        use crate::parser::ast::{
+            Attribute, AttributeTarget, BlockStatement, Expression,
+            FunctionCall as AstFunctionCall, FunctionStatement, LetStatement,
+            Parameter, ReturnStatement, ServiceStatement, Statement,
+        };
+
+        let helper = FunctionStatement {
+            name: "double".to_string(),
+            parameters: vec![Parameter {
+                name: "x".to_string(),
+                param_type: Some("int".to_string()),
+            }],
+            return_type: Some("int".to_string()),
+            body: BlockStatement {
+                statements: vec![Statement::Return(ReturnStatement {
+                    value: Some(Expression::BinaryOp(
+                        Box::new(Expression::Identifier("x".to_string())),
+                        crate::lexer::tokens::Operator::Star,
+                        Box::new(Expression::Literal(crate::lexer::tokens::Literal::Int(2))),
+                    )),
+                })],
+            },
+            attributes: vec![],
+            is_async: false,
+            exported: false,
+        };
+
+        let main_method = FunctionStatement {
+            name: "quadruple".to_string(),
+            parameters: vec![Parameter {
+                name: "n".to_string(),
+                param_type: Some("int".to_string()),
+            }],
+            return_type: Some("int".to_string()),
+            body: BlockStatement {
+                statements: vec![
+                    Statement::Let(LetStatement {
+                        name: "d".to_string(),
+                        value: Expression::FunctionCall(AstFunctionCall {
+                            name: "double".to_string(),
+                            arguments: vec![Expression::Identifier("n".to_string())],
+                        }),
+                        line: None,
+                    }),
+                    Statement::Return(ReturnStatement {
+                        value: Some(Expression::FunctionCall(AstFunctionCall {
+                            name: "double".to_string(),
+                            arguments: vec![Expression::Identifier("d".to_string())],
+                        })),
+                    }),
+                ],
+            },
+            attributes: vec![],
+            is_async: false,
+            exported: false,
+        };
+
+        let service = ServiceStatement {
+            name: "Math".to_string(),
+            attributes: vec![Attribute {
+                name: "@trust".to_string(),
+                parameters: vec![Expression::Literal(crate::lexer::tokens::Literal::String(
+                    "decentralized".to_string(),
+                ))],
+                target: AttributeTarget::Module,
+            }],
+            fields: vec![],
+            methods: vec![helper.clone(), main_method.clone()],
+            events: vec![],
+            compilation_target: None,
+            exported: false,
+        };
+
+        let solidity = service_to_solidity(&service, &[helper, main_method])
+            .expect("solidity generation");
+
+        let expected = [
+            "function double(int256 x) public returns (int256 )",
+            "return (x * 2);",
+            "function quadruple(int256 n) public returns (int256 )",
+            "int256 d = double(n);",
+            "return double(d);",
+        ];
+        let mut cursor = 0usize;
+        for needle in expected {
+            let slice = &solidity[cursor..];
+            let pos = slice.find(needle).unwrap_or_else(|| {
+                panic!(
+                    "expected ordered fragment '{}' not found in generated Solidity:\n{}",
+                    needle, solidity
+                )
+            });
+            cursor += pos + needle.len();
+        }
+
+        assert!(
+            !solidity.contains("DAL transpiled; implement in Solidity"),
+            "internal function calls should not emit revert stubs"
+        );
+    }
+
+    #[test]
+    fn decentralized_v1_rejects_namespace_function_calls() {
+        use crate::parser::ast::{Expression, FunctionCall as AstFunctionCall};
+
+        let expr = Expression::FunctionCall(AstFunctionCall {
+            name: "log::info".to_string(),
+            arguments: vec![
+                Expression::Literal(crate::lexer::tokens::Literal::String("tag".to_string())),
+                Expression::Literal(crate::lexer::tokens::Literal::String("msg".to_string())),
+            ],
+        });
+        let result = expression_to_solidity(&expr);
+        assert!(result.is_err());
+        assert!(
+            result.unwrap_err().contains("namespace call"),
+            "namespace calls should be rejected with clear diagnostic"
+        );
+    }
+
+    #[test]
+    fn decentralized_v1_e2e_source_parse_compile_produces_real_solidity() {
+        let source = r#"
+@secure
+@trust("decentralized")
+@chain("ethereum")
+service Vault @compile_target("blockchain") {
+    balance: int = 0;
+    locked: bool = false;
+    deposits: map<address,int> = {};
+
+    event Deposited(who: address, amount: int);
+    event Withdrawn(who: address, amount: int);
+
+    fn deposit(sender: address, amount: int) -> int {
+        if (amount > 0) {
+            self.deposits[sender] = self.deposits[sender] + amount;
+            self.balance = self.balance + amount;
+            event Deposited { who: sender, amount: amount };
+        }
+        return self.balance;
+    }
+
+    fn withdraw(sender: address, amount: int) -> int {
+        if (self.locked == false) {
+            if (self.deposits[sender] >= amount) {
+                self.deposits[sender] = self.deposits[sender] - amount;
+                self.balance = self.balance - amount;
+                event Withdrawn { who: sender, amount: amount };
+            }
+        }
+        return self.balance;
+    }
+
+    fn is_locked() -> bool {
+        return self.locked;
+    }
+}
+"#;
+        let program = crate::parse_source(source).expect("parse DAL source");
+        let services = crate::compile::select_services_for_target(
+            &program,
+            &crate::lexer::tokens::CompilationTarget::Blockchain,
+        );
+        assert!(!services.is_empty(), "should find at least one blockchain service");
+        let service = services[0];
+
+        let solidity = service_to_solidity(service, service.methods.as_slice())
+            .expect("e2e solidity generation from parsed source");
+
+        let expected_fragments = [
+            "pragma solidity ^0.8.0;",
+            "contract Vault {",
+            "int256 balance = 0;",
+            "bool locked = false;",
+            "mapping(address => int256) deposits;",
+            "event Deposited(address who, int256 amount);",
+            "event Withdrawn(address who, int256 amount);",
+            "function deposit(address sender, int256 amount) public returns (int256 )",
+            "if ((amount > 0)) {",
+            "deposits[sender] = (deposits[sender] + amount);",
+            "balance = (balance + amount);",
+            "emit Deposited(sender, amount);",
+            "return balance;",
+            "function withdraw(address sender, int256 amount) public returns (int256 )",
+            "if ((locked == false)) {",
+            "if ((deposits[sender] >= amount)) {",
+            "deposits[sender] = (deposits[sender] - amount);",
+            "balance = (balance - amount);",
+            "emit Withdrawn(sender, amount);",
+            "function is_locked() public returns (bool )",
+            "return locked;",
+        ];
+
+        let mut cursor = 0usize;
+        for needle in expected_fragments {
+            let slice = &solidity[cursor..];
+            let pos = slice.find(needle).unwrap_or_else(|| {
+                panic!(
+                    "expected ordered fragment '{}' not found in generated Solidity (from pos {}):\n{}",
+                    needle, cursor, solidity
+                )
+            });
+            cursor += pos + needle.len();
+        }
+
+        assert!(
+            !solidity.contains("DAL transpiled; implement in Solidity"),
+            "e2e decentralized codegen should produce no stubs:\n{}",
+            solidity
+        );
     }
 }

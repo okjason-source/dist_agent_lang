@@ -3657,6 +3657,17 @@ impl Parser {
                             context: ErrorContext::new(),
                         });
                     }
+                } else {
+                    let (line, _column) = self.get_service_line_column(service);
+                    return Err(ParserError::SemanticError {
+                        message: format!(
+                            "Service '{}' has @trust attribute without a valid string model parameter. \
+Usage: @trust(\"decentralized\"), @trust(\"hybrid\"), or @trust(\"centralized\")",
+                            service.name
+                        ),
+                        line,
+                        context: ErrorContext::new(),
+                    });
                 }
             }
 

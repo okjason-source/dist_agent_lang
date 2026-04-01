@@ -12906,23 +12906,24 @@ impl Runtime {
             }
         }
 
-        // Set admin/cloudadmin privileges based on trust model
+        // Set admin/cloudadmin privileges based on trust model (fail-closed for unknown models)
         match trust_model.as_str() {
             "centralized" => {
                 has_admin_privileges = true;
                 has_cloudadmin_privileges = true;
             }
             "hybrid" => {
-                // In hybrid mode, check if admin/cloudadmin attributes are present
                 has_admin_privileges = attributes.iter().any(|a| a == "@admin");
                 has_cloudadmin_privileges = attributes.iter().any(|a| a == "@cloudadmin");
             }
-            "decentralized" => {
-                // In decentralized mode, admin/cloudadmin operations are restricted
+            "decentralized" | "trustless" => {
                 has_admin_privileges = false;
                 has_cloudadmin_privileges = false;
             }
-            _ => {}
+            _ => {
+                has_admin_privileges = false;
+                has_cloudadmin_privileges = false;
+            }
         }
 
         self.current_service = Some(ServiceContext {

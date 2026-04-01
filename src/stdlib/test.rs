@@ -622,7 +622,7 @@ mod tests {
     #[test]
     fn test_expect_has_attribute() {
         let source = r#"
-@trust @chain
+@trust("decentralized") @chain("ethereum")
 service TokenContract {
     fn balance() -> int { 0 }
 }

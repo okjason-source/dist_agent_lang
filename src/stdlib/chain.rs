@@ -703,6 +703,93 @@ fn typed_call_request_from_args(
     })
 }
 
+/// Typed deploy arguments for [`deploy_typed`] / [`deploy_typed_with_args`].
+///
+/// Makes the required signed-transaction payload explicit at the type level while
+/// preserving a catch-all `extra` map for forward-compatible kwargs.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ChainDeployArgs {
+    /// Hex-encoded signed transaction payload (normalized to `0x` prefix).
+    pub raw_transaction: String,
+    /// Additional kwargs forwarded to the deploy pipeline.
+    pub extra: HashMap<String, String>,
+}
+
+impl ChainDeployArgs {
+    /// Parse from a flat string map, validating required fields and normalizing hex.
+    ///
+    /// Accepts `raw_transaction` or `signed_tx` as the payload key.
+    pub fn from_map(mut map: HashMap<String, String>) -> Result<Self, String> {
+        let raw_tx = map
+            .remove("raw_transaction")
+            .or_else(|| map.remove("signed_tx"))
+            .ok_or_else(|| {
+                "missing required deploy field: raw_transaction or signed_tx".to_string()
+            })?;
+        let normalized = if raw_tx.starts_with("0x") {
+            raw_tx
+        } else {
+            format!("0x{}", raw_tx)
+        };
+        Ok(Self {
+            raw_transaction: normalized,
+            extra: map,
+        })
+    }
+
+    fn to_flat_map(self) -> HashMap<String, String> {
+        let mut m = self.extra;
+        m.insert("raw_transaction".to_string(), self.raw_transaction);
+        m
+    }
+}
+
+/// Typed call arguments for [`call_typed`] / [`call_typed_with_args`].
+///
+/// Makes the required calldata explicit at the type level, surfaces the optional
+/// `function_signature` decode hint, and preserves a catch-all `extra` map.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ChainCallArgs {
+    /// Hex-encoded calldata (normalized to `0x` prefix).
+    pub data: String,
+    /// Optional Solidity signature hint for ABI return decoding (e.g. `balanceOf(address)`).
+    pub function_signature: Option<String>,
+    /// Additional kwargs forwarded to the call pipeline.
+    pub extra: HashMap<String, String>,
+}
+
+impl ChainCallArgs {
+    /// Parse from a flat string map, validating required fields and normalizing hex.
+    ///
+    /// Accepts `data` or `calldata` as the calldata key.
+    pub fn from_map(mut map: HashMap<String, String>) -> Result<Self, String> {
+        let call_data = map
+            .remove("data")
+            .or_else(|| map.remove("calldata"))
+            .ok_or_else(|| "missing required call field: data or calldata".to_string())?;
+        let data = if call_data.starts_with("0x") {
+            call_data
+        } else {
+            format!("0x{}", call_data)
+        };
+        let function_signature = map.remove("function_signature");
+        Ok(Self {
+            data,
+            function_signature,
+            extra: map,
+        })
+    }
+
+    fn to_flat_map(self) -> HashMap<String, String> {
+        let mut m = self.extra;
+        m.insert("data".to_string(), self.data);
+        if let Some(sig) = self.function_signature {
+            m.insert("function_signature".to_string(), sig);
+        }
+        m
+    }
+}
+
 /// Convert a runtime object map (e.g. DAL map literal for `chain::deploy` / `chain::call` kwargs)
 /// into the flat string map consumed by [`deploy_typed`], [`call_typed`], and legacy wrappers.
 ///
@@ -903,6 +990,18 @@ pub fn deploy_typed(
         contract_name,
         constructor_args,
     ))
+}
+
+/// Typed-args deploy: accepts a [`ChainDeployArgs`] instead of a raw `HashMap`.
+///
+/// The struct makes the required `raw_transaction` field explicit at the type level,
+/// removing the ambiguity of which map keys are mandatory.
+pub fn deploy_typed_with_args(
+    chain_id: i64,
+    contract_name: String,
+    args: ChainDeployArgs,
+) -> ChainDeployResult {
+    deploy_typed(chain_id, contract_name, args.to_flat_map())
 }
 
 #[cfg(feature = "http-interface")]
@@ -1685,6 +1784,19 @@ pub fn call_typed(
     ))
 }
 
+/// Typed-args call: accepts a [`ChainCallArgs`] instead of a raw `HashMap`.
+///
+/// The struct makes the required `data` field and optional `function_signature` hint
+/// explicit at the type level, removing map-key ambiguity.
+pub fn call_typed_with_args(
+    chain_id: i64,
+    contract_address: String,
+    function_name: String,
+    args: ChainCallArgs,
+) -> ChainCallResult {
+    call_typed(chain_id, contract_address, function_name, args.to_flat_map())
+}
+
 /// Mint a new asset or token
 ///
 /// # Arguments
@@ -1944,13 +2056,14 @@ mod abi_golden_vectors {
         build_erc20_total_supply_calldata, build_erc20_transfer_calldata,
         build_erc20_transfer_from_calldata, build_erc721_owner_of_calldata,
         build_erc721_token_uri_calldata, build_panic_revert_payload, build_revert_error_payload,
-        call_typed, chain_arg_map_from_runtime_values, decode_abi_bytes_data,
-        decode_abi_string_data, decode_abi_tuple_string_bytes_payload, decode_address_word,
-        decode_bool_word, decode_custom_error_payload_words, decode_revert_error_string_payload,
-        decode_revert_panic_code_payload, decode_static_tuple_address_uint_bool_payload,
-        decode_uint256_word, deploy_typed, encode_address_word, encode_bool_word,
-        encode_bytes32_word, encode_uint256_word, typed_call_request_from_args,
-        typed_deploy_request_from_args, TypedCallResponse, TypedChainErrorCode,
+        call_typed, call_typed_with_args, chain_arg_map_from_runtime_values,
+        decode_abi_bytes_data, decode_abi_string_data, decode_abi_tuple_string_bytes_payload,
+        decode_address_word, decode_bool_word, decode_custom_error_payload_words,
+        decode_revert_error_string_payload, decode_revert_panic_code_payload,
+        decode_static_tuple_address_uint_bool_payload, decode_uint256_word, deploy_typed,
+        deploy_typed_with_args, encode_address_word, encode_bool_word, encode_bytes32_word,
+        encode_uint256_word, typed_call_request_from_args, typed_deploy_request_from_args,
+        ChainCallArgs, ChainDeployArgs, TypedCallResponse, TypedChainErrorCode,
         TypedDeployResponse,
     };
     use crate::runtime::values::Value;
@@ -1969,6 +2082,119 @@ mod abi_golden_vectors {
         assert_eq!(out.get("flag").map(String::as_str), Some("false"));
         assert_eq!(out.get("empty").map(String::as_str), Some("null"));
     }
+
+    // -- Typed kwargs struct tests --
+
+    #[test]
+    fn chain_deploy_args_from_map_requires_signed_payload_and_normalizes_hex() {
+        let mut m = std::collections::HashMap::new();
+        m.insert("signed_tx".to_string(), "deadbeef".to_string());
+        m.insert("gas_limit".to_string(), "21000".to_string());
+        let args = ChainDeployArgs::from_map(m).expect("should parse");
+        assert_eq!(args.raw_transaction, "0xdeadbeef");
+        assert_eq!(args.extra.get("gas_limit").map(String::as_str), Some("21000"));
+        assert!(!args.extra.contains_key("signed_tx"));
+        assert!(!args.extra.contains_key("raw_transaction"));
+    }
+
+    #[test]
+    fn chain_deploy_args_from_map_rejects_missing_payload() {
+        let m = std::collections::HashMap::new();
+        assert!(ChainDeployArgs::from_map(m).is_err());
+    }
+
+    #[test]
+    fn chain_deploy_args_roundtrips_through_flat_map() {
+        let args = ChainDeployArgs {
+            raw_transaction: "0xabc".to_string(),
+            extra: std::collections::HashMap::new(),
+        };
+        let flat = args.to_flat_map();
+        assert_eq!(flat.get("raw_transaction").map(String::as_str), Some("0xabc"));
+    }
+
+    #[test]
+    fn chain_call_args_from_map_requires_calldata_and_normalizes_hex() {
+        let mut m = std::collections::HashMap::new();
+        m.insert("calldata".to_string(), "70a08231".to_string());
+        m.insert(
+            "function_signature".to_string(),
+            "balanceOf(address)".to_string(),
+        );
+        m.insert("value".to_string(), "0".to_string());
+        let args = ChainCallArgs::from_map(m).expect("should parse");
+        assert_eq!(args.data, "0x70a08231");
+        assert_eq!(args.function_signature.as_deref(), Some("balanceOf(address)"));
+        assert_eq!(args.extra.get("value").map(String::as_str), Some("0"));
+        assert!(!args.extra.contains_key("calldata"));
+        assert!(!args.extra.contains_key("function_signature"));
+    }
+
+    #[test]
+    fn chain_call_args_from_map_rejects_missing_calldata() {
+        let m = std::collections::HashMap::new();
+        assert!(ChainCallArgs::from_map(m).is_err());
+    }
+
+    #[test]
+    fn chain_call_args_roundtrips_through_flat_map() {
+        let args = ChainCallArgs {
+            data: "0x70a08231".to_string(),
+            function_signature: Some("balanceOf(address)".to_string()),
+            extra: std::collections::HashMap::new(),
+        };
+        let flat = args.to_flat_map();
+        assert_eq!(flat.get("data").map(String::as_str), Some("0x70a08231"));
+        assert_eq!(
+            flat.get("function_signature").map(String::as_str),
+            Some("balanceOf(address)")
+        );
+    }
+
+    #[test]
+    fn deploy_typed_with_args_produces_same_result_as_deploy_typed() {
+        let mut flat = std::collections::HashMap::new();
+        flat.insert("raw_transaction".to_string(), "0xdead".to_string());
+        let result_flat = deploy_typed(999_999, "Demo".to_string(), flat);
+
+        let args = ChainDeployArgs {
+            raw_transaction: "0xdead".to_string(),
+            extra: std::collections::HashMap::new(),
+        };
+        let result_typed = deploy_typed_with_args(999_999, "Demo".to_string(), args);
+
+        assert_eq!(result_flat.error_code, result_typed.error_code);
+        assert_eq!(result_flat.message, result_typed.message);
+    }
+
+    #[test]
+    fn call_typed_with_args_produces_same_result_as_call_typed() {
+        let mut flat = std::collections::HashMap::new();
+        flat.insert("data".to_string(), "0x70a08231".to_string());
+        let result_flat = call_typed(
+            999_999,
+            "0x000000000000000000000000000000000000dead".to_string(),
+            "balanceOf".to_string(),
+            flat,
+        );
+
+        let args = ChainCallArgs {
+            data: "0x70a08231".to_string(),
+            function_signature: None,
+            extra: std::collections::HashMap::new(),
+        };
+        let result_typed = call_typed_with_args(
+            999_999,
+            "0x000000000000000000000000000000000000dead".to_string(),
+            "balanceOf".to_string(),
+            args,
+        );
+
+        assert_eq!(result_flat.error_code, result_typed.error_code);
+        assert_eq!(result_flat.message, result_typed.message);
+    }
+
+    // -- End typed kwargs struct tests --
 
     #[test]
     fn erc20_balance_of_selector_and_padding_match_golden_vector() {

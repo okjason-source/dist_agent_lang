@@ -174,12 +174,32 @@ jobs:
         cargo test --lib stdlib::chain::abi_golden_vectors::chain_arg_map_from_runtime_values_preserves_chain_kwarg_contract --verbose 2>&1 | tee .artifacts/trust-split-fast/h4_chain_kwargs_bridge.log
         cargo test --lib runtime::values::tests::to_chain_arg_string --verbose 2>&1 | tee .artifacts/trust-split-fast/h4_value_chain_arg_coercion.log
 
+    - name: Generate audit evidence bundle manifest
+      run: |
+        python3 scripts/release/audit_bundle.py generate \
+          --bundle-dir .artifacts/audit-bundle \
+          --release-tag "ci-${{ github.run_id }}" \
+          --workflow "ci.yml" \
+          --run-id "${{ github.run_id }}"
+
+    - name: Validate audit evidence bundle (fail-closed)
+      run: |
+        python3 scripts/release/audit_bundle.py validate \
+          --bundle-dir .artifacts/audit-bundle
+
     - name: Upload trust-split gate logs
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: trust-split-fast-logs-${{ github.run_id }}
         path: .artifacts/trust-split-fast
+
+    - name: Upload audit evidence bundle
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: trust-split-audit-bundle-${{ github.run_id }}
+        path: .artifacts/audit-bundle
 
   build:
     name: Build Release

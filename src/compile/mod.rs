@@ -369,7 +369,7 @@ fn validate_decentralized_service(
     service: &ServiceStatement,
     target: &CompilationTarget,
 ) -> Result<(), CompileError> {
-    let forbidden = ["ai", "sh", "web", "http", "oracle", "agent", "cloudadmin"];
+    let forbidden = ["ai", "sh", "fs", "web", "http", "oracle", "agent", "cloudadmin"];
     for method in &service.methods {
         let namespaces = collect_namespaces_from_block(&method.body);
         let mut violating: Vec<String> = namespaces
@@ -749,5 +749,145 @@ mod trust_compile_mode_tests {
     fn std_from_str_matches_from_str() {
         assert_eq!(TrustCompileMode::Hybrid, "hybrid".parse().unwrap());
         assert!("nope".parse::<TrustCompileMode>().is_err());
+    }
+}
+
+#[cfg(test)]
+mod h5_policy_convergence_tests {
+    use crate::lexer::tokens::CompilationTarget;
+
+    #[test]
+    fn parser_rejects_trust_without_string_model() {
+        let source = r#"
+@trust @chain("ethereum")
+service Bad {
+    fn noop() -> int { return 0; }
+}
+"#;
+        let result = crate::parse_source(source);
+        assert!(result.is_err(), "parser should reject @trust without string model");
+        let err = format!("{}", result.unwrap_err());
+        assert!(
+            err.contains("without a valid string model"),
+            "error should explain missing model: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn parser_rejects_invalid_trust_model() {
+        let source = r#"
+@trust("invalid_model") @chain("ethereum")
+service Bad {
+    fn noop() -> int { return 0; }
+}
+"#;
+        let result = crate::parse_source(source);
+        assert!(result.is_err(), "parser should reject invalid trust model");
+    }
+
+    #[test]
+    fn parser_and_compiler_agree_on_fs_namespace_rejection() {
+        let source = r#"
+@secure
+@trust("decentralized")
+@chain("ethereum")
+service Store @compile_target("blockchain") {
+    fn read_data(path: string) -> string {
+        let data = fs::read_text(path);
+        return data;
+    }
+}
+"#;
+        let parse_result = crate::parse_source(source);
+        assert!(
+            parse_result.is_err(),
+            "parser should reject fs:: in decentralized service"
+        );
+        let err = format!("{}", parse_result.unwrap_err());
+        assert!(
+            err.contains("fs") && err.contains("disallowed"),
+            "parser error should mention fs namespace: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn compiler_rejects_fs_namespace_in_decentralized() {
+        let source = r#"
+@secure
+@trust("decentralized")
+@chain("ethereum")
+service Store @compile_target("blockchain") {
+    val: int = 0;
+    fn bump() -> int {
+        self.val = self.val + 1;
+        return self.val;
+    }
+}
+"#;
+        let program = crate::parse_source(source).expect("parse");
+        let services = super::select_services_for_target(&program, &CompilationTarget::Blockchain);
+        let result = super::validate_trust_policy_for_services(
+            &services,
+            &CompilationTarget::Blockchain,
+            super::TrustCompileMode::Auto,
+        );
+        assert!(result.is_ok(), "clean decentralized service should pass compiler policy");
+    }
+
+    #[test]
+    fn all_three_trust_models_parse_and_compile_without_error() {
+        for model in &["decentralized", "hybrid", "centralized"] {
+            let source = format!(
+                r#"
+@secure
+@trust("{}")
+@chain("ethereum")
+service Test @compile_target("blockchain") {{
+    val: int = 0;
+    fn get_val() -> int {{
+        return self.val;
+    }}
+}}
+"#,
+                model
+            );
+            let program = crate::parse_source(&source)
+                .unwrap_or_else(|e| panic!("parse failed for model '{}': {}", model, e));
+            let services =
+                super::select_services_for_target(&program, &CompilationTarget::Blockchain);
+            if !services.is_empty() {
+                let result = super::validate_trust_policy_for_services(
+                    &services,
+                    &CompilationTarget::Blockchain,
+                    super::TrustCompileMode::Auto,
+                );
+                assert!(
+                    result.is_ok(),
+                    "model '{}' should pass compiler policy: {:?}",
+                    model,
+                    result
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn forbidden_namespace_lists_are_aligned() {
+        let parser_forbidden: std::collections::HashSet<&str> =
+            ["ai", "sh", "fs", "web", "http", "oracle", "agent", "cloudadmin"]
+                .iter()
+                .copied()
+                .collect();
+        let compiler_forbidden: std::collections::HashSet<&str> =
+            ["ai", "sh", "fs", "web", "http", "oracle", "agent", "cloudadmin"]
+                .iter()
+                .copied()
+                .collect();
+        assert_eq!(
+            parser_forbidden, compiler_forbidden,
+            "parser and compiler forbidden namespace lists must be identical"
+        );
     }
 }
