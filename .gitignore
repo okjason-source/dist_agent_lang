@@ -18,6 +18,8 @@
 *.out.old/
 /logs/
 *.log
+/.artifacts/
+**/.artifacts/
 
 # Development / project / testing documentation (do not publish)
 /docs/development/
