@@ -2,6 +2,12 @@
 
 use dist_agent_lang::rag_retrieval::{bm25_scores, should_attempt_rag, tokenize, RagChunk};
 use dist_agent_lang::stdlib::rag::prompt_section_prefix;
+use std::sync::{Mutex, OnceLock};
+
+fn dal_rag_env_lock() -> &'static Mutex<()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+}
 
 #[test]
 fn tokenize_splits_words() {
@@ -12,7 +18,12 @@ fn tokenize_splits_words() {
 
 #[test]
 fn should_attempt_rag_respects_env_and_body() {
+    let _guard = dal_rag_env_lock()
+        .lock()
+        .expect("DAL_RAG env mutex poisoned");
+    let previous = std::env::var("DAL_RAG").ok();
     std::env::remove_var("DAL_RAG");
+
     assert!(!should_attempt_rag(None));
     assert!(should_attempt_rag(Some(true)));
     assert!(!should_attempt_rag(Some(false)));
@@ -20,15 +31,26 @@ fn should_attempt_rag_respects_env_and_body() {
     std::env::set_var("DAL_RAG", "1");
     assert!(should_attempt_rag(None));
     assert!(!should_attempt_rag(Some(false)));
-    std::env::remove_var("DAL_RAG");
+
+    match previous {
+        Some(v) => std::env::set_var("DAL_RAG", v),
+        None => std::env::remove_var("DAL_RAG"),
+    }
 }
 
 #[test]
 fn prompt_section_prefix_empty_when_rag_forced_off() {
+    let _guard = dal_rag_env_lock()
+        .lock()
+        .expect("DAL_RAG env mutex poisoned");
+    let previous = std::env::var("DAL_RAG").ok();
     std::env::set_var("DAL_RAG", "1");
     let s = prompt_section_prefix("any query text", Some(false));
     assert!(s.is_empty());
-    std::env::remove_var("DAL_RAG");
+    match previous {
+        Some(v) => std::env::set_var("DAL_RAG", v),
+        None => std::env::remove_var("DAL_RAG"),
+    }
 }
 
 #[test]

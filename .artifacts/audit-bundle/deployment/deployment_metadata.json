@@ -1,0 +1,11 @@
+{
+  "git_commit": "1dc7821b94c5ccd9f2773b005e11632c60aa57d0",
+  "release_tag": "local-fix",
+  "ci_provider": "github-actions",
+  "workflow": "ci.yml",
+  "run_id": "local-fix",
+  "generated_at_utc": "2026-04-01T00:47:32Z",
+  "rust_version": "rustc 1.93.1 (01f6ddf75 2026-02-11)",
+  "solc_version": "unavailable",
+  "dal_version": "dev"
+}

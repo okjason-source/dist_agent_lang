@@ -12882,8 +12882,6 @@ impl Runtime {
     pub fn set_current_service(&mut self, service_name: String, attributes: Vec<String>) {
         // Parse attributes to determine trust model and privileges
         let mut trust_model = "decentralized".to_string(); // Default
-        let mut has_admin_privileges = false;
-        let mut has_cloudadmin_privileges = false;
         let mut has_web_privileges = false;
         let mut has_ai_privileges = false;
         let mut has_chain_privileges = false;
@@ -12907,24 +12905,15 @@ impl Runtime {
         }
 
         // Set admin/cloudadmin privileges based on trust model (fail-closed for unknown models)
-        match trust_model.as_str() {
-            "centralized" => {
-                has_admin_privileges = true;
-                has_cloudadmin_privileges = true;
-            }
-            "hybrid" => {
-                has_admin_privileges = attributes.iter().any(|a| a == "@admin");
-                has_cloudadmin_privileges = attributes.iter().any(|a| a == "@cloudadmin");
-            }
-            "decentralized" | "trustless" => {
-                has_admin_privileges = false;
-                has_cloudadmin_privileges = false;
-            }
-            _ => {
-                has_admin_privileges = false;
-                has_cloudadmin_privileges = false;
-            }
-        }
+        let (has_admin_privileges, has_cloudadmin_privileges) = match trust_model.as_str() {
+            "centralized" => (true, true),
+            "hybrid" => (
+                attributes.iter().any(|a| a == "@admin"),
+                attributes.iter().any(|a| a == "@cloudadmin"),
+            ),
+            "decentralized" | "trustless" => (false, false),
+            _ => (false, false),
+        };
 
         self.current_service = Some(ServiceContext {
             name: service_name,
