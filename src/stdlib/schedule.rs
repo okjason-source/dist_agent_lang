@@ -152,18 +152,25 @@ mod tests {
 
     #[test]
     fn series_ids_distinct() {
+        let _lock = scatter::test_lock();
+        scatter::reset_for_test();
         let ids = series_interval_unix_ms("p", 1_700_000_000_000, 3_600_000, 3).unwrap();
         assert_eq!(ids, vec!["p_0", "p_1", "p_2"]);
+        scatter::reset_for_test();
     }
 
     #[test]
     fn series_rejects_bad_count() {
+        let _lock = scatter::test_lock();
+        scatter::reset_for_test();
         assert!(series_interval_unix_ms("p", 0, 1, 0).is_err());
         assert!(series_interval_unix_ms("", 0, 1, 1).is_err());
+        scatter::reset_for_test();
     }
 
     #[test]
     fn every_minutes_delegates() {
+        let _lock = scatter::test_lock();
         scatter::reset_for_test();
         every_minutes("m", 60).unwrap();
         assert!(scatter::scheduled_count() >= 1);

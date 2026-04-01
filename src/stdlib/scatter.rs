@@ -292,6 +292,14 @@ pub fn next_due_ms() -> Option<u64> {
 }
 
 #[cfg(test)]
+static SCATTER_TEST_MUTEX: Mutex<()> = Mutex::new(());
+
+#[cfg(test)]
+pub(crate) fn test_lock() -> std::sync::MutexGuard<'static, ()> {
+    SCATTER_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+#[cfg(test)]
 pub(crate) fn reset_for_test() {
     if let Some(s) = SYNC.get() {
         if let Ok(mut st) = s.state.lock() {
@@ -306,12 +314,8 @@ pub(crate) fn reset_for_test() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
     use std::thread;
     use std::time::Duration;
-
-    /// Scatter uses process-global state; serialize tests to avoid cross-test races.
-    static SCATTER_TEST_MUTEX: Mutex<()> = Mutex::new(());
 
     fn uniq(prefix: &str) -> String {
         format!(
@@ -326,7 +330,7 @@ mod tests {
 
     #[test]
     fn after_ms_fires_once() {
-        let _lock = SCATTER_TEST_MUTEX.lock().unwrap();
+        let _lock = test_lock();
         reset_for_test();
         let id = uniq("after");
         after_ms(80, &id).unwrap();
@@ -338,7 +342,7 @@ mod tests {
 
     #[test]
     fn every_ms_repeats() {
-        let _lock = SCATTER_TEST_MUTEX.lock().unwrap();
+        let _lock = test_lock();
         reset_for_test();
         let id = uniq("every");
         every_ms(120, &id).unwrap();
@@ -350,7 +354,7 @@ mod tests {
 
     #[test]
     fn peek_pending_does_not_drain() {
-        let _lock = SCATTER_TEST_MUTEX.lock().unwrap();
+        let _lock = test_lock();
         reset_for_test();
         let id = uniq("peek");
         after_ms(30, &id).unwrap();
@@ -364,7 +368,7 @@ mod tests {
 
     #[test]
     fn after_at_unix_ms_one_shot() {
-        let _lock = SCATTER_TEST_MUTEX.lock().unwrap();
+        let _lock = test_lock();
         reset_for_test();
         let id = uniq("abs");
         let t = crate::stdlib::time::unix_ms_now() + 150;
