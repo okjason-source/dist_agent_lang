@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TRUST_SPLIT_EVM_THREAT_MODEL_TRACEABILITY_MATRIX</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dist_agent_lang/docs/assets/docs.css" />
+</head>
+<body>
+<h1
+id="trust-split-evm-threat-model-to-test-traceability-matrix">Trust-Split
+EVM Threat Model to Test Traceability Matrix</h1>
+<p><strong>Status:</strong> Active (H6)<br />
+<strong>Owner:</strong> Security + QA + Runtime<br />
+<strong>Purpose:</strong> Map each high-priority risk to concrete
+automated tests and the latest passing evidence.</p>
+<hr />
+<h2 id="1-usage-rules">1. Usage Rules</h2>
+<ul>
+<li>Every release candidate must update this matrix.</li>
+<li>Every <code>Risk ID</code> must map to at least one automated
+test.</li>
+<li>A row is incomplete if <code>Test ID</code>,
+<code>Last passing run</code>, or <code>Evidence artifact</code> is
+missing.</li>
+<li>High/Critical risks without passing tests are release blockers
+unless explicitly waived.</li>
+</ul>
+<hr />
+<h2 id="2-traceability-matrix">2. Traceability Matrix</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Risk ID</th>
+<th>Threat Scenario</th>
+<th>Severity</th>
+<th>Control Objective</th>
+<th>Test ID(s)</th>
+<th>Suite</th>
+<th>Last passing run</th>
+<th>Evidence artifact</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>TM-001</td>
+<td>Decentralized service executes non-deterministic namespace call
+(<code>ai::</code>, <code>sh::</code>, <code>fs::</code>,
+<code>web::</code>, etc.)</td>
+<td>Critical</td>
+<td>Reject at parse/compile with explicit diagnostic</td>
+<td><code>compile::h5_policy_convergence_tests::parser_and_compiler_agree_on_fs_namespace_rejection</code></td>
+<td>L0 / Unit</td>
+<td><em>(fill per release)</em></td>
+<td><code>correctness/trust-policy-tests.log</code></td>
+</tr>
+<tr class="even">
+<td>TM-002</td>
+<td><code>@trust</code> malformed or missing model silently
+accepted</td>
+<td>High</td>
+<td>Fail closed on invalid/missing trust model</td>
+<td><code>compile::h5_policy_convergence_tests::parser_rejects_trust_without_string_model</code><br><code>compile::h5_policy_convergence_tests::parser_rejects_invalid_trust_model</code></td>
+<td>L0 / Unit</td>
+<td><em>(fill per release)</em></td>
+<td><code>correctness/trust-policy-tests.log</code></td>
+</tr>
+<tr class="odd">
+<td>TM-003</td>
+<td>Policy divergence between parser/compiler allows inconsistent
+enforcement</td>
+<td>High</td>
+<td>Keep parser and compiler trust checks aligned</td>
+<td><code>compile::h5_policy_convergence_tests::forbidden_namespace_lists_are_aligned</code></td>
+<td>L0 / Unit</td>
+<td><em>(fill per release)</em></td>
+<td><code>correctness/trust-policy-tests.log</code></td>
+</tr>
+<tr class="even">
+<td>TM-004</td>
+<td>Decentralized codegen falls back to revert stubs for supported
+subset</td>
+<td>Critical</td>
+<td>Emit real Solidity bodies for supported constructs</td>
+<td><code>compile::blockchain::tests::decentralized_v1_e2e_source_parse_compile_produces_real_solidity</code></td>
+<td>L1 / Unit</td>
+<td><em>(fill per release)</em></td>
+<td><code>correctness/blockchain-codegen-tests.log</code></td>
+</tr>
+<tr class="odd">
+<td>TM-005</td>
+<td>Map index access/assignment lowers incorrectly
+(<code>self.map[key]</code>)</td>
+<td>High</td>
+<td>Correct deterministic lowering and diagnostics</td>
+<td><code>compile::blockchain::tests::decentralized_v1_lowers_map_index_read_and_write_for_self_fields</code><br><code>compile::blockchain::tests::decentralized_v1_rejects_non_self_index_access</code></td>
+<td>L1 / Unit</td>
+<td><em>(fill per release)</em></td>
+<td><code>correctness/blockchain-codegen-tests.log</code></td>
+</tr>
+<tr class="even">
+<td>TM-006</td>
+<td>Strict mode silently fabricates deploy/call success</td>
+<td>Critical</td>
+<td>Strict policy returns explicit machine-readable errors</td>
+<td><code>stdlib::chain::abi_golden_vectors::typed_call_strict_missing_calldata_uses_missing_required_field_code</code><br><code>stdlib::chain::abi_golden_vectors::typed_deploy_strict_missing_payload_uses_missing_required_field_code</code></td>
+<td>L2 / Unit</td>
+<td><em>(fill per release)</em></td>
+<td><code>policy/strict-mode-proof.log</code></td>
+</tr>
+<tr class="odd">
+<td>TM-007</td>
+<td>ABI decode/revert handling drifts from canonical vectors</td>
+<td>High</td>
+<td>Keep selector/encode/decode/revert parity locked</td>
+<td><code>stdlib::chain::abi_golden_vectors::*</code> (suite run)</td>
+<td>L2 / Unit</td>
+<td><em>(fill per release)</em></td>
+<td><code>correctness/abi-vectors.log</code></td>
+</tr>
+<tr class="even">
+<td>TM-008</td>
+<td>Overloaded function decode ambiguity causes wrong typed decode</td>
+<td>High</td>
+<td>Require explicit signature hint on ambiguity</td>
+<td><code>stdlib::add_sol::tests::registry_requires_function_signature_for_overloaded_name</code></td>
+<td>L2 / Unit</td>
+<td><em>(fill per release)</em></td>
+<td><code>correctness/abi-registry-tests.log</code></td>
+</tr>
+<tr class="odd">
+<td>TM-009</td>
+<td>Unknown trust model accidentally receives elevated runtime
+privileges</td>
+<td>High</td>
+<td>Runtime fail-closed for unknown models</td>
+<td><code>compile::h5_policy_convergence_tests::all_three_trust_models_parse_and_compile_without_error</code>
++ runtime policy smoke tests</td>
+<td>L0/L1</td>
+<td><em>(fill per release)</em></td>
+<td><code>policy/runtime-trust-policy.log</code></td>
+</tr>
+<tr class="even">
+<td>TM-010</td>
+<td>Deployment provenance evidence contract drifts (missing keys)</td>
+<td>High</td>
+<td>Shape-lock typed evidence maps and audit projections</td>
+<td><code>stdlib::chain::abi_golden_vectors::*provenance*</code> (suite
+run)</td>
+<td>L2 / Unit</td>
+<td><em>(fill per release)</em></td>
+<td><code>correctness/provenance-shape-lock.log</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-release-signoff-rules">3. Release Signoff Rules</h2>
+<ul>
+<li>Security reviewer confirms every Critical/High row has passing
+evidence.</li>
+<li>QA confirms <code>Last passing run</code> points to the current
+release candidate run.</li>
+<li>Release manager confirms artifacts exist in the audit bundle and
+match checksums.</li>
+</ul>
+<hr />
+<h2 id="4-waiver-record-if-needed">4. Waiver Record (If Needed)</h2>
+<p>Use only for time-limited exceptions:</p>
+<ul>
+<li><code>Risk ID</code></li>
+<li><code>Reason</code></li>
+<li><code>Compensating controls</code></li>
+<li><code>Expiry date</code></li>
+<li><code>Approver</code></li>
+</ul>
+<p>If any waiver expires before release, release is blocked.</p>
+</body>
+</html>

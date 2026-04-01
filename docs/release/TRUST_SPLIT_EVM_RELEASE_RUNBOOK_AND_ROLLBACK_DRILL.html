@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TRUST_SPLIT_EVM_RELEASE_RUNBOOK_AND_ROLLBACK_DRILL</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dist_agent_lang/docs/assets/docs.css" />
+</head>
+<body>
+<h1 id="trust-split-evm-release-runbook-and-rollback-drill">Trust-Split
+EVM Release Runbook and Rollback Drill</h1>
+<p><strong>Status:</strong> Active (H6)<br />
+<strong>Owner:</strong> Operations + Runtime + Security<br />
+<strong>Purpose:</strong> Standardize release execution and rollback
+drills with auditable evidence.</p>
+<hr />
+<h2 id="1-preconditions-must-pass-before-release">1. Preconditions (Must
+Pass Before Release)</h2>
+<ul>
+<li><code>cargo test --lib</code> passes on release candidate
+commit.</li>
+<li>Trust policy/convergence tests pass.</li>
+<li>ABI vector and typed provenance tests pass.</li>
+<li>Audit evidence bundle manifest is complete
+(<code>bundle.manifest.json</code>).</li>
+<li>Threat-model traceability matrix is updated for this release.</li>
+</ul>
+<p>If any precondition fails, stop and remediate before proceeding.</p>
+<hr />
+<h2 id="2-release-runbook-checklist">2. Release Runbook Checklist</h2>
+<h2 id="21-build-and-artifact-freeze">2.1 Build and Artifact Freeze</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Record release tag and commit
+SHA.</label></li>
+<li><label><input type="checkbox" />Build blockchain artifacts
+(<code>.sol</code>, <code>.abi</code>, <code>.bin</code>, optional
+<code>.http.json</code>).</label></li>
+<li><label><input type="checkbox" />Generate artifact checksums
+(SHA-256).</label></li>
+<li><label><input type="checkbox" />Record toolchain versions
+(<code>rustc</code>, <code>solc</code>, DAL version).</label></li>
+</ul>
+<h2 id="22-policy-and-correctness-evidence">2.2 Policy and Correctness
+Evidence</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Export trust policy test
+logs.</label></li>
+<li><label><input type="checkbox" />Export strict-mode proof
+logs.</label></li>
+<li><label><input type="checkbox" />Export ABI vector suite
+logs.</label></li>
+<li><label><input type="checkbox" />Export codegen and provenance
+shape-lock logs.</label></li>
+</ul>
+<h2 id="23-security-evidence">2.3 Security Evidence</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Update threat-model traceability
+matrix with latest run IDs.</label></li>
+<li><label><input type="checkbox" />Export adversarial/security suite
+summary.</label></li>
+<li><label><input type="checkbox" />Document unresolved findings (or
+explicit empty report).</label></li>
+</ul>
+<h2 id="24-operational-signoff">2.4 Operational Signoff</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Security reviewer
+signoff.</label></li>
+<li><label><input type="checkbox" />Runtime owner signoff.</label></li>
+<li><label><input type="checkbox" />Release manager
+signoff.</label></li>
+<li><label><input type="checkbox" />Bundle manifest finalized and signed
+(if signature flow enabled).</label></li>
+</ul>
+<hr />
+<h2 id="3-rollback-drill-procedure">3. Rollback Drill Procedure</h2>
+<p>Perform before production release and record output in artifacts.</p>
+<h2 id="31-drill-setup">3.1 Drill Setup</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Choose staging or forked
+environment.</label></li>
+<li><label><input type="checkbox" />Deploy candidate
+artifacts.</label></li>
+<li><label><input type="checkbox" />Capture baseline tx hash/receipt and
+health checks.</label></li>
+</ul>
+<h2 id="32-simulated-incident-trigger">3.2 Simulated Incident
+Trigger</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Trigger controlled failure scenario
+(policy mismatch, contract behavior regression, or integration
+failure).</label></li>
+<li><label><input type="checkbox" />Confirm detection via
+logs/alerts/checks.</label></li>
+</ul>
+<h2 id="33-rollback-execution">3.3 Rollback Execution</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Execute rollback steps for target
+environment:</label>
+<ul>
+<li>revert deployment pointer / registry reference</li>
+<li>restore previous artifact manifest</li>
+<li>verify previous version receipts and health</li>
+</ul></li>
+<li><label><input type="checkbox" />Record rollback start/end timestamps
+and operator.</label></li>
+<li><label><input type="checkbox" />Capture tx hashes and final state
+verification.</label></li>
+</ul>
+<h2 id="34-post-rollback-validation">3.4 Post-rollback Validation</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Run smoke tests on rolled-back
+version.</label></li>
+<li><label><input type="checkbox" />Confirm no unresolved critical
+errors.</label></li>
+<li><label><input type="checkbox" />Attach rollback evidence logs to
+audit bundle.</label></li>
+</ul>
+<hr />
+<h2 id="4-rollback-drill-record-template">4. Rollback Drill Record
+Template</h2>
+<p>Fill for each release candidate:</p>
+<ul>
+<li><code>release_tag</code>:</li>
+<li><code>environment</code>:</li>
+<li><code>incident_scenario</code>:</li>
+<li><code>rollback_operator</code>:</li>
+<li><code>rollback_started_at_utc</code>:</li>
+<li><code>rollback_completed_at_utc</code>:</li>
+<li><code>rollback_tx_hashes</code>:</li>
+<li><code>post_rollback_health_result</code>:</li>
+<li><code>notes</code>:</li>
+</ul>
+<hr />
+<h2 id="5-stop-conditions-fail-closed">5. Stop Conditions (Fail
+Closed)</h2>
+<p>Release is blocked if:</p>
+<ul>
+<li>rollback drill not executed for current release candidate</li>
+<li>rollback drill evidence missing from bundle</li>
+<li>rollback fails to restore previous known-good state</li>
+<li>post-rollback smoke tests fail</li>
+</ul>
+</body>
+</html>
