@@ -77,17 +77,14 @@ def build_manifest(bundle_dir: Path, args: argparse.Namespace) -> Dict:
     release_docs = [
         repo_root
         / "docs"
-        / "development"
         / "release"
         / "TRUST_SPLIT_EVM_AUDIT_EVIDENCE_BUNDLE_SPEC.md",
         repo_root
         / "docs"
-        / "development"
         / "release"
         / "TRUST_SPLIT_EVM_THREAT_MODEL_TRACEABILITY_MATRIX.md",
         repo_root
         / "docs"
-        / "development"
         / "release"
         / "TRUST_SPLIT_EVM_RELEASE_RUNBOOK_AND_ROLLBACK_DRILL.md",
     ]
