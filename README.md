@@ -3,7 +3,7 @@
 ## dist_agent_lang
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-1.0.8-blue.svg)](https://github.com/okjason-source/dist_agent_lang)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/okjason-source/dist_agent_lang)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](https://github.com/okjason-source/dist_agent_lang)
 
 **A runtime programming language tooled with trust off-chain and on-chain controls for the agentic future.**
