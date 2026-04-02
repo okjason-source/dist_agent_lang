@@ -764,6 +764,7 @@ mod trust_compile_mode_tests {
 #[cfg(test)]
 mod h5_policy_convergence_tests {
     use crate::lexer::tokens::CompilationTarget;
+    use crate::parser::ast::Statement;
 
     #[test]
     fn parser_rejects_trust_without_string_model() {
@@ -919,6 +920,45 @@ service Test @compile_target("blockchain") {{
         assert_eq!(
             parser_forbidden, compiler_forbidden,
             "parser and compiler forbidden namespace lists must be identical"
+        );
+    }
+
+    #[test]
+    fn collects_unsupported_constructs_from_nested_block() {
+        let source = r#"
+service X {
+  fn run() {
+    if (true) {
+      while (false) { break; }
+      let arr = [1, 2, 3];
+      let y = arr[0];
+      let z = user.name();
+      return y + z;
+    }
+  }
+}
+"#;
+        let program = crate::parse_source(source).expect("parse");
+        let block = match &program.statements[0] {
+            Statement::Service(svc) => &svc.methods[0].body,
+            _ => panic!("expected first statement to be service"),
+        };
+        let unsupported = super::collect_decentralized_v1_unsupported_constructs(block);
+        assert!(
+            unsupported.contains(&"while".to_string()),
+            "{unsupported:?}"
+        );
+        assert!(
+            unsupported.contains(&"array-literal".to_string()),
+            "{unsupported:?}"
+        );
+        assert!(
+            unsupported.contains(&"index-access".to_string()),
+            "{unsupported:?}"
+        );
+        assert!(
+            unsupported.contains(&"method-call".to_string()),
+            "{unsupported:?}"
         );
     }
 }

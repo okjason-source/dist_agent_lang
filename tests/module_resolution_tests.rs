@@ -228,6 +228,39 @@ fn test_resolve_no_cycle_chain() {
     assert!(resolved.len() >= 2);
 }
 
+#[test]
+fn test_resolve_with_cycles_returns_expected_dependency_chain_order() {
+    let dir = tempfile::tempdir().unwrap();
+    let a_path = dir.path().join("a.dal");
+    let b_path = dir.path().join("b.dal");
+    let c_path = dir.path().join("c.dal");
+    std::fs::write(&a_path, r#"import "./b.dal" as b; fn a() { 1 }"#).unwrap();
+    std::fs::write(&b_path, r#"import "./c.dal" as c; fn b() { 2 }"#).unwrap();
+    std::fs::write(&c_path, r#"fn c() { 3 }"#).unwrap();
+
+    let program = parse_source(&std::fs::read_to_string(&a_path).unwrap()).unwrap();
+    let resolver = ModuleResolver::new();
+    let parse_fn = |s: &str| parse_source(s).map_err(|e| e.to_string());
+    let resolved = resolver
+        .resolve_program_with_cycles(&program, Some(a_path.as_path()), parse_fn)
+        .unwrap();
+
+    // DFS flattened order: deepest dependency import first, then its parent import.
+    assert_eq!(resolved.len(), 2, "resolved={resolved:?}");
+    match &resolved[0].resolved {
+        ResolvedImport::RelativeFile(p) => {
+            assert_eq!(p.file_name().and_then(|s| s.to_str()), Some("c.dal"))
+        }
+        other => panic!("expected first resolved import to be c.dal, got {other:?}"),
+    }
+    match &resolved[1].resolved {
+        ResolvedImport::RelativeFile(p) => {
+            assert_eq!(p.file_name().and_then(|s| s.to_str()), Some("b.dal"))
+        }
+        other => panic!("expected second resolved import to be b.dal, got {other:?}"),
+    }
+}
+
 // --- M4: Runtime module loading tests ---
 
 #[test]

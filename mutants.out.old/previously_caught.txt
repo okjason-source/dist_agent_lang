@@ -1,3 +1,271 @@
+src/bin/registry_server.rs:28:5: replace storage_path -> PathBuf with Default::default()
+src/bin/registry_server.rs:40:5: replace public_url -> String with "xyzzy".into()
+src/bin/registry_server.rs:54:8: delete ! in get_package_index
+src/bin/registry_server.rs:59:8: delete ! in get_package_index
+src/bin/registry_server.rs:73:28: replace == with != in get_package_index
+src/bin/registry_server.rs:86:5: replace get_tarball -> Response with Default::default()
+src/bin/registry_server.rs:86:30: replace || with && in get_tarball
+src/bin/registry_server.rs:86:8: delete ! in get_tarball
+src/lib.rs:95:53: replace * with +
+src/lib.rs:95:53: replace * with /
+src/lib.rs:95:46: replace * with +
+src/lib.rs:95:46: replace * with /
+src/lib.rs:105:5: replace source_byte_len_exceeds_parse_limit -> bool with true
+src/lib.rs:105:5: replace source_byte_len_exceeds_parse_limit -> bool with false
+src/lib.rs:105:9: replace > with == in source_byte_len_exceeds_parse_limit
+src/lib.rs:105:9: replace > with < in source_byte_len_exceeds_parse_limit
+src/lib.rs:105:9: replace > with >= in source_byte_len_exceeds_parse_limit
+src/lib.rs:110:5: replace token_count_exceeds_parse_limit -> bool with true
+src/lib.rs:110:5: replace token_count_exceeds_parse_limit -> bool with false
+src/lib.rs:110:11: replace > with == in token_count_exceeds_parse_limit
+src/lib.rs:110:11: replace > with < in token_count_exceeds_parse_limit
+src/lib.rs:110:11: replace > with >= in token_count_exceeds_parse_limit
+src/lib.rs:116:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:174:5: replace execute_dal_file -> Result<(), String> with Ok(())
+src/cli.rs:505:5: replace chain_subcommand_to_args -> Vec<String> with vec![]
+src/cli.rs:505:5: replace chain_subcommand_to_args -> Vec<String> with vec![String::new()]
+src/cli.rs:505:5: replace chain_subcommand_to_args -> Vec<String> with vec!["xyzzy".into()]
+src/compile/mod.rs:426:5: replace is_decentralized_v1_supported_type -> bool with false
+src/http_server.rs:98:17: delete match arm "POST" in start_http_server
+src/http_server.rs:99:17: delete match arm "PUT" in start_http_server
+src/http_server.rs:100:17: delete match arm "DELETE" in start_http_server
+src/http_server.rs:147:5: replace home_handler -> Html<String> with Html::from(String::new())
+src/http_server_security.rs:150:9: replace InputValidator::validate_number -> Result<(), String> with Ok(())
+src/http_server_security.rs:150:24: replace || with && in InputValidator::validate_number
+src/http_server_security.rs:150:18: replace < with == in InputValidator::validate_number
+src/http_server_security.rs:150:18: replace < with > in InputValidator::validate_number
+src/http_server_security.rs:150:18: replace < with <= in InputValidator::validate_number
+src/http_server_security.rs:150:33: replace > with == in InputValidator::validate_number
+src/http_server_security.rs:150:33: replace > with < in InputValidator::validate_number
+src/http_server_security.rs:150:33: replace > with >= in InputValidator::validate_number
+src/http_server_security.rs:158:9: replace InputValidator::validate_address -> Result<(), String> with Ok(())
+src/http_server_security.rs:158:12: delete ! in InputValidator::validate_address
+src/http_server_security.rs:162:26: replace != with == in InputValidator::validate_address
+src/http_server_security.rs:166:12: delete ! in InputValidator::validate_address
+src/http_server_security.rs:175:9: replace InputValidator::sanitize_string -> String with String::new()
+src/http_server_security.rs:175:9: replace InputValidator::sanitize_string -> String with "xyzzy".into()
+src/http_server_security.rs:177:84: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:177:71: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:177:58: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:177:45: replace || with && in InputValidator::sanitize_string
+src/http_server_security.rs:177:51: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:177:64: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:177:77: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:177:90: replace == with != in InputValidator::sanitize_string
+src/http_server_security.rs:234:9: replace Claims::is_expired -> bool with true
+src/http_server_security.rs:234:9: replace Claims::is_expired -> bool with false
+src/http_server_security.rs:235:18: replace < with == in Claims::is_expired
+src/http_server_security.rs:235:18: replace < with > in Claims::is_expired
+src/http_server_security.rs:235:18: replace < with <= in Claims::is_expired
+src/http_server_security.rs:267:9: replace JwtConfig::with_expiration -> Self with Default::default()
+src/http_server_security.rs:322:9: replace AuthValidator::generate_token -> Result<String, String> with Ok(String::new())
+src/http_server_security.rs:322:9: replace AuthValidator::generate_token -> Result<String, String> with Ok("xyzzy".into())
+src/http_server_security.rs:338:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:338:9: replace AuthValidator::validate_role -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:348:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(true)
+src/http_server_security.rs:348:9: replace AuthValidator::validate_permission -> Result<bool, String> with Ok(false)
+src/http_server_security.rs:356:9: replace AuthValidator::extract_token -> Option<String> with None
+src/http_server_security.rs:356:9: replace AuthValidator::extract_token -> Option<String> with Some(String::new())
+src/http_server_security.rs:356:9: replace AuthValidator::extract_token -> Option<String> with Some("xyzzy".into())
+src/http_server_security.rs:391:9: replace RequestSizeLimiter::validate_request -> Result<(), StatusCode> with Ok(())
+src/http_server_security.rs:391:22: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:391:22: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:391:22: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:396:23: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:396:23: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:396:23: replace > with >= in RequestSizeLimiter::validate_request
+src/http_server_security.rs:403:54: replace + with - in RequestSizeLimiter::validate_request
+src/http_server_security.rs:403:54: replace + with * in RequestSizeLimiter::validate_request
+src/http_server_security.rs:406:24: replace > with == in RequestSizeLimiter::validate_request
+src/http_server_security.rs:406:24: replace > with < in RequestSizeLimiter::validate_request
+src/http_server_security.rs:439:9: replace SecurityLogger::log_rate_limit with ()
+src/http_server_security.rs:457:9: replace SecurityLogger::log_auth_success with ()
+src/manifest.rs:210:39: replace || with && in write_lockfile
+src/manifest.rs:210:44: replace == with != in write_lockfile
+src/module_resolver.rs:135:9: replace ModuleResolver::with_root_dir -> Self with Default::default()
+src/module_resolver.rs:141:9: replace ModuleResolver::with_dependencies -> Self with Default::default()
+src/module_resolver.rs:179:16: delete ! in ModuleResolver::resolve
+src/module_resolver.rs:186:31: replace || with && in ModuleResolver::resolve
+src/module_resolver.rs:194:16: delete ! in ModuleResolver::resolve
+src/module_resolver.rs:221:9: replace ModuleResolver::resolve_program_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/module_resolver.rs:243:9: replace ModuleResolver::resolve_program_with_cycles -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/module_resolver.rs:257:9: replace ModuleResolver::resolve_program_recursive -> Result<(), ResolveError> with Ok(())
+src/module_resolver.rs:334:5: replace package_entry_path -> Option<PathBuf> with None
+src/module_resolver.rs:334:5: replace package_entry_path -> Option<PathBuf> with Some(Default::default())
+src/module_resolver.rs:350:5: replace resolve_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/mold/mod.rs:27:5: replace use_mold_and_spawn -> Result<crate::stdlib::agent::AgentContext, String> with Ok(Default::default())
+src/mold/mod.rs:52:5: replace load_principal_overrides -> PrincipalOverrides with Default::default()
+src/mold/mod.rs:240:52: replace || with && in list_local_paths
+src/mold/mod.rs:252:13: delete match arm (false, true) in list_local_paths
+src/mold/mod.rs:263:24: replace && with || in resolve_mold_path
+src/observability.rs:57:5: replace prometheus_metrics_text -> String with String::new()
+src/observability.rs:57:5: replace prometheus_metrics_text -> String with "xyzzy".into()
+src/observability.rs:74:5: replace record_http_response with ()
+src/observability.rs:100:5: replace http_observability_middleware -> Response with Default::default()
+src/rag_retrieval.rs:46:5: replace tokenize -> Vec<String> with vec![]
+src/rag_retrieval.rs:46:5: replace tokenize -> Vec<String> with vec![String::new()]
+src/rag_retrieval.rs:46:5: replace tokenize -> Vec<String> with vec!["xyzzy".into()]
+src/rag_retrieval.rs:51:19: delete ! in tokenize
+src/rag_retrieval.rs:55:8: delete ! in tokenize
+src/rag_retrieval.rs:62:5: replace term_freqs -> HashMap<String, u32> with HashMap::new()
+src/rag_retrieval.rs:62:5: replace term_freqs -> HashMap<String, u32> with HashMap::from_iter([(String::new(), 0)])
+src/rag_retrieval.rs:62:5: replace term_freqs -> HashMap<String, u32> with HashMap::from_iter([(String::new(), 1)])
+src/rag_retrieval.rs:62:5: replace term_freqs -> HashMap<String, u32> with HashMap::from_iter([("xyzzy".into(), 0)])
+src/rag_retrieval.rs:62:5: replace term_freqs -> HashMap<String, u32> with HashMap::from_iter([("xyzzy".into(), 1)])
+src/rag_retrieval.rs:64:34: replace += with -= in term_freqs
+src/rag_retrieval.rs:64:34: replace += with *= in term_freqs
+src/rag_retrieval.rs:117:5: replace bm25_scores -> Vec<f64> with vec![]
+src/rag_retrieval.rs:117:5: replace bm25_scores -> Vec<f64> with vec![0.0]
+src/rag_retrieval.rs:117:5: replace bm25_scores -> Vec<f64> with vec![1.0]
+src/rag_retrieval.rs:117:5: replace bm25_scores -> Vec<f64> with vec![-1.0]
+src/rag_retrieval.rs:118:10: replace < with > in bm25_scores
+src/rag_retrieval.rs:128:50: replace += with -= in bm25_scores
+src/rag_retrieval.rs:134:51: replace / with % in bm25_scores
+src/rag_retrieval.rs:151:54: replace + with - in bm25_scores
+src/rag_retrieval.rs:151:54: replace + with * in bm25_scores
+src/rag_retrieval.rs:151:40: replace / with % in bm25_scores
+src/rag_retrieval.rs:152:50: replace + with * in bm25_scores
+src/rag_retrieval.rs:153:38: replace + with * in bm25_scores
+src/rag_retrieval.rs:154:23: replace += with -= in bm25_scores
+src/rag_retrieval.rs:154:23: replace += with *= in bm25_scores
+src/rag_retrieval.rs:162:5: replace should_attempt_rag -> bool with true
+src/rag_retrieval.rs:162:5: replace should_attempt_rag -> bool with false
+src/rag_retrieval.rs:166:31: replace || with && in should_attempt_rag
+src/rag_retrieval.rs:166:24: replace == with != in should_attempt_rag
+src/rag_retrieval.rs:173:5: replace rag_context_blocks_for_query -> Vec<ContextBlock> with vec![]
+src/rag_retrieval.rs:251:5: replace chunk_markdown_text -> Vec<RagChunk> with vec![]
+src/rag_retrieval.rs:260:13: replace < with <= in chunk_markdown_text
+src/registry_paths.rs:8:5: replace sanitize_name -> bool with true
+src/registry_paths.rs:8:5: replace sanitize_name -> bool with false
+src/registry_paths.rs:10:9: replace && with || in sanitize_name
+src/registry_paths.rs:9:9: replace && with || in sanitize_name
+src/registry_paths.rs:8:5: delete ! in sanitize_name
+src/registry_paths.rs:9:12: delete ! in sanitize_name
+src/registry_paths.rs:11:81: replace || with && in sanitize_name
+src/registry_paths.rs:11:69: replace || with && in sanitize_name
+src/registry_paths.rs:11:57: replace || with && in sanitize_name
+src/registry_paths.rs:11:45: replace || with && in sanitize_name
+src/registry_paths.rs:11:33: replace || with && in sanitize_name
+src/registry_paths.rs:11:38: replace == with != in sanitize_name
+src/registry_paths.rs:11:50: replace == with != in sanitize_name
+src/registry_paths.rs:11:62: replace == with != in sanitize_name
+src/registry_paths.rs:11:74: replace == with != in sanitize_name
+src/registry_paths.rs:17:5: replace sanitize_version -> bool with true
+src/registry_paths.rs:17:5: replace sanitize_version -> bool with false
+src/registry_paths.rs:19:9: replace && with || in sanitize_version
+src/registry_paths.rs:18:9: replace && with || in sanitize_version
+src/registry_paths.rs:17:5: delete ! in sanitize_version
+src/registry_paths.rs:18:12: delete ! in sanitize_version
+src/registry_paths.rs:20:66: replace || with && in sanitize_version
+src/registry_paths.rs:20:54: replace || with && in sanitize_version
+src/registry_paths.rs:20:42: replace || with && in sanitize_version
+src/registry_paths.rs:20:47: replace == with != in sanitize_version
+src/registry_paths.rs:20:59: replace == with != in sanitize_version
+src/registry_paths.rs:26:5: replace path_under_storage -> bool with false
+src/registry_paths.rs:45:5: replace name_to_storage_dir -> String with "xyzzy".into()
+src/reporting.rs:26:52: replace - with + in format_lexer_error
+src/agent_serve.rs:37:5: replace idempotency_key_from_headers -> Option<String> with None
+src/agent_serve.rs:37:5: replace idempotency_key_from_headers -> Option<String> with Some(String::new())
+src/agent_serve.rs:41:21: delete ! in idempotency_key_from_headers
+src/agent_serve.rs:48:5: replace idempotency_prune_and_get -> Option<serde_json::Value> with Some(Default::default())
+src/agent_serve.rs:61:59: replace < with == in idempotency_insert
+src/agent_serve.rs:61:59: replace < with > in idempotency_insert
+src/agent_serve.rs:62:16: replace >= with < in idempotency_insert
+src/agent_serve.rs:270:20: delete ! in dal_summary_context_blocks
+src/agent_serve.rs:394:38: replace > with >= in handle_message
+src/agent_serve.rs:428:40: replace == with != in handle_message
+src/agent_serve.rs:561:5: replace task_priority_from_str -> &'static str with "xyzzy"
+src/agent_serve.rs:564:9: delete match arm "critical" in task_priority_from_str
+src/agent_serve.rs:797:5: replace run_agent_serve -> Result<(), String> with Ok(())
+src/lib.rs:147:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:160:5: replace execute_dal_with_scope -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:223:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:223:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:223:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/lib.rs:243:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:243:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:243:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/cli.rs:499:9: replace Cli::parse -> Self with Default::default()
+src/http_server_security.rs:286:9: replace AuthValidator::validate_api_key -> Result<Claims, String> with Ok(Default::default())
+src/module_resolver.rs:151:9: replace ModuleResolver::resolve -> Result<ResolvedImport, ResolveError> with Ok(Default::default())
+src/module_resolver.rs:221:9: replace ModuleResolver::resolve_program_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![Default::default()])
+src/module_resolver.rs:243:9: replace ModuleResolver::resolve_program_with_cycles -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![Default::default()])
+src/module_resolver.rs:350:5: replace resolve_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![Default::default()])
+src/rag_retrieval.rs:71:5: replace load_chunks_cached -> Option<Vec<RagChunk>> with Some(vec![Default::default()])
+src/rag_retrieval.rs:251:5: replace chunk_markdown_text -> Vec<RagChunk> with vec![Default::default()]
+src/agent_serve.rs:90:5: replace prompt_only_run_message_ai -> Result<MultiStepResult, String> with Ok(Default::default())
+src/agent_serve.rs:154:5: replace prompt_only_run_task_ai -> Result<MultiStepResult, String> with Ok(Default::default())
+src/agent_serve.rs:771:5: replace spawn_agent -> Result<AgentContext, String> with Ok(Default::default())
+src/lib.rs:94:53: replace * with +
+src/lib.rs:94:53: replace * with /
+src/lib.rs:94:46: replace * with +
+src/lib.rs:94:46: replace * with /
+src/lib.rs:104:5: replace source_byte_len_exceeds_parse_limit -> bool with true
+src/lib.rs:104:5: replace source_byte_len_exceeds_parse_limit -> bool with false
+src/lib.rs:104:9: replace > with == in source_byte_len_exceeds_parse_limit
+src/lib.rs:104:9: replace > with < in source_byte_len_exceeds_parse_limit
+src/lib.rs:104:9: replace > with >= in source_byte_len_exceeds_parse_limit
+src/lib.rs:109:5: replace token_count_exceeds_parse_limit -> bool with true
+src/lib.rs:109:5: replace token_count_exceeds_parse_limit -> bool with false
+src/lib.rs:109:11: replace > with == in token_count_exceeds_parse_limit
+src/lib.rs:109:11: replace > with < in token_count_exceeds_parse_limit
+src/lib.rs:109:11: replace > with >= in token_count_exceeds_parse_limit
+src/lib.rs:115:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:173:5: replace execute_dal_file -> Result<(), String> with Ok(())
+src/cli_design.rs:16:5: replace version -> &'static str with ""
+src/cli_design.rs:37:5: replace help_content -> String with String::new()
+src/cli_design.rs:37:5: replace help_content -> String with "xyzzy".into()
+src/compile/mod.rs:406:16: replace == with != in validate_decentralized_service
+src/compile/mod.rs:410:25: delete ! in validate_decentralized_service
+src/compile/mod.rs:413:12: delete ! in validate_decentralized_service
+src/compile/mod.rs:426:5: replace is_decentralized_v1_supported_type -> bool with true
+src/compile/mod.rs:509:5: replace collect_unsupported_from_expression with ()
+src/fleet.rs:229:5: replace add_member -> Result<(), String> with Ok(())
+src/fleet.rs:451:21: delete ! in health
+src/fleet.rs:479:5: replace export -> Result<String, String> with Ok(String::new())
+src/fleet.rs:479:5: replace export -> Result<String, String> with Ok("xyzzy".into())
+src/fleet.rs:501:5: replace export_k8s -> Result<String, String> with Ok(String::new())
+src/fleet.rs:501:5: replace export_k8s -> Result<String, String> with Ok("xyzzy".into())
+src/fleet.rs:518:5: replace export_docker_compose -> Result<String, String> with Ok(String::new())
+src/fleet.rs:518:5: replace export_docker_compose -> Result<String, String> with Ok("xyzzy".into())
+src/http_server_security.rs:100:9: replace InputValidator::validate_string -> Result<(), String> with Ok(())
+src/http_server_security.rs:100:24: replace > with == in InputValidator::validate_string
+src/http_server_security.rs:100:24: replace > with < in InputValidator::validate_string
+src/http_server_security.rs:100:24: replace > with >= in InputValidator::validate_string
+src/lib.rs:146:5: replace execute_source -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:159:5: replace execute_dal_with_scope -> Result<Value, Box<dyn std::error::Error>> with Ok(Default::default())
+src/lib.rs:222:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:222:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:222:5: replace execute_dal_and_extract_handlers -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/lib.rs:242:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::new(), Default::default()))
+src/lib.rs:242:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([(String::new(), Default::default())]), Default::default()))
+src/lib.rs:242:5: replace execute_dal_and_extract_handlers_with_path -> Result<(std::collections::HashMap<String, runtime::engine::UserFunction>, runtime::scope::Scope,), Box<dyn std::error::Error>, > with Ok((HashMap::from_iter([("xyzzy".into(), Default::default())]), Default::default()))
+src/http_server.rs:147:5: replace home_handler -> Html<String> with Html::new()
+src/http_server.rs:147:5: replace home_handler -> Html<String> with Html::from_iter([String::new()])
+src/http_server.rs:147:5: replace home_handler -> Html<String> with Html::new(String::new())
+src/http_server.rs:147:5: replace home_handler -> Html<String> with Html::from_iter(["xyzzy".into()])
+src/http_server.rs:147:5: replace home_handler -> Html<String> with Html::new("xyzzy".into())
+src/http_server.rs:147:5: replace home_handler -> Html<String> with Html::from("xyzzy".into())
+src/http_server.rs:495:5: replace balance_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:495:5: replace balance_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:495:5: replace balance_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:495:5: replace balance_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:507:5: replace connect_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:507:5: replace connect_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:507:5: replace connect_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:507:5: replace connect_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:518:5: replace transfer_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:518:5: replace transfer_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:518:5: replace transfer_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:518:5: replace transfer_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:529:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:529:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:529:5: replace airdrop_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:529:5: replace airdrop_handler -> Json<serde_json::Value> with Json::from(Default::default())
+src/http_server.rs:540:5: replace health_handler -> Json<serde_json::Value> with Json::new()
+src/http_server.rs:540:5: replace health_handler -> Json<serde_json::Value> with Json::from_iter([Default::default()])
+src/http_server.rs:540:5: replace health_handler -> Json<serde_json::Value> with Json::new(Default::default())
+src/http_server.rs:540:5: replace health_handler -> Json<serde_json::Value> with Json::from(Default::default())
 src/lib.rs:93:53: replace * with +
 src/lib.rs:93:53: replace * with /
 src/lib.rs:93:46: replace * with +

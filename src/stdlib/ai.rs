@@ -2230,7 +2230,7 @@ pub fn generate_agent_model_turn(
                     Err(e) => {
                         eprintln!("call_openai_api_tool_turn failed: {}", e);
                         log::warn!("Tool-calling API failed (provider {:?}, falling back to plain text): {}", config.provider, e);
-                        return Err(e);
+                        // Fall through to plain-text generation path below.
                     }
                 }
             }
@@ -2250,7 +2250,7 @@ pub fn generate_agent_model_turn(
                             "Tool-calling API failed (Anthropic, falling back to plain text): {}",
                             e
                         );
-                        return Err(e);
+                        // Fall through to plain-text generation path below.
                     }
                 }
             }
@@ -2817,6 +2817,34 @@ pub fn classify_termination(result: &MultiStepResult) -> TerminationDiagnostics 
         parse_fail_terminal,
         unsupported_tool_call_terminal,
     }
+}
+
+/// Stable completion classification for host schedulers and RL signals.
+/// Keep coarse-grained to avoid overfitting host logic to provider-specific text.
+pub fn classify_completion_status(
+    result: &MultiStepResult,
+    termination: &TerminationDiagnostics,
+) -> &'static str {
+    if result.max_steps_reached || termination.guard_stopped {
+        return "failed_guard";
+    }
+    if result.is_ask_user {
+        return "needs_user";
+    }
+    if termination.parse_fail_terminal || termination.unsupported_tool_call_terminal {
+        return "failed_runtime";
+    }
+    let text = result.final_text.trim();
+    if text.is_empty() {
+        return "failed_runtime";
+    }
+    if text.starts_with("Generated response (AI not configured).")
+        || text.starts_with("AI is not configured.")
+        || text.starts_with("No output. See README for setup.")
+    {
+        return "degraded_reply";
+    }
+    "completed"
 }
 
 /// Default max tool steps when env DAL_AGENT_MAX_TOOL_STEPS is not set.
@@ -3612,6 +3640,7 @@ pub fn agent_route_metrics_map(
         }
     }
     let termination = classify_termination(result);
+    let completion_status = classify_completion_status(result, &termination);
     let mut data = HashMap::new();
     data.insert("route".to_string(), Value::String(route_str.to_string()));
     data.insert("policy".to_string(), Value::String(policy_str.to_string()));
@@ -3665,6 +3694,10 @@ pub fn agent_route_metrics_map(
     data.insert(
         "termination_reason".to_string(),
         Value::String(termination.termination_reason.to_string()),
+    );
+    data.insert(
+        "completion_status".to_string(),
+        Value::String(completion_status.to_string()),
     );
     data
 }
@@ -3790,6 +3823,7 @@ pub fn agent_run_result_map_from_diagnostics(
         d.tool_trace.clone()
     };
     let termination = classify_termination(r);
+    let completion_status = classify_completion_status(r, &termination);
     let mut map = HashMap::new();
     map.insert(
         "final_text".to_string(),
@@ -3811,6 +3845,10 @@ pub fn agent_run_result_map_from_diagnostics(
         "termination_reason".to_string(),
         Value::String(termination.termination_reason.to_string()),
     );
+    map.insert(
+        "completion_status".to_string(),
+        Value::String(completion_status.to_string()),
+    );
     let mut obs = HashMap::new();
     obs.insert("route".to_string(), Value::String(route.to_string()));
     obs.insert("policy".to_string(), Value::String(policy_str.to_string()));
@@ -3827,6 +3865,10 @@ pub fn agent_run_result_map_from_diagnostics(
     obs.insert(
         "termination_reason".to_string(),
         Value::String(termination.termination_reason.to_string()),
+    );
+    obs.insert(
+        "completion_status".to_string(),
+        Value::String(completion_status.to_string()),
     );
     obs.insert(
         "legacy_text_protocol_enabled".to_string(),

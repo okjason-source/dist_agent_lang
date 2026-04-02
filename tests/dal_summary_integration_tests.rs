@@ -1,7 +1,9 @@
 //! Integration tests for `dal_summary` (agent context extraction). Complements unit tests in
 //! `src/dal_summary.rs` by exercising the public API from an external crate.
 
-use dist_agent_lang::dal_summary::{summary_from_source, to_context_string, DalSummary};
+use dist_agent_lang::dal_summary::{
+    summary_from_path, summary_from_source, to_context_string, DalSummary,
+};
 
 #[test]
 fn summary_end_to_end_agent_imports_and_context_string() {
@@ -32,4 +34,32 @@ service Api {
 fn to_context_string_skips_empty_sections() {
     let summary = DalSummary::default();
     assert_eq!(to_context_string(&summary), "");
+}
+
+#[test]
+fn summary_from_path_sets_non_default_path_fields() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("main.dal");
+    std::fs::write(
+        &path,
+        r#"
+import stdlib::log;
+fn main() { }
+"#,
+    )
+    .unwrap();
+
+    let summary = summary_from_path(&path).expect("summary_from_path");
+    assert_eq!(
+        summary.entry_file.as_deref(),
+        Some(path.to_str().unwrap()),
+        "entry_file must reflect source path"
+    );
+    assert_eq!(
+        summary.project_root.as_deref(),
+        Some(dir.path().to_str().unwrap()),
+        "project_root must be parent directory"
+    );
+    assert_eq!(summary.top_level_functions, vec!["main"]);
+    assert_eq!(summary.imports, vec!["stdlib::log"]);
 }

@@ -330,3 +330,109 @@ pub fn write_index(roots: &[PathBuf], out_dir: &Path) -> Result<(usize, usize), 
 
     Ok((n_files, all_chunks.len()))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use std::sync::Mutex;
+
+    static RAG_TEST_MUTEX: Mutex<()> = Mutex::new(());
+
+    fn approx_eq(a: f64, b: f64, eps: f64) -> bool {
+        (a - b).abs() <= eps
+    }
+
+    #[test]
+    fn bm25_scores_match_reference_values_for_simple_corpus() {
+        let _lock = RAG_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let chunks = vec![
+            RagChunk {
+                id: "c1".into(),
+                path: "a.md".into(),
+                start_line: None,
+                text: "alpha alpha beta".into(),
+            },
+            RagChunk {
+                id: "c2".into(),
+                path: "b.md".into(),
+                start_line: None,
+                text: "alpha gamma delta epsilon zeta eta theta iota kappa lambda mu".into(),
+            },
+            RagChunk {
+                id: "c3".into(),
+                path: "c.md".into(),
+                start_line: None,
+                text: "omega".into(),
+            },
+        ];
+        let scores = bm25_scores("alpha", &chunks);
+        assert_eq!(scores.len(), 3);
+        assert!(
+            approx_eq(scores[0], 0.7315673400856836, 1e-12),
+            "{scores:?}"
+        );
+        assert!(
+            approx_eq(scores[1], 0.3125272934608578, 1e-12),
+            "{scores:?}"
+        );
+        assert!(approx_eq(scores[2], 0.0, 1e-12), "{scores:?}");
+        assert!(scores[0] > scores[1] && scores[1] > scores[2], "{scores:?}");
+    }
+
+    #[test]
+    fn rag_context_blocks_filters_zero_score_results() {
+        let _lock = RAG_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = tempfile::tempdir().unwrap();
+        let idx = dir.path().join("chunks.jsonl");
+        let mut f = std::fs::File::create(&idx).unwrap();
+        let line = serde_json::to_string(&RagChunk {
+            id: "x1".into(),
+            path: "docs/one.md".into(),
+            start_line: None,
+            text: "alpha beta".into(),
+        })
+        .unwrap();
+        f.write_all(line.as_bytes()).unwrap();
+        f.write_all(b"\n").unwrap();
+
+        std::env::set_var(
+            "DAL_RAG_INDEX_DIR",
+            dir.path().to_string_lossy().to_string(),
+        );
+        std::env::set_var("DAL_RAG_TOP_K", "5");
+
+        let none = rag_context_blocks_for_query("query_term_not_present", Some(true));
+        assert!(none.is_empty(), "expected no zero-score picks: {none:?}");
+
+        let some = rag_context_blocks_for_query("alpha", Some(true));
+        assert_eq!(some.len(), 1);
+        assert_eq!(some[0].source, "rag");
+        assert!(some[0].content.contains("docs/one.md"));
+        assert!(some[0].content.contains("alpha beta"));
+    }
+
+    #[test]
+    fn rag_context_blocks_honor_explicit_disable_even_with_index_present() {
+        let _lock = RAG_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = tempfile::tempdir().unwrap();
+        let idx = dir.path().join("chunks.jsonl");
+        let mut f = std::fs::File::create(&idx).unwrap();
+        let line = serde_json::to_string(&RagChunk {
+            id: "x1".into(),
+            path: "docs/one.md".into(),
+            start_line: None,
+            text: "alpha beta".into(),
+        })
+        .unwrap();
+        f.write_all(line.as_bytes()).unwrap();
+        f.write_all(b"\n").unwrap();
+
+        std::env::set_var(
+            "DAL_RAG_INDEX_DIR",
+            dir.path().to_string_lossy().to_string(),
+        );
+        let out = rag_context_blocks_for_query("alpha", Some(false));
+        assert!(out.is_empty(), "include_rag=false must bypass RAG: {out:?}");
+    }
+}

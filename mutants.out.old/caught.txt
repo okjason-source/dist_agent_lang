@@ -1,36 +1,17 @@
-src/lib.rs:94:53: replace * with +
-src/lib.rs:94:53: replace * with /
-src/lib.rs:94:46: replace * with +
-src/lib.rs:94:46: replace * with /
-src/lib.rs:104:5: replace source_byte_len_exceeds_parse_limit -> bool with true
-src/lib.rs:104:5: replace source_byte_len_exceeds_parse_limit -> bool with false
-src/lib.rs:104:9: replace > with == in source_byte_len_exceeds_parse_limit
-src/lib.rs:104:9: replace > with < in source_byte_len_exceeds_parse_limit
-src/lib.rs:104:9: replace > with >= in source_byte_len_exceeds_parse_limit
-src/lib.rs:109:5: replace token_count_exceeds_parse_limit -> bool with true
-src/lib.rs:109:5: replace token_count_exceeds_parse_limit -> bool with false
-src/lib.rs:109:11: replace > with == in token_count_exceeds_parse_limit
-src/lib.rs:109:11: replace > with < in token_count_exceeds_parse_limit
-src/lib.rs:109:11: replace > with >= in token_count_exceeds_parse_limit
-src/lib.rs:115:5: replace parse_source -> Result<ast::Program, Box<dyn std::error::Error>> with Ok(Default::default())
-src/lib.rs:173:5: replace execute_dal_file -> Result<(), String> with Ok(())
-src/cli_design.rs:16:5: replace version -> &'static str with ""
-src/cli_design.rs:37:5: replace help_content -> String with String::new()
-src/cli_design.rs:37:5: replace help_content -> String with "xyzzy".into()
-src/compile/mod.rs:406:16: replace == with != in validate_decentralized_service
-src/compile/mod.rs:410:25: delete ! in validate_decentralized_service
-src/compile/mod.rs:413:12: delete ! in validate_decentralized_service
-src/compile/mod.rs:426:5: replace is_decentralized_v1_supported_type -> bool with true
-src/compile/mod.rs:509:5: replace collect_unsupported_from_expression with ()
-src/fleet.rs:229:5: replace add_member -> Result<(), String> with Ok(())
-src/fleet.rs:451:21: delete ! in health
-src/fleet.rs:479:5: replace export -> Result<String, String> with Ok(String::new())
-src/fleet.rs:479:5: replace export -> Result<String, String> with Ok("xyzzy".into())
-src/fleet.rs:501:5: replace export_k8s -> Result<String, String> with Ok(String::new())
-src/fleet.rs:501:5: replace export_k8s -> Result<String, String> with Ok("xyzzy".into())
-src/fleet.rs:518:5: replace export_docker_compose -> Result<String, String> with Ok(String::new())
-src/fleet.rs:518:5: replace export_docker_compose -> Result<String, String> with Ok("xyzzy".into())
-src/http_server_security.rs:100:9: replace InputValidator::validate_string -> Result<(), String> with Ok(())
-src/http_server_security.rs:100:24: replace > with == in InputValidator::validate_string
-src/http_server_security.rs:100:24: replace > with < in InputValidator::validate_string
-src/http_server_security.rs:100:24: replace > with >= in InputValidator::validate_string
+src/compile/mod.rs:388:12: delete ! in validate_decentralized_service
+src/compile/mod.rs:398:12: delete ! in validate_decentralized_service
+src/compile/mod.rs:415:16: replace == with != in validate_decentralized_service
+src/compile/mod.rs:419:25: delete ! in validate_decentralized_service
+src/compile/mod.rs:422:12: delete ! in validate_decentralized_service
+src/compile/mod.rs:435:5: replace is_decentralized_v1_supported_type -> bool with true
+src/compile/mod.rs:435:5: replace is_decentralized_v1_supported_type -> bool with false
+src/compile/mod.rs:443:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec![]
+src/compile/mod.rs:443:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec![String::new()]
+src/compile/mod.rs:443:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec!["xyzzy".into()]
+src/compile/mod.rs:456:5: replace collect_unsupported_from_statement with ()
+src/compile/mod.rs:518:5: replace collect_unsupported_from_expression with ()
+src/module_resolver.rs:247:9: replace ModuleResolver::resolve_program_with_cycles -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/module_resolver.rs:261:9: replace ModuleResolver::resolve_program_recursive -> Result<(), ResolveError> with Ok(())
+src/module_resolver.rs:338:5: replace package_entry_path -> Option<PathBuf> with None
+src/module_resolver.rs:338:5: replace package_entry_path -> Option<PathBuf> with Some(Default::default())
+src/module_resolver.rs:354:5: replace resolve_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
