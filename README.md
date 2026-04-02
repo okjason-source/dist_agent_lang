@@ -1,4 +1,6 @@
-# dist_agent_lang
+# Distributed Agent Language
+
+## dist_agent_lang
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Version](https://img.shields.io/badge/version-1.0.8-blue.svg)](https://github.com/okjason-source/dist_agent_lang)
@@ -10,7 +12,7 @@
 DAL is a programming language where AI agents are native citizens. Spawn agents, give them skills, persist their memory, coordinate multi-agent workflows, and serve them over HTTP. Program applications using distributed integration with off-chain services, and on-chain contracts coexisting through a unified trust model. [Try the IDE](https://d10e14gce1iuq7.cloudfront.net/).
 
 
-> **v1.0.XX Beta** — Actively maintained. Test thoroughly before production use.
+> **v1.0.XX Beta** — Test thoroughly before production use.
 
 ---
 
@@ -98,7 +100,7 @@ DAL is a **Rust-hosted interpreted language** with a tree-walking runtime. The i
 
 - **Lexer + Parser** producing a full AST
 - **Runtime engine** with scope, closures, and module resolution
-- **30-module standard library**: agent, ai, chain, crypto, database, auth, cloud, iot, mobile, desktop, evolve, trust, oracle, and more
+- **Over 30-module standard library**: agent, ai, chain, crypto, database, auth, cloud, iot, mobile, desktop, evolve, trust, oracle, and more
 - **HTTP server** (axum-based) for serving agents with `/message` and `/task` endpoints
 - **Package registry** for publishing and consuming DAL packages
 
@@ -114,11 +116,11 @@ DAL is a **Rust-hosted interpreted language** with a tree-walking runtime. The i
 | **Skills registry** | Built-in skills (development, creative, office, home) + user-defined `.skill.dal`. |
 | **Persistent memory** | Agent state survives restarts. File or SQLite backend. Schema versioning. On by default. |
 | **Blockchain** | Multi-chain (Ethereum, Polygon, Solana, Arbitrum). Deploy, call, events. Solidity converter. |
-| **Security** | Reentrancy protection, safe math, cross-chain security, oracle validation, shell trust controls, ACID transactions. |
+| **Security** | Reentrancy protection, safe math, cross-chain security, oracle validation, shell trust controls, ACID transactions, configurable guards/env vars. |
 | **Hybrid trust** | @trust("decentralized") or ("hybrid") or ("centralized") — high level attribute for on-chain and off-chain service contracts. |
 | **CLI toolchain** | `dal run`, `dal check`, `dal fmt`, `dal lint`, `dal test`, `dal repl`, `dal watch`, `dal new`, `dal init`, `dal agent serve` |
 | **Standard library** | 30 modules: agent, ai, chain, crypto, database, auth, cloud, iot, mobile, desktop, evolve, trust, and more |
-| **Testing** | Built-in test framework, mock registry, 140+ tests passing |
+| **Testing** | Built-in test framework, mock registry, 400+ tests passing |
 
 ---
 
@@ -175,7 +177,7 @@ dal mold list                # List available molds
 
 ## Beta notice
 
-**Current version: v1.0.8 (Beta)**
+**Current version: v1.0.XX (Beta)**
 
 **Ready for:**
 - Development and prototyping
@@ -231,7 +233,7 @@ cargo test -- --nocapture       # With output
 cargo test --test example_tests # Specific suite
 ```
 
-140+ tests passing across all standard library modules.
+400+ tests passing across all standard library modules.
 
 ---
 
@@ -240,12 +242,12 @@ cargo test --test example_tests # Specific suite
 - **[Documentation](docs/PUBLIC_DOCUMENTATION_INDEX.md)** — Complete documentation index
 - **[Examples](examples/)** — 27+ example programs
 - **[GitHub](https://github.com/okjason-source/dist_agent_lang)** — Source code and issues
-- **[Discord](https://discord.gg/tu7tg9eN)** — Community
+
 
 ---
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE).
+see [LICENSE](LICENSE).
 
 **Made by OK Jason**
