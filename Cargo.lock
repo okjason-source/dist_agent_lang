@@ -952,7 +952,7 @@ version = "1.0.23"
 dependencies = [
  "aes-gcm",
  "axum",
- "base64 0.21.7",
+ "base64 0.22.1",
  "chrono",
  "clap",
  "criterion",
