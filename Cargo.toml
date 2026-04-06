@@ -88,7 +88,7 @@ reqwest = { version = "0.12", features = ["blocking", "json", "multipart", "rust
 tar = "0.4"
 flate2 = "1.0"
 tempfile = "3.27"
-dirs = "5"
+dirs = "6"
 urlencoding = "2"
 dotenvy = "0.15"
 # Python FFI bindings (optional)
