@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/runtime/engine.rs`."><title>engine.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-77263533.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="dist_agent_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.1 (e408947bf 2026-03-25)" data-channel="1.94.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">dist_agent_lang/runtime/</div>engine.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-5"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![allow(clippy::len_zero)]
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/runtime/engine.rs`."><title>engine.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="dist_agent_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">dist_agent_lang/runtime/</div>engine.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-5"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![allow(clippy::len_zero)]
 <a href=#2 id=2 data-nosnippet>2</a></span><span class="kw">use </span><span class="kw">crate</span>::parser::ast::{BlockStatement, Program, ServiceStatement, Statement};
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span><span class="kw">crate</span>::runtime::advanced_security::AdvancedSecurityManager;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::runtime::control_flow::{ControlFlow, StatementOutcome, StatementResult};
@@ -57,7 +57,7 @@
 <a href=#57 id=57 data-nosnippet>57</a>    }
 <a href=#58 id=58 data-nosnippet>58</a>    <span class="kw">let </span><span class="kw-2">mut </span>with_dist: Vec&lt;(usize, <span class="kw-2">&amp;</span>String)&gt; = candidates
 <a href=#59 id=59 data-nosnippet>59</a>        .iter()
-<a href=#60 id=60 data-nosnippet>60</a>        .filter(|c| <span class="kw-2">*</span><span class="macro">c !</span>= name)
+<a href=#60 id=60 data-nosnippet>60</a>        .filter(|c| <span class="kw-2">*</span>c != name)
 <a href=#61 id=61 data-nosnippet>61</a>        .map(|c| (edit_distance(name, c), c))
 <a href=#62 id=62 data-nosnippet>62</a>        .collect();
 <a href=#63 id=63 data-nosnippet>63</a>    with_dist.sort_by_key(|(d, <span class="kw">_</span>)| <span class="kw-2">*</span>d);
@@ -5203,7 +5203,7 @@
 <a href=#5203 id=5203 data-nosnippet>5203</a>                                <span class="prelude-val">Ok</span>(Value::Bool(left_val == right_val))
 <a href=#5204 id=5204 data-nosnippet>5204</a>                            }
 <a href=#5205 id=5205 data-nosnippet>5205</a>                            <span class="kw">crate</span>::lexer::tokens::Operator::NotEqual =&gt; {
-<a href=#5206 id=5206 data-nosnippet>5206</a>                                <span class="prelude-val">Ok</span>(Value::Bool(<span class="macro">left_val !</span>= right_val))
+<a href=#5206 id=5206 data-nosnippet>5206</a>                                <span class="prelude-val">Ok</span>(Value::Bool(left_val != right_val))
 <a href=#5207 id=5207 data-nosnippet>5207</a>                            }
 <a href=#5208 id=5208 data-nosnippet>5208</a>                            <span class="kw">crate</span>::lexer::tokens::Operator::Less =&gt; {
 <a href=#5209 id=5209 data-nosnippet>5209</a>                                <span class="self">self</span>.compare_values(left_val, right_val, <span class="string">"&lt;"</span>)
@@ -5601,8 +5601,8 @@
 <a href=#5601 id=5601 data-nosnippet>5601</a>    <span class="kw">fn </span>is_truthy(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>Value) -&gt; bool {
 <a href=#5602 id=5602 data-nosnippet>5602</a>        <span class="kw">match </span>value {
 <a href=#5603 id=5603 data-nosnippet>5603</a>            Value::Bool(b) =&gt; <span class="kw-2">*</span>b,
-<a href=#5604 id=5604 data-nosnippet>5604</a>            Value::Int(n) =&gt; <span class="kw-2">*</span><span class="macro">n !</span>= <span class="number">0</span>,
-<a href=#5605 id=5605 data-nosnippet>5605</a>            Value::Float(f) =&gt; <span class="kw-2">*</span><span class="macro">f !</span>= <span class="number">0.0</span>,
+<a href=#5604 id=5604 data-nosnippet>5604</a>            Value::Int(n) =&gt; <span class="kw-2">*</span>n != <span class="number">0</span>,
+<a href=#5605 id=5605 data-nosnippet>5605</a>            Value::Float(f) =&gt; <span class="kw-2">*</span>f != <span class="number">0.0</span>,
 <a href=#5606 id=5606 data-nosnippet>5606</a>            Value::String(s) =&gt; !s.is_empty(),
 <a href=#5607 id=5607 data-nosnippet>5607</a>            Value::Null =&gt; <span class="bool-val">false</span>,
 <a href=#5608 id=5608 data-nosnippet>5608</a>            Value::Result(ok_val, _err_val) =&gt; <span class="self">self</span>.is_truthy(ok_val),
@@ -5792,16 +5792,16 @@
 <a href=#5792 id=5792 data-nosnippet>5792</a>
 <a href=#5793 id=5793 data-nosnippet>5793</a>                <span class="kw">let </span>is_truthy = <span class="kw">match </span><span class="kw-2">&amp;</span>args[<span class="number">0</span>] {
 <a href=#5794 id=5794 data-nosnippet>5794</a>                    Value::Bool(b) =&gt; <span class="kw-2">*</span>b,
-<a href=#5795 id=5795 data-nosnippet>5795</a>                    Value::Int(n) =&gt; <span class="kw-2">*</span><span class="macro">n !</span>= <span class="number">0</span>,
-<a href=#5796 id=5796 data-nosnippet>5796</a>                    Value::Float(f) =&gt; <span class="kw-2">*</span><span class="macro">f !</span>= <span class="number">0.0</span>,
+<a href=#5795 id=5795 data-nosnippet>5795</a>                    Value::Int(n) =&gt; <span class="kw-2">*</span>n != <span class="number">0</span>,
+<a href=#5796 id=5796 data-nosnippet>5796</a>                    Value::Float(f) =&gt; <span class="kw-2">*</span>f != <span class="number">0.0</span>,
 <a href=#5797 id=5797 data-nosnippet>5797</a>                    Value::String(s) =&gt; !s.is_empty(),
 <a href=#5798 id=5798 data-nosnippet>5798</a>                    Value::Null =&gt; <span class="bool-val">false</span>,
 <a href=#5799 id=5799 data-nosnippet>5799</a>                    Value::Result(ok_val, _err_val) =&gt; {
 <a href=#5800 id=5800 data-nosnippet>5800</a>                        <span class="comment">// For Result type, check if Ok value is truthy
 <a href=#5801 id=5801 data-nosnippet>5801</a>                        </span><span class="kw">match </span>ok_val.as_ref() {
 <a href=#5802 id=5802 data-nosnippet>5802</a>                            Value::Bool(b) =&gt; <span class="kw-2">*</span>b,
-<a href=#5803 id=5803 data-nosnippet>5803</a>                            Value::Int(n) =&gt; <span class="kw-2">*</span><span class="macro">n !</span>= <span class="number">0</span>,
-<a href=#5804 id=5804 data-nosnippet>5804</a>                            Value::Float(f) =&gt; <span class="kw-2">*</span><span class="macro">f !</span>= <span class="number">0.0</span>,
+<a href=#5803 id=5803 data-nosnippet>5803</a>                            Value::Int(n) =&gt; <span class="kw-2">*</span>n != <span class="number">0</span>,
+<a href=#5804 id=5804 data-nosnippet>5804</a>                            Value::Float(f) =&gt; <span class="kw-2">*</span>f != <span class="number">0.0</span>,
 <a href=#5805 id=5805 data-nosnippet>5805</a>                            Value::String(s) =&gt; !s.is_empty(),
 <a href=#5806 id=5806 data-nosnippet>5806</a>                            Value::Null =&gt; <span class="bool-val">false</span>,
 <a href=#5807 id=5807 data-nosnippet>5807</a>                            <span class="kw">_ </span>=&gt; <span class="bool-val">true</span>, <span class="comment">// Default for complex types
@@ -5811,8 +5811,8 @@
 <a href=#5811 id=5811 data-nosnippet>5811</a>                        <span class="kw">if let </span><span class="prelude-val">Some</span>(val) = opt_val {
 <a href=#5812 id=5812 data-nosnippet>5812</a>                            <span class="kw">match </span>val.as_ref() {
 <a href=#5813 id=5813 data-nosnippet>5813</a>                                Value::Bool(b) =&gt; <span class="kw-2">*</span>b,
-<a href=#5814 id=5814 data-nosnippet>5814</a>                                Value::Int(n) =&gt; <span class="kw-2">*</span><span class="macro">n !</span>= <span class="number">0</span>,
-<a href=#5815 id=5815 data-nosnippet>5815</a>                                Value::Float(f) =&gt; <span class="kw-2">*</span><span class="macro">f !</span>= <span class="number">0.0</span>,
+<a href=#5814 id=5814 data-nosnippet>5814</a>                                Value::Int(n) =&gt; <span class="kw-2">*</span>n != <span class="number">0</span>,
+<a href=#5815 id=5815 data-nosnippet>5815</a>                                Value::Float(f) =&gt; <span class="kw-2">*</span>f != <span class="number">0.0</span>,
 <a href=#5816 id=5816 data-nosnippet>5816</a>                                Value::String(s) =&gt; !s.is_empty(),
 <a href=#5817 id=5817 data-nosnippet>5817</a>                                Value::Null =&gt; <span class="bool-val">false</span>,
 <a href=#5818 id=5818 data-nosnippet>5818</a>                                <span class="kw">_ </span>=&gt; <span class="bool-val">true</span>, <span class="comment">// Default for complex types
@@ -5848,8 +5848,8 @@
 <a href=#5848 id=5848 data-nosnippet>5848</a>                <span class="kw">let </span>condition = <span class="kw-2">&amp;</span>args[<span class="number">0</span>];
 <a href=#5849 id=5849 data-nosnippet>5849</a>                <span class="kw">let </span>is_true = <span class="kw">match </span>condition {
 <a href=#5850 id=5850 data-nosnippet>5850</a>                    Value::Bool(b) =&gt; <span class="kw-2">*</span>b,
-<a href=#5851 id=5851 data-nosnippet>5851</a>                    Value::Int(n) =&gt; <span class="kw-2">*</span><span class="macro">n !</span>= <span class="number">0</span>,
-<a href=#5852 id=5852 data-nosnippet>5852</a>                    Value::Float(f) =&gt; <span class="kw-2">*</span><span class="macro">f !</span>= <span class="number">0.0</span>,
+<a href=#5851 id=5851 data-nosnippet>5851</a>                    Value::Int(n) =&gt; <span class="kw-2">*</span>n != <span class="number">0</span>,
+<a href=#5852 id=5852 data-nosnippet>5852</a>                    Value::Float(f) =&gt; <span class="kw-2">*</span>f != <span class="number">0.0</span>,
 <a href=#5853 id=5853 data-nosnippet>5853</a>                    Value::String(s) =&gt; !s.is_empty(),
 <a href=#5854 id=5854 data-nosnippet>5854</a>                    Value::Null =&gt; <span class="bool-val">false</span>,
 <a href=#5855 id=5855 data-nosnippet>5855</a>                    Value::List(list) =&gt; !list.is_empty(),
@@ -11566,7 +11566,7 @@
 <a href=#11566 id=11566 data-nosnippet>11566</a>                    .edge_cache
 <a href=#11567 id=11567 data-nosnippet>11567</a>                    .get(<span class="kw-2">&amp;</span>(node_id, key))
 <a href=#11568 id=11568 data-nosnippet>11568</a>                    .and_then(|(v, exp)| {
-<a href=#11569 id=11569 data-nosnippet>11569</a>                        <span class="kw">if </span><span class="kw-2">*</span><span class="macro">exp !</span>= <span class="number">0 </span>&amp;&amp; now &gt; <span class="kw-2">*</span>exp {
+<a href=#11569 id=11569 data-nosnippet>11569</a>                        <span class="kw">if </span><span class="kw-2">*</span>exp != <span class="number">0 </span>&amp;&amp; now &gt; <span class="kw-2">*</span>exp {
 <a href=#11570 id=11570 data-nosnippet>11570</a>                            <span class="prelude-val">None
 <a href=#11571 id=11571 data-nosnippet>11571</a>                        </span>} <span class="kw">else </span>{
 <a href=#11572 id=11572 data-nosnippet>11572</a>                            <span class="prelude-val">Some</span>(v.clone())
@@ -12023,7 +12023,7 @@
 <a href=#12023 id=12023 data-nosnippet>12023</a>                .as_ref()
 <a href=#12024 id=12024 data-nosnippet>12024</a>                .map(|caller| {
 <a href=#12025 id=12025 data-nosnippet>12025</a>                    <span class="comment">// Reject default/null addresses
-<a href=#12026 id=12026 data-nosnippet>12026</a>                    </span><span class="macro">caller !</span>= <span class="string">"0x0000000000000000000000000000000000000000" </span>&amp;&amp; !caller.is_empty()
+<a href=#12026 id=12026 data-nosnippet>12026</a>                    </span>caller != <span class="string">"0x0000000000000000000000000000000000000000" </span>&amp;&amp; !caller.is_empty()
 <a href=#12027 id=12027 data-nosnippet>12027</a>                })
 <a href=#12028 id=12028 data-nosnippet>12028</a>                .unwrap_or(<span class="bool-val">false</span>);
 <a href=#12029 id=12029 data-nosnippet>12029</a>
@@ -12912,7 +12912,7 @@
 <a href=#12912 id=12912 data-nosnippet>12912</a>        operation: <span class="kw-2">&amp;</span>str,
 <a href=#12913 id=12913 data-nosnippet>12913</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RuntimeError&gt; {
 <a href=#12914 id=12914 data-nosnippet>12914</a>        <span class="kw">let </span>gate = std::env::var(<span class="string">"DAL_COMPLIANCE_KEY_GATE"</span>).unwrap_or_default();
-<a href=#12915 id=12915 data-nosnippet>12915</a>        <span class="kw">if </span><span class="macro">gate !</span>= <span class="string">"1" </span>&amp;&amp; <span class="macro">gate !</span>= <span class="string">"true" </span>&amp;&amp; !gate.eq_ignore_ascii_case(<span class="string">"true"</span>) {
+<a href=#12915 id=12915 data-nosnippet>12915</a>        <span class="kw">if </span>gate != <span class="string">"1" </span>&amp;&amp; gate != <span class="string">"true" </span>&amp;&amp; !gate.eq_ignore_ascii_case(<span class="string">"true"</span>) {
 <a href=#12916 id=12916 data-nosnippet>12916</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
 <a href=#12917 id=12917 data-nosnippet>12917</a>        }
 <a href=#12918 id=12918 data-nosnippet>12918</a>        <span class="kw">let </span>principal_id =
