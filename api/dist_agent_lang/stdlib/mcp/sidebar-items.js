@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["McpTransport"],"fn":["bridge_list","bridge_start","bridge_status","bridge_stop","find_bridge_script","invoke_tool","resolve_base_url","resolve_transport"],"struct":["BridgeStatus","InvokeResult"]};

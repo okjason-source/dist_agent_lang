@@ -604,11 +604,26 @@ HTTP server uses the same in-memory bus and queues.</p>
 <li><code>evolve::load(agent_name?)</code> — Load full context. Creates
 file with header if missing.</li>
 <li><code>evolve::load_recent(agent_name?, max_lines)</code> — Last N
-lines (or full if <code>max_lines &lt;= 0</code>).</li>
+<strong>lines</strong> of the file (or full if
+<code>max_lines &lt;= 0</code>). Line-based cuts can split tables;
+prefer below for prompts.</li>
+<li><code>evolve::load_recent_for_prompt(agent_name?, max_turns, max_chars)</code>
+— <strong>Prompt-oriented load:</strong> last <code>max_turns</code>
+<strong>conversation turns</strong> (blocks under
+<code>## Conversation</code>), plus optional
+<code>## Working memory</code> and the latest <code>## Summary</code>
+block. <strong>Omits</strong> the action-log table from the returned
+string (still on disk). Env defaults in COO:
+<code>DAL_EVOLVE_PROMPT_MAX_TURNS</code>,
+<code>DAL_EVOLVE_PROMPT_MAX_CHARS</code>.</li>
 <li><code>evolve::append_conversation(user_message, agent_response, agent_name?)</code>
 — Append a conversation turn.</li>
 <li><code>evolve::append_log(action, detail, result)</code> — Append an
 action log row (e.g. after <code>sh::run</code>).</li>
+<li><code>evolve::append_working_memory(line)</code> — Append one
+high-signal bullet under <code>## Working memory</code> (decisions,
+paths, open threads). Creates the section before
+<code>## Conversation</code> if needed.</li>
 <li><code>evolve::append_summary(summary_text, title?)</code> — Append a
 summary section.</li>
 <li><code>evolve::get_path()</code> — Resolved context file path.</li>
@@ -616,7 +631,12 @@ summary section.</li>
 last N lines of content after the header.</li>
 </ul>
 <p>Use these from DAL to keep the context file in sync with agent
-behavior (e.g. after answering a user or running a command).</p>
+behavior (e.g. after answering a user or running a command). For
+<strong>evolution</strong> that actually helps the next turn, prefer
+<strong><code>append_working_memory</code></strong> for durable facts
+and <strong><code>load_recent_for_prompt</code></strong> (or COO’s
+built-in prompt path) instead of stuffing only raw action-log noise into
+context.</p>
 <h3 id="shrun--shell-execution">sh::run — shell execution</h3>
 <ul>
 <li><code>sh::run(cmd)</code> — Run a shell command. Trust is determined
@@ -921,15 +941,21 @@ script and sets <strong><code>DAL_AGENT_HTTP_BASE</code></strong> (see
 <strong><code>DAL_AGENT_HTTP_BASE</code></strong> /
 <strong><code>DAL_MCP_HTTP_BASE</code></strong> (optional
 <strong><code>DAL_MCP_BRIDGE_SCRIPT</code></strong> to override the
-script path). Legacy names: <code>DAL_CEO_BASE_URL</code>,
-<code>DAL_CEO_MCP_SCRIPT</code>.</li>
-<li><strong>In-repo example:</strong>
-<strong><code>CEO/mcp/</code></strong> — reference implementation;
+script path). Prefer <strong><code>DAL_COO_BASE_URL</code></strong> /
+<strong><code>DAL_COO_MCP_SCRIPT</code></strong>.</li>
+<li><strong>Reference example:</strong>
+<strong><code>COO/mcp/</code></strong> (repo root) or
+<strong><code>../COO/mcp/</code></strong> (from
+<code>dist_agent_lang</code>) — run
 <strong><code>npm install</code></strong> in that folder, then configure
 your IDE’s MCP server entry to run
-<code>node …/CEO/mcp/src/server.js</code> with
-<strong><code>cwd</code></strong> set to
-<strong><code>CEO/mcp</code></strong>.</li>
+<code>node …/COO/mcp/src/server.js</code> (or
+<code>node …/../COO/mcp/src/server.js</code>) with
+<strong><code>cwd</code></strong> set to that same <code>mcp</code>
+folder.</li>
+<li><strong>Claude option for developers:</strong> keep COO defaults and
+expose an opt-in connector path with <a
+href="CLAUDE_CONNECTORS_OPTIONAL_SETUP.html">CLAUDE_CONNECTORS_OPTIONAL_SETUP.md</a>.</li>
 </ul>
 <p>Language-wide mental model (HTTP first, MCP optional, LSP separate):
 <strong><a

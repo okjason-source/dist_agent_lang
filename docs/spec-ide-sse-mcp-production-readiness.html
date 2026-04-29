@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>spec-ide-sse-mcp-production-readiness</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dist_agent_lang/docs/assets/docs.css" />
+</head>
+<body>
+<h1 id="spec-ide-sse--mcp-bridge-production-readiness">Spec: IDE SSE +
+MCP Bridge Production Readiness</h1>
+<p>Status: Draft checklist/spec hybrid<br />
+Owner: OKJason<br />
+Last updated: 2026-04-09</p>
+<h2 id="goal">Goal</h2>
+<p>Deliver production-grade streaming for:</p>
+<ul>
+<li><code>dal ide serve</code> SSE endpoints (reliable, secure,
+observable).</li>
+<li>MCP bridge transport with both local stdio and remote HTTP streaming
+support.</li>
+</ul>
+<p>This document is intentionally a living checklist first, and a final
+spec artifact second.</p>
+<hr />
+<h2 id="scope">Scope</h2>
+<p>In scope:</p>
+<ul>
+<li>SSE hardening in IDE backend.</li>
+<li>MCP bridge dual transport (<code>stdio</code> +
+<code>http-stream</code>).</li>
+<li>Security defaults, auth, CORS, and limits for streaming paths.</li>
+<li>Test coverage (unit/integration/soak) and rollout controls.</li>
+<li>Documentation and operator runbooks.</li>
+</ul>
+<p>Out of scope (for this phase):</p>
+<ul>
+<li>Replacing WebSocket-based LSP transport.</li>
+<li>Rewriting non-streaming DAL HTTP endpoints unless required for
+parity.</li>
+</ul>
+<hr />
+<h2 id="current-baseline-as-of-2026-04-09">Current baseline (as of
+2026-04-09)</h2>
+<ul>
+<li>SSE exists in <code>src/ide/server.rs</code>:
+<ul>
+<li><code>GET /api/run/stream/:job_id</code></li>
+<li><code>GET /api/events/stream</code></li>
+</ul></li>
+<li>MCP bridge command exists in <code>src/main.rs</code> with
+<code>stdio</code> and <code>http-stream</code> transport selection
+(<code>dal mcp-bridge</code>).</li>
+<li>Dedicated SSE regression suite exists in
+<code>tests/ide_sse_phase0_tests.rs</code>.</li>
+<li>Explicit remote MCP HTTP transport contract is present, but full
+remote stream runtime parity remains open.</li>
+</ul>
+<hr />
+<h2 id="production-acceptance-criteria">Production acceptance
+criteria</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />No silent event loss for
+normal reconnect scenarios.</label></li>
+<li><label><input type="checkbox" checked="" />Clear stream contract
+(event schema, terminal semantics, reconnect semantics).</label></li>
+<li><label><input type="checkbox" checked="" />MCP behavior parity
+across stdio and HTTP streaming transports.</label></li>
+<li><label><input type="checkbox" checked="" />Secure-by-default profile
+with explicit dev override.</label></li>
+<li><label><input type="checkbox" checked="" />Metrics/logging/alerts
+available for stream health and failures.</label></li>
+<li><label><input type="checkbox" />Documented rollout + rollback path
+validated in staging.</label></li>
+</ul>
+<hr />
+<h2 id="workstream-a-ide-sse-reliability">Workstream A: IDE SSE
+reliability</h2>
+<h3 id="a1-event-contract-and-framing">A1. Event contract and
+framing</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Define SSE event schema
+(<code>id</code>, <code>type</code>, <code>timestamp</code>,
+<code>payload</code>, <code>version</code>).</label></li>
+<li><label><input type="checkbox" checked="" />Define terminal event
+semantics (<code>done</code>, <code>cancelled</code>,
+<code>error</code>).</label></li>
+<li><label><input type="checkbox" checked="" />Define recoverable
+error/gap event semantics.</label></li>
+<li><label><input type="checkbox" checked="" />Add compatibility note
+for existing consumers.</label></li>
+</ul>
+<h3 id="a2-replay-and-resume-support">A2. Replay and resume support</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Implement bounded replay
+buffer for job stream
+(<code>/api/run/stream/:job_id</code>).</label></li>
+<li><label><input type="checkbox" checked="" />Implement bounded replay
+buffer for global events stream
+(<code>/api/events/stream</code>).</label></li>
+<li><label><input type="checkbox" checked="" />Support
+<code>Last-Event-ID</code> resume behavior.</label></li>
+<li><label><input type="checkbox" checked="" />Emit deterministic
+<code>id</code> values (monotonic per stream).</label></li>
+</ul>
+<h3 id="a3-stream-lifecycle-correctness">A3. Stream lifecycle
+correctness</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Ensure completed jobs are
+removed from in-memory registry after retention window.</label></li>
+<li><label><input type="checkbox" checked="" />Ensure
+stop/cancel/natural completion emit explicit terminal
+events.</label></li>
+<li><label><input type="checkbox" checked="" />Ensure lagged consumers
+do not fail silently.</label></li>
+<li><label><input type="checkbox" checked="" />Ensure keepalive cadence
+is configurable and documented.</label></li>
+</ul>
+<h3 id="a4-backpressure-and-limits">A4. Backpressure and limits</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Define ring buffer
+capacity and retention policy.</label></li>
+<li><label><input type="checkbox" checked="" />Cap per-message size and
+truncate with explicit metadata when needed.</label></li>
+<li><label><input type="checkbox" checked="" />Add per-client stream
+concurrency limit.</label></li>
+<li><label><input type="checkbox" checked="" />Add rate limit for stream
+establishment/reconnect bursts.</label></li>
+</ul>
+<hr />
+<h2 id="workstream-b-mcp-bridge-dual-transport">Workstream B: MCP bridge
+dual transport</h2>
+<h3 id="b1-transport-abstraction">B1. Transport abstraction</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Introduce explicit
+transport selection: <code>stdio</code> (default) and
+<code>http-stream</code>.</label></li>
+<li><label><input type="checkbox" checked="" />Add CLI flags/env mapping
+(for example <code>--transport</code>,
+<code>DAL_MCP_TRANSPORT</code>).</label></li>
+<li><label><input type="checkbox" checked="" />Keep current stdio
+behavior as fully backward compatible default.</label></li>
+</ul>
+<h3 id="b2-http-streaming-transport">B2. HTTP streaming transport</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Implement remote HTTP
+streaming session lifecycle (connect, heartbeat, close).</label></li>
+<li><label><input type="checkbox" checked="" />Define request/response
+envelope parity with stdio mode.</label></li>
+<li><label><input type="checkbox" checked="" />Add retry/backoff
+guidance for remote clients.</label></li>
+<li><label><input type="checkbox" checked="" />Add timeout/cancellation
+semantics.</label></li>
+</ul>
+<h3 id="b3-mcp-parity-guarantees">B3. MCP parity guarantees</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Produce parity matrix for
+supported tools and error classes.</label></li>
+<li><label><input type="checkbox" checked="" />Ensure identical
+user-visible tool behavior across transports.</label></li>
+<li><label><input type="checkbox" checked="" />Validate
+idempotency/retry handling where applicable.</label></li>
+<li><label><input type="checkbox" checked="" />Document known
+differences (if any) and reasons.</label></li>
+</ul>
+<p>Reference: <code>docs/guides/MCP_TRANSPORT_PARITY.md</code></p>
+<hr />
+<h2 id="workstream-c-security-hardening">Workstream C: Security
+hardening</h2>
+<h3 id="c1-cors-and-auth-policy">C1. CORS and auth policy</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Tighten IDE SSE CORS
+defaults for production profile.</label></li>
+<li><label><input type="checkbox" checked="" />Keep permissive local dev
+mode explicit and opt-in.</label></li>
+<li><label><input type="checkbox" checked="" />Add optional token/JWT
+protection for stream endpoints.</label></li>
+<li><label><input type="checkbox" checked="" />Define auth exemption
+policy for health/metrics endpoints.</label></li>
+</ul>
+<h3 id="c2-abuse-resistance">C2. Abuse resistance</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Rate-limit stream
+connection attempts.</label></li>
+<li><label><input type="checkbox" checked="" />Add max stream lifetime
+and idle timeout controls.</label></li>
+<li><label><input type="checkbox" checked="" />Add payload/body/header
+size limits for relevant paths.</label></li>
+<li><label><input type="checkbox" checked="" />Validate behavior under
+reconnect storms.</label></li>
+</ul>
+<h3 id="c3-threat-model-and-policy-docs">C3. Threat model and policy
+docs</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Write threat model notes
+for local-only vs remote deployments.</label></li>
+<li><label><input type="checkbox" checked="" />Define recommended
+deployment presets (<code>legacy</code>, <code>balanced</code>,
+<code>strict</code>).</label></li>
+<li><label><input type="checkbox" checked="" />Document secure defaults
+and emergency rollback toggles.</label></li>
+</ul>
+<hr />
+<h2 id="workstream-d-tests-and-quality-gates">Workstream D: Tests and
+quality gates</h2>
+<h3 id="d1-automated-tests">D1. Automated tests</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Add SSE contract tests
+(headers, keepalive, event format).</label></li>
+<li><label><input type="checkbox" checked="" />Add replay/resume tests
+(<code>Last-Event-ID</code>).</label></li>
+<li><label><input type="checkbox" checked="" />Add job lifecycle cleanup
+tests.</label></li>
+<li><label><input type="checkbox" checked="" />Add lag/backpressure
+tests.</label></li>
+<li><label><input type="checkbox" checked="" />Add MCP stdio vs HTTP
+parity tests.</label></li>
+</ul>
+<h3 id="d2-soak-and-fault-tests">D2. Soak and fault tests</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Long-lived stream soak
+test (&gt;= 30 min). (Validated via
+<code>scripts/soak/run_ide_sse_soak.sh 1800</code> — pass,
+~1802.59s)</label></li>
+<li><label><input type="checkbox" checked="" />Network
+interruption/reconnect test.</label></li>
+<li><label><input type="checkbox" checked="" />Burst reconnect
+test.</label></li>
+<li><label><input type="checkbox" checked="" />Forced process
+kill/cancel path test.</label></li>
+</ul>
+<h3 id="d3-ci-gates">D3. CI gates</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Add/extend CI jobs to run
+new streaming test suites.</label></li>
+<li><label><input type="checkbox" checked="" />Define minimum passing
+matrix before release. (See
+<code>docs/guides/SSE_RELEASE_MINIMUM_MATRIX.md</code>)</label></li>
+<li><label><input type="checkbox" checked="" />Add regression guard for
+event schema drift.</label></li>
+</ul>
+<hr />
+<h2 id="workstream-e-observability-and-operations">Workstream E:
+Observability and operations</h2>
+<h3 id="e1-metrics">E1. Metrics</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Active stream gauges by
+endpoint.</label></li>
+<li><label><input type="checkbox" checked="" />Reconnect counters and
+success/failure rates.</label></li>
+<li><label><input type="checkbox" checked="" />Dropped/lagged event
+counters.</label></li>
+<li><label><input type="checkbox" checked="" />Buffer utilization gauges
+and eviction counters.</label></li>
+<li><label><input type="checkbox" checked="" />Auth/rate-limit rejection
+counters.</label></li>
+</ul>
+<h3 id="e2-logging-and-tracing">E2. Logging and tracing</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Structured logs with
+<code>job_id</code>, <code>stream_id</code>, <code>client_id</code>
+correlation.</label></li>
+<li><label><input type="checkbox" checked="" />Consistent error taxonomy
+for stream failures.</label></li>
+<li><label><input type="checkbox" checked="" />Trace key stream
+lifecycle spans.</label></li>
+</ul>
+<h3 id="e3-runbooks">E3. Runbooks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />On-call playbook for
+stream outage.</label></li>
+<li><label><input type="checkbox" checked="" />Playbook for reconnect
+storm and backpressure incidents.</label></li>
+<li><label><input type="checkbox" checked="" />Rollback procedure with
+toggle checklist.</label></li>
+</ul>
+<hr />
+<h2 id="workstream-f-dal-ide-required-changes">Workstream F: dal-ide
+required changes</h2>
+<p>Purpose: keep the frontend client compatible while backend SSE/MCP
+contracts evolve.</p>
+<h3 id="f1-stream-client-compatibility-dal-idesrcmainjs">F1. Stream
+client compatibility (<code>dal-ide/src/main.js</code>)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Add dual parser support
+for legacy raw <code>onmessage</code> payloads and structured event
+envelopes.</label></li>
+<li><label><input type="checkbox" checked="" />Preserve compatibility
+with current keepalive behavior while supporting new heartbeat
+framing.</label></li>
+<li><label><input type="checkbox" checked="" />Support explicit terminal
+outcomes (<code>done</code>, <code>cancelled</code>, <code>error</code>)
+in addition to legacy <code>"[DONE]"</code>.</label></li>
+<li><label><input type="checkbox" checked="" />Ensure run/output UI
+state transitions are driven by terminal event semantics, not socket
+close alone.</label></li>
+</ul>
+<h3 id="f2-reconnect-and-resume-behavior">F2. Reconnect and resume
+behavior</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Implement reconnect flow
+that can leverage <code>Last-Event-ID</code> (or equivalent replay
+token) when available.</label></li>
+<li><label><input type="checkbox" checked="" />Track last processed
+event id separately for run stream vs activity stream.</label></li>
+<li><label><input type="checkbox" checked="" />Handle gap/lag
+notifications with user-visible status and safe fallback
+behavior.</label></li>
+<li><label><input type="checkbox" checked="" />Add exponential
+backoff/jitter for repeated reconnect failures.</label></li>
+</ul>
+<h3 id="f3-auth-model-for-browser-stream-clients">F3. Auth model for
+browser stream clients</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Decide browser-compatible
+auth strategy for SSE (<code>cookie/session</code> vs query token vs
+fetch-stream migration).</label></li>
+<li><label><input type="checkbox" checked="" />If token-based auth is
+required, avoid relying on custom headers with native
+<code>EventSource</code>.</label></li>
+<li><label><input type="checkbox" checked="" />Add frontend handling for
+auth failures (401/403) with actionable UX and retry
+guidance.</label></li>
+<li><label><input type="checkbox" checked="" />Document local-dev versus
+hosted auth wiring in <code>dal-ide</code> docs.</label></li>
+</ul>
+<h3 id="f4-ux-and-operator-visibility">F4. UX and operator
+visibility</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Add UI indicator for
+stream status (<code>connected</code>, <code>reconnecting</code>,
+<code>degraded</code>, <code>disconnected</code>).</label></li>
+<li><label><input type="checkbox" checked="" />Surface stream
+reliability warnings (event loss risk, replay window
+exceeded).</label></li>
+<li><label><input type="checkbox" checked="" />Add debug panel/log hooks
+for stream metadata in development builds.</label></li>
+<li><label><input type="checkbox" checked="" />Ensure stop/run controls
+remain consistent during reconnect windows.</label></li>
+</ul>
+<h3 id="f5-dal-ide-tests-and-docs">F5. dal-ide tests and docs</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Add frontend tests for
+event parsing compatibility (legacy + new schema).</label></li>
+<li><label><input type="checkbox" checked="" />Add tests for
+reconnect/resume and terminal state handling.</label></li>
+<li><label><input type="checkbox" checked="" />Update
+<code>dal-ide/IDE design/API_REFERENCE.md</code> with final stream
+contract.</label></li>
+<li><label><input type="checkbox" checked="" />Update
+<code>dal-ide/README.md</code> with hosted deployment/auth
+notes.</label></li>
+</ul>
+<hr />
+<h2 id="rollout-plan-checklist">Rollout plan checklist</h2>
+<h3 id="stage-0-localdev">Stage 0: Local/dev</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Ship behind flags with
+compatibility defaults.</label></li>
+<li><label><input type="checkbox" checked="" />Validate baseline
+behavior unchanged for existing clients.</label></li>
+</ul>
+<h3 id="stage-1-internalstaging">Stage 1: Internal/staging</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Enable
+replay/resume.</label></li>
+<li><label><input type="checkbox" checked="" />Enable security profile
+candidate.</label></li>
+<li><label><input type="checkbox" checked="" />Run soak tests and
+capture metrics baselines.</label></li>
+</ul>
+<h3 id="stage-2-canary-production">Stage 2: Canary production</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Enable for small traffic
+slice.</label></li>
+<li><label><input type="checkbox" />Monitor error budgets and rollback
+triggers.</label></li>
+<li><label><input type="checkbox" />Confirm MCP transport parity in real
+workflows.</label></li>
+</ul>
+<h3 id="stage-3-general-availability">Stage 3: General availability</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Promote secure
+defaults.</label></li>
+<li><label><input type="checkbox" />Publish final docs and migration
+notes.</label></li>
+<li><label><input type="checkbox" />Archive this checklist into final
+implementation spec.</label></li>
+</ul>
+<hr />
+<h2 id="file-level-implementation-map">File-level implementation
+map</h2>
+<p>Primary expected touch points:</p>
+<ul>
+<li><code>src/ide/server.rs</code></li>
+<li><code>src/ide/run_backend.rs</code></li>
+<li><code>src/main.rs</code></li>
+<li><code>tests/</code> (new SSE and MCP parity suites)</li>
+<li><code>docs/CONFIG.md</code></li>
+<li><code>docs/guides/AGENT_SETUP_AND_USAGE.md</code> (or equivalent
+integration guide)</li>
+<li>MCP bridge script path resolved by <code>dal mcp-bridge</code> (for
+example <code>COO/mcp/src/server.js</code>, or
+<code>../COO/mcp/src/server.js</code> from
+<code>dist_agent_lang/</code>, when present)</li>
+</ul>
+<hr />
+<h2 id="open-questions-resolve-before-implementation-lock">Open
+questions (resolve before implementation lock)</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Which auth primitive is
+canonical for IDE SSE in hosted mode (JWT vs API token)?</label></li>
+<li><label><input type="checkbox" checked="" />Required replay window
+and retention limits per stream type?</label></li>
+<li><label><input type="checkbox" checked="" />Should terminal events be
+explicit <code>event:</code> names or only
+<code>data.type</code>?</label></li>
+<li><label><input type="checkbox" checked="" />Required remote MCP HTTP
+transport compatibility target/version?</label></li>
+<li><label><input type="checkbox" checked="" />Do we support
+multi-tenant stream isolation now or defer?</label></li>
+</ul>
+<hr />
+<h2 id="decision-log">Decision log</h2>
+<p>Use this section to record non-obvious decisions and rationale.</p>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Decision 1: Hosted SSE
+uses cookie/session auth as canonical browser path;
+<code>DAL_IDE_SSE_AUTH_TOKEN</code> + <code>access_token</code> query is
+the compatibility fallback for EventSource constraints.</label></li>
+<li><label><input type="checkbox" checked="" />Decision 2:
+Replay/retention defaults: <code>DAL_IDE_SSE_REPLAY_CAP=512</code>,
+<code>DAL_IDE_SSE_JOB_RETENTION_SECS=120</code>; override per deployment
+SLO.</label></li>
+<li><label><input type="checkbox" checked="" />Decision 3: Terminal
+semantics are conveyed in <code>data.type</code>
+(<code>done|cancelled|error</code>) with default <code>message</code>
+framing for EventSource compatibility.</label></li>
+<li><label><input type="checkbox" checked="" />Decision 4: MCP remote
+compatibility target is Streamable HTTP MCP over <code>/mcp</code> (SDK
+family <code>@modelcontextprotocol/sdk</code> 1.28+ behavior
+baseline).</label></li>
+<li><label><input type="checkbox" checked="" />Decision 5: Multi-tenant
+stream isolation is deferred; current scope is single-tenant per bridge
+process, with deployment-level isolation for tenants.</label></li>
+</ul>
+<hr />
+<h2 id="progress-tracker">Progress tracker</h2>
+<p>Legend: <code>[ ]</code> not started, <code>[-]</code> in progress,
+<code>[x]</code> complete, <code>[!]</code> blocked</p>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Phase 0: Contract +
+flags</label></li>
+<li><label><input type="checkbox" checked="" />Phase 1: IDE SSE
+reliability</label></li>
+<li><label><input type="checkbox" checked="" />Phase 2: Security
+hardening</label></li>
+<li><label><input type="checkbox" checked="" />Phase 3: MCP dual
+transport</label></li>
+<li><label><input type="checkbox" checked="" />Phase 4: Tests + CI
+gates</label></li>
+<li><label><input type="checkbox" checked="" />Phase 5: Observability +
+runbooks</label></li>
+<li><label><input type="checkbox" />Phase 6: Staged rollout</label></li>
+</ul>
+<hr />
+<h2 id="spec-sheet-conversion-checklist">Spec-sheet conversion
+checklist</h2>
+<p>When all items above are complete, convert this doc into final spec
+format:</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />Replace checklist status with final
+implementation status summary.</label></li>
+<li><label><input type="checkbox" />Add final architecture
+diagram(s).</label></li>
+<li><label><input type="checkbox" />Add endpoint/protocol reference
+appendix.</label></li>
+<li><label><input type="checkbox" />Add performance and reliability
+results from soak tests.</label></li>
+<li><label><input type="checkbox" />Add migration and rollback
+guide.</label></li>
+<li><label><input type="checkbox" />Mark
+<code>Status: Final</code>.</label></li>
+</ul>
+</body>
+</html>

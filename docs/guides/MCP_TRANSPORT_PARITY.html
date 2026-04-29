@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MCP_TRANSPORT_PARITY</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dist_agent_lang/docs/assets/docs.css" />
+</head>
+<body>
+<h1 id="mcp-transport-parity-matrix">MCP Transport Parity Matrix</h1>
+<p>Status: Implemented parity contract + remote <code>http-stream</code>
+session lifecycle.</p>
+<h2 id="scope">Scope</h2>
+<ul>
+<li>CLI transport selector:
+<code>DAL_MCP_TRANSPORT=stdio|http-stream</code></li>
+<li>DAL stdlib namespace: <code>mcp::*</code></li>
+<li>Bridge script: <code>COO/mcp/src/server.js</code> (or
+<code>../COO/mcp/src/server.js</code> from
+<code>dist_agent_lang/</code>)</li>
+</ul>
+<h2 id="tool-parity-matrix-user-visible">Tool parity matrix
+(user-visible)</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Tool name</th>
+<th>Endpoint</th>
+<th>Request body</th>
+<th>Response shape</th>
+<th>Stdio</th>
+<th>http-stream</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dal_agent_message</code></td>
+<td><code>POST /api/message</code></td>
+<td><code>{ content, sender_id?, policy?, include_rag? }</code></td>
+<td><code>{ httpStatus, body }</code> (JSON text payload)</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td><code>dal_agent_task</code></td>
+<td><code>POST /api/task</code></td>
+<td><code>{ description, policy?, include_rag? }</code></td>
+<td><code>{ httpStatus, body }</code></td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td><code>dal_agent_run</code></td>
+<td><code>POST /api/agents/run</code></td>
+<td><code>{ role, task, include_rag? }</code></td>
+<td><code>{ httpStatus, body }</code></td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td><code>dal_agent_workflow</code></td>
+<td><code>POST /api/workflow</code></td>
+<td><code>{ workflow, input, include_rag? }</code></td>
+<td><code>{ httpStatus, body }</code></td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="error-class-parity">Error class parity</h2>
+<ul>
+<li>Transport selection:
+<ul>
+<li>Unsupported value -&gt; deterministic config error
+(<code>use stdio or http-stream</code>).</li>
+</ul></li>
+<li>Invocation:
+<ul>
+<li>Unsupported tool name -&gt; deterministic
+<code>mcp::invoke unsupported tool</code>.</li>
+<li>HTTP failure -&gt; non-success <code>status</code> with parsed
+<code>body</code> / <code>body_text</code>.</li>
+</ul></li>
+<li>Bridge lifecycle:
+<ul>
+<li>Missing bridge script or <code>node_modules</code> -&gt;
+deterministic startup error.</li>
+<li>Stopped bridge id -&gt; <code>false</code> / <code>null</code>
+status response.</li>
+</ul></li>
+</ul>
+<h2 id="retrybackoff-guidance">Retry/backoff guidance</h2>
+<ul>
+<li>Client policy:
+<ul>
+<li>Use exponential backoff with jitter for bridge start retries (1s,
+2s, 4s, cap 8s + jitter).</li>
+<li>Retry only idempotent invocations automatically.</li>
+</ul></li>
+<li>Server policy:
+<ul>
+<li>Preserve idempotency by sending <code>Idempotency-Key</code> on
+<code>/api/message</code> and <code>/api/task</code> when callers may
+retry.</li>
+</ul></li>
+</ul>
+<h2 id="timeout-and-cancellation-semantics">Timeout and cancellation
+semantics</h2>
+<ul>
+<li><code>mcp::invoke</code> uses bounded HTTP timeout (30s) and returns
+structured failure on timeout.</li>
+<li><code>mcp::bridge_stop</code> is the cancellation primitive for a
+running bridge process.</li>
+<li>Workflow/run endpoints should be treated as long-running; callers
+should avoid aggressive retry loops.</li>
+<li><code>http-stream</code> bridge mode includes session lifecycle
+management:
+<ul>
+<li>connect via <code>POST /mcp</code> initialize;</li>
+<li>heartbeat via periodic server logging notifications;</li>
+<li>close via <code>DELETE /mcp</code> (or idle session GC).</li>
+</ul></li>
+</ul>
+<h2 id="known-differences-and-rationale">Known differences and
+rationale</h2>
+<ul>
+<li>Stdio remains the default for maximal local compatibility.</li>
+<li><code>http-stream</code> mode requires an MCP HTTP client that sends
+<code>Accept: application/json, text/event-stream</code> and uses
+<code>mcp-session-id</code>.</li>
+<li>Multi-tenant isolation is deployment-level (separate bridge/server
+instances), not in-process bridge tenancy.</li>
+</ul>
+</body>
+</html>

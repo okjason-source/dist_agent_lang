@@ -91,7 +91,7 @@
 <h1 id="installation-and-usage-guide">Installation and Usage Guide</h1>
 <h2 id="️-production-readiness-notice">⚠️ Production Readiness
 Notice</h2>
-<p><strong>dist_agent_lang v1.0.8 is currently in beta.</strong> While
+<p><strong>dist_agent_lang v1.0.xx is currently in beta.</strong> While
 it includes comprehensive security features, it has not yet undergone
 extensive real-world production testing.</p>
 <p><strong>Recommended for</strong>: Development, prototyping, learning,
@@ -108,13 +108,42 @@ detailed information.</p>
 <li>For binary install: No additional dependencies (binary is
 self-contained)</li>
 </ul>
+<h3 id="one-package-one-cli-name-read-this-first">One package, one CLI
+name (read this first)</h3>
+<table>
+<thead>
+<tr class="header">
+<th>What</th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rust crate / <code>cargo install</code> /
+<code>cargo add</code></td>
+<td><strong><code>dist_agent_lang</code></strong></td>
+</tr>
+<tr class="even">
+<td>Command in your shell</td>
+<td><strong><code>dal</code></strong> (not
+<code>dist_agent_lang</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><code>cargo install dist_agent_lang</code> puts
+<strong><code>dal</code></strong> on your <code>PATH</code> (and also
+<code>dal-registry</code> and <code>rag-index</code> unless you limit
+bins). There is no separate “DAL install” vs “dist_agent_lang
+install”—same package, same binary. To install only the main CLI:
+<code>cargo install dist_agent_lang --bin dal</code>.</p>
 <h3 id="quick-install-cratesio">Quick Install (crates.io)</h3>
 <p>If you have Rust installed:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install dist_agent_lang</span></code></pre></div>
-<p>This installs the CLI from <a
-href="https://crates.io/crates/dist_agent_lang">crates.io</a>. To use as
-a library: <code>cargo add dist_agent_lang</code></p>
+<p>This installs from <a
+href="https://crates.io/crates/dist_agent_lang">crates.io</a>; use the
+<strong><code>dal</code></strong> command afterward. To use as a
+library: <code>cargo add dist_agent_lang</code></p>
 <h3 id="install-from-release-binary">Install from Release Binary</h3>
 <h4 id="linuxmacos">Linux/macOS</h4>
 <div class="sourceCode" id="cb2"><pre
@@ -124,15 +153,15 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract the package</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-xzf</span> dist_agent_lang-v1.0.5-linux-x64.tar.gz</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Copy binary to PATH</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang /usr/local/bin/</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># OR: cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang ~/.local/bin/</span></span></code></pre></div>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Copy binary to PATH (artifact name is `dal` in current builds)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp target/x86_64-unknown-linux-gnu/release/dal /usr/local/bin/</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># OR: cp target/x86_64-unknown-linux-gnu/release/dal ~/.local/bin/</span></span></code></pre></div>
 <h4 id="windows">Windows</h4>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download the release package</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract dist_agent_lang-1.0.0.zip</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Open Command Prompt in the extracted folder</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run install.bat (if available) or manually copy bin/dist_agent_lang.exe to your PATH</span></span></code></pre></div>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run install.bat (if available) or manually copy dal.exe to your PATH</span></span></code></pre></div>
 <h3 id="build-from-source">Build from Source</h3>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/okjason-source/dist_agent_lang.git</span>
@@ -145,57 +174,106 @@ to your shell PATH. To only build the binary without installing, run
 <code>cargo build --release</code> and use
 <code>./target/release/dal</code> or add <code>target/release</code> to
 PATH.</p>
-<h4 id="windows-1">Windows</h4>
+<h3 id="one-path-while-hacking-this-repo-recommended">One path while
+hacking this repo (recommended)</h3>
+<p>Rust puts the CLI at <strong><code>target/release/dal</code></strong>
+(not <code>target/release/bin/dal</code>). Everything below avoids a
+split brain between <code>~/.cargo/bin/dal</code>,
+<code>cargo install</code>, and ad hoc copies.</p>
+<ol type="1">
+<li><p><strong>Prefer the repo binary in your shell</strong> (updates on
+every <code>cargo build --release</code>):</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download dist_agent_lang-v1.0.5-windows-x64.zip from GitHub Releases</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract, then copy dist_agent_lang.exe to a folder in your PATH</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Add that folder to the system PATH environment variable</span></span></code></pre></div>
-<h3 id="verify-installation">Verify Installation</h3>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /path/to/dist_agent_lang</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">./scripts/dev-dal-path.sh</span><span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> <span class="at">--version</span></span></code></pre></div>
+<p>Add that <code>eval</code> line to <code>~/.zshrc</code> or
+<code>~/.bashrc</code> if you always work in this clone (adjust the path
+to your machine).</p></li>
+<li><p><strong>Optional: make <code>/usr/local/bin/dal</code> track this
+tree</strong> (not <code>~/.cargo/bin/dal</code> — that only refreshes
+when you <code>cargo install</code>):</p>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> <span class="at">--version</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Should output: dal 1.0.8 (or latest version)</span></span></code></pre></div>
-<h2 id="-quick-start">🚀 Quick Start</h2>
-<h3 id="1-run-a-dist_agent_lang-file">1. Run a dist_agent_lang File</h3>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span> <span class="at">--bin</span> dal</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/symlink-dal-usr-local.sh</span></span></code></pre></div>
+<p>After that, any new <code>cargo build --release</code> overwrites
+<code>target/release/dal</code>; the symlink keeps pointing at the same
+path, so you always run the binary you just built.</p></li>
+<li><p><strong>COO</strong> (<code>COO/start.sh</code>) already prefers
+<code>../target/release/dal</code> (or newer
+<code>../target/debug/dal</code>) over <code>dal</code> on
+<code>PATH</code>, so <code>./start.sh</code> stays aligned with local
+builds without extra steps.</p></li>
+<li><p><strong><code>cargo install --path . --force --bin dal</code></strong>
+is fine if you live in <code>~/.cargo/bin</code>; it is a <em>copy</em>,
+not a link to <code>target/release</code>. Do not mix that with “I only
+<code>cargo build</code>” — either install after each build, or use
+(1)/(2) and skip <code>cargo install</code> for day-to-day
+work.</p></li>
+</ol>
+<p><strong>Why they don’t all update together by default:</strong>
+Rust/Cargo only guarantees writing under <code>target/</code>. Putting a
+binary in <code>~/.cargo/bin</code> is a separate
+<strong><code>cargo install</code></strong> copy step. Anything in
+<code>/usr/local/bin</code> is your OS layout, not Cargo’s — so nothing
+“auto-syncs” unless you run one command that chains the steps. Use
+<strong><code>./scripts/sync-all-dal.sh</code></strong> from the repo
+root (build + <code>cargo install --bin dal</code>; optional
+<code>SYNC_DAL_USR_LOCAL=1</code> or <code>--usr-local</code> for the
+<code>/usr/local/bin</code> symlink), or
+<strong><code>make install-dal-sync</code></strong>
+(<code>USR_LOCAL=1</code> includes <code>/usr/local</code>).</p>
+<h4 id="windows-1">Windows</h4>
 <div class="sourceCode" id="cb7"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run a simple example</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run examples/hello_world_demo.dal</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with specific file</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run path/to/your/file.dal</span></code></pre></div>
-<h3 id="2-create-your-first-dist_agent_lang-program">2. Create Your
-First dist_agent_lang Program</h3>
-<p>Create a file <code>hello.dal</code>:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download dist_agent_lang-v1.0.5-windows-x64.zip from GitHub Releases</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract, then copy dal.exe to a folder in your PATH</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Add that folder to the system PATH environment variable</span></span></code></pre></div>
+<h3 id="verify-installation">Verify Installation</h3>
 <div class="sourceCode" id="cb8"><pre
-class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>trust(<span class="st">&quot;hybrid&quot;</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>service HelloWorld <span class="op">{</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Hello, dist_agent_lang!&quot;</span>)<span class="op">;</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create an AI agent</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> agent <span class="op">=</span> <span class="pp">ai::</span>create_agent(<span class="st">&quot;greeter&quot;</span><span class="op">,</span> <span class="op">{</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;role&quot;</span><span class="op">:</span> <span class="st">&quot;greeting_specialist&quot;</span><span class="op">,</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;capabilities&quot;</span><span class="op">:</span> [<span class="st">&quot;greeting&quot;</span><span class="op">,</span> <span class="st">&quot;conversation&quot;</span>]</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>info(<span class="st">&quot;main&quot;</span><span class="op">,</span> <span class="st">&quot;Hello World program executed successfully!&quot;</span>)<span class="op">;</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>Run it:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> <span class="at">--version</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Should output: dal 1.0.8 (or latest version)</span></span></code></pre></div>
+<h2 id="-quick-start">🚀 Quick Start</h2>
+<h3 id="1-run-a-dal-program">1. Run a DAL program</h3>
 <div class="sourceCode" id="cb9"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run hello.dal</span></code></pre></div>
-<h3 id="3-available-commands">3. Available Commands</h3>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run a simple example</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run examples/hello_world_demo.dal</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with specific file</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run path/to/your/file.dal</span></code></pre></div>
+<h3 id="2-create-your-first-dal-program">2. Create your first DAL
+program</h3>
+<p>Create a file <code>hello.dal</code>:</p>
 <div class="sourceCode" id="cb10"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run a dist_agent_lang file</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run <span class="op">&lt;</span>file.dal<span class="op">&gt;</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse and validate syntax (without executing)</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> parse <span class="op">&lt;</span>file.dal<span class="op">&gt;</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Show help</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> <span class="at">--help</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Show version</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> <span class="at">--version</span></span></code></pre></div>
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="op">@</span>trust(<span class="st">&quot;hybrid&quot;</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>service HelloWorld <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>        print(<span class="st">&quot;Hello, dist_agent_lang!&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create an AI agent</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> agent <span class="op">=</span> <span class="pp">ai::</span>create_agent(<span class="st">&quot;greeter&quot;</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;role&quot;</span><span class="op">:</span> <span class="st">&quot;greeting_specialist&quot;</span><span class="op">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;capabilities&quot;</span><span class="op">:</span> [<span class="st">&quot;greeting&quot;</span><span class="op">,</span> <span class="st">&quot;conversation&quot;</span>]</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        <span class="pp">log::</span>info(<span class="st">&quot;main&quot;</span><span class="op">,</span> <span class="st">&quot;Hello World program executed successfully!&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Run it:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run hello.dal</span></code></pre></div>
+<h3 id="3-available-commands">3. Available Commands</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run a .dal file</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run <span class="op">&lt;</span>file.dal<span class="op">&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse and validate syntax (without executing)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> parse <span class="op">&lt;</span>file.dal<span class="op">&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Show help</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> <span class="at">--help</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Show version</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> <span class="at">--version</span></span></code></pre></div>
 <h2 id="-examples">📚 Examples</h2>
 <p>The package includes 27 example files in the <code>examples/</code>
 directory:</p>
@@ -265,84 +343,84 @@ configuration</li>
 <li><code>oracle_development_setup.dal</code> - Oracle development</li>
 </ul>
 <h3 id="running-examples">Running Examples</h3>
-<div class="sourceCode" id="cb11"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Navigate to the examples directory</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> examples</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run any example</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run hello_world_demo.dal</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run agent_system_demo.dal</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run smart_contract.dal</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Navigate to the examples directory</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> examples</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run any example</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run hello_world_demo.dal</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run agent_system_demo.dal</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run smart_contract.dal</span></code></pre></div>
 <h2 id="-configuration">🔧 Configuration</h2>
 <h3 id="environment-variables">Environment Variables</h3>
 <p>Set these environment variables for full functionality:</p>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Blockchain configuration</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_RPC_URL_ETHEREUM</span><span class="op">=</span><span class="st">&quot;https://mainnet.infura.io/v3/YOUR_KEY&quot;</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_RPC_URL_POLYGON</span><span class="op">=</span><span class="st">&quot;https://polygon-rpc.com&quot;</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_PRIVATE_KEY</span><span class="op">=</span><span class="st">&quot;your_private_key&quot;</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># AI configuration</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;your_openai_key&quot;</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_AI_MODEL</span><span class="op">=</span><span class="st">&quot;gpt-4&quot;</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Database configuration</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_DB_URL</span><span class="op">=</span><span class="st">&quot;postgresql://user:pass@localhost/db&quot;</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Logging</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_LOG_LEVEL</span><span class="op">=</span><span class="st">&quot;info&quot;</span></span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">RUST_LOG</span><span class="op">=</span><span class="st">&quot;info&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Blockchain configuration</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_RPC_URL_ETHEREUM</span><span class="op">=</span><span class="st">&quot;https://mainnet.infura.io/v3/YOUR_KEY&quot;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_RPC_URL_POLYGON</span><span class="op">=</span><span class="st">&quot;https://polygon-rpc.com&quot;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_PRIVATE_KEY</span><span class="op">=</span><span class="st">&quot;your_private_key&quot;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co"># AI configuration</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_AI_API_KEY</span><span class="op">=</span><span class="st">&quot;your_openai_key&quot;</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_AI_MODEL</span><span class="op">=</span><span class="st">&quot;gpt-4&quot;</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Database configuration</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_DB_URL</span><span class="op">=</span><span class="st">&quot;postgresql://user:pass@localhost/db&quot;</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Logging</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DIST_AGENT_LOG_LEVEL</span><span class="op">=</span><span class="st">&quot;info&quot;</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">RUST_LOG</span><span class="op">=</span><span class="st">&quot;info&quot;</span></span></code></pre></div>
 <h3 id="configuration-file">Configuration File</h3>
 <p>Create a <code>config.toml</code> file:</p>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode toml"><code class="sourceCode toml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[blockchain]</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="dt">ethereum_rpc</span> <span class="op">=</span> <span class="st">&quot;https://mainnet.infura.io/v3/YOUR_KEY&quot;</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="dt">polygon_rpc</span> <span class="op">=</span> <span class="st">&quot;https://polygon-rpc.com&quot;</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="dt">private_key</span> <span class="op">=</span> <span class="st">&quot;your_private_key&quot;</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[ai]</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="dt">api_key</span> <span class="op">=</span> <span class="st">&quot;your_openai_key&quot;</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="dt">model</span> <span class="op">=</span> <span class="st">&quot;gpt-4&quot;</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="dt">max_tokens</span> <span class="op">=</span> <span class="dv">4096</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="kw">[database]</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="dt">url</span> <span class="op">=</span> <span class="st">&quot;postgresql://user:pass@localhost/db&quot;</span></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="dt">pool_size</span> <span class="op">=</span> <span class="dv">10</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[blockchain]</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="dt">ethereum_rpc</span> <span class="op">=</span> <span class="st">&quot;https://mainnet.infura.io/v3/YOUR_KEY&quot;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="dt">polygon_rpc</span> <span class="op">=</span> <span class="st">&quot;https://polygon-rpc.com&quot;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="dt">private_key</span> <span class="op">=</span> <span class="st">&quot;your_private_key&quot;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[ai]</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="dt">api_key</span> <span class="op">=</span> <span class="st">&quot;your_openai_key&quot;</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="dt">model</span> <span class="op">=</span> <span class="st">&quot;gpt-4&quot;</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="dt">max_tokens</span> <span class="op">=</span> <span class="dv">4096</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="kw">[database]</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="dt">url</span> <span class="op">=</span> <span class="st">&quot;postgresql://user:pass@localhost/db&quot;</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="dt">pool_size</span> <span class="op">=</span> <span class="dv">10</span></span></code></pre></div>
 <h2 id="-common-use-cases">💡 Common Use Cases</h2>
 <h3 id="1-create-a-smart-contract">1. Create a Smart Contract</h3>
-<div class="sourceCode" id="cb14"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run examples/smart_contract.dal</span></code></pre></div>
-<h3 id="2-deploy-a-token">2. Deploy a Token</h3>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run examples/keys_token_implementation.dal</span></code></pre></div>
-<h3 id="3-create-an-ai-agent-system">3. Create an AI Agent System</h3>
 <div class="sourceCode" id="cb16"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run examples/agent_system_demo.dal</span></code></pre></div>
-<h3 id="4-build-a-web-api">4. Build a Web API</h3>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run examples/smart_contract.dal</span></code></pre></div>
+<h3 id="2-deploy-a-token">2. Deploy a Token</h3>
 <div class="sourceCode" id="cb17"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dist_agent_lang</span> run examples/simple_web_api_example.dal</span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run examples/keys_token_implementation.dal</span></code></pre></div>
+<h3 id="3-create-an-ai-agent-system">3. Create an AI Agent System</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run examples/agent_system_demo.dal</span></code></pre></div>
+<h3 id="4-build-a-web-api">4. Build a Web API</h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> run examples/simple_web_api_example.dal</span></code></pre></div>
 <h2 id="-troubleshooting">🐛 Troubleshooting</h2>
 <h3 id="binary-not-found">Binary not found</h3>
-<div class="sourceCode" id="cb18"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if binary is in PATH</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> dist_agent_lang</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># If not found, add installation directory to PATH</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.local/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span>  <span class="co"># For Linux/macOS</span></span></code></pre></div>
-<h3 id="permission-denied">Permission denied</h3>
-<div class="sourceCode" id="cb19"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Make binary executable</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x bin/dist_agent_lang</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or install with sudo</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ./install.sh</span></code></pre></div>
-<h3 id="file-not-found">File not found</h3>
 <div class="sourceCode" id="cb20"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Make sure you&#39;re in the correct directory</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if binary is in PATH</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> dal</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if file exists</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> examples/hello_world_demo.dal</span></code></pre></div>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># If not found, add installation directory to PATH</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.local/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span>  <span class="co"># For Linux/macOS</span></span></code></pre></div>
+<h3 id="permission-denied">Permission denied</h3>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Make binary executable</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x ~/.local/bin/dal</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or install with sudo</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ./install.sh</span></code></pre></div>
+<h3 id="file-not-found">File not found</h3>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Make sure you&#39;re in the correct directory</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if file exists</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> examples/hello_world_demo.dal</span></code></pre></div>
 <h2 id="-next-steps">📖 Next Steps</h2>
 <ol type="1">
 <li><strong>Read the README.md</strong> - Overview of features and

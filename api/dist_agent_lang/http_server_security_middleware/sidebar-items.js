@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["auth_middleware","input_validation_middleware","rate_limit_middleware","request_size_middleware"]};
+window.SIDEBAR_ITEMS = {"fn":["auth_middleware","auth_middleware_with_exemptions","dal_serve_basic_auth_middleware","input_validation_middleware","input_validation_middleware_with_exemptions","rate_limit_middleware","request_size_middleware"],"struct":["AuthExemptPaths","InputValidationExemptPaths"]};

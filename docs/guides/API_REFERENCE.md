@@ -1,6 +1,6 @@
-# API Reference - Standard Library (v1.0.8)
+# API Reference - Standard Library (v1.0.xx)
 
-> **Beta Release v1.0.8:** Actively maintained with consistent updates. Test thoroughly before production use. **Beta testing contributions appreciated!**
+> **Beta Release v1.0.xx:** Actively maintained with consistent updates. Test thoroughly before production use. **Beta testing contributions appreciated!**
 
 Complete reference for all **standard library modules** in dist_agent_lang.
 

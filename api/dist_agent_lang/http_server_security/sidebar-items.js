@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["security_headers_middleware"],"struct":["AuthValidator","Claims","CorsConfig","InputValidator","JwtConfig","RateLimiter","RequestSizeLimiter","SecurityLogger"]};
+window.SIDEBAR_ITEMS = {"fn":["security_headers_middleware"],"struct":["AuthValidator","Claims","CorsConfig","DalServeBasicAuthBruteForce","InputValidator","JwtConfig","RateLimiter","RequestSizeLimiter","SecurityLogger"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["connect_client_credentials","create_client","remove_client","request","set_header","set_retry_policy","set_token"],"struct":["GraphClient","GraphResponse"]};

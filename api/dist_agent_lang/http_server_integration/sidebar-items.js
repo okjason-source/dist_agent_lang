@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["create_router_with_middleware","create_router_with_options","create_router_with_runtime_factory"]};
+window.SIDEBAR_ITEMS = {"enum":["ServeSecurityPreset"],"fn":["apply_standard_http_layers","create_router_with_middleware","create_router_with_options","create_router_with_runtime_factory","dal_serve_basic_auth_configured"],"struct":["ServeSecurityOptions"]};

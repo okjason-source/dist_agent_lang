@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CLAUDE_CONNECTORS_OPTIONAL_SETUP</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/dist_agent_lang/docs/assets/docs.css" />
+</head>
+<body>
+<h1 id="claude-connectors-optional-for-dal-developers">Claude Connectors
+(Optional) for DAL Developers</h1>
+<p>This guide shows how to make DAL agents easy to access from Claude
+via MCP/connector tooling.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Keep DAL's default model/tooling behavior unchanged (no forced
+switch).</li>
+<li>Give developers a fast, copy-paste path to expose DAL as an optional
+connector.</li>
+<li>Reuse DAL's existing HTTP-first contract and MCP bridge.</li>
+</ul>
+<h2 id="mental-model">Mental model</h2>
+<ul>
+<li>Your DAL agent remains an HTTP app (<code>dal agent serve</code> or
+<code>dal serve</code>).</li>
+<li>MCP/connector is an optional adapter that forwards tool calls to the
+same DAL HTTP endpoints.</li>
+<li>Claude integration is therefore additive, not a replacement for COO
+or existing DAL flows.</li>
+</ul>
+<p>See also:</p>
+<ul>
+<li><code>docs/IDE_AND_AGENT_INTEGRATION.md</code></li>
+<li><code>docs/guides/AGENT_SETUP_AND_USAGE.md#13-mcp-ide-bridge</code></li>
+</ul>
+<h2 id="1-start-a-dal-agent-http-server">1) Start a DAL agent HTTP
+server</h2>
+<p>Run from your DAL project:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent serve <span class="at">--port</span> 4040</span></code></pre></div>
+<p>Or run your custom DAL app:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> serve app.dal <span class="at">--port</span> 4040</span></code></pre></div>
+<h2 id="2-install-mcp-bridge-dependencies-one-time">2) Install MCP
+bridge dependencies (one-time)</h2>
+<p>From the repository checkout:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> COO/mcp</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># or, from dist_agent_lang/: cd ../COO/mcp</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install</span></code></pre></div>
+<h2 id="3-run-the-dal-mcp-bridge">3) Run the DAL MCP bridge</h2>
+<p>From a second terminal:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AGENT_HTTP_BASE</span><span class="op">=</span><span class="st">&quot;http://127.0.0.1:4040&quot;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> mcp-bridge</span></code></pre></div>
+<p>Notes:</p>
+<ul>
+<li>Default transport is <code>stdio</code>.</li>
+<li><code>DAL_MCP_TRANSPORT=http-stream</code> is available for
+environments that support streamable HTTP MCP transport.</li>
+</ul>
+<h2 id="4-register-dal-bridge-in-your-claude-connectormcp-surface">4)
+Register DAL bridge in your Claude connector/MCP surface</h2>
+<p>In any Claude environment that supports MCP connectors/servers, add a
+server entry that runs:</p>
+<ul>
+<li>Command: <code>node</code></li>
+<li>Args: <code>&lt;path-to&gt;/COO/mcp/src/server.js</code> (or
+<code>&lt;path-to&gt;/../COO/mcp/src/server.js</code> from
+<code>dist_agent_lang</code>)</li>
+<li>Working directory: <code>&lt;path-to&gt;/COO/mcp</code> (or
+<code>&lt;path-to&gt;/../COO/mcp</code>)</li>
+<li>Environment:
+<code>DAL_AGENT_HTTP_BASE=http://127.0.0.1:4040</code></li>
+</ul>
+<p>The MCP server then exposes DAL tool endpoints backed by your running
+DAL agent HTTP server.</p>
+<h2 id="5-team-friendly-developer-experience-recommended">5)
+Team-friendly developer experience (recommended)</h2>
+<p>For language users, provide this as an optional profile:</p>
+<ul>
+<li>Keep existing default setup as-is.</li>
+<li>Add a short "Enable Claude connector" section in onboarding
+docs.</li>
+<li>Include a local script to run both processes for developers.</li>
+</ul>
+<p>Example helper script:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AGENT_HTTP_BASE</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${DAL_AGENT_HTTP_BASE</span><span class="op">:-</span>http://127.0.0.1:4040<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;[1/2] Starting DAL agent server on :4040&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> agent serve <span class="at">--port</span> 4040</span></code></pre></div>
+<p>Run MCP bridge in another terminal:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DAL_AGENT_HTTP_BASE</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${DAL_AGENT_HTTP_BASE</span><span class="op">:-</span>http://127.0.0.1:4040<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dal</span> mcp-bridge</span></code></pre></div>
+<h2 id="optional-use-claude-as-model-provider-without-mcp">Optional: use
+Claude as model provider without MCP</h2>
+<p>If a developer only wants Claude for generation (not connector
+tools), DAL already supports Anthropic directly:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-ant-...&quot;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_MODEL</span><span class="op">=</span><span class="st">&quot;claude-3-5-sonnet-20241022&quot;</span></span></code></pre></div>
+<p>This is independent from MCP connector setup.</p>
+<h2 id="troubleshooting-quick-checks">Troubleshooting quick checks</h2>
+<ul>
+<li><code>dal mcp-bridge</code> says missing <code>node_modules</code>:
+<ul>
+<li>Run <code>cd COO/mcp &amp;&amp; npm install</code> (or
+<code>cd ../COO/mcp &amp;&amp; npm install</code> from
+<code>dist_agent_lang</code>).</li>
+</ul></li>
+<li>MCP server starts but tool calls fail:
+<ul>
+<li>Verify <code>DAL_AGENT_HTTP_BASE</code> points to your active DAL
+HTTP server.</li>
+</ul></li>
+<li>Wrong script path:
+<ul>
+<li>Set <code>DAL_MCP_BRIDGE_SCRIPT</code> (or
+<code>DAL_COO_MCP_SCRIPT</code>) explicitly.</li>
+</ul></li>
+</ul>
+<h2 id="why-this-approach-works-for-coo-and-language-users">Why this
+approach works for COO and language users</h2>
+<ul>
+<li>COO keeps its current defaults and roadmap.</li>
+<li>Developers who prefer Claude connectors get a clear optional
+path.</li>
+<li>The same DAL HTTP API remains the source of truth, so behavior is
+consistent across curl, IDE, and connector clients.</li>
+</ul>
+</body>
+</html>

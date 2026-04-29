@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SSE_RELEASE_MINIMUM_MATRIX</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dist_agent_lang/docs/assets/docs.css" />
+</head>
+<body>
+<h1 id="sse-release-minimum-passing-matrix">SSE Release Minimum Passing
+Matrix</h1>
+<p>Minimum gates required before promoting SSE changes to release
+stages.</p>
+<h2 id="ci-required-gates">CI-required gates</h2>
+<p>All of the following must pass in CI:</p>
+<ol type="1">
+<li><code>Code Quality Check</code> job (<code>cargo check</code>, fmt,
+clippy)</li>
+<li><code>Test Suite</code> job (default + optional feature tests)</li>
+<li><code>Streaming Reliability Gates</code> job:
+<ul>
+<li><code>cargo test --test ide_sse_phase0_tests</code></li>
+<li><code>cargo test mcp_bridge_transport_tests --bin dal</code></li>
+<li>exact schema drift guard execution:
+<ul>
+<li><code>sse_envelope_schema_drift_guard_for_run_and_activity_streams</code></li>
+</ul></li>
+</ul></li>
+</ol>
+<h2
+id="manualops-required-gate-before-production-promotion">Manual/ops-required
+gate before production promotion</h2>
+<p>Run long soak harness and capture results:</p>
+<ul>
+<li><code>scripts/soak/run_ide_sse_soak.sh 1800</code></li>
+<li>Expected:
+<ul>
+<li>soak test passes for full duration</li>
+<li>no replay <code>gap</code> assertion failures</li>
+<li>reconnect windows continue advancing <code>id</code> cursor</li>
+</ul></li>
+</ul>
+<h2 id="promotion-decision-checklist">Promotion decision checklist</h2>
+<ul>
+<li>Stage 0 (local/dev): all CI-required gates pass.</li>
+<li>Stage 1 (internal/staging): CI-required gates pass + one successful
+30-minute soak evidence run.</li>
+<li>Stage 2 (canary): same as Stage 1, plus no critical stream
+regression alerts.</li>
+<li>Stage 3 (GA): maintain green CI and soak evidence for the release
+candidate.</li>
+</ul>
+</body>
+</html>

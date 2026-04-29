@@ -51,6 +51,10 @@ paths)</li>
 <li><a href="#mold-module">mold</a> - Mold load/spawn</li>
 <li><a href="#iot-module">iot</a> - IoT device management</li>
 <li><a href="#oracle-module">oracle</a> - Oracle data feeds</li>
+<li><a href="#graph-module">graph</a> - Graph API clients (Microsoft
+Graph and similar)</li>
+<li><a href="#mcp-module">mcp</a> - MCP bridge lifecycle and tool
+invocation</li>
 <li><a href="#sync-module">sync</a> - Data synchronization</li>
 <li><a href="#web-module">web</a> - HTTP operations</li>
 <li><a href="#log-module">log</a> - Logging</li>
@@ -606,9 +610,93 @@ stripped best-effort). On failure, the runtime surfaces an error string
 (network, HTTP status, blocked host, etc.).</p>
 <p>Alias: <strong><code>http::fetch</code></strong> — same behavior.</p>
 <hr />
+<h2 id="graph-module">graph Module</h2>
+<p>Provider-agnostic graph API primitives for services like Microsoft
+Graph. Supports bearer auth, OAuth client-credentials bootstrap, JSON
+requests, and retry/backoff.</p>
+<h3 id="functions-10">Functions</h3>
+<h4 id="connect-1">connect</h4>
+<pre class="dal"><code>graph::connect(base_url: String, bearer_token: String, timeout_secs?: Int) -&gt; String</code></pre>
+<p>Create a graph client and return <code>client_id</code>.</p>
+<h4 id="connect_client_credentials">connect_client_credentials</h4>
+<pre class="dal"><code>graph::connect_client_credentials(base_url: String, token_endpoint: String, client_id: String, client_secret: String, scope: String, timeout_secs?: Int) -&gt; String</code></pre>
+<p>Fetch OAuth token using client-credentials and create a graph
+client.</p>
+<h4 id="set_header">set_header</h4>
+<pre class="dal"><code>graph::set_header(client_id: String, key: String, value: String) -&gt; Bool</code></pre>
+<p>Set default header for requests. Protected headers (like
+<code>Authorization</code>) are blocked.</p>
+<h4 id="set_token">set_token</h4>
+<pre class="dal"><code>graph::set_token(client_id: String, bearer_token: String) -&gt; Bool</code></pre>
+<p>Rotate/replace bearer token.</p>
+<h4 id="set_retry_policy">set_retry_policy</h4>
+<pre class="dal"><code>graph::set_retry_policy(client_id: String, max_retries: Int, retry_backoff_ms: Int) -&gt; Bool</code></pre>
+<p>Set retry policy for <code>429</code> and <code>5xx</code>
+responses.</p>
+<h4 id="request">request</h4>
+<pre class="dal"><code>graph::request(client_id: String, method: String, path: String, body?: Any) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Perform authenticated JSON request. Returns map with:</p>
+<ul>
+<li><code>status</code> (Int)</li>
+<li><code>ok</code> (Bool)</li>
+<li><code>retries</code> (Int)</li>
+<li><code>request_id</code> (String|null)</li>
+<li><code>body_text</code> (String)</li>
+<li><code>body</code> (parsed JSON value when possible)</li>
+</ul>
+<h4 id="get--post--patch--delete">get / post / patch / delete</h4>
+<pre class="dal"><code>graph::get(client_id: String, path: String) -&gt; Map&lt;String, Value&gt;
+graph::post(client_id: String, path: String, body: Any) -&gt; Map&lt;String, Value&gt;
+graph::patch(client_id: String, path: String, body: Any) -&gt; Map&lt;String, Value&gt;
+graph::delete(client_id: String, path: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>HTTP convenience wrappers over <code>graph::request</code>.</p>
+<hr />
+<h2 id="mcp-module">mcp Module</h2>
+<p>MCP bridge lifecycle management and DAL-facing tool invocation
+primitives.</p>
+<h3 id="functions-11">Functions</h3>
+<h4 id="bridge_start">bridge_start</h4>
+<pre class="dal"><code>mcp::bridge_start(base_url?: String, transport?: String) -&gt; String</code></pre>
+<p>Start MCP bridge process (<code>node COO/mcp/src/server.js</code>, or
+<code>node ../COO/mcp/src/server.js</code> from
+<code>dist_agent_lang/</code>) and return <code>bridge_id</code>.
+Supported transport values: <code>stdio</code> (default) and
+<code>http-stream</code>. In <code>http-stream</code> mode, the bridge
+exposes MCP Streamable HTTP endpoint <code>/mcp</code> using configured
+<code>DAL_MCP_STREAM_HOST</code> / <code>DAL_MCP_STREAM_PORT</code>.</p>
+<h4 id="bridge_stop">bridge_stop</h4>
+<pre class="dal"><code>mcp::bridge_stop(bridge_id: String) -&gt; Bool</code></pre>
+<p>Stop a running bridge process.</p>
+<h4 id="bridge_status">bridge_status</h4>
+<pre class="dal"><code>mcp::bridge_status(bridge_id: String) -&gt; Map&lt;String, Value&gt; | Null</code></pre>
+<p>Get one bridge status (<code>id</code>, <code>pid</code>,
+<code>running</code>, <code>exit_code</code>, <code>base_url</code>,
+<code>transport</code>).</p>
+<h4 id="bridge_list">bridge_list</h4>
+<pre class="dal"><code>mcp::bridge_list() -&gt; List&lt;Map&lt;String, Value&gt;&gt;</code></pre>
+<p>List all runtime-started bridge processes.</p>
+<h4 id="invoke">invoke</h4>
+<pre class="dal"><code>mcp::invoke(tool_name: String, input: Any, base_url?: String) -&gt; Map&lt;String, Value&gt;</code></pre>
+<p>Invoke supported MCP bridge tools by name against DAL HTTP API.</p>
+<p>Supported <code>tool_name</code> values:</p>
+<ul>
+<li><code>dal_agent_message</code> → <code>POST /api/message</code></li>
+<li><code>dal_agent_task</code> → <code>POST /api/task</code></li>
+<li><code>dal_agent_run</code> → <code>POST /api/agents/run</code></li>
+<li><code>dal_agent_workflow</code> →
+<code>POST /api/workflow</code></li>
+</ul>
+<p>Return shape:</p>
+<ul>
+<li><code>status</code> (Int)</li>
+<li><code>ok</code> (Bool)</li>
+<li><code>body_text</code> (String)</li>
+<li><code>body</code> (parsed JSON when possible)</li>
+</ul>
+<hr />
 <h2 id="oracle-module">oracle Module</h2>
 <p>Oracle data feed operations.</p>
-<h3 id="functions-10">Functions</h3>
+<h3 id="functions-12">Functions</h3>
 <h4 id="fetch">fetch</h4>
 <pre class="dal"><code>oracle::fetch(source: String, query_type: String) -&gt; Map&lt;String, Value&gt;</code></pre>
 <p>Fetch data from oracle.</p>
@@ -641,7 +729,7 @@ stripped best-effort). On failure, the runtime surfaces an error string
 <hr />
 <h2 id="web-module">web Module</h2>
 <p>HTTP operations for web requests and responses.</p>
-<h3 id="functions-11">Functions</h3>
+<h3 id="functions-13">Functions</h3>
 <h4 id="get_request">get_request</h4>
 <pre class="dal"><code>web::get_request(url: String) -&gt; String</code></pre>
 <p>HTTP GET request.</p>
@@ -665,7 +753,7 @@ etc.</p>
 <hr />
 <h2 id="log-module">log Module</h2>
 <p>Logging operations.</p>
-<h3 id="functions-12">Functions</h3>
+<h3 id="functions-14">Functions</h3>
 <h4 id="info">info</h4>
 <pre class="dal"><code>log::info(message: String)
 log::info(source: String, message: String)</code></pre>
@@ -712,7 +800,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="config-module">config Module</h2>
 <p>Configuration management.</p>
-<h3 id="functions-13">Functions</h3>
+<h3 id="functions-15">Functions</h3>
 <h4 id="get_env">get_env</h4>
 <pre class="dal"><code>config::get_env(key: String) -&gt; String</code></pre>
 <p>Get environment variable.</p>
@@ -740,7 +828,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="cloudadmin-module">cloudadmin Module</h2>
 <p>Cloud administration and governance.</p>
-<h3 id="functions-14">Functions</h3>
+<h3 id="functions-16">Functions</h3>
 <h4 id="authorize">authorize</h4>
 <pre class="dal"><code>cloudadmin::authorize(admin_id: String, operation: String, resource: String) -&gt; Bool</code></pre>
 <p>Check authorization.</p>
@@ -763,7 +851,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="trust-module">trust Module</h2>
 <p>Trust and permission management.</p>
-<h3 id="functions-15">Functions</h3>
+<h3 id="functions-17">Functions</h3>
 <h4 id="authorize-1">authorize</h4>
 <pre class="dal"><code>trust::authorize(admin_id: String, operation: String, resource: String) -&gt; Bool</code></pre>
 <p>Authorize operation.</p>
@@ -795,7 +883,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="key-module">key Module</h2>
 <p>Capability-based access control (keys to resources).</p>
-<h3 id="functions-16">Functions</h3>
+<h3 id="functions-18">Functions</h3>
 <h4 id="create">create</h4>
 <pre class="dal"><code>key::create(resource: String, permissions: List&lt;String&gt;) -&gt; Capability</code></pre>
 <p>Create key (capability).</p>
@@ -813,7 +901,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="aml-module">aml Module</h2>
 <p>Anti-money laundering checks.</p>
-<h3 id="functions-17">Functions</h3>
+<h3 id="functions-19">Functions</h3>
 <h4 id="perform_check">perform_check</h4>
 <pre class="dal"><code>aml::perform_check(transaction: Map&lt;String, Value&gt;, address: String) -&gt; String</code></pre>
 <p>Perform AML check.</p>
@@ -831,7 +919,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="kyc-module">kyc Module</h2>
 <p>Know Your Customer verification.</p>
-<h3 id="functions-18">Functions</h3>
+<h3 id="functions-20">Functions</h3>
 <h4 id="verify-2">verify</h4>
 <pre class="dal"><code>kyc::verify(user_id: String, verification_data: Map&lt;String, Value&gt;) -&gt; String</code></pre>
 <p>Verify user identity.</p>
@@ -845,7 +933,7 @@ log::audit(source: String, event: String, data: Map&lt;String, Value&gt;)</code>
 <hr />
 <h2 id="test-module">test Module</h2>
 <p>Testing framework.</p>
-<h3 id="functions-19">Functions</h3>
+<h3 id="functions-21">Functions</h3>
 <h4 id="run_registered_tests">run_registered_tests</h4>
 <pre class="dal"><code>test::run_registered_tests() -&gt; Map&lt;String, Value&gt;</code></pre>
 <p>Run all registered tests.</p>

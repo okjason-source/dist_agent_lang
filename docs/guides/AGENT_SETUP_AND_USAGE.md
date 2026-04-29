@@ -364,14 +364,16 @@ Note: Messages and tasks are consumed when received (e.g. `receive_messages` / `
 Evolve uses a single markdown file (path from `[agent] context_path` or `DAL_AGENT_CONTEXT_PATH`; default `./evolve.md`).
 
 - `evolve::load(agent_name?)` — Load full context. Creates file with header if missing.
-- `evolve::load_recent(agent_name?, max_lines)` — Last N lines (or full if `max_lines <= 0`).
+- `evolve::load_recent(agent_name?, max_lines)` — Last N **lines** of the file (or full if `max_lines <= 0`). Line-based cuts can split tables; prefer below for prompts.
+- `evolve::load_recent_for_prompt(agent_name?, max_turns, max_chars)` — **Prompt-oriented load:** last `max_turns` **conversation turns** (blocks under `## Conversation`), plus optional `## Working memory` and the latest `## Summary` block. **Omits** the action-log table from the returned string (still on disk). Env defaults in COO: `DAL_EVOLVE_PROMPT_MAX_TURNS`, `DAL_EVOLVE_PROMPT_MAX_CHARS`.
 - `evolve::append_conversation(user_message, agent_response, agent_name?)` — Append a conversation turn.
 - `evolve::append_log(action, detail, result)` — Append an action log row (e.g. after `sh::run`).
+- `evolve::append_working_memory(line)` — Append one high-signal bullet under `## Working memory` (decisions, paths, open threads). Creates the section before `## Conversation` if needed.
 - `evolve::append_summary(summary_text, title?)` — Append a summary section.
 - `evolve::get_path()` — Resolved context file path.
 - `evolve::trim_retention(keep_tail_lines)` — Keep only the last N lines of content after the header.
 
-Use these from DAL to keep the context file in sync with agent behavior (e.g. after answering a user or running a command).
+Use these from DAL to keep the context file in sync with agent behavior (e.g. after answering a user or running a command). For **evolution** that actually helps the next turn, prefer **`append_working_memory`** for durable facts and **`load_recent_for_prompt`** (or COO’s built-in prompt path) instead of stuffing only raw action-log noise into context.
 
 ### sh::run — shell execution
 
@@ -572,8 +574,9 @@ Full behavior, corpus layout, and `context_blocks` with `source: rag` are docume
 **MCP** (Model Context Protocol) is **not** a DAL keyword or builtin. It is a **host protocol**: a small **stdio** process (often Node) forwards tool calls from an MCP-capable editor (e.g. Cursor) to **your agent’s HTTP API** — the same behavior as calling `POST /message` or `/task` with `curl`.
 
 - **CLI:** From a checkout, **`dal mcp-bridge`** runs the bundled bridge script and sets **`DAL_AGENT_HTTP_BASE`** (see `dal mcp-bridge --help`). Point the base URL at wherever **`dal agent serve`** or your **`dal serve`** app listens.
-- **Env:** **`DAL_AGENT_HTTP_BASE`** / **`DAL_MCP_HTTP_BASE`** (optional **`DAL_MCP_BRIDGE_SCRIPT`** to override the script path). Legacy names: `DAL_CEO_BASE_URL`, `DAL_CEO_MCP_SCRIPT`.
-- **In-repo example:** **`CEO/mcp/`** — reference implementation; **`npm install`** in that folder, then configure your IDE’s MCP server entry to run `node …/CEO/mcp/src/server.js` with **`cwd`** set to **`CEO/mcp`**.
+- **Env:** **`DAL_AGENT_HTTP_BASE`** / **`DAL_MCP_HTTP_BASE`** (optional **`DAL_MCP_BRIDGE_SCRIPT`** to override the script path). Prefer **`DAL_COO_BASE_URL`** / **`DAL_COO_MCP_SCRIPT`**.
+- **Reference example:** **`COO/mcp/`** (repo root) or **`../COO/mcp/`** (from `dist_agent_lang`) — run **`npm install`** in that folder, then configure your IDE’s MCP server entry to run `node …/COO/mcp/src/server.js` (or `node …/../COO/mcp/src/server.js`) with **`cwd`** set to that same `mcp` folder.
+- **Claude option for developers:** keep COO defaults and expose an opt-in connector path with [CLAUDE_CONNECTORS_OPTIONAL_SETUP.md](CLAUDE_CONNECTORS_OPTIONAL_SETUP.md).
 
 Language-wide mental model (HTTP first, MCP optional, LSP separate): **[IDE_AND_AGENT_INTEGRATION.md](../IDE_AND_AGENT_INTEGRATION.md)**. Env index: **[CONFIG.md](../CONFIG.md)**.
 

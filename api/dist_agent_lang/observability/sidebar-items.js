@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["http_observability_middleware","init_tracing","metrics_http_response","prometheus_metrics_text"]};
+window.SIDEBAR_ITEMS = {"enum":["IdeSseEndpoint"],"fn":["http_observability_middleware","ide_sse_gap","ide_sse_lagged","ide_sse_recv_closed","ide_sse_replay_evictions","ide_sse_resume","ide_sse_stream_open","init_tracing","metrics_http_response","prometheus_metrics_text"],"struct":["IdeSseActiveGuard"]};

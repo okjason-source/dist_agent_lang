@@ -42,7 +42,8 @@ same routes as <code>curl</code> against your
 <strong><code>dal serve</code> / <code>dal agent serve</code></strong>
 base URL — set <code>DAL_AGENT_HTTP_BASE</code> (or
 <code>DAL_MCP_HTTP_BASE</code>) for <code>dal mcp-bridge</code> or the
-example under <code>CEO/mcp/</code>. Step-by-step context: <a
+example under <code>COO/mcp/</code> (or <code>../COO/mcp/</code> when
+running from <code>dist_agent_lang/</code>). Step-by-step context: <a
 href="guides/AGENT_SETUP_AND_USAGE.html#12-rag-retrieval">AGENT_SETUP_AND_USAGE.md
 §12–13</a>, <a
 href="IDE_AND_AGENT_INTEGRATION.html">IDE_AND_AGENT_INTEGRATION.md</a>, <a
@@ -61,12 +62,19 @@ href="development/RAG_MVP_SPEC.html">RAG_MVP_SPEC.md</a>.</p>
 <td><code>RUST_LOG</code>, <code>DAL_LOG_FORMAT</code>,
 <code>DAL_METRICS</code></td>
 <td><code>RUST_LOG</code> — standard filter (e.g. <code>info</code>,
-<code>dal_http=debug</code>). <code>DAL_LOG_FORMAT=json</code> — JSON
-lines to stderr. <code>DAL_METRICS=1</code> — expose
-<code>GET /metrics</code> (Prometheus text counters) on HTTP servers
-that ship observability (<code>dal web</code>,
-<code>dal ide serve</code>, <code>dal agent serve</code>,
-<code>dal-registry</code>, <code>start_http_server</code>).</td>
+<code>dal_http=debug</code>, <code>dal_stream=info</code>).
+<code>DAL_LOG_FORMAT=json</code> — JSON lines to stderr.
+<code>DAL_METRICS=1</code> — expose <code>GET /metrics</code>
+(Prometheus text counters) on HTTP servers that ship observability
+(<code>dal web</code>, <code>dal ide serve</code>,
+<code>dal agent serve</code>, <code>dal-registry</code>,
+<code>start_http_server</code>). IDE SSE metrics include stream active
+gauges, connection/resume counters, gap counters, replay-eviction
+counters, and global rejection counters
+(<code>dal_http_auth_rejections_total</code>,
+<code>dal_http_rate_limit_rejections_total</code>). In
+<code>legacy</code> preset local dev, auth rejection counters are
+typically zero unless auth is explicitly enabled.</td>
 </tr>
 <tr class="even">
 <td><strong>LLM / AI</strong></td>
@@ -153,6 +161,15 @@ href="STDLIB_REFERENCE.html">STDLIB_REFERENCE.md</a> (<code>http</code>
 module).</td>
 </tr>
 <tr class="odd">
+<td><strong>DAL <code>graph::*</code> primitives</strong> (requires
+<code>http-interface</code>)</td>
+<td><code>DAL_GRAPH_ALLOW_INSECURE_HTTP</code></td>
+<td>Production default requires <code>https://</code> for graph base
+URLs and token endpoints. Set
+<code>DAL_GRAPH_ALLOW_INSECURE_HTTP=1</code> only for local/dev HTTP
+endpoints.</td>
+</tr>
+<tr class="even">
 <td><strong>RAG (lexical MVP)</strong></td>
 <td><code>DAL_RAG</code>, <code>DAL_RAG_INDEX_DIR</code>,
 <code>DAL_RAG_TOP_K</code></td>
@@ -170,14 +187,42 @@ Optional JSON <code>include_rag</code>: <code>true</code> /
 <code>rag::prompt_block(query, include_rag)</code>. See <a
 href="development/RAG_MVP_SPEC.html">RAG_MVP_SPEC.md</a>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>MCP bridge</strong> (<code>dal mcp-bridge</code>, example
-under <code>CEO/mcp/</code>)</td>
+under <code>COO/mcp/</code> or <code>../COO/mcp/</code> from
+<code>dist_agent_lang/</code>)</td>
 <td><code>DAL_AGENT_HTTP_BASE</code>, <code>DAL_MCP_HTTP_BASE</code>,
-<code>DAL_MCP_BRIDGE_SCRIPT</code></td>
-<td>MCP stdio process forwards to your
-<strong><code>dal serve</code></strong> base URL. Legacy aliases:
-<code>DAL_CEO_BASE_URL</code>, <code>DAL_CEO_MCP_SCRIPT</code>.</td>
+<code>DAL_MCP_BRIDGE_SCRIPT</code>, <code>DAL_MCP_TRANSPORT</code>,
+<code>DAL_MCP_HTTP_TIMEOUT_MS</code>, <code>DAL_MCP_STREAM_HOST</code>,
+<code>DAL_MCP_STREAM_PORT</code>,
+<code>DAL_MCP_STREAM_HEARTBEAT_MS</code>,
+<code>DAL_MCP_STREAM_SESSION_IDLE_MS</code></td>
+<td>MCP bridge forwards tool calls to your
+<strong><code>dal serve</code></strong> base URL.
+`DAL_MCP_TRANSPORT=stdio</td>
+</tr>
+<tr class="even">
+<td><strong>IDE SSE contract flags (Phase 0)</strong></td>
+<td><code>DAL_IDE_SSE_STRUCTURED</code>,
+<code>DAL_IDE_SSE_REPLAY</code>, <code>DAL_IDE_SSE_REPLAY_CAP</code>,
+<code>DAL_IDE_SSE_KEEPALIVE_SECS</code>,
+<code>DAL_IDE_SSE_JOB_RETENTION_SECS</code>,
+<code>DAL_IDE_SSE_MAX_CHUNK_BYTES</code>,
+<code>DAL_IDE_SSE_MAX_STREAMS_PER_CLIENT</code>,
+<code>DAL_IDE_SSE_MAX_ESTABLISH_PER_MINUTE</code>,
+<code>DAL_IDE_SSE_MAX_STREAM_LIFETIME_SECS</code>,
+<code>DAL_IDE_SSE_IDLE_TIMEOUT_SECS</code>,
+<code>DAL_IDE_SSE_MAX_HEADER_BYTES</code>,
+<code>DAL_IDE_MAX_BODY_BYTES</code>,
+<code>DAL_IDE_SSE_AUTH_TOKEN</code>,
+<code>DAL_IDE_CORS_ALLOW_ANY</code>,
+<code>DAL_IDE_CORS_ALLOW_ORIGIN</code>,
+<code>DAL_IDE_SSE_VERSION</code></td>
+<td><code>DAL_IDE_SSE_STRUCTURED=1</code> enables envelope events with
+<code>id</code>, <code>type</code>, <code>timestamp</code>,
+<code>payload</code>, <code>version</code> on
+<code>/api/run/stream/:job_id</code> and <code>/api/events/stream</code>
+(<code>chunk</code>, terminal types `done</td>
 </tr>
 <tr class="odd">
 <td><strong>Hosted IDE agent safety</strong></td>
@@ -188,6 +233,31 @@ under <code>CEO/mcp/</code>)</td>
 <code>DAL_AGENT_GUARDS_STRICT_MODE</code>, …</td>
 <td>Listed in <a href="PRODUCTION_ROADMAP.html">PRODUCTION_ROADMAP.md</a>
 and <strong><code>../dal-ide/README.md</code></strong>.</td>
+</tr>
+<tr class="even">
+<td><strong><code>dal serve</code> security presets</strong></td>
+<td><code>DAL_SERVE_SECURITY_PRESET</code>,
+<code>DAL_SERVE_ENABLE_AUTH</code>,
+<code>DAL_SERVE_ENABLE_INPUT_VALIDATION</code>,
+<code>DAL_SERVE_RATE_LIMIT_RPM</code>,
+<code>DAL_SERVE_MAX_BODY_BYTES</code></td>
+<td>`DAL_SERVE_SECURITY_PRESET=legacy</td>
+</tr>
+<tr class="odd">
+<td><strong>Optional <code>dal serve</code> HTTP Basic Auth</strong>
+(browser / <code>curl -u</code>; separate from
+<code>DAL_COO_API_TOKEN</code> and from JWT)</td>
+<td><code>DAL_HTTP_USER</code> <strong>and</strong> one of
+<code>DAL_HTTP_PASSWORD_HASH</code> (bcrypt, preferred) or
+<code>DAL_HTTP_PASSWORD</code> (plaintext, dev only); optional
+<code>DAL_HTTP_AUTH_EXEMPT</code> (comma paths, merges with built-ins);
+brute-force: <code>DAL_HTTP_AUTH_MAX_FAILS_PER_IP</code> (default 15),
+<code>DAL_HTTP_AUTH_FAIL_WINDOW_SECS</code> (default 300),
+<code>DAL_HTTP_AUTH_DISABLE_BRUTE=1</code></td>
+<td>Set <code>WWW-Authenticate: Basic realm="dal serve"</code>. Hash:
+<code>dal crypto forge</code> → copy into
+<code>DAL_HTTP_PASSWORD_HASH</code> (quote in <code>.env</code> if
+<code>$</code> in hash).</td>
 </tr>
 <tr class="even">
 <td><strong>HTTP server auth</strong></td>

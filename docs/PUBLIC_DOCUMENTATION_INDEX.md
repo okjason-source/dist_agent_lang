@@ -1,6 +1,6 @@
 # dist_agent_lang — Documentation index
 
-**Version:** 1.0.8 (Beta)
+**Version:** 1.0.xx (Beta)
 **Last updated:** 2026-03-03
 **License:** Apache 2.0
 
@@ -12,6 +12,8 @@
 |---------|-------------|-----------------|
 | [Getting started](#getting-started) | Install, first program, first agent | You're new to DAL |
 | [HTTP vs MCP vs LSP](IDE_AND_AGENT_INTEGRATION.md#first-time-mental-model) | One-page mental model: agent = HTTP; MCP = optional IDE bridge; LSP = editor | You're new to agents or confused about MCP |
+| [Optional Claude connector path](guides/CLAUDE_CONNECTORS_OPTIONAL_SETUP.md) | Enable DAL via MCP in Claude-compatible connector surfaces without changing defaults | You want Claude access to DAL as an option |
+| [Cursor + DAL autonomous gating plan](guides/CURSOR_DAL_AUTONOMOUS_GATING_PLAN.md) | Phased implementation plan for Cursor-led coding with DAL MCP step approvals | You want autonomous multi-step progression without human-in-the-loop at every step |
 | [Agent development](#agent-development) | Agent setup, skills, persistent memory, molds | You're building agents |
 | [Language reference](#language-reference) | Syntax, types, attributes | You need syntax details |
 | [Standard library](#standard-library) | All 30 stdlib modules | You need API docs |
@@ -200,12 +202,13 @@ DAL provides multi-chain blockchain integration through its trust model and chai
 ## IDE and agent integration
 
 - [IDE and Agent Integration](IDE_AND_AGENT_INTEGRATION.md) — **§1:** DAL IDE (`dal ide serve`) vs external editors vs your HTTP agent; LSP setup; editor agents; tool schema
+- [Claude Connectors (Optional)](guides/CLAUDE_CONNECTORS_OPTIONAL_SETUP.md) — Keep DAL defaults; add an optional MCP connector path for Claude users
 - [LSP and Agent Integration Plan (detailed)](development/LSP_AND_AGENT_INTEGRATION_PLAN.md) — Full LSP feature plan, phases, stdio vs IDE HTTP routes
-- [DAL CEO / agent app plan](AGENT_ASSISTANT_PLAN.md) — Executive sub-agents, skills, molds, code-editor tools (legacy filename; app lives under `CEO/`)
+- [DAL COO / agent app plan](AGENT_ASSISTANT_PLAN.md) — Executive sub-agents, skills, molds, code-editor tools (legacy filename; app lives under `COO/`)
 
 ### Project state and alignment (maintainers)
 
-- **[Deploy and production readiness](development/DEPLOY_AND_PRODUCTION_READINESS.md)** — Fast iteration vs production discipline: CI, release artifacts, Docker, CEO run paths, linked checklists.
+- **[Deploy and production readiness](development/DEPLOY_AND_PRODUCTION_READINESS.md)** — Fast iteration vs production discipline: CI, release artifacts, Docker, COO run paths, linked checklists.
 - **[RAG MVP spec](development/RAG_MVP_SPEC.md)** — Retrieval into `context_blocks` (`source: rag`), corpus, indexer, lexical MVP-A, `agent_serve` wiring.
 - **[Project state and alignment](PROJECT_STATE_AND_ALIGNMENT.md)** — Single matrix: what is shipped vs stub vs planned; links to trust-split EVM, LSP, checklists; **gap backlog** to keep docs and code honest across releases.
 - **[Production grade checklist](PRODUCTION_GRADE_CHECKLIST.md)** — Unwrap/panic, stubs, JWT, logging
