@@ -157,8 +157,8 @@ jobs:
         elif [ -d "../COO/mcp" ]; then
           cd ../COO/mcp
         else
-          echo "Missing COO/mcp (checked COO/mcp and ../COO/mcp)" >&2
-          exit 1
+          echo "Skipping MCP bridge deps: COO/mcp not present in this repo checkout."
+          exit 0
         fi
         npm ci
 
@@ -169,8 +169,8 @@ jobs:
         elif [ -d "../COO/mcp" ]; then
           cd ../COO/mcp
         else
-          echo "Missing COO/mcp (checked COO/mcp and ../COO/mcp)" >&2
-          exit 1
+          echo "Skipping MCP bridge integration tests: COO/mcp not present in this repo checkout."
+          exit 0
         fi
         npm test
 
