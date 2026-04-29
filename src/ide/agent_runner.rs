@@ -11,15 +11,13 @@ use crate::agent_context_schema::{AgentContextSchema, ContextBlock, Conversation
 use crate::ide::run_backend;
 use crate::stdlib::agent::{self, AgentConfig, AgentType, ResourceBudget};
 use crate::stdlib::ai::{
-    execute_fetch_url_result, generate_agent_model_turn, max_tool_steps_from_env,
-    model_turn_to_outcome, run_web_search, MultiStepResult, ToolOutcome, TurnUsage,
-    COMPLETION_AND_ASK_GUIDANCE, TOOLS_SYSTEM_WITH_SCRIPTING,
+    completion_and_ask_guidance_for_tool_loop, execute_fetch_url_result, generate_agent_model_turn,
+    max_tool_result_chars, max_tool_steps_from_env, model_turn_to_outcome, run_web_search,
+    MultiStepResult, ToolOutcome, TurnUsage, TOOLS_SYSTEM_WITH_SCRIPTING,
 };
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 use tokio::sync::broadcast;
-
-const MAX_TOOL_RESULT_LEN: usize = 4000;
 
 // ── Shared helpers ──────────────────────────────────────────────────
 
@@ -40,10 +38,11 @@ pub(crate) fn emit_activity(
 pub(crate) use crate::stdlib::fs::resolve_path_under_root;
 
 fn truncate_result(s: &str) -> String {
-    if s.len() <= MAX_TOOL_RESULT_LEN {
+    let cap = max_tool_result_chars();
+    if s.len() <= cap {
         s.to_string()
     } else {
-        format!("{}\n... (truncated)", &s[..MAX_TOOL_RESULT_LEN])
+        format!("{}\n... (truncated)", &s[..cap])
     }
 }
 
@@ -238,37 +237,130 @@ fn check_result_guard(
 // ── Tool execution ──────────────────────────────────────────────────
 // Each function returns the tool result string (or error message).
 
-fn exec_run(root: &Path, cmd: &str) -> String {
-    let cmd = cmd.trim();
-    let (cmd_str, args) = if cmd.is_empty() {
-        ("true".to_string(), vec![])
-    } else {
-        let parts: Vec<&str> = cmd.split_whitespace().collect();
-        (
-            parts
-                .first()
-                .map(|s| (*s).to_string())
-                .unwrap_or_else(|| "true".to_string()),
-            parts
-                .get(1..)
-                .map(|s| s.iter().map(|x| (*x).to_string()).collect())
-                .unwrap_or_default(),
-        )
-    };
-    match run_backend::run_command_blocking(&cmd_str, &args, Some(root)) {
-        Ok((stdout, stderr, code)) => {
-            let mut out = format!("Exit code: {}\n", code);
-            if !stdout.is_empty() {
-                out.push_str("stdout:\n");
-                out.push_str(&stdout);
+/// True if `path` stays under `workspace_root` (IDE jail).
+fn path_is_within_workspace(workspace_root: &Path, path: &Path) -> bool {
+    if let (Ok(root_c), Ok(path_c)) = (workspace_root.canonicalize(), path.canonicalize()) {
+        return path_c.starts_with(&root_c);
+    }
+    path.starts_with(workspace_root)
+}
+
+/// Resolve `cd` target: empty or `~` → workspace root; otherwise relative to `job_cwd`
+/// with `/` segments and `..` (single-token components only; no `..` inside a name).
+fn apply_cd(workspace_root: &Path, job_cwd: &Path, arg: &str) -> Result<PathBuf, String> {
+    let arg = arg.trim();
+    if arg.is_empty() || arg == "~" {
+        return workspace_root
+            .canonicalize()
+            .or_else(|_| Ok(workspace_root.to_path_buf()));
+    }
+    let mut cur = job_cwd.to_path_buf();
+    for part in arg.split('/').filter(|p| !p.is_empty() && *p != ".") {
+        if part == ".." {
+            cur.pop();
+            if !path_is_within_workspace(workspace_root, &cur) {
+                return Err("cd: would leave workspace".to_string());
             }
-            if !stderr.is_empty() {
-                out.push_str("\nstderr:\n");
-                out.push_str(&stderr);
-            }
-            truncate_result(&out)
+        } else if part.contains("..") {
+            return Err("cd: invalid path component".to_string());
+        } else {
+            cur.push(part);
         }
-        Err(e) => format!("Command failed: {}", e),
+    }
+    if !path_is_within_workspace(workspace_root, &cur) {
+        return Err("cd: path escapes workspace".to_string());
+    }
+    if !cur.exists() {
+        return Err(format!("cd: no such file or directory: {}", arg));
+    }
+    if !cur.is_dir() {
+        return Err(format!("cd: not a directory: {}", arg));
+    }
+    cur.canonicalize().map_err(|e| format!("cd: {}", e))
+}
+
+/// Recognize a lone `cd` or `cd <single relative path>` (no spaces in target). Other forms
+/// fall through to normal execution (e.g. `sh -c 'cd a && …'`).
+fn try_parse_cd_command(cmd: &str) -> Option<&str> {
+    let cmd = cmd.trim();
+    let parts: Vec<&str> = cmd.split_whitespace().collect();
+    if parts.first().copied() != Some("cd") {
+        return None;
+    }
+    if parts.len() > 2 {
+        return None;
+    }
+    if parts.len() == 1 {
+        return Some("");
+    }
+    Some(parts[1])
+}
+
+fn exec_run(
+    workspace_root: &Path,
+    job_cwd: &mut PathBuf,
+    cmd: &str,
+    events_tx: &broadcast::Sender<String>,
+    job_id: &str,
+) -> String {
+    let cmd = cmd.trim();
+    if let Some(cd_arg) = try_parse_cd_command(cmd) {
+        let old = job_cwd.clone();
+        match apply_cd(workspace_root, job_cwd.as_path(), cd_arg) {
+            Ok(new_cwd) => {
+                let old_canon = old.canonicalize().ok().unwrap_or_else(|| old.clone());
+                let new_canon = new_cwd
+                    .canonicalize()
+                    .ok()
+                    .unwrap_or_else(|| new_cwd.clone());
+                *job_cwd = new_cwd;
+                if old_canon != new_canon {
+                    emit_activity(
+                        events_tx,
+                        "agent_scope",
+                        serde_json::json!({
+                            "job_id": job_id,
+                            "effective_root": workspace_root.to_string_lossy(),
+                            "effective_cwd": job_cwd.to_string_lossy(),
+                            "reason": "cd",
+                        }),
+                    );
+                }
+                format!("Changed directory to {}", job_cwd.display())
+            }
+            Err(e) => e,
+        }
+    } else {
+        let (cmd_str, args) = if cmd.is_empty() {
+            ("true".to_string(), vec![])
+        } else {
+            let parts: Vec<&str> = cmd.split_whitespace().collect();
+            (
+                parts
+                    .first()
+                    .map(|s| (*s).to_string())
+                    .unwrap_or_else(|| "true".to_string()),
+                parts
+                    .get(1..)
+                    .map(|s| s.iter().map(|x| (*x).to_string()).collect())
+                    .unwrap_or_default(),
+            )
+        };
+        match run_backend::run_command_blocking(&cmd_str, &args, Some(job_cwd.as_path())) {
+            Ok((stdout, stderr, code)) => {
+                let mut out = format!("Exit code: {}\n", code);
+                if !stdout.is_empty() {
+                    out.push_str("stdout:\n");
+                    out.push_str(&stdout);
+                }
+                if !stderr.is_empty() {
+                    out.push_str("\nstderr:\n");
+                    out.push_str(&stderr);
+                }
+                truncate_result(&out)
+            }
+            Err(e) => format!("Command failed: {}", e),
+        }
     }
 }
 
@@ -403,6 +495,8 @@ struct StepContext<'a> {
     max_steps: u32,
     loop_state: &'a mut ToolLoopState,
     budget: &'a ResourceBudget,
+    /// Current job working directory (`run` tool cwd; updated on `cd`).
+    working_directory_display: &'a str,
 }
 
 /// Record a completed tool step. Returns `Some(reason)` if a guard or
@@ -428,7 +522,8 @@ fn record_step(
             "step": *ctx.steps_used + 1,
             "tool": tool_name,
             "args_sanitized": args_sanitized,
-            "result_summary": truncate_result(result)
+            "result_summary": truncate_result(result),
+            "working_directory": ctx.working_directory_display
         }),
     );
     ctx.schema.conversation.push(ConversationTurn {
@@ -453,6 +548,7 @@ fn guard_break(reason: &str) -> MultiStepResult {
         steps_used: 0, // caller patches this
         max_steps_reached: reason == "max_steps_reached",
         executed_tools: vec![],
+        last_tool_success: None,
     }
 }
 
@@ -484,7 +580,7 @@ pub fn run_agent_prompt_sync(
 
     // ── 2. Build conversation schema ────────────────────────────────
     let mut schema = AgentContextSchema::minimal(prompt.trim(), TOOLS_SYSTEM_WITH_SCRIPTING);
-    schema.completion_and_ask_guidance = Some(COMPLETION_AND_ASK_GUIDANCE.to_string());
+    schema.completion_and_ask_guidance = Some(completion_and_ask_guidance_for_tool_loop());
     if let Some(ref ctx) = context {
         if !ctx.trim().is_empty() {
             schema.context_blocks.push(ContextBlock {
@@ -495,6 +591,8 @@ pub fn run_agent_prompt_sync(
     }
 
     let root = workspace_root.to_path_buf();
+    let root_display = root.to_string_lossy().into_owned();
+    let mut job_cwd = root.canonicalize().unwrap_or_else(|_| root.clone());
     let max_steps = max_tool_steps_from_env();
     let mut steps_used: u32 = 0;
     let mut files_changed: Vec<String> = Vec::new();
@@ -513,6 +611,17 @@ pub fn run_agent_prompt_sync(
         }),
     );
 
+    emit_activity(
+        &events_tx,
+        "agent_scope",
+        serde_json::json!({
+            "job_id": job_id,
+            "effective_root": root_display.as_str(),
+            "effective_cwd": job_cwd.to_string_lossy(),
+            "reason": "job_start"
+        }),
+    );
+
     let include_scripting_tools = true;
 
     // ── 3. Model-turn loop ──────────────────────────────────────────
@@ -528,6 +637,7 @@ pub fn run_agent_prompt_sync(
                     steps_used,
                     max_steps_reached: false,
                     executed_tools: vec![],
+                    last_tool_success: None,
                 });
             }
         }
@@ -544,6 +654,7 @@ pub fn run_agent_prompt_sync(
                 steps_used,
                 max_steps_reached: false,
                 executed_tools: vec![],
+                last_tool_success: None,
             });
         }
 
@@ -586,6 +697,7 @@ pub fn run_agent_prompt_sync(
                         steps_used,
                         max_steps_reached: true,
                         executed_tools: vec![],
+                        last_tool_success: None,
                     });
                 }
                 continue;
@@ -601,6 +713,7 @@ pub fn run_agent_prompt_sync(
                     steps_used,
                     max_steps_reached: false,
                     executed_tools: vec![],
+                    last_tool_success: None,
                 });
             }
             ToolOutcome::AskUser(message) => {
@@ -610,6 +723,7 @@ pub fn run_agent_prompt_sync(
                     steps_used,
                     max_steps_reached: false,
                     executed_tools: vec![],
+                    last_tool_success: None,
                 });
             }
             ToolOutcome::ParseFail(raw) => {
@@ -619,6 +733,7 @@ pub fn run_agent_prompt_sync(
                     steps_used,
                     max_steps_reached: false,
                     executed_tools: vec![],
+                    last_tool_success: None,
                 });
             }
             ToolOutcome::Run(cmd) => {
@@ -629,7 +744,7 @@ pub fn run_agent_prompt_sync(
                     "run_started",
                     serde_json::json!({ "job_id": run_job_id, "cmd": cmd_trimmed }),
                 );
-                let r = exec_run(&root, &cmd_trimmed);
+                let r = exec_run(&root, &mut job_cwd, &cmd_trimmed, &events_tx, &job_id);
                 emit_activity(
                     &events_tx,
                     "run_stopped",
@@ -707,6 +822,7 @@ pub fn run_agent_prompt_sync(
         };
 
         // ── Record step (guard + emit + conversation + counter) ─────
+        let wd_display = job_cwd.to_string_lossy();
         let mut step_ctx = StepContext {
             events_tx: &events_tx,
             job_id: &job_id,
@@ -715,6 +831,7 @@ pub fn run_agent_prompt_sync(
             max_steps,
             loop_state: &mut loop_state,
             budget: &budget,
+            working_directory_display: wd_display.as_ref(),
         };
         if let Some(reason) = record_step(
             &mut step_ctx,
@@ -774,4 +891,34 @@ pub fn run_agent_prompt_sync(
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn apply_cd_subdir_and_back() {
+        let tmp = tempfile::tempdir().expect("tmp");
+        let root = tmp.path().to_path_buf();
+        fs::create_dir_all(root.join("a")).unwrap();
+        let start = root.canonicalize().unwrap();
+        let mut cur = start.clone();
+        let r = apply_cd(&start, &cur, "a");
+        assert!(r.is_ok());
+        cur = r.unwrap();
+        assert!(cur.ends_with("a"));
+        let r2 = apply_cd(&start, &cur, "..");
+        assert!(r2.is_ok());
+        assert_eq!(r2.unwrap(), start);
+    }
+
+    #[test]
+    fn apply_cd_rejects_escape() {
+        let tmp = tempfile::tempdir().expect("tmp");
+        let root = tmp.path().canonicalize().unwrap();
+        let r = apply_cd(&root, &root, "..");
+        assert!(r.is_err());
+    }
 }

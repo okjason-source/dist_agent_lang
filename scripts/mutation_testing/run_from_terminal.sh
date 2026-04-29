@@ -10,7 +10,8 @@
 #
 # Test suite:
 #   MUTATION_TEST_SUITE=lib   -> --lib only (faster)
-#   MUTATION_TEST_SUITE=tests -> --tests (default; runs tests/*.rs, catches more)
+#   MUTATION_TEST_SUITE=tests -> --tests (default; runs tests/*.rs, including
+#                                   http_security_mutation_tests and serve_security_parity_tests)
 #
 # Scoped runs (see run_with_tmux.sh for the same variables):
 #   MUTATION_FILE=src/cli.rs ./scripts/mutation_testing/run_from_terminal.sh

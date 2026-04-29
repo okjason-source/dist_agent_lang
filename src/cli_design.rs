@@ -85,6 +85,9 @@ ORCHESTRATION (bond, pipe, invoke)
 DATA & INFRASTRUCTURE
   crypto hash <data> [alg]    Hash (sha256/sha512)
   crypto keygen [alg]         Generate keypair
+  crypto api-token            One-line random secret (e.g. COO DAL_COO_API_TOKEN)
+  crypto forge [--ember xx] [--hush] [pwd]  bcrypt for DAL_HTTP_PASSWORD_HASH (random salt per hash; xx = cost 4–31, default if omitted)
+  crypto jwt mint [--sub ..] [--hours ..] [--secret ..] [--print-export]  HS256 JWT
   db connect <conn>           Test database connection
   db query <conn> "<sql>"     Execute query
   cloud authorize | grant     Cloud RBAC and audit

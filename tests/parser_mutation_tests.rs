@@ -4,6 +4,7 @@
 
 use dist_agent_lang::lexer::tokens::Literal;
 use dist_agent_lang::parser::ast::{Expression, Statement};
+use dist_agent_lang::parser::error::ParserError;
 use dist_agent_lang::{parse_source, MAX_PARSE_SOURCE_BYTES, MAX_PARSE_TOKEN_COUNT};
 use dist_agent_lang::{Lexer, Parser};
 
@@ -174,6 +175,91 @@ fn test_parser_with_recovery_on_invalid_input() {
         !program.statements.is_empty(),
         "Should parse valid statements before error"
     );
+}
+
+// ============================================================================
+// INTEGRATION: ERROR SPANS + RECOVERY PROGRESS (parse_source / parse_with_recovery)
+// ============================================================================
+// Catches: get_token_position mutants (wrong line/column), parse_with_recovery position updates
+// (`next_pos > position`), continue-after-sync behavior across crate boundary.
+
+#[test]
+fn integration_parse_error_line_column_use_lexer_positions() {
+    let err = parse_source("let x = ;").unwrap_err();
+    let pe = *err.downcast::<ParserError>().expect("ParserError");
+    assert_eq!(
+        pe.line_number(),
+        Some(1),
+        "single-line bad let should report line 1 (not fallback (0,0) from get_token_position mutants)"
+    );
+    assert!(
+        pe.column_number().unwrap_or(0) >= 1,
+        "column should be set from token positions"
+    );
+}
+
+#[test]
+fn integration_parse_error_on_second_line_reports_line_two() {
+    let err = parse_source("let a = 1;\nlet x = ;").unwrap_err();
+    let pe = *err.downcast::<ParserError>().expect("ParserError");
+    assert_eq!(
+        pe.line_number(),
+        Some(2),
+        "error in second statement must use lexer line (parse() path + get_token_position)"
+    );
+}
+
+#[test]
+fn integration_recovery_collects_both_lets_after_invalid_middle_statement() {
+    let code = "let a = 1;\nlet b = ;\nlet c = 3;";
+    let tokens = Lexer::new(code)
+        .tokenize_with_positions_immutable()
+        .unwrap();
+    let mut parser = Parser::new_with_positions(tokens);
+    let (program, errors) = parser.parse_with_recovery();
+    assert!(
+        !errors.is_empty(),
+        "middle statement should produce at least one error"
+    );
+    let let_names: Vec<&str> = program
+        .statements
+        .iter()
+        .filter_map(|s| match s {
+            Statement::Let(ls) => Some(ls.name.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        let_names.contains(&"a") && let_names.contains(&"c"),
+        "recovery must advance past bad `let b = ;` and still parse `let c` (catches next_pos / sync mutants); got names={let_names:?}"
+    );
+}
+
+#[test]
+fn integration_export_function_parses() {
+    let program = parse_source("export fn foo() {}").unwrap();
+    assert!(
+        matches!(&program.statements[0], Statement::Function(f) if f.exported && f.name == "foo"),
+        "export fn path in parse_statement"
+    );
+}
+
+#[test]
+fn integration_attribute_before_function_parses() {
+    let program = parse_source("@inline fn bar() {}").unwrap();
+    match &program.statements[0] {
+        Statement::Function(f) => {
+            assert_eq!(f.name, "bar");
+            assert!(
+                !f.attributes.is_empty(),
+                "@inline should attach attribute (fn workaround / attribute loop)"
+            );
+        }
+        _ => panic!(
+            "expected function with attribute, got {:?}",
+            program.statements[0]
+        ),
+    }
 }
 
 // ============================================================================

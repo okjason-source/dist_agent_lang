@@ -20,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [examples/deploy_presigned_example.dal](examples/deploy_presigned_example.dal) — `deploy_with_presigned`, `deploy_demo_only`, multi-chain pattern
   - Guide clarifies DAL → EVM pipeline (`dal build --target blockchain` → Solidity skeleton → solc → bytecode), hybrid use case, and practical stub uses (oracle/NFT placeholders, interface validation)
 - **Documentation:** PUBLIC_DOCUMENTATION_INDEX links to Pre-signed Deployment Guide and Solidity Integration; CHAIN_NAMESPACE_GAPS_AND_FIXES §5 and pre-signed pointer
+- **IDE + SSE (phase 0):** Structured event envelopes, bounded replay buffers, request body limits, correct `Content-Type` for static images, and per-client stream state; new observability counters (SSE connections, resume, gaps, replay, lag, etc.); new `ide_sse_phase0_tests` and an SSE schema drift guard; CI also runs `scripts/policy/check_sse_policy_matrix.sh` via a **Streaming Reliability Gates** job (Node 20).
+- **MCP:** New `mcp` stdlib for MCP bridge lifecycle (stdio vs `http-stream`), list/status, and tool invocation against DAL agent HTTP; CI runs MCP transport parity tests and the in-repo Node MCP bridge test suite (see `.github/workflows/ci.yml` for paths).
+- **`graph` stdlib:** Bearer-based graph-style HTTP client with retries/backoff for Microsoft Graph–class REST APIs.
+- **Database (SQLite):** With the `sqlite-storage` feature, `database::connect("sqlite://…")` uses a real SQLite backend (WAL, bound parameters, backup, introspection helpers) via the new `database_sqlite` module; `rusqlite` now enables the `backup` feature.
+- **`dal serve` / HTTP hardening (optional Basic Auth):** `DAL_HTTP_USER` with `DAL_HTTP_PASSWORD_HASH` (bcrypt, preferred) or `DAL_HTTP_PASSWORD` (dev); `DAL_HTTP_AUTH_EXEMPT` and `DAL_HTTP_AUTH_*` for lockout tuning. Documented in [docs/CONFIG.md](docs/CONFIG.md). Middleware and helpers renamed from `coo_basic_auth_*` to `dal_serve_basic_auth_*`; `DalServeBasicAuthBruteForce` replaces `CooBasicAuthBruteForce`.
+- **CLI `crypto`:** `dal crypto forge` (aka `bcrypt-hash` / `http-password-hash`) outputs bcrypt for **`DAL_HTTP_PASSWORD_HASH`**.
+- **AI & agent tool loop:** `DAL_LLM_PRIMARY` plus env-first provider selection (Kimi `DAL_AI_*`, DeepSeek, Ollama, OpenAI, Anthropic); normalizes OpenAI-style `/v1` bases to `…/chat/completions`; parses legacy JSON tool lines embedded in assistant `content`, caps tool-result size, raises `DAL_AGENT_MAX_TOOL_STEPS` ceiling, surfaces `last_tool_success` on turn traces, and extends tool-loop / citation guidance; `prompt_variant_contract_tests` for prompt invariants.
+- **RAG:** `DAL_RAG_TOP_K` cap honored and covered by tests in `rag_retrieval`.
+- **`evolve`:** `load_recent_for_prompt` and section/summary/conversation extraction so prompts avoid broken markdown tables; note on when `load_recent` is a poor fit.
 
 ### Changed
 - **BREAKING:** Renamed `cap` module to `key` — capability-based access control
@@ -28,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - DAL code: `cap::create()` → `key::create()`, etc.
   - Capability IDs now use `key_` prefix instead of `cap_`
 - **Best Practices guide:** [docs/guides/BEST_PRACTICES.md](docs/guides/BEST_PRACTICES.md) rewritten to use real DAL syntax and stdlib throughout (services with `@trust`/`@chain`/`@secure`, `fn`, `chain::`/`oracle::` APIs, `throw`/Result/try-catch, `test::expect_*`, describe/it); removed Solidity-style examples
+- **Documentation:** Add links for optional Claude connector setup, Cursor gating, IDE SSE / MCP / SSE release matrix runbooks, and `STDLIB_REFERENCE` expansion; installation, config, and README/Makefile text aligned.
+- **Runtime / integration:** Parser, `runtime::engine`, `http_server_*`, `agent_serve`, IDE `agent_runner`, `rag_index`, and related tests updated in support of the features above; fuzz `corpus_seed` DAL examples refreshed.
 
 ## [1.0.5] - 2026-02-08
 

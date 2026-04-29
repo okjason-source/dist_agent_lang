@@ -11,10 +11,28 @@
 */scripts/run_dal_tests.sh
 */scripts/run-tests.sh
 */scripts/test_examples.sh
+*/scripts/fuzzing/run_with_tmux.sh
+**/scripts/fuzzing/run_with_tmux.sh
+*/scripts/mutation_testing/run_with_tmux.sh
+**/scripts/mutation_testing/run_with_tmux.sh
+*/scripts/mutation_testing/run_from_terminal.sh
+**/scripts/mutation_testing/run_from_terminal.sh
+*/scripts/mutation_testing/run_cargo_mutants.sh
+**/scripts/mutation_testing/run_cargo_mutants.sh
+*/scripts/observability/prompt_variant_metrics.py
+**/scripts/observability/prompt_variant_metrics.py
+*/scripts/policy/check_sse_policy_matrix.sh
+**/scripts/policy/check_sse_policy_matrix.sh
+/scripts/dev-dal-path.sh
+*/scripts/dev-dal-path.sh
+/scripts/symlink-dal-usr-local.sh
+/scripts/sync-all-dal.sh
+*/scripts/soak/run_ide_sse_soak.sh
+**/scripts/soak/run_ide_sse_soak.sh
 
 # Mutation testing and logs (do not publish)
 /mutants.out/
-/mutants.out.old/
+*/mutants.out.old/
 *.out.old/
 /logs/
 *.log
@@ -87,11 +105,11 @@ PHASE*.md
 /docs/design/
 **/docs/design/
 
-# DAL CEO app — keep the whole tree out of Git (local-only). Do not `git add CEO/`.
-# If CEO were tracked while also ignored, sync tools that "remove tracked ignored files"
+# DAL COO app — keep the whole tree out of Git (local-only). Do not `git add COO/`.
+# If COO were tracked while also ignored, sync tools that "remove tracked ignored files"
 # delete the working copy. Untracked + ignored is safe.
-/CEO/
-**/CEO/
+/COO/
+**/COO/
 
 # Agent / project files (local workspace; do not commit)
 
@@ -138,5 +156,19 @@ CODEBASE_TODOS.md
 **/syntax-highlighting/
 
 # Fuzz artifacts (keep corpus if you want; uncomment to exclude)
-/fuzz/corpus/
-/fuzz/artifacts/
+/fuzz/
+**/fuzz/
+
+# Release binaries and documentation
+dist_agent_lang-*.tar.gz
+dist_agent_lang-*.zip
+dist_agent_lang-1.0.11.tar.gz
+dist_agent_lang-1.0.11.zip
+dist_agent_lang-1.0.11-docs.tar.gz
+dist_agent_lang-1.0.05-macos-x64.tar.gz
+dist_agent_lang-v1.0.05-linux-x64.tar.gz
+dist_agent_lang-v1.0.05-macos-x64.tar.gz
+
+FUZZING_GUIDE.md
+GOOD_FIRST_ISSUES.md
+SECURITY_DISCLAIMER.md

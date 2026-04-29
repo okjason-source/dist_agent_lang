@@ -57,6 +57,87 @@ impl RateLimiter {
     }
 }
 
+/// Failed HTTP Basic Auth attempts per IP (sliding window). Mitigates online brute force when
+/// Basic Auth is enabled for `dal serve`. Configure with **`DAL_HTTP_AUTH_MAX_FAILS_PER_IP`**
+/// (default **15**) and **`DAL_HTTP_AUTH_FAIL_WINDOW_SECS`** (default **300**). Set
+/// **`DAL_HTTP_AUTH_DISABLE_BRUTE=1`** to disable (tests / special cases only).
+#[derive(Debug, Clone)]
+pub struct DalServeBasicAuthBruteForce {
+    fails: Arc<RwLock<HashMap<IpAddr, Vec<Instant>>>>,
+    max_attempts: usize,
+    window: Duration,
+    disabled: bool,
+}
+
+impl DalServeBasicAuthBruteForce {
+    pub fn from_env() -> Self {
+        let disabled = std::env::var("DAL_HTTP_AUTH_DISABLE_BRUTE")
+            .ok()
+            .map(|v| {
+                matches!(
+                    v.trim().to_ascii_lowercase().as_str(),
+                    "1" | "true" | "yes" | "on"
+                )
+            })
+            .unwrap_or(false);
+        let max_attempts = std::env::var("DAL_HTTP_AUTH_MAX_FAILS_PER_IP")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .filter(|&n| n > 0)
+            .unwrap_or(15);
+        let window_secs = std::env::var("DAL_HTTP_AUTH_FAIL_WINDOW_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .filter(|&n| n > 0)
+            .unwrap_or(300);
+        Self {
+            fails: Arc::new(RwLock::new(HashMap::new())),
+            max_attempts,
+            window: Duration::from_secs(window_secs),
+            disabled,
+        }
+    }
+
+    /// Returns true when this IP has reached the failure threshold (still within the window).
+    pub async fn is_locked_out(&self, ip: IpAddr) -> bool {
+        if self.disabled {
+            return false;
+        }
+        let mut guard = self.fails.write().await;
+        Self::prune_map(&mut guard, ip, self.window);
+        guard
+            .get(&ip)
+            .map(|v| v.len() >= self.max_attempts)
+            .unwrap_or(false)
+    }
+
+    pub async fn record_failure(&self, ip: IpAddr) {
+        if self.disabled {
+            return;
+        }
+        let mut guard = self.fails.write().await;
+        let now = Instant::now();
+        let e = guard.entry(ip).or_insert_with(Vec::new);
+        e.retain(|t| now.duration_since(*t) < self.window);
+        e.push(now);
+    }
+
+    pub async fn clear(&self, ip: IpAddr) {
+        let mut guard = self.fails.write().await;
+        guard.remove(&ip);
+    }
+
+    fn prune_map(guard: &mut HashMap<IpAddr, Vec<Instant>>, ip: IpAddr, window: Duration) {
+        let now = Instant::now();
+        if let Some(v) = guard.get_mut(&ip) {
+            v.retain(|t| now.duration_since(*t) < window);
+            if v.is_empty() {
+                guard.remove(&ip);
+            }
+        }
+    }
+}
+
 /// Security headers middleware
 pub async fn security_headers_middleware(request: Request, next: Next) -> Response {
     let mut response = next.run(request).await;

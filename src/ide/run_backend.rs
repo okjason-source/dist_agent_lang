@@ -157,14 +157,28 @@ pub fn spawn_run_streaming(
             }
         });
 
+        let mut cancelled = false;
+        let mut exit_code: i32 = 0;
         tokio::select! {
             _ = kill_rx => {
+                cancelled = true;
                 let _ = child.kill().await;
+                if let Ok(status) = child.wait().await {
+                    exit_code = status.code().unwrap_or(-1);
+                }
             }
             _ = async {
                 let _ = tokio::join!(h_stdout, h_stderr);
-                let _ = child.wait().await;
+                if let Ok(status) = child.wait().await {
+                    exit_code = status.code().unwrap_or(-1);
+                }
             } => {}
+        }
+
+        if cancelled {
+            let _ = tx_done.send("[CANCELLED]".to_string());
+        } else if exit_code != 0 {
+            let _ = tx_done.send(format!("[ERROR:{}]", exit_code));
         }
 
         // Send done marker

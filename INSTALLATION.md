@@ -28,7 +28,7 @@ If you have [Rust](https://rustup.rs) installed:
 cargo install dist_agent_lang
 ```
 
-This downloads the package from [crates.io](https://crates.io/crates/dist_agent_lang), builds it, and installs the `dist_agent_lang` binary to `~/.cargo/bin/` (which is in PATH if you use rustup).
+This downloads the package from [crates.io](https://crates.io/crates/dist_agent_lang), builds it, and installs the **`dal`** CLI (crate name is `dist_agent_lang`; the command is `dal`) to `~/.cargo/bin/` (on PATH with rustup). Optional: `cargo install dist_agent_lang --bin dal` installs only the main binary.
 
 **Use as a Rust library** in your project:
 ```toml
@@ -50,18 +50,18 @@ Or: `cargo add dist_agent_lang`
 V=$(curl -sL https://api.github.com/repos/okjason-source/dist_agent_lang/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
 wget "https://github.com/okjason-source/dist_agent_lang/releases/download/v${V}/dist_agent_lang-v${V}-linux-x64.tar.gz"
 tar -xzf "dist_agent_lang-v${V}-linux-x64.tar.gz"
-sudo cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang /usr/local/bin/
+sudo cp target/x86_64-unknown-linux-gnu/release/dal /usr/local/bin/
 ```
 
 ```bash
 # Option 2: Install a specific version (replace v1.0.5 with the release you want)
 wget https://github.com/okjason-source/dist_agent_lang/releases/download/v1.0.5/dist_agent_lang-v1.0.5-linux-x64.tar.gz
 tar -xzf dist_agent_lang-v1.0.5-linux-x64.tar.gz
-sudo cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang /usr/local/bin/
+sudo cp target/x86_64-unknown-linux-gnu/release/dal /usr/local/bin/
 # OR user install (no sudo):
 mkdir -p ~/.local/bin
-cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang ~/.local/bin/
-chmod +x ~/.local/bin/dist_agent_lang
+cp target/x86_64-unknown-linux-gnu/release/dal ~/.local/bin/
+chmod +x ~/.local/bin/dal
 export PATH="$HOME/.local/bin:$PATH"   # add to ~/.bashrc or ~/.zshrc
 ```
 
@@ -71,13 +71,13 @@ export PATH="$HOME/.local/bin:$PATH"   # add to ~/.bashrc or ~/.zshrc
 # Extract, then copy the binary from the path inside the tarball to /usr/local/bin or ~/.local/bin
 # Example (ARM64):
 tar -xzf dist_agent_lang-v1.0.5-macos-arm64.tar.gz
-sudo cp target/aarch64-apple-darwin/release/dist_agent_lang /usr/local/bin/
+sudo cp target/aarch64-apple-darwin/release/dal /usr/local/bin/
 ```
 
 #### Windows
 ```bash
 # Download dist_agent_lang-v1.0.5-windows-x64.zip from Releases
-# Extract, then copy dist_agent_lang.exe to a folder in your PATH (e.g. C:\Program Files\dist_agent_lang\)
+# Extract, then copy dal.exe to a folder in your PATH (e.g. C:\Program Files\dist_agent_lang\)
 # Add that folder to the system PATH environment variable.
 ```
 
@@ -102,31 +102,33 @@ Use this if you clone the repo or need to build from source.
 3. **If you prefer to build manually:**
    ```bash
    cargo build --release
-   sudo cp target/release/dist_agent_lang /usr/local/bin/
-   # OR: cp target/release/dist_agent_lang ~/.local/bin/  and add ~/.local/bin to PATH
+   sudo cp target/release/dal /usr/local/bin/
+   # OR: cp target/release/dal ~/.local/bin/  and add ~/.local/bin to PATH
    ```
+
+4. **Single-path workflow on your machine (clone):** the authoritative binary is `target/release/dal`. To put that first on `PATH`: `eval "$(./scripts/dev-dal-path.sh)"`. To make `/usr/local/bin/dal` a symlink to that file (so every rebuild is what you run): `./scripts/symlink-dal-usr-local.sh` after `cargo build --release`. Details: [docs/getting_started/INSTALLATION.md](docs/getting_started/INSTALLATION.md#one-path-while-hacking-this-repo-recommended).
 
 ---
 
 ### Verify installation
 ```bash
-dist_agent_lang --version
-# Should output: dist_agent_lang v1.0.5 (or the version you installed)
+dal --version
+# Should output a dal version line (crate/library: dist_agent_lang)
 ```
 
 ## 🚀 Quick Start
 
-### 1. Run a dist_agent_lang File
+### 1. Run a DAL program
 
 ```bash
 # Run a simple example
-dist_agent_lang run examples/hello_world_demo.dal
+dal run examples/hello_world_demo.dal
 
 # Run with specific file
-dist_agent_lang run path/to/your/file.dal
+dal run path/to/your/file.dal
 ```
 
-### 2. Create Your First dist_agent_lang Program
+### 2. Create your first DAL program
 
 Create a file `hello.dal`:
 
@@ -149,23 +151,23 @@ service HelloWorld {
 
 Run it:
 ```bash
-dist_agent_lang run hello.dal
+dal run hello.dal
 ```
 
 ### 3. Available Commands
 
 ```bash
-# Run a dist_agent_lang file
-dist_agent_lang run <file.dal>
+# Run a .dal file
+dal run <file.dal>
 
 # Parse and validate syntax (without executing)
-dist_agent_lang parse <file.dal>
+dal parse <file.dal>
 
 # Show help
-dist_agent_lang --help
+dal --help
 
 # Show version
-dist_agent_lang --version
+dal --version
 ```
 
 ## 📚 Examples
@@ -220,9 +222,9 @@ The package includes 27 example files in the `examples/` directory:
 cd examples   # or: cd ~/dist_agent_lang_examples
 
 # Run any example
-dist_agent_lang run hello_world_demo.dal
-dist_agent_lang run agent_system_demo.dal
-dist_agent_lang run smart_contract.dal
+dal run hello_world_demo.dal
+dal run agent_system_demo.dal
+dal run smart_contract.dal
 ```
 
 ## 🔧 Configuration
@@ -273,22 +275,22 @@ pool_size = 10
 
 ### 1. Create a Smart Contract
 ```bash
-dist_agent_lang run examples/smart_contract.dal
+dal run examples/smart_contract.dal
 ```
 
 ### 2. Deploy a Token
 ```bash
-dist_agent_lang run examples/defi_nft_rwa_contract.dal
+dal run examples/defi_nft_rwa_contract.dal
 ```
 
 ### 3. Create an AI Agent System
 ```bash
-dist_agent_lang run examples/agent_system_demo.dal
+dal run examples/agent_system_demo.dal
 ```
 
 ### 4. Build a Web API
 ```bash
-dist_agent_lang run examples/simple_web_api_example.dal
+dal run examples/simple_web_api_example.dal
 ```
 
 ## 🐛 Troubleshooting
@@ -296,7 +298,7 @@ dist_agent_lang run examples/simple_web_api_example.dal
 ### Binary not found
 ```bash
 # Check if binary is in PATH
-which dist_agent_lang
+which dal
 
 # If not found, add installation directory to PATH
 export PATH="$HOME/.local/bin:$PATH"  # For Linux/macOS
@@ -305,7 +307,7 @@ export PATH="$HOME/.local/bin:$PATH"  # For Linux/macOS
 ### Permission denied
 ```bash
 # Make binary executable (if you have the binary locally)
-chmod +x dist_agent_lang
+chmod +x ~/.local/bin/dal
 
 # For build-from-source, install with sudo if needed
 sudo ./scripts/install.sh

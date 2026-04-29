@@ -8,6 +8,7 @@ use std::sync::{Mutex, OnceLock};
 /// - agent::spawn(agent_type, config, capabilities) - Spawn new agent
 /// - agent::coordinate(agent_id, task, coordination_type) - Coordinate agent activities
 /// - agent::communicate(sender_id, receiver_id, message) - Agent-to-agent communication
+/// - agent::receive_messages(receiver_id) - Drain in-memory bus for receiver_id; returns list of message maps
 /// - agent::evolve(agent_id, evolution_data) - Agent learning and evolution
 /// - agent::validate_capabilities(agent_type, required_capabilities) - Validate agent capabilities
 

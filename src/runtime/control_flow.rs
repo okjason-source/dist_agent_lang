@@ -92,3 +92,61 @@ impl From<Value> for StatementOutcome {
         StatementOutcome::Value(value)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Pins `is_continue` / `is_break` / `is_next` / `break_value` (mutation: constant bool, `None`, deleted arm)
+    #[test]
+    fn control_flow_predicates_and_break_value() {
+        let c = ControlFlow::Continue;
+        assert!(c.is_continue());
+        assert!(!c.is_break());
+        assert!(!c.is_next());
+        assert_eq!(c.break_value(), None);
+
+        let b0 = ControlFlow::Break(None);
+        assert!(!b0.is_continue());
+        assert!(b0.is_break());
+        assert!(!b0.is_next());
+        assert_eq!(b0.clone().break_value(), None);
+
+        let b1 = ControlFlow::Break(Some(Value::Int(7)));
+        assert!(!b1.is_continue());
+        assert!(b1.is_break());
+        assert!(!b1.is_next());
+        assert_eq!(b1.clone().break_value(), Some(Value::Int(7)));
+
+        let n = ControlFlow::Next;
+        assert!(!n.is_continue());
+        assert!(!n.is_break());
+        assert!(n.is_next());
+        assert_eq!(n.break_value(), None);
+    }
+
+    /// Pins `as_value` / `as_control_flow` / `is_control_flow` (mutation: `None`, deleted arms, constant bool)
+    #[test]
+    fn statement_outcome_accessors() {
+        let v = StatementOutcome::value(Value::String("x".to_string()));
+        assert_eq!(v.as_value(), Some(&Value::String("x".to_string())));
+        assert!(v.as_control_flow().is_none());
+        assert!(!v.is_control_flow());
+
+        let cf = StatementOutcome::ControlFlow(ControlFlow::Continue);
+        assert_eq!(cf.as_value(), None);
+        assert!(matches!(cf.as_control_flow(), Some(ControlFlow::Continue)));
+        assert!(cf.is_control_flow());
+
+        let br = StatementOutcome::break_with_value(Some(Value::Null));
+        assert!(br.is_control_flow());
+        assert_eq!(
+            br.as_control_flow().unwrap().clone().break_value(),
+            Some(Value::Null)
+        );
+
+        let nx = StatementOutcome::next();
+        assert!(nx.is_control_flow());
+        assert!(matches!(nx.as_control_flow(), Some(ControlFlow::Next)));
+    }
+}

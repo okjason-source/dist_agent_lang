@@ -68,10 +68,11 @@ tokio = { version = "1.0", features = ["full"] }
 axum = { version = "0.7", features = ["ws"] }
 futures-util = "0.3"
 tower = { version = "0.5", features = ["util"] }
-tower-http = { version = "0.5", features = ["cors", "fs", "normalize-path"] }
+tower-http = { version = "0.5", features = ["cors", "fs", "normalize-path", "limit"] }
 serde_json = "1.0"
 toml = "0.8"
 base64 = "0.21"
+bcrypt = "0.15"
 hex = "0.4"
 # Cryptography for production-grade signatures
 ecdsa = "0.16"
@@ -98,7 +99,7 @@ pyo3 = { version = "0.24", features = ["auto-initialize"], optional = true }
 # Note: ethers 2.0.x uses jsonwebtoken 8.x (security concern); consider updating when ethers 3.x+ available
 ethers = { version = "2.0", features = ["rustls"], optional = true }
 # SQLite for transaction storage backend (optional)
-rusqlite = { version = "0.39", features = ["bundled"], optional = true }
+rusqlite = { version = "0.39", features = ["bundled", "backup"], optional = true }
 # LSP (Language Server Protocol) for IDE integration
 tower-lsp = { version = "0.20", optional = true }
 lsp-types = { version = "0.94", optional = true }
@@ -119,6 +120,7 @@ quickcheck = "1.0"
 quickcheck_macros = "1.0"
 tempfile = "3.27"
 serial_test = "3.0"
+http-body-util = "0.1.3"
 
 [[bench]]
 name = "performance"

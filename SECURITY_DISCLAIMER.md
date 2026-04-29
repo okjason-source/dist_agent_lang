@@ -2,7 +2,7 @@
 
 ## Important notice
 
-**dist_agent_lang v1.0.9** is in **beta**. This document describes the current security posture and how to use the software safely. The software is not production-ready for high-value or safety-critical use.
+**dist_agent_lang v1.0.xx** is in **beta**. This document describes the current security posture and how to use the software safely. The software is not production-ready for high-value or safety-critical use.
 
 ---
 
@@ -39,7 +39,7 @@
 
 ### Testing and audits
 
-- **Tests**: 140+ tests across lexer, parser, runtime, stdlib, agent, fleet, mold, security, integration, and HTTP server.
+- **Tests**: 1000+ tests across lexer, parser, runtime, stdlib, agent, fleet, mold, security, integration, and HTTP server.
 - **Dependency audit**: Run `cargo audit` (or your usual process) for third-party crate vulnerabilities.
 - **No formal verification**: Critical smart contracts should undergo formal verification before high-value use.
 - **No third-party security audit**: The codebase has not yet had an independent security audit.
@@ -54,7 +54,7 @@ DAL runs on a **tree-walking interpreter** (Rust host). There is no JIT or AOT c
 
 1. **Beta status**
    - Limited real-world deployment and edge-case coverage.
-   - Some areas may have TODOs or incomplete behavior; review the code for your use case.
+   - Some areas may have thin wiring, TODOs, or incomplete behavior; review the code for your use case.
 
 2. **Agent server**
    - One agent per process for the HTTP serve path. Shell execution is configurable but must be locked down (e.g. sandboxed/confirmed) for untrusted input.
@@ -74,15 +74,15 @@ DAL runs on a **tree-walking interpreter** (Rust host). There is no JIT or AOT c
 ### Generally acceptable for
 
 - Development and prototyping
-- Learning and experimentation
-- Non-critical applications
+- Agentic and trust-level experimentation
+- Locally hosted surfaces and applications
 - Testing and validation (including agent and chain workflows)
 
 ### Use with caution
 
 - **Production financial applications** — Prefer after 1.1.0+ and additional validation.
 - **High-value smart contracts** — Third-party audit and testnet validation recommended.
-- **Critical infrastructure** — Additional hardening and review required.
+- **Critical infrastructure** — Additional hardening and comprehensive audit/review recommended before production.
 - **Sensitive data** — Ensure compliance, encryption, and access control (e.g. credentials, PII) at the application and host level.
 
 ---
@@ -115,5 +115,5 @@ This software is provided “as is” without warranty of any kind. See [LICENSE
 ---
 
 **Last updated**: 2026-03  
-**Version**: 1.0.9  
+**Version**: 1.0.xx  
 **Status**: Beta

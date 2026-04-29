@@ -1820,6 +1820,8 @@ impl Runtime {
             "fs" => self.call_fs_function(function_name, args),
             "evolve" => self.call_evolve_function(function_name, args),
             "http" => self.call_http_function(function_name, args),
+            "graph" => self.call_graph_function(function_name, args),
+            "mcp" => self.call_mcp_function(function_name, args),
             "scatter" => self.call_scatter_function(function_name, args),
             "schedule" => self.call_schedule_function(function_name, args),
             "time" => self.call_time_function(function_name, args),
@@ -4925,63 +4927,24 @@ impl Runtime {
                         Ok(StatementOutcome::ControlFlow(cf))
                     }
                     Err(error) => {
-                        // Try to find a matching catch block
+                        // Try to find a matching catch block.
+                        // Execute on `self` so catch bodies have access to all
+                        // functions, user_functions, services, etc. — a previous
+                        // implementation created a bare Runtime which wiped out
+                        // every builtin and user function, making any function
+                        // call inside catch blocks fail with FunctionNotFound.
                         for catch_block in &try_stmt.catch_blocks {
-                            // For now, we'll catch all errors
-                            // In a more sophisticated implementation, we'd check error types
-                            let mut catch_scope = self.scope.clone();
+                            let saved_scope = self.scope.clone();
 
-                            // Bind error variable if specified
                             if let Some(error_var) = &catch_block.error_variable {
-                                catch_scope
+                                self.scope
                                     .set(error_var.clone(), Value::String(format!("{:?}", error)));
                             }
 
-                            let mut catch_runtime = Runtime {
-                                services: HashMap::new(),
-                                stack: Vec::new(),
-                                scope: catch_scope,
-                                functions: HashMap::new(),
-                                user_functions: HashMap::new(),
-                                call_stack: Vec::new(),
-                                current_service: None,
-                                reentrancy_guard: ReentrancyGuard::new(),
-                                state_manager: StateIsolationManager::new(),
-                                cross_chain_manager: CrossChainSecurityManager::new(),
-                                advanced_security: AdvancedSecurityManager::new(),
-                                transaction_manager: TransactionManager::new(),
-                                execution_start: None,
-                                current_caller: None,
-                                mock_registry: None,
-                                current_transaction_id: None,
-                                pending_spawns: HashMap::new(),
-                                spawn_counter: 0,
-                                closure_registry: HashMap::new(),
-                                closure_counter: 0,
-                                agent_states: HashMap::new(),
-                                agent_coordinators: HashMap::new(),
-                                ai_agents: HashMap::new(),
-                                test_current_suite: None,
-                                test_suite_before_each: HashMap::new(),
-                                test_suite_after_each: HashMap::new(),
-                                test_tests: Vec::new(),
-                                return_pending: None,
-                                current_location: None,
-                                stdlib_aliases: HashMap::new(),
-                                module_exports: HashMap::new(),
-                                resolved_imports: None,
-                                current_import_index: 0,
-                                allowed_namespaces: None,
-                                iot_state: IotState::default(),
-                                desktop_state: DesktopState::default(),
-                                database_connections: HashMap::new(),
-                            };
-
-                            match catch_runtime.execute_statement_internal(
+                            match self.execute_statement_internal(
                                 &crate::parser::ast::Statement::Block(catch_block.body.clone()),
                             ) {
                                 Ok(StatementOutcome::Value(result)) => {
-                                    // Execute finally block if present
                                     if let Some(finally_block) = &try_stmt.finally_block {
                                         let _ = self.execute_statement_internal(
                                             &crate::parser::ast::Statement::Block(
@@ -4992,7 +4955,6 @@ impl Runtime {
                                     return Ok(StatementOutcome::value(result));
                                 }
                                 Ok(StatementOutcome::ControlFlow(cf)) => {
-                                    // Control flow propagates through catch blocks too
                                     if let Some(finally_block) = &try_stmt.finally_block {
                                         let _ = self.execute_statement_internal(
                                             &crate::parser::ast::Statement::Block(
@@ -5002,7 +4964,10 @@ impl Runtime {
                                     }
                                     return Ok(StatementOutcome::ControlFlow(cf));
                                 }
-                                Err(_) => continue, // Try next catch block
+                                Err(_) => {
+                                    self.scope = saved_scope;
+                                    continue;
+                                }
                             }
                         }
 
@@ -5717,6 +5682,75 @@ impl Runtime {
         });
         self.register_function(trim_fn);
 
+        // Built-in substr(string, start, end) — character-level substring (Python-style half-open)
+        let substr_fn = Function::new(
+            "substr".to_string(),
+            vec![
+                "s".to_string(),
+                "start".to_string(),
+                "end_or_len".to_string(),
+            ],
+            |args, _| {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let s = match &args[0] {
+                    Value::String(s) => s.clone(),
+                    Value::Null => String::new(),
+                    other => format!("{}", other),
+                };
+                let chars: Vec<char> = s.chars().collect();
+                let len = chars.len() as i64;
+                let start = match &args[1] {
+                    Value::Int(n) => (*n).max(0).min(len) as usize,
+                    _ => 0,
+                };
+                let end = if args.len() == 3 {
+                    match &args[2] {
+                        Value::Int(n) => (*n).max(0).min(len) as usize,
+                        _ => chars.len(),
+                    }
+                } else {
+                    chars.len()
+                };
+                if start >= end || start >= chars.len() {
+                    return Ok(Value::String(String::new()));
+                }
+                let result: String = chars[start..end.min(chars.len())].iter().collect();
+                Ok(Value::String(result))
+            },
+        );
+        self.register_function(substr_fn);
+
+        // Built-in contains(haystack, needle) — true when needle is a substring of haystack
+        let contains_fn = Function::new(
+            "contains".to_string(),
+            vec!["haystack".to_string(), "needle".to_string()],
+            |args, _| {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let haystack = match &args[0] {
+                    Value::String(s) => s.clone(),
+                    Value::Null => String::new(),
+                    other => format!("{}", other),
+                };
+                let needle = match &args[1] {
+                    Value::String(s) => s.clone(),
+                    Value::Null => return Ok(Value::Bool(true)),
+                    other => format!("{}", other),
+                };
+                Ok(Value::Bool(haystack.contains(&needle)))
+            },
+        );
+        self.register_function(contains_fn);
+
         // Built-in type function
         let type_fn = Function::new("type".to_string(), vec!["value".to_string()], |args, _| {
             if args.len() != 1 {
@@ -5742,7 +5776,10 @@ impl Runtime {
                     });
                 }
 
-                Ok(Value::String(args[0].to_string()))
+                match &args[0] {
+                    Value::String(s) => Ok(Value::String(s.clone())),
+                    other => Ok(Value::String(other.to_string())),
+                }
             },
         );
         self.register_function(to_string_fn);
@@ -6681,6 +6718,329 @@ impl Runtime {
         }
     }
 
+    /// `graph::*` — provider-agnostic graph API primitives with stateful clients.
+    ///
+    /// Supported functions:
+    /// - `graph::connect(base_url, bearer_token [, timeout_secs]) -> client_id`
+    /// - `graph::connect_client_credentials(base_url, token_endpoint, client_id, client_secret, scope [, timeout_secs]) -> client_id`
+    /// - `graph::set_header(client_id, key, value) -> bool`
+    /// - `graph::set_token(client_id, bearer_token) -> bool`
+    /// - `graph::set_retry_policy(client_id, max_retries, retry_backoff_ms) -> bool`
+    /// - `graph::disconnect(client_id) -> bool`
+    /// - `graph::request(client_id, method, path [, body]) -> map`
+    /// - `graph::get(client_id, path) -> map`
+    /// - `graph::post(client_id, path, body) -> map`
+    /// - `graph::patch(client_id, path, body) -> map`
+    /// - `graph::delete(client_id, path) -> map`
+    fn call_graph_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::graph;
+        match name {
+            "connect" => {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err(RuntimeError::General(
+                        "graph::connect expects 2 or 3 arguments".to_string(),
+                    ));
+                }
+                let base_url = self.value_to_string(&args[0])?;
+                let token = self.value_to_string(&args[1])?;
+                let timeout_secs = if args.len() == 3 {
+                    self.value_to_int(&args[2])?.max(1) as u64
+                } else {
+                    30
+                };
+                graph::create_client(&base_url, &token, timeout_secs)
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "connect_client_credentials" => {
+                if args.len() < 5 || args.len() > 6 {
+                    return Err(RuntimeError::General(
+                        "graph::connect_client_credentials expects 5 or 6 arguments".to_string(),
+                    ));
+                }
+                let base_url = self.value_to_string(&args[0])?;
+                let token_endpoint = self.value_to_string(&args[1])?;
+                let client_id = self.value_to_string(&args[2])?;
+                let client_secret = self.value_to_string(&args[3])?;
+                let scope = self.value_to_string(&args[4])?;
+                let timeout_secs = if args.len() == 6 {
+                    self.value_to_int(&args[5])?.max(1) as u64
+                } else {
+                    30
+                };
+                graph::connect_client_credentials(
+                    &base_url,
+                    &token_endpoint,
+                    &client_id,
+                    &client_secret,
+                    &scope,
+                    timeout_secs,
+                )
+                .map(Value::String)
+                .map_err(RuntimeError::General)
+            }
+            "set_header" => {
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let client_id = self.value_to_string(&args[0])?;
+                let key = self.value_to_string(&args[1])?;
+                let value = self.value_to_string(&args[2])?;
+                graph::set_header(&client_id, &key, &value)
+                    .map(|_| Value::Bool(true))
+                    .map_err(RuntimeError::General)
+            }
+            "set_token" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let client_id = self.value_to_string(&args[0])?;
+                let token = self.value_to_string(&args[1])?;
+                graph::set_token(&client_id, &token)
+                    .map(|_| Value::Bool(true))
+                    .map_err(RuntimeError::General)
+            }
+            "set_retry_policy" => {
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                let client_id = self.value_to_string(&args[0])?;
+                let max_retries = self.value_to_int(&args[1])?.max(0) as u32;
+                let backoff_ms = self.value_to_int(&args[2])?.max(1) as u64;
+                graph::set_retry_policy(&client_id, max_retries, backoff_ms)
+                    .map(|_| Value::Bool(true))
+                    .map_err(RuntimeError::General)
+            }
+            "disconnect" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let client_id = self.value_to_string(&args[0])?;
+                graph::remove_client(&client_id)
+                    .map(Value::Bool)
+                    .map_err(RuntimeError::General)
+            }
+            "request" => {
+                if args.len() < 3 || args.len() > 4 {
+                    return Err(RuntimeError::General(
+                        "graph::request expects 3 or 4 arguments".to_string(),
+                    ));
+                }
+                let client_id = self.value_to_string(&args[0])?;
+                let method = self.value_to_string(&args[1])?;
+                let path = self.value_to_string(&args[2])?;
+                let body_json = if args.len() == 4 {
+                    Some(crate::ffi::interface::value_to_json(&args[3]))
+                } else {
+                    None
+                };
+                let resp = graph::request(&client_id, &method, &path, body_json.as_ref())
+                    .map_err(RuntimeError::General)?;
+                let mut out = std::collections::HashMap::new();
+                out.insert("status".to_string(), Value::Int(resp.status));
+                out.insert("ok".to_string(), Value::Bool(resp.ok));
+                out.insert("retries".to_string(), Value::Int(resp.retries));
+                out.insert("body_text".to_string(), Value::String(resp.body_text));
+                out.insert(
+                    "request_id".to_string(),
+                    resp.request_id.map(Value::String).unwrap_or(Value::Null),
+                );
+                let body_value = crate::ffi::interface::json_to_value(&resp.body)
+                    .unwrap_or_else(|_| Value::String(resp.body.to_string()));
+                out.insert("body".to_string(), body_value);
+                Ok(Value::Map(out))
+            }
+            "get" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                self.call_graph_function(
+                    "request",
+                    &[
+                        args[0].clone(),
+                        Value::String("GET".to_string()),
+                        args[1].clone(),
+                    ],
+                )
+            }
+            "post" => {
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                self.call_graph_function(
+                    "request",
+                    &[
+                        args[0].clone(),
+                        Value::String("POST".to_string()),
+                        args[1].clone(),
+                        args[2].clone(),
+                    ],
+                )
+            }
+            "patch" => {
+                if args.len() != 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 3,
+                        got: args.len(),
+                    });
+                }
+                self.call_graph_function(
+                    "request",
+                    &[
+                        args[0].clone(),
+                        Value::String("PATCH".to_string()),
+                        args[1].clone(),
+                        args[2].clone(),
+                    ],
+                )
+            }
+            "delete" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                self.call_graph_function(
+                    "request",
+                    &[
+                        args[0].clone(),
+                        Value::String("DELETE".to_string()),
+                        args[1].clone(),
+                    ],
+                )
+            }
+            _ => Err(RuntimeError::function_not_found(format!("graph::{}", name))),
+        }
+    }
+
+    /// `mcp::*` — MCP bridge lifecycle and tool invocation primitives.
+    ///
+    /// Supported functions:
+    /// - `mcp::bridge_start([base_url], [transport]) -> bridge_id`
+    /// - `mcp::bridge_stop(bridge_id) -> Bool`
+    /// - `mcp::bridge_status(bridge_id) -> Map | Null`
+    /// - `mcp::bridge_list() -> List<Map>`
+    /// - `mcp::invoke(tool_name, input_map [, base_url]) -> Map`
+    fn call_mcp_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
+        use crate::stdlib::mcp;
+        match name {
+            "bridge_start" => {
+                if args.len() > 2 {
+                    return Err(RuntimeError::General(
+                        "mcp::bridge_start expects 0, 1, or 2 arguments".to_string(),
+                    ));
+                }
+                let base = args.first().map(|v| self.value_to_string(v)).transpose()?;
+                let transport = args.get(1).map(|v| self.value_to_string(v)).transpose()?;
+                mcp::bridge_start(base.as_deref(), transport.as_deref())
+                    .map(Value::String)
+                    .map_err(RuntimeError::General)
+            }
+            "bridge_stop" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let id = self.value_to_string(&args[0])?;
+                mcp::bridge_stop(&id)
+                    .map(Value::Bool)
+                    .map_err(RuntimeError::General)
+            }
+            "bridge_status" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let id = self.value_to_string(&args[0])?;
+                let status = mcp::bridge_status(&id).map_err(RuntimeError::General)?;
+                match status {
+                    Some(s) => {
+                        let mut out = std::collections::HashMap::new();
+                        out.insert("id".to_string(), Value::String(s.id));
+                        out.insert("pid".to_string(), Value::Int(s.pid));
+                        out.insert("running".to_string(), Value::Bool(s.running));
+                        out.insert(
+                            "exit_code".to_string(),
+                            s.exit_code.map(Value::Int).unwrap_or(Value::Null),
+                        );
+                        out.insert("base_url".to_string(), Value::String(s.base_url));
+                        out.insert("transport".to_string(), Value::String(s.transport));
+                        Ok(Value::Map(out))
+                    }
+                    None => Ok(Value::Null),
+                }
+            }
+            "bridge_list" => {
+                if !args.is_empty() {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 0,
+                        got: args.len(),
+                    });
+                }
+                let list = mcp::bridge_list().map_err(RuntimeError::General)?;
+                let mut out = Vec::new();
+                for s in list {
+                    let mut m = std::collections::HashMap::new();
+                    m.insert("id".to_string(), Value::String(s.id));
+                    m.insert("pid".to_string(), Value::Int(s.pid));
+                    m.insert("running".to_string(), Value::Bool(s.running));
+                    m.insert(
+                        "exit_code".to_string(),
+                        s.exit_code.map(Value::Int).unwrap_or(Value::Null),
+                    );
+                    m.insert("base_url".to_string(), Value::String(s.base_url));
+                    m.insert("transport".to_string(), Value::String(s.transport));
+                    out.push(Value::Map(m));
+                }
+                Ok(Value::Array(out))
+            }
+            "invoke" => {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err(RuntimeError::General(
+                        "mcp::invoke expects 2 or 3 arguments".to_string(),
+                    ));
+                }
+                let tool = self.value_to_string(&args[0])?;
+                let input_json = crate::ffi::interface::value_to_json(&args[1]);
+                let base = args.get(2).map(|v| self.value_to_string(v)).transpose()?;
+                let resp = mcp::invoke_tool(&tool, &input_json, base.as_deref())
+                    .map_err(RuntimeError::General)?;
+                let mut out = std::collections::HashMap::new();
+                out.insert("status".to_string(), Value::Int(resp.status));
+                out.insert("ok".to_string(), Value::Bool(resp.ok));
+                out.insert("body_text".to_string(), Value::String(resp.body_text));
+                let body_value = crate::ffi::interface::json_to_value(&resp.body)
+                    .unwrap_or_else(|_| Value::String(resp.body.to_string()));
+                out.insert("body".to_string(), body_value);
+                Ok(Value::Map(out))
+            }
+            _ => Err(RuntimeError::function_not_found(format!("mcp::{}", name))),
+        }
+    }
+
     fn call_sh_function(&mut self, name: &str, args: &[Value]) -> Result<Value, RuntimeError> {
         use crate::stdlib::sh;
         match name {
@@ -6830,6 +7190,39 @@ impl Runtime {
                 evolve::load_recent(agent_name.as_deref(), max_lines)
                     .map(Value::String)
                     .map_err(RuntimeError::General)
+            }
+            "load_recent_for_prompt" => {
+                let r = match args.len() {
+                    2 => {
+                        let max_turns = self.value_to_int(&args[0])? as usize;
+                        let max_chars = self.value_to_int(&args[1])? as usize;
+                        evolve::load_recent_for_prompt(None, max_turns, max_chars)
+                    }
+                    3 => {
+                        let name = self.value_to_string(&args[0])?;
+                        let max_turns = self.value_to_int(&args[1])? as usize;
+                        let max_chars = self.value_to_int(&args[2])? as usize;
+                        evolve::load_recent_for_prompt(Some(&name), max_turns, max_chars)
+                    }
+                    _ => {
+                        return Err(RuntimeError::ArgumentCountMismatch {
+                            expected: 2,
+                            got: args.len(),
+                        });
+                    }
+                };
+                r.map(Value::String).map_err(RuntimeError::General)
+            }
+            "append_working_memory" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let line = self.value_to_string(&args[0])?;
+                evolve::append_working_memory_line(&line).map_err(RuntimeError::General)?;
+                Ok(Value::Null)
             }
             "trim_retention" => {
                 if args.len() < 1 {
@@ -7529,6 +7922,33 @@ impl Runtime {
                 );
                 Ok(Value::Map(out))
             }
+            "execute" => {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let conn_id = self.value_to_string(&args[0])?;
+                let sql = self.value_to_string(&args[1])?;
+                let params = if args.len() > 2 {
+                    match &args[2] {
+                        Value::Array(a) | Value::List(a) => a.clone(),
+                        _ => vec![],
+                    }
+                } else {
+                    vec![]
+                };
+                let db = self.database_connections.get(&conn_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "database::execute: connection '{}' not found",
+                        conn_id
+                    ))
+                })?;
+                let ok = crate::stdlib::database::execute(db, sql, params)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Bool(ok))
+            }
             // ===== TRANSACTION MANAGEMENT (ACID) =====
             "begin_transaction" => {
                 // database::begin_transaction(isolation_level: String, timeout_ms: Int?) -> String (tx_id)
@@ -7703,71 +8123,151 @@ impl Runtime {
                 Ok(Value::Bool(true))
             }
             "get_table_schema" => {
-                if args.len() != 1 {
+                if args.len() != 2 {
                     return Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 1,
+                        expected: 2,
                         got: args.len(),
                     });
                 }
-                let table_name = self.value_to_string(&args[0])?;
-                Ok(Value::String(format!("schema_{}", table_name)))
+                let conn_id = self.value_to_string(&args[0])?;
+                let table_name = self.value_to_string(&args[1])?;
+                let db = self.database_connections.get(&conn_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "database::get_table_schema: connection '{}' not found",
+                        conn_id
+                    ))
+                })?;
+                let schema = crate::stdlib::database::get_table_schema(db, table_name)
+                    .map_err(RuntimeError::General)?;
+                let mut cols: Vec<Value> = Vec::new();
+                for c in schema.columns {
+                    let mut m = std::collections::HashMap::new();
+                    m.insert("name".to_string(), Value::String(c.name));
+                    m.insert("data_type".to_string(), Value::String(c.data_type));
+                    m.insert("is_nullable".to_string(), Value::Bool(c.is_nullable));
+                    m.insert("is_primary_key".to_string(), Value::Bool(c.is_primary_key));
+                    if let Some(d) = c.default_value {
+                        m.insert("default_value".to_string(), Value::String(d));
+                    }
+                    cols.push(Value::Map(m));
+                }
+                let mut out = std::collections::HashMap::new();
+                out.insert("name".to_string(), Value::String(schema.name));
+                out.insert("columns".to_string(), Value::Array(cols));
+                Ok(Value::Map(out))
             }
             "list_tables" => {
-                if args.len() != 0 {
+                if args.len() != 1 {
                     return Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 0,
+                        expected: 1,
                         got: args.len(),
                     });
                 }
-                Ok(Value::String("users,products,orders".to_string()))
+                let conn_id = self.value_to_string(&args[0])?;
+                let db = self.database_connections.get(&conn_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "database::list_tables: connection '{}' not found",
+                        conn_id
+                    ))
+                })?;
+                let tables =
+                    crate::stdlib::database::list_tables(db).map_err(RuntimeError::General)?;
+                Ok(Value::Array(
+                    tables.into_iter().map(Value::String).collect(),
+                ))
             }
             "backup_database" => {
-                if args.len() != 1 {
+                if args.len() != 2 {
                     return Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 1,
+                        expected: 2,
                         got: args.len(),
                     });
                 }
-                let _backup_path = self.value_to_string(&args[0])?;
-                Ok(Value::Bool(true))
+                let conn_id = self.value_to_string(&args[0])?;
+                let backup_path = self.value_to_string(&args[1])?;
+                let db = self.database_connections.get(&conn_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "database::backup_database: connection '{}' not found",
+                        conn_id
+                    ))
+                })?;
+                let ok = crate::stdlib::database::backup_database(db, backup_path)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Bool(ok))
             }
             "restore_database" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let conn_id = self.value_to_string(&args[0])?;
+                let backup_path = self.value_to_string(&args[1])?;
+                let db = self.database_connections.get(&conn_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "database::restore_database: connection '{}' not found",
+                        conn_id
+                    ))
+                })?;
+                let ok = crate::stdlib::database::restore_database(db, backup_path)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Bool(ok))
+            }
+            "close_connection" => {
                 if args.len() != 1 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 1,
                         got: args.len(),
                     });
                 }
-                let _backup_path = self.value_to_string(&args[0])?;
-                Ok(Value::Bool(true))
-            }
-            "close_connection" => {
-                if args.len() != 0 {
-                    return Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 0,
-                        got: args.len(),
-                    });
-                }
+                let conn_id = self.value_to_string(&args[0])?;
+                let mut db = self.database_connections.remove(&conn_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "database::close_connection: connection '{}' not found",
+                        conn_id
+                    ))
+                })?;
+                crate::stdlib::database::close_connection(&mut db)
+                    .map_err(RuntimeError::General)?;
                 Ok(Value::Bool(true))
             }
             "ping_database" => {
-                if args.len() != 0 {
-                    return Err(RuntimeError::ArgumentCountMismatch {
-                        expected: 0,
-                        got: args.len(),
-                    });
-                }
-                Ok(Value::Bool(true))
-            }
-            "get_query_plan" => {
                 if args.len() != 1 {
                     return Err(RuntimeError::ArgumentCountMismatch {
                         expected: 1,
                         got: args.len(),
                     });
                 }
-                let sql = self.value_to_string(&args[0])?;
-                Ok(Value::String(format!("plan_{}", sql)))
+                let conn_id = self.value_to_string(&args[0])?;
+                let db = self.database_connections.get(&conn_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "database::ping_database: connection '{}' not found",
+                        conn_id
+                    ))
+                })?;
+                let ok =
+                    crate::stdlib::database::ping_database(db).map_err(RuntimeError::General)?;
+                Ok(Value::Bool(ok))
+            }
+            "get_query_plan" => {
+                if args.len() != 2 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 2,
+                        got: args.len(),
+                    });
+                }
+                let conn_id = self.value_to_string(&args[0])?;
+                let sql = self.value_to_string(&args[1])?;
+                let db = self.database_connections.get(&conn_id).ok_or_else(|| {
+                    RuntimeError::General(format!(
+                        "database::get_query_plan: connection '{}' not found",
+                        conn_id
+                    ))
+                })?;
+                let plan = crate::stdlib::database::get_query_plan(db, sql)
+                    .map_err(RuntimeError::General)?;
+                Ok(Value::Map(plan))
             }
 
             // === PHASE 3: ADVANCED DATABASE FUNCTIONS ===
@@ -9713,6 +10213,31 @@ impl Runtime {
                     ))),
                     Err(e) => Err(RuntimeError::General(e)),
                 }
+            }
+
+            "receive_messages" => {
+                if args.len() != 1 {
+                    return Err(RuntimeError::ArgumentCountMismatch {
+                        expected: 1,
+                        got: args.len(),
+                    });
+                }
+                let receiver_id = self.value_to_string(&args[0])?;
+                let messages = crate::stdlib::agent::receive_messages(&receiver_id);
+                let items: Vec<Value> = messages
+                    .into_iter()
+                    .map(|m| {
+                        let mut fields = std::collections::HashMap::new();
+                        fields.insert("message_id".to_string(), Value::String(m.message_id));
+                        fields.insert("sender_id".to_string(), Value::String(m.sender_id));
+                        fields.insert("receiver_id".to_string(), Value::String(m.receiver_id));
+                        fields.insert("message_type".to_string(), Value::String(m.message_type));
+                        fields.insert("content".to_string(), m.content);
+                        fields.insert("timestamp".to_string(), Value::String(m.timestamp));
+                        Value::Map(fields)
+                    })
+                    .collect();
+                Ok(Value::List(items))
             }
 
             // === AGENT EVOLUTION ===
@@ -11808,19 +12333,22 @@ impl Runtime {
         self.validate_compile_target(service_stmt)?;
 
         // Build attribute strings for context
+        // Attribute.name from the parser already includes a leading '@' (e.g. "@admin", "@trust").
+        // Do not prefix again — "@@admin" breaks set_current_service() trust/privilege matching.
         let attr_strings: Vec<String> = service_stmt
             .attributes
             .iter()
             .map(|a| {
+                let bare = a.name.strip_prefix('@').unwrap_or(a.name.as_str());
                 if a.parameters.is_empty() {
-                    format!("@{}", a.name)
+                    format!("@{}", bare)
                 } else if let Some(crate::parser::ast::Expression::Literal(
                     crate::lexer::tokens::Literal::String(s),
                 )) = a.parameters.first()
                 {
-                    format!("@{}(\"{}\")", a.name, s)
+                    format!("@{}(\"{}\")", bare, s)
                 } else {
-                    format!("@{}", a.name)
+                    format!("@{}", bare)
                 }
             })
             .collect();
@@ -12168,21 +12696,45 @@ impl Runtime {
             config = config.with_role(role.clone());
         }
 
-        // Parse capabilities if provided
-        if let Some(Value::List(capabilities)) = fields.get("capabilities") {
-            let capability_strings: Vec<String> = capabilities
-                .iter()
-                .filter_map(|cap| {
-                    if let Value::String(cap_str) = cap {
-                        Some(cap_str.clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect();
+        // Parse capabilities if provided (support both Value::List and Value::Array)
+        if let Some(capability_values) = fields.get("capabilities") {
+            let capability_strings: Vec<String> = match capability_values {
+                Value::List(capabilities) | Value::Array(capabilities) => capabilities
+                    .iter()
+                    .filter_map(|cap| {
+                        if let Value::String(cap_str) = cap {
+                            Some(cap_str.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+                _ => Vec::new(),
+            };
 
             if !capability_strings.is_empty() {
                 config = config.with_capabilities(capability_strings);
+            }
+        }
+
+        // Parse skills if provided (support both Value::List and Value::Array)
+        if let Some(skill_values) = fields.get("skills") {
+            let skill_strings: Vec<String> = match skill_values {
+                Value::List(skills) | Value::Array(skills) => skills
+                    .iter()
+                    .filter_map(|s| {
+                        if let Value::String(skill_name) = s {
+                            Some(skill_name.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+                _ => Vec::new(),
+            };
+
+            if !skill_strings.is_empty() {
+                config = config.with_skills(skill_strings);
             }
         }
 
@@ -12884,7 +13436,7 @@ impl Runtime {
             }
         } else {
             // No service context (e.g. top-level route handlers in dal serve, or script): allow AI
-            // so that DAL CEO and similar apps work without wrapping in a @service.
+            // so that DAL COO and similar apps work without wrapping in a @service.
             true
         }
     }

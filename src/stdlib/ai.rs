@@ -81,6 +81,103 @@ fn effective_local_ai_endpoint() -> Option<String> {
     env::var("DAL_AI_ENDPOINT").ok().filter(|k| !k.is_empty())
 }
 
+/// OpenAI-compatible chat URL: base may be `.../v1` or already `.../v1/chat/completions`.
+fn openai_compatible_chat_completions_url(base: &str) -> String {
+    let b = base.trim().trim_end_matches('/');
+    if b.ends_with("/chat/completions") {
+        b.to_string()
+    } else {
+        format!("{}/chat/completions", b)
+    }
+}
+
+/// Kimi / generic OpenAI-shape API from COO `.env`: DAL_AI_KEY, DAL_AI_ENDPOINT, DAL_AI_MODEL.
+fn ai_config_from_dal_ai_env() -> Option<AIConfig> {
+    let key = env::var("DAL_AI_KEY")
+        .ok()
+        .filter(|k| !k.is_empty() && k != "none")?;
+    let endpoint = env::var("DAL_AI_ENDPOINT")
+        .ok()
+        .filter(|e| !e.trim().is_empty())?;
+    let model = env::var("DAL_AI_MODEL")
+        .ok()
+        .filter(|m| !m.trim().is_empty())?;
+    let mut config = AIConfig::default();
+    config.provider = AIProvider::Custom("custom".to_string());
+    config.api_key = Some(key);
+    config.endpoint = Some(openai_compatible_chat_completions_url(&endpoint));
+    config.model = Some(model);
+    Some(config)
+}
+
+/// DeepSeek (OpenAI-compatible) from COO `.env`: DAL_DEEPSEEK_KEY, DAL_DEEPSEEK_ENDPOINT, DAL_DEEPSEEK_MODEL.
+fn ai_config_from_deepseek_env() -> Option<AIConfig> {
+    let key = env::var("DAL_DEEPSEEK_KEY")
+        .ok()
+        .filter(|k| !k.is_empty() && k != "none")?;
+    let base = env::var("DAL_DEEPSEEK_ENDPOINT")
+        .ok()
+        .filter(|e| !e.trim().is_empty())?;
+    let model = env::var("DAL_DEEPSEEK_MODEL")
+        .ok()
+        .filter(|m| !m.trim().is_empty())?;
+    let mut config = AIConfig::default();
+    config.provider = AIProvider::Custom("custom".to_string());
+    config.api_key = Some(key);
+    config.endpoint = Some(openai_compatible_chat_completions_url(&base));
+    config.model = Some(model);
+    Some(config)
+}
+
+/// Ollama HTTP API from COO `.env`: DAL_OLLAMA_ENDPOINT, DAL_OLLAMA_MODEL; optional DAL_OLLAMA_KEY (Bearer).
+fn ai_config_from_ollama_env() -> Option<AIConfig> {
+    let endpoint = env::var("DAL_OLLAMA_ENDPOINT")
+        .ok()
+        .filter(|e| !e.trim().is_empty())?;
+    let model = env::var("DAL_OLLAMA_MODEL")
+        .ok()
+        .filter(|m| !m.trim().is_empty())?;
+    let mut config = AIConfig::default();
+    config.provider = AIProvider::Local;
+    config.endpoint = Some(endpoint.trim().to_string());
+    config.model = Some(model);
+    if let Ok(k) = env::var("DAL_OLLAMA_KEY") {
+        if !k.is_empty() && k != "none" {
+            config.api_key = Some(k);
+        }
+    }
+    Some(config)
+}
+
+fn ai_config_from_openai_env_only() -> Option<AIConfig> {
+    let key = env::var("OPENAI_API_KEY")
+        .or_else(|_| env::var("DAL_OPENAI_API_KEY"))
+        .ok()
+        .filter(|k| !k.is_empty() && k != "none")?;
+    let mut config = AIConfig::default();
+    config.provider = AIProvider::OpenAI;
+    config.api_key = Some(key);
+    if let Ok(m) = env::var("OPENAI_MODEL").or_else(|_| env::var("DAL_OPENAI_MODEL")) {
+        if !m.is_empty() {
+            config.model = Some(m);
+        }
+    }
+    Some(config)
+}
+
+fn ai_config_from_anthropic_env_only() -> Option<AIConfig> {
+    let key = effective_anthropic_api_key()?;
+    let mut config = AIConfig::default();
+    config.provider = AIProvider::Anthropic;
+    config.api_key = Some(key);
+    if let Ok(m) = env::var("ANTHROPIC_MODEL").or_else(|_| env::var("DAL_ANTHROPIC_MODEL")) {
+        if !m.is_empty() {
+            config.model = Some(m);
+        }
+    }
+    Some(config)
+}
+
 /// Initialize AI configuration from multiple sources (priority order):
 /// 1. Runtime configuration (if set)
 /// 2. Environment variables
@@ -99,34 +196,53 @@ fn load_ai_config() -> AIConfig {
         config = file_config;
     }
 
-    // Step 2: Override with environment variables (higher priority)
-    // Support both OPENAI_API_KEY and DAL_OPENAI_API_KEY so agents/tools that set only DAL_* work.
-    let openai_key = env::var("OPENAI_API_KEY").or_else(|_| env::var("DAL_OPENAI_API_KEY"));
-    if let Ok(key) = openai_key {
-        if !key.is_empty() && key != "none" {
-            config.provider = AIProvider::OpenAI;
+    // Step 2: Optional explicit primary (COO `.env` — one provider at a time: kimi, deepseek, ollama, openai, anthropic).
+    let primary = env::var("DAL_LLM_PRIMARY")
+        .unwrap_or_default()
+        .trim()
+        .to_ascii_lowercase();
+
+    let from_primary = match primary.as_str() {
+        "kimi" | "dal_ai" => ai_config_from_dal_ai_env(),
+        "deepseek" => ai_config_from_deepseek_env(),
+        "ollama" => ai_config_from_ollama_env(),
+        "openai" => ai_config_from_openai_env_only(),
+        "anthropic" => ai_config_from_anthropic_env_only(),
+        _ => None,
+    };
+
+    if let Some(c) = from_primary {
+        config = c;
+    } else if primary.is_empty() {
+        // Legacy auto-priority when DAL_LLM_PRIMARY is unset: OpenAI → Anthropic → DAL_AI_ENDPOINT (Ollama-style).
+        let openai_key = env::var("OPENAI_API_KEY").or_else(|_| env::var("DAL_OPENAI_API_KEY"));
+        if let Ok(key) = openai_key {
+            if !key.is_empty() && key != "none" {
+                config.provider = AIProvider::OpenAI;
+                config.api_key = Some(key);
+                let model = env::var("OPENAI_MODEL").or_else(|_| env::var("DAL_OPENAI_MODEL"));
+                if let Ok(model) = model {
+                    config.model = Some(model);
+                }
+            }
+        } else if let Some(key) = effective_anthropic_api_key() {
+            config.provider = AIProvider::Anthropic;
             config.api_key = Some(key);
-            let model = env::var("OPENAI_MODEL").or_else(|_| env::var("DAL_OPENAI_MODEL"));
+            let model = env::var("ANTHROPIC_MODEL").or_else(|_| env::var("DAL_ANTHROPIC_MODEL"));
             if let Ok(model) = model {
                 config.model = Some(model);
             }
-        }
-    } else if let Some(key) = effective_anthropic_api_key() {
-        config.provider = AIProvider::Anthropic;
-        config.api_key = Some(key);
-        let model = env::var("ANTHROPIC_MODEL").or_else(|_| env::var("DAL_ANTHROPIC_MODEL"));
-        if let Ok(model) = model {
-            config.model = Some(model);
-        }
-    } else if let Some(endpoint) = effective_local_ai_endpoint() {
-        if !endpoint.is_empty() {
-            config.provider = AIProvider::Local;
-            config.endpoint = Some(endpoint);
-            if let Ok(model) = env::var("DAL_AI_MODEL") {
-                config.model = Some(model);
+        } else if let Some(endpoint) = effective_local_ai_endpoint() {
+            if !endpoint.is_empty() {
+                config.provider = AIProvider::Local;
+                config.endpoint = Some(endpoint);
+                if let Ok(model) = env::var("DAL_AI_MODEL") {
+                    config.model = Some(model);
+                }
             }
         }
     }
+    // If DAL_LLM_PRIMARY is set to an unknown value or kimi/deepseek/ollama with incomplete env, keep file-based config from step 1.
 
     // Step 3: Apply optional configuration overrides
     if let Ok(temp) = env::var("DAL_AI_TEMPERATURE") {
@@ -1015,7 +1131,10 @@ pub fn analyze_image(image_data: Vec<u8>) -> Result<ImageAnalysis, String> {
         let base = env::var("OPENAI_BASE_URL")
             .or_else(|_| env::var("DAL_OPENAI_BASE_URL"))
             .unwrap_or_else(|_| "https://api.openai.com/v1".to_string());
-        let svc = crate::stdlib::service::AIService::new("gpt-4o".to_string())
+        let vision_model = env::var("OPENAI_MODEL")
+            .or_else(|_| env::var("DAL_OPENAI_MODEL"))
+            .unwrap_or_else(|_| "gpt-4o".to_string());
+        let svc = crate::stdlib::service::AIService::new(vision_model)
             .with_api_key(api_key)
             .with_base_url(base);
         let b64 = base64::engine::general_purpose::STANDARD.encode(&image_data);
@@ -1186,7 +1305,7 @@ pub fn generate_text(prompt: String) -> Result<String, String> {
     // Fallback when no provider is configured/available.
     // Important: do NOT echo the full prompt (it may include large tool schemas and internal instructions).
     let _ = prompt; // keep signature stable; avoid unused warning in some builds
-    Ok("Generated response (AI not configured). Set DAL_AI_PROVIDER and an API key to enable real replies.".to_string())
+    Ok("Generated response (AI not configured). Set OPENAI_API_KEY or DAL_OPENAI_API_KEY (see COO/.env.example). If DAL_LLM_PRIMARY is set, it must match that provider or be unset for auto-detect; restart dal after changing env.".to_string())
 }
 
 /// System prompt for tool-using agent: reply, run shell, or search.
@@ -1194,7 +1313,7 @@ const TOOLS_SYSTEM: &str = "You are an intelligent assistant. You can run shell 
 Use host tools through the API when needed, and answer users in natural language when finished. \
 If legacy text-JSON mode is explicitly enabled, output exactly one JSON action object using: \
 {\"action\":\"reply\",\"text\":\"your reply\"} or {\"action\":\"run\",\"cmd\":\"shell command\"} or {\"action\":\"search\",\"query\":\"search query\"} or {\"action\":\"fetch_url\",\"url\":\"https://...\"} or {\"action\":\"ask_user\",\"message\":\"your question or status for the user\"}. \
-For run, search, and fetch_url the tool will execute and you will see the result; then reply once to complete the task. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
+For run, search, and fetch_url the tool will execute and you will see the result; then reply once to complete the task. If your answer uses information from search/fetch_url, include source links in the final reply (prefer 2-5 concrete URLs). This is mandatory for travel, shopping, and research-style requests. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
 
 /// Extended tools with file and DAL scripting: write_file, read_file, list_dir, dal_run, dal_check.
 /// Enabled when `DAL_AGENT_SCRIPTING=1` or `DAL_AGENT_SCRIPT_ROOT` is set; `AGENT_ASSISTANT_*` names are still accepted as aliases (same behavior).
@@ -1207,11 +1326,24 @@ If legacy text-JSON mode is explicitly enabled, output exactly one JSON action o
 or {\"action\":\"write_file\",\"path\":\"path/to/file\",\"contents\":\"file contents\"} or {\"action\":\"read_file\",\"path\":\"path/to/file\"} or {\"action\":\"list_dir\",\"path\":\".\"} \
 or {\"action\":\"dal_run\",\"path\":\"file.dal\"} or {\"action\":\"dal_check\",\"path\":\"file.dal\"} \
 or {\"action\":\"show_url\",\"url\":\"https://...\"} or {\"action\":\"show_content\",\"content\":\"html or text\",\"title\":\"optional\"}. \
-For run, search, and fetch_url the tool will execute and you will see the result. For write_file, read_file, list_dir, dal_run, dal_check: paths are relative to the scripts root. Use write_file to create .dal or .sh scripts, then dal_run for DAL or run with bash for shell. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
+For run, search, and fetch_url the tool will execute and you will see the result. If your answer uses information from search/fetch_url, include source links in the final reply (prefer 2-5 concrete URLs). This is mandatory for travel, shopping, and research-style requests. For write_file, read_file, list_dir, dal_run, dal_check: paths are relative to the scripts root. Use write_file to create .dal or .sh scripts, then dal_run for DAL or run with bash for shell. After a successful run (e.g. posting to X), reply immediately—do not run more steps. Use ask_user only if you need input. Keep the user in the loop: if you cannot finish, reply with what you did and what they should do next.";
 
 /// Completion and when to ask: try to finish; if you need input or must stop, keep the user in the loop.
-/// Public for IDE agent runner.
-pub const COMPLETION_AND_ASK_GUIDANCE: &str = "Complete in few steps: when a run succeeds (e.g. curl to post), use action reply right away with the outcome. Do not run extra checks or steps after success. If you need user input use ask_user; if something failed use reply to say what happened. Do not leave the user without a reply.";
+/// Default copy favors **multi-step** work (long tasks, scaffolding, many runs). Override entirely with env
+/// **`DAL_AGENT_COMPLETION_AND_ASK_GUIDANCE`** (non-empty string).
+/// Public for IDE agent runner (prefer [`completion_and_ask_guidance_for_tool_loop`] so env is honored).
+pub const COMPLETION_AND_ASK_GUIDANCE: &str = "Complex tasks may need many tool steps (run, read_file, write_file, search, …). Continue until the user's request is fully satisfied, you need missing input, or a safety limit stops you. If you used search/fetch_url, include source links in the final answer; for travel, shopping, and research requests, missing links means the task is not complete. For a single trivial success with nothing left to do, reply immediately. Use ask_user when critical information is missing. On failure, explain what happened. Always give a clear final reply when you stop.";
+
+/// Resolved completion guidance: env `DAL_AGENT_COMPLETION_AND_ASK_GUIDANCE` overrides the default when set.
+pub fn completion_and_ask_guidance_for_tool_loop() -> String {
+    if let Ok(s) = std::env::var("DAL_AGENT_COMPLETION_AND_ASK_GUIDANCE") {
+        let t = s.trim();
+        if !t.is_empty() {
+            return t.to_string();
+        }
+    }
+    COMPLETION_AND_ASK_GUIDANCE.to_string()
+}
 const CHAT_REPLY_ONLY_SYSTEM: &str =
     "You are an intelligent assistant. Answer the user directly in natural language. \
 Do not return JSON, code fences, or tool actions unless explicitly requested by the host.";
@@ -1305,7 +1437,7 @@ pub fn decide_chat_route(user_message: &str) -> ChatRoute {
         "website",
         "x page",
         "tweet",
-        // Persisted artifacts / file work (long CEO prompts can still miss earlier "run " cues)
+        // Persisted artifacts / file work (long COO prompts can still miss earlier "run " cues)
         "save ",
         "write ",
         "persist",
@@ -1352,7 +1484,7 @@ fn build_tool_loop_schema(
     };
     let mut schema =
         crate::agent_context_schema::AgentContextSchema::minimal(user_message, tools_system);
-    schema.completion_and_ask_guidance = Some(COMPLETION_AND_ASK_GUIDANCE.to_string());
+    schema.completion_and_ask_guidance = Some(completion_and_ask_guidance_for_tool_loop());
     (schema, working_root)
 }
 
@@ -1649,7 +1781,7 @@ fn scripting_env_enabled() -> bool {
 ///   jail is `<root>/scripts/` (created if missing).
 /// - If only `DAL_AGENT_SCRIPTING=1` (or legacy `AGENT_ASSISTANT_SCRIPTING=1`) is set, the jail is
 ///   the **process current directory** (canonicalized when possible) so the agent works in cwd
-///   (e.g. CEO started from `./start.sh` without an extra root env).
+///   (e.g. COO started from `./start.sh` without an extra root env).
 /// Returns `None` when scripting is enabled only via `DAL_AGENT_SCRIPT_ROOT` being present but
 /// empty/invalid — callers combine with [`scripting_env_enabled`].
 fn scripting_working_root() -> Option<std::path::PathBuf> {
@@ -2272,6 +2404,16 @@ pub struct ParsedTurnOutcome {
     pub used_legacy_parse: bool,
 }
 
+/// True when assistant `content` looks like a legacy JSON tool line (first `{...}` has `"action"`).
+/// Used so weak models that print JSON into `content` without native `tool_calls` still run tools.
+fn content_looks_like_legacy_tool_json(s: &str) -> bool {
+    let t = s.trim();
+    if !t.starts_with('{') {
+        return false;
+    }
+    t.contains("\"action\"")
+}
+
 pub fn model_turn_to_outcome(turn: &AgentModelTurn) -> ParsedTurnOutcome {
     if let Some(call) = turn.tool_calls.first() {
         return ParsedTurnOutcome {
@@ -2290,6 +2432,21 @@ pub fn model_turn_to_outcome(turn: &AgentModelTurn) -> ParsedTurnOutcome {
             used_legacy_parse: true,
         };
     }
+    // Without DAL_AGENT_ENABLE_LEGACY_TEXT_JSON, still parse obvious JSON tool lines so the loop
+    // does not treat `{"action":"run",...}` as a final user reply (common when the model echoes
+    // legacy JSON or emits multiple JSON lines — only the first object is executed per turn).
+    let trimmed = turn.content.trim();
+    if content_looks_like_legacy_tool_json(trimmed) {
+        let parsed = parse_tool_response(trimmed);
+        if !matches!(parsed, ToolOutcome::ParseFail(_)) {
+            return ParsedTurnOutcome {
+                outcome: parsed,
+                assistant_event: turn.content.clone(),
+                used_native_tool_call: false,
+                used_legacy_parse: true,
+            };
+        }
+    }
     ParsedTurnOutcome {
         outcome: ToolOutcome::Reply(turn.content.clone()),
         assistant_event: turn.content.clone(),
@@ -2298,7 +2455,15 @@ pub fn model_turn_to_outcome(turn: &AgentModelTurn) -> ParsedTurnOutcome {
     }
 }
 
-const MAX_TOOL_RESULT_LEN: usize = 4000;
+/// Max characters of tool output (run/search/fetch/dal_*) fed back into the next model turn.
+/// Env **`DAL_AGENT_TOOL_RESULT_MAX_CHARS`** (default **8000**, clamped 2048–200_000). Raise for long logs or big diffs.
+pub fn max_tool_result_chars() -> usize {
+    std::env::var("DAL_AGENT_TOOL_RESULT_MAX_CHARS")
+        .ok()
+        .and_then(|s| s.trim().parse().ok())
+        .unwrap_or(8000)
+        .clamp(2048, 200_000)
+}
 
 /// Strip curl progress meter from stderr so agent replies stay clean (exit 0, progress in stderr).
 fn strip_curl_progress(stderr: &str) -> &str {
@@ -2398,8 +2563,9 @@ fn execute_run_result(cmd: &str) -> String {
             if stdout.is_empty() && stderr.is_empty() {
                 out.push_str("(no output)");
             }
-            if out.len() > MAX_TOOL_RESULT_LEN {
-                out.truncate(MAX_TOOL_RESULT_LEN);
+            let cap = max_tool_result_chars();
+            if out.len() > cap {
+                out.truncate(cap);
                 out.push_str("\n... (truncated)");
             }
             out
@@ -2415,8 +2581,9 @@ fn execute_search_result(query: &str) -> String {
     }
     match search_web(query) {
         Ok(summary) => {
-            if summary.len() > MAX_TOOL_RESULT_LEN {
-                format!("{}\n... (truncated)", &summary[..MAX_TOOL_RESULT_LEN])
+            let cap = max_tool_result_chars();
+            if summary.len() > cap {
+                format!("{}\n... (truncated)", &summary[..cap])
             } else {
                 summary
             }
@@ -2498,8 +2665,9 @@ pub fn fetch_url_text_result(url: &str) -> Result<String, String> {
     #[cfg(feature = "http-interface")]
     {
         let text = fetch_url_http_impl(url)?;
-        Ok(if text.len() > MAX_TOOL_RESULT_LEN {
-            format!("{}\n... (truncated)", &text[..MAX_TOOL_RESULT_LEN])
+        let cap = max_tool_result_chars();
+        Ok(if text.len() > cap {
+            format!("{}\n... (truncated)", &text[..cap])
         } else {
             text
         })
@@ -2630,8 +2798,9 @@ fn execute_read_file_result(path: &str, root: &std::path::Path) -> String {
             }
             match std::fs::read_to_string(&p) {
                 Ok(s) => {
-                    if s.len() > MAX_TOOL_RESULT_LEN {
-                        format!("{}\n... (truncated)", &s[..MAX_TOOL_RESULT_LEN])
+                    let cap = max_tool_result_chars();
+                    if s.len() > cap {
+                        format!("{}\n... (truncated)", &s[..cap])
                     } else {
                         s
                     }
@@ -2642,7 +2811,46 @@ fn execute_read_file_result(path: &str, root: &std::path::Path) -> String {
     }
 }
 
+/// Paths (relative to working root) that agent write_file must never touch.
+/// Checked as prefix of the normalized relative path. Env `DAL_AGENT_WRITE_DENY`
+/// can add extra comma-separated prefixes (e.g. "secrets/,config/").
+fn is_write_denied(rel: &str) -> bool {
+    const BUILTIN_DENY: &[&str] = &["public/", "public\\", ".env", "bridge/", "bridge\\"];
+    let norm = rel.replace('\\', "/");
+    let norm = norm.trim_start_matches("./");
+    for prefix in BUILTIN_DENY {
+        let prefix_norm = prefix.replace('\\', "/");
+        if norm.starts_with(&prefix_norm) || norm == prefix_norm.trim_end_matches('/') {
+            return true;
+        }
+    }
+    if let Ok(extra) = std::env::var("DAL_AGENT_WRITE_DENY") {
+        for seg in extra.split(',') {
+            let seg = seg.trim().replace('\\', "/");
+            if seg.is_empty() {
+                continue;
+            }
+            let seg_slash = if seg.ends_with('/') {
+                seg.clone()
+            } else {
+                format!("{}/", seg)
+            };
+            if norm.starts_with(&seg_slash) || norm == seg.trim_end_matches('/') {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 fn execute_write_file_result(path: &str, contents: &str, root: &std::path::Path) -> String {
+    if is_write_denied(path) {
+        return format!(
+            "write_file denied: '{}' is in a protected directory. \
+             Write project files under COO-FILESYSTEM/ or another project subdirectory instead.",
+            path
+        );
+    }
     match resolve_path_under_root(root, path) {
         Err(e) => format!("write_file failed: {}", e),
         Ok(p) => {
@@ -2736,8 +2944,9 @@ fn run_dal_subcommand(subcommand: &str, args: &[&str], root: &std::path::Path) -
                 s.push_str("\nstderr:\n");
                 s.push_str(&stderr);
             }
-            if s.len() > MAX_TOOL_RESULT_LEN {
-                s.truncate(MAX_TOOL_RESULT_LEN);
+            let cap = max_tool_result_chars();
+            if s.len() > cap {
+                s.truncate(cap);
                 s.push_str("\n... (truncated)");
             }
             s
@@ -2760,6 +2969,8 @@ pub struct MultiStepResult {
     /// Tool names in execution order (`run`, `search`, …). Filled by the loop for accurate telemetry;
     /// length should match `steps_used` when tools ran.
     pub executed_tools: Vec<String>,
+    /// Whether the last tool invocation succeeded (`None` when no tools ran).
+    pub last_tool_success: Option<bool>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2850,13 +3061,13 @@ pub fn classify_completion_status(
 /// Default max tool steps when env DAL_AGENT_MAX_TOOL_STEPS is not set.
 pub const DEFAULT_MAX_TOOL_STEPS: u32 = 40;
 
-/// Read max tool steps from env DAL_AGENT_MAX_TOOL_STEPS (default DEFAULT_MAX_TOOL_STEPS, clamped 1..=80).
+/// Read max tool steps from env DAL_AGENT_MAX_TOOL_STEPS (default DEFAULT_MAX_TOOL_STEPS, clamped 1..=512).
 pub fn max_tool_steps_from_env() -> u32 {
     std::env::var("DAL_AGENT_MAX_TOOL_STEPS")
         .ok()
         .and_then(|s| s.trim().parse().ok())
         .unwrap_or(DEFAULT_MAX_TOOL_STEPS)
-        .clamp(1, 80)
+        .clamp(1, 512)
 }
 
 #[derive(Debug, Clone)]
@@ -3085,12 +3296,53 @@ fn register_tool_result_guard(
     None
 }
 
+/// Heuristic: did the tool invocation succeed based on its result string?
+fn classify_tool_result_success(tool_name: &str, result: &str) -> bool {
+    match tool_name {
+        "run" => result.starts_with("Exit code: 0\n") || result == "Exit code: 0\n(no output)",
+        "search" => !result.starts_with("Search failed:") && !result.starts_with("No search query"),
+        "fetch_url" => !result.contains("failed:") && !result.starts_with("Error"),
+        "write_file" => result.starts_with("Wrote "),
+        "read_file" => !result.starts_with("read_file failed:"),
+        "list_dir" => !result.starts_with("list_dir failed:"),
+        "dal_check" => !result.starts_with("dal_check failed:") && !result.contains("Error"),
+        "dal_run" => !result.starts_with("dal_run failed:"),
+        "dal_init" => !result.starts_with("dal_init failed:"),
+        _ => !result.starts_with("Error") && !result.contains("failed:"),
+    }
+}
+
+fn requires_source_links(executed_tools: &[String]) -> bool {
+    executed_tools
+        .iter()
+        .any(|t| t == "search" || t == "fetch_url")
+}
+
+fn text_has_source_link(text: &str) -> bool {
+    text.split_whitespace().any(|tok| {
+        let t = tok.trim_matches(|c: char| {
+            c == '"'
+                || c == '\''
+                || c == '('
+                || c == ')'
+                || c == '['
+                || c == ']'
+                || c == '<'
+                || c == '>'
+                || c == ','
+                || c == '.'
+        });
+        t.starts_with("http://") || t.starts_with("https://") || t.starts_with("www.")
+    })
+}
+
 fn step_result(
     text: String,
     is_ask: bool,
     steps: u32,
     max_reached: bool,
     tools: Vec<String>,
+    last_tool_success: Option<bool>,
 ) -> MultiStepResult {
     MultiStepResult {
         final_text: text,
@@ -3098,6 +3350,153 @@ fn step_result(
         steps_used: steps,
         max_steps_reached: max_reached,
         executed_tools: tools,
+        last_tool_success,
+    }
+}
+
+fn prompt_telemetry_enabled() -> bool {
+    std::env::var("DAL_AGENT_PROMPT_TELEMETRY")
+        .map(|v| {
+            let v = v.trim().to_ascii_lowercase();
+            matches!(v.as_str(), "1" | "true" | "yes" | "on")
+        })
+        .unwrap_or(false)
+}
+
+fn prompt_section_sizes_map(
+    schema: &crate::agent_context_schema::AgentContextSchema,
+) -> HashMap<String, Value> {
+    let context_chars: usize = schema
+        .context_blocks
+        .iter()
+        .map(|b| b.content.len() + b.source.len())
+        .sum();
+    let conversation_chars: usize = schema
+        .conversation
+        .iter()
+        .map(|t| t.role.len() + t.content.len())
+        .sum();
+    let sub_tasks_chars: usize = schema
+        .sub_tasks
+        .as_ref()
+        .map(|tasks| tasks.iter().map(|t| t.len()).sum())
+        .unwrap_or(0usize);
+    let rendered_chars = crate::agent_context_schema::build_prompt_for_llm(schema).len();
+    let mut out = HashMap::new();
+    out.insert(
+        "objective_chars".to_string(),
+        Value::Int(schema.objective.len() as i64),
+    );
+    out.insert(
+        "tools_chars".to_string(),
+        Value::Int(schema.tools_description.len() as i64),
+    );
+    out.insert(
+        "constraints_chars".to_string(),
+        Value::Int(
+            schema
+                .constraints
+                .as_ref()
+                .map(|s| s.len())
+                .unwrap_or(0usize) as i64,
+        ),
+    );
+    out.insert(
+        "completion_guidance_chars".to_string(),
+        Value::Int(
+            schema
+                .completion_and_ask_guidance
+                .as_ref()
+                .map(|s| s.len())
+                .unwrap_or(0usize) as i64,
+        ),
+    );
+    out.insert(
+        "context_chars".to_string(),
+        Value::Int(context_chars as i64),
+    );
+    out.insert(
+        "conversation_chars".to_string(),
+        Value::Int(conversation_chars as i64),
+    );
+    out.insert(
+        "sub_tasks_chars".to_string(),
+        Value::Int(sub_tasks_chars as i64),
+    );
+    out.insert(
+        "rendered_prompt_chars".to_string(),
+        Value::Int(rendered_chars as i64),
+    );
+    out
+}
+
+fn usage_consistency_map(usage: &TurnUsage) -> HashMap<String, Value> {
+    let in_tok = usage.input_tokens;
+    let out_tok = usage.output_tokens;
+    let total_tok = usage.total_tokens;
+    let derived_total = in_tok.zip(out_tok).map(|(i, o)| i.saturating_add(o));
+    let consistency = match (in_tok, out_tok, total_tok) {
+        (None, None, None) => "missing_all",
+        (Some(_), Some(_), Some(t)) => {
+            if Some(t) == derived_total {
+                "exact_match"
+            } else {
+                "mismatch"
+            }
+        }
+        (Some(_), Some(_), None) => "derived_from_in_out",
+        (None, None, Some(_)) => "total_only",
+        _ => "partial",
+    };
+    let consistency_ok = matches!(
+        consistency,
+        "exact_match" | "derived_from_in_out" | "total_only"
+    );
+    let mut out = HashMap::new();
+    match in_tok {
+        Some(v) => out.insert("input_tokens".to_string(), Value::Int(v as i64)),
+        None => out.insert("input_tokens".to_string(), Value::Null),
+    };
+    match out_tok {
+        Some(v) => out.insert("output_tokens".to_string(), Value::Int(v as i64)),
+        None => out.insert("output_tokens".to_string(), Value::Null),
+    };
+    match total_tok {
+        Some(v) => out.insert("total_tokens".to_string(), Value::Int(v as i64)),
+        None => out.insert("total_tokens".to_string(), Value::Null),
+    };
+    match derived_total {
+        Some(v) => out.insert("derived_total_tokens".to_string(), Value::Int(v as i64)),
+        None => out.insert("derived_total_tokens".to_string(), Value::Null),
+    };
+    match usage.estimated_cost_microusd {
+        Some(v) => out.insert("estimated_cost_microusd".to_string(), Value::Int(v as i64)),
+        None => out.insert("estimated_cost_microusd".to_string(), Value::Null),
+    };
+    out.insert(
+        "consistency".to_string(),
+        Value::String(consistency.to_string()),
+    );
+    out.insert("consistency_ok".to_string(), Value::Bool(consistency_ok));
+    out
+}
+
+fn outcome_kind(outcome: &ToolOutcome) -> &'static str {
+    match outcome {
+        ToolOutcome::Reply(_) => "reply",
+        ToolOutcome::AskUser(_) => "ask_user",
+        ToolOutcome::Run(_) => "run",
+        ToolOutcome::Search(_) => "search",
+        ToolOutcome::DalInit(_) => "dal_init",
+        ToolOutcome::ReadFile(_) => "read_file",
+        ToolOutcome::WriteFile(_, _) => "write_file",
+        ToolOutcome::ListDir(_) => "list_dir",
+        ToolOutcome::DalCheck(_) => "dal_check",
+        ToolOutcome::DalRun(_) => "dal_run",
+        ToolOutcome::ShowUrl(_) => "show_url",
+        ToolOutcome::ShowContent(_, _) => "show_content",
+        ToolOutcome::FetchUrl(_) => "fetch_url",
+        ToolOutcome::ParseFail(_) => "parse_fail",
     }
 }
 
@@ -3128,7 +3527,10 @@ pub fn run_multi_step_tool_loop(
     };
     let mut steps_used: u32 = 0;
     let mut executed_tools: Vec<String> = Vec::new();
+    let mut last_tool_ok: Option<bool> = None;
+    let mut citation_retry_used = false;
     let include_scripting_tools = working_root.is_some();
+    let mut model_turn_index: u32 = 0;
     loop {
         let task_get_started = std::time::Instant::now();
         if let Some(started) = guard_state.started_at {
@@ -3144,28 +3546,127 @@ pub fn run_multi_step_tool_loop(
                     steps_used,
                     false,
                     executed_tools,
+                    last_tool_ok,
                 ));
             }
         }
+        let turn_started = std::time::Instant::now();
         let turn = generate_agent_model_turn(schema, include_scripting_tools)?;
+        let turn_latency_ms = duration_ms_i64(turn_started.elapsed());
+        model_turn_index = model_turn_index.saturating_add(1);
         if let Some(msg) = apply_turn_usage_budget(&mut guard_state, &guards, &turn) {
-            return Ok(step_result(msg, false, steps_used, false, executed_tools));
+            if prompt_telemetry_enabled() {
+                let mut payload = HashMap::new();
+                payload.insert("route".to_string(), Value::String("tool_loop".to_string()));
+                payload.insert(
+                    "turn_index".to_string(),
+                    Value::Int(model_turn_index as i64),
+                );
+                payload.insert("turn_latency_ms".to_string(), Value::Int(turn_latency_ms));
+                payload.insert(
+                    "termination_reason".to_string(),
+                    Value::String("usage_budget_guard".to_string()),
+                );
+                payload.insert(
+                    "prompt_sections".to_string(),
+                    Value::Map(prompt_section_sizes_map(schema)),
+                );
+                payload.insert(
+                    "usage".to_string(),
+                    Value::Map(usage_consistency_map(&turn.usage)),
+                );
+                crate::stdlib::log::info("agent_prompt_turn_metrics", payload, Some("ai"));
+            }
+            return Ok(step_result(
+                msg,
+                false,
+                steps_used,
+                false,
+                executed_tools,
+                last_tool_ok,
+            ));
         }
         let parsed = model_turn_to_outcome(&turn);
         let outcome = parsed.outcome;
         let assistant_event = parsed.assistant_event;
+        if prompt_telemetry_enabled() {
+            let mut payload = HashMap::new();
+            payload.insert("route".to_string(), Value::String("tool_loop".to_string()));
+            payload.insert(
+                "turn_index".to_string(),
+                Value::Int(model_turn_index as i64),
+            );
+            payload.insert("turn_latency_ms".to_string(), Value::Int(turn_latency_ms));
+            payload.insert(
+                "outcome_kind".to_string(),
+                Value::String(outcome_kind(&outcome).to_string()),
+            );
+            payload.insert(
+                "used_native_tool_call".to_string(),
+                Value::Bool(parsed.used_native_tool_call),
+            );
+            payload.insert(
+                "used_legacy_parse".to_string(),
+                Value::Bool(parsed.used_legacy_parse),
+            );
+            payload.insert(
+                "prompt_sections".to_string(),
+                Value::Map(prompt_section_sizes_map(schema)),
+            );
+            payload.insert(
+                "usage".to_string(),
+                Value::Map(usage_consistency_map(&turn.usage)),
+            );
+            crate::stdlib::log::info("agent_prompt_turn_metrics", payload, Some("ai"));
+        }
         let pending_signature = tool_signature(&outcome);
         let get_task_ms = duration_ms_i64(task_get_started.elapsed());
         if let Some((tool_name, signature)) = pending_signature.as_ref() {
             if let Some(msg) =
                 register_tool_invocation_guard(&mut guard_state, &guards, tool_name, signature)
             {
-                return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                return Ok(step_result(
+                    msg,
+                    false,
+                    steps_used,
+                    false,
+                    executed_tools,
+                    last_tool_ok,
+                ));
             }
         }
         match outcome {
             ToolOutcome::Reply(text) => {
-                return Ok(step_result(text, false, steps_used, false, executed_tools));
+                if requires_source_links(&executed_tools) && !text_has_source_link(&text) {
+                    if !citation_retry_used {
+                        citation_retry_used = true;
+                        schema.conversation.push(ConversationTurn {
+                            role: "assistant".to_string(),
+                            content: assistant_event.clone(),
+                        });
+                        schema.conversation.push(ConversationTurn {
+                            role: "user".to_string(),
+                            content: "[Policy reminder] Your previous reply used search/fetch data but did not include concrete source links. Rewrite the final reply with the same conclusions and include 2-5 concrete URLs used as sources.".to_string(),
+                        });
+                        continue;
+                    }
+                    return Ok(step_result(
+                        "Stopped: final reply missing required source links after search/fetch_url. Include concrete URLs and try again.".to_string(),
+                        false,
+                        steps_used,
+                        false,
+                        executed_tools,
+                        last_tool_ok,
+                    ));
+                }
+                return Ok(step_result(
+                    text,
+                    false,
+                    steps_used,
+                    false,
+                    executed_tools,
+                    last_tool_ok,
+                ));
             }
             ToolOutcome::AskUser(message) => {
                 return Ok(step_result(
@@ -3174,10 +3675,18 @@ pub fn run_multi_step_tool_loop(
                     steps_used,
                     false,
                     executed_tools,
+                    last_tool_ok,
                 ));
             }
             ToolOutcome::ParseFail(raw) => {
-                return Ok(step_result(raw, false, steps_used, false, executed_tools));
+                return Ok(step_result(
+                    raw,
+                    false,
+                    steps_used,
+                    false,
+                    executed_tools,
+                    last_tool_ok,
+                ));
             }
             ToolOutcome::Run(cmd) => {
                 let task_do_started = std::time::Instant::now();
@@ -3187,7 +3696,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 if agent_name.is_some() {
@@ -3207,6 +3723,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("run", &result));
                 executed_tools.push("run".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3216,6 +3733,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3227,7 +3745,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 if agent_name.is_some() {
@@ -3247,6 +3772,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("search", &result));
                 executed_tools.push("search".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3256,6 +3782,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3267,7 +3794,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 if agent_name.is_some() {
@@ -3287,6 +3821,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("fetch_url", &result));
                 executed_tools.push("fetch_url".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3296,6 +3831,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3308,7 +3844,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 if agent_name.is_some() {
@@ -3328,6 +3871,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("dal_init", &result));
                 executed_tools.push("dal_init".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3337,6 +3881,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3348,7 +3893,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 if agent_name.is_some() {
@@ -3368,6 +3920,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("read_file", &result));
                 executed_tools.push("read_file".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3377,6 +3930,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3388,7 +3942,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 if agent_name.is_some() {
@@ -3408,6 +3969,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("write_file", &result));
                 executed_tools.push("write_file".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3417,6 +3979,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3428,7 +3991,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 if agent_name.is_some() {
@@ -3448,6 +4018,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("list_dir", &result));
                 executed_tools.push("list_dir".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3457,6 +4028,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3468,7 +4040,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 if agent_name.is_some() {
@@ -3488,6 +4067,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("dal_check", &result));
                 executed_tools.push("dal_check".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3497,6 +4077,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3508,7 +4089,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 if agent_name.is_some() {
@@ -3528,6 +4116,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("dal_run", &result));
                 executed_tools.push("dal_run".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3537,6 +4126,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3546,7 +4136,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 schema.conversation.push(ConversationTurn {
@@ -3557,6 +4154,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("show_url", &result));
                 executed_tools.push("show_url".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3566,6 +4164,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3575,7 +4174,14 @@ pub fn run_multi_step_tool_loop(
                     if let Some(msg) =
                         register_tool_result_guard(&mut guard_state, &guards, signature, &result)
                     {
-                        return Ok(step_result(msg, false, steps_used, false, executed_tools));
+                        return Ok(step_result(
+                            msg,
+                            false,
+                            steps_used,
+                            false,
+                            executed_tools,
+                            last_tool_ok,
+                        ));
                     }
                 }
                 schema.conversation.push(ConversationTurn {
@@ -3586,6 +4192,7 @@ pub fn run_multi_step_tool_loop(
                     role: "user".to_string(),
                     content: format!("[Tool result]\n{}", result),
                 });
+                last_tool_ok = Some(classify_tool_result_success("show_content", &result));
                 executed_tools.push("show_content".to_string());
                 steps_used += 1;
                 if steps_used >= max_steps {
@@ -3595,6 +4202,7 @@ pub fn run_multi_step_tool_loop(
                         steps_used,
                         true,
                         executed_tools,
+                        last_tool_ok,
                     ));
                 }
             }
@@ -3613,6 +4221,7 @@ pub fn agent_route_metrics_map(
     schema: Option<&crate::agent_context_schema::AgentContextSchema>,
     result: &MultiStepResult,
     max_steps: u32,
+    elapsed_ms: Option<u64>,
 ) -> HashMap<String, Value> {
     let route_str = match route {
         ChatRoute::ReplyOnly => "reply_only",
@@ -3699,6 +4308,15 @@ pub fn agent_route_metrics_map(
         "completion_status".to_string(),
         Value::String(completion_status.to_string()),
     );
+    if let Some(ms) = elapsed_ms {
+        data.insert("elapsed_ms".to_string(), Value::Int(ms as i64));
+    }
+    if let Some(schema) = schema {
+        data.insert(
+            "prompt_sections".to_string(),
+            Value::Map(prompt_section_sizes_map(schema)),
+        );
+    }
     data
 }
 
@@ -3708,8 +4326,9 @@ fn emit_route_metrics(
     schema: Option<&crate::agent_context_schema::AgentContextSchema>,
     result: &MultiStepResult,
     max_steps: u32,
+    elapsed_ms: Option<u64>,
 ) {
-    let map = agent_route_metrics_map(policy, route, schema, result, max_steps);
+    let map = agent_route_metrics_map(policy, route, schema, result, max_steps, elapsed_ms);
     crate::stdlib::log::info("agent_route_metrics", map, Some("ai"));
 }
 
@@ -3720,6 +4339,10 @@ pub struct RespondWithToolsDiagnostics {
     pub result: MultiStepResult,
     /// Tool names only, in execution order.
     pub tool_trace: Vec<String>,
+    /// End-to-end runtime for this route execution.
+    pub elapsed_ms: u64,
+    /// Prompt section sizes (chars) for the initial schema used by this route.
+    pub prompt_sections: HashMap<String, Value>,
 }
 
 fn collect_tool_trace_from_schema(
@@ -3746,25 +4369,30 @@ pub fn respond_with_tools_diagnostics(
 }
 
 /// `max_steps_override`: when `Some(n)` and `n > 0`, use `n` as the tool-loop cap instead of
-/// `DAL_AGENT_MAX_TOOL_STEPS` (CEO exploit/explore and per-call tuning).
+/// `DAL_AGENT_MAX_TOOL_STEPS` (COO exploit/explore and per-call tuning).
 pub fn respond_with_tools_diagnostics_with_policy(
     user_message: &str,
     policy: ChatPolicy,
     max_steps_override: Option<u32>,
 ) -> Result<RespondWithToolsDiagnostics, String> {
+    let started = std::time::Instant::now();
     let route = route_for_policy(policy, user_message);
     match route {
         ChatRoute::ReplyOnly => {
             let schema = build_reply_only_schema(user_message);
             let prompt = crate::agent_context_schema::build_prompt_for_llm(&schema);
             let reply = generate_text(prompt).map_err(|e| e.to_string())?;
-            let result = step_result(reply.trim().to_string(), false, 0, false, Vec::new());
-            emit_route_metrics(policy, route, None, &result, 0);
+            let result = step_result(reply.trim().to_string(), false, 0, false, Vec::new(), None);
+            let elapsed_ms = started.elapsed().as_millis() as u64;
+            let prompt_sections = prompt_section_sizes_map(&schema);
+            emit_route_metrics(policy, route, Some(&schema), &result, 0, Some(elapsed_ms));
             Ok(RespondWithToolsDiagnostics {
                 policy,
                 route,
                 result,
                 tool_trace: Vec::new(),
+                elapsed_ms,
+                prompt_sections,
             })
         }
         ChatRoute::ToolLoop => {
@@ -3779,12 +4407,23 @@ pub fn respond_with_tools_diagnostics_with_policy(
             } else {
                 collect_tool_trace_from_schema(&schema)
             };
-            emit_route_metrics(policy, route, Some(&schema), &result, max_steps);
+            let elapsed_ms = started.elapsed().as_millis() as u64;
+            let prompt_sections = prompt_section_sizes_map(&schema);
+            emit_route_metrics(
+                policy,
+                route,
+                Some(&schema),
+                &result,
+                max_steps,
+                Some(elapsed_ms),
+            );
             Ok(RespondWithToolsDiagnostics {
                 policy,
                 route,
                 result,
                 tool_trace,
+                elapsed_ms,
+                prompt_sections,
             })
         }
     }
@@ -3870,6 +4509,11 @@ pub fn agent_run_result_map_from_diagnostics(
         "completion_status".to_string(),
         Value::String(completion_status.to_string()),
     );
+    obs.insert("elapsed_ms".to_string(), Value::Int(d.elapsed_ms as i64));
+    obs.insert(
+        "prompt_sections".to_string(),
+        Value::Map(d.prompt_sections.clone()),
+    );
     obs.insert(
         "legacy_text_protocol_enabled".to_string(),
         Value::Bool(legacy_text_tool_protocol_enabled()),
@@ -3902,6 +4546,10 @@ pub fn agent_run_result_map_from_diagnostics(
     );
     // Same ordering as tool_trace — name matches `MultiStepResult::executed_tools` for HTTP clients.
     map.insert("executed_tools".to_string(), Value::Array(tool_names_arr));
+    match r.last_tool_success {
+        Some(ok) => map.insert("last_tool_success".to_string(), Value::Bool(ok)),
+        None => map.insert("last_tool_success".to_string(), Value::Null),
+    };
     map
 }
 
@@ -3925,8 +4573,11 @@ mod agent_run_result_contract_tests {
                 steps_used: 0,
                 max_steps_reached: false,
                 executed_tools: Vec::new(),
+                last_tool_success: None,
             },
             tool_trace: vec!["run".to_string()],
+            elapsed_ms: 12,
+            prompt_sections: std::collections::HashMap::new(),
         };
         let m = agent_run_result_map_from_diagnostics(&d);
         for key in [
@@ -3956,6 +4607,8 @@ mod agent_run_result_contract_tests {
                     "default_policy",
                     "termination_reason",
                     "guard_stopped",
+                    "elapsed_ms",
+                    "prompt_sections",
                 ] {
                     assert!(
                         obs.contains_key(key),
@@ -3979,11 +4632,14 @@ mod agent_run_result_contract_tests {
                 steps_used: 2,
                 max_steps_reached: false,
                 executed_tools: vec!["run".to_string(), "run".to_string()],
+                last_tool_success: None,
             },
             tool_trace: vec!["run".to_string()],
+            elapsed_ms: 25,
+            prompt_sections: std::collections::HashMap::new(),
         };
         let api = agent_run_result_map_from_diagnostics(&d);
-        let metrics = agent_route_metrics_map(d.policy, d.route, None, &d.result, 40);
+        let metrics = agent_route_metrics_map(d.policy, d.route, None, &d.result, 40, None);
         for key in [
             "route",
             "policy",
@@ -4004,8 +4660,9 @@ mod agent_run_result_contract_tests {
 mod multi_step_loop_tests {
     use super::{
         build_transcript_events, decide_chat_route, model_turn_to_outcome,
-        parse_tool_call_from_conversation, parse_tool_response, AgentModelTurn, ChatPolicy,
-        ChatRoute, NativeToolCall, ToolOutcome, TranscriptEvent, TurnUsage,
+        parse_tool_call_from_conversation, parse_tool_response, requires_source_links,
+        text_has_source_link, AgentModelTurn, ChatPolicy, ChatRoute, NativeToolCall, ToolOutcome,
+        TranscriptEvent, TurnUsage,
     };
 
     #[test]
@@ -4091,6 +4748,28 @@ mod multi_step_loop_tests {
         }
     }
 
+    #[test]
+    fn source_link_detection_accepts_http_https_and_www() {
+        assert!(text_has_source_link("See https://example.com for details."));
+        assert!(text_has_source_link("Reference: http://example.com/a"));
+        assert!(text_has_source_link("Try www.example.com/docs"));
+        assert!(!text_has_source_link("No links here."));
+    }
+
+    #[test]
+    fn requires_source_links_only_when_search_or_fetch_used() {
+        assert!(!requires_source_links(&[]));
+        assert!(!requires_source_links(&[
+            "run".to_string(),
+            "write_file".to_string()
+        ]));
+        assert!(requires_source_links(&["search".to_string()]));
+        assert!(requires_source_links(&[
+            "run".to_string(),
+            "fetch_url".to_string()
+        ]));
+    }
+
     #[cfg(feature = "http-interface")]
     #[test]
     fn parse_web_search_provider_str_accepts_known_values() {
@@ -4148,6 +4827,47 @@ mod multi_step_loop_tests {
         match out {
             ToolOutcome::ParseFail(s) => assert_eq!(s, "Just plain text"),
             _ => panic!("expected ParseFail"),
+        }
+    }
+
+    #[test]
+    fn model_turn_parses_json_in_content_when_legacy_flag_off() {
+        let prev = std::env::var("DAL_AGENT_ENABLE_LEGACY_TEXT_JSON").ok();
+        std::env::remove_var("DAL_AGENT_ENABLE_LEGACY_TEXT_JSON");
+        let turn = AgentModelTurn {
+            content: "{\"action\":\"run\",\"cmd\":\"ls -la /tmp\"}\n{\"action\":\"run\",\"cmd\":\"ls -la /tmp\"}"
+                .to_string(),
+            tool_calls: vec![],
+            usage: TurnUsage::default(),
+        };
+        let parsed = model_turn_to_outcome(&turn);
+        match &parsed.outcome {
+            ToolOutcome::Run(cmd) => assert_eq!(cmd, "ls -la /tmp"),
+            other => panic!("expected Run, got {:?}", other),
+        }
+        assert!(parsed.used_legacy_parse);
+        if let Some(v) = prev {
+            std::env::set_var("DAL_AGENT_ENABLE_LEGACY_TEXT_JSON", v);
+        }
+    }
+
+    #[test]
+    fn model_turn_plain_text_stays_reply_when_legacy_off() {
+        let prev = std::env::var("DAL_AGENT_ENABLE_LEGACY_TEXT_JSON").ok();
+        std::env::remove_var("DAL_AGENT_ENABLE_LEGACY_TEXT_JSON");
+        let turn = AgentModelTurn {
+            content: "Here is the folder list you asked for.".to_string(),
+            tool_calls: vec![],
+            usage: TurnUsage::default(),
+        };
+        let parsed = model_turn_to_outcome(&turn);
+        match &parsed.outcome {
+            ToolOutcome::Reply(s) => assert_eq!(s, "Here is the folder list you asked for."),
+            other => panic!("expected Reply, got {:?}", other),
+        }
+        assert!(!parsed.used_legacy_parse);
+        if let Some(v) = prev {
+            std::env::set_var("DAL_AGENT_ENABLE_LEGACY_TEXT_JSON", v);
         }
     }
 
@@ -4593,13 +5313,15 @@ fn call_openai_api_tool_turn(
         }
     }
 
-    let body = json!({
+    let mut body = json!({
         "model": model,
         "messages": messages,
         "tools": host_tool_definitions(include_scripting_tools),
         "temperature": config.temperature,
         "max_tokens": config.max_tokens
     });
+    merge_openai_max_tokens_param(&model, config.max_tokens, &mut body);
+    merge_openai_reasoning_into_chat_body(&model, &mut body);
 
     let url = openai_chat_completions_url(config);
     let mut req = client
@@ -4820,6 +5542,65 @@ fn call_anthropic_api_tool_turn(
     })
 }
 
+/// GPT-5.x Chat Completions: `reasoning_effort` is required for correct behavior; `temperature` is only
+/// accepted when `reasoning_effort` is `none` ([OpenAI GPT-5.4 guide](https://developers.openai.com/api/docs/guides/latest-model)).
+#[cfg(feature = "http-interface")]
+fn openai_chat_completions_reasoning_effort(model: &str) -> Option<String> {
+    if let Ok(s) =
+        env::var("DAL_OPENAI_REASONING_EFFORT").or_else(|_| env::var("OPENAI_REASONING_EFFORT"))
+    {
+        let t = s.trim();
+        if !t.is_empty() {
+            return Some(t.to_string());
+        }
+    }
+    if model.starts_with("gpt-5") {
+        Some("none".to_string())
+    } else {
+        None
+    }
+}
+
+#[cfg(feature = "http-interface")]
+fn merge_openai_reasoning_into_chat_body(model: &str, body: &mut serde_json::Value) {
+    use serde_json::json;
+    if let Some(effort) = openai_chat_completions_reasoning_effort(model) {
+        if let Some(obj) = body.as_object_mut() {
+            // gpt-5.x Chat Completions rejects reasoning_effort when function
+            // tools are present — OpenAI requires /v1/responses for that combo.
+            // Strip it here so tool-calling requests succeed; plain-text requests
+            // (no tools key) still get the parameter.
+            let has_tools = obj
+                .get("tools")
+                .and_then(|v| v.as_array())
+                .map_or(false, |a| !a.is_empty());
+            if has_tools {
+                return;
+            }
+            obj.insert("reasoning_effort".to_string(), json!(effort.clone()));
+            if effort != "none" {
+                obj.remove("temperature");
+                obj.remove("top_p");
+            }
+        }
+    }
+}
+
+/// GPT-5 / some o-series Chat Completions reject `max_tokens`; use `max_completion_tokens` instead.
+#[cfg(feature = "http-interface")]
+fn merge_openai_max_tokens_param(model: &str, max_tokens: u32, body: &mut serde_json::Value) {
+    use serde_json::json;
+    if let Some(obj) = body.as_object_mut() {
+        obj.remove("max_tokens");
+        obj.remove("max_completion_tokens");
+        if model.starts_with("gpt-5") || model.starts_with("o1") || model.starts_with("o3") {
+            obj.insert("max_completion_tokens".to_string(), json!(max_tokens));
+        } else {
+            obj.insert("max_tokens".to_string(), json!(max_tokens));
+        }
+    }
+}
+
 #[cfg(feature = "http-interface")]
 fn call_openai_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<String, String> {
     use serde_json::json;
@@ -4837,7 +5618,7 @@ fn call_openai_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<Str
         .or_else(|| env::var("DAL_OPENAI_MODEL").ok())
         .unwrap_or_else(|| "gpt-4".to_string());
 
-    let body = json!({
+    let mut body = json!({
         "model": model,
         "messages": [
             {
@@ -4852,6 +5633,8 @@ fn call_openai_api(prompt: &str, api_key: &str, config: &AIConfig) -> Result<Str
         "temperature": config.temperature,
         "max_tokens": config.max_tokens
     });
+    merge_openai_max_tokens_param(&model, config.max_tokens, &mut body);
+    merge_openai_reasoning_into_chat_body(&model, &mut body);
 
     let response = client
         .post("https://api.openai.com/v1/chat/completions")
@@ -4956,9 +5739,14 @@ fn call_local_model(prompt: &str, endpoint: &str, config: &AIConfig) -> Result<S
         }
     });
 
-    let response = client
-        .post(endpoint)
-        .json(&body)
+    let mut request = client.post(endpoint).json(&body);
+    if let Some(ref key) = config.api_key {
+        if !key.is_empty() {
+            request = request.header("Authorization", format!("Bearer {}", key));
+        }
+    }
+
+    let response = request
         .send()
         .map_err(|e| format!("Request failed: {}", e))?;
 
@@ -6281,7 +7069,8 @@ mod wrapper_tests {
         let result = generate("gpt-4", "Explain blockchain");
         assert!(result.is_ok());
         let response = result.unwrap();
-        assert!(response.contains("GPT"));
+        // Offline path prefixes with "[GPT]"; real API returns plain completion text.
+        assert!(!response.trim().is_empty());
     }
 
     #[test]
@@ -6289,7 +7078,8 @@ mod wrapper_tests {
         let result = embed("Hello world");
         assert!(result.is_ok());
         let embeddings = result.unwrap();
-        assert_eq!(embeddings.len(), 384);
+        // Offline fallback uses 384 dims; OpenAI text-embedding-3-small returns 1536 by default.
+        assert!(embeddings.len() >= 384);
 
         // Check values are in reasonable range
         for val in embeddings {

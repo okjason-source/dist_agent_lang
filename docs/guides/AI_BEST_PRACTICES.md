@@ -1,6 +1,6 @@
-# AI Best Practices for Smart Contracts (v1.0.8)
+# AI Best Practices for Smart Contracts (v1.0.xx)
 
-> **Beta Release v1.0.8:** Follow these best practices for AI features. Test thoroughly before production. **Beta testing contributions welcome!**
+> **Beta Release v1.0.xx:** Follow these best practices for AI features. Test thoroughly before production. **Beta testing contributions welcome!**
 
 Security, performance, and reliability best practices for **AI-powered smart contracts**.
 

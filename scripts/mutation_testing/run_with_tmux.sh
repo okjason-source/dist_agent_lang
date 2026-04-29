@@ -16,7 +16,8 @@
 # Test suite (what gets run for each mutant):
 #   MUTATION_TEST_SUITE=lib   -> cargo test --lib (faster; integration tests in tests/*.rs do NOT run)
 #   MUTATION_TEST_SUITE=tests -> cargo test --tests (slower; runs tests in tests/*.rs, catches more lexer/etc.)
-#   Default: tests (so lexer_mutation_tests, lexer_boundary_tests, lexer_tokens_tests run)
+#   Default: tests (so lexer_mutation_tests, lexer_boundary_tests, lexer_tokens_tests,
+#                   http_security_mutation_tests, and serve_security_parity_tests run)
 #
 # Scoped runs (faster feedback on survivors — same flags as full run, narrower file set):
 #   MUTATION_FILE=src/cli.rs ./scripts/mutation_testing/run_with_tmux.sh
@@ -65,8 +66,8 @@ fi
 echo "Using: cargo test $( [[ "$TEST_SUITE" == "lib" ]] && echo --lib || echo --tests ) (set MUTATION_TEST_SUITE=lib for --lib only)"
 
 # Long-run defaults inside the tmux session
-export MUTATION_TIMEOUT="${MUTATION_TIMEOUT:-500}"
-export MUTATION_BUILD_TIMEOUT="${MUTATION_BUILD_TIMEOUT:-500}"
+export MUTATION_TIMEOUT="${MUTATION_TIMEOUT:-1000}"
+export MUTATION_BUILD_TIMEOUT="${MUTATION_BUILD_TIMEOUT:-1000}"
 
 TMUX_INNER=""
 TMUX_INNER+="export CARGO_HTTP_CAINFO=$(printf '%q' "$CARGO_HTTP_CAINFO"); "

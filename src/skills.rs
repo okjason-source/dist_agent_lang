@@ -72,7 +72,7 @@ pub struct SkillRegistry {
     skills: HashMap<String, SkillDefinition>,
 }
 
-/// Default skill set for the DAL CEO app (executive sub-agent / smart assist).
+/// Default skill set for the DAL COO app (executive sub-agent / smart assist).
 /// When an agent has no explicit skills, use these.
 pub const DEFAULT_LEARNING_PATH_SKILLS: &[&str] = &["development", "creative", "office", "home"];
 
@@ -657,7 +657,7 @@ pub fn tools_description_for_skills_with_registry(
         "You are a helpful assistant.".to_string()
     } else {
         format!(
-            "You are operating as the DAL CEO surface, serving your principal. Skills:\n{}",
+            "You are operating as the DAL COO surface, serving your principal. Skills:\n{}",
             skill_descriptions.join("\n")
         )
     };
@@ -712,7 +712,7 @@ mod tests {
     #[test]
     fn default_skills_produce_non_empty_description() {
         let desc = tools_description_for_skills(&[]);
-        assert!(desc.contains("DAL CEO"));
+        assert!(desc.contains("DAL COO"));
         assert!(desc.contains("development"));
         assert!(desc.contains("creative"));
         assert!(desc.contains("office"));

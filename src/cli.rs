@@ -97,7 +97,7 @@ pub enum Commands {
     Serve {
         /// DAL file with handler functions (e.g. get_todos, create_todo)
         file: String,
-        /// Port to listen on (default: 8080)
+        /// Port to listen on (default: 8080 — same as COO ./start.sh; override with --port)
         #[arg(short, long, default_value = "8080")]
         port: u16,
         /// HTML file to serve at / (e.g. examples/frontend_todo_app.html)
@@ -219,7 +219,8 @@ pub enum Commands {
     Crypto {
         #[arg(required = true)]
         subcommand: String,
-        #[arg(trailing_var_arg = true)]
+        /// Pass-through for subcommands that use flags (e.g. `crypto forge --hush`).
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         rest: Vec<String>,
     },
 
@@ -427,6 +428,9 @@ pub enum Commands {
         /// Base URL of the agent HTTP server (default: http://127.0.0.1:4040; env DAL_AGENT_HTTP_BASE)
         #[arg(long, value_name = "URL")]
         url: Option<String>,
+        /// Bridge transport profile (default: stdio; env DAL_MCP_TRANSPORT)
+        #[arg(long, value_name = "TRANSPORT")]
+        transport: Option<String>,
     },
 }
 

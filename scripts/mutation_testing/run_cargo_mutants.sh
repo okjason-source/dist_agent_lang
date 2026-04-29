@@ -32,13 +32,8 @@ fi
 MUT_TIMEOUT="${MUTATION_TIMEOUT:-500}"
 MUT_BUILD_TIMEOUT="${MUTATION_BUILD_TIMEOUT:-500}"
 
-ITER_FLAG=(--iterate)
-if [[ "${MUTATION_NO_ITERATE:-}" == "1" ]]; then
-  ITER_FLAG=()
-fi
-
 MUT_ARGS=(
-  cargo mutants "${ITER_FLAG[@]}" --gitignore true --jobs 1
+  cargo mutants --gitignore true --jobs 1
   --exclude src/main.rs
   --exclude src/stdlib/iot.rs
   --exclude src/stdlib/desktop.rs
@@ -48,6 +43,10 @@ MUT_ARGS=(
   --timeout "$MUT_TIMEOUT"
   --build-timeout "$MUT_BUILD_TIMEOUT"
 )
+
+if [[ "${MUTATION_NO_ITERATE:-}" != "1" ]]; then
+  MUT_ARGS+=(--iterate)
+fi
 
 if [[ "${MUTATION_EXCLUDE_AST:-}" == "1" ]]; then
   MUT_ARGS+=(--exclude src/parser/ast.rs)

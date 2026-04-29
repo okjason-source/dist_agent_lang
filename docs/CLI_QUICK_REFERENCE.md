@@ -1,8 +1,8 @@
 # dist_agent_lang CLI - Complete Command Reference
 
-**Version:** 1.0.8  
+**Version:** 1.0.xx 
 **Phases Complete:** Phase 0–9  
-**Total Commands:** 80+ on our way to interactive distributed agents...
+**Total Commands:** 80+ commands
 
 ---
 

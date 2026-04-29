@@ -1,6 +1,6 @@
 # 👔 CloudAdmin Guide: Hybrid Trust & Administrative Control
 
-> **Beta Release v1.0.8:** CloudAdmin is actively maintained with consistent updates. Test thoroughly before production. **Beta testing contributions appreciated!**
+> **Beta Release v1.0.xx:** CloudAdmin is actively maintained with consistent updates. Test thoroughly before production. **Beta testing contributions appreciated!**
 
 **Complete guide to CloudAdmin security architecture for hybrid applications**
 

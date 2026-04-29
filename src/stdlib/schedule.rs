@@ -5,7 +5,7 @@
 //!
 //! **Semantics:** identical to Scatter — **process-local** only. Jobs exist while the interpreter
 //! process runs and something drains [`pending`]. For **durable** tasks across restarts, use an
-//! application store (e.g. CEO `POST /api/schedule`).
+//! application store (e.g. COO `POST /api/schedule`).
 
 use crate::runtime::values::Value;
 

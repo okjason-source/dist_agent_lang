@@ -139,6 +139,21 @@ pub fn ai(prompt: &str, service: AIService) -> Result<String, String> {
     }
 }
 
+/// GPT-5+ Chat Completions require `max_completion_tokens` instead of `max_tokens`.
+#[cfg(feature = "http-interface")]
+fn patch_openai_chat_max_tokens_param(model: &str, limit: i64, body: &mut serde_json::Value) {
+    use serde_json::json;
+    if let Some(obj) = body.as_object_mut() {
+        obj.remove("max_tokens");
+        obj.remove("max_completion_tokens");
+        if model.starts_with("gpt-5") || model.starts_with("o1") || model.starts_with("o3") {
+            obj.insert("max_completion_tokens".into(), json!(limit));
+        } else {
+            obj.insert("max_tokens".into(), json!(limit));
+        }
+    }
+}
+
 #[cfg(feature = "http-interface")]
 fn call_llm_api(
     base_url: &str,
@@ -149,12 +164,13 @@ fn call_llm_api(
     max_tokens: Option<i64>,
 ) -> Result<String, String> {
     let url = format!("{}/chat/completions", base_url.trim_end_matches('/'));
-    let body = serde_json::json!({
+    let mut body = serde_json::json!({
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": temperature,
         "max_tokens": max_tokens.unwrap_or(1024),
     });
+    patch_openai_chat_max_tokens_param(model, max_tokens.unwrap_or(1024), &mut body);
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(60))
         .build()
@@ -280,7 +296,7 @@ fn call_vision_api(
     } else {
         return Err("vision_analyze requires image_url or image_base64".to_string());
     };
-    let body = serde_json::json!({
+    let mut body = serde_json::json!({
         "model": model,
         "messages": [{
             "role": "user",
@@ -291,6 +307,7 @@ fn call_vision_api(
         }],
         "max_tokens": 1024
     });
+    patch_openai_chat_max_tokens_param(model, 1024, &mut body);
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(60))
         .build()

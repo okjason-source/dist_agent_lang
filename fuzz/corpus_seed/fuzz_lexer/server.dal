@@ -1,4 +1,4 @@
-// DAL CEO — HTTP server with memory (evolve) and tool-using AI.
+// DAL COO — HTTP server with memory (evolve) and tool-using AI.
 // Run: dal serve server.dal --port 4040
 //
 // Routes:
@@ -21,7 +21,7 @@ import "./workflows.dal" as workflows;
 fn check_config() {
  let ai_cfg = config::get_ai_config();
  let model = ai_cfg["model"];
- log::info("dal-ceo", "Starting v0.2.0");
+ log::info("dal-coo", "Starting v0.2.0");
  log::info("config", "AI model: " + to_string(model));
 
  try {
@@ -230,7 +230,7 @@ fn history_trim() {
 
 // ---------------------------------------------------------------------------
 // Web UI: self-contained in this file for robustness. Tries static/ via sh, then inline fallback.
-// No import needed — keeps the DAL CEO app runnable with plain dal serve.
+// No import needed — keeps the DAL COO app runnable with plain dal serve.
 // ---------------------------------------------------------------------------
 
 fn get_ui_base() {
@@ -287,7 +287,7 @@ fn get_app_js(base) {
 }
 
 fn default_index_html() {
- return "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>DAL CEO</title><link rel=\"stylesheet\" href=\"/styles.css\"></head><body><div class=\"header\"><h1>DAL CEO</h1><p>Chat, run commands, or give tasks. Memory-enabled.</p><div class=\"ai-status\" id=\"ai-status\"><span class=\"ai-dot checking\" id=\"ai-dot\"></span><span id=\"ai-label\">Checking…</span></div><div class=\"ai-fix\" id=\"ai-fix\"></div></div><div class=\"layout\"><main class=\"chat-main\"><div id=\"messages\"></div><form class=\"input-bar\" id=\"form\"><input type=\"text\" id=\"input\" placeholder=\"Message your agent...\" autocomplete=\"off\"><button type=\"submit\">Send</button></form></main><aside class=\"panels\"><div class=\"tabs\"><button type=\"button\" class=\"tab active\" data-panel=\"history\">History</button><button type=\"button\" class=\"tab\" data-panel=\"task\">Task</button><button type=\"button\" class=\"tab\" data-panel=\"workflow\">Workflow</button></div><section class=\"panel active\" id=\"panel-history\"><div class=\"panel-header\"><h2>History</h2><button type=\"button\" id=\"history-refresh\">↻</button><button type=\"button\" id=\"history-clear\">Clear</button></div><div id=\"history-list\" class=\"history-list\"></div></section><section class=\"panel\" id=\"panel-task\"><div class=\"panel-header\"><h2>Task</h2></div><form id=\"task-form\" class=\"panel-form\"><textarea id=\"task-input\" placeholder=\"Describe the task...\" rows=\"3\"></textarea><button type=\"submit\">Run task</button></form><div id=\"task-result\" class=\"panel-result\"></div></section><section class=\"panel\" id=\"panel-workflow\"><div class=\"panel-header\"><h2>Workflow</h2></div><form id=\"workflow-form\" class=\"panel-form\"><label for=\"workflow-select\">Workflow</label><select id=\"workflow-select\"><option value=\"\">Loading…</option></select><label for=\"workflow-input\">Input</label><input type=\"text\" id=\"workflow-input\" placeholder=\"e.g. topic\"><button type=\"submit\">Run workflow</button></form><div id=\"workflow-result\" class=\"panel-result\"></div></section></aside></div><script src=\"/app.js\"></script></body></html>";
+ return "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>DAL COO</title><link rel=\"stylesheet\" href=\"/styles.css\"></head><body><div class=\"header\"><h1>DAL COO</h1><p>Chat, run commands, or give tasks. Memory-enabled.</p><div class=\"ai-status\" id=\"ai-status\"><span class=\"ai-dot checking\" id=\"ai-dot\"></span><span id=\"ai-label\">Checking…</span></div><div class=\"ai-fix\" id=\"ai-fix\"></div></div><div class=\"layout\"><main class=\"chat-main\"><div id=\"messages\"></div><form class=\"input-bar\" id=\"form\"><input type=\"text\" id=\"input\" placeholder=\"Message your agent...\" autocomplete=\"off\"><button type=\"submit\">Send</button></form></main><aside class=\"panels\"><div class=\"tabs\"><button type=\"button\" class=\"tab active\" data-panel=\"history\">History</button><button type=\"button\" class=\"tab\" data-panel=\"task\">Task</button><button type=\"button\" class=\"tab\" data-panel=\"workflow\">Workflow</button></div><section class=\"panel active\" id=\"panel-history\"><div class=\"panel-header\"><h2>History</h2><button type=\"button\" id=\"history-refresh\">↻</button><button type=\"button\" id=\"history-clear\">Clear</button></div><div id=\"history-list\" class=\"history-list\"></div></section><section class=\"panel\" id=\"panel-task\"><div class=\"panel-header\"><h2>Task</h2></div><form id=\"task-form\" class=\"panel-form\"><textarea id=\"task-input\" placeholder=\"Describe the task...\" rows=\"3\"></textarea><button type=\"submit\">Run task</button></form><div id=\"task-result\" class=\"panel-result\"></div></section><section class=\"panel\" id=\"panel-workflow\"><div class=\"panel-header\"><h2>Workflow</h2></div><form id=\"workflow-form\" class=\"panel-form\"><label for=\"workflow-select\">Workflow</label><select id=\"workflow-select\"><option value=\"\">Loading…</option></select><label for=\"workflow-input\">Input</label><input type=\"text\" id=\"workflow-input\" placeholder=\"e.g. topic\"><button type=\"submit\">Run workflow</button></form><div id=\"workflow-result\" class=\"panel-result\"></div></section></aside></div><script src=\"/app.js\"></script></body></html>";
 }
 
 fn default_styles_css() {
@@ -348,7 +348,7 @@ fn health(request) {
  return {
   "status": 200,
   "headers": {"Content-Type": "application/json"},
-  "body": "{\"status\":\"ok\",\"service\":\"dal-ceo\",\"version\":\"0.2.0\"}"
+  "body": "{\"status\":\"ok\",\"service\":\"dal-coo\",\"version\":\"0.2.0\"}"
  };
 }
 

@@ -1,0 +1,190 @@
+// Validator agents — consensus by majority (design / reasoning sketch)
+// Run: dal run examples/validator_consensus_agents.dal
+//
+// This file is intentionally illustrative: it shows how you might structure
+// independent validator agents, collect their verdicts, and aggregate by quorum.
+// Replace simulated votes with ai::generate_text, tool checks, or chain attestations
+// in a real deployment.
+//
+// Audit bus: each validator publishes signed vote envelopes to a dedicated receiver id
+// via agent::communicate; the ledger agent id is the mailbox. agent::receive_messages
+// drains that mailbox for persistence, SIEM export, or replay tests.
+
+@trust("hybrid")
+@chain("ethereum")
+service ValidatorConsensusSketch {
+    quorum_approve: int;
+    validator_ids: list<string>;
+    audit_bus_id: string;
+
+    fn initialize() {
+        // Minimum number of "approve" votes required (absolute count, not fraction).
+        self.quorum_approve = 2;
+        self.validator_ids = [];
+        self.audit_bus_id = "";
+
+        // Central audit mailbox (one agent id all validators target).
+        self.audit_bus_id = agent::spawn({
+            "name": "AuditLedger",
+            "type": "worker",
+            "role": "immutable_audit_sink",
+            "capabilities": ["task_execution", "data_processing", "automation"]
+        });
+
+        // Spawn three specialized workers; each would run a different check in production.
+        let syntax_id = agent::spawn({
+            "name": "ValidatorSyntax",
+            "type": "worker",
+            "role": "syntax_and_schema",
+            "capabilities": ["task_execution", "data_processing", "automation"]
+        });
+        let policy_id = agent::spawn({
+            "name": "ValidatorPolicy",
+            "type": "worker",
+            "role": "policy_and_safety",
+            "capabilities": ["task_execution", "data_processing", "automation"]
+        });
+        let semantic_id = agent::spawn({
+            "name": "ValidatorSemantic",
+            "type": "worker",
+            "role": "semantic_equivalence",
+            "capabilities": ["task_execution", "data_processing", "automation"]
+        });
+
+        self.validator_ids = [syntax_id, policy_id, semantic_id];
+    }
+
+    fn publish_votes_to_audit_bus(votes: list<any>) {
+        let i = 0;
+        for vid in self.validator_ids {
+            let vote = votes[i];
+            let envelope = {
+                "channel": "validation_audit",
+                "event": "validator_vote",
+                "vote": vote
+            };
+            let ack = agent::communicate(vid, self.audit_bus_id, envelope);
+            print("  audit bus: " + ack);
+            i = i + 1;
+        }
+    }
+
+    fn publish_consensus_rollup(outcome: map<string, any>) {
+        let rollup = {
+            "channel": "validation_audit",
+            "event": "consensus_rollup",
+            "passed": outcome["passed"],
+            "approvals": outcome["approvals"],
+            "quorum_required": outcome["quorum_required"]
+        };
+        let ack = agent::communicate("orchestrator", self.audit_bus_id, rollup);
+        print("  audit bus: " + ack);
+    }
+
+    fn drain_audit_bus() {
+        let inbox = agent::receive_messages(self.audit_bus_id);
+        print("");
+        print("Audit bus drained: " + inbox.length() + " message(s)");
+        for m in inbox {
+            let body = m["content"];
+            let ev = body["event"];
+            print("  [" + m["timestamp"] + "] from=" + m["sender_id"] + " event=" + ev);
+        }
+    }
+
+    // Stand-in for an LLM or static analyzer: returns a vote map.
+    fn simulated_vote(validator_role: string, artifact_id: string) -> map<string, any> {
+        if (validator_role == "syntax_and_schema") {
+            return {
+                "validator": validator_role,
+                "artifact_id": artifact_id,
+                "verdict": "approve",
+                "rationale": "parse tree and schema constraints satisfied"
+            };
+        }
+        if (validator_role == "policy_and_safety") {
+            return {
+                "validator": validator_role,
+                "artifact_id": artifact_id,
+                "verdict": "approve",
+                "rationale": "no disallowed capabilities for declared trust model"
+            };
+        }
+        return {
+            "validator": validator_role,
+            "artifact_id": artifact_id,
+            "verdict": "reject",
+            "rationale": "semantic drift vs. stated intent (example failure)"
+        };
+    }
+
+    fn collect_votes(artifact_id: string) -> list<any> {
+        let roles = ["syntax_and_schema", "policy_and_safety", "semantic_equivalence"];
+        let votes = [];
+        for role in roles {
+            votes = votes + [self.simulated_vote(role, artifact_id)];
+        }
+        return votes;
+    }
+
+    fn count_approvals(votes: list<any>) -> int {
+        let n = 0;
+        for v in votes {
+            if (v["verdict"] == "approve") {
+                n = n + 1;
+            }
+        }
+        return n;
+    }
+
+    fn consensus_decision(votes: list<any>) -> map<string, any> {
+        let approvals = self.count_approvals(votes);
+        let total = votes.length();
+        let passed = approvals >= self.quorum_approve;
+        return {
+            "passed": passed,
+            "approvals": approvals,
+            "total_validators": total,
+            "quorum_required": self.quorum_approve,
+            "votes": votes
+        };
+    }
+
+    fn dispatch_coordination(artifact_id: string) {
+        // Optional: enqueue validation work per spawned agent (task queue pattern).
+        let i = 0;
+        for vid in self.validator_ids {
+            let task_desc = "validate:" + artifact_id + ":round:" + i;
+            let ack = agent::coordinate(vid, task_desc, "task_distribution");
+            print("  coordination: " + ack);
+            i = i + 1;
+        }
+    }
+
+    fn run_demo() {
+        self.initialize();
+
+        let artifact = "change-set-42";
+        print("Artifact: " + artifact);
+        print("Validators: " + self.validator_ids.length());
+        self.dispatch_coordination(artifact);
+
+        let votes = self.collect_votes(artifact);
+        self.publish_votes_to_audit_bus(votes);
+
+        let outcome = self.consensus_decision(votes);
+        self.publish_consensus_rollup(outcome);
+        self.drain_audit_bus();
+
+        print("");
+        print("Consensus outcome (majority-style quorum):");
+        print("  passed: " + outcome["passed"]);
+        print("  approvals: " + outcome["approvals"] + " / " + outcome["total_validators"]);
+        print("  quorum_required: " + outcome["quorum_required"]);
+        print("");
+        print("Per-validator votes are in outcome[\"votes\"] for logging or audit.");
+    }
+}
+
+let bench = ValidatorConsensusSketch::new();
+bench.run_demo();

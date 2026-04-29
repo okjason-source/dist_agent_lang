@@ -1,6 +1,6 @@
 # 🔗 Hybrid Integration Guide: Seamless Onchain/Offchain Design
 
-**Version**: 1.0.2 (Beta)  
+**Version**: 1.0.xx (Beta)  
 **Last Updated**: December 30, 2025  
 **Status**: Security features implemented (beta)
 

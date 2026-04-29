@@ -2,7 +2,7 @@
 
 ## ⚠️ Production Readiness Notice
 
-**dist_agent_lang v1.0.8 is currently in beta.** While it includes comprehensive security features, it has not yet undergone extensive real-world production testing. 
+**dist_agent_lang v1.0.xx is currently in beta.** While it includes comprehensive security features, it has not yet undergone extensive real-world production testing. 
 
 **Recommended for**: Development, prototyping, learning, and non-critical applications.  
 **Use caution for**: Production financial applications, high-value smart contracts, and critical infrastructure.
@@ -16,6 +16,15 @@ See [SECURITY_DISCLAIMER.md](SECURITY_DISCLAIMER.md) for detailed information.
 - For crates.io install: [Rust](https://rustup.rs)
 - For binary install: No additional dependencies (binary is self-contained)
 
+### One package, one CLI name (read this first)
+
+| What | Name |
+|------|------|
+| Rust crate / `cargo install` / `cargo add` | **`dist_agent_lang`** |
+| Command in your shell | **`dal`** (not `dist_agent_lang`) |
+
+`cargo install dist_agent_lang` puts **`dal`** on your `PATH` (and also `dal-registry` and `rag-index` unless you limit bins). There is no separate “DAL install” vs “dist_agent_lang install”—same package, same binary. To install only the main CLI: `cargo install dist_agent_lang --bin dal`.
+
 ### Quick Install (crates.io)
 
 If you have Rust installed:
@@ -24,7 +33,7 @@ If you have Rust installed:
 cargo install dist_agent_lang
 ```
 
-This installs the CLI from [crates.io](https://crates.io/crates/dist_agent_lang). To use as a library: `cargo add dist_agent_lang`
+This installs from [crates.io](https://crates.io/crates/dist_agent_lang); use the **`dal`** command afterward. To use as a library: `cargo add dist_agent_lang`
 
 ### Install from Release Binary
 
@@ -36,9 +45,9 @@ wget https://github.com/okjason-source/dist_agent_lang/releases/latest/download/
 # Extract the package
 tar -xzf dist_agent_lang-v1.0.5-linux-x64.tar.gz
 
-# Copy binary to PATH
-sudo cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang /usr/local/bin/
-# OR: cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang ~/.local/bin/
+# Copy binary to PATH (artifact name is `dal` in current builds)
+sudo cp target/x86_64-unknown-linux-gnu/release/dal /usr/local/bin/
+# OR: cp target/x86_64-unknown-linux-gnu/release/dal ~/.local/bin/
 ```
 
 #### Windows
@@ -46,7 +55,7 @@ sudo cp target/x86_64-unknown-linux-gnu/release/dist_agent_lang /usr/local/bin/
 # Download the release package
 # Extract dist_agent_lang-1.0.0.zip
 # Open Command Prompt in the extracted folder
-# Run install.bat (if available) or manually copy bin/dist_agent_lang.exe to your PATH
+# Run install.bat (if available) or manually copy dal.exe to your PATH
 ```
 
 ### Build from Source
@@ -59,10 +68,35 @@ cd dist_agent_lang
 
 This installs Rust and Node if needed, runs `cargo build --release`, copies the `dal` binary to `/usr/local/bin` or `~/.local/bin`, and adds it to your shell PATH. To only build the binary without installing, run `cargo build --release` and use `./target/release/dal` or add `target/release` to PATH.
 
+### One path while hacking this repo (recommended)
+
+Rust puts the CLI at **`target/release/dal`** (not `target/release/bin/dal`). Everything below avoids a split brain between `~/.cargo/bin/dal`, `cargo install`, and ad hoc copies.
+
+1. **Prefer the repo binary in your shell** (updates on every `cargo build --release`):
+   ```bash
+   cd /path/to/dist_agent_lang
+   eval "$(./scripts/dev-dal-path.sh)"
+   dal --version
+   ```
+   Add that `eval` line to `~/.zshrc` or `~/.bashrc` if you always work in this clone (adjust the path to your machine).
+
+2. **Optional: make `/usr/local/bin/dal` track this tree** (not `~/.cargo/bin/dal` — that only refreshes when you `cargo install`):
+   ```bash
+   cargo build --release --bin dal
+   ./scripts/symlink-dal-usr-local.sh
+   ```
+   After that, any new `cargo build --release` overwrites `target/release/dal`; the symlink keeps pointing at the same path, so you always run the binary you just built.
+
+3. **COO** (`COO/start.sh`) already prefers `../target/release/dal` (or newer `../target/debug/dal`) over `dal` on `PATH`, so `./start.sh` stays aligned with local builds without extra steps.
+
+4. **`cargo install --path . --force --bin dal`** is fine if you live in `~/.cargo/bin`; it is a *copy*, not a link to `target/release`. Do not mix that with “I only `cargo build`” — either install after each build, or use (1)/(2) and skip `cargo install` for day-to-day work.
+
+**Why they don’t all update together by default:** Rust/Cargo only guarantees writing under `target/`. Putting a binary in `~/.cargo/bin` is a separate **`cargo install`** copy step. Anything in `/usr/local/bin` is your OS layout, not Cargo’s — so nothing “auto-syncs” unless you run one command that chains the steps. Use **`./scripts/sync-all-dal.sh`** from the repo root (build + `cargo install --bin dal`; optional `SYNC_DAL_USR_LOCAL=1` or `--usr-local` for the `/usr/local/bin` symlink), or **`make install-dal-sync`** (`USR_LOCAL=1` includes `/usr/local`).
+
 #### Windows
 ```bash
 # Download dist_agent_lang-v1.0.5-windows-x64.zip from GitHub Releases
-# Extract, then copy dist_agent_lang.exe to a folder in your PATH
+# Extract, then copy dal.exe to a folder in your PATH
 # Add that folder to the system PATH environment variable
 ```
 
@@ -74,17 +108,17 @@ dal --version
 
 ## 🚀 Quick Start
 
-### 1. Run a dist_agent_lang File
+### 1. Run a DAL program
 
 ```bash
 # Run a simple example
-dist_agent_lang run examples/hello_world_demo.dal
+dal run examples/hello_world_demo.dal
 
 # Run with specific file
-dist_agent_lang run path/to/your/file.dal
+dal run path/to/your/file.dal
 ```
 
-### 2. Create Your First dist_agent_lang Program
+### 2. Create your first DAL program
 
 Create a file `hello.dal`:
 
@@ -107,23 +141,23 @@ service HelloWorld {
 
 Run it:
 ```bash
-dist_agent_lang run hello.dal
+dal run hello.dal
 ```
 
 ### 3. Available Commands
 
 ```bash
-# Run a dist_agent_lang file
-dist_agent_lang run <file.dal>
+# Run a .dal file
+dal run <file.dal>
 
 # Parse and validate syntax (without executing)
-dist_agent_lang parse <file.dal>
+dal parse <file.dal>
 
 # Show help
-dist_agent_lang --help
+dal --help
 
 # Show version
-dist_agent_lang --version
+dal --version
 ```
 
 ## 📚 Examples
@@ -178,9 +212,9 @@ The package includes 27 example files in the `examples/` directory:
 cd examples
 
 # Run any example
-dist_agent_lang run hello_world_demo.dal
-dist_agent_lang run agent_system_demo.dal
-dist_agent_lang run smart_contract.dal
+dal run hello_world_demo.dal
+dal run agent_system_demo.dal
+dal run smart_contract.dal
 ```
 
 ## 🔧 Configuration
@@ -231,22 +265,22 @@ pool_size = 10
 
 ### 1. Create a Smart Contract
 ```bash
-dist_agent_lang run examples/smart_contract.dal
+dal run examples/smart_contract.dal
 ```
 
 ### 2. Deploy a Token
 ```bash
-dist_agent_lang run examples/keys_token_implementation.dal
+dal run examples/keys_token_implementation.dal
 ```
 
 ### 3. Create an AI Agent System
 ```bash
-dist_agent_lang run examples/agent_system_demo.dal
+dal run examples/agent_system_demo.dal
 ```
 
 ### 4. Build a Web API
 ```bash
-dist_agent_lang run examples/simple_web_api_example.dal
+dal run examples/simple_web_api_example.dal
 ```
 
 ## 🐛 Troubleshooting
@@ -254,7 +288,7 @@ dist_agent_lang run examples/simple_web_api_example.dal
 ### Binary not found
 ```bash
 # Check if binary is in PATH
-which dist_agent_lang
+which dal
 
 # If not found, add installation directory to PATH
 export PATH="$HOME/.local/bin:$PATH"  # For Linux/macOS
@@ -263,7 +297,7 @@ export PATH="$HOME/.local/bin:$PATH"  # For Linux/macOS
 ### Permission denied
 ```bash
 # Make binary executable
-chmod +x bin/dist_agent_lang
+chmod +x ~/.local/bin/dal
 
 # Or install with sudo
 sudo ./install.sh

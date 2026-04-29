@@ -29,6 +29,8 @@ function_name(param1: Type, param2: Type) -> ReturnType
 - [mold](#mold-module) - Mold load/spawn
 - [iot](#iot-module) - IoT device management
 - [oracle](#oracle-module) - Oracle data feeds
+- [graph](#graph-module) - Graph API clients (Microsoft Graph and similar)
+- [mcp](#mcp-module) - MCP bridge lifecycle and tool invocation
 - [sync](#sync-module) - Data synchronization
 - [web](#web-module) - HTTP operations
 - [log](#log-module) - Logging
@@ -948,6 +950,118 @@ http::fetch_text(url: String) -> String
 GET the URL and return the response body as plain text (HTML is stripped best-effort). On failure, the runtime surfaces an error string (network, HTTP status, blocked host, etc.).
 
 Alias: **`http::fetch`** — same behavior.
+
+---
+
+## graph Module
+
+Provider-agnostic graph API primitives for services like Microsoft Graph. Supports bearer auth, OAuth client-credentials bootstrap, JSON requests, and retry/backoff.
+
+### Functions
+
+#### connect
+```dal
+graph::connect(base_url: String, bearer_token: String, timeout_secs?: Int) -> String
+```
+Create a graph client and return `client_id`.
+
+#### connect_client_credentials
+```dal
+graph::connect_client_credentials(base_url: String, token_endpoint: String, client_id: String, client_secret: String, scope: String, timeout_secs?: Int) -> String
+```
+Fetch OAuth token using client-credentials and create a graph client.
+
+#### set_header
+```dal
+graph::set_header(client_id: String, key: String, value: String) -> Bool
+```
+Set default header for requests. Protected headers (like `Authorization`) are blocked.
+
+#### set_token
+```dal
+graph::set_token(client_id: String, bearer_token: String) -> Bool
+```
+Rotate/replace bearer token.
+
+#### set_retry_policy
+```dal
+graph::set_retry_policy(client_id: String, max_retries: Int, retry_backoff_ms: Int) -> Bool
+```
+Set retry policy for `429` and `5xx` responses.
+
+#### request
+```dal
+graph::request(client_id: String, method: String, path: String, body?: Any) -> Map<String, Value>
+```
+Perform authenticated JSON request. Returns map with:
+- `status` (Int)
+- `ok` (Bool)
+- `retries` (Int)
+- `request_id` (String|null)
+- `body_text` (String)
+- `body` (parsed JSON value when possible)
+
+#### get / post / patch / delete
+```dal
+graph::get(client_id: String, path: String) -> Map<String, Value>
+graph::post(client_id: String, path: String, body: Any) -> Map<String, Value>
+graph::patch(client_id: String, path: String, body: Any) -> Map<String, Value>
+graph::delete(client_id: String, path: String) -> Map<String, Value>
+```
+HTTP convenience wrappers over `graph::request`.
+
+---
+
+## mcp Module
+
+MCP bridge lifecycle management and DAL-facing tool invocation primitives.
+
+### Functions
+
+#### bridge_start
+```dal
+mcp::bridge_start(base_url?: String, transport?: String) -> String
+```
+Start MCP bridge process (`node COO/mcp/src/server.js`, or `node ../COO/mcp/src/server.js` from `dist_agent_lang/`) and return `bridge_id`.
+Supported transport values: `stdio` (default) and `http-stream`.
+In `http-stream` mode, the bridge exposes MCP Streamable HTTP endpoint `/mcp`
+using configured `DAL_MCP_STREAM_HOST` / `DAL_MCP_STREAM_PORT`.
+
+#### bridge_stop
+```dal
+mcp::bridge_stop(bridge_id: String) -> Bool
+```
+Stop a running bridge process.
+
+#### bridge_status
+```dal
+mcp::bridge_status(bridge_id: String) -> Map<String, Value> | Null
+```
+Get one bridge status (`id`, `pid`, `running`, `exit_code`, `base_url`, `transport`).
+
+#### bridge_list
+```dal
+mcp::bridge_list() -> List<Map<String, Value>>
+```
+List all runtime-started bridge processes.
+
+#### invoke
+```dal
+mcp::invoke(tool_name: String, input: Any, base_url?: String) -> Map<String, Value>
+```
+Invoke supported MCP bridge tools by name against DAL HTTP API.
+
+Supported `tool_name` values:
+- `dal_agent_message` → `POST /api/message`
+- `dal_agent_task` → `POST /api/task`
+- `dal_agent_run` → `POST /api/agents/run`
+- `dal_agent_workflow` → `POST /api/workflow`
+
+Return shape:
+- `status` (Int)
+- `ok` (Bool)
+- `body_text` (String)
+- `body` (parsed JSON when possible)
 
 ---
 

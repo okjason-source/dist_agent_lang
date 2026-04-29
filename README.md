@@ -17,8 +17,9 @@ DAL is a programming language where AI agents are native citizens. Spawn agents,
 ## Quick start
 
 ```bash
-# Install
+# Install (crate name: dist_agent_lang; CLI binary: dal — same install either way)
 cargo install --git https://github.com/okjason-source/dist_agent_lang.git dist_agent_lang --bin dal
+# Equivalent: cargo install dist_agent_lang   # installs dal + optional extra bins
 
 # Create an agent project
 mkdir my-agent && cd my-agent
@@ -118,7 +119,7 @@ DAL is a **Rust-hosted interpreted language** with a tree-walking runtime. The i
 | **Hybrid trust** | @trust("decentralized") or ("hybrid") or ("centralized") — high level attribute for on-chain and off-chain service contracts. |
 | **CLI toolchain** | `dal run`, `dal check`, `dal fmt`, `dal lint`, `dal test`, `dal repl`, `dal watch`, `dal new`, `dal init`, `dal agent serve` |
 | **Standard library** | 30 modules: agent, ai, chain, crypto, database, auth, cloud, iot, mobile, desktop, evolve, trust, and more |
-| **Testing** | Built-in test framework, mock registry, 140+ tests passing |
+| **Testing** | Built-in test framework, mock registry, 1000+ tests passing |
 
 ---
 
@@ -162,6 +163,7 @@ dal mold list                # List available molds
 - **[Agent setup and usage](docs/guides/AGENT_SETUP_AND_USAGE.md#12-rag-retrieval)** — RAG and MCP in practice (when to enable retrieval, wiring an IDE to your agent HTTP server)
 - **[RAG MVP spec](docs/development/RAG_MVP_SPEC.md)** — Lexical retrieval into agent prompts (`rag::prompt_block`, `include_rag`, corpus indexing)
 - **[IDE and agent integration](docs/IDE_AND_AGENT_INTEGRATION.md)** — Mental model: agent over HTTP first; **MCP** as an optional stdio bridge for editors (Cursor, etc.); LSP for language tooling
+- **[Claude connectors (optional)](docs/guides/CLAUDE_CONNECTORS_OPTIONAL_SETUP.md)** — Keep DAL/COO defaults and offer a developer opt-in path for Claude connector access
 
 ### Reference
 - **[Complete Documentation Index](docs/PUBLIC_DOCUMENTATION_INDEX.md)** — All docs in one place

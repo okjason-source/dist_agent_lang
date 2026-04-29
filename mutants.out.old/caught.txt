@@ -1,17 +1,15 @@
-src/compile/mod.rs:388:12: delete ! in validate_decentralized_service
-src/compile/mod.rs:398:12: delete ! in validate_decentralized_service
-src/compile/mod.rs:415:16: replace == with != in validate_decentralized_service
-src/compile/mod.rs:419:25: delete ! in validate_decentralized_service
-src/compile/mod.rs:422:12: delete ! in validate_decentralized_service
-src/compile/mod.rs:435:5: replace is_decentralized_v1_supported_type -> bool with true
-src/compile/mod.rs:435:5: replace is_decentralized_v1_supported_type -> bool with false
-src/compile/mod.rs:443:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec![]
-src/compile/mod.rs:443:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec![String::new()]
-src/compile/mod.rs:443:5: replace collect_decentralized_v1_unsupported_constructs -> Vec<String> with vec!["xyzzy".into()]
-src/compile/mod.rs:456:5: replace collect_unsupported_from_statement with ()
-src/compile/mod.rs:518:5: replace collect_unsupported_from_expression with ()
-src/module_resolver.rs:247:9: replace ModuleResolver::resolve_program_with_cycles -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
-src/module_resolver.rs:261:9: replace ModuleResolver::resolve_program_recursive -> Result<(), ResolveError> with Ok(())
-src/module_resolver.rs:338:5: replace package_entry_path -> Option<PathBuf> with None
-src/module_resolver.rs:338:5: replace package_entry_path -> Option<PathBuf> with Some(Default::default())
-src/module_resolver.rs:354:5: replace resolve_imports -> Result<Vec<ResolvedImportEntry>, ResolveError> with Ok(vec![])
+src/stdlib/auth.rs:204:26: replace + with - in session
+src/stdlib/auth.rs:204:32: replace * with / in session
+src/stdlib/auth.rs:289:12: replace > with < in validate_jwt_token
+src/stdlib/auth.rs:329:5: replace is_valid_session -> bool with false
+src/stdlib/auth.rs:334:9: replace < with == in is_valid_session
+src/stdlib/auth.rs:334:9: replace < with > in is_valid_session
+src/stdlib/auth.rs:353:5: replace has_permission -> bool with true
+src/stdlib/auth.rs:353:5: replace has_permission -> bool with false
+src/stdlib/auth.rs:353:8: delete ! in has_permission
+src/stdlib/auth.rs:376:5: replace has_role -> bool with true
+src/stdlib/auth.rs:376:5: replace has_role -> bool with false
+src/stdlib/auth.rs:376:8: delete ! in has_role
+src/stdlib/auth.rs:412:5: replace get_role -> Option<Role> with None
+src/stdlib/auth.rs:464:9: delete match arm "admin" in get_role
+src/stdlib/auth.rs:506:17: replace == with != in validate_credentials

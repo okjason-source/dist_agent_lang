@@ -14,14 +14,18 @@ pub mod cross_chain_security;
 pub mod crypto;
 pub mod crypto_signatures; // Production-grade cryptographic signatures
 pub mod database;
+#[cfg(feature = "sqlite-storage")]
+mod database_sqlite;
 pub mod desktop;
 pub mod evolve;
 pub mod fs;
+pub mod graph;
 pub mod http_fetch;
 pub mod iot;
 pub mod key;
 pub mod kyc;
 pub mod log;
+pub mod mcp;
 pub mod mobile;
 pub mod mold;
 pub mod oracle;

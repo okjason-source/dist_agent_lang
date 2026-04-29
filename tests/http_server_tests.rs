@@ -6,7 +6,9 @@ use axum::http::StatusCode;
 use dist_agent_lang::http_server_converters::{
     error_response, http_response_to_axum_response, json_response,
 };
-use dist_agent_lang::http_server_handlers::get_route_handler_name;
+use dist_agent_lang::http_server_handlers::{
+    get_route_handler_name, get_route_handler_name_and_params,
+};
 use dist_agent_lang::http_server_integration::{
     create_router_with_middleware, create_router_with_runtime_factory,
 };
@@ -137,6 +139,26 @@ async fn test_axum_request_to_http_request_extract_body() {
     let _http_request = axum_request_to_http_request(request).await;
 }
 
+/// `MAX_BODY_SIZE` is `10 * 1024 * 1024`. A `*`→`+` mutant makes the limit ~1MB and fails here.
+#[tokio::test]
+async fn test_axum_request_to_http_request_accepts_multi_mb_body_under_limit() {
+    use axum::http::{Method, Uri};
+    use dist_agent_lang::http_server_converters::axum_request_to_http_request;
+
+    let size = 2 * 1024 * 1024;
+    let payload = vec![b'z'; size];
+    let uri = Uri::from_static("http://example.com/upload");
+    let request = axum::http::Request::builder()
+        .method(Method::POST)
+        .uri(uri)
+        .body(axum::body::Body::from(payload.clone()))
+        .unwrap();
+
+    let http_request = axum_request_to_http_request(request).await;
+    assert_eq!(http_request.body.len(), size);
+    assert!(http_request.body.chars().all(|c| c == 'z'));
+}
+
 #[test]
 fn test_error_response_creates_error() {
     // Test error_response - catches return value mutations
@@ -240,6 +262,156 @@ fn test_get_route_handler_name_root() {
         assert!(!name.is_empty(), "Handler name should not be empty");
         assert_ne!(name, "xyzzy", "Handler name should not be 'xyzzy'");
     }
+}
+
+#[test]
+fn test_get_route_handler_name_and_params_exact_match() {
+    use dist_agent_lang::stdlib::web::{HttpMethod, HttpServer, Route, ServerConfig};
+
+    let mut routes = HashMap::new();
+    routes.insert(
+        "GET:/api/items".to_string(),
+        Route {
+            method: HttpMethod::GET,
+            path: "/api/items".to_string(),
+            handler: "list_items".to_string(),
+            middleware: vec![],
+        },
+    );
+    let server = HttpServer {
+        port: 8080,
+        routes,
+        middleware: vec![],
+        static_files: HashMap::new(),
+        config: ServerConfig {
+            max_connections: 100,
+            timeout_seconds: 30,
+            cors_enabled: false,
+            ssl_enabled: false,
+            static_path: "".to_string(),
+        },
+    };
+
+    let got = get_route_handler_name_and_params(&server, "GET", "/api/items").expect("route");
+    assert_eq!(got.0, "list_items");
+    assert!(
+        got.1.is_empty(),
+        "exact match should yield empty path params"
+    );
+}
+
+#[test]
+fn test_get_route_handler_name_and_params_pattern_and_params() {
+    use dist_agent_lang::stdlib::web::{HttpMethod, HttpServer, Route, ServerConfig};
+
+    let mut routes = HashMap::new();
+    routes.insert(
+        "GET:/users/:id".to_string(),
+        Route {
+            method: HttpMethod::GET,
+            path: "/users/:id".to_string(),
+            handler: "user_by_id".to_string(),
+            middleware: vec![],
+        },
+    );
+    let server = HttpServer {
+        port: 8080,
+        routes,
+        middleware: vec![],
+        static_files: HashMap::new(),
+        config: ServerConfig {
+            max_connections: 100,
+            timeout_seconds: 30,
+            cors_enabled: false,
+            ssl_enabled: false,
+            static_path: "".to_string(),
+        },
+    };
+
+    let got =
+        get_route_handler_name_and_params(&server, "get", "/users/42").expect("pattern route");
+    assert_eq!(got.0, "user_by_id");
+    assert_eq!(got.1.get("id").map(String::as_str), Some("42"));
+}
+
+#[test]
+fn test_get_route_handler_name_and_params_multi_segment_pattern() {
+    use dist_agent_lang::stdlib::web::{HttpMethod, HttpServer, Route, ServerConfig};
+
+    let mut routes = HashMap::new();
+    routes.insert(
+        "GET:/v1/a/:x/b".to_string(),
+        Route {
+            method: HttpMethod::GET,
+            path: "/v1/a/:x/b".to_string(),
+            handler: "nested".to_string(),
+            middleware: vec![],
+        },
+    );
+    let server = HttpServer {
+        port: 8080,
+        routes,
+        middleware: vec![],
+        static_files: HashMap::new(),
+        config: ServerConfig {
+            max_connections: 100,
+            timeout_seconds: 30,
+            cors_enabled: false,
+            ssl_enabled: false,
+            static_path: "".to_string(),
+        },
+    };
+
+    let got =
+        get_route_handler_name_and_params(&server, "GET", "/v1/a/99/b").expect("nested pattern");
+    assert_eq!(got.0, "nested");
+    assert_eq!(got.1.get("x").map(String::as_str), Some("99"));
+}
+
+#[test]
+fn test_get_route_handler_name_and_params_rejects_mismatch() {
+    use dist_agent_lang::stdlib::web::{HttpMethod, HttpServer, Route, ServerConfig};
+
+    let mut routes = HashMap::new();
+    routes.insert(
+        "GET:/users/:id".to_string(),
+        Route {
+            method: HttpMethod::GET,
+            path: "/users/:id".to_string(),
+            handler: "user_by_id".to_string(),
+            middleware: vec![],
+        },
+    );
+    let server = HttpServer {
+        port: 8080,
+        routes,
+        middleware: vec![],
+        static_files: HashMap::new(),
+        config: ServerConfig {
+            max_connections: 100,
+            timeout_seconds: 30,
+            cors_enabled: false,
+            ssl_enabled: false,
+            static_path: "".to_string(),
+        },
+    };
+
+    assert!(
+        get_route_handler_name_and_params(&server, "GET", "/users/").is_none(),
+        "empty trailing segment must not match :id"
+    );
+    assert!(
+        get_route_handler_name_and_params(&server, "GET", "/users/123/extra").is_none(),
+        "extra segment must not match"
+    );
+    assert!(
+        get_route_handler_name_and_params(&server, "GET", "/other/123").is_none(),
+        "literal segment mismatch"
+    );
+    assert!(
+        get_route_handler_name_and_params(&server, "POST", "/users/123").is_none(),
+        "wrong method must not match pattern registered for GET"
+    );
 }
 
 // ============================================================================
@@ -425,6 +597,52 @@ async fn test_default_routes_return_non_empty_body() {
         "health handler must return OK, got: {}",
         body_str
     );
+}
+
+/// `stdlib::web::start_server` delegates to `http_server::start_http_server`. Ensures bind + default HTML home (not empty).
+#[tokio::test]
+async fn test_start_http_server_serves_default_html_home() {
+    use dist_agent_lang::stdlib::web::{HttpServer, ServerConfig};
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let port = listener.local_addr().unwrap().port();
+    drop(listener);
+
+    let server = HttpServer {
+        port: port as i64,
+        routes: HashMap::new(),
+        middleware: vec![],
+        static_files: HashMap::new(),
+        config: ServerConfig {
+            max_connections: 100,
+            timeout_seconds: 30,
+            cors_enabled: false,
+            ssl_enabled: false,
+            static_path: "".to_string(),
+        },
+    };
+
+    let handle = tokio::spawn(async move {
+        let _ = dist_agent_lang::http_server::start_http_server(server).await;
+    });
+    tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+
+    // Default reqwest `Accept: */*` contains `/*`, which input_validation_middleware rejects (SQL comment pattern).
+    let client = reqwest::Client::new();
+    let res = client
+        .get(format!("http://127.0.0.1:{port}/"))
+        .header("Accept", "text/html")
+        .send()
+        .await
+        .expect("connect to start_http_server");
+    assert_eq!(res.status(), reqwest::StatusCode::OK);
+    let text = res.text().await.unwrap();
+    assert!(
+        text.contains("KEYS Web Application") && text.contains("dist_agent_lang"),
+        "home page must include product markers, got len {}",
+        text.len()
+    );
+    handle.abort();
 }
 
 // ============================================================================
@@ -836,6 +1054,122 @@ fn test_create_router_with_middleware_all_methods_coverage() {
     };
 
     let _router = create_router_with_middleware(server);
+}
+
+/// Exercises PUT/DELETE registration in `create_router_with_middleware` (mirrors `http_server::start_http_server` routing).
+#[tokio::test]
+async fn test_create_router_put_delete_methods_invoke_registered_handlers() {
+    use axum::body::Body;
+    use axum::http::Request;
+    use dist_agent_lang::stdlib::web::{HttpMethod, HttpServer, Route, ServerConfig};
+    use tower::ServiceExt;
+
+    let mut routes = HashMap::new();
+    routes.insert(
+        "PUT:/api/put".to_string(),
+        Route {
+            method: HttpMethod::PUT,
+            path: "/api/put".to_string(),
+            handler: "put_handler".to_string(),
+            middleware: vec![],
+        },
+    );
+    routes.insert(
+        "DELETE:/api/del".to_string(),
+        Route {
+            method: HttpMethod::DELETE,
+            path: "/api/del".to_string(),
+            handler: "delete_handler".to_string(),
+            middleware: vec![],
+        },
+    );
+    let server = HttpServer {
+        port: 8080,
+        routes,
+        middleware: vec![],
+        static_files: HashMap::new(),
+        config: ServerConfig {
+            max_connections: 100,
+            timeout_seconds: 30,
+            cors_enabled: false,
+            ssl_enabled: false,
+            static_path: "".to_string(),
+        },
+    };
+
+    let runtime_factory = || {
+        let mut rt = Runtime::new();
+        let put = Function::new(
+            "put_handler".to_string(),
+            vec!["request".to_string()],
+            |_args, _scope| {
+                let mut map = HashMap::new();
+                map.insert("status".to_string(), dist_agent_lang::Value::Int(200));
+                map.insert(
+                    "body".to_string(),
+                    dist_agent_lang::Value::String("from-put".to_string()),
+                );
+                Ok(dist_agent_lang::Value::Map(map))
+            },
+        );
+        rt.register_function(put);
+        let delete = Function::new(
+            "delete_handler".to_string(),
+            vec!["request".to_string()],
+            |_args, _scope| {
+                let mut map = HashMap::new();
+                map.insert("status".to_string(), dist_agent_lang::Value::Int(200));
+                map.insert(
+                    "body".to_string(),
+                    dist_agent_lang::Value::String("from-delete".to_string()),
+                );
+                Ok(dist_agent_lang::Value::Map(map))
+            },
+        );
+        rt.register_function(delete);
+        rt
+    };
+
+    let app = create_router_with_runtime_factory(server, runtime_factory);
+
+    let put_res = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("PUT")
+                .uri("/api/put")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(put_res.status(), StatusCode::OK);
+    let put_body = axum::body::to_bytes(put_res.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    assert!(
+        String::from_utf8_lossy(&put_body).contains("from-put"),
+        "PUT handler output missing"
+    );
+
+    let del_res = app
+        .oneshot(
+            Request::builder()
+                .method("DELETE")
+                .uri("/api/del")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(del_res.status(), StatusCode::OK);
+    let del_body = axum::body::to_bytes(del_res.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    assert!(
+        String::from_utf8_lossy(&del_body).contains("from-delete"),
+        "DELETE handler output missing"
+    );
 }
 
 // ============================================================================

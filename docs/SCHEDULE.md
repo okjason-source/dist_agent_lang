@@ -2,7 +2,7 @@
 
 The **`schedule::`** stdlib module wraps [`time::`](TIME.md) and [`scatter::`](SCATTER.md) behind **one namespace** so DAL code and LLM-generated code can express “when” without juggling two modules.
 
-**Semantics:** identical to Scatter — **process-local** timers only. For **durable** jobs across process restarts, use an application store (e.g. CEO `POST /api/schedule`).
+**Semantics:** identical to Scatter — **process-local** timers only. For **durable** jobs across process restarts, use an application store (e.g. COO `POST /api/schedule`).
 
 ## Functions (DAL)
 

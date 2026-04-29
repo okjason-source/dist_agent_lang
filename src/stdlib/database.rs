@@ -1,21 +1,35 @@
 use crate::runtime::values::Value;
 use std::collections::HashMap;
 
+#[cfg(feature = "sqlite-storage")]
+use crate::stdlib::database_sqlite;
+
 // Enhanced Database & Storage Framework - Phase 3
-// Comprehensive data persistence and storage capabilities including:
-// - Advanced database operations with connection pooling
-// - Query builder with ORM-like features
-// - Migration system for schema management
-// - Multi-level caching (memory, Redis, disk)
-// - File system operations and storage management
-// - Backup, restore, and replication features
-// - Data integrity and validation
+//
+// **SQLite (production):** build with `--features sqlite-storage`, then
+// `database::connect("sqlite://relative/path.db")` or `sqlite:///absolute/path.db`.
+// `query` / `execute` use bound `?` placeholders; `list_tables`, `get_table_schema`,
+// `backup_database`, `ping_database`, `get_query_plan` use the live connection.
+// PostgreSQL/MySQL return an error until implemented.
+//
+// **Without `sqlite-storage`:** connect/query remain simulated (dev/demo).
+//
+// **Filesystem:** `database::read_file` / `write_file` / etc. delegate to `fs::*`
+// (`DAL_FS_ROOT` jail), same as other agent file tools.
+//
+// Other topics: connection pooling, query builder, cache, migrations — largely stubs;
+// caching and advanced pool features are not production-backed yet.
 
 #[derive(Debug, Clone)]
 pub struct Database {
     pub connection_string: String,
     pub connection_type: String, // "postgresql", "mysql", "sqlite", etc.
     pub is_connected: bool,
+    /// Live SQLite connection when built with `sqlite-storage` and `sqlite://...` URL.
+    #[cfg(feature = "sqlite-storage")]
+    sqlite: Option<std::sync::Arc<std::sync::Mutex<rusqlite::Connection>>>,
+    #[cfg(feature = "sqlite-storage")]
+    sqlite_path: Option<std::path::PathBuf>,
 }
 
 #[derive(Debug, Clone)]
@@ -248,14 +262,50 @@ pub fn connect(connection_string: String) -> Result<Database, String> {
         "unknown".to_string()
     };
 
-    Ok(Database {
-        connection_string,
-        connection_type,
-        is_connected: true,
-    })
+    #[cfg(feature = "sqlite-storage")]
+    {
+        if connection_string.starts_with("sqlite://") {
+            let path = database_sqlite::parse_sqlite_path(&connection_string)?;
+            let sqlite = database_sqlite::open_sqlite(&path)?;
+            return Ok(Database {
+                connection_string,
+                connection_type,
+                is_connected: true,
+                sqlite: Some(sqlite),
+                sqlite_path: Some(path),
+            });
+        }
+        if connection_string.starts_with("postgresql://")
+            || connection_string.starts_with("mysql://")
+        {
+            return Err(
+                "PostgreSQL/MySQL are not implemented in this build; use sqlite://path/to/db.sqlite"
+                    .to_string(),
+            );
+        }
+    }
+
+    #[cfg(not(feature = "sqlite-storage"))]
+    {
+        return Ok(Database {
+            connection_string,
+            connection_type,
+            is_connected: true,
+        });
+    }
+    #[cfg(feature = "sqlite-storage")]
+    {
+        Ok(Database {
+            connection_string,
+            connection_type,
+            is_connected: true,
+            sqlite: None,
+            sqlite_path: None,
+        })
+    }
 }
 
-pub fn query(db: &Database, sql: String, _params: Vec<Value>) -> Result<QueryResult, String> {
+pub fn query(db: &Database, sql: String, params: Vec<Value>) -> Result<QueryResult, String> {
     crate::stdlib::log::info(
         "database",
         {
@@ -273,6 +323,13 @@ pub fn query(db: &Database, sql: String, _params: Vec<Value>) -> Result<QueryRes
     if !db.is_connected {
         return Err("Database not connected".to_string());
     }
+
+    #[cfg(feature = "sqlite-storage")]
+    if let Some(ref conn) = db.sqlite {
+        return database_sqlite::run_sql(conn, sql, params);
+    }
+
+    let _ = params.len();
 
     // Simulated query execution
     let mut rows = Vec::new();
@@ -314,6 +371,12 @@ pub fn query(db: &Database, sql: String, _params: Vec<Value>) -> Result<QueryRes
             0
         },
     })
+}
+
+/// INSERT/UPDATE/DELETE (or any non-readonly SQL). Prefer bound parameters in `sql` (`?` placeholders).
+pub fn execute(db: &Database, sql: String, params: Vec<Value>) -> Result<bool, String> {
+    let r = query(db, sql, params)?;
+    Ok(r.affected_rows > 0 || r.row_count > 0)
 }
 
 pub fn transaction(db: &Database, operations: Vec<String>) -> Result<Transaction, String> {
@@ -469,6 +532,11 @@ pub fn get_table_schema(db: &Database, table_name: String) -> Result<TableSchema
         return Err("Database not connected".to_string());
     }
 
+    #[cfg(feature = "sqlite-storage")]
+    if let Some(ref conn) = db.sqlite {
+        return database_sqlite::table_schema_sqlite(conn, &table_name);
+    }
+
     // Simulated schema retrieval
     Ok(TableSchema {
         name: table_name,
@@ -516,6 +584,11 @@ pub fn list_tables(db: &Database) -> Result<Vec<String>, String> {
         return Err("Database not connected".to_string());
     }
 
+    #[cfg(feature = "sqlite-storage")]
+    if let Some(ref conn) = db.sqlite {
+        return database_sqlite::list_tables_sqlite(conn);
+    }
+
     // Simulated table listing
     Ok(vec![
         "users".to_string(),
@@ -547,6 +620,13 @@ pub fn backup_database(db: &Database, backup_path: String) -> Result<bool, Strin
         return Err("Database not connected".to_string());
     }
 
+    #[cfg(feature = "sqlite-storage")]
+    if let Some(ref conn) = db.sqlite {
+        let dest = std::path::PathBuf::from(&backup_path);
+        database_sqlite::backup_sqlite_file(conn, &dest)?;
+        return Ok(true);
+    }
+
     // Simulated backup
     Ok(true)
 }
@@ -573,8 +653,21 @@ pub fn restore_database(db: &Database, backup_path: String) -> Result<bool, Stri
         return Err("Database not connected".to_string());
     }
 
-    // Simulated restore
-    Ok(true)
+    #[cfg(feature = "sqlite-storage")]
+    {
+        let backup = std::path::PathBuf::from(&backup_path);
+        if let Some(ref db_path) = db.sqlite_path {
+            database_sqlite::restore_sqlite_file(db_path, &backup)?;
+            return Ok(true);
+        }
+        return Err(
+            "restore_database requires a live sqlite:// connection with a file path".to_string(),
+        );
+    }
+    #[cfg(not(feature = "sqlite-storage"))]
+    {
+        Ok(true)
+    }
 }
 
 pub fn get_connection_info(db: &Database) -> HashMap<String, Value> {
@@ -588,6 +681,13 @@ pub fn get_connection_info(db: &Database) -> HashMap<String, Value> {
         Value::String(db.connection_type.clone()),
     );
     info.insert("is_connected".to_string(), Value::Bool(db.is_connected));
+    #[cfg(feature = "sqlite-storage")]
+    if let Some(ref p) = db.sqlite_path {
+        info.insert(
+            "sqlite_path".to_string(),
+            Value::String(p.display().to_string()),
+        );
+    }
     info
 }
 
@@ -605,6 +705,11 @@ pub fn close_connection(db: &mut Database) -> Result<bool, String> {
         Some("database"),
     );
 
+    #[cfg(feature = "sqlite-storage")]
+    {
+        db.sqlite.take();
+        db.sqlite_path.take();
+    }
     db.is_connected = false;
     Ok(true)
 }
@@ -612,6 +717,11 @@ pub fn close_connection(db: &mut Database) -> Result<bool, String> {
 pub fn ping_database(db: &Database) -> Result<bool, String> {
     if !db.is_connected {
         return Err("Database not connected".to_string());
+    }
+
+    #[cfg(feature = "sqlite-storage")]
+    if let Some(ref conn) = db.sqlite {
+        return database_sqlite::ping_sqlite(conn);
     }
 
     // Simulated ping
@@ -635,6 +745,11 @@ pub fn get_query_plan(db: &Database, sql: String) -> Result<HashMap<String, Valu
 
     if !db.is_connected {
         return Err("Database not connected".to_string());
+    }
+
+    #[cfg(feature = "sqlite-storage")]
+    if let Some(ref conn) = db.sqlite {
+        return database_sqlite::explain_sqlite(conn, sql);
     }
 
     // Simulated query plan
@@ -1163,7 +1278,7 @@ pub fn cache_clear(cache_id: String) -> Result<i64, String> {
     Ok(42)
 }
 
-// File System Operations
+// File System Operations — delegated to `fs::*` (same jail as `DAL_FS_ROOT` / cwd).
 pub fn read_file(path: String) -> Result<String, String> {
     crate::stdlib::log::info(
         "database",
@@ -1172,15 +1287,15 @@ pub fn read_file(path: String) -> Result<String, String> {
             data.insert("path".to_string(), Value::String(path.clone()));
             data.insert(
                 "message".to_string(),
-                Value::String("Reading file".to_string()),
+                Value::String("Reading file (via fs::read_text)".to_string()),
             );
             data
         },
         Some("database"),
     );
 
-    // Simulated file read
-    Ok("file contents here".to_string())
+    let root = crate::stdlib::fs::filesystem_root();
+    crate::stdlib::fs::read_text(&root, path.trim())
 }
 
 pub fn write_file(path: String, content: String) -> Result<bool, String> {
@@ -1188,21 +1303,22 @@ pub fn write_file(path: String, content: String) -> Result<bool, String> {
         "database",
         {
             let mut data = std::collections::HashMap::new();
-            data.insert("path".to_string(), Value::String(path));
+            data.insert("path".to_string(), Value::String(path.clone()));
             data.insert(
                 "content_length".to_string(),
                 Value::Int(content.len() as i64),
             );
             data.insert(
                 "message".to_string(),
-                Value::String("Writing file".to_string()),
+                Value::String("Writing file (via fs::write_text)".to_string()),
             );
             data
         },
         Some("database"),
     );
 
-    Ok(true)
+    let root = crate::stdlib::fs::filesystem_root();
+    crate::stdlib::fs::write_text(&root, path.trim(), &content).map(|_| true)
 }
 
 pub fn delete_file(path: String) -> Result<bool, String> {
@@ -1210,7 +1326,7 @@ pub fn delete_file(path: String) -> Result<bool, String> {
         "database",
         {
             let mut data = std::collections::HashMap::new();
-            data.insert("path".to_string(), Value::String(path));
+            data.insert("path".to_string(), Value::String(path.clone()));
             data.insert(
                 "message".to_string(),
                 Value::String("Deleting file".to_string()),
@@ -1220,6 +1336,10 @@ pub fn delete_file(path: String) -> Result<bool, String> {
         Some("database"),
     );
 
+    let root = crate::stdlib::fs::filesystem_root();
+    let p = crate::stdlib::fs::resolve_path_under_root(&root, path.trim())
+        .map_err(|e| e.to_string())?;
+    std::fs::remove_file(&p).map_err(|e| e.to_string())?;
     Ok(true)
 }
 
@@ -1228,7 +1348,7 @@ pub fn list_directory(path: String) -> Result<Vec<String>, String> {
         "database",
         {
             let mut data = std::collections::HashMap::new();
-            data.insert("path".to_string(), Value::String(path));
+            data.insert("path".to_string(), Value::String(path.clone()));
             data.insert(
                 "message".to_string(),
                 Value::String("Listing directory".to_string()),
@@ -1238,12 +1358,25 @@ pub fn list_directory(path: String) -> Result<Vec<String>, String> {
         Some("database"),
     );
 
-    // Simulated directory listing
-    Ok(vec![
-        "file1.txt".to_string(),
-        "file2.json".to_string(),
-        "subdir/".to_string(),
-    ])
+    let root = crate::stdlib::fs::filesystem_root();
+    let dir = if path.trim().is_empty() {
+        root.clone()
+    } else {
+        crate::stdlib::fs::resolve_path_under_root(&root, path.trim()).map_err(|e| e.to_string())?
+    };
+    let mut out = Vec::new();
+    for ent in std::fs::read_dir(&dir).map_err(|e| e.to_string())? {
+        let ent = ent.map_err(|e| e.to_string())?;
+        let name = ent.file_name().to_string_lossy().to_string();
+        let ft = ent.file_type().map_err(|e| e.to_string())?;
+        if ft.is_dir() {
+            out.push(format!("{}/", name));
+        } else {
+            out.push(name);
+        }
+    }
+    out.sort();
+    Ok(out)
 }
 
 pub fn create_directory(path: String) -> Result<bool, String> {
@@ -1251,7 +1384,7 @@ pub fn create_directory(path: String) -> Result<bool, String> {
         "database",
         {
             let mut data = std::collections::HashMap::new();
-            data.insert("path".to_string(), Value::String(path));
+            data.insert("path".to_string(), Value::String(path.clone()));
             data.insert(
                 "message".to_string(),
                 Value::String("Creating directory".to_string()),
@@ -1261,12 +1394,16 @@ pub fn create_directory(path: String) -> Result<bool, String> {
         Some("database"),
     );
 
+    let root = crate::stdlib::fs::filesystem_root();
+    let p = crate::stdlib::fs::resolve_path_under_root(&root, path.trim())
+        .map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&p).map_err(|e| e.to_string())?;
     Ok(true)
 }
 
 pub fn file_exists(path: String) -> bool {
-    // Simulated file existence check
-    path.ends_with(".txt") || path.ends_with(".json")
+    let root = crate::stdlib::fs::filesystem_root();
+    crate::stdlib::fs::exists(&root, path.trim()).unwrap_or(false)
 }
 
 pub fn get_file_info(path: String) -> Result<FileInfo, String> {
@@ -1284,13 +1421,30 @@ pub fn get_file_info(path: String) -> Result<FileInfo, String> {
         Some("database"),
     );
 
+    let root = crate::stdlib::fs::filesystem_root();
+    let p = crate::stdlib::fs::resolve_path_under_root(&root, path.trim())
+        .map_err(|e| e.to_string())?;
+    let meta = std::fs::metadata(&p).map_err(|e| e.to_string())?;
+    let name = p
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let modified_at = meta
+        .modified()
+        .ok()
+        .and_then(|t| {
+            t.duration_since(std::time::UNIX_EPOCH)
+                .ok()
+                .map(|d| format!("{}.{:03}Z", d.as_secs(), d.subsec_millis()))
+        })
+        .unwrap_or_else(|| "unknown".to_string());
     Ok(FileInfo {
-        name: "example.txt".to_string(),
-        path,
-        size: 1024,
-        is_directory: false,
-        modified_at: "2024-01-01T00:00:00Z".to_string(),
-        permissions: "rw-r--r--".to_string(),
+        name,
+        path: path.clone(),
+        size: meta.len() as i64,
+        is_directory: meta.is_dir(),
+        modified_at,
+        permissions: "unknown".to_string(),
     })
 }
 

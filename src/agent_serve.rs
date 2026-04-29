@@ -217,7 +217,7 @@ fn prompt_only_run_task_ai(
     }
 }
 
-/// Max lines of evolve content to include in prompt (P1: evolve in context).
+/// Legacy fallback: line-based evolve load if structured load fails.
 const EVOLVE_RECENT_LINES: i64 = 300;
 
 /// Max length for working_root path (CodeQL: prevent uncontrolled allocation from request body).
@@ -231,15 +231,41 @@ fn capped_working_root_path(s: Option<&String>) -> Option<std::path::PathBuf> {
     })
 }
 
-/// Load recent evolve content as a context block when available (P1).
+/// Load evolve content for prompts: last N **conversation turns** + working memory + summary tail
+/// (see `evolve::load_recent_for_prompt` — excludes noisy action-log tables by default).
 fn evolve_context_block(agent_name: &str) -> Vec<ContextBlock> {
-    match dist_agent_lang::stdlib::evolve::load_recent(Some(agent_name), EVOLVE_RECENT_LINES) {
-        Ok(s) if !s.trim().is_empty() => vec![ContextBlock {
-            source: "evolve".to_string(),
-            content: s,
-        }],
-        _ => Vec::new(),
+    let max_turns = std::env::var("DAL_EVOLVE_PROMPT_MAX_TURNS")
+        .ok()
+        .and_then(|s| s.trim().parse().ok())
+        .unwrap_or(12usize)
+        .clamp(1, 120);
+    let max_chars = std::env::var("DAL_EVOLVE_PROMPT_MAX_CHARS")
+        .ok()
+        .and_then(|s| s.trim().parse().ok())
+        .unwrap_or(18_000usize)
+        .clamp(1_500, 250_000);
+    let structured = dist_agent_lang::stdlib::evolve::load_recent_for_prompt(
+        Some(agent_name),
+        max_turns,
+        max_chars,
+    );
+    let s = match structured {
+        Ok(s) if !s.trim().is_empty() => s,
+        _ => match dist_agent_lang::stdlib::evolve::load_recent(
+            Some(agent_name),
+            EVOLVE_RECENT_LINES,
+        ) {
+            Ok(s) => s,
+            Err(_) => return Vec::new(),
+        },
+    };
+    if s.trim().is_empty() {
+        return Vec::new();
     }
+    vec![ContextBlock {
+        source: "evolve".to_string(),
+        content: s,
+    }]
 }
 
 /// Heuristic: true if objective looks code-related (P3). Used to optionally include DAL summary.
@@ -552,7 +578,8 @@ struct TaskBody {
     /// RAG: include retrieved doc excerpts; see docs/development/RAG_MVP_SPEC.md.
     #[serde(default)]
     include_rag: Option<bool>,
-    /// When true (prompt-only mode), block until the tool loop finishes and return `result` in the JSON body. Optional `Idempotency-Key` header caches the response.
+    /// When true, block until the tool loop finishes and return `result` in the JSON body (prompt-only
+    /// server, or `dal agent serve --behavior …` — same path when wait is set). Optional `Idempotency-Key` caches the response.
     #[serde(default)]
     wait: Option<bool>,
 }
@@ -594,7 +621,11 @@ async fn handle_task(
                     Json(serde_json::json!({ "error": e })),
                 );
             }
-            if state.prompt_only {
+            // Run the tool loop for /task when in prompt-only mode, OR when the client asks to wait
+            // for a result (e.g. TeamLead `DalHttpAdapter` always sends `wait: true`). Without this,
+            // `dal agent serve --behavior …` left `prompt_only` false and never mapped `description`
+            // into the LLM objective — only enqueued a task and returned `{ ok, task_id }`.
+            if state.prompt_only || body.wait == Some(true) {
                 if body
                     .working_root
                     .as_ref()

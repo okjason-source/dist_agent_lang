@@ -3927,3 +3927,99 @@ Move orchestration/tooling calls to @trust(\"hybrid\") or @trust(\"centralized\"
         }
     }
 }
+
+#[cfg(test)]
+mod parser_sync_and_limit_tests {
+    use super::*;
+    use crate::lexer::tokens::{Keyword, Punctuation, Token};
+
+    #[test]
+    fn skip_to_sync_sets_continue_at_semicolon() {
+        let tokens = vec![
+            Token::Identifier("x".into()),
+            Token::Punctuation(Punctuation::Semicolon),
+            Token::Keyword(Keyword::Let),
+            Token::EOF,
+        ];
+        let mut p = Parser::new(tokens);
+        assert!(p.skip_to_sync_point_from(0));
+        assert_eq!(
+            p.get_recovery_continue_at(),
+            Some(1),
+            "sync point is the semicolon at index 1"
+        );
+    }
+
+    #[test]
+    fn skip_to_sync_sets_continue_at_let_keyword() {
+        let tokens = vec![
+            Token::Identifier("garbage".into()),
+            Token::Keyword(Keyword::Let),
+            Token::EOF,
+        ];
+        let mut p = Parser::new(tokens);
+        assert!(p.skip_to_sync_point_from(0));
+        assert_eq!(p.get_recovery_continue_at(), Some(1));
+    }
+
+    #[test]
+    fn skip_to_sync_start_plus_one_oob_sets_end() {
+        let tokens = vec![Token::EOF];
+        let mut p = Parser::new(tokens);
+        assert!(p.skip_to_sync_point_from(0));
+        assert_eq!(p.get_recovery_continue_at(), Some(1));
+    }
+
+    #[test]
+    fn skip_to_sync_finds_right_brace() {
+        let tokens = vec![
+            Token::Identifier("x".into()),
+            Token::Punctuation(Punctuation::RightBrace),
+            Token::EOF,
+        ];
+        let mut p = Parser::new(tokens);
+        assert!(p.skip_to_sync_point_from(0));
+        assert_eq!(p.get_recovery_continue_at(), Some(1));
+    }
+
+    #[test]
+    fn max_recursion_depth_errors_on_deep_blocks() {
+        let mut s = String::new();
+        for _ in 0..52 {
+            s.push('{');
+        }
+        s.push_str("let x = 1;");
+        for _ in 0..52 {
+            s.push('}');
+        }
+        let tokens = crate::Lexer::new(&s)
+            .tokenize_with_positions_immutable()
+            .expect("tokenize");
+        let mut parser = Parser::new_with_positions(tokens);
+        let err = parser.parse().unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Maximum recursion depth") || msg.contains("recursion"),
+            "expected depth limit error, got: {}",
+            msg
+        );
+    }
+
+    #[test]
+    fn parse_rejects_more_than_max_statements() {
+        let mut src = String::with_capacity(110_000);
+        for _ in 0..100_001 {
+            src.push(';');
+        }
+        let tokens = crate::Lexer::new(&src)
+            .tokenize_with_positions_immutable()
+            .expect("tokenize");
+        let mut parser = Parser::new_with_positions(tokens);
+        let err = parser.parse().unwrap_err();
+        assert!(
+            err.to_string().contains("Too many statements"),
+            "expected statement cap, got: {:?}",
+            err
+        );
+    }
+}

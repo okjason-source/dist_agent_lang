@@ -402,16 +402,29 @@ fn test_fuzz_runtime_slow_unit_a36a588e_no_panic() {
     );
 }
 
+/// Resolve COO server path across old/new repository layouts.
+fn resolve_coo_server_path() -> Option<std::path::PathBuf> {
+    let candidates = [
+        std::path::Path::new("COO/server.dal").to_path_buf(),
+        std::path::Path::new("../COO/server.dal").to_path_buf(),
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("COO/server.dal"),
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../COO/server.dal"),
+    ];
+    candidates.into_iter().find(|p| p.is_file())
+}
+
 /// Server registers all 28 @route handlers (runtime workaround for nested functions).
 #[test]
 fn test_server_registers_all_routes() {
     use dist_agent_lang::execute_dal_and_extract_handlers_with_path;
-    let path = std::path::Path::new("CEO/server.dal");
-    let source = match std::fs::read_to_string(path) {
+    let Some(path) = resolve_coo_server_path() else {
+        return;
+    };
+    let source = match std::fs::read_to_string(&path) {
         Ok(s) => s,
         Err(_) => return,
     };
-    let (user_functions, _, _, _) = match execute_dal_and_extract_handlers_with_path(&source, path)
+    let (user_functions, _, _, _) = match execute_dal_and_extract_handlers_with_path(&source, &path)
     {
         Ok(x) => x,
         Err(e) => panic!("execute failed: {}", e),
@@ -431,10 +444,12 @@ fn test_server_registers_all_routes() {
 #[test]
 fn test_route_attributes_count() {
     use dist_agent_lang::parser::ast::{BlockStatement, Statement};
-    let path = "CEO/server.dal";
-    let source = match std::fs::read_to_string(path) {
+    let Some(path) = resolve_coo_server_path() else {
+        return;
+    };
+    let source = match std::fs::read_to_string(&path) {
         Ok(s) => s,
-        Err(_) => return, // skip if CEO/ app tree not present
+        Err(_) => return, // skip if COO/ app tree not present
     };
     let program = match dist_agent_lang::parse_source(&source) {
         Ok(p) => p,

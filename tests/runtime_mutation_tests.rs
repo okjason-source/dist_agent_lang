@@ -25,11 +25,8 @@ fn test_evaluate_expression_equal_operator() {
 
     assert!(result.is_ok(), "Should execute equality comparison");
 
-    // Check if variable was set
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Bool(b)) = var_result {
-        assert!(b, "x should be true (5 == 5)");
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(var_result, Value::Bool(true), "5 == 5 must be true");
 }
 
 #[test]
@@ -59,11 +56,12 @@ fn test_evaluate_expression_arithmetic_plus() {
 
     assert!(result.is_ok(), "Should execute addition");
 
-    // Verify result is correct (5 + 3 = 8, not 2 or 15)
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Int(val)) = var_result {
-        assert_eq!(val, 8, "5 + 3 should be 8, not 2 (5-3) or 15 (5*3)");
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(
+        var_result,
+        Value::Int(8),
+        "5 + 3 must be 8, not 2 (5-3) or 15 (5*3)"
+    );
 }
 
 #[test]
@@ -79,11 +77,12 @@ fn test_evaluate_expression_arithmetic_minus() {
 
     assert!(result.is_ok(), "Should execute subtraction");
 
-    // Verify result is correct (5 - 3 = 2, not 8 or 15)
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Int(val)) = var_result {
-        assert_eq!(val, 2, "5 - 3 should be 2, not 8 (5+3) or 15 (5*3)");
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(
+        var_result,
+        Value::Int(2),
+        "5 - 3 must be 2, not 8 (5+3) or 15 (5*3)"
+    );
 }
 
 #[test]
@@ -99,11 +98,12 @@ fn test_evaluate_expression_arithmetic_multiply() {
 
     assert!(result.is_ok(), "Should execute multiplication");
 
-    // Verify result is correct (5 * 3 = 15, not 8 or 2)
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Int(val)) = var_result {
-        assert_eq!(val, 15, "5 * 3 should be 15, not 8 (5+3) or 2 (5-3)");
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(
+        var_result,
+        Value::Int(15),
+        "5 * 3 must be 15, not 8 (5+3) or 2 (5-3)"
+    );
 }
 
 #[test]
@@ -119,11 +119,8 @@ fn test_evaluate_expression_comparison_less() {
 
     assert!(result.is_ok(), "Should execute less-than comparison");
 
-    // Verify result (5 < 10 should be true)
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Bool(b)) = var_result {
-        assert!(b, "5 < 10 should be true");
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(var_result, Value::Bool(true), "5 < 10 must be true");
 }
 
 #[test]
@@ -139,11 +136,8 @@ fn test_evaluate_expression_comparison_greater() {
 
     assert!(result.is_ok(), "Should execute greater-than comparison");
 
-    // Verify result (10 > 5 should be true)
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Bool(b)) = var_result {
-        assert!(b, "10 > 5 should be true");
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(var_result, Value::Bool(true), "10 > 5 must be true");
 }
 
 // ============================================================================
@@ -160,7 +154,11 @@ fn test_call_auth_function_has_role_with_array() {
 
     let mut runtime = Runtime::new();
 
-    // Create session struct with array roles directly
+    let now_secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+
     let mut session_fields = HashMap::new();
     session_fields.insert("user_id".to_string(), Value::String("user123".to_string()));
     session_fields.insert(
@@ -177,8 +175,8 @@ fn test_call_auth_function_has_role_with_array() {
             Value::String("write".to_string()),
         ]),
     );
-    session_fields.insert("created_at".to_string(), Value::Int(1000));
-    session_fields.insert("expires_at".to_string(), Value::Int(2000));
+    session_fields.insert("created_at".to_string(), Value::Int(now_secs));
+    session_fields.insert("expires_at".to_string(), Value::Int(now_secs + 3600));
 
     let session_value = Value::Struct("Session".to_string(), session_fields);
 
@@ -193,16 +191,12 @@ fn test_call_auth_function_has_role_with_array() {
 
     let result = runtime.call_function("auth::has_role", &args);
 
-    // Should succeed - if Array match arm is deleted, this will fail with "Invalid session structure"
-    assert!(result.is_ok(), "auth::has_role should succeed with array roles - if Array match arm is deleted, this fails");
-
-    // Verify the result is a boolean (has_role returns bool)
-    // If the match arm is deleted, we'd get an error instead
-    if let Ok(Value::Bool(_)) = result {
-        // Success - function returned a boolean, meaning it processed the array
-    } else {
-        panic!("auth::has_role should return a boolean when roles array is provided");
-    }
+    let val = result.expect("auth::has_role should succeed with array roles — if Array match arm is deleted, this fails");
+    assert_eq!(
+        val,
+        Value::Bool(true),
+        "auth::has_role('admin') must return true when roles contain 'admin'"
+    );
 }
 
 #[test]
@@ -214,7 +208,11 @@ fn test_call_auth_function_has_permission_with_array() {
 
     let mut runtime = Runtime::new();
 
-    // Create session struct with array permissions directly
+    let now_secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+
     let mut session_fields = HashMap::new();
     session_fields.insert("user_id".to_string(), Value::String("user123".to_string()));
     session_fields.insert(
@@ -229,8 +227,8 @@ fn test_call_auth_function_has_permission_with_array() {
             Value::String("delete".to_string()),
         ]),
     );
-    session_fields.insert("created_at".to_string(), Value::Int(1000));
-    session_fields.insert("expires_at".to_string(), Value::Int(2000));
+    session_fields.insert("created_at".to_string(), Value::Int(now_secs));
+    session_fields.insert("expires_at".to_string(), Value::Int(now_secs + 3600));
 
     let session_value = Value::Struct("Session".to_string(), session_fields);
 
@@ -245,16 +243,12 @@ fn test_call_auth_function_has_permission_with_array() {
 
     let result = runtime.call_function("auth::has_permission", &args);
 
-    // Should succeed - if Array match arm is deleted, this will fail with "Invalid session structure"
-    assert!(result.is_ok(), "auth::has_permission should succeed with array permissions - if Array match arm is deleted, this fails");
-
-    // Verify the result is a boolean (has_permission returns bool)
-    // If the match arm is deleted, we'd get an error instead
-    if let Ok(Value::Bool(_)) = result {
-        // Success - function returned a boolean, meaning it processed the array
-    } else {
-        panic!("auth::has_permission should return a boolean when permissions array is provided");
-    }
+    let val = result.expect("auth::has_permission should succeed with array permissions — if Array match arm is deleted, this fails");
+    assert_eq!(
+        val,
+        Value::Bool(true),
+        "auth::has_permission('write') must return true when permissions contain 'write'"
+    );
 }
 
 // ============================================================================
@@ -265,23 +259,19 @@ fn test_call_auth_function_has_permission_with_array() {
 #[test]
 fn test_call_log_function_info_exact_args() {
     // Test log::info with exactly 2 arguments - catches != -> == mutations
-    // If != is mutated to ==, the argument count check will fail
     let code = r#"
         log::info("test", "message");
     "#;
 
-    let tokens = Lexer::new(code).tokenize_immutable();
-    if let Ok(tokens) = tokens {
-        let mut parser = Parser::new(tokens);
-        if let Ok(program) = parser.parse() {
-            let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program, None);
+    let tokens = Lexer::new(code)
+        .tokenize_immutable()
+        .expect("lexer should succeed");
+    let mut parser = Parser::new(tokens);
+    let program = parser.parse().expect("parser should succeed");
+    let mut runtime = Runtime::new();
+    let result = runtime.execute_program(program, None);
 
-            // Should succeed with exactly 2 arguments
-            // If != is mutated to ==, this will fail incorrectly
-            assert!(result.is_ok(), "log::info with 2 args should succeed");
-        }
-    }
+    assert!(result.is_ok(), "log::info with 2 args should succeed");
 }
 
 #[test]
@@ -292,23 +282,18 @@ fn test_call_log_function_info_wrong_args() {
         log::info("test");
     "#;
 
-    let tokens = Lexer::new(code).tokenize_immutable();
-    if let Ok(tokens) = tokens {
-        let mut parser = Parser::new(tokens);
-        if let Ok(program) = parser.parse() {
-            let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program, None);
+    let tokens = Lexer::new(code)
+        .tokenize_immutable()
+        .expect("lexer should succeed");
+    let mut parser = Parser::new(tokens);
+    let program = parser.parse().expect("parser should succeed");
+    let mut runtime = Runtime::new();
+    let result = runtime.execute_program(program, None);
 
-            // Should fail with wrong number of arguments
-            // If != is mutated to ==, this will incorrectly succeed
-            // We can't easily test this without knowing the exact error, but
-            // the mutation will change behavior
-            assert!(
-                result.is_ok() || result.is_err(),
-                "Should handle wrong arg count"
-            );
-        }
-    }
+    assert!(
+        result.is_err(),
+        "log::info with 1 arg should fail — if != mutated to ==, this incorrectly succeeds"
+    );
 }
 
 #[test]
@@ -318,17 +303,15 @@ fn test_call_log_function_audit_exact_args() {
         log::audit("event", "details");
     "#;
 
-    let tokens = Lexer::new(code).tokenize_immutable();
-    if let Ok(tokens) = tokens {
-        let mut parser = Parser::new(tokens);
-        if let Ok(program) = parser.parse() {
-            let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program, None);
+    let tokens = Lexer::new(code)
+        .tokenize_immutable()
+        .expect("lexer should succeed");
+    let mut parser = Parser::new(tokens);
+    let program = parser.parse().expect("parser should succeed");
+    let mut runtime = Runtime::new();
+    let result = runtime.execute_program(program, None);
 
-            // Should succeed with exactly 2 arguments
-            assert!(result.is_ok(), "log::audit with 2 args should succeed");
-        }
-    }
+    assert!(result.is_ok(), "log::audit with 2 args should succeed");
 }
 
 // ============================================================================
@@ -343,17 +326,15 @@ fn test_call_crypto_function_hash() {
         let result = crypto::hash("data", "sha256");
     "#;
 
-    let tokens = Lexer::new(code).tokenize_immutable();
-    if let Ok(tokens) = tokens {
-        let mut parser = Parser::new(tokens);
-        if let Ok(program) = parser.parse() {
-            let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program, None);
+    let tokens = Lexer::new(code)
+        .tokenize_immutable()
+        .expect("lexer should succeed");
+    let mut parser = Parser::new(tokens);
+    let program = parser.parse().expect("parser should succeed");
+    let mut runtime = Runtime::new();
+    let result = runtime.execute_program(program, None);
 
-            // Should succeed - if "hash" match arm is deleted, this will fail
-            assert!(result.is_ok(), "crypto::hash should be callable");
-        }
-    }
+    assert!(result.is_ok(), "crypto::hash should be callable");
 }
 
 #[test]
@@ -363,17 +344,15 @@ fn test_call_crypto_function_sign() {
         let result = crypto::sign("data", "key");
     "#;
 
-    let tokens = Lexer::new(code).tokenize_immutable();
-    if let Ok(tokens) = tokens {
-        let mut parser = Parser::new(tokens);
-        if let Ok(program) = parser.parse() {
-            let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program, None);
+    let tokens = Lexer::new(code)
+        .tokenize_immutable()
+        .expect("lexer should succeed");
+    let mut parser = Parser::new(tokens);
+    let program = parser.parse().expect("parser should succeed");
+    let mut runtime = Runtime::new();
+    let result = runtime.execute_program(program, None);
 
-            // Should succeed - if "sign" match arm is deleted, this will fail
-            assert!(result.is_ok(), "crypto::sign should be callable");
-        }
-    }
+    assert!(result.is_ok(), "crypto::sign should be callable");
 }
 
 #[test]
@@ -383,18 +362,15 @@ fn test_call_crypto_function_verify() {
         let result = crypto::verify("data", "signature", "key");
     "#;
 
-    let tokens = Lexer::new(code).tokenize_immutable();
-    if let Ok(tokens) = tokens {
-        let mut parser = Parser::new(tokens);
-        if let Ok(program) = parser.parse() {
-            let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program, None);
+    let tokens = Lexer::new(code)
+        .tokenize_immutable()
+        .expect("lexer should succeed");
+    let mut parser = Parser::new(tokens);
+    let program = parser.parse().expect("parser should succeed");
+    let mut runtime = Runtime::new();
+    let result = runtime.execute_program(program, None);
 
-            // Should succeed with exactly 3 arguments
-            // If != is mutated to ==, the argument count check will fail
-            assert!(result.is_ok(), "crypto::verify with 3 args should succeed");
-        }
-    }
+    assert!(result.is_ok(), "crypto::verify with 3 args should succeed");
 }
 
 #[test]
@@ -404,21 +380,18 @@ fn test_call_crypto_function_verify_wrong_args() {
         let result = crypto::verify("data", "signature");
     "#;
 
-    let tokens = Lexer::new(code).tokenize_immutable();
-    if let Ok(tokens) = tokens {
-        let mut parser = Parser::new(tokens);
-        if let Ok(program) = parser.parse() {
-            let mut runtime = Runtime::new();
-            let result = runtime.execute_program(program, None);
+    let tokens = Lexer::new(code)
+        .tokenize_immutable()
+        .expect("lexer should succeed");
+    let mut parser = Parser::new(tokens);
+    let program = parser.parse().expect("parser should succeed");
+    let mut runtime = Runtime::new();
+    let result = runtime.execute_program(program, None);
 
-            // Should fail with wrong number of arguments
-            // If != is mutated to ==, this will incorrectly succeed
-            assert!(
-                result.is_ok() || result.is_err(),
-                "Should handle wrong arg count"
-            );
-        }
-    }
+    assert!(
+        result.is_err(),
+        "crypto::verify with 2 args should fail — if != mutated to ==, this incorrectly succeeds"
+    );
 }
 
 // ============================================================================
@@ -439,14 +412,12 @@ fn test_value_addition_exact() {
 
     assert!(result.is_ok(), "Should execute addition");
 
-    // Verify exact result (10 + 20 = 30, not -10 or 200)
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Int(val)) = var_result {
-        assert_eq!(
-            val, 30,
-            "10 + 20 should be 30, not -10 (10-20) or 200 (10*20)"
-        );
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(
+        var_result,
+        Value::Int(30),
+        "10 + 20 must be 30, not -10 (10-20) or 200 (10*20)"
+    );
 }
 
 #[test]
@@ -462,14 +433,12 @@ fn test_value_subtraction_exact() {
 
     assert!(result.is_ok(), "Should execute subtraction");
 
-    // Verify exact result (20 - 10 = 10, not 30 or 200)
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Int(val)) = var_result {
-        assert_eq!(
-            val, 10,
-            "20 - 10 should be 10, not 30 (20+10) or 200 (20*10)"
-        );
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(
+        var_result,
+        Value::Int(10),
+        "20 - 10 must be 10, not 30 (20+10) or 200 (20*10)"
+    );
 }
 
 #[test]
@@ -485,11 +454,12 @@ fn test_value_multiplication_exact() {
 
     assert!(result.is_ok(), "Should execute multiplication");
 
-    // Verify exact result (5 * 4 = 20, not 9 or 1)
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Int(val)) = var_result {
-        assert_eq!(val, 20, "5 * 4 should be 20, not 9 (5+4) or 1 (5-4)");
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(
+        var_result,
+        Value::Int(20),
+        "5 * 4 must be 20, not 9 (5+4) or 1 (5-4)"
+    );
 }
 
 // ============================================================================
@@ -510,11 +480,8 @@ fn test_comparison_less_equal_boundary() {
 
     assert!(result.is_ok(), "Should execute less-equal comparison");
 
-    // Verify result (10 <= 10 should be true)
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Bool(b)) = var_result {
-        assert!(b, "10 <= 10 should be true");
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(var_result, Value::Bool(true), "10 <= 10 must be true");
 }
 
 #[test]
@@ -530,11 +497,8 @@ fn test_comparison_greater_equal_boundary() {
 
     assert!(result.is_ok(), "Should execute greater-equal comparison");
 
-    // Verify result (10 >= 10 should be true)
-    let var_result = runtime.get_variable("x");
-    if let Ok(Value::Bool(b)) = var_result {
-        assert!(b, "10 >= 10 should be true");
-    }
+    let var_result = runtime.get_variable("x").expect("x must be set");
+    assert_eq!(var_result, Value::Bool(true), "10 >= 10 must be true");
 }
 
 // ============================================================================
@@ -739,10 +703,12 @@ fn test_builtin_type_correct() {
     // Test type function with correct arguments - catches != -> == mutations
     let mut runtime = Runtime::new();
     let result = runtime.call_function("type", &[Value::Int(42)]);
-    assert!(result.is_ok(), "type(42) should succeed");
-    if let Ok(Value::String(s)) = result {
-        assert_eq!(s, "int", "type(42) should return \"int\"");
-    }
+    let val = result.expect("type(42) should succeed");
+    assert_eq!(
+        val,
+        Value::String("int".to_string()),
+        "type(42) must return \"int\""
+    );
 }
 
 #[test]
@@ -862,10 +828,12 @@ fn test_builtin_to_string_correct() {
     // Test to_string function - catches != -> == mutations
     let mut runtime = Runtime::new();
     let result = runtime.call_function("to_string", &[Value::Int(42)]);
-    assert!(result.is_ok(), "to_string(42) should succeed");
-    if let Ok(Value::String(s)) = result {
-        assert_eq!(s, "42", "to_string(42) should return \"42\"");
-    }
+    let val = result.expect("to_string(42) should succeed");
+    assert_eq!(
+        val,
+        Value::String("42".to_string()),
+        "to_string(42) must return \"42\""
+    );
 }
 
 #[test]

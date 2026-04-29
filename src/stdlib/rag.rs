@@ -1,4 +1,4 @@
-//! DAL stdlib: lexical RAG prompt augmentation (CEO / `dal serve` apps).
+//! DAL stdlib: lexical RAG prompt augmentation (COO / `dal serve` apps).
 //! See `docs/development/RAG_MVP_SPEC.md` and `crate::rag_retrieval`.
 
 use crate::agent_context_schema::ContextBlock;
@@ -14,7 +14,7 @@ pub fn prompt_block(query: &str, include_rag: Option<bool>) -> String {
 }
 
 /// Full `## Context (retrieved documentation)` block with trailing `---`, or empty when there is nothing to inject.
-/// Used by `workflow::run_steps` and matches CEO `enrich_prompt` / agent RAG wrapping.
+/// Used by `workflow::run_steps` and matches COO `enrich_prompt` / agent RAG wrapping.
 pub fn prompt_section_prefix(query: &str, include_rag: Option<bool>) -> String {
     let inner = prompt_block(query, include_rag);
     if inner.is_empty() {

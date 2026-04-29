@@ -66,6 +66,20 @@ fn unix_epoch_millis_u128() -> u128 {
         .unwrap_or(0)
 }
 
+/// POSIX single-quoted string for `export VAR=...` lines (`dal crypto jwt mint --print-export`).
+fn shell_single_quoted_for_export(s: &str) -> String {
+    let mut out = String::from("'");
+    for c in s.chars() {
+        if c == '\'' {
+            out.push_str("'\"'\"'");
+        } else {
+            out.push(c);
+        }
+    }
+    out.push('\'');
+    out
+}
+
 fn main() {
     dist_agent_lang::observability::init_tracing();
 
@@ -326,12 +340,142 @@ fn main() {
             handle_cross_component_command("invoke", &a, &cli);
         }
         Commands::Ide { subcommand } => handle_ide_command(subcommand),
-        Commands::McpBridge { url } => handle_mcp_bridge_command(url.as_deref()),
+        Commands::McpBridge { url, transport } => {
+            handle_mcp_bridge_command(url.as_deref(), transport.as_deref())
+        }
     }
 }
 
 /// Run the MCP stdio bridge (forwards IDE tools to your agent HTTP API). See `dal mcp-bridge --help`.
-fn handle_mcp_bridge_command(url: Option<&str>) {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum McpBridgeTransport {
+    Stdio,
+    HttpStream,
+}
+
+impl McpBridgeTransport {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Stdio => "stdio",
+            Self::HttpStream => "http-stream",
+        }
+    }
+}
+
+fn resolve_mcp_bridge_transport(raw: Option<&str>) -> Result<McpBridgeTransport, String> {
+    let from_env = std::env::var("DAL_MCP_TRANSPORT").ok();
+    let selected = raw
+        .map(|s| s.trim().to_string())
+        .or(from_env)
+        .unwrap_or_else(|| "stdio".to_string())
+        .to_ascii_lowercase();
+    match selected.as_str() {
+        "stdio" => Ok(McpBridgeTransport::Stdio),
+        "http-stream" | "http_stream" | "httpstream" => Ok(McpBridgeTransport::HttpStream),
+        other => Err(format!(
+            "dal mcp-bridge: unsupported transport `{}`. Use `stdio` or `http-stream` (or set DAL_MCP_TRANSPORT).",
+            other
+        )),
+    }
+}
+
+#[cfg(test)]
+mod mcp_bridge_transport_tests {
+    use super::{resolve_mcp_bridge_transport, McpBridgeTransport};
+    use std::sync::{Mutex, OnceLock};
+
+    fn env_lock() -> &'static Mutex<()> {
+        static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(()))
+    }
+
+    struct EnvGuard {
+        original: Option<String>,
+    }
+
+    impl EnvGuard {
+        fn set(value: Option<&str>) -> Self {
+            let original = std::env::var("DAL_MCP_TRANSPORT").ok();
+            if let Some(v) = value {
+                std::env::set_var("DAL_MCP_TRANSPORT", v);
+            } else {
+                std::env::remove_var("DAL_MCP_TRANSPORT");
+            }
+            Self { original }
+        }
+    }
+
+    impl Drop for EnvGuard {
+        fn drop(&mut self) {
+            if let Some(v) = &self.original {
+                std::env::set_var("DAL_MCP_TRANSPORT", v);
+            } else {
+                std::env::remove_var("DAL_MCP_TRANSPORT");
+            }
+        }
+    }
+
+    #[test]
+    fn defaults_to_stdio_when_unset() {
+        let _lock = env_lock().lock().expect("lock");
+        let _guard = EnvGuard::set(None);
+        let transport = resolve_mcp_bridge_transport(None).expect("transport");
+        assert_eq!(transport, McpBridgeTransport::Stdio);
+    }
+
+    #[test]
+    fn honors_env_when_cli_unset() {
+        let _lock = env_lock().lock().expect("lock");
+        let _guard = EnvGuard::set(Some("http_stream"));
+        let transport = resolve_mcp_bridge_transport(None).expect("transport");
+        assert_eq!(transport, McpBridgeTransport::HttpStream);
+    }
+
+    #[test]
+    fn cli_transport_overrides_env() {
+        let _lock = env_lock().lock().expect("lock");
+        let _guard = EnvGuard::set(Some("stdio"));
+        let transport = resolve_mcp_bridge_transport(Some("http-stream")).expect("transport");
+        assert_eq!(transport, McpBridgeTransport::HttpStream);
+    }
+
+    #[test]
+    fn accepts_http_stream_aliases() {
+        let _lock = env_lock().lock().expect("lock");
+        let _guard = EnvGuard::set(None);
+        assert_eq!(
+            resolve_mcp_bridge_transport(Some("http-stream")).expect("transport"),
+            McpBridgeTransport::HttpStream
+        );
+        assert_eq!(
+            resolve_mcp_bridge_transport(Some("http_stream")).expect("transport"),
+            McpBridgeTransport::HttpStream
+        );
+        assert_eq!(
+            resolve_mcp_bridge_transport(Some("httpstream")).expect("transport"),
+            McpBridgeTransport::HttpStream
+        );
+    }
+
+    #[test]
+    fn rejects_unsupported_transport_values() {
+        let _lock = env_lock().lock().expect("lock");
+        let _guard = EnvGuard::set(None);
+        let err = resolve_mcp_bridge_transport(Some("ws")).expect_err("should fail");
+        assert!(err.contains("unsupported transport"));
+        assert!(err.contains("stdio"));
+        assert!(err.contains("http-stream"));
+    }
+}
+
+fn handle_mcp_bridge_command(url: Option<&str>, transport: Option<&str>) {
+    let transport = match resolve_mcp_bridge_transport(transport) {
+        Ok(t) => t,
+        Err(msg) => {
+            eprintln!("{}", msg);
+            std::process::exit(1);
+        }
+    };
     let script = match find_mcp_bridge_script() {
         Ok(p) => p,
         Err(msg) => {
@@ -363,12 +507,17 @@ fn handle_mcp_bridge_command(url: Option<&str>) {
         .map(String::from)
         .or_else(|| std::env::var("DAL_AGENT_HTTP_BASE").ok())
         .or_else(|| std::env::var("DAL_MCP_HTTP_BASE").ok())
-        .or_else(|| std::env::var("DAL_CEO_BASE_URL").ok())
+        .or_else(|| std::env::var("DAL_COO_BASE_URL").ok())
         .unwrap_or_else(|| "http://127.0.0.1:4040".to_string());
     let base = base.trim_end_matches('/').to_string();
 
-    eprintln!("dal mcp-bridge: MCP (stdio) → {}", base);
-    eprintln!("  Start your agent first, e.g.: dal serve <server.dal> --port 4040");
+    if transport == McpBridgeTransport::HttpStream {
+        eprintln!(
+            "dal mcp-bridge: transport `http-stream` selected; Phase 0 keeps stdio bridge runtime while passing transport metadata for forward compatibility."
+        );
+    }
+    eprintln!("dal mcp-bridge: MCP ({}) → {}", transport.as_str(), base);
+    eprintln!("  Start your agent first, e.g.: dal serve <server.dal> --port <port>");
     eprintln!(
         "  IDE config: command `node`, arg `{}`, cwd `{}`",
         script.display(),
@@ -379,6 +528,7 @@ fn handle_mcp_bridge_command(url: Option<&str>) {
         .current_dir(&mcp_root)
         .arg(&script)
         .env("DAL_AGENT_HTTP_BASE", &base)
+        .env("DAL_MCP_TRANSPORT", transport.as_str())
         .stdin(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .stderr(std::process::Stdio::inherit())
@@ -412,14 +562,13 @@ fn find_mcp_bridge_script() -> Result<std::path::PathBuf, String> {
             path.display()
         ));
     }
-    // Legacy alias (avoid for new configs)
-    if let Ok(p) = std::env::var("DAL_CEO_MCP_SCRIPT") {
+    if let Ok(p) = std::env::var("DAL_COO_MCP_SCRIPT") {
         let path = PathBuf::from(p);
         if path.is_file() {
             return Ok(path);
         }
         return Err(format!(
-            "dal mcp-bridge: DAL_CEO_MCP_SCRIPT is set but file is missing: {}",
+            "dal mcp-bridge: DAL_COO_MCP_SCRIPT is set but file is missing: {}",
             path.display()
         ));
     }
@@ -427,7 +576,7 @@ fn find_mcp_bridge_script() -> Result<std::path::PathBuf, String> {
     if let Ok(cwd) = std::env::current_dir() {
         let mut dir = cwd;
         for _ in 0..12 {
-            let candidate = dir.join("CEO/mcp/src/server.js");
+            let candidate = dir.join("COO/mcp/src/server.js");
             if candidate.is_file() {
                 return Ok(candidate);
             }
@@ -437,20 +586,26 @@ fn find_mcp_bridge_script() -> Result<std::path::PathBuf, String> {
         }
     }
 
-    let compile_time = Path::new(env!("CARGO_MANIFEST_DIR")).join("CEO/mcp/src/server.js");
-    if compile_time.is_file() {
-        return Ok(compile_time);
+    let compile_time_candidates = [
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("COO/mcp/src/server.js"),
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../COO/mcp/src/server.js"),
+    ];
+    for candidate in compile_time_candidates {
+        if candidate.is_file() {
+            return Ok(candidate);
+        }
     }
 
     Err(
         r#"dal mcp-bridge: could not find the MCP bridge script (server.js)
 
-First-time setup (this repo includes an example under CEO/mcp/):
+First-time setup (this repo includes an example under COO/mcp/):
   1. Install Node.js (`node` on PATH).
-  2. cd CEO/mcp && npm install
-  3. Start your agent, e.g.: dal serve CEO/server.dal --port 4040
+  2. cd COO/mcp && npm install  (or: cd ../COO/mcp from dist_agent_lang/)
+  3. Start your agent, e.g.: dal serve COO/server.dal --port 8080
+     (or: dal serve ../COO/server.dal --port 8080 from dist_agent_lang/)
   4. In another terminal: dal mcp-bridge
-     (or configure your IDE: command `node`, script path …/CEO/mcp/src/server.js, cwd …/CEO/mcp)
+     (or configure your IDE: command `node`, script path …/COO/mcp/src/server.js, cwd …/COO/mcp)
 
 If the example lives elsewhere, set:
   export DAL_MCP_BRIDGE_SCRIPT=/absolute/path/to/server.js"#
@@ -950,14 +1105,16 @@ fn infer_routes_from_handlers(
 fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &str) {
     use axum::response::Html;
     use dist_agent_lang::execute_dal_and_extract_handlers_with_path;
-    use dist_agent_lang::http_server_integration::create_router_with_options;
+    use dist_agent_lang::http_server_integration::{
+        apply_standard_http_layers, create_router_with_options, ServeSecurityOptions,
+    };
     use std::sync::Arc;
 
     println!("🪩  Serving DAL handlers from: {}", filename);
     println!("    Port: {}", port);
 
     // Load .env from the entry file's directory so X_API_KEY, OPENAI_API_KEY, etc. are set
-    // when not started via ./start.sh (e.g. IDE run or `dal serve CEO/server.dal`).
+    // when not started via ./start.sh (e.g. IDE run or `dal serve COO/server.dal`).
     // Preserves existing env vars (e.g. from start.sh).
     let entry_path_for_env = std::path::Path::new(filename)
         .canonicalize()
@@ -966,6 +1123,21 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
         let env_path = parent.join(".env");
         if env_path.exists() && dotenvy::from_path(&env_path).is_ok() {
             println!("    Loaded .env from {}", env_path.display());
+        }
+        // Align with ./COO/start.sh: handlers use `get_ui_base()` → DAL_COO_ROOT / DAL_SERVER_ROOT for
+        // scripts (e.g. handoff_report.py) and `.dal/` paths when not launched via start.sh.
+        if std::env::var("DAL_COO_ROOT")
+            .ok()
+            .filter(|s| !s.trim().is_empty())
+            .is_none()
+            && entry_path_for_env
+                .file_name()
+                .and_then(|n| n.to_str())
+                .map(|n| n.eq_ignore_ascii_case("server.dal"))
+                .unwrap_or(false)
+        {
+            std::env::set_var("DAL_COO_ROOT", parent.as_os_str());
+            println!("    DAL_COO_ROOT={} (serve entry parent)", parent.display());
         }
     }
     if std::env::var("X_API_KEY").is_err() {
@@ -1099,53 +1271,8 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
         }
     }
 
-    // Add CORS layer
-    use axum::http::Method;
-    use tower_http::cors::{Any, CorsLayer};
-    let cors = if cors_origin == "*" {
-        CorsLayer::new()
-            .allow_methods([
-                Method::GET,
-                Method::POST,
-                Method::PUT,
-                Method::DELETE,
-                Method::PATCH,
-                Method::OPTIONS,
-            ])
-            .allow_origin(Any)
-            .allow_headers(Any)
-    } else {
-        let origin = cors_origin
-            .parse::<axum::http::HeaderValue>()
-            .unwrap_or_else(|_| {
-                eprintln!(
-                    "⚠️  Invalid --cors-origin '{}', falling back to *",
-                    cors_origin
-                );
-                axum::http::HeaderValue::from_static("*")
-            });
-        CorsLayer::new()
-            .allow_methods([
-                Method::GET,
-                Method::POST,
-                Method::PUT,
-                Method::DELETE,
-                Method::PATCH,
-                Method::OPTIONS,
-            ])
-            .allow_origin(origin)
-            .allow_headers(Any)
-    };
-    use axum::middleware;
-    let app = app
-        .route(
-            "/metrics",
-            axum::routing::get(dist_agent_lang::observability::metrics_http_response),
-        )
-        .layer(middleware::from_fn(
-            dist_agent_lang::observability::http_observability_middleware,
-        ))
-        .layer(cors);
+    let serve_security = ServeSecurityOptions::from_env();
+    let app = apply_standard_http_layers(app, cors_origin, &serve_security);
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
 
@@ -1154,10 +1281,25 @@ fn run_serve(filename: &str, port: u16, frontend: Option<&str>, cors_origin: &st
         println!("    {} {} -> {}", method, path, handler);
     }
     println!("✅ CORS: {}", cors_origin);
-    println!("🌐 API: http://localhost:{}/api", port);
-    if frontend_path.is_some() {
-        println!("🌐 App: http://localhost:{}/", port);
+    println!(
+        "✅ Serve security preset: {}",
+        serve_security.preset.as_str()
+    );
+    if serve_security.enable_auth_middleware {
+        println!("🔐 Auth middleware enabled (JWT_SECRET required)");
     }
+    if dist_agent_lang::http_server_integration::dal_serve_basic_auth_configured() {
+        println!(
+            "🔐 HTTP Basic Auth enabled (DAL_HTTP_USER + DAL_HTTP_PASSWORD_HASH or DAL_HTTP_PASSWORD); brute-force + exempt: see docs/CONFIG.md and COO/.env.example"
+        );
+    }
+    if serve_security.enable_input_validation {
+        println!("🧪 Input validation middleware enabled");
+    }
+    // Always show `/` first — COO and most @route("GET", "/") apps serve the UI there; `--frontend`
+    // is not required. The old order (API line only unless --frontend) nudged people toward `/api`.
+    println!("🌐 Web UI: http://localhost:{}/", port);
+    println!("🌐 API: http://localhost:{}/api/…", port);
     println!("🛑 Press Ctrl+C to stop");
 
     let rt = match tokio::runtime::Runtime::new() {
@@ -4219,9 +4361,191 @@ fn handle_crypto_command(args: &[String]) {
                 }
             }
         }
+        "api-token" => {
+            // One-line strong shared secret for COO DAL_COO_API_TOKEN / wake JSON "token" (not a JWT).
+            let t = crypto::random_hash(HashAlgorithm::SHA256);
+            println!("{}", t);
+        }
+        "bcrypt-hash" | "http-password-hash" | "forge" => {
+            // Stronger default than `bcrypt::DEFAULT_COST` (12): cost is stored in the hash and
+            // `bcrypt::verify` pays it on every Basic-authenticated request — stay ≤14–15 unless traffic is light.
+            let mut rounds: u32 = 13;
+            let mut use_stdin = false;
+            let mut positional: Option<String> = None;
+            let mut i = 1;
+            while i < args.len() {
+                match args[i].as_str() {
+                    "--ember" | "--rounds" => {
+                        if i + 1 >= args.len() {
+                            eprintln!("❌ --ember requires a value (4-31)  [alias: --rounds]");
+                            std::process::exit(1);
+                        }
+                        rounds = args[i + 1].parse().unwrap_or_else(|_| {
+                            eprintln!("❌ --ember value must be an integer");
+                            std::process::exit(1);
+                        });
+                        i += 2;
+                    }
+                    "--hush" | "--stdin" => {
+                        use_stdin = true;
+                        i += 1;
+                    }
+                    other if !other.starts_with('-') => {
+                        if positional.is_some() {
+                            eprintln!("❌ Unexpected extra argument: {}", other);
+                            std::process::exit(1);
+                        }
+                        positional = Some(other.to_string());
+                        i += 1;
+                    }
+                    other => {
+                        eprintln!("❌ Unknown flag: {}", other);
+                        std::process::exit(1);
+                    }
+                }
+            }
+            if !(4..=31).contains(&rounds) {
+                eprintln!("❌ --ember (bcrypt cost) must be between 4 and 31");
+                std::process::exit(1);
+            }
+            if use_stdin && positional.is_some() {
+                eprintln!("❌ Do not use --hush/--stdin together with a positional password");
+                std::process::exit(1);
+            }
+            let password = if use_stdin {
+                eprintln!("Enter password, then press Enter (input may echo in this terminal):");
+                let mut line = String::new();
+                std::io::stdin().read_line(&mut line).unwrap_or_else(|e| {
+                    eprintln!("❌ Failed to read stdin: {}", e);
+                    std::process::exit(1);
+                });
+                line.trim_end_matches('\n')
+                    .trim_end_matches('\r')
+                    .to_string()
+            } else {
+                positional.unwrap_or_else(|| {
+                    eprintln!(
+                        "Usage: {} crypto forge [--ember xx] [--hush] [password]",
+                        binary_name()
+                    );
+                    eprintln!("  Same: {} crypto bcrypt-hash | http-password-hash  (less obvious names: forge)", binary_name());
+                    eprintln!("  Flags: --ember = bcrypt cost (alias --rounds); --hush = read password from stdin (alias --stdin).");
+                    eprintln!("  xx = salty rounds; omit --ember to use the built-in default (stronger than the bcrypt crate default).");
+                    eprintln!("  Higher cost hardens offline attacks but slows verification on each HTTP request with Basic auth.");
+                    eprintln!("  Output is suitable for DAL_HTTP_PASSWORD_HASH.");
+                    eprintln!("  Salt: random per hash (OS RNG), embedded in the bcrypt string — nothing extra to configure.");
+                    eprintln!("  Prefer --hush or a pipe so the password is not stored in shell history.");
+                    std::process::exit(1);
+                })
+            };
+            if password.is_empty() {
+                eprintln!("❌ Password is empty");
+                std::process::exit(1);
+            }
+            // `bcrypt::hash` draws a random 16-byte salt (via getrandom) each time; verify reads it from the hash.
+            match bcrypt::hash(&password, rounds) {
+                Ok(h) => println!("{}", h),
+                Err(e) => {
+                    eprintln!("❌ bcrypt hash failed: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        "jwt" => {
+            use dist_agent_lang::http_server_security::{AuthValidator, JwtConfig};
+            if args.len() < 2 {
+                eprintln!(
+                    "Usage: {} crypto jwt mint [--sub SUB] [--hours HOURS] [--secret SECRET] [--print-export]",
+                    binary_name()
+                );
+                eprintln!("  Mints an HS256 JWT using JWT_SECRET from the environment unless --secret is set.");
+                eprintln!("  Use with HTTP Authorization: Bearer <token> when serve auth middleware is enabled.");
+                eprintln!("  --print-export: shell-safe `export COO_JWT_BEARER=...` line only.");
+                std::process::exit(1);
+            }
+            if args[1] != "mint" {
+                eprintln!(
+                    "❌ Unknown jwt subcommand: {} (only 'mint' is supported)",
+                    args[1]
+                );
+                std::process::exit(1);
+            }
+            let mut sub = "coo".to_string();
+            let mut hours: i64 = 24;
+            let mut secret_override: Option<String> = None;
+            let mut print_export = false;
+            let mut i = 2;
+            while i < args.len() {
+                match args[i].as_str() {
+                    "--print-export" => {
+                        print_export = true;
+                        i += 1;
+                    }
+                    "--sub" => {
+                        if i + 1 >= args.len() {
+                            eprintln!("❌ --sub requires a value");
+                            std::process::exit(1);
+                        }
+                        sub = args[i + 1].clone();
+                        i += 2;
+                    }
+                    "--hours" => {
+                        if i + 1 >= args.len() {
+                            eprintln!("❌ --hours requires a value");
+                            std::process::exit(1);
+                        }
+                        hours = args[i + 1].parse().unwrap_or_else(|_| {
+                            eprintln!("❌ --hours must be an integer");
+                            std::process::exit(1);
+                        });
+                        i += 2;
+                    }
+                    "--secret" => {
+                        if i + 1 >= args.len() {
+                            eprintln!("❌ --secret requires a value");
+                            std::process::exit(1);
+                        }
+                        secret_override = Some(args[i + 1].clone());
+                        i += 2;
+                    }
+                    other => {
+                        eprintln!("❌ Unknown flag: {}", other);
+                        std::process::exit(1);
+                    }
+                }
+            }
+            let secret = secret_override
+                .or_else(|| std::env::var("JWT_SECRET").ok())
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| {
+                    eprintln!(
+                        "❌ Set JWT_SECRET in the environment or pass --secret (same value as serve will use)."
+                    );
+                    std::process::exit(1);
+                });
+            let validator = AuthValidator::new(JwtConfig::new(secret).with_expiration(hours));
+            match validator.generate_token(sub, vec![], vec![]) {
+                Ok(token) => {
+                    if print_export {
+                        println!(
+                            "export COO_JWT_BEARER={}",
+                            shell_single_quoted_for_export(&token)
+                        );
+                    } else {
+                        println!("{}", token);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("❌ {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
         _ => {
             eprintln!("❌ Unknown crypto subcommand: {}", args[0]);
-            eprintln!("Available: hash, keygen, sign, verify, encrypt, decrypt, aes-encrypt, aes-decrypt, random-hash");
+            eprintln!(
+                "Available: hash, keygen, sign, verify, encrypt, decrypt, aes-encrypt, aes-decrypt, random-hash, api-token, forge (bcrypt-hash), jwt"
+            );
             std::process::exit(1);
         }
     }

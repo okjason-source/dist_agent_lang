@@ -10,6 +10,7 @@
     "blockchain",
     "distributed-systems",
     "smart-contracts",
+    "skills-package",
     "cross-chain",
     "compiler",
     "runtime"
@@ -22,7 +23,7 @@
     "type": "git",
     "url": "https://github.com/okjason-source/dist_agent_lang.git"
   },
-  "homepage": "https://distagentlang.com",
+  "homepage": "https://dist-agent-lang.org",
   "bugs": {
     "url": "https://github.com/okjason-source/dist_agent_lang/issues"
   },

@@ -1,0 +1,108 @@
+// Internal ops copilot vs. customer tenant agents — same language, different trust blast radius
+// Run: dal run examples/internal_ops_vs_tenant_agents.dal
+//
+// Pattern (see docs / reasoning about @trust):
+// - InternalOpsCopilot: @trust("centralized") — platform NOC / runbooks (admin + cloudadmin + web + ai + chain).
+// - CustomerTenantAgent: @trust("hybrid") with @web @ai @chain only — typical SaaS tenant agent (no admin).
+// - TenantChainAnchor: @trust("decentralized") — parse-time rule: no web/ai/agent in body; chain-only
+//   deterministic hook (e.g. attestation window) for the strictest tenant slice.
+//
+// Note: @trust(...) requires @chain(...) on each service (parser security rule).
+
+// ---------------------------------------------------------------------------
+// Elevated: platform NOC / runbooks — centralized trust (full platform blast radius)
+// ---------------------------------------------------------------------------
+@trust("centralized")
+@web
+@ai
+@chain("ethereum")
+service InternalOpsCopilot {
+    fn run_noc_playbook() {
+        print("InternalOpsCopilot: running elevated incident playbook (mock stdlib)");
+
+        let worker = agent::spawn({
+            "name": "NocRunner",
+            "type": "worker",
+            "role": "incident_automation",
+            "capabilities": ["task_execution", "automation"]
+        });
+        let coord = agent::coordinate(worker, "drain_queue:incident-4411", "task_distribution");
+        print("  agent coordination: " + coord);
+
+        let procs = admin::list_processes();
+        print("  admin::list_processes (elevated visibility) -> count " + procs.length());
+        print("  cloudadmin::authorize -> " + cloudadmin::authorize("platform_noc", "restart", "job_runner"));
+        print("  web::create_server -> " + web::create_server(9090));
+        print("  ai::spawn_agent -> " + ai::spawn_agent({ "name": "summarize_incident_thread", "role": "noc" }));
+        print("  chain::deploy -> " + chain::deploy(1, "PostMortemLog", {}));
+
+        log::info("internal_ops", "NOC playbook finished (centralized trust).");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Restricted: customer-facing agent — hybrid without @admin / @cloudadmin
+// ---------------------------------------------------------------------------
+@trust("hybrid")
+@web
+@ai
+@chain("ethereum")
+service CustomerTenantAgent {
+    fn handle_customer_ticket() {
+        print("CustomerTenantAgent: tenant-safe path (web + ai + chain + agent only)");
+
+        let aide = agent::spawn({
+            "name": "TicketTriage",
+            "type": "worker",
+            "role": "customer_support",
+            "capabilities": ["task_execution", "data_processing", "automation"]
+        });
+        print("  agent::coordinate -> " + agent::coordinate(aide, "lookup_order_and_draft_reply", "task_distribution"));
+        print("  web::create_server -> " + web::create_server(8080));
+        print("  ai::spawn_agent -> " + ai::spawn_agent({ "name": "tenant_scoped_assistant", "role": "support" }));
+        print("  chain::deploy -> " + chain::deploy(1, "TenantEscrowStub", {}));
+
+        log::info("customer_tenant", "Ticket flow complete under hybrid caps (no admin).");
+    }
+
+    fn demonstrate_admin_blocked() {
+        print("CustomerTenantAgent: attempting admin::kill (must fail under hybrid without @admin)");
+        // Parser treats `catch (Foo bar)` as type + variable; a single `catch (err)` binds only a type.
+        try {
+            let bad = admin::kill("some_process", "should_not_run");
+            print("  UNEXPECTED: admin call succeeded: " + bad);
+        } catch (Error e) {
+            print("  Expected failure caught: " + e);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Strictest: decentralized service may not call web/ai/agent (parser-enforced).
+// Use for deterministic chain-side logic only (e.g. anchor read / commitment window).
+// ---------------------------------------------------------------------------
+@trust("decentralized")
+@chain("ethereum")
+service TenantChainAnchor {
+    fn anchor_clock() -> int {
+        let ts = chain::get_block_timestamp(1);
+        log::info("tenant_anchor", { "chain_timestamp": ts });
+        print("TenantChainAnchor: chain::get_block_timestamp only (decentralized body)");
+        return ts;
+    }
+}
+
+// Use Service::method() on the registered template (same pattern as test-trust-validation.dal)
+// so the runtime sets the correct @trust context for each call.
+
+print("=== Internal ops copilot (centralized; elevated blast radius) ===");
+InternalOpsCopilot::run_noc_playbook();
+
+print("");
+print("=== Customer tenant agent (hybrid; @web @ai @chain; no admin) ===");
+CustomerTenantAgent::handle_customer_ticket();
+CustomerTenantAgent::demonstrate_admin_blocked();
+
+print("");
+print("=== Tenant chain anchor (decentralized; chain-only deterministic slice) ===");
+TenantChainAnchor::anchor_clock();

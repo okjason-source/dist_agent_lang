@@ -76,6 +76,11 @@ jobs:
         toolchain: stable
         override: true
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
     - name: Cache dependencies
       uses: actions/cache@v3
       with:
@@ -92,6 +97,77 @@ jobs:
 
     - name: Run tests with optional features
       run: cargo test --features "http-interface,web3,sqlite-storage,c-ffi" --verbose
+
+  streaming-gates:
+    name: Streaming Reliability Gates
+    runs-on: ubuntu-latest
+    needs: [check]
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Fix CA cert path for Cargo/curl
+      run: |
+        sudo mkdir -p /usr/local/etc/ca-certificates
+        sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/etc/ca-certificates/cert.pem
+        sudo update-ca-certificates
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Run SSE integration suite
+      run: cargo test --test ide_sse_phase0_tests --verbose
+
+    - name: Run MCP bridge transport parity suite
+      run: cargo test mcp_bridge_transport_tests --bin dal --verbose
+
+    - name: Enforce schema drift guard is present and executable
+      run: |
+        set -o pipefail
+        cargo test --test ide_sse_phase0_tests sse_envelope_schema_drift_guard_for_run_and_activity_streams -- --exact --nocapture 2>&1 | tee /tmp/sse-schema-guard.log
+        rg "running 1 test" /tmp/sse-schema-guard.log
+
+    - name: Run SSE policy stability matrix
+      run: scripts/policy/check_sse_policy_matrix.sh
+
+    - name: Install MCP bridge dependencies
+      run: |
+        if [ -d "COO/mcp" ]; then
+          cd COO/mcp
+        elif [ -d "../COO/mcp" ]; then
+          cd ../COO/mcp
+        else
+          echo "Missing COO/mcp (checked COO/mcp and ../COO/mcp)" >&2
+          exit 1
+        fi
+        npm ci
+
+    - name: Run MCP http-stream lifecycle integration tests
+      run: |
+        if [ -d "COO/mcp" ]; then
+          cd COO/mcp
+        elif [ -d "../COO/mcp" ]; then
+          cd ../COO/mcp
+        else
+          echo "Missing COO/mcp (checked COO/mcp and ../COO/mcp)" >&2
+          exit 1
+        fi
+        npm test
 
   trust-split-fast:
     name: Trust Split Fast Gate

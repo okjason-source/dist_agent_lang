@@ -4,7 +4,7 @@
 # Version from Cargo.toml (single source of truth)
 VERSION := $(shell grep '^version' Cargo.toml | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/')
 
-.PHONY: help build test clean install uninstall fmt clippy bench docs docs-bundle package release
+.PHONY: help build test clean install install-dal-sync uninstall fmt clippy bench docs docs-bundle package release
 
 # Default target
 help: ## Show this help message
@@ -61,6 +61,10 @@ docs-build: ## Build documentation without opening
 # Installation targets
 install: build-release ## Install dist_agent_lang
 	cargo install --path .
+
+# One command: refresh target/release/dal and ~/.cargo/bin/dal (optional /usr/local: make install-dal-sync USR_LOCAL=1)
+install-dal-sync: ## Build release dal + cargo install --bin dal; add USR_LOCAL=1 for /usr/local/bin link
+	@if [ "$(USR_LOCAL)" = "1" ]; then SYNC_DAL_USR_LOCAL=1 ./scripts/sync-all-dal.sh; else ./scripts/sync-all-dal.sh; fi
 
 install-local: build-release ## Install to local bin directory
 	@mkdir -p ~/.local/bin

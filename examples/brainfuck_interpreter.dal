@@ -20,7 +20,7 @@
 
 fn bf_run(program: list<string>, input: list<int>) -> list<int> {
     let tape = [];
-    for _i in 0..300 {
+    for _ in 0..300 {
         tape.push(0);
     }
 
@@ -164,7 +164,7 @@ print("[cell wrapping (mod 256)]");
 // Test 6: Increment wraps 255 → 0
 // 256 increments should wrap back to 0
 let prog6 = [];
-for _i in 0..256 {
+for _ in 0..256 {
     prog6.push("+");
 }
 prog6.push(".");

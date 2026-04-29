@@ -4,17 +4,19 @@
 fn main() {
     let cwd = std::env::current_dir().expect("cwd");
     let mut roots: Vec<std::path::PathBuf> = Vec::new();
-    let docs = cwd.join("docs");
-    if docs.is_dir() {
-        roots.push(docs);
-    }
-    let ceo_docs = cwd.join("CEO/docs");
-    if ceo_docs.is_dir() {
-        roots.push(ceo_docs);
+    let doc_candidates = [
+        cwd.join("docs"),
+        cwd.join("COO/docs"),
+        cwd.join("../COO/docs"),
+    ];
+    for candidate in doc_candidates {
+        if candidate.is_dir() && !roots.contains(&candidate) {
+            roots.push(candidate);
+        }
     }
     if roots.is_empty() {
         eprintln!(
-            "rag-index: no docs/ or CEO/docs/ found from {}",
+            "rag-index: no docs/ or COO/docs/ (or ../COO/docs) found from {}",
             cwd.display()
         );
         std::process::exit(1);

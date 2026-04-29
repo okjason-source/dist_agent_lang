@@ -435,4 +435,199 @@ mod tests {
         let out = rag_context_blocks_for_query("alpha", Some(false));
         assert!(out.is_empty(), "include_rag=false must bypass RAG: {out:?}");
     }
+
+    fn count_path_headers(content: &str) -> usize {
+        content
+            .lines()
+            .filter(|l| l.starts_with('[') && l.contains(']'))
+            .count()
+    }
+
+    #[test]
+    fn rag_context_respects_dal_rag_top_k_cap() {
+        let _lock = RAG_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = tempfile::tempdir().unwrap();
+        let idx = dir.path().join("chunks.jsonl");
+        let mut f = std::fs::File::create(&idx).unwrap();
+        for i in 0..4 {
+            let line = serde_json::to_string(&RagChunk {
+                id: format!("id{i}"),
+                path: format!("docs/p{i}.md"),
+                start_line: None,
+                text: "sharedkw sharedkw sharedkw extra words here".into(),
+            })
+            .unwrap();
+            f.write_all(line.as_bytes()).unwrap();
+            f.write_all(b"\n").unwrap();
+        }
+        std::env::set_var(
+            "DAL_RAG_INDEX_DIR",
+            dir.path().to_string_lossy().to_string(),
+        );
+        std::env::set_var("DAL_RAG_TOP_K", "2");
+        let blocks = rag_context_blocks_for_query("sharedkw", Some(true));
+        assert_eq!(blocks.len(), 1);
+        let n = count_path_headers(&blocks[0].content);
+        assert_eq!(
+            n, 2,
+            "TOP_K=2 must pick two chunks, not {}",
+            blocks[0].content
+        );
+
+        std::env::set_var("DAL_RAG_TOP_K", "4");
+        let blocks4 = rag_context_blocks_for_query("sharedkw", Some(true));
+        assert_eq!(count_path_headers(&blocks4[0].content), 4);
+    }
+
+    #[test]
+    fn load_chunks_cache_hit_survives_index_file_replace() {
+        let _lock = RAG_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = tempfile::tempdir().unwrap();
+        let idx = dir.path().join("chunks.jsonl");
+        {
+            let mut f = std::fs::File::create(&idx).unwrap();
+            let line = serde_json::to_string(&RagChunk {
+                id: "v1".into(),
+                path: "docs/old.md".into(),
+                start_line: None,
+                text: "keepme_stable_token_xyz".into(),
+            })
+            .unwrap();
+            f.write_all(line.as_bytes()).unwrap();
+            f.write_all(b"\n").unwrap();
+        }
+        std::env::set_var(
+            "DAL_RAG_INDEX_DIR",
+            dir.path().to_string_lossy().to_string(),
+        );
+        std::env::set_var("DAL_RAG_TOP_K", "5");
+
+        let first = rag_context_blocks_for_query("keepme_stable_token_xyz", Some(true));
+        assert_eq!(first.len(), 1);
+        assert!(first[0].content.contains("keepme_stable_token_xyz"));
+
+        let mut f = std::fs::File::create(&idx).unwrap();
+        let line = serde_json::to_string(&RagChunk {
+            id: "v2".into(),
+            path: "docs/new.md".into(),
+            start_line: None,
+            text: "only_new_world".into(),
+        })
+        .unwrap();
+        f.write_all(line.as_bytes()).unwrap();
+        f.write_all(b"\n").unwrap();
+
+        let second = rag_context_blocks_for_query("keepme_stable_token_xyz", Some(true));
+        assert_eq!(second.len(), 1);
+        assert!(
+            second[0].content.contains("keepme_stable_token_xyz"),
+            "cached chunks must still serve first index after disk replace: {:?}",
+            second[0].content
+        );
+        assert!(
+            !second[0].content.contains("only_new_world"),
+            "must not reload from disk while cache key matches"
+        );
+    }
+
+    #[test]
+    fn collect_markdown_files_skips_target_and_vcs_dirs() {
+        let _lock = RAG_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        std::fs::write(root.join("keep.md"), "# ok").unwrap();
+        std::fs::create_dir_all(root.join("target")).unwrap();
+        std::fs::write(root.join("target").join("hide.md"), "# no").unwrap();
+        std::fs::create_dir_all(root.join("node_modules").join("pkg")).unwrap();
+        std::fs::write(root.join("node_modules").join("pkg").join("x.md"), "# no").unwrap();
+        std::fs::create_dir_all(root.join(".git").join("hooks")).unwrap();
+        std::fs::write(root.join(".git").join("hooks").join("y.md"), "# no").unwrap();
+        std::fs::create_dir_all(root.join("mutants.out")).unwrap();
+        std::fs::write(root.join("mutants.out").join("z.md"), "# no").unwrap();
+
+        let mut out = Vec::new();
+        collect_markdown_files(root, &mut out).unwrap();
+        assert_eq!(out.len(), 1);
+        assert!(out[0].ends_with("keep.md"));
+    }
+
+    #[test]
+    fn collect_markdown_files_non_dir_root_is_noop() {
+        let _lock = RAG_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("notadir.md");
+        std::fs::write(&file, "# x").unwrap();
+        let mut out = vec![PathBuf::from("/should/not/appear")];
+        collect_markdown_files(&file, &mut out).unwrap();
+        assert_eq!(out.len(), 1);
+        assert!(out[0].to_string_lossy().contains("should"));
+    }
+
+    #[test]
+    fn chunk_markdown_text_splits_long_input() {
+        let _lock = RAG_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let body = "word ".repeat(800);
+        let chunks = chunk_markdown_text("long.md", &body, "pfx");
+        assert!(
+            chunks.len() >= 2,
+            "3500+ chars should yield multiple chunks, got {}",
+            chunks.len()
+        );
+        assert!(chunks.iter().all(|c| c.text.len() <= 3000));
+        assert!(chunks[0].id.contains("long.md"));
+    }
+
+    #[test]
+    fn write_index_returns_file_and_chunk_counts() {
+        let _lock = RAG_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = tempfile::tempdir().unwrap();
+        let docs = dir.path().join("docroot");
+        std::fs::create_dir_all(&docs).unwrap();
+        std::fs::write(docs.join("a.md"), "# A\nhello").unwrap();
+        std::fs::write(docs.join("b.md"), "# B\nworld").unwrap();
+        let out_dir = dir.path().join("idx");
+        let (n_files, n_chunks) = write_index(&[docs.clone()], &out_dir).unwrap();
+        assert_eq!(n_files, 2);
+        assert!(
+            n_chunks >= 2,
+            "two non-empty files must produce at least two chunks, got {}",
+            n_chunks
+        );
+        assert!(out_dir.join("chunks.jsonl").exists());
+        assert!(out_dir.join("manifest.json").exists());
+        let raw = std::fs::read_to_string(out_dir.join("chunks.jsonl")).unwrap();
+        assert_eq!(raw.lines().filter(|l| !l.is_empty()).count(), n_chunks);
+    }
+
+    #[test]
+    fn top_k_env_invalid_falls_back_to_default_max_five() {
+        let _lock = RAG_TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = tempfile::tempdir().unwrap();
+        let idx = dir.path().join("chunks.jsonl");
+        let mut f = std::fs::File::create(&idx).unwrap();
+        for i in 0..6 {
+            let line = serde_json::to_string(&RagChunk {
+                id: format!("id{i}"),
+                path: format!("q{i}.md"),
+                start_line: None,
+                text: "uniqmarker uniqmarker phrase".into(),
+            })
+            .unwrap();
+            f.write_all(line.as_bytes()).unwrap();
+            f.write_all(b"\n").unwrap();
+        }
+        std::env::set_var(
+            "DAL_RAG_INDEX_DIR",
+            dir.path().to_string_lossy().to_string(),
+        );
+        std::env::set_var("DAL_RAG_TOP_K", "99");
+        let blocks = rag_context_blocks_for_query("uniqmarker", Some(true));
+        assert_eq!(blocks.len(), 1);
+        let n = count_path_headers(&blocks[0].content);
+        assert_eq!(
+            n, 5,
+            "TOP_K>50 must clamp via filter to default behavior (max 5 picks): {}",
+            blocks[0].content
+        );
+    }
 }

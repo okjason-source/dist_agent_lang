@@ -11,7 +11,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Builder
 # -----------------------------------------------------------------------------
-FROM rust:1-bookworm-slim AS builder
+FROM rust:slim-bookworm AS builder
 
 # Build-time: enable HTTP interface, Web3/EVM, SQLite (for AI agents + chain + tx persistence)
 ARG FEATURES=http-interface,web3,sqlite-storage
@@ -28,6 +28,7 @@ WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY src/ ./src/
 COPY examples/ ./examples/
+COPY benches/ ./benches/
 
 RUN cargo build --release --no-default-features --features "$FEATURES"
 

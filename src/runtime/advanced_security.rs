@@ -916,6 +916,8 @@ impl Default for FormalVerificationManager {
 mod tests {
     use super::*;
 
+    const DELAY_WINDOW_SECS: u64 = 300;
+
     #[test]
     fn test_mev_protection_commit_reveal() {
         let mut mev_manager = MEVProtectionManager::new();
@@ -929,6 +931,133 @@ mod tests {
 
         assert!(result.is_ok());
         assert_eq!(mev_manager.transaction_pool.len(), 1);
+    }
+
+    /// Catches: submit_time_delayed_transaction mutants (early `Ok(())`, wrong `+`/`-`/`*` on `timestamp`)
+    #[test]
+    fn test_time_delay_transaction_schedules_future_timestamp() {
+        let mut mev = MEVProtectionManager::new();
+        let t0 = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        mev.submit_protected_transaction(
+            "alice".to_string(),
+            "call".to_string(),
+            vec![],
+            MEVProtectionType::TimeDelay,
+        )
+        .expect("time-delay submit");
+        let tx = mev.transaction_pool.back().expect("pending entry");
+        assert!(
+            tx.id.starts_with("tx_alice_"),
+            "id format is tx_<sender>_<u128 ns>"
+        );
+        assert_eq!(tx.sender, "alice");
+        // Must schedule in the 5-minute MEV window (not the past, not unmodified `now`)
+        assert!(tx.timestamp >= t0.saturating_add(DELAY_WINDOW_SECS));
+    }
+
+    /// Catches: fair batch trigger on `len >= batch_size` and that `process_fair_batch` returns the popped IDs
+    #[test]
+    fn test_fair_batch_flushes_at_batch_size_and_return_matches_pool() {
+        let mut mev = MEVProtectionManager::new();
+        mev.fair_ordering.batch_size = 2;
+        for i in 0..2 {
+            mev.submit_fair_batch_transaction(
+                format!("id{}", i),
+                "s".to_string(),
+                "f".to_string(),
+                vec![],
+            )
+            .expect("batch submit");
+        }
+        assert!(
+            mev.transaction_pool.is_empty(),
+            "full batch should be processed and removed"
+        );
+        // Load pool again: process manually and assert return value content
+        mev.submit_fair_batch_transaction(
+            "a".to_string(),
+            "s".to_string(),
+            "f".to_string(),
+            vec![],
+        )
+        .ok();
+        mev.submit_fair_batch_transaction(
+            "b".to_string(),
+            "s".to_string(),
+            "f".to_string(),
+            vec![],
+        )
+        .ok();
+        // Pool empty after auto-process; re-seed for explicit process_fair_batch
+        for id in &["p1", "p2"] {
+            mev.transaction_pool.push_back(PendingTransaction {
+                id: (*id).to_string(),
+                sender: "s".to_string(),
+                function_call: "f".to_string(),
+                args: vec![],
+                commitment: None,
+                reveal_data: None,
+                timestamp: 0,
+                priority_fee: 0,
+                max_fee: 0,
+            });
+        }
+        let out = mev.process_fair_batch().expect("process batch");
+        assert_eq!(
+            out,
+            vec!["p1", "p2"],
+            "returned IDs must match popped batch"
+        );
+    }
+
+    #[test]
+    fn test_commitment_hash_is_sha256_like_and_data_dependent() {
+        let mev = MEVProtectionManager::new();
+        let a = mev.generate_commitment_hash(b"ab", 1u128);
+        let b = mev.generate_commitment_hash(b"ab", 2u128);
+        assert_eq!(a.len(), 64);
+        assert!(!a.is_empty() && a != b);
+    }
+
+    #[test]
+    fn test_serialize_transaction_data_round_trip_len() {
+        let mev = MEVProtectionManager::new();
+        let v: Vec<u8> = mev.serialize_transaction_data("x", &[Value::Int(3)]);
+        assert!(!v.is_empty());
+        let w = mev.serialize_transaction_data("y", &[Value::Int(3)]);
+        assert_ne!(v, w);
+    }
+
+    /// Catches: `analyze_transaction` bool / operator mutants
+    #[test]
+    fn test_mev_analyze_blocks_raw_attack_substrings() {
+        let mut m = MEVProtectionManager::new();
+        m.analyze_transaction("unrelated code sandwich attack")
+            .expect_err("execution-like sandwich reference must be rejected");
+    }
+
+    #[test]
+    fn test_mev_analyze_allows_monitoring_sandwich_keyword() {
+        let mut m = MEVProtectionManager::new();
+        m.analyze_transaction("fn get_price() { return sandwich_spread; }")
+            .expect("monitoring + keyword should not error");
+    }
+
+    #[test]
+    fn test_mev_analyze_allows_protected_sandwich() {
+        let mut m = MEVProtectionManager::new();
+        m.analyze_transaction("commit_reveal sandwich MEV on curve")
+            .expect("with protection context");
+    }
+
+    #[test]
+    fn test_mev_analyze_blocks_urgent_when_not_monitoring() {
+        let mut m = MEVProtectionManager::new();
+        m.analyze_transaction("send urgent frontrun MEV with priority high")
+            .expect_err("urgent without monitoring is flagged");
     }
 
     #[test]
@@ -957,6 +1086,96 @@ mod tests {
         assert!(result.is_ok());
     }
 
+    /// Catches: `create_time_lock` delay range checks (`<`, `>`, `||`/`&&`)
+    #[test]
+    fn test_time_lock_rejects_delay_outside_bounds() {
+        let mut t = TimeLockManager::new();
+        t.add_config(
+            "op".to_string(),
+            TimeLockConfig {
+                min_delay: 10,
+                max_delay: 100,
+                required_approvers: vec![],
+                min_approvals: 0,
+                emergency_guardian: None,
+                can_cancel: false,
+            },
+        );
+        assert!(t
+            .create_time_lock("op".to_string(), vec![], "c".to_string(), 5, vec![])
+            .is_err());
+    }
+
+    /// Catches: approve/execute state checks (early `Ok`, wrong `!`, `&&` vs `||`)
+    #[test]
+    fn test_time_lock_execute_after_unlock_with_approvals() {
+        let mut t = TimeLockManager::new();
+        t.add_config(
+            "t".to_string(),
+            TimeLockConfig {
+                min_delay: 0,
+                max_delay: 1_000_000,
+                required_approvers: vec!["a1".to_string()],
+                min_approvals: 1,
+                emergency_guardian: None,
+                can_cancel: false,
+            },
+        );
+        let op = t
+            .create_time_lock(
+                "t".to_string(),
+                b"data".to_vec(),
+                "c".to_string(),
+                0,
+                vec!["a1".to_string()],
+            )
+            .expect("op");
+        t.approve_operation(&op, "a1").expect("approve");
+        let out = t.execute_operation(&op, "c").expect("execute");
+        assert_eq!(out, b"data");
+        assert!(t
+            .execute_operation(&op, "c")
+            .expect_err("re-execute should fail")
+            .to_string()
+            .to_lowercase()
+            .contains("already"));
+    }
+
+    /// Catches: `check_lock` active lock and time comparison
+    #[test]
+    fn test_time_lock_check_lock_finds_typed_key() {
+        let mut t = TimeLockManager::new();
+        t.add_config(
+            "upgrade".to_string(),
+            TimeLockConfig {
+                min_delay: 0,
+                max_delay: 1,
+                required_approvers: vec![],
+                min_approvals: 0,
+                emergency_guardian: None,
+                can_cancel: false,
+            },
+        );
+        let k = "upgrade:my_upgrade";
+        t.locked_operations.insert(
+            k.to_string(),
+            TimeLockOperation {
+                operation_id: "x".to_string(),
+                operation_type: "upgrade".to_string(),
+                data: vec![],
+                creator: "c".to_string(),
+                created_at: 0,
+                unlock_time: u64::MAX,
+                executed: false,
+                cancelled: false,
+                required_approvals: vec![],
+                current_approvals: vec![],
+            },
+        );
+        // `lock_key` is "upgrade:<name>"; name must include "upgrade" so the config key matches
+        assert!(t.check_lock("my_upgrade").is_err());
+    }
+
     #[test]
     fn test_formal_verification() {
         let mut verifier = FormalVerificationManager::new();
@@ -982,7 +1201,104 @@ mod tests {
 
         let result = verifier.verify_contract("TestContract", "contract code here");
         assert!(result.is_ok());
-        assert!(result.unwrap().passed);
+        assert!(result.as_ref().unwrap().passed);
+        let stored = verifier
+            .get_verification_result("TestContract")
+            .expect("result cached");
+        assert!(stored.passed);
+    }
+
+    /// Catches: `check_invariant` return mutants, `!` in verify loop
+    #[test]
+    fn test_formal_verification_fails_false_invariant() {
+        let mut v = FormalVerificationManager::new();
+        v.add_specification(ContractSpecification {
+            contract_name: "C".to_string(),
+            invariants: vec![Invariant {
+                name: "bad".to_string(),
+                condition: "false".to_string(),
+                description: "d".to_string(),
+            }],
+            preconditions: vec![],
+            postconditions: vec![],
+            safety_properties: vec![],
+            liveness_properties: vec![],
+        });
+        let r = v.verify_contract("C", "code").expect("verify");
+        assert!(!r.passed, "invariant with literal 'false' must not pass");
+    }
+
+    /// Catches: `check_safety_property` stub mutants
+    #[test]
+    fn test_formal_safety_fails_unsafe() {
+        let mut v = FormalVerificationManager::new();
+        v.add_specification(ContractSpecification {
+            contract_name: "S".to_string(),
+            invariants: vec![],
+            preconditions: vec![],
+            postconditions: vec![],
+            safety_properties: vec![SafetyProperty {
+                name: "n".to_string(),
+                property: "unsafe use".to_string(),
+                violation_consequence: "x".to_string(),
+            }],
+            liveness_properties: vec![],
+        });
+        let r = v.verify_contract("S", "x").unwrap();
+        assert!(!r.passed);
+    }
+
+    /// Catches: `check_liveness_property` stub mutants
+    #[test]
+    fn test_formal_liveness_warns_on_deadlock_property() {
+        let mut v = FormalVerificationManager::new();
+        v.add_specification(ContractSpecification {
+            contract_name: "L".to_string(),
+            invariants: vec![],
+            preconditions: vec![],
+            postconditions: vec![],
+            safety_properties: vec![],
+            liveness_properties: vec![LivenessProperty {
+                name: "l".to_string(),
+                property: "deadlock risk".to_string(),
+                timeout: None,
+            }],
+        });
+        let r = v.verify_contract("L", "x").unwrap();
+        assert!(!r.warnings.is_empty());
+    }
+
+    /// Catches: `get_verification_result` returning `None`, `generate_proof` find/property match
+    #[test]
+    fn test_formal_proof_and_cache() {
+        let mut v = FormalVerificationManager::new();
+        v.add_specification(ContractSpecification {
+            contract_name: "P".to_string(),
+            invariants: vec![Invariant {
+                name: "inv1".to_string(),
+                condition: "true".to_string(),
+                description: "d".to_string(),
+            }],
+            preconditions: vec![],
+            postconditions: vec![],
+            safety_properties: vec![],
+            liveness_properties: vec![],
+        });
+        v.verify_contract("P", "x").ok();
+        assert!(v.get_verification_result("P").is_some());
+        let proof = v.generate_proof("P", "inv1").expect("proof");
+        assert_eq!(proof.property_name, "inv1");
+        v.generate_proof("P", "missing")
+            .expect_err("unknown property");
+    }
+
+    /// Catches: `AdvancedSecurityManager` delegating (not `Ok(())` stubs)
+    #[test]
+    fn test_advanced_security_mev_delegation_errors() {
+        let mut a = AdvancedSecurityManager::new();
+        a.mev_protection
+            .analyze_transaction("arbitrage bot")
+            .expect_err("delegate must surface MEV");
     }
 }
 

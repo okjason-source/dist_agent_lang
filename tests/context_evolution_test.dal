@@ -2,4 +2,6 @@
 evolve::append_conversation("Hello", "Hi, how can I help?", "TestAgent");
 evolve::append_log("sh::run", "echo ok", "exit 0");
 evolve::append_summary("Session went well.", "Phase 4 test");
-evolve::load_recent(5)
+evolve::append_working_memory("Principal prefers Next.js for new web scaffolds");
+evolve::load_recent(5);
+evolve::load_recent_for_prompt(8, 12000)
