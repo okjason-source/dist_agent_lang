@@ -119,6 +119,11 @@ jobs:
         toolchain: stable
         override: true
 
+    - name: Install ripgrep
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y ripgrep
+
     - name: Cache dependencies
       uses: actions/cache@v3
       with:
