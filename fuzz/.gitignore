@@ -1,6 +1,0 @@
-fuzz_targets
-target
-corpus
-artifacts
-coverage
-*/fuzz_targets/

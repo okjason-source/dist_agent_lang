@@ -1,9 +1,0 @@
-{"stdout": "{"content":"Run echo hello","reply":"Generated response (AI not configured). Set DAL_AI_PROVIDER and an API key to enable real replies.","sender":"web","ts":{"exit_code":0,"stderr":"","stdout":"-n {\"exit_code\": 0, \"stdout\": \"2026-03-31T04:26:40Z
-\", \"stderr\": \"\"}
-"},"type":"message"}", "stderr": "", "exit_code": 0}
-{"exit_code": 0, "stdout": "{"content":"What is DAL?","reply":"Generated response (AI not configured). Set DAL_AI_PROVIDER and an API key to enable real replies.","sender":"web","ts":{"exit_code":0,"stderr":"","stdout":"-n {\"stdout\": \"2026-03-31T04:26:40Z
-\", \"exit_code\": 0, \"stderr\": \"\"}
-"},"type":"message"}", "stderr": ""}
-{"stdout": "{"content":"List files in current directory","reply":"Generated response (AI not configured). Set DAL_AI_PROVIDER and an API key to enable real replies.","sender":"task","ts":{"exit_code":0,"stderr":"","stdout":"-n {\"stderr\": \"\", \"exit_code\": 0, \"stdout\": \"2026-03-31T04:26:43Z
-\"}
-"},"type":"task"}", "stderr": "", "exit_code": 0}
