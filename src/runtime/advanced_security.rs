@@ -1005,6 +1005,9 @@ mod tests {
                 max_fee: 0,
             });
         }
+        // This assertion verifies popped order, so force deterministic ordering
+        // instead of FairBatch's randomness-based scoring.
+        mev.fair_ordering.ordering_algorithm = OrderingAlgorithm::FirstComeFirstServe;
         let out = mev.process_fair_batch().expect("process batch");
         assert_eq!(
             out,
