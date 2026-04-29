@@ -1,0 +1,310 @@
+// Multi-Chain Operations Example
+// This demonstrates the comprehensive chain namespace functions built into dist_agent_lang
+
+// @trust("hybrid")
+// @secure
+// @limit(15000)
+service MultiChainKEYS {
+    // Chain-specific contract addresses
+    contract_addresses: map<int, string>,
+    active_chain: int = 1, // Default to Ethereum
+    
+    // Cross-chain state
+    cross_chain_balances: map<string, map<int, int>>,
+    
+    // Events
+    event ChainDeployed { chain_id: int, address: string },
+    event GasEstimated { chain_id: int, operation: string, gas: int },
+    event BalanceChecked { chain_id: int, address: string, balance: int }
+}
+
+impl MultiChainKEYS {
+    // Deploy KEYS token to multiple chains
+    @txn
+    fn deploy_to_all_chains() -> bool {
+        let chains = [1, 137, 56, 42161]; // Ethereum, Polygon, BSC, Arbitrum
+        
+        for chain_id in chains {
+            let address = chain::deploy(
+                chain_id,
+                "KEYS_Token",
+                {
+                    "name": "KEYS Token",
+                    "symbol": "KEYS",
+                    "total_supply": "120000000000000000000000000"
+                }
+            );
+            
+            if address != "" {
+                self.contract_addresses[chain_id] = address;
+                
+                self.emit(ChainDeployed {
+                    chain_id: chain_id,
+                    address: address
+                });
+                
+                log::info("deploy", format!("Deployed to chain {} at {}", chain_id, address));
+            } else {
+                log::error("deploy", format!("Failed to deploy to chain {}", chain_id));
+            }
+        }
+        
+        return true;
+    }
+    
+    // Deploy to specific chain
+    @txn
+    fn deploy_to_chain(chain_id: int) -> string {
+        let address = chain::deploy(
+            chain_id,
+            "KEYS_Token",
+            {
+                "name": "KEYS Token",
+                "symbol": "KEYS",
+                "total_supply": "120000000000000000000000000"
+            }
+        );
+        
+        if address != "" {
+            self.contract_addresses[chain_id] = address;
+            log::info("deploy", format!("Deployed to chain {} at {}", chain_id, address));
+        }
+        
+        return address;
+    }
+    
+    // Get gas estimates for different operations across chains
+    fn estimate_gas_costs() -> map<string, map<int, int>> {
+        let chains = [1, 137, 56, 42161];
+        let operations = ["transfer", "mint", "burn", "approve", "deploy"];
+        let mut gas_costs = {};
+        
+        for operation in operations {
+            gas_costs[operation] = {};
+            for chain_id in chains {
+                let gas = chain::estimate_gas(chain_id, operation);
+                gas_costs[operation][chain_id] = gas;
+                
+                self.emit(GasEstimated {
+                    chain_id: chain_id,
+                    operation: operation,
+                    gas: gas
+                });
+            }
+        }
+        
+        return gas_costs;
+    }
+    
+    // Get current gas prices for all chains
+    fn get_all_gas_prices() -> map<int, float> {
+        let chains = [1, 137, 56, 42161];
+        let mut gas_prices = {};
+        
+        for chain_id in chains {
+            let price = chain::get_gas_price(chain_id);
+            gas_prices[chain_id] = price;
+            log::info("gas", format!("Chain {} gas price: {} gwei", chain_id, price));
+        }
+        
+        return gas_prices;
+    }
+    
+    // Check balance across multiple chains
+    fn check_balances(address: string) -> map<int, int> {
+        let chains = [1, 137, 56, 42161];
+        let mut balances = {};
+        
+        for chain_id in chains {
+            let balance = chain::get_balance(chain_id, address);
+            balances[chain_id] = balance;
+            
+            self.emit(BalanceChecked {
+                chain_id: chain_id,
+                address: address,
+                balance: balance
+            });
+            
+            log::info("balance", format!("Chain {} balance: {} wei", chain_id, balance));
+        }
+        
+        return balances;
+    }
+    
+    // Call contract function on specific chain
+    @txn
+    fn call_contract_function(
+        chain_id: int,
+        function_name: string,
+        args: map<string, string>
+    ) -> string {
+        let contract_address = self.contract_addresses[chain_id];
+        if contract_address == "" {
+            log::error("call", format!("No contract deployed on chain {}", chain_id));
+            return "error: no contract deployed";
+        }
+        
+        let result = chain::call(chain_id, contract_address, function_name, args);
+        log::info("call", format!("Function {} called on chain {}: {}", function_name, chain_id, result));
+        
+        return result;
+    }
+    
+    // Get transaction status
+    fn check_transaction_status(chain_id: int, tx_hash: string) -> string {
+        let status = chain::get_transaction_status(chain_id, tx_hash);
+        log::info("txn", format!("Transaction {} on chain {}: {}", tx_hash, chain_id, status));
+        
+        return status;
+    }
+    
+    // Get block timestamp for a chain
+    fn get_chain_timestamp(chain_id: int) -> int {
+        let timestamp = chain::get_block_timestamp(chain_id);
+        log::info("timestamp", format!("Chain {} timestamp: {}", chain_id, timestamp));
+        
+        return timestamp;
+    }
+    
+    // Mint asset on specific chain
+    @txn
+    fn mint_asset_on_chain(chain_id: int, name: string, metadata: map<string, string>) -> int {
+        let asset_id = chain::mint(name, metadata);
+        log::info("mint", format!("Minted asset {} on chain {}", asset_id, chain_id));
+        
+        return asset_id;
+    }
+    
+    // Update asset
+    @txn
+    fn update_asset(asset_id: int, updates: map<string, string>) -> bool {
+        let success = chain::update(asset_id, updates);
+        if success {
+            log::info("update", format!("Asset {} updated successfully", asset_id));
+        } else {
+            log::error("update", format!("Failed to update asset {}", asset_id));
+        }
+        
+        return success;
+    }
+    
+    // Get asset information
+    fn get_asset_info(asset_id: int) -> string {
+        let asset_info = chain::get(asset_id);
+        log::info("asset", format!("Asset {} info: {:?}", asset_id, asset_info));
+        
+        return format!("{:?}", asset_info);
+    }
+    
+    // Check if asset exists
+    fn check_asset_exists(asset_id: int) -> bool {
+        let exists = chain::exists(asset_id);
+        log::info("asset", format!("Asset {} exists: {}", asset_id, exists));
+        
+        return exists;
+    }
+    
+    // Find cheapest chain for operation
+    fn find_cheapest_chain(operation: string) -> int {
+        let chains = [1, 137, 56, 42161];
+        let mut cheapest_chain = 1;
+        let mut lowest_cost = 999999999;
+        
+        for chain_id in chains {
+            let gas = chain::estimate_gas(chain_id, operation);
+            let gas_price = chain::get_gas_price(chain_id);
+            let total_cost = gas * (gas_price as int);
+            
+            if total_cost < lowest_cost {
+                lowest_cost = total_cost;
+                cheapest_chain = chain_id;
+            }
+        }
+        
+        log::info("cost", format!("Cheapest chain for {}: {} (cost: {})", operation, cheapest_chain, lowest_cost));
+        return cheapest_chain;
+    }
+    
+    // Find fastest chain
+    fn find_fastest_chain() -> int {
+        // Arbitrum is typically fastest for confirmations
+        return 42161;
+    }
+    
+    // Find most secure chain
+    fn find_most_secure_chain() -> int {
+        // Ethereum mainnet is typically most secure
+        return 1;
+    }
+    
+    // Switch active chain
+    @txn
+    fn switch_active_chain(chain_id: int) -> bool {
+        let old_chain = self.active_chain;
+        self.active_chain = chain_id;
+        
+        log::info("chain", format!("Switched from chain {} to chain {}", old_chain, chain_id));
+        return true;
+    }
+    
+    // Get current active chain info
+    fn get_active_chain_info() -> string {
+        let timestamp = chain::get_block_timestamp(self.active_chain);
+        let gas_price = chain::get_gas_price(self.active_chain);
+        
+        return format!("Active chain: {}, timestamp: {}, gas price: {} gwei", 
+            self.active_chain, timestamp, gas_price);
+    }
+}
+
+// Example usage
+fn main() {
+    let keys = MultiChainKEYS::new();
+    
+    // Deploy to all chains
+    keys.deploy_to_all_chains();
+    
+    // Get gas estimates
+    let gas_costs = keys.estimate_gas_costs();
+    log::info("main", format!("Gas costs: {:?}", gas_costs));
+    
+    // Get gas prices
+    let gas_prices = keys.get_all_gas_prices();
+    log::info("main", format!("Gas prices: {:?}", gas_prices));
+    
+    // Check balances
+    let balances = keys.check_balances("0x1234567890123456789012345678901234567890");
+    log::info("main", format!("Balances: {:?}", balances));
+    
+    // Find cheapest chain for transfer
+    let cheapest = keys.find_cheapest_chain("transfer");
+    log::info("main", format!("Cheapest chain for transfer: {}", cheapest));
+    
+    // Switch to cheapest chain
+    keys.switch_active_chain(cheapest);
+    
+    // Get active chain info
+    let chain_info = keys.get_active_chain_info();
+    log::info("main", format!("Active chain info: {}", chain_info));
+    
+    // Mint an asset
+    let asset_id = keys.mint_asset_on_chain(1, "MyNFT", {
+        "description": "A unique NFT",
+        "image": "ipfs://..."
+    });
+    
+    // Update the asset
+    keys.update_asset(asset_id, {
+        "description": "Updated description"
+    });
+    
+    // Get asset info
+    let asset_info = keys.get_asset_info(asset_id);
+    log::info("main", format!("Asset info: {}", asset_info));
+    
+    // Check if asset exists
+    let exists = keys.check_asset_exists(asset_id);
+    log::info("main", format!("Asset exists: {}", exists));
+    
+    log::info("main", "Multi-chain operations completed successfully!");
+}

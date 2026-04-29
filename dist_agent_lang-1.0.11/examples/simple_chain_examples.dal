@@ -1,0 +1,281 @@
+// Simple Chain Examples
+// Working with 1-2 chains or custom chains in dist_agent_lang
+
+// Example 1: Single Chain (Ethereum Only)
+@trust("hybrid")
+@chain("ethereum")
+@secure
+service EthereumOnlyKEYS {
+    contract_address: string;
+    
+    fn deploy_to_ethereum() -> string {
+        // Deploy to Ethereum mainnet (chain_id: 1)
+        let address = chain::deploy(
+            1, // Ethereum mainnet
+            "KEYS_Token",
+            {
+                "name": "KEYS Token",
+                "symbol": "KEYS",
+                "total_supply": "120000000000000000000000000"
+            }
+        );
+        
+        self.contract_address = address;
+        log::info("deploy", "Deployed to Ethereum");
+        return address;
+    }
+    
+    fn transfer_on_ethereum(to: string, amount: int) -> bool {
+        let result = chain::call(
+            1, // Ethereum
+            self.contract_address,
+            "transfer",
+            { "to": to, "amount": amount.to_string() }
+        );
+        
+        log::info("transfer", "Transfer completed");
+        return result.contains("success");
+    }
+    
+    fn get_ethereum_gas_price() -> float {
+        return chain::get_gas_price(1); // Ethereum gas price
+    }
+}
+
+// Example 2: Two Chains (Ethereum + Polygon)
+@trust("hybrid")
+@chain("ethereum","polygon")
+@secure
+service DualChainKEYS {
+    eth_address: string;
+    poly_address: string;
+    
+    fn deploy_to_two_chains() -> bool {
+        // Deploy to Ethereum
+        self.eth_address = chain::deploy(
+            1, // Ethereum
+            "KEYS_Token",
+            { "name": "KEYS", "symbol": "KEYS" }
+        );
+        
+        // Deploy to Polygon
+        self.poly_address = chain::deploy(
+            137, // Polygon
+            "KEYS_Token", 
+            { "name": "KEYS", "symbol": "KEYS" }
+        );
+        
+        log::info("deploy", "Ethereum and Polygon deployed");
+        return true;
+    }
+    
+    fn compare_gas_costs() -> map<string, float> {
+        let eth_gas = chain::estimate_gas(1, "transfer");
+        let poly_gas = chain::estimate_gas(137, "transfer");
+        
+        let eth_price = chain::get_gas_price(1);
+        let poly_price = chain::get_gas_price(137);
+        
+        let eth_cost = eth_gas * eth_price;
+        let poly_cost = poly_gas * poly_price;
+        
+        return {
+            "ethereum_cost": eth_cost,
+            "polygon_cost": poly_cost,
+            "savings": eth_cost - poly_cost
+        };
+    }
+    
+    fn choose_cheaper_chain() -> int {
+        let eth_cost = chain::estimate_gas(1, "transfer") * chain::get_gas_price(1);
+        let poly_cost = chain::estimate_gas(137, "transfer") * chain::get_gas_price(137);
+        
+        if (poly_cost < eth_cost) {
+            log::info("choice", "Polygon is cheaper");
+            return 137;
+        } else {
+            log::info("choice", "Ethereum is cheaper");
+            return 1;
+        }
+    }
+}
+
+// Example 3: Custom Chain Configuration
+@trust("hybrid")
+@chain("ethereum")
+@secure
+service CustomChainKEYS {
+    custom_chain_id: int = 999; // Custom chain ID
+    contract_address: string;
+    
+    fn deploy_to_custom_chain() -> string {
+        // Deploy to a custom chain (e.g., private blockchain)
+        let address = chain::deploy(
+            self.custom_chain_id,
+            "KEYS_Token",
+            {
+                "name": "KEYS Token",
+                "symbol": "KEYS",
+                "total_supply": "1000000000000000000000000" // Smaller supply for custom chain
+            }
+        );
+        
+        self.contract_address = address;
+        log::info("deploy", "Deployed to custom chain");
+        return address;
+    }
+    
+    fn get_custom_chain_info() -> string {
+        let gas_price = chain::get_gas_price(self.custom_chain_id);
+        let timestamp = chain::get_block_timestamp(self.custom_chain_id);
+        
+        return "Custom chain info";
+    }
+}
+
+// Example 4: Chain Selection Based on Use Case
+@trust("hybrid")
+@chain("ethereum","polygon","bsc","arbitrum")
+@secure
+service SmartChainKEYS {
+    fn select_chain_by_use_case(use_case: string) -> int {
+        if (use_case == "high_value") {
+            log::info("selection", "High value transaction - using Ethereum");
+            return 1;
+        } else {
+            if (use_case == "gaming") {
+                log::info("selection", "Gaming transaction - using Polygon");
+                return 137;
+            } else {
+                if (use_case == "micro_transaction") {
+                    log::info("selection", "Micro transaction - using BSC");
+                    return 56;
+                } else {
+                    if (use_case == "defi") {
+                        log::info("selection", "DeFi transaction - using Arbitrum");
+                        return 42161;
+                    } else {
+                        log::info("selection", "Default - using Ethereum");
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+    
+    fn execute_on_best_chain(use_case: string, operation: string, args: map<string, string>) -> string {
+        let chain_id = self.select_chain_by_use_case(use_case);
+        
+        let result = chain::call(chain_id, "0x1234...", operation, args);
+        log::info("execution", "Executed");
+        
+        return result;
+    }
+}
+
+// Example 5: Simple Single-Chain Token
+@trust("hybrid")
+@chain("ethereum")
+@secure
+service SimpleKEYS {
+    // Only work with Ethereum mainnet
+    fn deploy() -> string {
+        let address = chain::deploy(1, "SimpleKEYS", {
+            "name": "Simple KEYS",
+            "symbol": "SKEYS"
+        });
+        
+        log::info("deploy", "Simple KEYS deployed");
+        return address;
+    }
+    
+    fn mint_tokens(amount: int) -> int {
+        let asset_id = chain::mint("KEYS_Token", {
+            "amount": amount.to_string(),
+            "type": "erc20"
+        });
+        
+        log::info("mint", "Minted");
+        return asset_id;
+    }
+    
+    fn check_balance(address: string) -> int {
+        let balance = chain::get_balance(1, address); // Ethereum only
+        log::info("balance", "Balance");
+        return balance;
+    }
+}
+
+// Example 6: Testnet Only Development
+// @trust("hybrid")
+// @secure
+service TestnetKEYS {
+    fn deploy_to_testnets() -> map<int, string> {
+        let testnets = [5, 80001]; // Goerli, Mumbai
+        let mut addresses = {};
+        
+        for chain_id in testnets  {
+            let address = chain::deploy(chain_id, "TestKEYS", {
+                "name": "Test KEYS",
+                "symbol": "TKEYS"
+            });
+            
+            addresses[chain_id] = address;
+            log::info("testnet", "Deployed to testnet");
+        }
+        
+        return addresses;
+    }
+    
+    fn test_gas_estimation() -> map<int, int> {
+        let testnets = [5, 80001];
+        let mut gas_costs = {};
+        
+        for chain_id in testnets  {
+            let gas = chain::estimate_gas(chain_id, "transfer");
+            gas_costs[chain_id] = gas;
+            log::info("gas", "Testnet transfer gas");
+        }
+        
+        return gas_costs;
+    }
+}
+
+// Usage Examples
+fn main() {
+    // Single chain example
+    let eth_only = EthereumOnlyKEYS::new();
+    let address = eth_only.deploy_to_ethereum();
+    let gas_price = eth_only.get_ethereum_gas_price();
+    log::info("main", "Ethereum gas price");
+    
+    // Dual chain example
+    let dual = DualChainKEYS::new();
+    dual.deploy_to_two_chains();
+    let costs = dual.compare_gas_costs();
+    let cheaper = dual.choose_cheaper_chain();
+    log::info("main", "Cheaper chain");
+    
+    // Custom chain example
+    let custom = CustomChainKEYS::new();
+    custom.deploy_to_custom_chain();
+    let info = custom.get_custom_chain_info();
+    log::info("main", "Custom chain info");
+    
+    // Smart selection example
+    let smart = SmartChainKEYS::new();
+    let result = smart.execute_on_best_chain("gaming", "mint", { "amount": "100" });
+    log::info("main", "Smart execution result");
+    
+    // Simple single chain
+    let simple = SimpleKEYS::new();
+    simple.deploy();
+    simple.mint_tokens(1000);
+    
+    // Testnet development
+    let testnet = TestnetKEYS::new();
+    testnet.deploy_to_testnets();
+    testnet.test_gas_estimation();
+    
+    log::info("main", "All chain examples completed!");
+}

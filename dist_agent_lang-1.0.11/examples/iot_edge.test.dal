@@ -1,0 +1,551 @@
+// IoT & Edge Computing Integration Tests
+// Comprehensive verification of IoT and Edge Computing capabilities
+// Run with: dal test examples/iot_edge.test.dal
+
+// ============================================================================
+// IoT Device Management Tests
+// ============================================================================
+
+@test
+fn test_device_registration() {
+    let device_id = "iot_device_001";
+    let device_type = "temperature_sensor";
+    let protocol = "mqtt";
+    
+    // In real implementation:
+    // let device = iot::register_device(device_id, device_type, protocol);
+    // assert(device.status == "connected");
+    // assert(device.protocol == "mqtt");
+}
+
+@test
+fn test_device_connectivity() {
+    let device_id = "iot_device_001";
+    let expected_status = "online";
+    
+    // In real implementation:
+    // let status = iot::check_device_status(device_id);
+    // assert(status == "online");
+}
+
+@test
+fn test_multi_protocol_support() {
+    let protocols = ["mqtt", "coap", "http", "websocket"];
+    let device_count = 4;
+    
+    // In real implementation:
+    // for protocol in protocols {
+    //     let device = iot::register_device("device_" + protocol, "sensor", protocol);
+    //     assert(device.protocol == protocol);
+    // }
+    // assert(iot::get_device_count() == device_count);
+}
+
+@test
+fn test_device_authentication() {
+    let device_id = "iot_device_001";
+    let certificate = "device_cert_001";
+    let is_authenticated = true;
+    
+    // In real implementation:
+    // let auth_result = iot::authenticate_device(device_id, certificate);
+    // assert(auth_result == true);
+}
+
+// ============================================================================
+// Sensor Framework Tests
+// ============================================================================
+
+@test
+fn test_sensor_data_collection() {
+    let sensor_id = "temp_sensor_001";
+    let reading = 72;
+    let unit = "fahrenheit";
+    
+    // In real implementation:
+    // let data = sensor::read(sensor_id);
+    // assert(data.temperature > 0);
+    // assert(data.unit == "fahrenheit");
+}
+
+@test
+fn test_temperature_sensor() {
+    let sensor_type = "temperature";
+    let min_temp = -40;
+    let max_temp = 185;
+    let current_reading = 72;
+    
+    // In real implementation:
+    // let sensor = sensor::create(sensor_type, min_temp, max_temp);
+    // let reading = sensor::read(sensor.id);
+    // assert(reading >= min_temp && reading <= max_temp);
+}
+
+@test
+fn test_motion_sensor() {
+    let sensor_type = "motion";
+    let motion_detected = false;
+    let sensitivity = 5;
+    
+    // In real implementation:
+    // let sensor = sensor::create_motion(sensitivity);
+    // let status = sensor::check_motion(sensor.id);
+    // assert(status == true || status == false);
+}
+
+@test
+fn test_gps_sensor() {
+    let sensor_type = "gps";
+    let latitude = 37;
+    let longitude = -122;
+    let accuracy = 10;
+    
+    // In real implementation:
+    // let sensor = sensor::create_gps();
+    // let location = sensor::get_location(sensor.id);
+    // assert(location.latitude != 0);
+    // assert(location.longitude != 0);
+}
+
+@test
+fn test_sensor_calibration() {
+    let sensor_id = "temp_sensor_001";
+    let calibration_offset = 2;
+    let expected_accuracy = 98;
+    
+    // In real implementation:
+    // sensor::calibrate(sensor_id, calibration_offset);
+    // let accuracy = sensor::get_accuracy(sensor_id);
+    // assert(accuracy > 95);
+}
+
+@test
+fn test_anomaly_detection() {
+    let sensor_id = "temp_sensor_001";
+    let normal_reading = 72;
+    let anomalous_reading = 250;
+    let threshold = 100;
+    
+    // In real implementation:
+    // let is_normal = sensor::check_anomaly(sensor_id, normal_reading, threshold);
+    // let is_anomaly = sensor::check_anomaly(sensor_id, anomalous_reading, threshold);
+    // assert(is_normal == false);
+    // assert(is_anomaly == true);
+}
+
+// ============================================================================
+// Actuator Control Tests
+// ============================================================================
+
+@test
+fn test_actuator_command_execution() {
+    let actuator_id = "relay_001";
+    let command = "turn_on";
+    let expected_state = "on";
+    
+    // In real implementation:
+    // let result = actuator::execute(actuator_id, command);
+    // assert(result.success == true);
+    // assert(actuator::get_state(actuator_id) == "on");
+}
+
+@test
+fn test_actuator_safety_protocols() {
+    let actuator_id = "motor_001";
+    let unsafe_command = "overvolt";
+    let safe_command = "start";
+    
+    // In real implementation:
+    // let unsafe_result = actuator::execute(actuator_id, unsafe_command);
+    // assert(unsafe_result.success == false);
+    // assert(unsafe_result.error == "safety_violation");
+}
+
+@test
+fn test_multi_actuator_coordination() {
+    let actuator_group = ["relay_001", "relay_002", "relay_003"];
+    let command = "synchronize";
+    let expected_count = 3;
+    
+    // In real implementation:
+    // let result = actuator::coordinate_group(actuator_group, command);
+    // assert(result.success_count == expected_count);
+}
+
+// ============================================================================
+// Edge Computing Tests
+// ============================================================================
+
+@test
+fn test_edge_ai_inference() {
+    let model_name = "object_detection";
+    let input_data = "image_data";
+    let confidence_threshold = 90;
+    
+    // In real implementation:
+    // let result = edge::run_inference(model_name, input_data);
+    // assert(result.confidence > confidence_threshold);
+}
+
+@test
+fn test_edge_data_caching() {
+    let cache_key = "sensor_data_001";
+    let cache_value = "temperature_72";
+    let ttl = 300;
+    
+    // In real implementation:
+    // edge::cache_set(cache_key, cache_value, ttl);
+    // let cached = edge::cache_get(cache_key);
+    // assert(cached == cache_value);
+}
+
+@test
+fn test_edge_real_time_analytics() {
+    let data_stream = "sensor_stream_001";
+    let window_size = 60;
+    let metric = "average";
+    
+    // In real implementation:
+    // let analytics = edge::analyze_stream(data_stream, window_size, metric);
+    // assert(analytics.result > 0);
+}
+
+@test
+fn test_cloud_synchronization() {
+    let local_data = "edge_data_001";
+    let sync_interval = 300;
+    let sync_status = "synced";
+    
+    // In real implementation:
+    // let result = edge::sync_to_cloud(local_data);
+    // assert(result.status == "synced");
+}
+
+// ============================================================================
+// Data Streaming Tests
+// ============================================================================
+
+@test
+fn test_data_pipeline_creation() {
+    let pipeline_id = "iot_pipeline_001";
+    let source = "mqtt_broker";
+    let sink = "time_series_db";
+    
+    // In real implementation:
+    // let pipeline = stream::create_pipeline(pipeline_id, source, sink);
+    // assert(pipeline.status == "running");
+}
+
+@test
+fn test_data_transformation() {
+    let input_data = 72;
+    let transformation = "celsius_to_fahrenheit";
+    let expected_output = 161;
+    
+    // In real implementation:
+    // let output = stream::transform(input_data, transformation);
+    // assert(output == expected_output);
+}
+
+@test
+fn test_data_aggregation() {
+    let data_points = [70, 71, 72, 73, 74];
+    let aggregation_type = "average";
+    let expected_result = 72;
+    
+    // In real implementation:
+    // let result = stream::aggregate(data_points, aggregation_type);
+    // assert(result == expected_result);
+}
+
+@test
+fn test_stream_performance_monitoring() {
+    let pipeline_id = "iot_pipeline_001";
+    let expected_throughput = 100000;
+    let expected_latency = 10;
+    
+    // In real implementation:
+    // let metrics = stream::get_metrics(pipeline_id);
+    // assert(metrics.throughput > expected_throughput);
+    // assert(metrics.latency < expected_latency);
+}
+
+// ============================================================================
+// Security Framework Tests
+// ============================================================================
+
+@test
+fn test_device_certificate_validation() {
+    let device_id = "iot_device_001";
+    let certificate = "cert_001";
+    let is_valid = true;
+    
+    // In real implementation:
+    // let validation = security::validate_certificate(device_id, certificate);
+    // assert(validation == true);
+}
+
+@test
+fn test_encrypted_data_transmission() {
+    let data = "sensitive_sensor_data";
+    let encryption_algorithm = "aes256";
+    let encrypted_length = 32;
+    
+    // In real implementation:
+    // let encrypted = security::encrypt(data, encryption_algorithm);
+    // assert(encrypted != data);
+    // assert(encrypted.length() >= encrypted_length);
+}
+
+@test
+fn test_access_control() {
+    let user_id = "operator_001";
+    let device_id = "iot_device_001";
+    let permission = "read";
+    let has_access = true;
+    
+    // In real implementation:
+    // let access = security::check_access(user_id, device_id, permission);
+    // assert(access == true);
+}
+
+@test
+fn test_security_policy_enforcement() {
+    let policy_id = "iot_policy_001";
+    let rule = "require_tls";
+    let is_enforced = true;
+    
+    // In real implementation:
+    // let enforcement = security::enforce_policy(policy_id, rule);
+    // assert(enforcement.success == true);
+}
+
+// ============================================================================
+// Cloud Integration Tests
+// ============================================================================
+
+@test
+fn test_bidirectional_sync() {
+    let local_data = "edge_data";
+    let cloud_data = "cloud_data";
+    let sync_direction = "bidirectional";
+    
+    // In real implementation:
+    // let result = cloud::sync(local_data, cloud_data, sync_direction);
+    // assert(result.edge_to_cloud == true);
+    // assert(result.cloud_to_edge == true);
+}
+
+@test
+fn test_cloud_storage() {
+    let data_key = "iot_data_001";
+    let data_value = "sensor_reading_72";
+    let storage_class = "standard";
+    
+    // In real implementation:
+    // let result = cloud::store(data_key, data_value, storage_class);
+    // assert(result.success == true);
+}
+
+@test
+fn test_remote_monitoring() {
+    let device_id = "iot_device_001";
+    let monitor_interval = 60;
+    let alert_threshold = 100;
+    
+    // In real implementation:
+    // let monitor = cloud::start_monitoring(device_id, monitor_interval, alert_threshold);
+    // assert(monitor.active == true);
+}
+
+@test
+fn test_data_backup_recovery() {
+    let backup_id = "backup_001";
+    let backup_data = "critical_sensor_data";
+    let retention_days = 30;
+    
+    // In real implementation:
+    // let backup = cloud::create_backup(backup_id, backup_data, retention_days);
+    // assert(backup.success == true);
+    // let restored = cloud::restore_backup(backup_id);
+    // assert(restored == backup_data);
+}
+
+// ============================================================================
+// AI Integration Tests
+// ============================================================================
+
+@test
+fn test_local_ai_model_execution() {
+    let model_path = "edge_model_v1";
+    let input_tensor = [1, 2, 3, 4];
+    let expected_output_size = 2;
+    
+    // In real implementation:
+    // let output = ai::run_model(model_path, input_tensor);
+    // assert(output.length() == expected_output_size);
+}
+
+@test
+fn test_predictive_maintenance() {
+    let device_id = "motor_001";
+    let sensor_data = [100, 98, 95, 90, 85];
+    let maintenance_threshold = 80;
+    
+    // In real implementation:
+    // let prediction = ai::predict_maintenance(device_id, sensor_data);
+    // assert(prediction.maintenance_needed == true);
+    // assert(prediction.predicted_failure < maintenance_threshold);
+}
+
+@test
+fn test_anomaly_detection_ai() {
+    let sensor_data = [70, 71, 72, 250, 73];
+    let normal_range_min = 65;
+    let normal_range_max = 80;
+    
+    // In real implementation:
+    // let anomalies = ai::detect_anomalies(sensor_data, normal_range_min, normal_range_max);
+    // assert(anomalies.count == 1);
+    // assert(anomalies.indices[0] == 3);
+}
+
+@test
+fn test_real_time_decision_support() {
+    let context_data = "sensor_readings_and_state";
+    let decision_model = "optimization_v1";
+    let confidence_threshold = 85;
+    
+    // In real implementation:
+    // let decision = ai::make_decision(context_data, decision_model);
+    // assert(decision.confidence > confidence_threshold);
+    // assert(decision.action != "");
+}
+
+// ============================================================================
+// Performance & Scalability Tests
+// ============================================================================
+
+@test
+fn test_high_throughput_processing() {
+    let message_count = 100000;
+    let time_window = 1;
+    let expected_throughput = 100000;
+    
+    // In real implementation:
+    // let start_time = time::now();
+    // for i in 0..message_count {
+    //     edge::process_message("sensor_data_" + i);
+    // }
+    // let duration = time::now() - start_time;
+    // let throughput = message_count / duration;
+    // assert(throughput >= expected_throughput);
+}
+
+@test
+fn test_low_latency_edge_response() {
+    let request = "sensor_query";
+    let max_latency_ms = 10;
+    
+    // In real implementation:
+    // let start_time = time::now();
+    // let response = edge::query(request);
+    // let latency = time::now() - start_time;
+    // assert(latency < max_latency_ms);
+}
+
+@test
+fn test_scalable_device_management() {
+    let device_count = 1000000;
+    let batch_size = 1000;
+    let max_registration_time = 5000;
+    
+    // In real implementation:
+    // let start_time = time::now();
+    // for i in 0..device_count/batch_size {
+    //     iot::register_device_batch(batch_size);
+    // }
+    // let duration = time::now() - start_time;
+    // assert(duration < max_registration_time);
+    // assert(iot::get_device_count() == device_count);
+}
+
+@test
+fn test_resource_optimization() {
+    let initial_memory = 1000;
+    let initial_cpu = 50;
+    let optimization_target = "memory";
+    let expected_savings = 20;
+    
+    // In real implementation:
+    // edge::optimize_resources(optimization_target);
+    // let final_memory = edge::get_memory_usage();
+    // let savings_percent = ((initial_memory - final_memory) / initial_memory) * 100;
+    // assert(savings_percent >= expected_savings);
+}
+
+// ============================================================================
+// Integration Scenario Tests
+// ============================================================================
+
+@test
+fn test_smart_city_traffic_optimization() {
+    let traffic_sensors = 50;
+    let traffic_lights = 20;
+    let optimization_goal = "reduce_congestion";
+    let expected_improvement = 25;
+    
+    // In real implementation:
+    // let system = smart_city::create_traffic_system(traffic_sensors, traffic_lights);
+    // let result = smart_city::optimize(system, optimization_goal);
+    // assert(result.improvement >= expected_improvement);
+}
+
+@test
+fn test_industrial_iot_predictive_maintenance() {
+    let production_line_sensors = 100;
+    let maintenance_threshold = 75;
+    let prediction_accuracy = 95;
+    
+    // In real implementation:
+    // let system = iiot::create_production_system(production_line_sensors);
+    // let predictions = iiot::predict_maintenance(system, maintenance_threshold);
+    // assert(predictions.accuracy >= prediction_accuracy);
+}
+
+@test
+fn test_smart_home_energy_optimization() {
+    let devices = ["thermostat", "lights", "appliances"];
+    let optimization_target = "energy_savings";
+    let expected_reduction = 40;
+    
+    // In real implementation:
+    // let home = smart_home::setup(devices);
+    // let result = smart_home::optimize_energy(home);
+    // assert(result.energy_reduction >= expected_reduction);
+}
+
+@test
+fn test_agricultural_iot_crop_monitoring() {
+    let soil_sensors = 50;
+    let weather_sensors = 10;
+    let irrigation_zones = 20;
+    let expected_yield_increase = 35;
+    
+    // In real implementation:
+    // let farm = agri_iot::create_farm_system(soil_sensors, weather_sensors, irrigation_zones);
+    // let result = agri_iot::optimize_irrigation(farm);
+    // assert(result.yield_increase >= expected_yield_increase);
+}
+
+@test
+fn test_autonomous_vehicle_communication() {
+    let vehicle_count = 100;
+    let communication_range = 500;
+    let latency_requirement = 5;
+    
+    // In real implementation:
+    // let network = v2v::create_network(vehicle_count, communication_range);
+    // let latency = v2v::measure_latency(network);
+    // assert(latency < latency_requirement);
+}

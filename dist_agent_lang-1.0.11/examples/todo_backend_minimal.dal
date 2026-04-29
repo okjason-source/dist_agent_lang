@@ -1,0 +1,37 @@
+// Minimal Todo Backend for E2E Testing
+// Top-level handlers matching frontend_todo_app.html API contract
+// Simplified: get_todos + create_todo only (proves DAL -> HTTP pipeline)
+
+@secure
+fn get_todos(request) {
+    return {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body": json::stringify({"todos": []})
+    };
+}
+
+fn create_todo(request) {
+    let body = json::parse(request.body);
+    let text = body["text"];
+    if (text == null) {
+        return {
+            "status": 400,
+            "headers": {"Content-Type": "application/json"},
+            "body": json::stringify({"error": {"message": "Todo text is required"}})
+        };
+    }
+    if (len(text) == 0) {
+        return {
+            "status": 400,
+            "headers": {"Content-Type": "application/json"},
+            "body": json::stringify({"error": {"message": "Todo text is required"}})
+        };
+    }
+    let todo = {"id": 1, "text": text, "completed": false};
+    return {
+        "status": 201,
+        "headers": {"Content-Type": "application/json"},
+        "body": json::stringify({"todo": todo})
+    };
+}

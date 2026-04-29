@@ -1,0 +1,46 @@
+// Token design in DAL → Solidity workflow
+//
+// 1) Design your token's *shape* here: state, events, function signatures.
+// 2) Build to Solidity (requires solc installed):
+//      dal build examples/token_design_for_solidity.dal --target blockchain --output out
+// 3) You get: out/MyToken.sol (skeleton with revert() bodies).
+// 4) In the .sol file: replace revert() with real ERC20 logic; change
+//    string → address for addresses, int/int256 → uint256 for amounts.
+// 5) Compile with solc and deploy with your usual tooling (Foundry, Hardhat, etc.).
+
+@secure
+@trust("decentralized")
+@chain("ethereum")
+@compile_target("blockchain")
+service MyToken {
+    // State: name, symbol, supply, balances (DAL map<string,int> → Solidity mapping)
+    name: string;
+    symbol: string;
+    total_supply: int;
+    balances: map<string, int>;
+    allowances: map<string, map<string, int>>;
+
+    event Transfer(from: string, to: string, amount: int);
+    event Approval(owner: string, spender: string, amount: int);
+
+    // Constructor-like: initial supply (you'll implement constructor in Solidity)
+    fn initialize(initial_supply: int) -> bool {
+        return false;  // design only; implement in Solidity
+    }
+
+    fn transfer(to: string, amount: int) -> bool {
+        return false;
+    }
+    fn balance_of(account: string) -> int {
+        return 0;
+    }
+    fn approve(spender: string, amount: int) -> bool {
+        return false;
+    }
+    fn transfer_from(from: string, to: string, amount: int) -> bool {
+        return false;
+    }
+    fn allowance(owner: string, spender: string) -> int {
+        return 0;
+    }
+}

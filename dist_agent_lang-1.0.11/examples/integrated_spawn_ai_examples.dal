@@ -1,0 +1,522 @@
+// Integrated Spawn & AI Agent Examples
+// Demonstrates how language-level spawn/agent constructs integrate with the AI framework
+
+// Example 1: Basic Spawn with AI Agent
+fn basic_spawn_example() {
+    log::info("example", { "message": "=== Basic Spawn with AI Agent ===" });
+
+    // This spawn statement now creates an AI agent using the enhanced syntax
+    spawn my_assistant:ai {
+        role: "personal_assistant",
+        capabilities: ["task_management", "scheduling", "reminders"],
+        memory_size: 2000,
+        max_concurrent_tasks: 3
+    } {
+        // Agent initialization code
+        log::info("agent", { "message": "AI Assistant agent initialized" });
+
+        // Agent can use AI functions
+        let greeting = ai::generate_text("Generate a friendly greeting for a personal assistant");
+        log::info("agent", { "greeting": greeting });
+
+        // Agent can communicate with other agents
+        ai::send_message(
+            "my_assistant",
+            "system_coordinator",
+            "agent_ready",
+            { "status": "initialized", "capabilities": ["task_management", "scheduling"] },
+            "normal"
+        );
+    }
+
+    log::info("example", { "message": "Basic spawn example completed" });
+}
+
+// Example 2: Agent Declaration with Full Configuration
+fn agent_declaration_example() {
+    log::info("example", { "message": "=== Agent Declaration with Full Configuration ===" });
+
+    // This agent declaration creates a fully configured AI agent
+    agent data_analyzer:ai {
+        role: "data_analysis_specialist",
+        memory_size: 5000,
+        max_concurrent_tasks: 10,
+        trust_level: "hybrid",
+        communication_protocols: ["async", "sync", "event_driven"],
+        ai_models: ["gpt", "bert", "data_analysis_model"]
+    } with ["data_analysis", "statistics", "visualization", "reporting"] {
+        // Agent initialization
+        log::info("agent", { "message": "Data Analyzer agent starting up" });
+
+        // Agent can perform AI tasks
+        let analysis = ai::analyze_text("This is a sample document for analysis. It contains information about data processing and analysis techniques.");
+        log::info("agent", {
+            "analysis_summary": analysis.summary,
+            "sentiment": analysis.sentiment,
+            "keywords": analysis.keywords
+        });
+
+        // Agent can create and execute tasks
+        let task = ai::create_task(
+            "data_analyzer",
+            "analyze_dataset",
+            "Analyze the sales dataset for trends",
+            {
+                "dataset_path": "/data/sales.csv",
+                "analysis_type": "trend_analysis",
+                "output_format": "json"
+            }
+        );
+
+        let result = ai::execute_task("data_analyzer", task.id);
+        log::info("agent", { "task_result": result });
+    }
+
+    log::info("example", { "message": "Agent declaration example completed" });
+}
+
+// Example 3: Multi-Agent Coordination via Spawn
+fn multi_agent_coordination_example() {
+    log::info("example", { "message": "=== Multi-Agent Coordination ===" });
+
+    // Create a coordinator agent
+    let coordinator = ai::create_coordinator("project_coordinator");
+
+    // Spawn multiple specialized agents
+    spawn frontend_developer:ai {
+        role: "frontend_specialist",
+        capabilities: ["ui_design", "react", "typescript", "responsive_design"],
+        memory_size: 3000
+    } {
+        log::info("agent", { "message": "Frontend Developer agent ready" });
+    }
+
+    spawn backend_developer:ai {
+        role: "backend_specialist",
+        capabilities: ["api_design", "database", "security", "scalability"],
+        memory_size: 4000
+    } {
+        log::info("agent", { "message": "Backend Developer agent ready" });
+    }
+
+    spawn qa_engineer:ai {
+        role: "quality_assurance",
+        capabilities: ["testing", "automation", "performance", "security_testing"],
+        memory_size: 2500
+    } {
+        log::info("agent", { "message": "QA Engineer agent ready" });
+    }
+
+    // Add agents to coordinator
+    ai::add_agent_to_coordinator(coordinator, frontend_developer);
+    ai::add_agent_to_coordinator(coordinator, backend_developer);
+    ai::add_agent_to_coordinator(coordinator, qa_engineer);
+
+    // Create a workflow for software development
+    let workflow_steps = [
+        {
+            "step_id": "requirements_analysis",
+            "agent_id": frontend_developer.id,
+            "task_type": "analyze_requirements",
+            "dependencies": []
+        },
+        {
+            "step_id": "design_ui",
+            "agent_id": frontend_developer.id,
+            "task_type": "design_interface",
+            "dependencies": ["requirements_analysis"]
+        },
+        {
+            "step_id": "implement_backend",
+            "agent_id": backend_developer.id,
+            "task_type": "implement_api",
+            "dependencies": ["requirements_analysis"]
+        },
+        {
+            "step_id": "integrate_frontend",
+            "agent_id": frontend_developer.id,
+            "task_type": "integrate_components",
+            "dependencies": ["design_ui", "implement_backend"]
+        },
+        {
+            "step_id": "testing",
+            "agent_id": qa_engineer.id,
+            "task_type": "run_tests",
+            "dependencies": ["integrate_frontend"]
+        }
+    ];
+
+    let workflow = ai::create_workflow(coordinator, "software_development", workflow_steps);
+    let result = ai::execute_workflow(coordinator, workflow.workflow_id);
+
+    log::info("example", {
+        "message": "Multi-agent coordination completed",
+        "workflow_id": workflow.workflow_id,
+        "success": result
+    });
+}
+
+// Example 4: Real-time Agent Communication
+fn real_time_communication_example() {
+    log::info("example", "message": "=== Real-time Agent Communication ===" });
+
+    // Spawn a chat agent
+    spawn chat_agent:ai {
+        role: "conversation_specialist",
+        capabilities: ["chat", "sentiment_analysis", "language_processing"],
+        memory_size: 3000
+    } {
+        log::info("agent", { "message": "Chat Agent initialized and ready for communication" });
+
+        // Set up message handling
+        while (true ) {
+            // In a real implementation, this would be event-driven
+            // For demo purposes, we'll simulate message handling
+
+            let simulated_message = ai::send_message(
+                "user",
+                "chat_agent",
+                "user_input",
+                { "text": "Hello, can you help me with my project?" },
+                "normal"
+            );
+
+            // Process the message
+            let response = ai::process_message("chat_agent", simulated_message);
+
+            // Send response back
+            let reply = ai::send_message(
+                "chat_agent",
+                "user",
+                "agent_response",
+                { "text": "I'd be happy to help you with your project! What specific aspect would you like assistance with?" },
+                "normal"
+            );
+
+            log::info("agent", {
+                "message": "Processed user message and sent response",
+                "response_id": reply.id
+            });
+
+            break; // Exit simulation loop
+        }
+    }
+
+    // Spawn a monitoring agent
+    spawn monitor_agent:ai {
+        role: "system_monitor",
+        capabilities: ["monitoring", "alerts", "performance_tracking"],
+        memory_size: 2000
+    } {
+        log::info("agent", { "message": "Monitor Agent initialized" });
+
+        // Monitor the chat agent
+        let metrics = ai::get_agent_metrics(chat_agent.id);
+        log::info("monitor", {
+            "monitored_agent": chat_agent.id,
+            "status": metrics["status"],
+            "message_count": metrics["message_count"],
+            "task_count": metrics["task_count"]
+        });
+    }
+
+    log::info("example", "message": "Real-time communication example completed" });
+}
+
+// Example 5: System Agent for Infrastructure Management
+fn system_agent_example() {
+    log::info("example", "message": "=== System Agent for Infrastructure ===" });
+
+    // Declare a system agent for infrastructure management
+    agent infrastructure_manager:system {
+        role: "infrastructure_specialist",
+        capabilities: ["server_management", "networking", "security", "monitoring"]
+    } {
+        log::info("system", { "message": "Infrastructure Manager system agent started" });
+
+        // System agents can access system-level resources
+        // In a real implementation, this would manage servers, networks, etc.
+
+        // Example: Monitor system resources
+        let system_status = {
+            "cpu_usage": 45.2,
+            "memory_usage": 67.8,
+            "disk_usage": 23.1,
+            "network_traffic": 150.5, // Mbps
+            "active_connections": 1250,
+            "timestamp": chain::get_block_timestamp(1)
+        };
+
+        log::info("system", {
+            "cpu": system_status.cpu_usage,
+            "memory": system_status.memory_usage,
+            "connections": system_status.active_connections
+        });
+
+        // Example: Send alert if (resources are critical
+        if (system_status.cpu_usage > 90.0 {
+            ai::send_message(
+                "infrastructure_manager",
+                "alert_system",
+                "high_cpu_alert",
+                {
+                    "cpu_usage": system_status.cpu_usage,
+                    "threshold": 90.0,
+                    "recommendation": "Consider scaling up resources"
+                },
+                "high"
+            );
+        }
+    }
+
+    log::info("example", "message": "System agent example completed" });
+}
+
+// Example 6: Worker Agent for Background Processing
+fn worker_agent_example() {
+    log::info("example", "message": "=== Worker Agent for Background Processing ===" });
+
+    // Declare a worker agent for background tasks
+    agent background_worker:worker {
+        role: "background_processor",
+        capabilities: ["data_processing", "file_operations", "scheduled_tasks"]
+    } {
+        log::info("worker", { "message": "Background Worker started" });
+
+        // Worker agents can access parent scope but run independently
+        // In a real implementation, this would process queues, handle file operations, etc.
+
+        // Example: Process a file queue
+        let files_to_process = [
+            "/data/input/file1.csv",
+            "/data/input/file2.json",
+            "/data/input/file3.xml"
+        ];
+
+        for file_path in files_to_process  {
+            // Process each file
+            let file_content = database::read_file(file_path);
+
+            // Perform processing (simplified)
+            let processed_content = // format!("Processed: {}", file_content);
+
+            // Save processed result
+            let output_path = file_path.replace("/input/", "/output/");
+            database::write_file(output_path, processed_content);
+
+            log::info("worker", {
+                "processed_file": file_path,
+                "output_file": output_path,
+                "content_length": file_content.length
+            });
+        }
+
+        // Example: Clean up old files
+        let cleanup_result = self.perform_cleanup("/data/temp/");
+        log::info("worker", {
+            "cleanup_result": cleanup_result,
+            "message": "Background cleanup completed"
+        });
+    }
+
+    log::info("example", "message": "Worker agent example completed" });
+}
+
+// Example 7: Custom Agent Type
+fn custom_agent_example() {
+    log::info("example", "message": "=== Custom Agent Type ===" });
+
+    // Declare a custom agent with specialized behavior
+    agent blockchain_oracle:custom("oracle") {
+        role: "blockchain_data_provider",
+        capabilities: ["price_feeds", "market_data", "oracle_services"]
+    } {
+        log::info("oracle", { "message": "Blockchain Oracle custom agent started" });
+
+        // Custom agents can define their own behavior patterns
+        // In this case, an oracle agent that provides blockchain data
+
+        // Example: Provide price feed
+        let price_data = {
+            "asset": "ETH",
+            "price_usd": 2456.78,
+            "change_24h": 2.34,
+            "volume_24h": 1250000000,
+            "timestamp": chain::get_block_timestamp(1)
+        };
+
+        // Send price update to subscribers
+        ai::send_message(
+            "blockchain_oracle",
+            "price_subscribers",
+            "price_update",
+            price_data,
+            "normal"
+        );
+
+        // Example: Verify external data
+        let external_data = {
+            "source": "coinmarketcap",
+            "data": "market_cap_data",
+            "signature": "verified_signature"
+        };
+
+        let verification_result = self.verify_external_data(external_data);
+
+        if (verification_result {
+            ai::send_message(
+                "blockchain_oracle",
+                "data_consumers",
+                "verified_data",
+                external_data,
+                "high"
+            );
+        }
+
+        log::info("oracle", {
+            "message": "Oracle data provided and verified",
+            "price_asset": price_data.asset,
+            "verification_status": verification_result
+        });
+    }
+
+    log::info("example", "message": "Custom agent example completed" });
+}
+
+// Example 8: Complex Multi-Agent Workflow
+fn complex_workflow_example() {
+    log::info("example", "message": "=== Complex Multi-Agent Workflow ===" });
+
+    // Create multiple AI agents for a complex workflow
+    spawn content_creator:ai {
+        role: "content_specialist",
+        capabilities: ["writing", "research", "editing"],
+        memory_size: 4000
+    } {
+        log::info("agent", { "message": "Content Creator agent ready" });
+    }
+
+    spawn content_reviewer:ai {
+        role: "quality_assurance",
+        capabilities: ["editing", "fact_checking", "grammar_check"],
+        memory_size: 3000
+    } {
+        log::info("agent", { "message": "Content Reviewer agent ready" });
+    }
+
+    spawn content_publisher:ai {
+        role: "publication_specialist",
+        capabilities: ["seo_optimization", "social_media", "analytics"],
+        memory_size: 2500
+    } {
+        log::info("agent", { "message": "Content Publisher agent ready" });
+    }
+
+    // Create a content creation workflow
+    let coordinator = ai::create_coordinator("content_workflow_coordinator");
+
+    // Add agents to coordinator
+    ai::add_agent_to_coordinator(coordinator, content_creator);
+    ai::add_agent_to_coordinator(coordinator, content_reviewer);
+    ai::add_agent_to_coordinator(coordinator, content_publisher);
+
+    // Define workflow steps
+    let content_workflow_steps = [
+        {
+            "step_id": "research_topic",
+            "agent_id": content_creator.id,
+            "task_type": "research",
+            "dependencies": []
+        },
+        {
+            "step_id": "write_draft",
+            "agent_id": content_creator.id,
+            "task_type": "writing",
+            "dependencies": ["research_topic"]
+        },
+        {
+            "step_id": "review_content",
+            "agent_id": content_reviewer.id,
+            "task_type": "review",
+            "dependencies": ["write_draft"]
+        },
+        {
+            "step_id": "edit_content",
+            "agent_id": content_creator.id,
+            "task_type": "editing",
+            "dependencies": ["review_content"]
+        },
+        {
+            "step_id": "final_review",
+            "agent_id": content_reviewer.id,
+            "task_type": "final_check",
+            "dependencies": ["edit_content"]
+        },
+        {
+            "step_id": "optimize_seo",
+            "agent_id": content_publisher.id,
+            "task_type": "seo_optimization",
+            "dependencies": ["final_review"]
+        },
+        {
+            "step_id": "publish_content",
+            "agent_id": content_publisher.id,
+            "task_type": "publishing",
+            "dependencies": ["optimize_seo"]
+        },
+        {
+            "step_id": "analyze_performance",
+            "agent_id": content_publisher.id,
+            "task_type": "analytics",
+            "dependencies": ["publish_content"]
+        }
+    ];
+
+    let workflow = ai::create_workflow(coordinator, "content_creation_pipeline", content_workflow_steps);
+    let success = ai::execute_workflow(coordinator, workflow.workflow_id);
+
+    if (success {
+        log::info("example", {
+            "message": "Complex content creation workflow completed successfully",
+            "workflow_id": workflow.workflow_id,
+            "steps_completed": content_workflow_steps.length
+        });
+    } else {
+        log::info("example", {
+            "message": "Content creation workflow encountered issues",
+            "workflow_id": workflow.workflow_id
+        });
+    }
+}
+
+// Main demonstration
+fn main() {
+    log::info("main", "message": "Starting Integrated Spawn & AI Agent Examples" });
+
+    // Run all examples
+    basic_spawn_example();
+    agent_declaration_example();
+    multi_agent_coordination_example();
+    real_time_communication_example();
+    system_agent_example();
+    worker_agent_example();
+    custom_agent_example();
+    complex_workflow_example();
+
+    log::info("main", "message": "All integrated spawn & AI agent examples completed!" });
+
+    // Summary of integration benefits
+    log::info("summary", {
+        "message": "Spawn & AI Agent Integration Summary",
+        "benefits": [
+            "Unified syntax for agent creation and AI integration",
+            "Seamless transition from language constructs to AI framework",
+            "Type-safe agent configuration and capabilities",
+            "Automatic AI agent lifecycle management",
+            "Integrated message passing between language and AI systems",
+            "Coordinated multi-agent workflows with language-level control",
+            "Extensible agent types (AI, System, Worker, Custom)",
+            "Real-time agent communication and task execution"
+        ]
+    });
+}

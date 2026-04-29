@@ -1,0 +1,957 @@
+// Todo Backend Service - dist_agent_lang Server-Side Implementation
+// This shows how the backend logic would be implemented in dist_agent_lang
+// Updated for v1.0.3 - Uses current log:: syntax and web:: API
+//
+// To run: cargo run -- run todo_backend_service.dal
+// Frontend: Open frontend_todo_app.html in a browser (or serve via HTTP server)
+
+@trust("hybrid")
+@persistent
+@web
+service TodoBackendService {
+    // Database connection
+    database: any;
+
+    // In-memory cache for performance
+    cache: Map<String, any>;
+
+    // Web server configuration
+    server: any;
+
+    // Real-time subscriptions for live updates
+    subscriptions: Map<String, List<any>>;
+
+    fn initialize() -> Result<Unit, Error> {
+        log::info("TodoBackendService initializing", {
+            "service": "TodoBackendService",
+            "status": "initializing",
+            "timestamp": chain::get_block_timestamp(1)
+        }, Some("todo_backend"));
+
+        // Initialize database connection
+        self.database = database::connect("postgresql://todo_user:secure_password@localhost:5432/todo_app");
+
+        // Initialize Redis cache for session management and caching
+        self.cache = database::connect("redis://:cache_password@localhost:6379/1");
+
+        // Setup database schema
+        self.setup_database_schema();
+
+        // Initialize web server
+        self.server = web::create_server(8080);
+
+        // Setup API routes
+        self.setup_api_routes();
+        
+        // Start server
+        web::start_server(self.server);
+
+        // Initialize real-time subscriptions
+        self.subscriptions = Map::new();
+
+        // Start background tasks
+        self.start_background_tasks();
+
+        log::info("TodoBackendService initialized successfully", {
+            "service": "TodoBackendService",
+            "status": "initialized",
+            "port": 8080,
+            "database": "connected",
+            "cache": "connected"
+        }, Some("todo_backend"));
+
+        return Ok(Unit);
+    }
+
+    fn setup_database_schema() -> Result<Unit, Error> {
+        let schema_sql = "
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(50) UNIQUE NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS todos (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                text VARCHAR(500) NOT NULL,
+                completed BOOLEAN DEFAULT FALSE,
+                priority VARCHAR(20) DEFAULT \"medium\",
+                due_date TIMESTAMP,
+                tags TEXT[],
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS user_sessions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                session_token VARCHAR(255) UNIQUE NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE INDEX idx_todos_user_id ON todos(user_id);
+            CREATE INDEX idx_todos_completed ON todos(completed);
+            CREATE INDEX idx_todos_due_date ON todos(due_date);
+            CREATE INDEX idx_user_sessions_token ON user_sessions(session_token);
+            CREATE INDEX idx_user_sessions_expires ON user_sessions(expires_at);
+        ";
+
+        database::execute_query(self.database, schema_sql);
+        return Ok(Unit);
+    }
+
+    fn setup_api_routes() -> Result<Unit, Error> {
+        // Authentication routes
+        web::add_route(self.server, "POST", "/api/auth/login", "authenticate_user");
+        web::add_route(self.server, "POST", "/api/auth/register", "register_user");
+        web::add_route(self.server, "POST", "/api/auth/logout", "logout_user");
+
+        // Todo CRUD routes
+        web::add_route(self.server, "GET", "/api/todos", "get_todos");
+        web::add_route(self.server, "POST", "/api/todos", "create_todo");
+        web::add_route(self.server, "GET", "/api/todos/:id", "get_todo");
+        web::add_route(self.server, "PUT", "/api/todos/:id", "update_todo");
+        web::add_route(self.server, "DELETE", "/api/todos/:id", "delete_todo");
+
+        // Bulk operations
+        web::add_route(self.server, "POST", "/api/todos/bulk", "bulk_update_todos");
+        web::add_route(self.server, "DELETE", "/api/todos/completed", "clear_completed_todos");
+
+        // Analytics routes
+        web::add_route(self.server, "GET", "/api/analytics/summary", "get_analytics_summary");
+        web::add_route(self.server, "GET", "/api/analytics/productivity", "get_productivity_metrics");
+
+        // Real-time subscriptions (WebSocket support may vary)
+        // web::add_route(self.server, "GET", "/api/realtime/connect", "handle_websocket_connection");
+
+        log::info("API routes configured", {
+            "event": "routes_configured",
+            "auth_routes": 3,
+            "todo_routes": 6,
+            "analytics_routes": 2,
+            "realtime_routes": 1
+        }, Some("todo_backend"));
+
+        return Ok(Unit);
+    }
+
+    // ================================================
+    // AUTHENTICATION METHODS
+    // ================================================
+
+    fn authenticate_user(request: HttpRequest) -> HttpResponse {
+        let body = json::parse(request.body);
+
+//         if (!body.email 
+            return this.create_error_response(400, "Email and password are required");
+        }
+
+        // Get user from database
+        let user_result = database::query(self.database, "
+            SELECT id, username, email, password_hash FROM users
+            WHERE email = $1
+        ", [body.email]);
+
+        if user_result.rows.len() == 0 {
+            return this.create_error_response(401, "Invalid credentials");
+        }
+
+        let user = user_result.rows[0];
+
+        // Verify password
+        if !crypto::verify_password(body.password, user.password_hash) {
+            return this.create_error_response(401, "Invalid credentials");
+        }
+
+        // Generate session token
+        let session_token = crypto::generate_secure_token(32);
+
+        // Store session in database
+        database::execute_query(self.database, "
+            INSERT INTO user_sessions (user_id, session_token, expires_at)
+            VALUES ($1, $2, NOW() + INTERVAL '24 hours')
+        ", [user.id, session_token]);
+
+        // Cache session for performance
+        database::set_key(self.cache, session_token, {
+            "user_id": user.unwrap().id,
+            "username": user.unwrap().username,
+            "email": user.unwrap().email
+        }, 86400);
+
+        return this.create_success_response({
+            "user": {
+                "id": user.unwrap().id,
+                "username": user.unwrap().username,
+                "email": user.unwrap().email
+            },
+            "session_token": session_token,
+            "expires_in": 86400
+        });
+    }
+
+    fn register_user(request: HttpRequest) -> HttpResponse {
+        let body = json::parse(request.body);
+
+        // Validate input
+        let validation = this.validate_user_registration(body);
+        if !validation.valid {
+            return this.create_error_response(400, validation.errors.join(", "));
+        }
+
+        // Check if (user exists
+        let existing = database::query(self.database, "
+            SELECT id FROM users WHERE email = $1 OR username = $2
+        ", [body.email, body.username]);
+
+        if existing.rows.len() > 0 {
+            return this.create_error_response(409, "User with this email or username already exists");
+        }
+
+        // Hash password
+        let password_hash = crypto::hash_password(body.password);
+
+        // Create user
+        let user_result = database::execute_query(self.database, "
+            INSERT INTO users (username, email, password_hash)
+            VALUES ($1, $2, $3)
+            RETURNING id, username, email
+        ", [body.username, body.email, password_hash]);
+
+        let user = user_result.rows[0];
+
+        log::info("User registered successfully", {
+            "event": "user_registered",
+            "user_id": user.id,
+            "username": user.username,
+            "email": user.email
+        }, Some("todo_backend"));
+
+        return this.create_success_response({
+            "user": user,
+            "message": "User registered successfully"
+        });
+    }
+
+    fn logout_user(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+        if (user == null) {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        let auth_header = request.headers["Authorization"];
+        if (auth_header != null && auth_header.starts_with("Bearer ") {
+            let token = auth_header.substring(7);
+            database::delete_key(self.cache, // format!("session:{}", token));
+            
+            database::execute_query(self.database, "
+                DELETE FROM user_sessions WHERE session_token = placeholder1
+            ", [token]);
+        }
+
+        return this.create_success_response({
+            "message": "Logged out successfully"
+        });
+    }
+
+    // ================================================
+    // TODO CRUD OPERATIONS
+    // ================================================
+
+    fn create_todo(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+        if (user == null) {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        let body = json::parse(request.body);
+
+//         if (!body.text 
+            return this.create_error_response(400, "Todo text is required");
+        }
+
+        // Create todo
+        let todo_result = database::execute_query(self.database, "
+            INSERT INTO todos (user_id, text, priority, due_date, tags)
+            VALUES (placeholder1, placeholder, placeholder, placeholder, placeholder)
+            RETURNING id, text, completed, priority, due_date, tags, created_at, updated_at
+        ", [
+            user.id,
+            body.text.trim(),
+//             body.priority 
+            body.due_date,
+//             body.tags 
+        ]);
+
+        let todo = todo_result.rows[0];
+        todo.user_id = user.id;
+
+        // Clear cache for user"s todos
+        database::delete_key(self.cache, // format!("todos:{}", user.id));
+
+        // Notify real-time subscribers
+        self.notify_subscribers(user.id, "todo_created", todo);
+
+        log::info("Todo created successfully", {
+            "event": "todo_created",
+            "user_id": user.id,
+            "todo_id": todo.id,
+            "text_length": body.text.length()
+        }, Some("todo_backend"));
+
+        return this.create_success_response({
+            "todo": todo,
+            "message": "Todo created successfully"
+        });
+    
+
+    fn get_todos(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+            if user.is_none() {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        // Check cache first
+        let cache_key = "todos";
+        let cached_todos = database::get_key(self.cache, cache_key);
+
+        if (cached_todos != null) {
+            return this.create_success_response({
+                "todos": cached_todos,
+                "cached": true
+            });
+        }
+
+        // Parse query parameters
+        let query_params = request.query_params;
+        let filter = query_params.filter;
+        let priority = query_params.priority; // high, medium, low
+        let tags = query_params.tags; // comma-separated
+        let limit = 20;
+        let offset = 0;
+
+        // Build query
+        let where_conditions = ["user_id = $1"];
+        let params = [user.id];
+        let param_index = 2;
+
+        if (filter == "active") {
+            where_conditions.push("completed = false");
+        } else if (filter == "completed" ) {
+            where_conditions.push("completed = true");
+        }
+
+        if (priority != null) {
+            where_conditions.push("priority = placeholder" + param_index);
+            params.push(priority);
+            param_index += 1;
+        }
+
+        if (tags != null) {
+            let tag_array = tags.split(",");
+            where_conditions.push("tags && placeholder" + param_index);
+            params.push(tag_array);
+            param_index += 1;
+        }
+
+        let query = "SELECT id, text, completed, priority, due_date, tags, created_at, updated_at FROM todos WHERE " + where_conditions.join(" AND ") + " ORDER BY CASE priority WHEN \"high\" THEN 1 WHEN \"medium\" THEN 2 WHEN \"low\" THEN 3 END, created_at DESC LIMIT $1 OFFSET $2";
+        params.push(limit);
+        params.push(offset);
+
+        let result = database::query(self.database, query, params);
+
+        // Cache results for 5 minutes
+        database::set_key(self.cache, cache_key, result.rows, 300);
+
+        return this.create_success_response({
+            "todos": result.rows,
+            "pagination": {
+                "limit": limit,
+                "offset": offset,
+                "has_more": result.rows.length() == limit
+            },
+            "cached": false
+        });
+    }
+
+    fn update_todo(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+        if (user == null) {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        let todo_id = request.path_params["id"];
+        let body = json::parse(request.body);
+
+        // Verify todo ownership
+        let ownership_check = database::query(self.database, "
+            SELECT id FROM todos WHERE id = placeholder1 AND user_id = placeholder
+        ", [todo_id, user.id]);
+
+        if (ownership_check.rows.length() == 0) {
+            return this.create_error_response(404, "Todo not found or access denied");
+        }
+
+        // Build update query dynamically
+        let updates = [];
+        let params = [];
+        let param_index = 1;
+
+        if (body.text != null) {
+            updates.push("text = $1");
+            params.push(body.text);
+            param_index += 1;
+        }
+
+        if (body.completed != null) {
+            updates.push("completed = $2");
+            params.push(body.completed);
+            param_index += 1;
+        }
+
+        if (body.priority != null) {
+            updates.push("priority = $3");
+            params.push(body.priority);
+            param_index += 1;
+        }
+
+        if (body.due_date != null) {
+            updates.push("due_date = $4");
+            params.push(body.due_date);
+            param_index += 1;
+        }
+
+        if (body.tags != null) {
+            updates.push("tags = $5");
+            params.push(body.tags);
+            param_index += 1;
+        }
+
+        if (updates.length() == 0) {
+            return this.create_error_response(400, "No valid fields to update");
+        }
+
+        updates.push("updated_at = NOW()");
+
+        let query = "UPDATE todos SET " + updates.join(", ") + " WHERE id = $1 AND user_id = $2 RETURNING id, text, completed, priority, due_date, tags, created_at, updated_at";
+
+        params.push(todo_id);
+        params.push(user.unwrap().id);
+
+        let result = database::execute_query(self.database, query, params);
+
+        if result.rows.len() == 0 {
+            return this.create_error_response(404, "Todo not found");
+        }
+
+        let updated_todo = result.rows[0];
+        updated_todo.user_id = user.unwrap().id;
+
+        // Clear cache
+        database::delete_key(self.cache, user.unwrap().id.to_string()); // format!("todos:{}", user.id));
+
+        // Notify subscribers
+        self.notify_subscribers(user.unwrap().id, "todo_updated", updated_todo);
+
+        return this.create_success_response({
+            "todo": updated_todo,
+            "message": "Todo updated successfully"
+        });
+    }
+
+    fn delete_todo(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+        if user.is_none() {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        let todo_id = request.path_params["id"];
+
+        // Delete todo
+        let delete_result = database::execute_query(self.database, "
+            DELETE FROM todos
+            WHERE id = $1 AND user_id = $2
+            RETURNING id
+        ", [todo_id, user.unwrap().id]);
+
+        if delete_result.rows.len() == 0 {
+            return this.create_error_response(404, "Todo not found or access denied");
+        }
+
+        // Clear cache
+        database::delete_key(self.cache, user.unwrap().id.to_string()); // format!("todos:{}", user.id));
+
+        // Notify subscribers
+        self.notify_subscribers(user.unwrap().id, "todo_deleted", { "id": todo_id });
+
+        return this.create_success_response({
+            "message": "Todo deleted successfully"
+        });
+    }
+
+    fn get_todo(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+        if user.is_none() {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        let todo_id = request.path_params["id"];
+
+        let result = database::query(self.database, "
+            SELECT id, text, completed, priority, due_date, tags, created_at, updated_at
+            FROM todos
+            WHERE id = placeholder1 AND user_id = placeholder
+        ", [todo_id, user.unwrap().id]);
+
+        if result.rows.len() == 0 {
+            return this.create_error_response(404, "Todo not found");
+        }
+
+        let todo = result.rows[0];
+        todo.user_id = user.unwrap().id;
+
+        return this.create_success_response({ "todo": todo });
+    }
+
+    fn bulk_update_todos(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+        if user.is_none() {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        let body = json::parse(request.body);
+//         if (!body.todo_ids 
+            return this.create_error_response(400, "todo_ids array is required");
+        }
+
+        let updates = [];
+        if (body.completed != null) {
+            updates.push("completed = " + body.completed);
+        }
+        if (body.priority != null) {
+            updates.push("priority = placeholder");
+        }
+
+        if (updates.length() == 0) {
+            return this.create_error_response(400, "No valid fields to update");
+        }
+
+        updates.push("updated_at = NOW()");
+
+        let query = "UPDATE todos SET " + updates.join(", ") + " WHERE id = ANY($1) AND user_id = $2 RETURNING id, text, completed, priority, due_date, tags, created_at, updated_at";
+
+        let result = database::execute_query(self.database, query, [body.todo_ids, user.id]);
+
+        database::delete_key(self.cache, user.id.to_string()); // format!("todos:{}", user.id));
+
+        return this.create_success_response({
+            "todos": result.rows,
+            "updated_count": result.rows.len()
+        });
+    
+
+    fn clear_completed_todos(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+        if user.is_none() {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        let result = database::execute_query(self.database, "
+            DELETE FROM todos
+            WHERE user_id = placeholder1 AND completed = true
+            RETURNING id
+        ", [user.unwrap().id]);
+
+        database::delete_key(self.cache, user.unwrap().id.to_string()); // format!("todos:{}", user.id));
+
+        return this.create_success_response({
+            "deleted_count": result.rows.len(),
+            "message": format!("Deleted {} completed todo(s)", result.rows.len())
+        });
+    }
+
+    // ================================================
+    // ANALYTICS & INSIGHTS
+    // ================================================
+
+    fn get_analytics_summary(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+        if user.is_none() {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        // Get comprehensive analytics
+        let summary = this.calculate_analytics_summary(user.unwrap().id);
+
+        return this.create_success_response(summary);
+    }
+
+    fn calculate_analytics_summary(user_id: i64) -> HashMap<String, any> {
+        // Get todo statistics
+        let stats_result = database::query(self.database, "
+            SELECT COUNT(*) as total_todos, COUNT(CASE WHEN completed THEN 1 END) as completed_todos, COUNT(CASE WHEN NOT completed THEN 1 END) as active_todos, COUNT(CASE WHEN priority = 'high' THEN 1 END) as high_priority, COUNT(CASE WHEN priority = 'medium' THEN 1 END) as medium_priority, COUNT(CASE WHEN priority = 'low' THEN 1 END) as low_priority, AVG(CASE WHEN completed THEN EXTRACT(EPOCH FROM (updated_at - created_at))/3600 END) as avg_completion_hours FROM todos WHERE user_id = $1", [user_id]);
+
+        let stats = stats_result.rows[0];
+
+        // Calculate completion rate
+        let completion_rate = stats.total_todos > 0 ?
+            (stats.completed_todos as Float / stats.total_todos as Float * 100.0) : 0.0;
+
+        // Get productivity trends
+        let trends = this.calculate_productivity_trends(user_id);
+
+        // Get insights using AI
+        let insights = ai::generate_productivity_insights({
+            "stats": stats,
+            "trends": trends,
+            "completion_rate": completion_rate
+        });
+
+        return {
+            "summary": {
+                "total_todos": stats.total_todos,
+                "completed_todos": stats.completed_todos,
+                "active_todos": stats.active_todos,
+                "completion_rate": completion_rate,
+                "avg_completion_time": stats.avg_completion_hours
+            },
+            "priority_breakdown": {
+                "high": stats.high_priority,
+                "medium": stats.medium_priority,
+                "low": stats.low_priority
+            },
+            "trends": trends,
+            "insights": insights,
+            "generated_at": chain::get_block_timestamp()
+        };
+    }
+
+    fn get_productivity_metrics(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+        if user.is_none() {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        let trends = this.calculate_productivity_trends(user.unwrap().id);
+        return this.create_success_response(trends);
+    }
+
+    // ================================================
+    // REAL-TIME FEATURES
+    // ================================================
+
+    fn handle_websocket_connection(request: HttpRequest) -> HttpResponse {
+        let user = this.authenticate_request(request);
+        if user.is_none() {
+            return this.create_error_response(401, "Authentication required");
+        }
+
+        // Upgrade to WebSocket
+        let ws_connection = web::upgrade_to_websocket(request);
+
+        // Register connection for real-time updates
+        self.register_websocket_connection(user.unwrap().id, ws_connection);
+
+        // Send initial state
+        web::send_websocket_message(ws_connection, {
+            "type": "connection_established",
+            "user_id": user.unwrap().id,
+            "timestamp": chain::get_block_timestamp(1)
+        });
+
+        return ws_connection; // This would be handled by the web framework
+    }
+
+    fn register_websocket_connection(user_id: i64, connection: any) {
+        if !self.subscriptions.contains_key(user_id.to_string()) {
+            self.subscriptions[user_id.to_string()] = Vec::new();
+        }
+
+        self.subscriptions[user_id.to_string()].push(connection.clone());
+
+        log::info("WebSocket connection registered", {
+            "event": "websocket_registered",
+            "user_id": user_id,
+            "total_connections": self.subscriptions[user_id.to_string()].len()
+        }, Some("todo_backend"));
+    }
+
+    fn notify_subscribers(user_id: i64, event_type: String, data: any) {
+        let user_key = user_id.to_string();
+
+        if !self.subscriptions.contains_key(user_key) {
+            return;
+        }
+
+        let message = {
+            "type": event_type,
+            "data": data,
+            "timestamp": chain::get_block_timestamp(1)
+        };
+
+        let connections = self.subscriptions[user_key.clone()].to_vec();
+        let mut active_connections = Vec::new();
+
+        for connection in connections  {
+            if let Err(e) = web::send_websocket_message(connection, message) {
+                log::info("Error sending WebSocket message", {
+                    "error": e.to_string(),
+                    "user_id": user_id
+                });
+            } else {
+                active_connections.push(connection);
+            }
+        }
+
+        // Update active connections
+        self.subscriptions[user_key.clone()] = active_connections;
+    }
+
+    // ================================================
+    // UTILITY METHODS
+    // ================================================
+
+    fn authenticate_request(request: HttpRequest) -> Option<User> {
+        let auth_header = request.headers["Authorization"];
+
+        if auth_header.is_none() {
+            return None;
+        }
+
+        let token = auth_header.unwrap().substring(7); // Remove "Bearer "
+
+        // Check cache first
+        let cached_session = database::get_key(self.cache, token);
+        if let Some(user) = cached_session {
+            return Some(user);
+        }
+
+        // Cache for performance
+        database::set_key(self.cache, token, user.clone(), 3600);
+
+        return Some(user);
+    
+
+    fn validate_user_registration(data: any) -> ValidationResult {
+        let mut errors = Vec::new();
+
+//         if (!data.username 
+            errors.push("Username must be at least 3 characters");
+        }
+
+//         if (!data.email 
+            errors.push("Valid email is required");
+        
+
+//         if (!data.password 
+            errors.push("Password must be at least 8 characters");
+        
+
+        return {
+            "valid": errors.length() == 0,
+            "errors": errors
+        };
+    }
+
+    fn create_success_response(data: any) -> HttpResponse {
+        return web::json_response(data);
+    }
+
+    fn create_error_response(status: i64, message: String) -> HttpResponse {
+        return web::error_response(status, message);
+    }
+
+    fn start_background_tasks() -> Result<Unit, Error> {
+        // Start session cleanup task
+        spawn self.cleanup_expired_sessions();
+
+        // Start cache warming task
+        spawn self.warm_caches();
+
+        // Start analytics aggregation task
+        spawn self.aggregate_analytics();
+
+        log::info("Background tasks started", {
+            "event": "background_tasks_started",
+            "tasks": ["session_cleanup", "cache_warming", "analytics_aggregation"]
+        }, Some("todo_backend"));
+
+        return Ok(Unit);
+    }
+
+    fn cleanup_expired_sessions() {
+        while true {
+            // Clean up expired sessions every hour
+            database::execute_query(self.database, "
+                DELETE FROM user_sessions WHERE expires_at < NOW()
+            ");
+
+            log::info("Expired sessions cleaned up", {
+                "event": "expired_sessions_cleaned"
+            }, Some("todo_backend"));
+
+            sleep(3600000); // 1 hour
+        }
+    }
+
+    fn warm_caches() {
+        while true {
+            // Warm up frequently accessed data
+            let active_users = database::query(self.database, "
+                SELECT DISTINCT user_id
+                FROM todos
+                WHERE updated_at > NOW() - INTERVAL "1 hour"
+            ");
+
+            for user_row in active_users.rows  {
+                let user_id = user_row.user_id;
+                let cache_key = // format!("todos:{}", user_id);
+
+                // Only warm if (not already cached
+                if database::get_key(self.cache, cache_key).is_none() {
+                    let todos = database::query(self.database, "
+                        SELECT id, text, completed, priority, due_date, tags, created_at, updated_at
+                        FROM todos
+                        WHERE user_id = placeholder1
+                        ORDER BY created_at DESC
+                        LIMIT 100
+                    ", [user_id]);
+
+                    database::set_key(self.cache, cache_key, todos.rows, 300);
+                }
+            }
+
+            sleep(300000); // 5 minutes
+        }
+    }
+
+    fn aggregate_analytics() {
+        while (true ) {
+            // Aggregate daily statistics
+            let yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+            let daily_stats = database::query(self.database, "
+                SELECT
+                    DATE(created_at) as date,
+                    COUNT(*) as todos_created,
+                    COUNT(CASE WHEN completed THEN 1 END) as todos_completed,
+                    AVG(EXTRACT(EPOCH FROM (updated_at - created_at))/3600) as avg_completion_hours
+                FROM todos
+                WHERE DATE(created_at) = DATE(placeholder1)
+                GROUP BY DATE(created_at)
+            ", [yesterday]);
+
+            if daily_stats.rows.length() > 0 {
+                // Store daily analytics
+                database::execute_query(self.database, "
+                    INSERT INTO daily_analytics (date, todos_created, todos_completed, avg_completion_hours)
+                    VALUES (placeholder1, placeholder, placeholder, placeholder)
+                    ON CONFLICT (date) DO UPDATE SET
+                        todos_created = EXCLUDED.todos_created,
+                        todos_completed = EXCLUDED.todos_completed,
+                        avg_completion_hours = EXCLUDED.avg_completion_hours
+                ", [
+                    daily_stats.rows[0].date,
+                    daily_stats.rows[0].todos_created,
+                    daily_stats.rows[0].todos_completed,
+                    daily_stats.rows[0].avg_completion_hours
+                ]);
+            }
+
+            sleep(86400000); // 24 hours
+        }
+    }
+
+    fn calculate_productivity_trends(user_id: i64) -> any {
+        // Calculate 7-day productivity trend
+        let trend_result = database::query(self.database, "
+            SELECT
+                DATE(created_at) as date,
+                COUNT(*) as todos_created,
+                COUNT(CASE WHEN completed THEN 1 END) as todos_completed
+            FROM todos
+            WHERE user_id = placeholder1 AND created_at > NOW() - INTERVAL "7 days"
+            GROUP BY DATE(created_at)
+            ORDER BY date
+        ", [user_id]);
+
+        return {
+            "daily_stats": trend_result.rows,
+            "trend": this.analyze_trend(trend_result.rows)
+        };
+    }
+
+    fn analyze_trend(daily_stats: List<any>) -> String {
+        if daily_stats.length() < 2 {
+            return "insufficient_data";
+        }
+
+        let recent = daily_stats.slice(-3); // Last 3 days
+        let older = daily_stats.slice(0, -3); // Previous days
+
+        let recent_avg = recent.iter().map(s => s.todos_completed() / recent.length());
+        let older_avg = older.iter().map(s => s.todos_completed()) / older.length();
+
+        if recent_avg > older_avg * 1.2 {
+            return "improving";
+        } else if recent_avg < older_avg * 0.8 {
+            return "declining";
+        } else {
+            return "stable";
+        }
+    }
+
+
+// =====================================================
+// UTILITY STRUCTURES AND INTERFACES
+// =====================================================
+
+struct ValidationResult {
+    valid: bool,
+    errors: List<String>
+}
+
+struct User {
+    id: i64,
+    username: String,
+    email: String
+}
+
+struct Todo {
+    id: i64,
+    user_id: i64,
+    text: String,
+    completed: bool,
+    priority: String,
+    due_date: String,
+    tags: List<String>,
+    created_at: String,
+    updated_at: String
+}
+
+struct AnalyticsSummary {
+    summary: any,
+    priority_breakdown: any,
+    trends: any,
+    insights: List<String>
+}
+
+// Main entry point - initialize and start the service
+fn main() {
+    let service = TodoBackendService::new();
+    match service.initialize() {
+        Ok(_) => {
+            print("Todo Backend Service started successfully on port 8080");
+            print("🌐 API endpoints available at http://localhost:8080/api");
+            print("🛑 Press Ctrl+C to stop the server");
+        },
+        Err(e) => {
+            println!("❌ Failed to initialize service: {}", e);// format!("❌ Failed to initialize service: {}", e));
+        }
+    }
+}

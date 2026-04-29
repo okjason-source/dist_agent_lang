@@ -1,0 +1,858 @@
+// Practical Backend Connectivity Example
+// Real-world implementation showing how to connect dist_agent_lang to actual backend systems
+
+// =====================================================
+// PATTERN 1: Full-Stack E-commerce Application
+// =====================================================
+
+// @trust("hybrid")
+// @secure
+// @persistent
+service EcommerceBackend {
+    // Backend connections
+    database: any,
+    redis_cache: any,
+    payment_api: any,
+    email_service: any,
+    shipping_api: any,
+
+    fn initialize() -> Result<Unit, Error> {
+        log::info("ecommerce", {
+            "service": "EcommerceBackend",
+            "status": "initializing",
+            "timestamp": chain::get_block_timestamp()
+        });
+
+        // Initialize database connection
+        self.database = database::connect("postgresql://ecommerce_user:secure_password@localhost:5432/ecommerce_db");
+
+        // Initialize Redis cache
+        self.redis_cache = database::connect("redis://:cache_password@localhost:6379/0");
+
+        // Initialize payment API client
+        self.payment_api = web::create_http_client({
+            "base_url": "https://api.stripe.com/v1",
+            "headers": {
+                "Authorization": format!("Bearer {}", "sk_test_YOUR_STRIPE_SECRET_KEY"),
+                "Content-Type": "application/json"
+            },
+            "timeout": 30000,
+            "retry_count": 3
+        });
+
+        // Initialize email service
+        self.email_service = web::create_http_client({
+            "base_url": "https://api.sendgrid.com/v1",
+            "headers": {
+                "Authorization": format!("Bearer {}", "YOUR_SENDGRID_API_KEY"),
+                "Content-Type": "application/json"
+            }
+        });
+
+        // Initialize shipping API
+        self.shipping_api = web::create_http_client({
+            "base_url": "https://api.shippo.com/v1",
+            "headers": {
+                "Authorization": format!("ShippoToken {}", "YOUR_SHIPPO_API_TOKEN")
+            }
+        });
+
+        // Create database tables
+        self.initialize_database_schema();
+
+        log::info("ecommerce", {
+            "service": "EcommerceBackend",
+            "status": "initialized",
+            "connections": ["postgresql", "redis", "stripe", "sendgrid", "shippo"]
+        });
+
+        return Ok(());
+    }
+
+    fn initialize_database_schema() -> Result<Unit, Error> {
+        let schema_sql = "
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                first_name VARCHAR(100),
+                last_name VARCHAR(100),
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS products (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                price DECIMAL(10,2) NOT NULL,
+                inventory_count INTEGER DEFAULT 0,
+                category VARCHAR(100),
+                image_url VARCHAR(500),
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS orders (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                total_amount DECIMAL(10,2) NOT NULL,
+                status VARCHAR(50) DEFAULT 'pending',
+                stripe_payment_intent_id VARCHAR(255),
+                shipping_address JSONB,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS order_items (
+                id SERIAL PRIMARY KEY,
+                order_id INTEGER REFERENCES orders(id),
+                product_id INTEGER REFERENCES products(id),
+                quantity INTEGER NOT NULL,
+                unit_price DECIMAL(10,2) NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE INDEX idx_users_email ON users(email);
+            CREATE INDEX idx_products_category ON products(category);
+            CREATE INDEX idx_orders_user ON orders(user_id);
+            CREATE INDEX idx_orders_status ON orders(status);
+        ";
+
+        database::execute_query(self.database, schema_sql);
+
+        return Ok(());
+    }
+
+    // ================================================
+    // USER MANAGEMENT
+    // ================================================
+
+    fn register_user(user_data: any) -> Result<UserRegistration, Error> {
+        // Validate input
+        let validation = self.validate_user_data(user_data);
+        if !validation.valid {
+            return Err(Error::new("ValidationError", validation.errors.join(", ")));
+        }
+
+        // Check if user exists
+        let existing_user = database::query(self.database,
+            "SELECT id FROM users WHERE email = $1",
+            [user_data.email]
+        );
+
+        if existing_user.rows.length() > 0 {
+            return Err(Error::new("UserExists", "User with this email already exists"));
+        }
+
+        // Hash password
+        let password_hash = crypto::hash_password(user_data.password);
+
+        // Insert user
+        let insert_result = database::execute_query(self.database, "
+            INSERT INTO users (email, password_hash, first_name, last_name)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id
+        ", [user_data.email, password_hash, user_data.first_name, user_data.last_name]);
+
+        let user_id = insert_result.rows[0].id;
+
+        // Cache user data
+        let user_cache = {
+            "id": user_id,
+            "email": user_data.email,
+            "first_name": user_data.first_name,
+            "last_name": user_data.last_name
+        };
+        database::set_key(self.redis_cache, format!("user:{}", user_id), user_cache, 3600);
+
+        // Send welcome email
+        self.send_welcome_email(user_data.email, user_data.first_name);
+
+        log::info("ecommerce", {
+            "event": "user_registered",
+            "user_id": user_id,
+            "email": user_data.email
+        });
+
+        return Ok(UserRegistration {
+            "user_id": user_id,
+            "email": user_data.email,
+            "status": "registered",
+            "welcome_email_sent": true
+        });
+    }
+
+    fn authenticate_user(email: String, password: String) -> Result<UserSession, Error> {
+        // Get user from cache first
+        let cached_user = database::get_key(self.redis_cache, format!("user:{}", email));
+        let user = null;
+
+        if cached_user != null {
+            user = cached_user;
+        } else {
+            // Get from database
+            let db_result = database::query(self.database,
+                "SELECT id, email, password_hash, first_name, last_name FROM users WHERE email = $1",
+                [email]
+            );
+
+            if db_result.rows.length() == 0 {
+                return Err(Error::new("AuthenticationFailed", "Invalid credentials"));
+            }
+
+            user = db_result.rows[0];
+
+            // Cache user data
+            database::set_key(self.redis_cache, format!("user:{}", user.id), user, 3600);
+        }
+
+        // Verify password
+        let password_valid = crypto::verify_password(password, user.password_hash);
+        if !password_valid {
+            return Err(Error::new("AuthenticationFailed", "Invalid credentials"));
+        }
+
+        // Generate session token
+        let session_token = crypto::generate_session_token();
+
+        // Store session
+        let session_data = {
+            "user_id": user.id,
+            "email": user.email,
+            "created_at": chain::get_block_timestamp(),
+            "expires_at": chain::get_block_timestamp() + 86400000 // 24 hours
+        };
+        database::set_key(self.redis_cache, format!("session:{}", session_token), session_data, 86400);
+
+        return Ok(UserSession {
+            "session_token": session_token,
+            "user_id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "expires_at": session_data.expires_at
+        });
+    }
+
+    // ================================================
+    // PRODUCT MANAGEMENT
+    // ================================================
+
+    fn get_products(category: String, page: i64, limit: i64) -> Result<ProductList, Error> {
+        let offset = (page - 1) * limit;
+
+        // Try cache first
+        let cache_key = format!("products:{}:{}:{}", category, page, limit);
+        let cached_products = database::get_key(self.redis_cache, cache_key);
+
+        if cached_products != null {
+            return Ok(cached_products);
+        }
+
+        // Query database
+        let query = if category == "all" {
+            "SELECT id, name, description, price, inventory_count, category, image_url FROM products ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+        } else {
+            "SELECT id, name, description, price, inventory_count, category, image_url FROM products WHERE category = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3"
+        };
+
+        let params = if category == "all" {
+            [limit, offset]
+        } else {
+            [category, limit, offset]
+        };
+
+        let result = database::query(self.database, query, params);
+
+        // Get total count
+        let count_query = if category == "all" {
+            "SELECT COUNT(*) as total FROM products"
+        } else {
+            "SELECT COUNT(*) as total FROM products WHERE category = $1"
+        };
+
+        let count_result = database::query(self.database, count_query,
+            category == "all" ? [] : [category]);
+
+        let total_products = count_result.rows[0].total;
+        let total_pages = ceil(total_products / limit);
+
+        let product_list = {
+            "products": result.rows,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total_products": total_products,
+                "total_pages": total_pages,
+                "has_next": page < total_pages,
+                "has_prev": page > 1
+            }
+        };
+
+        // Cache result
+        database::set_key(self.redis_cache, cache_key, product_list, 300); // 5 minutes
+
+        return Ok(product_list);
+    }
+
+    fn get_product(product_id: i64) -> Result<Product, Error> {
+        // Try cache first
+        let cache_key = format!("product:{}", product_id);
+        let cached_product = database::get_key(self.redis_cache, cache_key);
+
+        if cached_product != null {
+            return Ok(cached_product);
+        }
+
+        // Query database
+        let result = database::query(self.database,
+            "SELECT * FROM products WHERE id = $1",
+            [product_id]
+        );
+
+        if result.rows.length() == 0 {
+            return Err(Error::new("ProductNotFound", format!("Product {} not found", product_id)));
+        }
+
+        let product = result.rows[0];
+
+        // Cache product
+        database::set_key(self.redis_cache, cache_key, product, 600); // 10 minutes
+
+        return Ok(product);
+    }
+
+    // ================================================
+    // ORDER MANAGEMENT
+    // ================================================
+
+    fn create_order(user_id: i64, cart_items: List<any>) -> Result<Order, Error> {
+        // Validate cart items
+        let validation = self.validate_cart_items(cart_items);
+        if !validation.valid {
+            return Err(Error::new("ValidationError", validation.errors.join(", ")));
+        }
+
+        // Calculate total
+        let total_amount = cart_items.sum(item => item.quantity * item.unit_price);
+
+        // Check inventory
+        for item in cart_items {
+            let product = self.get_product(item.product_id);
+            if product.inventory_count < item.quantity {
+                return Err(Error::new("InsufficientInventory",
+                    format!("Insufficient inventory for product {}", item.product_id)));
+            }
+        }
+
+        // Begin transaction
+        let transaction = database::begin_transaction(self.database);
+
+        try {
+            // Create order
+            let order_result = database::execute_in_transaction(transaction, "
+                INSERT INTO orders (user_id, total_amount, status)
+                VALUES ($1, $2, 'pending')
+                RETURNING id
+            ", [user_id, total_amount]);
+
+            let order_id = order_result.rows[0].id;
+
+            // Add order items
+            for item in cart_items {
+                database::execute_in_transaction(transaction, "
+                    INSERT INTO order_items (order_id, product_id, quantity, unit_price)
+                    VALUES ($1, $2, $3, $4)
+                ", [order_id, item.product_id, item.quantity, item.unit_price]);
+
+                // Update inventory
+                database::execute_in_transaction(transaction, "
+                    UPDATE products SET inventory_count = inventory_count - $1 WHERE id = $2
+                ", [item.quantity, item.product_id]);
+            }
+
+            // Create payment intent with Stripe
+            let payment_intent = self.create_payment_intent(total_amount, order_id);
+
+            // Update order with payment intent
+            database::execute_in_transaction(transaction, "
+                UPDATE orders SET stripe_payment_intent_id = $1 WHERE id = $2
+            ", [payment_intent.id, order_id]);
+
+            // Commit transaction
+            database::commit_transaction(transaction);
+
+            // Send order confirmation
+            let order_details = {
+                "order_id": order_id,
+                "total_amount": total_amount,
+                "items": cart_items
+            };
+            self.send_order_confirmation(user_id, order_details);
+
+            log::info("ecommerce", {
+                "event": "order_created",
+                "order_id": order_id,
+                "user_id": user_id,
+                "total_amount": total_amount,
+                "item_count": cart_items.length()
+            });
+
+            return Ok(Order {
+                "order_id": order_id,
+                "user_id": user_id,
+                "total_amount": total_amount,
+                "status": "pending",
+                "payment_intent": payment_intent.client_secret,
+                "items": cart_items
+            });
+
+        } catch (error) {
+            // Rollback transaction
+            database::rollback_transaction(transaction);
+            throw error;
+        }
+    }
+
+    // ================================================
+    // PAYMENT INTEGRATION
+    // ================================================
+
+    fn create_payment_intent(amount: Float, order_id: i64) -> PaymentIntent {
+        let request = web::create_http_request({
+            "method": "POST",
+            "path": "/payment_intents",
+            "body": json::stringify({
+                "amount": (amount * 100).to_i64(), // Convert to cents
+                "currency": "usd",
+                "metadata": {
+                    "order_id": order_id.to_string()
+                }
+            })
+        });
+
+        let response = web::execute_request(self.payment_api, request);
+
+        if response.status == 200 {
+            let payment_data = json::parse(response.body);
+            return PaymentIntent {
+                "id": payment_data.id,
+                "client_secret": payment_data.client_secret,
+                "amount": amount,
+                "currency": "usd"
+            };
+        } else {
+            let error_data = json::parse(response.body);
+            throw Error::new("PaymentError", error_data.error.message);
+        }
+    }
+
+    fn confirm_payment(order_id: i64, payment_intent_id: String) -> Result<PaymentConfirmation, Error> {
+        // Get order details
+        let order_result = database::query(self.database,
+            "SELECT total_amount, status FROM orders WHERE id = $1",
+            [order_id]
+        );
+
+        if order_result.rows.length() == 0 {
+            return Err(Error::new("OrderNotFound", format!("Order {} not found", order_id)));
+        }
+
+        let order = order_result.rows[0];
+
+        if order.status == "paid" {
+            return Ok(PaymentConfirmation {
+                "order_id": order_id,
+                "status": "already_paid",
+                "message": "Order has already been paid"
+            });
+        }
+
+        // Confirm payment with Stripe
+        let request = web::create_http_request({
+            "method": "GET",
+            "path": format!("/payment_intents/{}", payment_intent_id)
+        });
+
+        let response = web::execute_request(self.payment_api, request);
+
+        if response.status == 200 {
+            let payment_data = json::parse(response.body);
+
+            if payment_data.status == "succeeded" {
+                // Update order status
+                database::execute_query(self.database, "
+                    UPDATE orders SET status = 'paid' WHERE id = $1
+                ", [order_id]);
+
+                // Send payment confirmation email
+                self.send_payment_confirmation(order_id);
+
+                // Trigger order fulfillment
+                self.fulfill_order(order_id);
+
+                log::info("ecommerce", {
+                    "event": "payment_confirmed",
+                    "order_id": order_id,
+                    "payment_intent_id": payment_intent_id,
+                    "amount": order.total_amount
+                });
+
+                return Ok(PaymentConfirmation {
+                    "order_id": order_id,
+                    "status": "paid",
+                    "payment_intent_id": payment_intent_id,
+                    "amount": order.total_amount
+                });
+            } else {
+                return Ok(PaymentConfirmation {
+                    "order_id": order_id,
+                    "status": "payment_pending",
+                    "message": format!("Payment status: {}", payment_data.status)
+                });
+            }
+        } else {
+            let error_data = json::parse(response.body);
+            return Err(Error::new("PaymentVerificationError", error_data.error.message));
+        }
+    }
+
+    // ================================================
+    // SHIPPING INTEGRATION
+    // ================================================
+
+    fn create_shipping_label(order_id: i64, shipping_address: any) -> Result<ShippingLabel, Error> {
+        // Get order items for package calculation
+        let items_result = database::query(self.database, "
+            SELECT oi.quantity, p.name, p.weight
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = $1
+        ", [order_id]);
+
+        // Calculate package details
+        let package_weight = items_result.rows.sum(item => item.quantity * item.weight);
+        let package_dimensions = this.calculate_package_dimensions(items_result.rows);
+
+        // Create shipment with Shippo
+        let shipment_request = web::create_http_request({
+            "method": "POST",
+            "path": "/shipments",
+            "body": json::stringify({
+                "address_from": {
+                    "name": "Ecommerce Store",
+                    "street1": "123 Store Street",
+                    "city": "New York",
+                    "state": "NY",
+                    "zip": "10001",
+                    "country": "US"
+                },
+                "address_to": shipping_address,
+                "parcels": [{
+                    "length": package_dimensions.length,
+                    "width": package_dimensions.width,
+                    "height": package_dimensions.height,
+                    "distance_unit": "in",
+                    "weight": package_weight,
+                    "mass_unit": "lb"
+                }]
+            })
+        });
+
+        let response = web::execute_request(self.shipping_api, shipment_request);
+
+        if response.status == 201 {
+            let shipment_data = json::parse(response.body);
+
+            // Purchase shipping label
+            let rate = shipment_data.rates[0]; // Use cheapest rate
+            let label_request = web::create_http_request({
+                "method": "POST",
+                "path": format!("/transactions"),
+                "body": json::stringify({
+                    "rate": rate.object_id,
+                    "label_file_type": "PDF"
+                })
+            });
+
+            let label_response = web::execute_request(self.shipping_api, label_request);
+
+            if label_response.status == 201 {
+                let label_data = json::parse(label_response.body);
+
+                // Update order with tracking number
+                database::execute_query(self.database, "
+                    UPDATE orders SET tracking_number = $1 WHERE id = $2
+                ", [label_data.tracking_number, order_id]);
+
+                return Ok(ShippingLabel {
+                    "order_id": order_id,
+                    "tracking_number": label_data.tracking_number,
+                    "carrier": label_data.carrier,
+                    "service_level": label_data.servicelevel_name,
+                    "cost": label_data.rate,
+                    "label_url": label_data.label_url,
+                    "estimated_delivery": label_data.eta
+                });
+            }
+        }
+
+        return Err(Error::new("ShippingError", "Failed to create shipping label"));
+    }
+
+    // ================================================
+    // EMAIL INTEGRATION
+    // ================================================
+
+    fn send_welcome_email(email: String, first_name: String) -> Result<EmailResult, Error> {
+        let email_request = web::create_http_request({
+            "method": "POST",
+            "path": "/mail/send",
+            "body": json::stringify({
+                "personalizations": [{
+                    "to": [{"email": email}],
+                    "subject": "Welcome to Our Store!"
+                }],
+                "from": {"email": "noreply@store.com"},
+                "content": [{
+                    "type": "text/html",
+                    "value": format!("<h1>Welcome, {}!</h1><p>Thank you for joining our store.</p>", first_name)
+                }]
+            })
+        });
+
+        let response = web::execute_request(self.email_service, email_request);
+
+        if response.status == 202 {
+            return Ok(EmailResult {
+                "success": true,
+                "email": email,
+                "type": "welcome"
+            });
+        } else {
+            log::error("email", {
+                "event": "welcome_email_failed",
+                "email": email,
+                "status": response.status
+            });
+            return Ok(EmailResult {
+                "success": false,
+                "email": email,
+                "type": "welcome"
+            });
+        }
+    }
+
+    fn send_order_confirmation(user_id: i64, order_details: any) -> Result<EmailResult, Error> {
+        // Get user email
+        let user_result = database::query(self.database,
+            "SELECT email, first_name FROM users WHERE id = $1",
+            [user_id]
+        );
+
+        let user = user_result.rows[0];
+
+        let email_html = this.generate_order_confirmation_html(order_details);
+
+        let email_request = web::create_http_request({
+            "method": "POST",
+            "path": "/mail/send",
+            "body": json::stringify({
+                "personalizations": [{
+                    "to": [{"email": user.email}],
+                    "subject": format!("Order Confirmation #{}", order_details.order_id)
+                }],
+                "from": {"email": "orders@store.com"},
+                "content": [{
+                    "type": "text/html",
+                    "value": email_html
+                }]
+            })
+        });
+
+        let response = web::execute_request(self.email_service, email_request);
+
+        return Ok(EmailResult {
+            "success": response.status == 202,
+            "email": user.email,
+            "type": "order_confirmation",
+            "order_id": order_details.order_id
+        });
+    }
+
+    // ================================================
+    // UTILITY METHODS
+    // ================================================
+
+    fn validate_user_data(user_data: any) -> ValidationResult {
+        let errors = [];
+
+        if !user_data.email || !user_data.email.contains("@") {
+            errors.push("Invalid email address");
+        }
+
+        if !user_data.password || user_data.password.length() < 8 {
+            errors.push("Password must be at least 8 characters");
+        }
+
+        if !user_data.first_name {
+            errors.push("First name is required");
+        }
+
+        return ValidationResult {
+            "valid": errors.length() == 0,
+            "errors": errors
+        };
+    }
+
+    fn validate_cart_items(cart_items: List<any>) -> ValidationResult {
+        let errors = [];
+
+        if cart_items.length() == 0 {
+            errors.push("Cart is empty");
+        }
+
+        for item in cart_items {
+            if !item.product_id || item.product_id <= 0 {
+                errors.push("Invalid product ID");
+            }
+
+            if !item.quantity || item.quantity <= 0 {
+                errors.push("Invalid quantity");
+            }
+
+            if !item.unit_price || item.unit_price <= 0 {
+                errors.push("Invalid unit price");
+            }
+        }
+
+        return ValidationResult {
+            "valid": errors.length() == 0,
+            "errors": errors
+        };
+    }
+
+    fn generate_order_confirmation_html(order_details: any) -> String {
+        let items_html = order_details.items.map(item =>
+            format!("<tr><td>{}</td><td>{}</td><td>${}</td></tr>",
+                item.name, item.quantity, item.unit_price * item.quantity)
+        ).join("");
+
+        return format!("
+            <h1>Order Confirmation</h1>
+            <p>Thank you for your order!</p>
+            <h2>Order #${}</h2>
+            <table border='1'>
+                <tr><th>Item</th><th>Quantity</th><th>Price</th></tr>
+                {}
+            </table>
+            <p><strong>Total: ${}</strong></p>
+        ", order_details.order_id, items_html, order_details.total_amount);
+    }
+
+    fn calculate_package_dimensions(items: List<any>) -> Dimensions {
+        // Simple calculation - in real app, this would be more sophisticated
+        return Dimensions {
+            "length": 12.0,
+            "width": 8.0,
+            "height": 6.0
+        };
+    }
+
+    fn fulfill_order(order_id: i64) -> Result<Unit, Error> {
+        // This would integrate with inventory management,
+        // shipping systems, etc.
+        log::info("ecommerce", {
+            "event": "order_fulfillment_started",
+            "order_id": order_id
+        });
+
+        return Ok(());
+    }
+}
+
+// =====================================================
+// UTILITY STRUCTURES
+// =====================================================
+
+struct UserRegistration {
+    user_id: i64,
+    email: String,
+    status: String,
+    welcome_email_sent: bool
+}
+
+struct UserSession {
+    session_token: String,
+    user_id: i64,
+    email: String,
+    first_name: String,
+    last_name: String,
+    expires_at: i64
+}
+
+struct ProductList {
+    products: List<any>,
+    pagination: any
+}
+
+struct Product {
+    id: i64,
+    name: String,
+    description: String,
+    price: Float,
+    inventory_count: i64,
+    category: String,
+    image_url: String
+}
+
+struct Order {
+    order_id: i64,
+    user_id: i64,
+    total_amount: Float,
+    status: String,
+    payment_intent: String,
+    items: List<any>
+}
+
+struct PaymentIntent {
+    id: String,
+    client_secret: String,
+    amount: Float,
+    currency: String
+}
+
+struct PaymentConfirmation {
+    order_id: i64,
+    status: String,
+    payment_intent_id: String,
+    amount: Float,
+    message: String
+}
+
+struct ShippingLabel {
+    order_id: i64,
+    tracking_number: String,
+    carrier: String,
+    service_level: String,
+    cost: Float,
+    label_url: String,
+    estimated_delivery: String
+}
+
+struct EmailResult {
+    success: bool,
+    email: String,
+    type: String,
+    order_id: i64
+}
+
+struct ValidationResult {
+    valid: bool,
+    errors: List<String>
+}
+
+struct Dimensions {
+    length: Float,
+    width: Float,
+    height: Float
+}

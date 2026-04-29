@@ -1,0 +1,108 @@
+// Vibes Job – AI agent + task + generate_text, plus minting vibes and optional crypto rewards.
+// Uses: ai::, log, chain (KEYS rewards), cloudadmin (trust / policy).
+// Attributes: @trust("hybrid"), @ai, @chain("ethereum"), @cloudadmin.
+
+@trust("hybrid")
+@ai
+@chain("ethereum")
+@cloudadmin
+service VibesJob {
+    vibes_agent_id: string = "";
+    last_task_id: string = "";
+    owner: string = "";
+
+    // Minting vibes (in-service balance)
+    vibes_balance: map<string, int>;
+    total_vibes_minted: int = 0;
+
+    // Optional crypto reward (KEYS mint to recipient)
+    reward_contract: string = "";
+    reward_minter: string = "";
+    reward_amount: string = "1000000000000000000";
+
+    fn initialize(caller: string) -> bool {
+        self.owner = caller;
+        log::info("vibes", "VibesJob initialized, owner: " + caller);
+        return true;
+    }
+
+    fn get_vibes_prompt() -> string {
+        return "Write one short, kind sentence of encouragement or gratitude to show on a tip jar website. No quotes or attribution.";
+    }
+
+    fn run_vibes_job() -> string {
+        log::info("vibes", "Starting vibes job: spawn agent, create task, execute, generate.");
+
+        let config = {
+            "name": "vibes_agent",
+            "type": "ai",
+            "role": "good_vibes_writer",
+            "capabilities": ["generate_text", "analyze_text"],
+            "trust_level": "hybrid"
+        };
+        let agent_id = ai::spawn_agent(config);
+        self.vibes_agent_id = agent_id;
+        log::info("vibes", "Spawned agent: " + agent_id);
+
+        let prompt = self.get_vibes_prompt();
+        let task_type = "generate_vibes";
+        let priority = "high";
+
+        let task_id = ai::create_task(agent_id, task_type, prompt, priority);
+        self.last_task_id = task_id;
+        log::info("vibes", "Created task: " + task_id);
+
+        let exec_result = ai::execute_task(agent_id, task_id);
+        log::info("vibes", "Executed task: " + exec_result);
+
+        let vibes_text = ai::generate_text(prompt);
+        log::info("vibes", "Good vibes: " + vibes_text);
+
+        return vibes_text;
+    }
+
+    // Set optional KEYS reward (owner only). minter = address allowed to call mint on the token contract.
+    fn set_reward_contract(caller: string, contract_address: string, minter_address: string, amount: string) -> bool {
+        if (caller != self.owner) {
+            log::info("vibes", "[ERROR] Only owner can set reward contract");
+            return false;
+        }
+        self.reward_contract = contract_address;
+        self.reward_minter = minter_address;
+        self.reward_amount = amount;
+        log::info("vibes", "Reward contract set: " + contract_address + ", minter: " + minter_address);
+        return true;
+    }
+
+    // Get good vibes, mint vibes to caller, and optionally mint KEYS reward to caller.
+    fn get_good_vibes(caller: string) -> string {
+        let vibes_text = self.run_vibes_job();
+
+        self.vibes_balance[caller] = self.vibes_balance[caller] + 1;
+        self.total_vibes_minted = self.total_vibes_minted + 1;
+        log::info("vibes", "Minted 1 vibes to " + caller + ", total vibes: " + self.total_vibes_minted);
+
+        if (self.reward_contract != "" && self.reward_minter != "") {
+            let mint_result = chain::call(1, self.reward_contract, "mint", {
+                "caller": self.reward_minter,
+                "to": caller,
+                "amount": self.reward_amount
+            });
+            if (mint_result != "") {
+                log::info("vibes", "Crypto reward minted to " + caller);
+            } else {
+                log::info("vibes", "[ERROR] Reward mint failed for " + caller);
+            }
+        }
+
+        return vibes_text;
+    }
+
+    fn get_vibes_balance(account: string) -> int {
+        return self.vibes_balance[account];
+    }
+
+    fn get_total_vibes_minted() -> int {
+        return self.total_vibes_minted;
+    }
+}

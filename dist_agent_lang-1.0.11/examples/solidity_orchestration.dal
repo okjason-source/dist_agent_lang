@@ -1,0 +1,275 @@
+// Solidity Contract Orchestration Example
+// Shows how to easily integrate dist_agent_lang orchestration with existing Solidity contracts
+
+@trust("hybrid")
+@chain("ethereum", "polygon", "arbitrum")
+@interface("typescript")
+service SolidityOrchestrator {
+    // Registry of Solidity contract addresses
+    solidity_contracts: map<string, map<int, string>>;  // contract_name -> (chain_id -> address)
+    
+    // Initialize with Solidity contract addresses
+    fn initialize() {
+        // Example: Uniswap V2 Router (Solidity contract)
+        self.solidity_contracts["UniswapRouter"] = {
+            "1": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",  // Ethereum
+            "137": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",  // Polygon
+            "42161": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24"  // Arbitrum
+        };
+        
+        // Example: Aave Lending Pool (Solidity contract)
+        self.solidity_contracts["AaveLendingPool"] = {
+            "1": "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",  // Ethereum
+            "137": "0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf"   // Polygon
+        };
+        
+        // Example: ERC20 Token (Solidity contract)
+        self.solidity_contracts["USDC"] = {
+            "1": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",  // Ethereum
+            "137": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"   // Polygon
+        };
+        
+        log::info("orchestrator", "Solidity contracts registered");
+    }
+    
+    // Generic function to call any Solidity contract
+    fn call_solidity_contract(
+        contract_name: string,
+        chain_id: int,
+        function_name: string,
+        args: map<string, any>
+    ) -> string {
+        // Get contract address
+        let contract_address = self.solidity_contracts[contract_name][chain_id];
+        
+        if (contract_address == null) {
+            log::error("orchestrator", "Contract " + contract_name + " not found on chain " + chain_id);
+            return "error: contract not found";
+        }
+        
+        // Call the Solidity contract function
+        let result = chain::call(chain_id, contract_address, function_name, args);
+        
+        log::info("orchestrator", "Called " + function_name + " on " + contract_name);
+        return result;
+    }
+    
+    // Orchestrate a DeFi operation using multiple Solidity contracts
+    fn orchestrate_defi_operation(
+        token_a: string,
+        token_b: string,
+        amount: int,
+        chain_id: int
+    ) -> map<string, any> {
+        log::info("orchestrator", "Starting DeFi orchestration");
+        
+        // Step 1: Check balance on ERC20 token (Solidity contract)
+        let balance = self.call_solidity_contract(
+            "USDC",
+            chain_id,
+            "balanceOf",
+            {"account": auth::session().user_id}
+        );
+        
+        log::info("orchestrator", "Balance: " + balance);
+        
+        // Step 2: Approve Uniswap to spend tokens (ERC20 Solidity contract)
+        let approve_result = self.call_solidity_contract(
+            "USDC",
+            chain_id,
+            "approve",
+            {
+                "spender": self.solidity_contracts["UniswapRouter"][chain_id],
+                "amount": amount
+            }
+        );
+        
+        log::info("orchestrator", "Approval: " + approve_result);
+        
+        // Step 3: Execute swap on Uniswap (Solidity contract)
+        let swap_result = self.call_solidity_contract(
+            "UniswapRouter",
+            chain_id,
+            "swapExactTokensForTokens",
+            {
+                "amountIn": amount,
+                "amountOutMin": amount * 95 / 100,  // 5% slippage
+                "path": [token_a, token_b],
+                "to": auth::session().user_id,
+                "deadline": chain::get_block_timestamp(chain_id) + 1800  // 30 minutes
+            }
+        );
+        
+        log::info("orchestrator", "Swap completed: " + swap_result);
+        
+        return {
+            "balance": balance,
+            "approval": approve_result,
+            "swap": swap_result,
+            "status": "success"
+        };
+    }
+    
+    // Multi-chain orchestration: Find best price across chains
+    fn find_best_price_across_chains(
+        token_a: string,
+        token_b: string,
+        amount: int
+    ) -> map<string, any> {
+        log::info("orchestrator", "Finding best price across chains");
+        
+        let prices = {};
+        let chains = [1, 137, 42161];  // Ethereum, Polygon, Arbitrum
+        
+        // Check price on each chain
+        for chain_id in chains  {
+            let router_address = self.solidity_contracts["UniswapRouter"][chain_id];
+            
+            if (router_address != null ) {
+                // Get quote from Uniswap (Solidity contract)
+                let quote = self.call_solidity_contract(
+                    "UniswapRouter",
+                    chain_id,
+                    "getAmountsOut",
+                    {
+                        "amountIn": amount,
+                        "path": [token_a, token_b]
+                    }
+                );
+                
+                prices[chain_id] = quote;
+                log::info("orchestrator", "Chain " + chain_id + " quote: " + quote);
+            }
+        }
+        
+        // Find best price
+        let best_chain = null;
+        let best_price = 0;
+        
+        for chain_id in chains  {
+            if (prices[chain_id] > best_price ) {
+                best_price = prices[chain_id];
+                best_chain = chain_id;
+            }
+        }
+        
+        return {
+            "best_chain": best_chain,
+            "best_price": best_price,
+            "all_prices": prices
+        };
+    }
+    
+    // Orchestrate lending operation using Aave (Solidity contract)
+    fn orchestrate_lending(
+        asset: string,
+        amount: int,
+        chain_id: int
+    ) -> map<string, any> {
+        log::info("orchestrator", "Orchestrating lending operation");
+        
+        // Step 1: Approve Aave to spend tokens
+        let approve = self.call_solidity_contract(
+            asset,
+            chain_id,
+            "approve",
+            {
+                "spender": self.solidity_contracts["AaveLendingPool"][chain_id],
+                "amount": amount
+            }
+        );
+        
+        // Step 2: Deposit to Aave (Solidity contract)
+        let deposit = self.call_solidity_contract(
+            "AaveLendingPool",
+            chain_id,
+            "deposit",
+            {
+                "asset": asset,
+                "amount": amount,
+                "onBehalfOf": auth::session().user_id,
+                "referralCode": 0
+            }
+        );
+        
+        // Step 3: Get user account data from Aave
+        let account_data = self.call_solidity_contract(
+            "AaveLendingPool",
+            chain_id,
+            "getUserAccountData",
+            {"user": auth::session().user_id}
+        );
+        
+        return {
+            "approval": approve,
+            "deposit": deposit,
+            "account_data": account_data,
+            "status": "success"
+        };
+    }
+    
+    // Register a new Solidity contract for orchestration
+    fn register_solidity_contract(
+        contract_name: string,
+        chain_id: int,
+        contract_address: string
+    ) -> bool {
+        if (self.solidity_contracts[contract_name] == null ) {
+            self.solidity_contracts[contract_name] = {};
+        }
+        
+        self.solidity_contracts[contract_name][chain_id] = contract_address;
+        
+        log::info("orchestrator", "Registered " + contract_name + " on chain " + chain_id);
+        return true;
+    }
+    
+    // Get all registered Solidity contracts
+    fn get_registered_contracts() -> map<string, map<int, string>> {
+        return self.solidity_contracts;
+    }
+}
+
+// Example: AI-powered DeFi orchestration
+@trust("hybrid")
+@chain("ethereum","polygon","arbitrum")
+@ai
+service AIDefiOrchestrator {
+    orchestrator: SolidityOrchestrator;
+    
+    fn initialize() {
+        self.orchestrator = SolidityOrchestrator::new();
+        self.orchestrator.initialize();
+    }
+    
+    fn ai_optimized_swap(user_request: string) -> map<string, any> {
+        // Use AI to analyze market conditions
+        let market_analysis = ai::analyze_market({
+            "request": user_request,
+            "current_prices": self.get_current_prices()
+        });
+        
+        // AI recommends best chain and strategy
+        let recommendation = ai::generate_recommendation(market_analysis);
+        
+        // Execute orchestration based on AI recommendation
+        let result = self.orchestrator.orchestrate_defi_operation(
+            recommendation.token_a,
+            recommendation.token_b,
+            recommendation.amount,
+            recommendation.chain_id
+        );
+        
+        return {
+            "ai_analysis": market_analysis,
+            "recommendation": recommendation,
+            "execution": result
+        };
+    }
+    
+    fn get_current_prices() -> map<string, any> {
+        // Get prices from oracles
+        return oracle::fetch("price_feed", {});
+    }
+}
+

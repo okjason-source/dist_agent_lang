@@ -1257,6 +1257,18 @@ fn test_web_render_template() {
 // DATABASE MODULE TESTS
 // ============================================
 
+fn setup_test_users_db() -> database::Database {
+    let db = database::connect("sqlite://test.db".to_string()).expect("connect test db");
+    database::query(
+        &db,
+        "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, email TEXT)"
+            .to_string(),
+        vec![],
+    )
+    .expect("create users table");
+    db
+}
+
 #[test]
 fn test_database_connect() {
     let result = database::connect("sqlite://test.db".to_string());
@@ -1268,7 +1280,7 @@ fn test_database_connect() {
 
 #[test]
 fn test_database_query() {
-    let db = database::connect("sqlite://test.db".to_string()).unwrap();
+    let db = setup_test_users_db();
     let result = database::query(&db, "SELECT * FROM users".to_string(), vec![]);
 
     assert!(result.is_ok());
@@ -1278,7 +1290,13 @@ fn test_database_query() {
 
 #[test]
 fn test_database_query_with_params() {
-    let db = database::connect("sqlite://test.db".to_string()).unwrap();
+    let db = setup_test_users_db();
+    let _ = database::query(
+        &db,
+        "INSERT OR IGNORE INTO users (id, name, email) VALUES (1, 'Test User', 'test@example.com')"
+            .to_string(),
+        vec![],
+    );
     let params = vec![Value::String("test@example.com".to_string())];
     let result = database::query(
         &db,
@@ -1291,7 +1309,7 @@ fn test_database_query_with_params() {
 
 #[test]
 fn test_database_transaction() {
-    let db = database::connect("sqlite://test.db".to_string()).unwrap();
+    let db = setup_test_users_db();
     let operations = vec![
         "INSERT INTO users (name) VALUES ('Test')".to_string(),
         "UPDATE users SET name = 'Updated' WHERE id = 1".to_string(),

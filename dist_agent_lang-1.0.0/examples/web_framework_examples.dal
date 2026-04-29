@@ -1,0 +1,915 @@
+// Phase 2: Web Development Framework Examples
+// Demonstrates the enhanced web development capabilities of dist_agent_lang
+
+// Example 1: Full-Stack Web Application
+// @web
+// @trust("hybrid")
+// @secure
+service WebApp {
+    // State variables using enhanced types
+    server: string,
+    database_connection: string,
+    active_sessions: map<string, User>,
+    websocket_server: string,
+    
+    // Events
+    event UserLoggedIn { user_id: string, timestamp: int },
+    event PageRequested { path: string, user_id: string },
+    event WebSocketConnected { connection_id: string },
+    
+    fn initialize() -> Result<Unit, Error> {
+        // Create enhanced HTTP server
+        let server = web::create_server(8080);
+        
+        // Configure CORS for security
+        web::configure_cors(server, true, ["http://localhost:3000", "https://myapp.com"]);
+        
+        // Add middleware
+        web::add_middleware(server, "auth", "authenticate_user", 1);
+        web::add_middleware(server, "logging", "log_request", 0);
+        web::add_middleware(server, "cors", "handle_cors", -1);
+        
+        // Define routes
+        web::add_route(server, "GET", "/", "handle_home");
+        web::add_route(server, "GET", "/dashboard", "handle_dashboard");
+        web::add_route(server, "POST", "/api/users", "create_user_api");
+        web::add_route(server, "GET", "/api/users", "get_users_api");
+        web::add_route(server, "POST", "/api/auth/login", "handle_login");
+        web::add_route(server, "POST", "/api/auth/logout", "handle_logout");
+        web::add_route(server, "GET", "/api/blockchain/balance", "get_balance");
+        
+        // Serve static files
+        web::serve_static_files(server, "/css/main.css", self.load_css());
+        web::serve_static_files(server, "/js/app.js", self.load_javascript());
+        
+        // Create WebSocket server for real-time features
+        let ws_server = web::create_websocket_server(8081);
+        
+        // Start servers
+        let result = web::start_server(server);
+        
+        // Connect to database
+        self.database_connection = database::connect("postgresql://localhost/webapp");
+        
+        self.server = server;
+        self.websocket_server = ws_server;
+        
+        log::info("webapp", { "status": "initialized", "port": 8080 });
+        
+        return Ok(());
+    }
+    
+    // === FRONTEND RENDERING FUNCTIONS ===
+    
+    fn handle_home(request: HttpRequest) -> HttpResponse {
+        // Create HTML page with enhanced framework
+        let page = web::create_html_page("Welcome to My App");
+        
+        // Add CSS and JavaScript
+        web::add_css_file(page, "/css/main.css");
+        web::add_css_file(page, "/css/home.css");
+        web::add_js_file(page, "/js/app.js");
+        web::add_js_file(page, "/js/home.js");
+        
+        // Create page structure
+        let header = self.create_header();
+        let nav = self.create_navigation();
+        let main_content = self.create_home_content();
+        let footer = self.create_footer();
+        
+        // Add elements to page body
+        web::append_child(page.body, header);
+        web::append_child(page.body, nav);
+        web::append_child(page.body, main_content);
+        web::append_child(page.body, footer);
+        
+        // Render complete HTML
+        let html = web::render_html_page(page);
+        
+        return web::html_response(html);
+    }
+    
+    fn handle_dashboard(request: HttpRequest) -> HttpResponse {
+        // Check authentication
+        if !self.is_authenticated(request) {
+            return web::redirect_response("/login");
+        }
+        
+        let user = self.get_current_user(request);
+        
+        // Create dashboard page
+        let page = web::create_html_page("Dashboard - My App");
+        web::add_css_file(page, "/css/dashboard.css");
+        web::add_js_file(page, "/js/dashboard.js");
+        
+        // Create dashboard content
+        let dashboard_content = self.create_dashboard_content(user);
+        web::append_child(page.body, dashboard_content);
+        
+        let html = web::render_html_page(page);
+        return web::html_response(html);
+    }
+    
+    fn create_header() -> HtmlElement {
+        let header = web::create_element("header", None);
+        web::add_attribute(header, "class", "main-header");
+        
+        let title = web::create_element("h1", Some("My Blockchain App"));
+        web::add_attribute(title, "class", "app-title");
+        
+        let wallet_status = web::create_element("div", Some("Wallet: Connected"));
+        web::add_attribute(wallet_status, "class", "wallet-status");
+        web::add_attribute(wallet_status, "id", "wallet-status");
+        
+        web::append_child(header, title);
+        web::append_child(header, wallet_status);
+        
+        return header;
+    }
+    
+    fn create_navigation() -> HtmlElement {
+        let nav = web::create_element("nav", None);
+        web::add_attribute(nav, "class", "main-nav");
+        
+        let nav_list = web::create_element("ul", None);
+        
+        // Home link
+        let home_item = web::create_element("li", None);
+        let home_link = web::create_element("a", Some("Home"));
+        web::add_attribute(home_link, "href", "/");
+        web::append_child(home_item, home_link);
+        
+        // Dashboard link
+        let dashboard_item = web::create_element("li", None);
+        let dashboard_link = web::create_element("a", Some("Dashboard"));
+        web::add_attribute(dashboard_link, "href", "/dashboard");
+        web::append_child(dashboard_item, dashboard_link);
+        
+        // Trading link
+        let trading_item = web::create_element("li", None);
+        let trading_link = web::create_element("a", Some("Trading"));
+        web::add_attribute(trading_link, "href", "/trading");
+        web::append_child(trading_item, trading_link);
+        
+        web::append_child(nav_list, home_item);
+        web::append_child(nav_list, dashboard_item);
+        web::append_child(nav_list, trading_item);
+        web::append_child(nav, nav_list);
+        
+        return nav;
+    }
+    
+    fn create_home_content() -> HtmlElement {
+        let main = web::create_element("main", None);
+        web::add_attribute(main, "class", "home-content");
+        
+        // Hero section
+        let hero = web::create_element("section", None);
+        web::add_attribute(hero, "class", "hero");
+        
+        let hero_title = web::create_element("h2", Some("Welcome to the Future of Finance"));
+        let hero_description = web::create_element("p", Some("Experience seamless blockchain integration with our hybrid trust model."));
+        
+        let cta_button = web::create_button("Get Started", "button");
+        web::add_attribute(cta_button, "class", "cta-button");
+        web::add_event_handler(cta_button, "click", "startOnboarding()");
+        
+        web::append_child(hero, hero_title);
+        web::append_child(hero, hero_description);
+        web::append_child(hero, cta_button);
+        
+        // Features section
+        let features = self.create_features_section();
+        
+        // Live data section with WebSocket
+        let live_data = self.create_live_data_section();
+        
+        web::append_child(main, hero);
+        web::append_child(main, features);
+        web::append_child(main, live_data);
+        
+        return main;
+    }
+    
+    fn create_features_section() -> HtmlElement {
+        let section = web::create_element("section", None);
+        web::add_attribute(section, "class", "features");
+        
+        let section_title = web::create_element("h3", Some("Key Features"));
+        web::append_child(section, section_title);
+        
+        let features_grid = web::create_element("div", None);
+        web::add_attribute(features_grid, "class", "features-grid");
+        
+        // Feature 1: Hybrid Trust
+        let feature1 = web::create_element("div", None);
+        web::add_attribute(feature1, "class", "feature-card");
+        let feature1_title = web::create_element("h4", Some("Hybrid Trust Model"));
+        let feature1_desc = web::create_element("p", Some("Combine decentralized and centralized systems seamlessly."));
+        web::append_child(feature1, feature1_title);
+        web::append_child(feature1, feature1_desc);
+        
+        // Feature 2: Real-time Data
+        let feature2 = web::create_element("div", None);
+        web::add_attribute(feature2, "class", "feature-card");
+        let feature2_title = web::create_element("h4", Some("Real-time Updates"));
+        let feature2_desc = web::create_element("p", Some("Live blockchain data with WebSocket connections."));
+        web::append_child(feature2, feature2_title);
+        web::append_child(feature2, feature2_desc);
+        
+        // Feature 3: Smart Contracts
+        let feature3 = web::create_element("div", None);
+        web::add_attribute(feature3, "class", "feature-card");
+        let feature3_title = web::create_element("h4", Some("Smart Contract Integration"));
+        let feature3_desc = web::create_element("p", Some("Deploy and interact with contracts using dist_agent_lang."));
+        web::append_child(feature3, feature3_title);
+        web::append_child(feature3, feature3_desc);
+        
+        web::append_child(features_grid, feature1);
+        web::append_child(features_grid, feature2);
+        web::append_child(features_grid, feature3);
+        web::append_child(section, features_grid);
+        
+        return section;
+    }
+    
+    fn create_live_data_section() -> HtmlElement {
+        let section = web::create_element("section", None);
+        web::add_attribute(section, "class", "live-data");
+        web::add_attribute(section, "id", "live-data-section");
+        
+        let section_title = web::create_element("h3", Some("Live Blockchain Data"));
+        
+        let data_container = web::create_element("div", None);
+        web::add_attribute(data_container, "class", "data-container");
+        web::add_attribute(data_container, "id", "live-data-container");
+        
+        // Placeholder content that will be updated via WebSocket
+        let placeholder = web::create_element("p", Some("Connecting to live data..."));
+        web::add_attribute(placeholder, "id", "data-placeholder");
+        
+        web::append_child(data_container, placeholder);
+        web::append_child(section, section_title);
+        web::append_child(section, data_container);
+        
+        return section;
+    }
+    
+    fn create_footer() -> HtmlElement {
+        let footer = web::create_element("footer", None);
+        web::add_attribute(footer, "class", "main-footer");
+        
+        let footer_content = web::create_element("div", None);
+        web::add_attribute(footer_content, "class", "footer-content");
+        
+        let copyright = web::create_element("p", Some("© 2024 My Blockchain App. Built with dist_agent_lang."));
+        let links = web::create_element("div", None);
+        web::add_attribute(links, "class", "footer-links");
+        
+        let privacy_link = web::create_element("a", Some("Privacy Policy"));
+        web::add_attribute(privacy_link, "href", "/privacy");
+        
+        let terms_link = web::create_element("a", Some("Terms of Service"));
+        web::add_attribute(terms_link, "href", "/terms");
+        
+        web::append_child(links, privacy_link);
+        web::append_child(links, terms_link);
+        web::append_child(footer_content, copyright);
+        web::append_child(footer_content, links);
+        web::append_child(footer, footer_content);
+        
+        return footer;
+    }
+    
+    // === API ENDPOINTS ===
+    
+    fn create_user_api(request: HttpRequest) -> HttpResponse {
+        // Validate JSON request
+        let endpoint = web::create_api_endpoint("/api/users", "POST", "create_user_api");
+        web::add_auth_requirement(endpoint, true);
+        
+        if !web::validate_json_request(request, endpoint.input_schema) {
+            return web::error_response(400, "Invalid JSON request");
+        }
+        
+        // Parse user data (simplified)
+        let user_data = request.body;
+        
+        // Create user in database
+        let user_id = database::query(self.database_connection, 
+            "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id", 
+            [user_data]
+        );
+        
+        // Log event
+        emit UserLoggedIn { user_id: user_id, timestamp: chain::get_block_timestamp(1) };
+        
+        return web::json_response({
+            "success": true,
+            "user_id": user_id,
+            "message": "User created successfully"
+        });
+    }
+    
+    fn get_users_api(request: HttpRequest) -> HttpResponse {
+        // Check authentication
+        if !self.is_authenticated(request) {
+            return web::error_response(401, "Authentication required");
+        }
+        
+        // Query users from database
+        let users = database::query(self.database_connection, "SELECT * FROM users", []);
+        
+        return web::json_response({
+            "users": users,
+            "count": users.length,
+            "timestamp": chain::get_block_timestamp(1)
+        });
+    }
+    
+    fn handle_login(request: HttpRequest) -> HttpResponse {
+        // Parse login credentials
+        let credentials = request.body;
+        
+        // Authenticate user (simplified)
+        let user = self.authenticate_user(credentials);
+        
+        if user.is_some() {
+            // Create session
+            let session_id = crypto::generate_random(32);
+            self.active_sessions.insert(session_id, user.unwrap());
+            
+            // Create response with session cookie
+            let response = web::json_response({
+                "success": true,
+                "message": "Login successful"
+            });
+            
+            web::set_cookie(response, "session_id", session_id, {
+                "httpOnly": true,
+                "secure": true,
+                "maxAge": 86400
+            });
+            
+            return response;
+        } else {
+            return web::error_response(401, "Invalid credentials");
+        }
+    }
+    
+    fn get_balance(request: HttpRequest) -> HttpResponse {
+        // Check authentication
+        if !self.is_authenticated(request) {
+            return web::error_response(401, "Authentication required");
+        }
+        
+        let user = self.get_current_user(request);
+        
+        // Get wallet balance from blockchain
+        let balance = chain::get_balance(user.wallet_address, "ethereum");
+        
+        // Get transaction count
+        let tx_count = chain::get_transaction_count(user.wallet_address, "ethereum");
+        
+        return web::json_response({
+            "balance": balance,
+            "transaction_count": tx_count,
+            "wallet_address": user.wallet_address,
+            "timestamp": chain::get_block_timestamp(1)
+        });
+    }
+    
+    // === WEBSOCKET FUNCTIONS ===
+    
+    fn handle_websocket_connection(connection_id: string, user_id: Option<string>) {
+        // Add connection to WebSocket server
+        web::add_websocket_connection(self.websocket_server, connection_id, user_id);
+        
+        // Join user to general room
+        web::join_room(self.websocket_server, connection_id, "general");
+        
+        if user_id.is_some() {
+            // Join user to their personal room
+            web::join_room(self.websocket_server, connection_id, format!("user_{}", user_id.unwrap()));
+        }
+        
+        // Send welcome message
+        self.send_welcome_message(connection_id);
+        
+        // Start sending live data updates
+        self.start_live_data_updates(connection_id);
+        
+        emit WebSocketConnected { connection_id: connection_id };
+    }
+    
+    fn send_welcome_message(connection_id: string) {
+        let message = {
+            "type": "welcome",
+            "message": "Connected to live data feed",
+            "features": ["blockchain_data", "real_time_prices", "transaction_alerts"],
+            "timestamp": chain::get_block_timestamp(1)
+        };
+        
+        web::send_websocket_message(connection_id, json::serialize(message));
+    }
+    
+    fn start_live_data_updates(connection_id: string) {
+        // Simulate live blockchain data updates
+        spawn async {
+            while true {
+                let price_data = {
+                    "type": "price_update",
+                    "symbol": "ETH",
+                    "price": oracle::fetch("price", "ETH/USD"),
+                    "change_24h": oracle::fetch("change", "ETH/USD"),
+                    "timestamp": chain::get_block_timestamp(1)
+                };
+                
+                web::send_websocket_message(connection_id, json::serialize(price_data));
+                
+                // Wait 5 seconds
+                await sleep(5000);
+            }
+        };
+    }
+    
+    fn broadcast_to_all_users(message: any) {
+        let message_json = json::serialize(message);
+        web::broadcast_to_room(self.websocket_server, "general", message_json);
+    }
+    
+    // === TEMPLATE SYSTEM ===
+    
+    fn load_css() -> string {
+        let template = web::create_template("main_css", "
+            body {
+                font-family: 'Inter', sans-serif;
+                margin: 0;
+                padding: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: #333;
+            }
+            
+            .main-header {
+                background: rgba(255, 255, 255, 0.95);
+                padding: 1rem 2rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            }
+            
+            .app-title {
+                color: #4a5568;
+                font-size: 1.5rem;
+                font-weight: 600;
+            }
+            
+            .wallet-status {
+                background: #48bb78;
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 25px;
+                font-size: 0.9rem;
+                font-weight: 500;
+            }
+            
+            .main-nav ul {
+                list-style: none;
+                display: flex;
+                gap: 2rem;
+                margin: 0;
+                padding: 1rem 2rem;
+            }
+            
+            .main-nav a {
+                color: white;
+                text-decoration: none;
+                font-weight: 500;
+                padding: 0.5rem 1rem;
+                border-radius: 5px;
+                transition: background 0.3s ease;
+            }
+            
+            .main-nav a:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+            
+            .home-content {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+            
+            .hero {
+                text-align: center;
+                color: white;
+                margin-bottom: 4rem;
+            }
+            
+            .hero h2 {
+                font-size: 3rem;
+                margin-bottom: 1rem;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            
+            .hero p {
+                font-size: 1.2rem;
+                margin-bottom: 2rem;
+                opacity: 0.9;
+            }
+            
+            .cta-button {
+                background: #ff6b6b;
+                color: white;
+                border: none;
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+                border-radius: 50px;
+                cursor: pointer;
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            
+            .cta-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+            }
+            
+            .features {
+                margin-bottom: 4rem;
+            }
+            
+            .features h3 {
+                text-align: center;
+                color: white;
+                font-size: 2rem;
+                margin-bottom: 2rem;
+            }
+            
+            .features-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 2rem;
+            }
+            
+            .feature-card {
+                background: rgba(255, 255, 255, 0.95);
+                padding: 2rem;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                transition: transform 0.3s ease;
+            }
+            
+            .feature-card:hover {
+                transform: translateY(-5px);
+            }
+            
+            .live-data {
+                background: rgba(255, 255, 255, 0.95);
+                padding: 2rem;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            }
+            
+            .main-footer {
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 2rem;
+                text-align: center;
+                margin-top: 4rem;
+            }
+            
+            .footer-links {
+                margin-top: 1rem;
+            }
+            
+            .footer-links a {
+                color: #a0aec0;
+                text-decoration: none;
+                margin: 0 1rem;
+            }
+            
+            .footer-links a:hover {
+                color: white;
+            }
+        ");
+        
+        return web::render_advanced_template(template);
+    }
+    
+    fn load_javascript() -> string {
+        let template = web::create_template("main_js", "
+            // WebSocket connection for live data
+            class LiveDataConnection {
+                constructor() {
+                    this.ws = null;
+                    this.reconnectAttempts = 0;
+                    this.maxReconnectAttempts = 5;
+                    this.connect();
+                }
+                
+                connect() {
+                    try {
+                        this.ws = new WebSocket('ws://localhost:8081');
+                        
+                        this.ws.onopen = () => {
+                            console.log('Connected to live data feed');
+                            this.reconnectAttempts = 0;
+                            this.updateConnectionStatus('Connected');
+                        };
+                        
+                        this.ws.onmessage = (event) => {
+                            const data = JSON.parse(event.data);
+                            this.handleMessage(data);
+                        };
+                        
+                        this.ws.onclose = () => {
+                            console.log('Disconnected from live data feed');
+                            this.updateConnectionStatus('Disconnected');
+                            this.reconnect();
+                        };
+                        
+                        this.ws.onerror = (error) => {
+                            console.error('WebSocket error:', error);
+                            this.updateConnectionStatus('Error');
+                        };
+                    } catch (error) {
+                        console.error('Failed to connect:', error);
+                        this.reconnect();
+                    }
+                }
+                
+                handleMessage(data) {
+                    switch (data.type) {
+                        case 'welcome':
+                            console.log('Welcome message received:', data.message);
+                            this.updateLiveData('Connected to blockchain network');
+                            break;
+                            
+                        case 'price_update':
+                            this.updatePriceData(data);
+                            break;
+                            
+                        case 'transaction_alert':
+                            this.showTransactionAlert(data);
+                            break;
+                            
+                        default:
+                            console.log('Unknown message type:', data.type);
+                    }
+                }
+                
+                updatePriceData(data) {
+                    const container = document.getElementById('live-data-container');
+                    if (container) {
+                        container.innerHTML = '
+                            <div class='price-card'>
+                                <h4>${data.symbol} Price</h4>
+                                <div class='price-value'>$${data.price}</div>
+                                <div class='price-change ${data.change_24h >= 0 ? 'positive' : 'negative'}'>
+                                    ${data.change_24h >= 0 ? '+' : ''}${data.change_24h}%
+                                </div>
+                                <div class='timestamp'>Last updated: ${new Date(data.timestamp * 1000).toLocaleTimeString()}</div>
+                            </div>
+                        ';
+                    }
+                }
+                
+                updateLiveData(message) {
+                    const placeholder = document.getElementById('data-placeholder');
+                    if (placeholder) {
+                        placeholder.textContent = message;
+                    }
+                }
+                
+                updateConnectionStatus(status) {
+                    const statusElement = document.getElementById('wallet-status');
+                    if (statusElement) {
+                        statusElement.textContent = 'WebSocket: ${status}';
+                        statusElement.className = 'wallet-status ${status.toLowerCase()}';
+                    }
+                }
+                
+                reconnect() {
+                    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                        this.reconnectAttempts++;
+                        console.log('Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}');
+                        setTimeout(() => this.connect(), 3000 * this.reconnectAttempts);
+                    } else {
+                        console.log('Max reconnection attempts reached');
+                        this.updateConnectionStatus('Failed');
+                    }
+                }
+                
+                send(message) {
+                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                        this.ws.send(JSON.stringify(message));
+                    }
+                }
+            }
+            
+            // Initialize app when DOM is loaded
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('Initializing dist_agent_lang web app...');
+                
+                // Initialize live data connection
+                window.liveData = new LiveDataConnection();
+                
+                // Add CSS for dynamic elements
+                const style = document.createElement('style');
+                style.textContent = '
+                    .price-card {
+                        text-align: center;
+                        padding: 1rem;
+                    }
+                    
+                    .price-value {
+                        font-size: 2rem;
+                        font-weight: bold;
+                        color: #2d3748;
+                        margin: 0.5rem 0;
+                    }
+                    
+                    .price-change {
+                        font-size: 1.2rem;
+                        font-weight: 600;
+                        margin: 0.5rem 0;
+                    }
+                    
+                    .price-change.positive {
+                        color: #48bb78;
+                    }
+                    
+                    .price-change.negative {
+                        color: #f56565;
+                    }
+                    
+                    .timestamp {
+                        font-size: 0.9rem;
+                        color: #718096;
+                        margin-top: 1rem;
+                    }
+                    
+                    .wallet-status.connected {
+                        background: #48bb78;
+                    }
+                    
+                    .wallet-status.disconnected {
+                        background: #ed8936;
+                    }
+                    
+                    .wallet-status.error,
+                    .wallet-status.failed {
+                        background: #f56565;
+                    }
+                ';
+                document.head.appendChild(style);
+            });
+            
+            // Global functions
+            function startOnboarding() {
+                alert('Welcome to the onboarding process! This would typically guide users through wallet connection and account setup.');
+                
+                // In a real app, this would trigger a multi-step onboarding flow
+                console.log('Starting onboarding process...');
+                
+                // Example: Connect to MetaMask
+                if (typeof window.ethereum !== 'undefined') {
+                    window.ethereum.request({ method: 'eth_requestAccounts' })
+                        .then((accounts) => {
+                            console.log('Connected to wallet:', accounts[0]);
+                            // Update wallet status
+                            const statusElement = document.getElementById('wallet-status');
+                            if (statusElement) {
+                                statusElement.textContent = 'Wallet: ${accounts[0].substring(0, 6)}...${accounts[0].substring(38)}';
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Failed to connect wallet:', error);
+                        });
+                } else {
+                    alert('Please install MetaMask to connect your wallet.');
+                }
+            }
+        ");
+        
+        return web::render_advanced_template(template);
+    }
+    
+    // === UTILITY FUNCTIONS ===
+    
+    fn is_authenticated(request: HttpRequest) -> bool {
+        if let Some(session_id) = request.cookies.get("session_id") {
+            return self.active_sessions.contains_key(session_id);
+        }
+        return false;
+    }
+    
+    fn get_current_user(request: HttpRequest) -> Option<User> {
+        if let Some(session_id) = request.cookies.get("session_id") {
+            return self.active_sessions.get(session_id);
+        }
+        return None;
+    }
+    
+    fn authenticate_user(credentials: string) -> Option<User> {
+        // Simplified authentication - in real app, hash passwords, etc.
+        // This would typically verify against database
+        return Some(User {
+            id: "user123",
+            username: "demo_user",
+            email: "user@example.com",
+            wallet_address: "0x742d35Cc0097C2ea0B8ae56f94B50F8c1e6F7B85"
+        });
+    }
+    
+    fn create_dashboard_content(user: User) -> HtmlElement {
+        let dashboard = web::create_element("div", None);
+        web::add_attribute(dashboard, "class", "dashboard");
+        
+        let welcome = web::create_element("h2", Some(format!("Welcome back, {}!", user.username)));
+        let balance_card = self.create_balance_card(user);
+        let activity_card = self.create_activity_card(user);
+        
+        web::append_child(dashboard, welcome);
+        web::append_child(dashboard, balance_card);
+        web::append_child(dashboard, activity_card);
+        
+        return dashboard;
+    }
+    
+    fn create_balance_card(user: User) -> HtmlElement {
+        let card = web::create_element("div", None);
+        web::add_attribute(card, "class", "balance-card");
+        
+        let title = web::create_element("h3", Some("Wallet Balance"));
+        let balance = web::create_element("div", Some("Loading..."));
+        web::add_attribute(balance, "id", "user-balance");
+        web::add_attribute(balance, "class", "balance-amount");
+        
+        web::append_child(card, title);
+        web::append_child(card, balance);
+        
+        return card;
+    }
+    
+    fn create_activity_card(user: User) -> HtmlElement {
+        let card = web::create_element("div", None);
+        web::add_attribute(card, "class", "activity-card");
+        
+        let title = web::create_element("h3", Some("Recent Activity"));
+        let activity_list = web::create_element("div", Some("Loading recent transactions..."));
+        web::add_attribute(activity_list, "id", "user-activity");
+        
+        web::append_child(card, title);
+        web::append_child(card, activity_list);
+        
+        return card;
+    }
+    
+    fn web::redirect_response(url: string) -> HttpResponse {
+        let response = web::html_response("");
+        response.status = 302;
+        response.headers.insert("Location", url);
+        return response;
+    }
+    
+    fn web::send_websocket_message(connection_id: string, message: string) {
+        // Simulated WebSocket message sending
+        log::info("websocket", {
+            "connection_id": connection_id,
+            "message_length": message.length,
+            "action": "message_sent"
+        });
+    }
+}
+
+// Helper struct for user data
+struct User {
+    id: string,
+    username: string,
+    email: string,
+    wallet_address: string,
+}
+
+// Main function demonstrating the web framework
+fn main() {
+    log::info("main", { "message": "Starting Phase 2 Web Framework Example" });
+    
+    // Initialize the web application
+    let web_app = WebApp::new();
+    web_app.initialize();
+    
+    log::info("main", { 
+        "message": "Web application initialized successfully",
+        "features": [
+            "Enhanced HTTP Server",
+            "Frontend Framework", 
+            "API Framework",
+            "WebSocket Support",
+            "Template System",
+            "Middleware System"
+        ]
+    });
+}
