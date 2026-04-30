@@ -33,7 +33,7 @@ This downloads the package from [crates.io](https://crates.io/crates/dist_agent_
 **Use as a Rust library** in your project:
 ```toml
 [dependencies]
-dist_agent_lang = "1.0.5"
+dist_agent_lang = "latest"
 ```
 
 Or: `cargo add dist_agent_lang`
@@ -54,7 +54,7 @@ sudo cp target/x86_64-unknown-linux-gnu/release/dal /usr/local/bin/
 ```
 
 ```bash
-# Option 2: Install a specific version (replace v1.0.5 with the release you want)
+# Option 2: Install a specific version (replace v1.0.XX with the release you want)
 wget https://github.com/okjason-source/dist_agent_lang/releases/download/v1.0.5/dist_agent_lang-v1.0.5-linux-x64.tar.gz
 tar -xzf dist_agent_lang-v1.0.5-linux-x64.tar.gz
 sudo cp target/x86_64-unknown-linux-gnu/release/dal /usr/local/bin/
@@ -70,13 +70,13 @@ export PATH="$HOME/.local/bin:$PATH"   # add to ~/.bashrc or ~/.zshrc
 # Download the right one: ...-macos-x64.tar.gz or ...-macos-arm64.tar.gz
 # Extract, then copy the binary from the path inside the tarball to /usr/local/bin or ~/.local/bin
 # Example (ARM64):
-tar -xzf dist_agent_lang-v1.0.5-macos-arm64.tar.gz
+tar -xzf dist_agent_lang-v1.0.11-macos-arm64.tar.gz
 sudo cp target/aarch64-apple-darwin/release/dal /usr/local/bin/
 ```
 
 #### Windows
 ```bash
-# Download dist_agent_lang-v1.0.5-windows-x64.zip from Releases
+# Download dist_agent_lang-v1.0.11-windows-x64.zip from Releases
 # Extract, then copy dal.exe to a folder in your PATH (e.g. C:\Program Files\dist_agent_lang\)
 # Add that folder to the system PATH environment variable.
 ```
