@@ -55,7 +55,7 @@ clap = { version = "4", features = ["derive"] }
 thiserror = "2.0"
 lazy_static = "1.4"
 sha2 = "0.10"
-sha3 = "0.10"
+sha3 = "0.11"
 md5 = "0.7"
 # Stay on 0.8.x until we migrate call sites: rand 0.9+ changes thread_rng, OsRng,
 # distributions::Alphanumeric, and RngCore paths (Dependabot upgrades broke CI).
@@ -104,7 +104,7 @@ ethers = { version = "2.0", features = ["rustls"], optional = true }
 rusqlite = { version = "0.39", features = ["bundled", "backup"], optional = true }
 # LSP (Language Server Protocol) for IDE integration
 tower-lsp = { version = "0.20", optional = true }
-lsp-types = { version = "0.94", optional = true }
+lsp-types = { version = "0.97", optional = true }
 
 [features]
 default = ["http-interface"]
