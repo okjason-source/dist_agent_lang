@@ -1030,7 +1030,7 @@ version = "1.0.24"
 dependencies = [
  "aes-gcm",
  "axum",
- "base64 0.21.7",
+ "base64 0.22.1",
  "bcrypt",
  "chrono",
  "clap",
