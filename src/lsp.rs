@@ -6,19 +6,23 @@
 use dist_agent_lang::lexer::Lexer;
 use dist_agent_lang::parser::ast::Statement;
 use dist_agent_lang::parser::Parser;
-use lsp_types::{
-    CompletionItem, CompletionOptions, CompletionParams, CompletionResponse, Diagnostic,
-    DiagnosticSeverity, DidChangeTextDocumentParams, DidCloseTextDocumentParams,
-    DidOpenTextDocumentParams, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents,
-    HoverParams, HoverProviderCapability, InitializeParams, InitializeResult, InitializedParams,
-    Location, OneOf, ParameterInformation, Position, Range, ServerCapabilities, SignatureHelp,
-    SignatureHelpOptions, SignatureHelpParams, SignatureInformation, TextDocumentSyncCapability,
-    TextDocumentSyncKind, TextDocumentSyncOptions, Url,
-};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tower_lsp::{async_trait, Client, LanguageServer, LspService, Server};
+use tower_lsp::{
+    async_trait,
+    lsp_types::{
+        CompletionItem, CompletionOptions, CompletionParams, CompletionResponse, Diagnostic,
+        DiagnosticSeverity, DidChangeTextDocumentParams, DidCloseTextDocumentParams,
+        DidOpenTextDocumentParams, GotoDefinitionParams, GotoDefinitionResponse, Hover,
+        HoverContents, HoverParams, HoverProviderCapability, InitializeParams, InitializeResult,
+        InitializedParams, Location, OneOf, ParameterInformation, Position, Range,
+        ServerCapabilities, SignatureHelp, SignatureHelpOptions, SignatureHelpParams,
+        SignatureInformation, TextDocumentSyncCapability, TextDocumentSyncKind,
+        TextDocumentSyncOptions, Url,
+    },
+    Client, LanguageServer, LspService, Server,
+};
 
 #[derive(Debug)]
 pub struct Backend {
@@ -404,7 +408,7 @@ impl LanguageServer for Backend {
                 }),
                 ..Default::default()
             },
-            server_info: Some(lsp_types::ServerInfo {
+            server_info: Some(tower_lsp::lsp_types::ServerInfo {
                 name: "dal".to_string(),
                 version: Some(env!("CARGO_PKG_VERSION").to_string()),
             }),
@@ -415,7 +419,7 @@ impl LanguageServer for Backend {
     async fn initialized(&self, _params: InitializedParams) {
         self.client
             .log_message(
-                lsp_types::MessageType::INFO,
+                tower_lsp::lsp_types::MessageType::INFO,
                 "DAL language server initialized",
             )
             .await;
@@ -482,7 +486,7 @@ impl LanguageServer for Backend {
             None => return Ok(None),
         };
         Ok(Some(Hover {
-            contents: HoverContents::Scalar(lsp_types::MarkedString::String(content)),
+            contents: HoverContents::Scalar(tower_lsp::lsp_types::MarkedString::String(content)),
             range: None,
         }))
     }
@@ -512,7 +516,7 @@ impl LanguageServer for Backend {
             if prefix.is_empty() || kw.starts_with(&prefix) {
                 items.push(CompletionItem {
                     label: kw.to_string(),
-                    kind: Some(lsp_types::CompletionItemKind::KEYWORD),
+                    kind: Some(tower_lsp::lsp_types::CompletionItemKind::KEYWORD),
                     detail: Self::keyword_doc(kw).map(String::from),
                     ..Default::default()
                 });
@@ -527,7 +531,7 @@ impl LanguageServer for Backend {
             if prefix.is_empty() || m.starts_with(&prefix) {
                 items.push(CompletionItem {
                     label: m.to_string(),
-                    kind: Some(lsp_types::CompletionItemKind::MODULE),
+                    kind: Some(tower_lsp::lsp_types::CompletionItemKind::MODULE),
                     detail: Self::stdlib_doc(m).map(String::from),
                     ..Default::default()
                 });
@@ -539,7 +543,7 @@ impl LanguageServer for Backend {
             if prefix.is_empty() || name.starts_with(&prefix) {
                 items.push(CompletionItem {
                     label: name.clone(),
-                    kind: Some(lsp_types::CompletionItemKind::FUNCTION),
+                    kind: Some(tower_lsp::lsp_types::CompletionItemKind::FUNCTION),
                     detail: Some(detail),
                     ..Default::default()
                 });
@@ -607,7 +611,7 @@ impl LanguageServer for Backend {
                 param_labels
                     .into_iter()
                     .map(|l| ParameterInformation {
-                        label: lsp_types::ParameterLabel::Simple(l),
+                        label: tower_lsp::lsp_types::ParameterLabel::Simple(l),
                         documentation: None,
                     })
                     .collect(),
@@ -615,7 +619,7 @@ impl LanguageServer for Backend {
         };
         let sig = SignatureInformation {
             label,
-            documentation: doc.map(lsp_types::Documentation::String),
+            documentation: doc.map(tower_lsp::lsp_types::Documentation::String),
             parameters: params,
             active_parameter: None,
         };
@@ -639,7 +643,7 @@ pub async fn run_lsp_server() {
 #[cfg(all(test, feature = "lsp"))]
 mod tests {
     use super::*;
-    use lsp_types::DiagnosticSeverity;
+    use tower_lsp::lsp_types::DiagnosticSeverity;
 
     #[test]
     fn test_diagnostics_from_source_valid_empty() {

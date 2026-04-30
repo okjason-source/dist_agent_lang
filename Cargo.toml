@@ -102,9 +102,10 @@ pyo3 = { version = "0.24", features = ["auto-initialize"], optional = true }
 ethers = { version = "2.0", features = ["rustls"], optional = true }
 # SQLite for transaction storage backend (optional)
 rusqlite = { version = "0.39", features = ["bundled", "backup"], optional = true }
-# LSP (Language Server Protocol) for IDE integration
+# LSP (Language Server Protocol) for IDE integration.
+# Use tower_lsp::lsp_types only — do not add a separate lsp-types crate; tower-lsp pins a
+# compatible version and mixing versions breaks trait impls (InitializeParams, Url vs Uri, etc.).
 tower-lsp = { version = "0.20", optional = true }
-lsp-types = { version = "0.97", optional = true }
 
 [features]
 default = ["http-interface"]
@@ -113,7 +114,7 @@ web3 = ["ethers"]
 python-ffi = ["pyo3"]
 c-ffi = []
 sqlite-storage = ["rusqlite"]
-lsp = ["tower-lsp", "lsp-types"]
+lsp = ["tower-lsp"]
 
 [dev-dependencies]
 criterion = "0.5"
