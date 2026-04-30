@@ -102,7 +102,7 @@ ethers = { version = "2.0", features = ["rustls"], optional = true }
 rusqlite = { version = "0.39", features = ["bundled", "backup"], optional = true }
 # LSP (Language Server Protocol) for IDE integration
 tower-lsp = { version = "0.20", optional = true }
-lsp-types = { version = "0.94", optional = true }
+lsp-types = { version = "0.97", optional = true }
 
 [features]
 default = ["http-interface"]
