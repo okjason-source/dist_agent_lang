@@ -119,7 +119,7 @@ proptest = "1.11"
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
 tempfile = "3.27"
-serial_test = "3.0"
+serial_test = "3.4"
 http-body-util = "0.1.3"
 
 [[bench]]
