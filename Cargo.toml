@@ -117,7 +117,7 @@ sqlite-storage = ["rusqlite"]
 lsp = ["tower-lsp"]
 
 [dev-dependencies]
-criterion = "0.5"
+criterion = "0.8"
 proptest = "1.11"
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
