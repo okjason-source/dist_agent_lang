@@ -377,6 +377,71 @@ mod tests {
         let p = pending();
         assert!(p.contains(&id), "pending={p:?}");
     }
+
+    #[test]
+    fn validates_empty_ids_and_invalid_intervals() {
+        let _lock = test_lock();
+        reset_for_test();
+
+        assert!(after_ms(1, "").unwrap_err().contains("must not be empty"));
+        assert!(after_ms(-1, "x").unwrap_err().contains("non-negative"));
+        assert!(every_ms(0, "x").unwrap_err().contains("must be > 0"));
+        assert!(every_ms(-1, "x").unwrap_err().contains("non-negative"));
+        assert!(every_ms(1, "").unwrap_err().contains("must not be empty"));
+    }
+
+    #[test]
+    fn duplicate_id_replaces_schedule_entry() {
+        let _lock = test_lock();
+        reset_for_test();
+        let id = uniq("dup");
+        after_ms(200, &id).unwrap();
+        after_ms(400, &id).unwrap();
+        assert_eq!(scheduled_count(), 1);
+        cancel(&id);
+        reset_for_test();
+    }
+
+    #[test]
+    fn one_shot_removes_from_schedule_before_pending_drain() {
+        let _lock = test_lock();
+        reset_for_test();
+        let id = uniq("oneshot");
+        after_ms(30, &id).unwrap();
+        thread::sleep(Duration::from_millis(220));
+        assert_eq!(scheduled_count(), 0);
+        let due = peek_pending();
+        assert!(due.contains(&id), "due={due:?}");
+        let drained = pending();
+        assert!(drained.contains(&id), "drained={drained:?}");
+    }
+
+    #[test]
+    fn cancel_clears_queued_due_items() {
+        let _lock = test_lock();
+        reset_for_test();
+        let id = uniq("cancel_due");
+        after_ms(20, &id).unwrap();
+        thread::sleep(Duration::from_millis(200));
+        assert!(peek_pending().contains(&id));
+        assert_eq!(cancel(&id), true);
+        assert!(!peek_pending().contains(&id));
+        assert!(!pending().contains(&id));
+        assert_eq!(cancel(&id), false);
+    }
+
+    #[test]
+    fn next_due_ms_none_and_some() {
+        let _lock = test_lock();
+        reset_for_test();
+        assert_eq!(next_due_ms(), None);
+        let id = uniq("next");
+        after_ms(200, &id).unwrap();
+        let next = next_due_ms().expect("expected next_due_ms");
+        assert!(next <= 200, "next={next}");
+        cancel(&id);
+        reset_for_test();
+    }
 }
 
 /// Convert pending list to DAL `Value::Array` of strings.

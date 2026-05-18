@@ -425,3 +425,74 @@ pub fn json_to_value(json: &serde_json::Value) -> Result<Value, String> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ffi_only_both_mode_config() -> crate::ffi::FFIConfig {
+        crate::ffi::FFIConfig {
+            interface_type: InterfaceType::Both,
+            enable_http: false,
+            enable_ffi: true,
+            python_enabled: false,
+            rust_enabled: true,
+            c_enabled: false,
+        }
+    }
+
+    #[test]
+    fn auto_detect_prefers_compute_patterns() {
+        let iface = FFIInterface::new(ffi_only_both_mode_config());
+        let use_ffi = iface.auto_detect_interface("svc", "hash_payload", &[]);
+        assert_eq!(use_ffi, true);
+    }
+
+    #[test]
+    fn auto_detect_uses_arg_size_threshold() {
+        let iface = FFIInterface::new(ffi_only_both_mode_config());
+
+        let near_threshold = vec![Value::String("x".repeat(1023))];
+        assert_eq!(
+            iface.auto_detect_interface("svc", "plain_operation", &near_threshold),
+            true
+        );
+
+        let at_threshold = vec![Value::String("x".repeat(1024))];
+        assert_eq!(
+            iface.auto_detect_interface("svc", "plain_operation", &at_threshold),
+            true
+        );
+    }
+
+    #[test]
+    fn auto_detect_prefers_http_for_network_patterns_when_not_small() {
+        let iface = FFIInterface::new(ffi_only_both_mode_config());
+        let large_args = vec![Value::String("x".repeat(2048))];
+
+        assert_eq!(
+            iface.auto_detect_interface("svc", "fetch_remote_resource", &large_args),
+            false
+        );
+        assert_eq!(
+            iface.auto_detect_interface("chain::ledger", "do_work", &large_args),
+            false
+        );
+    }
+
+    #[test]
+    fn auto_detect_without_ffi_interface_returns_false() {
+        let iface = FFIInterface::new(crate::ffi::FFIConfig {
+            interface_type: InterfaceType::Both,
+            enable_http: false,
+            enable_ffi: false,
+            python_enabled: false,
+            rust_enabled: false,
+            c_enabled: false,
+        });
+        assert_eq!(
+            iface.auto_detect_interface("svc", "plain_operation", &[]),
+            false
+        );
+    }
+}

@@ -250,3 +250,98 @@ pub fn create_sync_target(location: String, protocol: String) -> SyncTarget {
 pub fn create_sync_filters() -> SyncFilters {
     SyncFilters::new()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_push_fallback_protocol_matrix() {
+        let mut data = HashMap::new();
+        data.insert("k".to_string(), Value::Int(1));
+
+        let ftp_ok = create_sync_target("ftp.example.com/data".to_string(), "ftp".to_string());
+        assert_eq!(push(data.clone(), ftp_ok).unwrap(), true);
+
+        let ftp_bad = create_sync_target("ftp.invalid.local/data".to_string(), "ftp".to_string());
+        assert!(push(data.clone(), ftp_bad)
+            .unwrap_err()
+            .contains("FTP push failed"));
+
+        let s3_ok = create_sync_target(
+            "s3.amazonaws.com/example-bucket".to_string(),
+            "s3".to_string(),
+        );
+        assert_eq!(push(data.clone(), s3_ok).unwrap(), true);
+
+        let s3_bad = create_sync_target("s3.invalid.local/bucket".to_string(), "s3".to_string());
+        assert!(push(data.clone(), s3_bad)
+            .unwrap_err()
+            .contains("S3 push failed"));
+
+        let unsupported = create_sync_target("wherever".to_string(), "gopher".to_string());
+        assert!(push(data, unsupported)
+            .unwrap_err()
+            .contains("Unsupported protocol"));
+    }
+
+    #[test]
+    fn test_pull_database_and_api_filters() {
+        let (db_all, complete_all) = pull("database", create_sync_filters()).unwrap();
+        assert_eq!(complete_all, true);
+        assert!(matches!(
+            db_all.get("user_123"),
+            Some(Value::String(v)) if v == "John Doe"
+        ));
+        assert!(matches!(
+            db_all.get("user_456"),
+            Some(Value::String(v)) if v == "Jane Smith"
+        ));
+
+        let users_only = create_sync_filters().with_data_type("users".to_string());
+        let (db_users, complete_users) = pull("database", users_only).unwrap();
+        assert_eq!(complete_users, true);
+        assert_eq!(db_users.len(), 2);
+
+        let bad_filter = create_sync_filters().with_data_type("orders".to_string());
+        assert!(pull("database", bad_filter)
+            .unwrap_err()
+            .contains("Data type filter not supported"));
+
+        let (api_data, complete_api) = pull("api", create_sync_filters()).unwrap();
+        assert_eq!(complete_api, true);
+        assert!(matches!(api_data.get("price_btc"), Some(Value::Int(45000))));
+        assert!(matches!(api_data.get("price_eth"), Some(Value::Int(3200))));
+
+        assert!(pull("unknown-source", create_sync_filters())
+            .unwrap_err()
+            .contains("Unknown source"));
+    }
+
+    #[test]
+    fn test_builder_and_factory_methods_preserve_values() {
+        let mut creds = HashMap::new();
+        creds.insert("token".to_string(), "secret".to_string());
+        let target = create_sync_target("api.example.com".to_string(), "https".to_string())
+            .with_credentials(creds.clone())
+            .with_compression(true);
+        assert_eq!(target.location, "api.example.com");
+        assert_eq!(target.protocol, "https");
+        assert_eq!(target.compression, true);
+        assert!(matches!(
+            target.credentials.as_ref().and_then(|m| m.get("token")),
+            Some(v) if v == "secret"
+        ));
+
+        let filters = create_sync_filters()
+            .with_data_type("users".to_string())
+            .with_date_range(10, 20)
+            .with_tag("a".to_string())
+            .with_tag("b".to_string())
+            .with_max_size(99);
+        assert_eq!(filters.data_type.as_deref(), Some("users"));
+        assert_eq!(filters.date_range, Some((10, 20)));
+        assert_eq!(filters.tags, vec!["a".to_string(), "b".to_string()]);
+        assert_eq!(filters.max_size, Some(99));
+    }
+}

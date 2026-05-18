@@ -176,4 +176,49 @@ mod tests {
         assert!(scatter::scheduled_count() >= 1);
         scatter::reset_for_test();
     }
+
+    #[test]
+    fn every_seconds_and_hours_validate_boundaries() {
+        let _lock = scatter::test_lock();
+        scatter::reset_for_test();
+
+        assert!(every_seconds("s0", 0).is_err());
+        assert!(every_seconds("sneg", -1).is_err());
+        assert!(every_hours("h0", 0).is_err());
+        assert!(every_hours("hneg", -1).is_err());
+
+        every_seconds("s_ok", 1).unwrap();
+        every_hours("h_ok", 1).unwrap();
+        assert!(scatter::scheduled_count() >= 2);
+        scatter::reset_for_test();
+    }
+
+    #[test]
+    fn series_interval_validates_limits_and_interval_sign() {
+        let _lock = scatter::test_lock();
+        scatter::reset_for_test();
+
+        assert!(series_interval_unix_ms("p", 0, -1, 1)
+            .unwrap_err()
+            .contains("interval_ms must be >= 0"));
+        assert!(series_interval_unix_ms("p", 0, 1, MAX_SERIES_COUNT + 1)
+            .unwrap_err()
+            .contains("count must be <="));
+        scatter::reset_for_test();
+    }
+
+    #[test]
+    fn series_from_now_and_cancel_delegate_to_scatter() {
+        let _lock = scatter::test_lock();
+        scatter::reset_for_test();
+
+        let ids = series_interval_from_now_ms("job", 100, 2).unwrap();
+        assert_eq!(ids, vec!["job_0".to_string(), "job_1".to_string()]);
+        // First job can become due immediately (start=now), so allow either 1 or 2.
+        assert!((1..=2).contains(&scatter::scheduled_count()));
+
+        assert_eq!(cancel("job_0"), true);
+        assert_eq!(cancel("job_0"), false);
+        scatter::reset_for_test();
+    }
 }

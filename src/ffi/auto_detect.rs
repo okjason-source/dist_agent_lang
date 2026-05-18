@@ -168,3 +168,82 @@ impl Default for InterfaceSelector {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_metadata(name: &str) -> ServiceMetadata {
+        ServiceMetadata {
+            name: name.to_string(),
+            function_names: vec!["op".to_string()],
+            has_network_operations: true,
+            has_compute_operations: false,
+            estimated_call_frequency: CallFrequency::Low,
+        }
+    }
+
+    #[test]
+    fn detect_interface_type_prefers_frequency_then_capability() {
+        let mut m = sample_metadata("svc");
+        m.estimated_call_frequency = CallFrequency::High;
+        assert_eq!(m.detect_interface_type(), InterfaceType::FFI);
+
+        m.estimated_call_frequency = CallFrequency::Low;
+        m.has_network_operations = true;
+        m.has_compute_operations = false;
+        assert_eq!(m.detect_interface_type(), InterfaceType::HTTP);
+
+        m.has_network_operations = false;
+        m.has_compute_operations = true;
+        assert_eq!(m.detect_interface_type(), InterfaceType::FFI);
+
+        m.has_network_operations = true;
+        m.has_compute_operations = true;
+        assert_eq!(m.detect_interface_type(), InterfaceType::Both);
+    }
+
+    #[test]
+    fn analyze_function_marks_network_and_compute_patterns() {
+        let (network, compute) = ServiceMetadata::analyze_function("chain::fetch_balance");
+        assert_eq!((network, compute), (true, false));
+
+        let (network, compute) = ServiceMetadata::analyze_function("crypto::hash_payload");
+        assert_eq!((network, compute), (false, true));
+
+        let (network, compute) = ServiceMetadata::analyze_function("api_process");
+        assert_eq!((network, compute), (true, true));
+    }
+
+    #[test]
+    fn selector_uses_function_override_and_default_fallback() {
+        let mut selector = InterfaceSelector::new();
+        selector.set_default(InterfaceType::HTTP);
+        assert_eq!(selector.default_interface(), InterfaceType::HTTP);
+
+        // Unknown service + no recognizable pattern falls back to configured default.
+        assert_eq!(
+            selector.select_interface("unknown", "do_work", &[]),
+            InterfaceType::HTTP
+        );
+
+        // Function-level pattern overrides service-level detection.
+        let mut meta = sample_metadata("svc");
+        meta.has_network_operations = false;
+        meta.has_compute_operations = true; // Service would prefer FFI
+        selector.register_service(meta);
+
+        assert_eq!(selector.service_count(), 1);
+        assert_eq!(selector.has_service("svc"), true);
+        assert_eq!(selector.has_service("missing"), false);
+
+        assert_eq!(
+            selector.select_interface("svc", "fetch_remote", &[]),
+            InterfaceType::HTTP
+        );
+        assert_eq!(
+            selector.select_interface("svc", "hash_payload", &[]),
+            InterfaceType::FFI
+        );
+    }
+}

@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-// AI Agent Framework - Phase 4
+// AI Agent Framework
 // Comprehensive AI capabilities including:
 // - Agent lifecycle management and spawning
 // - Message passing and communication
@@ -196,7 +196,7 @@ fn load_ai_config() -> AIConfig {
         config = file_config;
     }
 
-    // Step 2: Optional explicit primary (COO `.env` — one provider at a time: kimi, deepseek, ollama, openai, anthropic).
+    // Step 2: Optional explicit primary (`.env` — one provider at a time: kimi, deepseek, ollama, openai, anthropic).
     let primary = env::var("DAL_LLM_PRIMARY")
         .unwrap_or_default()
         .trim()
@@ -526,7 +526,7 @@ pub fn configure_openrouter(api_key: String, model: Option<String>) {
     );
 }
 
-// === PHASE 4: AI AGENT STRUCTURES ===
+// === AI AGENT STRUCTURES ===
 
 // Agent Configuration
 #[derive(Debug, Clone)]
@@ -748,7 +748,7 @@ pub struct CommunicationProtocol {
     pub authentication_required: bool,
 }
 
-// === PHASE 4: AI AGENT FUNCTIONS ===
+// === AI AGENT FUNCTIONS ===
 
 // Agent Lifecycle Management
 pub fn spawn_agent(config: AgentConfig) -> Result<Agent, String> {
@@ -1332,7 +1332,7 @@ For run, search, and fetch_url the tool will execute and you will see the result
 /// Default copy favors **multi-step** work (long tasks, scaffolding, many runs). Override entirely with env
 /// **`DAL_AGENT_COMPLETION_AND_ASK_GUIDANCE`** (non-empty string).
 /// Public for IDE agent runner (prefer [`completion_and_ask_guidance_for_tool_loop`] so env is honored).
-pub const COMPLETION_AND_ASK_GUIDANCE: &str = "Complex tasks may need many tool steps (run, read_file, write_file, search, …). Continue until the user's request is fully satisfied, you need missing input, or a safety limit stops you. If you used search/fetch_url, include source links in the final answer; for travel, shopping, and research requests, missing links means the task is not complete. For a single trivial success with nothing left to do, reply immediately. Use ask_user when critical information is missing. On failure, explain what happened. Always give a clear final reply when you stop.";
+pub const COMPLETION_AND_ASK_GUIDANCE: &str = "Complex tasks may need many tool steps (run, read_file, write_file, search, …). Continue until the user's request is fully satisfied, you need missing input, or a safety limit stops you. If you used search/fetch_url, include source links in the final answer; for research requests, missing links means the task is not complete. For a single trivial success with nothing left to do, reply immediately. Use ask_user when critical information is missing. On failure, explain what happened. Always give a clear final reply when you stop.";
 
 /// Resolved completion guidance: env `DAL_AGENT_COMPLETION_AND_ASK_GUIDANCE` overrides the default when set.
 pub fn completion_and_ask_guidance_for_tool_loop() -> String {
@@ -2465,6 +2465,18 @@ pub fn max_tool_result_chars() -> usize {
         .clamp(2048, 200_000)
 }
 
+/// Truncate UTF-8 text to at most `max_bytes` bytes without splitting a multibyte character.
+pub fn truncate_utf8_prefix(text: &str, max_bytes: usize) -> String {
+    if text.len() <= max_bytes {
+        return text.to_string();
+    }
+    let mut end = max_bytes;
+    while end > 0 && !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    format!("{}\n... (truncated)", &text[..end])
+}
+
 /// Strip curl progress meter from stderr so agent replies stay clean (exit 0, progress in stderr).
 fn strip_curl_progress(stderr: &str) -> &str {
     let t = stderr.trim();
@@ -2583,7 +2595,7 @@ fn execute_search_result(query: &str) -> String {
         Ok(summary) => {
             let cap = max_tool_result_chars();
             if summary.len() > cap {
-                format!("{}\n... (truncated)", &summary[..cap])
+                truncate_utf8_prefix(&summary, cap)
             } else {
                 summary
             }
@@ -2667,7 +2679,7 @@ pub fn fetch_url_text_result(url: &str) -> Result<String, String> {
         let text = fetch_url_http_impl(url)?;
         let cap = max_tool_result_chars();
         Ok(if text.len() > cap {
-            format!("{}\n... (truncated)", &text[..cap])
+            truncate_utf8_prefix(&text, cap)
         } else {
             text
         })
@@ -2800,7 +2812,7 @@ fn execute_read_file_result(path: &str, root: &std::path::Path) -> String {
                 Ok(s) => {
                     let cap = max_tool_result_chars();
                     if s.len() > cap {
-                        format!("{}\n... (truncated)", &s[..cap])
+                        truncate_utf8_prefix(&s, cap)
                     } else {
                         s
                     }
@@ -4661,8 +4673,8 @@ mod multi_step_loop_tests {
     use super::{
         build_transcript_events, decide_chat_route, model_turn_to_outcome,
         parse_tool_call_from_conversation, parse_tool_response, requires_source_links,
-        text_has_source_link, AgentModelTurn, ChatPolicy, ChatRoute, NativeToolCall, ToolOutcome,
-        TranscriptEvent, TurnUsage,
+        text_has_source_link, truncate_utf8_prefix, AgentModelTurn, ChatPolicy, ChatRoute,
+        NativeToolCall, ToolOutcome, TranscriptEvent, TurnUsage,
     };
 
     #[test]
@@ -4754,6 +4766,16 @@ mod multi_step_loop_tests {
         assert!(text_has_source_link("Reference: http://example.com/a"));
         assert!(text_has_source_link("Try www.example.com/docs"));
         assert!(!text_has_source_link("No links here."));
+    }
+
+    #[test]
+    fn truncate_utf8_prefix_does_not_split_multibyte_chars() {
+        let smart = "\u{201c}quoted\u{201d}";
+        let mut s = "x".repeat(7998);
+        s.push_str(smart);
+        let out = truncate_utf8_prefix(&s, 8000);
+        assert!(out.ends_with("... (truncated)"));
+        assert!(!out.contains('\u{fffd}'));
     }
 
     #[test]

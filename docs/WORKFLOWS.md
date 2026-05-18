@@ -23,6 +23,9 @@ For **multi-step agent workflows** (research → summarize, code → review, etc
    - `research_and_summarize` — researcher gathers info, reviewer summarizes
    - `code_and_review` — coder writes code, reviewer checks quality
    - `deep_research` — researcher → coder (commands) → reviewer (report)
+   - `plan_and_operationalize` — researcher scopes objective → coder writes plan + runbook → reviewer summarizes
+   - `diagnose_and_remediate` — researcher gathers evidence → coder runs safe diagnostics → reviewer remediation brief
+   - `grounded_content_pipeline` — researcher gathers sources → coder drafts content → reviewer editorial + repurposing
 
 4. **Custom workflows** can be defined via the API (e.g. `POST /api/workflow/define` with a steps array) and are then runnable by name via `wf::run(name, input)`.
 

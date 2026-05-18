@@ -653,4 +653,65 @@ fn add(a: int, b: int) -> int { a + b }
         let r = expect_function_signature(source, "add", 1, true);
         assert!(r.is_err());
     }
+
+    #[test]
+    fn test_expect_eq_and_ne_cover_success_and_failure() {
+        assert!(expect_eq(Value::Int(7), Value::Int(7)).is_ok());
+        let eq_err = expect_eq(Value::Int(7), Value::Int(8)).unwrap_err();
+        assert!(eq_err.contains("Expected"));
+
+        assert!(expect_ne(Value::Int(7), Value::Int(8)).is_ok());
+        let ne_err = expect_ne(Value::Int(7), Value::Int(7)).unwrap_err();
+        assert!(ne_err.contains("Expected not"));
+    }
+
+    #[test]
+    fn test_expect_true_and_false_cover_non_bool_cases() {
+        assert!(expect_true(Value::Bool(true)).is_ok());
+        let true_err = expect_true(Value::Int(1)).unwrap_err();
+        assert!(true_err.contains("Expected true"));
+
+        assert!(expect_false(Value::Bool(false)).is_ok());
+        let false_err = expect_false(Value::String("nope".to_string())).unwrap_err();
+        assert!(false_err.contains("Expected false"));
+    }
+
+    #[test]
+    fn test_expect_nil_and_not_nil_cover_both_paths() {
+        assert!(expect_nil(Value::Null).is_ok());
+        let nil_err = expect_nil(Value::Bool(false)).unwrap_err();
+        assert!(nil_err.contains("Expected null"));
+
+        assert!(expect_not_nil(Value::Int(1)).is_ok());
+        let not_nil_err = expect_not_nil(Value::Null).unwrap_err();
+        assert!(not_nil_err.contains("Expected not null"));
+    }
+
+    #[test]
+    fn test_expect_type_in_range_and_length_have_negative_assertions() {
+        assert!(expect_type(&Value::Float(1.5), "number").is_ok());
+        let type_err = expect_type(&Value::Float(1.5), "string").unwrap_err();
+        assert!(type_err.contains("Type mismatch"));
+
+        assert!(expect_in_range(Value::Int(10), 1.0, 10.0).is_ok());
+        let range_err = expect_in_range(Value::Float(10.1), 1.0, 10.0).unwrap_err();
+        assert!(range_err.contains("out of range"));
+
+        assert!(expect_length(Value::String("abc".to_string()), 3).is_ok());
+        let len_err = expect_length(Value::List(vec![Value::Int(1)]), 2).unwrap_err();
+        assert!(len_err.contains("Length mismatch"));
+    }
+
+    #[test]
+    fn test_expect_not_empty_and_has_key_negative_cases() {
+        assert!(expect_not_empty(Value::String("x".to_string())).is_ok());
+        let empty_err = expect_not_empty(Value::String(String::new())).unwrap_err();
+        assert!(empty_err.contains("Collection is empty"));
+
+        let mut m = std::collections::HashMap::new();
+        m.insert("ok".to_string(), Value::Int(1));
+        assert!(expect_has_key(Value::Map(m.clone()), "ok").is_ok());
+        let key_err = expect_has_key(Value::Map(m), "missing").unwrap_err();
+        assert!(key_err.contains("does not contain key"));
+    }
 }

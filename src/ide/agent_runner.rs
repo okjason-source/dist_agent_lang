@@ -13,6 +13,7 @@ use crate::stdlib::agent::{self, AgentConfig, AgentType, ResourceBudget};
 use crate::stdlib::ai::{
     completion_and_ask_guidance_for_tool_loop, execute_fetch_url_result, generate_agent_model_turn,
     max_tool_result_chars, max_tool_steps_from_env, model_turn_to_outcome, run_web_search,
+    truncate_utf8_prefix,
     MultiStepResult, ToolOutcome, TurnUsage, TOOLS_SYSTEM_WITH_SCRIPTING,
 };
 use std::path::{Path, PathBuf};
@@ -39,11 +40,7 @@ pub(crate) use crate::stdlib::fs::resolve_path_under_root;
 
 fn truncate_result(s: &str) -> String {
     let cap = max_tool_result_chars();
-    if s.len() <= cap {
-        s.to_string()
-    } else {
-        format!("{}\n... (truncated)", &s[..cap])
-    }
+    truncate_utf8_prefix(s, cap)
 }
 
 // ── Loop-local guard state ──────────────────────────────────────────

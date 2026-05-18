@@ -12,7 +12,7 @@ pub mod cloudadmin;
 pub mod config;
 pub mod cross_chain_security;
 pub mod crypto;
-pub mod crypto_signatures; // Production-grade cryptographic signatures
+pub mod crypto_signatures;
 pub mod database;
 #[cfg(feature = "sqlite-storage")]
 mod database_sqlite;

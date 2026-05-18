@@ -382,4 +382,54 @@ mod tests {
         assert!(err.contains("protected"));
         let _ = remove_client(&id);
     }
+
+    #[test]
+    fn set_header_rejects_other_protected_headers_and_empty_key() {
+        let _l = env_lock().lock().expect("lock");
+        let _g = EnvGuard::set_allow_http(None);
+        let id = create_client("https://graph.microsoft.com/v1.0", "token", 30).expect("client");
+
+        let e1 = set_header(&id, "content-length", "123").expect_err("must fail");
+        assert!(e1.contains("protected"));
+        let e2 = set_header(&id, "host", "example.com").expect_err("must fail");
+        assert!(e2.contains("protected"));
+        let e3 = set_header(&id, "   ", "x").expect_err("must fail");
+        assert!(e3.contains("cannot be empty"));
+
+        let _ = remove_client(&id);
+    }
+
+    #[test]
+    fn set_header_set_token_and_retry_policy_mutate_client_state() {
+        let _l = env_lock().lock().expect("lock");
+        let _g = EnvGuard::set_allow_http(None);
+        let id = create_client("https://graph.microsoft.com/v1.0", "token", 0).expect("client");
+
+        set_header(&id, "x-trace", "abc").expect("set header");
+        set_token(&id, "  token-updated  ").expect("set token");
+        set_retry_policy(&id, 999, 0).expect("set retry policy");
+
+        let guard = clients().lock().expect("lock clients");
+        let c = guard.get(&id).expect("client exists");
+        assert_eq!(c.timeout_secs, 1); // create_client clamps with max(1)
+        assert_eq!(c.bearer_token, "token-updated"); // trimmed
+        assert_eq!(c.max_retries, 10); // clamped
+        assert_eq!(c.retry_backoff_ms, 1); // clamped
+        assert_eq!(
+            c.default_headers.get("x-trace").map(String::as_str),
+            Some("abc")
+        );
+        drop(guard);
+
+        let _ = remove_client(&id);
+    }
+
+    #[test]
+    fn request_and_remove_unknown_client_paths() {
+        let _l = env_lock().lock().expect("lock");
+        let _g = EnvGuard::set_allow_http(None);
+        let err = request("graph_client_missing", "GET", "/me", None).expect_err("not found");
+        assert!(err.contains("not found"));
+        assert!(!remove_client("graph_client_missing").expect("remove unknown"));
+    }
 }

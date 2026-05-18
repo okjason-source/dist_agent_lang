@@ -557,3 +557,94 @@ pub fn create_webhook(url: String, method: String) -> WebhookConfig {
         retry_count: Some(3),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_call_dispatch_matrix_known_and_unknown_paths() {
+        let payment = ServiceCall::new("payment".to_string(), "process".to_string());
+        let payment_result = call(payment).expect("payment::process should succeed");
+        assert_eq!(
+            payment_result,
+            Value::String("payment_processed_12345".to_string())
+        );
+
+        let email = ServiceCall::new("email".to_string(), "verify".to_string());
+        let email_result = call(email).expect("email::verify should succeed");
+        assert_eq!(email_result, Value::Bool(true));
+
+        let sms = ServiceCall::new("sms".to_string(), "send".to_string());
+        let sms_result = call(sms).expect("sms::send should succeed");
+        assert_eq!(sms_result, Value::String("sms_sent_def456".to_string()));
+
+        let unknown_method = ServiceCall::new("email".to_string(), "unknown".to_string());
+        let method_err = call(unknown_method).unwrap_err();
+        assert!(method_err.contains("Unknown email method"));
+
+        let unknown_service = ServiceCall::new("not-real".to_string(), "send".to_string());
+        let service_err = call(unknown_service).unwrap_err();
+        assert!(service_err.contains("Unknown service"));
+    }
+
+    #[test]
+    fn test_webhook_fallback_url_matching_matrix() {
+        // Invalid URL formats force webhook_http_post to fail fast when http-interface is enabled,
+        // then the function exercises fallback URL pattern matching.
+        let example = create_webhook(
+            "https://api.example.com/webhook".to_string(),
+            "POST".to_string(),
+        );
+        assert_eq!(
+            webhook(example, HashMap::new()).unwrap(),
+            "webhook_delivered_xyz789"
+        );
+
+        let slack = create_webhook(
+            "hooks.slack.com/services/foo/bar".to_string(),
+            "POST".to_string(),
+        );
+        assert_eq!(
+            webhook(slack, HashMap::new()).unwrap(),
+            "slack_notification_sent"
+        );
+
+        let discord = create_webhook(
+            "discord.com/api/webhooks/123/abc".to_string(),
+            "POST".to_string(),
+        );
+        assert_eq!(
+            webhook(discord, HashMap::new()).unwrap(),
+            "discord_message_sent"
+        );
+
+        let unknown = create_webhook(
+            "https://unknown.example/webhook".to_string(),
+            "POST".to_string(),
+        );
+        let err = webhook(unknown, HashMap::new()).unwrap_err();
+        assert!(err.contains("Webhook delivery failed"));
+    }
+
+    #[test]
+    fn test_builder_methods_preserve_mutations() {
+        let ai = AIService::new("gpt-4".to_string())
+            .with_temperature(0.42)
+            .with_max_tokens(123)
+            .with_api_key("k".to_string())
+            .with_base_url("https://example.test/v1".to_string());
+        assert_eq!(ai.temperature, 0.42);
+        assert_eq!(ai.max_tokens, Some(123));
+        assert_eq!(ai.api_key.as_deref(), Some("k"));
+        assert_eq!(ai.base_url.as_deref(), Some("https://example.test/v1"));
+
+        let sc = ServiceCall::new("payment".to_string(), "process".to_string())
+            .with_parameter("amount".to_string(), Value::Int(5))
+            .with_timeout(3)
+            .with_base_url("https://service.example".to_string());
+        assert_eq!(sc.timeout, Some(3));
+        assert_eq!(sc.base_url.as_deref(), Some("https://service.example"));
+        assert!(matches!(sc.parameters.get("amount"), Some(Value::Int(5))));
+    }
+}

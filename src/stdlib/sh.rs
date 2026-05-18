@@ -238,3 +238,161 @@ fn run_impl(cmd: &str) -> Result<(String, String, i64), String> {
     let exit_code = output.status.code().unwrap_or(-1);
     Ok((stdout, stderr, exit_code as i64))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Mutex, OnceLock};
+    use tempfile::tempdir;
+
+    fn test_lock() -> &'static Mutex<()> {
+        static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(()))
+    }
+
+    struct EnvVarGuard {
+        key: &'static str,
+        old: Option<String>,
+    }
+
+    impl EnvVarGuard {
+        fn set(key: &'static str, value: Option<&str>) -> Self {
+            let old = std::env::var(key).ok();
+            if let Some(v) = value {
+                std::env::set_var(key, v);
+            } else {
+                std::env::remove_var(key);
+            }
+            Self { key, old }
+        }
+    }
+
+    impl Drop for EnvVarGuard {
+        fn drop(&mut self) {
+            if let Some(v) = &self.old {
+                std::env::set_var(self.key, v);
+            } else {
+                std::env::remove_var(self.key);
+            }
+        }
+    }
+
+    struct CwdGuard {
+        old: std::path::PathBuf,
+    }
+
+    impl CwdGuard {
+        fn set_to(path: &std::path::Path) -> Self {
+            let old = std::env::current_dir().expect("cwd");
+            std::env::set_current_dir(path).expect("set cwd");
+            Self { old }
+        }
+    }
+
+    impl Drop for CwdGuard {
+        fn drop(&mut self) {
+            std::env::set_current_dir(&self.old).expect("restore cwd");
+        }
+    }
+
+    #[test]
+    fn trust_level_from_str_and_display() {
+        assert_eq!(TrustLevel::from_str("off"), TrustLevel::Off);
+        assert_eq!(TrustLevel::from_str("confirmed"), TrustLevel::Confirmed);
+        assert_eq!(TrustLevel::from_str("trusted"), TrustLevel::Trusted);
+        assert_eq!(TrustLevel::from_str("unknown"), TrustLevel::Sandboxed);
+        assert_eq!(TrustLevel::Trusted.to_string(), "trusted");
+    }
+
+    #[test]
+    fn load_sh_config_env_overrides_file() {
+        let _l = test_lock().lock().expect("lock");
+        let td = tempdir().expect("tempdir");
+        std::fs::write(
+            td.path().join("dal.toml"),
+            r#"[agent.sh]
+trust = "off"
+"#,
+        )
+        .expect("write dal.toml");
+        std::fs::write(
+            td.path().join("agent.toml"),
+            r#"[agent.sh]
+trust = "trusted"
+forbidden_patterns = ["rm -rf", "sudo"]
+allowed_prefixes = ["echo", "ls"]
+"#,
+        )
+        .expect("write agent.toml");
+
+        let _cwd = CwdGuard::set_to(td.path());
+        let _env = EnvVarGuard::set("DAL_AGENT_SHELL_TRUST", Some("confirmed"));
+        let cfg = load_sh_config();
+        assert_eq!(cfg.trust, TrustLevel::Confirmed); // env override
+        assert_eq!(cfg.forbidden_patterns.len(), 2);
+        assert_eq!(cfg.allowed_prefixes.as_ref().map(|v| v.len()), Some(2));
+    }
+
+    #[test]
+    fn check_allowed_enforces_trust_forbidden_and_allowlist() {
+        let _l = test_lock().lock().expect("lock");
+        let _confirm = EnvVarGuard::set("DAL_AGENT_SHELL_CONFIRM", None);
+
+        let off = ShConfig {
+            trust: TrustLevel::Off,
+            forbidden_patterns: vec![],
+            allowed_prefixes: None,
+        };
+        assert!(check_allowed("echo hi", &off)
+            .unwrap_err()
+            .contains("disabled"));
+
+        let confirmed = ShConfig {
+            trust: TrustLevel::Confirmed,
+            forbidden_patterns: vec![],
+            allowed_prefixes: None,
+        };
+        assert!(check_allowed("echo hi", &confirmed)
+            .unwrap_err()
+            .contains("requires approval"));
+
+        let _confirm_yes = EnvVarGuard::set("DAL_AGENT_SHELL_CONFIRM", Some("1"));
+        assert!(check_allowed("echo hi", &confirmed).is_ok());
+
+        let guarded = ShConfig {
+            trust: TrustLevel::Trusted,
+            forbidden_patterns: vec!["rm -rf".to_string()],
+            allowed_prefixes: Some(vec!["echo".to_string(), "ls".to_string()]),
+        };
+        assert!(check_allowed("echo ok", &guarded).is_ok());
+        assert!(check_allowed("rm -rf /tmp", &guarded)
+            .unwrap_err()
+            .contains("forbidden_patterns"));
+        assert!(check_allowed("cat file.txt", &guarded)
+            .unwrap_err()
+            .contains("allowed_prefixes"));
+    }
+
+    #[test]
+    fn run_returns_map_with_exit_code_stdout_stderr() {
+        let _l = test_lock().lock().expect("lock");
+        let td = tempdir().expect("tempdir");
+        std::fs::write(
+            td.path().join("agent.toml"),
+            r#"[agent.sh]
+trust = "trusted"
+allowed_prefixes = ["echo"]
+"#,
+        )
+        .expect("write agent.toml");
+
+        let _cwd = CwdGuard::set_to(td.path());
+        let result = run("echo hello").expect("run echo");
+        let Value::Map(m) = result else {
+            panic!("expected map");
+        };
+        assert!(matches!(m.get("exit_code"), Some(Value::Int(0))));
+        assert!(matches!(m.get("stdout"), Some(Value::String(s)) if s.contains("hello")));
+        assert!(matches!(m.get("stderr"), Some(Value::String(_))));
+    }
+}
