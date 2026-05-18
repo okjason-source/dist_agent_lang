@@ -176,5 +176,50 @@
 <a href=#176 id=176 data-nosnippet>176</a>        <span class="macro">assert!</span>(scatter::scheduled_count() &gt;= <span class="number">1</span>);
 <a href=#177 id=177 data-nosnippet>177</a>        scatter::reset_for_test();
 <a href=#178 id=178 data-nosnippet>178</a>    }
-<a href=#179 id=179 data-nosnippet>179</a>}
+<a href=#179 id=179 data-nosnippet>179</a>
+<a href=#180 id=180 data-nosnippet>180</a>    <span class="attr">#[test]
+<a href=#181 id=181 data-nosnippet>181</a>    </span><span class="kw">fn </span>every_seconds_and_hours_validate_boundaries() {
+<a href=#182 id=182 data-nosnippet>182</a>        <span class="kw">let </span>_lock = scatter::test_lock();
+<a href=#183 id=183 data-nosnippet>183</a>        scatter::reset_for_test();
+<a href=#184 id=184 data-nosnippet>184</a>
+<a href=#185 id=185 data-nosnippet>185</a>        <span class="macro">assert!</span>(every_seconds(<span class="string">"s0"</span>, <span class="number">0</span>).is_err());
+<a href=#186 id=186 data-nosnippet>186</a>        <span class="macro">assert!</span>(every_seconds(<span class="string">"sneg"</span>, -<span class="number">1</span>).is_err());
+<a href=#187 id=187 data-nosnippet>187</a>        <span class="macro">assert!</span>(every_hours(<span class="string">"h0"</span>, <span class="number">0</span>).is_err());
+<a href=#188 id=188 data-nosnippet>188</a>        <span class="macro">assert!</span>(every_hours(<span class="string">"hneg"</span>, -<span class="number">1</span>).is_err());
+<a href=#189 id=189 data-nosnippet>189</a>
+<a href=#190 id=190 data-nosnippet>190</a>        every_seconds(<span class="string">"s_ok"</span>, <span class="number">1</span>).unwrap();
+<a href=#191 id=191 data-nosnippet>191</a>        every_hours(<span class="string">"h_ok"</span>, <span class="number">1</span>).unwrap();
+<a href=#192 id=192 data-nosnippet>192</a>        <span class="macro">assert!</span>(scatter::scheduled_count() &gt;= <span class="number">2</span>);
+<a href=#193 id=193 data-nosnippet>193</a>        scatter::reset_for_test();
+<a href=#194 id=194 data-nosnippet>194</a>    }
+<a href=#195 id=195 data-nosnippet>195</a>
+<a href=#196 id=196 data-nosnippet>196</a>    <span class="attr">#[test]
+<a href=#197 id=197 data-nosnippet>197</a>    </span><span class="kw">fn </span>series_interval_validates_limits_and_interval_sign() {
+<a href=#198 id=198 data-nosnippet>198</a>        <span class="kw">let </span>_lock = scatter::test_lock();
+<a href=#199 id=199 data-nosnippet>199</a>        scatter::reset_for_test();
+<a href=#200 id=200 data-nosnippet>200</a>
+<a href=#201 id=201 data-nosnippet>201</a>        <span class="macro">assert!</span>(series_interval_unix_ms(<span class="string">"p"</span>, <span class="number">0</span>, -<span class="number">1</span>, <span class="number">1</span>)
+<a href=#202 id=202 data-nosnippet>202</a>            .unwrap_err()
+<a href=#203 id=203 data-nosnippet>203</a>            .contains(<span class="string">"interval_ms must be &gt;= 0"</span>));
+<a href=#204 id=204 data-nosnippet>204</a>        <span class="macro">assert!</span>(series_interval_unix_ms(<span class="string">"p"</span>, <span class="number">0</span>, <span class="number">1</span>, MAX_SERIES_COUNT + <span class="number">1</span>)
+<a href=#205 id=205 data-nosnippet>205</a>            .unwrap_err()
+<a href=#206 id=206 data-nosnippet>206</a>            .contains(<span class="string">"count must be &lt;="</span>));
+<a href=#207 id=207 data-nosnippet>207</a>        scatter::reset_for_test();
+<a href=#208 id=208 data-nosnippet>208</a>    }
+<a href=#209 id=209 data-nosnippet>209</a>
+<a href=#210 id=210 data-nosnippet>210</a>    <span class="attr">#[test]
+<a href=#211 id=211 data-nosnippet>211</a>    </span><span class="kw">fn </span>series_from_now_and_cancel_delegate_to_scatter() {
+<a href=#212 id=212 data-nosnippet>212</a>        <span class="kw">let </span>_lock = scatter::test_lock();
+<a href=#213 id=213 data-nosnippet>213</a>        scatter::reset_for_test();
+<a href=#214 id=214 data-nosnippet>214</a>
+<a href=#215 id=215 data-nosnippet>215</a>        <span class="kw">let </span>ids = series_interval_from_now_ms(<span class="string">"job"</span>, <span class="number">100</span>, <span class="number">2</span>).unwrap();
+<a href=#216 id=216 data-nosnippet>216</a>        <span class="macro">assert_eq!</span>(ids, <span class="macro">vec!</span>[<span class="string">"job_0"</span>.to_string(), <span class="string">"job_1"</span>.to_string()]);
+<a href=#217 id=217 data-nosnippet>217</a>        <span class="comment">// First job can become due immediately (start=now), so allow either 1 or 2.
+<a href=#218 id=218 data-nosnippet>218</a>        </span><span class="macro">assert!</span>((<span class="number">1</span>..=<span class="number">2</span>).contains(<span class="kw-2">&amp;</span>scatter::scheduled_count()));
+<a href=#219 id=219 data-nosnippet>219</a>
+<a href=#220 id=220 data-nosnippet>220</a>        <span class="macro">assert_eq!</span>(cancel(<span class="string">"job_0"</span>), <span class="bool-val">true</span>);
+<a href=#221 id=221 data-nosnippet>221</a>        <span class="macro">assert_eq!</span>(cancel(<span class="string">"job_0"</span>), <span class="bool-val">false</span>);
+<a href=#222 id=222 data-nosnippet>222</a>        scatter::reset_for_test();
+<a href=#223 id=223 data-nosnippet>223</a>    }
+<a href=#224 id=224 data-nosnippet>224</a>}
 </code></pre></div></section></main></body></html>

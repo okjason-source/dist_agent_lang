@@ -250,4 +250,99 @@
 <a href=#250 id=250 data-nosnippet>250</a></span><span class="kw">pub fn </span>create_sync_filters() -&gt; SyncFilters {
 <a href=#251 id=251 data-nosnippet>251</a>    SyncFilters::new()
 <a href=#252 id=252 data-nosnippet>252</a>}
+<a href=#253 id=253 data-nosnippet>253</a>
+<a href=#254 id=254 data-nosnippet>254</a><span class="attr">#[cfg(test)]
+<a href=#255 id=255 data-nosnippet>255</a></span><span class="kw">mod </span>tests {
+<a href=#256 id=256 data-nosnippet>256</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#257 id=257 data-nosnippet>257</a>
+<a href=#258 id=258 data-nosnippet>258</a>    <span class="attr">#[test]
+<a href=#259 id=259 data-nosnippet>259</a>    </span><span class="kw">fn </span>test_push_fallback_protocol_matrix() {
+<a href=#260 id=260 data-nosnippet>260</a>        <span class="kw">let </span><span class="kw-2">mut </span>data = HashMap::new();
+<a href=#261 id=261 data-nosnippet>261</a>        data.insert(<span class="string">"k"</span>.to_string(), Value::Int(<span class="number">1</span>));
+<a href=#262 id=262 data-nosnippet>262</a>
+<a href=#263 id=263 data-nosnippet>263</a>        <span class="kw">let </span>ftp_ok = create_sync_target(<span class="string">"ftp.example.com/data"</span>.to_string(), <span class="string">"ftp"</span>.to_string());
+<a href=#264 id=264 data-nosnippet>264</a>        <span class="macro">assert_eq!</span>(push(data.clone(), ftp_ok).unwrap(), <span class="bool-val">true</span>);
+<a href=#265 id=265 data-nosnippet>265</a>
+<a href=#266 id=266 data-nosnippet>266</a>        <span class="kw">let </span>ftp_bad = create_sync_target(<span class="string">"ftp.invalid.local/data"</span>.to_string(), <span class="string">"ftp"</span>.to_string());
+<a href=#267 id=267 data-nosnippet>267</a>        <span class="macro">assert!</span>(push(data.clone(), ftp_bad)
+<a href=#268 id=268 data-nosnippet>268</a>            .unwrap_err()
+<a href=#269 id=269 data-nosnippet>269</a>            .contains(<span class="string">"FTP push failed"</span>));
+<a href=#270 id=270 data-nosnippet>270</a>
+<a href=#271 id=271 data-nosnippet>271</a>        <span class="kw">let </span>s3_ok = create_sync_target(
+<a href=#272 id=272 data-nosnippet>272</a>            <span class="string">"s3.amazonaws.com/example-bucket"</span>.to_string(),
+<a href=#273 id=273 data-nosnippet>273</a>            <span class="string">"s3"</span>.to_string(),
+<a href=#274 id=274 data-nosnippet>274</a>        );
+<a href=#275 id=275 data-nosnippet>275</a>        <span class="macro">assert_eq!</span>(push(data.clone(), s3_ok).unwrap(), <span class="bool-val">true</span>);
+<a href=#276 id=276 data-nosnippet>276</a>
+<a href=#277 id=277 data-nosnippet>277</a>        <span class="kw">let </span>s3_bad = create_sync_target(<span class="string">"s3.invalid.local/bucket"</span>.to_string(), <span class="string">"s3"</span>.to_string());
+<a href=#278 id=278 data-nosnippet>278</a>        <span class="macro">assert!</span>(push(data.clone(), s3_bad)
+<a href=#279 id=279 data-nosnippet>279</a>            .unwrap_err()
+<a href=#280 id=280 data-nosnippet>280</a>            .contains(<span class="string">"S3 push failed"</span>));
+<a href=#281 id=281 data-nosnippet>281</a>
+<a href=#282 id=282 data-nosnippet>282</a>        <span class="kw">let </span>unsupported = create_sync_target(<span class="string">"wherever"</span>.to_string(), <span class="string">"gopher"</span>.to_string());
+<a href=#283 id=283 data-nosnippet>283</a>        <span class="macro">assert!</span>(push(data, unsupported)
+<a href=#284 id=284 data-nosnippet>284</a>            .unwrap_err()
+<a href=#285 id=285 data-nosnippet>285</a>            .contains(<span class="string">"Unsupported protocol"</span>));
+<a href=#286 id=286 data-nosnippet>286</a>    }
+<a href=#287 id=287 data-nosnippet>287</a>
+<a href=#288 id=288 data-nosnippet>288</a>    <span class="attr">#[test]
+<a href=#289 id=289 data-nosnippet>289</a>    </span><span class="kw">fn </span>test_pull_database_and_api_filters() {
+<a href=#290 id=290 data-nosnippet>290</a>        <span class="kw">let </span>(db_all, complete_all) = pull(<span class="string">"database"</span>, create_sync_filters()).unwrap();
+<a href=#291 id=291 data-nosnippet>291</a>        <span class="macro">assert_eq!</span>(complete_all, <span class="bool-val">true</span>);
+<a href=#292 id=292 data-nosnippet>292</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
+<a href=#293 id=293 data-nosnippet>293</a>            db_all.get(<span class="string">"user_123"</span>),
+<a href=#294 id=294 data-nosnippet>294</a>            <span class="prelude-val">Some</span>(Value::String(v)) <span class="kw">if </span>v == <span class="string">"John Doe"
+<a href=#295 id=295 data-nosnippet>295</a>        </span>));
+<a href=#296 id=296 data-nosnippet>296</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
+<a href=#297 id=297 data-nosnippet>297</a>            db_all.get(<span class="string">"user_456"</span>),
+<a href=#298 id=298 data-nosnippet>298</a>            <span class="prelude-val">Some</span>(Value::String(v)) <span class="kw">if </span>v == <span class="string">"Jane Smith"
+<a href=#299 id=299 data-nosnippet>299</a>        </span>));
+<a href=#300 id=300 data-nosnippet>300</a>
+<a href=#301 id=301 data-nosnippet>301</a>        <span class="kw">let </span>users_only = create_sync_filters().with_data_type(<span class="string">"users"</span>.to_string());
+<a href=#302 id=302 data-nosnippet>302</a>        <span class="kw">let </span>(db_users, complete_users) = pull(<span class="string">"database"</span>, users_only).unwrap();
+<a href=#303 id=303 data-nosnippet>303</a>        <span class="macro">assert_eq!</span>(complete_users, <span class="bool-val">true</span>);
+<a href=#304 id=304 data-nosnippet>304</a>        <span class="macro">assert_eq!</span>(db_users.len(), <span class="number">2</span>);
+<a href=#305 id=305 data-nosnippet>305</a>
+<a href=#306 id=306 data-nosnippet>306</a>        <span class="kw">let </span>bad_filter = create_sync_filters().with_data_type(<span class="string">"orders"</span>.to_string());
+<a href=#307 id=307 data-nosnippet>307</a>        <span class="macro">assert!</span>(pull(<span class="string">"database"</span>, bad_filter)
+<a href=#308 id=308 data-nosnippet>308</a>            .unwrap_err()
+<a href=#309 id=309 data-nosnippet>309</a>            .contains(<span class="string">"Data type filter not supported"</span>));
+<a href=#310 id=310 data-nosnippet>310</a>
+<a href=#311 id=311 data-nosnippet>311</a>        <span class="kw">let </span>(api_data, complete_api) = pull(<span class="string">"api"</span>, create_sync_filters()).unwrap();
+<a href=#312 id=312 data-nosnippet>312</a>        <span class="macro">assert_eq!</span>(complete_api, <span class="bool-val">true</span>);
+<a href=#313 id=313 data-nosnippet>313</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(api_data.get(<span class="string">"price_btc"</span>), <span class="prelude-val">Some</span>(Value::Int(<span class="number">45000</span>))));
+<a href=#314 id=314 data-nosnippet>314</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(api_data.get(<span class="string">"price_eth"</span>), <span class="prelude-val">Some</span>(Value::Int(<span class="number">3200</span>))));
+<a href=#315 id=315 data-nosnippet>315</a>
+<a href=#316 id=316 data-nosnippet>316</a>        <span class="macro">assert!</span>(pull(<span class="string">"unknown-source"</span>, create_sync_filters())
+<a href=#317 id=317 data-nosnippet>317</a>            .unwrap_err()
+<a href=#318 id=318 data-nosnippet>318</a>            .contains(<span class="string">"Unknown source"</span>));
+<a href=#319 id=319 data-nosnippet>319</a>    }
+<a href=#320 id=320 data-nosnippet>320</a>
+<a href=#321 id=321 data-nosnippet>321</a>    <span class="attr">#[test]
+<a href=#322 id=322 data-nosnippet>322</a>    </span><span class="kw">fn </span>test_builder_and_factory_methods_preserve_values() {
+<a href=#323 id=323 data-nosnippet>323</a>        <span class="kw">let </span><span class="kw-2">mut </span>creds = HashMap::new();
+<a href=#324 id=324 data-nosnippet>324</a>        creds.insert(<span class="string">"token"</span>.to_string(), <span class="string">"secret"</span>.to_string());
+<a href=#325 id=325 data-nosnippet>325</a>        <span class="kw">let </span>target = create_sync_target(<span class="string">"api.example.com"</span>.to_string(), <span class="string">"https"</span>.to_string())
+<a href=#326 id=326 data-nosnippet>326</a>            .with_credentials(creds.clone())
+<a href=#327 id=327 data-nosnippet>327</a>            .with_compression(<span class="bool-val">true</span>);
+<a href=#328 id=328 data-nosnippet>328</a>        <span class="macro">assert_eq!</span>(target.location, <span class="string">"api.example.com"</span>);
+<a href=#329 id=329 data-nosnippet>329</a>        <span class="macro">assert_eq!</span>(target.protocol, <span class="string">"https"</span>);
+<a href=#330 id=330 data-nosnippet>330</a>        <span class="macro">assert_eq!</span>(target.compression, <span class="bool-val">true</span>);
+<a href=#331 id=331 data-nosnippet>331</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
+<a href=#332 id=332 data-nosnippet>332</a>            target.credentials.as_ref().and_then(|m| m.get(<span class="string">"token"</span>)),
+<a href=#333 id=333 data-nosnippet>333</a>            <span class="prelude-val">Some</span>(v) <span class="kw">if </span>v == <span class="string">"secret"
+<a href=#334 id=334 data-nosnippet>334</a>        </span>));
+<a href=#335 id=335 data-nosnippet>335</a>
+<a href=#336 id=336 data-nosnippet>336</a>        <span class="kw">let </span>filters = create_sync_filters()
+<a href=#337 id=337 data-nosnippet>337</a>            .with_data_type(<span class="string">"users"</span>.to_string())
+<a href=#338 id=338 data-nosnippet>338</a>            .with_date_range(<span class="number">10</span>, <span class="number">20</span>)
+<a href=#339 id=339 data-nosnippet>339</a>            .with_tag(<span class="string">"a"</span>.to_string())
+<a href=#340 id=340 data-nosnippet>340</a>            .with_tag(<span class="string">"b"</span>.to_string())
+<a href=#341 id=341 data-nosnippet>341</a>            .with_max_size(<span class="number">99</span>);
+<a href=#342 id=342 data-nosnippet>342</a>        <span class="macro">assert_eq!</span>(filters.data_type.as_deref(), <span class="prelude-val">Some</span>(<span class="string">"users"</span>));
+<a href=#343 id=343 data-nosnippet>343</a>        <span class="macro">assert_eq!</span>(filters.date_range, <span class="prelude-val">Some</span>((<span class="number">10</span>, <span class="number">20</span>)));
+<a href=#344 id=344 data-nosnippet>344</a>        <span class="macro">assert_eq!</span>(filters.tags, <span class="macro">vec!</span>[<span class="string">"a"</span>.to_string(), <span class="string">"b"</span>.to_string()]);
+<a href=#345 id=345 data-nosnippet>345</a>        <span class="macro">assert_eq!</span>(filters.max_size, <span class="prelude-val">Some</span>(<span class="number">99</span>));
+<a href=#346 id=346 data-nosnippet>346</a>    }
+<a href=#347 id=347 data-nosnippet>347</a>}
 </code></pre></div></section></main></body></html>

@@ -382,5 +382,55 @@
 <a href=#382 id=382 data-nosnippet>382</a>        <span class="macro">assert!</span>(err.contains(<span class="string">"protected"</span>));
 <a href=#383 id=383 data-nosnippet>383</a>        <span class="kw">let _ </span>= remove_client(<span class="kw-2">&amp;</span>id);
 <a href=#384 id=384 data-nosnippet>384</a>    }
-<a href=#385 id=385 data-nosnippet>385</a>}
+<a href=#385 id=385 data-nosnippet>385</a>
+<a href=#386 id=386 data-nosnippet>386</a>    <span class="attr">#[test]
+<a href=#387 id=387 data-nosnippet>387</a>    </span><span class="kw">fn </span>set_header_rejects_other_protected_headers_and_empty_key() {
+<a href=#388 id=388 data-nosnippet>388</a>        <span class="kw">let </span>_l = env_lock().lock().expect(<span class="string">"lock"</span>);
+<a href=#389 id=389 data-nosnippet>389</a>        <span class="kw">let </span>_g = EnvGuard::set_allow_http(<span class="prelude-val">None</span>);
+<a href=#390 id=390 data-nosnippet>390</a>        <span class="kw">let </span>id = create_client(<span class="string">"https://graph.microsoft.com/v1.0"</span>, <span class="string">"token"</span>, <span class="number">30</span>).expect(<span class="string">"client"</span>);
+<a href=#391 id=391 data-nosnippet>391</a>
+<a href=#392 id=392 data-nosnippet>392</a>        <span class="kw">let </span>e1 = set_header(<span class="kw-2">&amp;</span>id, <span class="string">"content-length"</span>, <span class="string">"123"</span>).expect_err(<span class="string">"must fail"</span>);
+<a href=#393 id=393 data-nosnippet>393</a>        <span class="macro">assert!</span>(e1.contains(<span class="string">"protected"</span>));
+<a href=#394 id=394 data-nosnippet>394</a>        <span class="kw">let </span>e2 = set_header(<span class="kw-2">&amp;</span>id, <span class="string">"host"</span>, <span class="string">"example.com"</span>).expect_err(<span class="string">"must fail"</span>);
+<a href=#395 id=395 data-nosnippet>395</a>        <span class="macro">assert!</span>(e2.contains(<span class="string">"protected"</span>));
+<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">let </span>e3 = set_header(<span class="kw-2">&amp;</span>id, <span class="string">"   "</span>, <span class="string">"x"</span>).expect_err(<span class="string">"must fail"</span>);
+<a href=#397 id=397 data-nosnippet>397</a>        <span class="macro">assert!</span>(e3.contains(<span class="string">"cannot be empty"</span>));
+<a href=#398 id=398 data-nosnippet>398</a>
+<a href=#399 id=399 data-nosnippet>399</a>        <span class="kw">let _ </span>= remove_client(<span class="kw-2">&amp;</span>id);
+<a href=#400 id=400 data-nosnippet>400</a>    }
+<a href=#401 id=401 data-nosnippet>401</a>
+<a href=#402 id=402 data-nosnippet>402</a>    <span class="attr">#[test]
+<a href=#403 id=403 data-nosnippet>403</a>    </span><span class="kw">fn </span>set_header_set_token_and_retry_policy_mutate_client_state() {
+<a href=#404 id=404 data-nosnippet>404</a>        <span class="kw">let </span>_l = env_lock().lock().expect(<span class="string">"lock"</span>);
+<a href=#405 id=405 data-nosnippet>405</a>        <span class="kw">let </span>_g = EnvGuard::set_allow_http(<span class="prelude-val">None</span>);
+<a href=#406 id=406 data-nosnippet>406</a>        <span class="kw">let </span>id = create_client(<span class="string">"https://graph.microsoft.com/v1.0"</span>, <span class="string">"token"</span>, <span class="number">0</span>).expect(<span class="string">"client"</span>);
+<a href=#407 id=407 data-nosnippet>407</a>
+<a href=#408 id=408 data-nosnippet>408</a>        set_header(<span class="kw-2">&amp;</span>id, <span class="string">"x-trace"</span>, <span class="string">"abc"</span>).expect(<span class="string">"set header"</span>);
+<a href=#409 id=409 data-nosnippet>409</a>        set_token(<span class="kw-2">&amp;</span>id, <span class="string">"  token-updated  "</span>).expect(<span class="string">"set token"</span>);
+<a href=#410 id=410 data-nosnippet>410</a>        set_retry_policy(<span class="kw-2">&amp;</span>id, <span class="number">999</span>, <span class="number">0</span>).expect(<span class="string">"set retry policy"</span>);
+<a href=#411 id=411 data-nosnippet>411</a>
+<a href=#412 id=412 data-nosnippet>412</a>        <span class="kw">let </span>guard = clients().lock().expect(<span class="string">"lock clients"</span>);
+<a href=#413 id=413 data-nosnippet>413</a>        <span class="kw">let </span>c = guard.get(<span class="kw-2">&amp;</span>id).expect(<span class="string">"client exists"</span>);
+<a href=#414 id=414 data-nosnippet>414</a>        <span class="macro">assert_eq!</span>(c.timeout_secs, <span class="number">1</span>); <span class="comment">// create_client clamps with max(1)
+<a href=#415 id=415 data-nosnippet>415</a>        </span><span class="macro">assert_eq!</span>(c.bearer_token, <span class="string">"token-updated"</span>); <span class="comment">// trimmed
+<a href=#416 id=416 data-nosnippet>416</a>        </span><span class="macro">assert_eq!</span>(c.max_retries, <span class="number">10</span>); <span class="comment">// clamped
+<a href=#417 id=417 data-nosnippet>417</a>        </span><span class="macro">assert_eq!</span>(c.retry_backoff_ms, <span class="number">1</span>); <span class="comment">// clamped
+<a href=#418 id=418 data-nosnippet>418</a>        </span><span class="macro">assert_eq!</span>(
+<a href=#419 id=419 data-nosnippet>419</a>            c.default_headers.get(<span class="string">"x-trace"</span>).map(String::as_str),
+<a href=#420 id=420 data-nosnippet>420</a>            <span class="prelude-val">Some</span>(<span class="string">"abc"</span>)
+<a href=#421 id=421 data-nosnippet>421</a>        );
+<a href=#422 id=422 data-nosnippet>422</a>        drop(guard);
+<a href=#423 id=423 data-nosnippet>423</a>
+<a href=#424 id=424 data-nosnippet>424</a>        <span class="kw">let _ </span>= remove_client(<span class="kw-2">&amp;</span>id);
+<a href=#425 id=425 data-nosnippet>425</a>    }
+<a href=#426 id=426 data-nosnippet>426</a>
+<a href=#427 id=427 data-nosnippet>427</a>    <span class="attr">#[test]
+<a href=#428 id=428 data-nosnippet>428</a>    </span><span class="kw">fn </span>request_and_remove_unknown_client_paths() {
+<a href=#429 id=429 data-nosnippet>429</a>        <span class="kw">let </span>_l = env_lock().lock().expect(<span class="string">"lock"</span>);
+<a href=#430 id=430 data-nosnippet>430</a>        <span class="kw">let </span>_g = EnvGuard::set_allow_http(<span class="prelude-val">None</span>);
+<a href=#431 id=431 data-nosnippet>431</a>        <span class="kw">let </span>err = request(<span class="string">"graph_client_missing"</span>, <span class="string">"GET"</span>, <span class="string">"/me"</span>, <span class="prelude-val">None</span>).expect_err(<span class="string">"not found"</span>);
+<a href=#432 id=432 data-nosnippet>432</a>        <span class="macro">assert!</span>(err.contains(<span class="string">"not found"</span>));
+<a href=#433 id=433 data-nosnippet>433</a>        <span class="macro">assert!</span>(!remove_client(<span class="string">"graph_client_missing"</span>).expect(<span class="string">"remove unknown"</span>));
+<a href=#434 id=434 data-nosnippet>434</a>    }
+<a href=#435 id=435 data-nosnippet>435</a>}
 </code></pre></div></section></main></body></html>

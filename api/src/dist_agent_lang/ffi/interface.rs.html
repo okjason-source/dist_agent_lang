@@ -425,4 +425,75 @@
 <a href=#425 id=425 data-nosnippet>425</a>        }
 <a href=#426 id=426 data-nosnippet>426</a>    }
 <a href=#427 id=427 data-nosnippet>427</a>}
+<a href=#428 id=428 data-nosnippet>428</a>
+<a href=#429 id=429 data-nosnippet>429</a><span class="attr">#[cfg(test)]
+<a href=#430 id=430 data-nosnippet>430</a></span><span class="kw">mod </span>tests {
+<a href=#431 id=431 data-nosnippet>431</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#432 id=432 data-nosnippet>432</a>
+<a href=#433 id=433 data-nosnippet>433</a>    <span class="kw">fn </span>ffi_only_both_mode_config() -&gt; <span class="kw">crate</span>::ffi::FFIConfig {
+<a href=#434 id=434 data-nosnippet>434</a>        <span class="kw">crate</span>::ffi::FFIConfig {
+<a href=#435 id=435 data-nosnippet>435</a>            interface_type: InterfaceType::Both,
+<a href=#436 id=436 data-nosnippet>436</a>            enable_http: <span class="bool-val">false</span>,
+<a href=#437 id=437 data-nosnippet>437</a>            enable_ffi: <span class="bool-val">true</span>,
+<a href=#438 id=438 data-nosnippet>438</a>            python_enabled: <span class="bool-val">false</span>,
+<a href=#439 id=439 data-nosnippet>439</a>            rust_enabled: <span class="bool-val">true</span>,
+<a href=#440 id=440 data-nosnippet>440</a>            c_enabled: <span class="bool-val">false</span>,
+<a href=#441 id=441 data-nosnippet>441</a>        }
+<a href=#442 id=442 data-nosnippet>442</a>    }
+<a href=#443 id=443 data-nosnippet>443</a>
+<a href=#444 id=444 data-nosnippet>444</a>    <span class="attr">#[test]
+<a href=#445 id=445 data-nosnippet>445</a>    </span><span class="kw">fn </span>auto_detect_prefers_compute_patterns() {
+<a href=#446 id=446 data-nosnippet>446</a>        <span class="kw">let </span>iface = FFIInterface::new(ffi_only_both_mode_config());
+<a href=#447 id=447 data-nosnippet>447</a>        <span class="kw">let </span>use_ffi = iface.auto_detect_interface(<span class="string">"svc"</span>, <span class="string">"hash_payload"</span>, <span class="kw-2">&amp;</span>[]);
+<a href=#448 id=448 data-nosnippet>448</a>        <span class="macro">assert_eq!</span>(use_ffi, <span class="bool-val">true</span>);
+<a href=#449 id=449 data-nosnippet>449</a>    }
+<a href=#450 id=450 data-nosnippet>450</a>
+<a href=#451 id=451 data-nosnippet>451</a>    <span class="attr">#[test]
+<a href=#452 id=452 data-nosnippet>452</a>    </span><span class="kw">fn </span>auto_detect_uses_arg_size_threshold() {
+<a href=#453 id=453 data-nosnippet>453</a>        <span class="kw">let </span>iface = FFIInterface::new(ffi_only_both_mode_config());
+<a href=#454 id=454 data-nosnippet>454</a>
+<a href=#455 id=455 data-nosnippet>455</a>        <span class="kw">let </span>near_threshold = <span class="macro">vec!</span>[Value::String(<span class="string">"x"</span>.repeat(<span class="number">1023</span>))];
+<a href=#456 id=456 data-nosnippet>456</a>        <span class="macro">assert_eq!</span>(
+<a href=#457 id=457 data-nosnippet>457</a>            iface.auto_detect_interface(<span class="string">"svc"</span>, <span class="string">"plain_operation"</span>, <span class="kw-2">&amp;</span>near_threshold),
+<a href=#458 id=458 data-nosnippet>458</a>            <span class="bool-val">true
+<a href=#459 id=459 data-nosnippet>459</a>        </span>);
+<a href=#460 id=460 data-nosnippet>460</a>
+<a href=#461 id=461 data-nosnippet>461</a>        <span class="kw">let </span>at_threshold = <span class="macro">vec!</span>[Value::String(<span class="string">"x"</span>.repeat(<span class="number">1024</span>))];
+<a href=#462 id=462 data-nosnippet>462</a>        <span class="macro">assert_eq!</span>(
+<a href=#463 id=463 data-nosnippet>463</a>            iface.auto_detect_interface(<span class="string">"svc"</span>, <span class="string">"plain_operation"</span>, <span class="kw-2">&amp;</span>at_threshold),
+<a href=#464 id=464 data-nosnippet>464</a>            <span class="bool-val">true
+<a href=#465 id=465 data-nosnippet>465</a>        </span>);
+<a href=#466 id=466 data-nosnippet>466</a>    }
+<a href=#467 id=467 data-nosnippet>467</a>
+<a href=#468 id=468 data-nosnippet>468</a>    <span class="attr">#[test]
+<a href=#469 id=469 data-nosnippet>469</a>    </span><span class="kw">fn </span>auto_detect_prefers_http_for_network_patterns_when_not_small() {
+<a href=#470 id=470 data-nosnippet>470</a>        <span class="kw">let </span>iface = FFIInterface::new(ffi_only_both_mode_config());
+<a href=#471 id=471 data-nosnippet>471</a>        <span class="kw">let </span>large_args = <span class="macro">vec!</span>[Value::String(<span class="string">"x"</span>.repeat(<span class="number">2048</span>))];
+<a href=#472 id=472 data-nosnippet>472</a>
+<a href=#473 id=473 data-nosnippet>473</a>        <span class="macro">assert_eq!</span>(
+<a href=#474 id=474 data-nosnippet>474</a>            iface.auto_detect_interface(<span class="string">"svc"</span>, <span class="string">"fetch_remote_resource"</span>, <span class="kw-2">&amp;</span>large_args),
+<a href=#475 id=475 data-nosnippet>475</a>            <span class="bool-val">false
+<a href=#476 id=476 data-nosnippet>476</a>        </span>);
+<a href=#477 id=477 data-nosnippet>477</a>        <span class="macro">assert_eq!</span>(
+<a href=#478 id=478 data-nosnippet>478</a>            iface.auto_detect_interface(<span class="string">"chain::ledger"</span>, <span class="string">"do_work"</span>, <span class="kw-2">&amp;</span>large_args),
+<a href=#479 id=479 data-nosnippet>479</a>            <span class="bool-val">false
+<a href=#480 id=480 data-nosnippet>480</a>        </span>);
+<a href=#481 id=481 data-nosnippet>481</a>    }
+<a href=#482 id=482 data-nosnippet>482</a>
+<a href=#483 id=483 data-nosnippet>483</a>    <span class="attr">#[test]
+<a href=#484 id=484 data-nosnippet>484</a>    </span><span class="kw">fn </span>auto_detect_without_ffi_interface_returns_false() {
+<a href=#485 id=485 data-nosnippet>485</a>        <span class="kw">let </span>iface = FFIInterface::new(<span class="kw">crate</span>::ffi::FFIConfig {
+<a href=#486 id=486 data-nosnippet>486</a>            interface_type: InterfaceType::Both,
+<a href=#487 id=487 data-nosnippet>487</a>            enable_http: <span class="bool-val">false</span>,
+<a href=#488 id=488 data-nosnippet>488</a>            enable_ffi: <span class="bool-val">false</span>,
+<a href=#489 id=489 data-nosnippet>489</a>            python_enabled: <span class="bool-val">false</span>,
+<a href=#490 id=490 data-nosnippet>490</a>            rust_enabled: <span class="bool-val">false</span>,
+<a href=#491 id=491 data-nosnippet>491</a>            c_enabled: <span class="bool-val">false</span>,
+<a href=#492 id=492 data-nosnippet>492</a>        });
+<a href=#493 id=493 data-nosnippet>493</a>        <span class="macro">assert_eq!</span>(
+<a href=#494 id=494 data-nosnippet>494</a>            iface.auto_detect_interface(<span class="string">"svc"</span>, <span class="string">"plain_operation"</span>, <span class="kw-2">&amp;</span>[]),
+<a href=#495 id=495 data-nosnippet>495</a>            <span class="bool-val">false
+<a href=#496 id=496 data-nosnippet>496</a>        </span>);
+<a href=#497 id=497 data-nosnippet>497</a>    }
+<a href=#498 id=498 data-nosnippet>498</a>}
 </code></pre></div></section></main></body></html>
