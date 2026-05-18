@@ -13,8 +13,7 @@ use crate::stdlib::agent::{self, AgentConfig, AgentType, ResourceBudget};
 use crate::stdlib::ai::{
     completion_and_ask_guidance_for_tool_loop, execute_fetch_url_result, generate_agent_model_turn,
     max_tool_result_chars, max_tool_steps_from_env, model_turn_to_outcome, run_web_search,
-    truncate_utf8_prefix,
-    MultiStepResult, ToolOutcome, TurnUsage, TOOLS_SYSTEM_WITH_SCRIPTING,
+    truncate_utf8_prefix, MultiStepResult, ToolOutcome, TurnUsage, TOOLS_SYSTEM_WITH_SCRIPTING,
 };
 use std::path::{Path, PathBuf};
 use std::time::Instant;
