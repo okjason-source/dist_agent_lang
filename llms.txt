@@ -1,0 +1,32 @@
+# dist_agent_lang (DAL)
+
+> Hybrid programming language with first-class agents, skills, molds, and off/on-chain trust controls. Canonical prose documentation is Markdown in `docs/` on branch `main`.
+
+## Canonical source (for tools & LLMs)
+
+- Repository: https://github.com/okjason-source/dist_agent_lang
+- Documentation tree: https://github.com/okjason-source/dist_agent_lang/tree/main/docs
+- Public index (raw Markdown): https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/PUBLIC_DOCUMENTATION_INDEX.md
+
+## Human-readable site (GitHub Pages)
+
+- Site root: https://okjason-source.github.io/dist_agent_lang/
+- Documentation index (HTML): https://okjason-source.github.io/dist_agent_lang/docs/PUBLIC_DOCUMENTATION_INDEX.html
+- Rust API reference (rustdoc): https://okjason-source.github.io/dist_agent_lang/api/
+
+## Major guides (raw Markdown on `main`)
+
+- Quick start: https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/guides/QUICK_START.md
+- Agent setup & usage: https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/guides/AGENT_SETUP_AND_USAGE.md
+- Skills & registry: https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/guides/SKILLS_AND_REGISTRY.md
+- Persistent agent memory: https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/guides/PERSISTENT_AGENT_MEMORY.md
+- API reference (stdlib): https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/guides/API_REFERENCE.md
+- Syntax: https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/syntax.md
+- Configuration: https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/CONFIGURATION_GUIDE.md
+- AI features: https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/guides/AI_FEATURES_GUIDE.md
+- Blockchain / hybrid: https://raw.githubusercontent.com/okjason-source/dist_agent_lang/main/docs/guides/HYBRID_INTEGRATION_GUIDE.md
+
+## Where to start
+
+1. Read `docs/PUBLIC_DOCUMENTATION_INDEX.md` (or the HTML mirror linked above).
+2. Follow section links from the index; prefer raw `.md` URLs for minimal markup when fetching with automated tools.
