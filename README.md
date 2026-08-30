@@ -188,7 +188,7 @@ dal mold list                # List available molds
 - Beta testing and validation
 
 **Use with caution for:**
-- Production financial applications (wait for v1.1.0+)
+- Production financial applications must be rigorously audited
 - High-value smart contracts (third-party audit recommended)
 - Critical infrastructure (additional validation needed)
 
