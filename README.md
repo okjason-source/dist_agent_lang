@@ -191,6 +191,7 @@ dal mold list                # List available molds
 - Production financial applications must be rigorously audited
 - High-value smart contracts (third-party audit recommended)
 - Critical infrastructure (additional validation needed)
+- Don't expect Web3 production without building or forking from repo clone - for advanced devs only - must opt in features
 
 ---
 
