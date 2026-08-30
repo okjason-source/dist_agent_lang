@@ -9,7 +9,7 @@
 **An agents-first programming and policy layer for autonomous systems.**
 
 
-DAL is a programming language where AI agents are native citizens. Spawn agents, give them skills, persist their memory, coordinate multi-agent workflows, and serve them over HTTP. Program applications using distributed integration with off-chain services, and on-chain contracts coexisting through a unified trust model. [Try the IDE](https://d10e14gce1iuq7.cloudfront.net/).
+Distributed Agent Language is designed as a runtime orchestration layer with a comprehensive library where AI agents are native citizens. Spawn agents, give them skills, persist their memory, coordinate multi-agent workflows, and serve them over HTTP. Program applications merging distributed integration with policy, off-chain services, and on-chain contracts coexisting through a unified trust model. [Try the IDE](https://d10e14gce1iuq7.cloudfront.net/).
 
 
 > **v1.0.XX Beta** — Test thoroughly before production use.
