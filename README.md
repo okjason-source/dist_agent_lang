@@ -200,9 +200,7 @@ dal mold list                # List available molds
 We welcome contributions of all kinds.
 
 - **Test the language** — Run examples, report bugs
-- **Improve documentation** — Fix typos, clarify instructions
 - **Share feedback** — Tell us what works and what doesn't
-- **Code** — See [CONTRIBUTING.md](CONTRIBUTING.md) and [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md)
 
 ---
 
